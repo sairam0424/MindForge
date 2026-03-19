@@ -92,6 +92,59 @@ Open Claude Code in your project. Run:
 
 ---
 
+## How the wave engine works
+
+MindForge's execution engine is not sequential. It analyses task dependencies and
+runs independent tasks in parallel — each with its own isolated 200K-token context.
+
+```
+/mindforge:plan-phase 1
+    → Creates 5 task plans with dependency declarations
+
+/mindforge:execute-phase 1
+    → Parser builds dependency graph
+    → Groups into waves: [01,02] → [03,04] → [05]
+    → Wave 1: Plans 01 and 02 run in parallel (independent)
+    → Wave 2: Plans 03 and 04 run in parallel (both depend on Wave 1 only)
+    → Wave 3: Plan 05 runs (depends on both Wave 2 plans)
+    → Full test suite runs between each wave
+    → Automated verification after all waves complete
+```
+
+This produces consistently higher quality than sequential execution: each subagent
+has a full, clean context window focused entirely on its specific task.
+
+## Long sessions and context compaction
+
+MindForge monitors context window usage. At 70%:
+1. Current state is committed to git
+2. `STATE.md` and `HANDOFF.json` are updated with full session context
+3. Work resumes in a fresh context window with clean working memory
+
+Sessions never degrade. Every session starts fresh with complete state awareness.
+
+## Audit trail
+
+Every agent action is logged to `.planning/AUDIT.jsonl`:
+- Task starts and completions with commit SHAs
+- Security findings with OWASP classification
+- Context compaction events
+- Quality gate failures
+
+Query the audit log:
+```bash
+# What happened in phase 1?
+grep '\"phase\":1' .planning/AUDIT.jsonl | jq .
+
+# Any security findings?
+grep '\"event\":\"security_finding\"' .planning/AUDIT.jsonl | jq '{severity,finding,file}'
+
+# Today's activity
+grep \"$(date -u +%Y-%m-%d)\" .planning/AUDIT.jsonl | jq .event
+```
+
+---
+
 ## Inspired by
 
 MindForge synthesises the best patterns from:

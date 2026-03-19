@@ -205,6 +205,64 @@ No exceptions. Security review is not optional for these categories.
 
 ---
 
+## Audit logging (mandatory)
+
+Write an AUDIT entry to `.planning/AUDIT.jsonl` for:
+- Every task started (event: task_started)
+- Every task completed (event: task_completed)
+- Every task failed (event: task_failed)
+- Every security finding (event: security_finding)
+- Every quality gate failure (event: quality_gate_failed)
+- Every context compaction (event: context_compaction)
+- Every architectural decision (event: decision_recorded)
+
+Use the schemas in `.mindforge/audit/AUDIT-SCHEMA.md`.
+Append only. Never modify existing entries.
+
+---
+
+## WAVE EXECUTION ENGINE
+
+When executing phases, always use the full wave engine protocol:
+1. Run dependency parser: `.mindforge/engine/dependency-parser.md`
+2. Build execution waves: `.mindforge/engine/wave-executor.md`
+3. Inject subagent context: `.mindforge/engine/context-injector.md`
+4. Run verification pipeline: `.mindforge/engine/verification-pipeline.md`
+
+Never execute plans sequentially without first checking for parallel opportunities.
+Parallel execution in isolated subagent contexts produces higher quality output.
+
+---
+
+## CONTEXT COMPACTION
+
+Follow `.mindforge/engine/compaction-protocol.md` exactly when context reaches 70%.
+Do not wait. Do not skip the protocol. Compacting at 85%+ risks losing critical context.
+
+---
+
+## AUDIT LOGGING
+
+Every significant action must produce an AUDIT entry.
+Schema: `.mindforge/audit/AUDIT-SCHEMA.md`
+File: `.planning/AUDIT.jsonl` (append only — never modify existing entries)
+
+---
+
+## QUICK TASKS
+
+For ad-hoc work outside the phase lifecycle: use `/mindforge:quick`.
+Quick tasks still get plans, verifications, commits, summaries, and audit entries.
+They skip the phase management overhead only.
+
+---
+
+## AUTO-DETECTION
+
+When unsure what to do next: run the state detection logic from
+`.claude/commands/mindforge/next.md` internally to determine the correct action.
+This is the same logic `/mindforge:next` uses — it can be applied any time.
+
 ## MINDFORGE COMMANDS
 
 All commands: `.claude/commands/mindforge/`
