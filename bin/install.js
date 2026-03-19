@@ -11,6 +11,14 @@ const path = require('path');
 const VERSION = '0.1.0';
 const ARGS = process.argv.slice(2);
 
+const nodeVersion = process.versions.node.split('.').map(Number);
+if (nodeVersion[0] < 18) {
+  console.error('❌ MindForge requires Node.js 18 or higher.');
+  console.error(`   Current version: ${process.versions.node}`);
+  console.error('   Install Node.js 18 LTS: https://nodejs.org');
+  process.exit(1);
+}
+
 // ── Argument parsing ──────────────────────────────────────────────────────────
 const runtime = ARGS.includes('--antigravity') ? 'antigravity'
               : ARGS.includes('--all')          ? 'all'
@@ -48,6 +56,18 @@ function copyFile(src, dest) {
   fs.copyFileSync(src, dest);
 }
 
+function safeCopyClaude(src, dest) {
+  if (fs.existsSync(dest)) {
+    const existing = fs.readFileSync(dest, 'utf8');
+    if (!existing.includes('MindForge')) {
+      const backup = dest + '.backup-' + Date.now();
+      fs.copyFileSync(dest, backup);
+      console.log(`  ⚠️  Existing CLAUDE.md backed up to ${backup}`);
+    }
+  }
+  copyFile(src, dest);
+}
+
 function copyDir(srcDir, destDir) {
   if (!fs.existsSync(srcDir)) return;
   ensureDir(destDir);
@@ -60,6 +80,29 @@ function copyDir(srcDir, destDir) {
       copyFile(srcPath, destPath);
     }
   }
+}
+
+function verifyInstall(targetBase, commandsDir) {
+  const requiredFiles = [
+    path.join(targetBase, 'CLAUDE.md'),
+    path.join(commandsDir, 'help.md'),
+    path.join(commandsDir, 'init-project.md'),
+    path.join(commandsDir, 'plan-phase.md'),
+    path.join(commandsDir, 'execute-phase.md'),
+    path.join(commandsDir, 'verify-phase.md'),
+    path.join(commandsDir, 'ship.md'),
+  ];
+
+  const missing = requiredFiles.filter(f => !fs.existsSync(f));
+
+  if (missing.length > 0) {
+    console.error('\n❌ Install verification failed. Missing files:');
+    missing.forEach(f => console.error(`   ${f}`));
+    console.error('\nTry re-running the installer.');
+    process.exit(1);
+  }
+
+  console.log('  ✅ Install verified — all required files present');
 }
 
 // ── Install for a single runtime ──────────────────────────────────────────────
@@ -81,7 +124,7 @@ function install(runtimeName) {
   // Copy CLAUDE.md entry point
   const claudeSrc = path.join(__dirname, '..', '.claude', 'CLAUDE.md');
   if (fs.existsSync(claudeSrc)) {
-    copyFile(claudeSrc, path.join(targetBase, 'CLAUDE.md'));
+    safeCopyClaude(claudeSrc, path.join(targetBase, 'CLAUDE.md'));
     console.log(`  ✅ CLAUDE.md`);
   }
 
@@ -115,6 +158,8 @@ function install(runtimeName) {
       console.log(`  ⏭️  .planning/ already exists — skipped`);
     }
   }
+
+  verifyInstall(targetBase, commandsDest);
 
   console.log(`\n✅ MindForge installed successfully!\n`);
   console.log(`Next steps:`);
