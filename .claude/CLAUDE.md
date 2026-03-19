@@ -26,6 +26,14 @@ Before touching any file, read these in order:
 
 If any file is missing, note it and continue. Never invent its contents.
 
+### If context files are missing
+- If `.planning/PROJECT.md` is missing: do not proceed. Tell the user:
+  "PROJECT.md not found. Run /mindforge:init-project first."
+- If `.planning/STATE.md` is missing: create it using the template from
+  `.planning/STATE.md` with status "Unknown — rebuilt from directory scan."
+- If `.planning/HANDOFF.json` is missing: continue normally.
+  This is expected on the first session.
+
 ---
 
 ## SKILLS DISCOVERY (before every task)
@@ -91,6 +99,16 @@ If no plan exists for the current task:
 </task>
 ```
 
+### Before executing any plan
+Validate the plan file:
+- Does it contain a `<task>` element?
+- Does it have `<n>`, `<files>`, `<action>`, `<verify>`, and `<done>` elements?
+- Does the `<verify>` element contain a runnable command (not "check manually")?
+- Do all files listed in `<files>` exist in the repository?
+  If a file does not exist yet: that is expected only if the action creates it.
+  If it should exist but does not: stop and flag to the user.
+If validation fails: stop. Tell the user which field is missing or invalid.
+
 ---
 
 ## EXECUTION RULES (all mandatory)
@@ -106,18 +124,34 @@ If no plan exists for the current task:
 
 ---
 
-## CONTEXT WINDOW MANAGEMENT
+## Context window management — compaction procedure
 
-- Monitor context usage continuously.
-- **At 70% capacity:** pause, write HANDOFF.json, update STATE.md, compact and restart.
-- **When spawning subagents:** inject only what they need:
-  persona file + PLAN file + CONVENTIONS.md + relevant ARCHITECTURE sections.
-  Never give subagents STATE.md, ROADMAP.md, or other agents' plans.
-- **Never carry forward tool call noise** — restart with state files, not chat history.
+Monitor context usage. When approaching 70% capacity:
+
+**Step 1:** Write the current session state.
+Update `.planning/STATE.md` — add any decisions made this session.
+Update `.planning/HANDOFF.json` with:
+- Current phase and plan number
+- Last completed task (with git SHA)
+- Next task to begin
+- Any blockers or questions for the user
+- List of the 5 most recently modified files
+
+**Step 2:** Compact the context.
+Summarise the last 20 tool calls into one paragraph in HANDOFF.json `agent_notes`.
+Discard the tool call history from your working context.
+
+**Step 3:** Continue with a fresh context load.
+Re-read: ORG.md + PROJECT.md + STATE.md + HANDOFF.json + current PLAN file.
+Do not re-read files not relevant to the current task.
+
+**Never** continue past 85% context without compacting first.
 
 ---
 
-## QUALITY GATES (all blocking — nothing ships that fails these)
+## Quality gates — enforcement
+
+These gates are BLOCKING. If any gate fails, you must STOP and NOT commit.
 
 - [ ] `<verify>` step in PLAN has passed
 - [ ] No hardcoded secrets, API keys, tokens, or passwords anywhere in the diff
@@ -126,6 +160,21 @@ If no plan exists for the current task:
 - [ ] No linter errors (`eslint`, `tsc --noEmit`, `ruff`, `mypy` — whatever applies)
 - [ ] Commit message follows Conventional Commits format
 - [ ] SUMMARY.md written
+
+When a gate fails:
+1. State clearly which gate failed and why.
+2. If the failure is fixable immediately: fix it, then re-run the gate.
+3. If the failure requires a plan change: create a FIX-PLAN file and
+   inform the user. Do not proceed with the original plan.
+4. Never ask "should I skip this gate?" — the answer is always no.
+5. Never commit with `--no-verify` or similar bypasses.
+
+If the user instructs you to skip a quality gate:
+- Acknowledge the instruction.
+- Explain the specific risk of skipping this gate.
+- Ask for explicit confirmation that they understand the risk.
+- If confirmed: document the skip in STATE.md with the user's rationale.
+- Still do not skip secret detection. Ever.
 
 ---
 
