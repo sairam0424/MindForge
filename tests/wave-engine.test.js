@@ -237,6 +237,95 @@ test('no conflicts when all plans touch different files', () => {
   assert.strictEqual(conflicts.length, 0);
 });
 
+console.log('\nAdditional edge cases:');
+
+test('handles empty graph (zero plans)', () => {
+  const waves = groupIntoWaves({});
+  assert.deepStrictEqual(waves, []);
+});
+
+test('detects self-referencing dependency (plan depends on itself)', () => {
+  const graph = { '01': { dependsOn: ['01'] } };
+  assert.strictEqual(hasCircularDependency(graph), true);
+});
+
+test('three plans all touching the same file — all conflict', () => {
+  const plans = [
+    { id: '01', files: ['src/shared.ts'] },
+    { id: '02', files: ['src/shared.ts'] },
+    { id: '03', files: ['src/shared.ts'] },
+  ];
+  const conflicts = findFileConflicts(plans);
+  assert.ok(conflicts.length >= 2, `Expected >= 2 conflicts, got ${conflicts.length}`);
+});
+
+test('6-plan complex graph groups correctly', () => {
+  const graph = {
+    '01': { dependsOn: [] },
+    '02': { dependsOn: [] },
+    '03': { dependsOn: [] },
+    '04': { dependsOn: ['01', '02'] },
+    '05': { dependsOn: ['02', '03'] },
+    '06': { dependsOn: ['04', '05'] },
+  };
+  const waves = groupIntoWaves(graph);
+  assert.strictEqual(waves.length, 3);
+  assert.deepStrictEqual(waves[0].sort(), ['01', '02', '03']);
+  assert.deepStrictEqual(waves[1].sort(), ['04', '05']);
+  assert.deepStrictEqual(waves[2], ['06']);
+});
+
+test('single linear chain of 4 plans → 4 waves', () => {
+  const graph = {
+    '01': { dependsOn: [] },
+    '02': { dependsOn: ['01'] },
+    '03': { dependsOn: ['02'] },
+    '04': { dependsOn: ['03'] },
+  };
+  const waves = groupIntoWaves(graph);
+  assert.strictEqual(waves.length, 4);
+  waves.forEach((wave, i) => {
+    const expectedId = String(i + 1).padStart(2, '0');
+    assert.deepStrictEqual(wave, [expectedId]);
+  });
+});
+
+test('wave executor stops on first failure — does not cascade', () => {
+  // Simulates: Wave 1 has 3 tasks. Task 02 fails.
+  // Expected: tasks 01 and 03 may run, but Wave 2 must NOT start.
+  const executionLog = [];
+
+  function simulateWaveExecution(graph, failingPlan) {
+    const waves = groupIntoWaves(graph);
+    let phaseFailed = false;
+
+    for (const wave of waves) {
+      if (phaseFailed) break;
+      for (const planId of wave) {
+        if (planId === failingPlan) {
+          executionLog.push({ plan: planId, status: 'failed' });
+          phaseFailed = true;
+        } else if (!phaseFailed) {
+          executionLog.push({ plan: planId, status: 'completed' });
+        }
+      }
+    }
+    return { phaseFailed, executionLog };
+  }
+
+  const graph = {
+    '01': { dependsOn: [] },
+    '02': { dependsOn: [] },
+    '03': { dependsOn: [] },
+    '04': { dependsOn: ['01', '03'] },
+  };
+
+  const result = simulateWaveExecution(graph, '02');
+  assert.strictEqual(result.phaseFailed, true);
+  const plan04Executed = result.executionLog.some(e => e.plan === '04');
+  assert.strictEqual(plan04Executed, false, 'Plan 04 should not execute after wave failure');
+});
+
 // ── Results ───────────────────────────────────────────────────────────────────
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`Results: ${passed} passed, ${failed} failed`);

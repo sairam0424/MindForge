@@ -111,6 +111,44 @@ test('compaction-protocol.md covers session restart procedure', () => {
   );
 });
 
+console.log('\nAdditional compaction tests:');
+
+test('HANDOFF.json has recent_commits field', () => {
+  const obj = JSON.parse(fs.readFileSync('.planning/HANDOFF.json', 'utf8'));
+  assert.ok('recent_commits' in obj, 'Missing recent_commits field');
+  assert.ok(Array.isArray(obj.recent_commits), 'recent_commits must be an array');
+});
+
+test('HANDOFF.json has recent_files field', () => {
+  const obj = JSON.parse(fs.readFileSync('.planning/HANDOFF.json', 'utf8'));
+  assert.ok('recent_files' in obj, 'Missing recent_files field');
+  assert.ok(Array.isArray(obj.recent_files), 'recent_files must be an array');
+});
+
+test('compaction-protocol.md covers WIP commit with --no-verify', () => {
+  const content = fs.readFileSync('.mindforge/engine/compaction-protocol.md', 'utf8');
+  assert.ok(
+    content.includes('--no-verify') || content.includes('no-verify'),
+    'Should mention --no-verify for WIP commits that bypass hooks'
+  );
+});
+
+test('compaction-protocol.md covers staleness detection', () => {
+  const content = fs.readFileSync('.mindforge/engine/compaction-protocol.md', 'utf8');
+  assert.ok(
+    content.includes('48 hours') || content.includes('staleness') || content.includes('stale'),
+    'Should cover HANDOFF.json staleness detection'
+  );
+});
+
+test('compaction-protocol.md mentions 85% emergency compaction', () => {
+  const content = fs.readFileSync('.mindforge/engine/compaction-protocol.md', 'utf8');
+  assert.ok(
+    content.includes('85%') || content.includes('emergency'),
+    'Should cover emergency compaction when 85%+ context is reached'
+  );
+});
+
 // ── Results ───────────────────────────────────────────────────────────────────
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`Results: ${passed} passed, ${failed} failed`);

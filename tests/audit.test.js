@@ -135,6 +135,65 @@ test('HANDOFF.json has _warning anti-secret field', () => {
   assert.ok(handoff._warning.toLowerCase().includes('secret'), 'Warning should mention secrets');
 });
 
+console.log('\nAdditional audit tests:');
+
+test('validates security_finding event type', () => {
+  const entry = {
+    id: '550e8400-e29b-41d4-a716-446655440002',
+    timestamp: new Date().toISOString(),
+    event: 'security_finding',
+    agent: 'mindforge-security-reviewer',
+    phase: 1,
+    session_id: 'sess_test',
+    severity: 'HIGH',
+    owasp_category: 'A03:Injection',
+    finding: 'SQL query built by string concatenation',
+    file: 'src/api/search.ts',
+    line: 42,
+    remediated: false
+  };
+  assert.doesNotThrow(() => validateAuditEntry(entry));
+  assert.strictEqual(entry.event, 'security_finding');
+});
+
+test('validates context_compaction event type', () => {
+  const entry = {
+    id: '550e8400-e29b-41d4-a716-446655440003',
+    timestamp: new Date().toISOString(),
+    event: 'context_compaction',
+    agent: 'mindforge-orchestrator',
+    phase: 2,
+    plan: '03',
+    session_id: 'sess_test',
+    context_usage_pct: 72,
+    handoff_written: true
+  };
+  assert.doesNotThrow(() => validateAuditEntry(entry));
+});
+
+test('rejects entry with malformed UUID', () => {
+  const entry = {
+    id: 'not-a-uuid',
+    timestamp: new Date().toISOString(),
+    event: 'task_completed',
+    agent: 'test',
+    session_id: 'sess_test'
+  };
+  assert.throws(() => validateAuditEntry(entry), /Invalid UUID/);
+});
+
+test('AUDIT.jsonl contains no secrets', () => {
+  const content = fs.readFileSync('.planning/AUDIT.jsonl', 'utf8');
+  const secretPatterns = [
+    /password\\s*["']?\\s*:\\s*["'][^"']{6,}/i,
+    /sk-[a-zA-Z0-9]{20,}/,
+    /-----BEGIN.*KEY-----/,
+  ];
+  secretPatterns.forEach(pattern => {
+    assert.ok(!pattern.test(content), `Potential secret found in AUDIT.jsonl`);
+  });
+});
+
 // ── Results ───────────────────────────────────────────────────────────────────
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`Results: ${passed} passed, ${failed} failed`);
