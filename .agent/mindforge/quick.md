@@ -83,6 +83,10 @@ without the `--full` flag.
 5. Commit: `[type](quick/[NNN]): [task name]`
 6. Write `.planning/quick/[NNN]-[slug]/SUMMARY.md`
 
+### STATE.md update policy
+Quick tasks do not change phase status. If there is no active phase, note the
+quick task completion in STATE.md under "Last completed task".
+
 ## Step 5 — Optional review (--review flag)
 
 If `--review` is provided:
@@ -97,6 +101,12 @@ If `--full` is provided, additionally:
 - Run the type checker and linter
 - Activate `security-reviewer.md` if the task touches any security-sensitive code
 - Write an AUDIT entry for the quick task
+
+## Linting always runs
+Regardless of flags, after every quick task execution:
+1. Run the project's linter (from CONVENTIONS.md — check which linter applies)
+2. If lint errors found: fix them before committing.
+3. Linting is not part of `--full` — it is always part of quick.
 
 ## Flags are composable
 ```

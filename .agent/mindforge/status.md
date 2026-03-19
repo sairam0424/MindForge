@@ -26,6 +26,9 @@ Phase Progress
   Phase 4  [░░░░░░░░░░░░░░░░░░░░]   0% — Not started
 ```
 Calculate percentage from: tasks with SUMMARY files / total tasks in phase.
+Count ONLY SUMMARY files that contain `Status: Completed ✅` (or `Status` + `Completed`).
+Do not count failed tasks as progress.
+If VERIFICATION.md is missing for a phase: label it "In progress" not "0% verified".
 
 ### Section 3 — Requirements coverage
 Read REQUIREMENTS.md and count:
@@ -53,6 +56,13 @@ Recent Activity
   [timestamp]  task_started    Plan 03: User API endpoints
   [timestamp]  task_completed  Plan 01: User model ✅
   [timestamp]  context_compaction  Phase 2, Plan 03 (72% context)
+```
+If AUDIT.jsonl is empty or missing, display:
+```
+Recent Activity
+───────────────────────────────────────────────────────
+  No activity logged yet. Activity will appear here
+  after running /mindforge:execute-phase.
 ```
 
 ### Section 5 — Open issues
@@ -87,3 +97,8 @@ Next Action
 4. VERIFICATION.md files — authoritative for test coverage
 5. WAVE-REPORT files — authoritative for execution history
 6. HANDOFF.json — authoritative for session state
+
+## Performance notes
+- For recent activity, read only the last 500 bytes of AUDIT.jsonl:
+  `tail -c 500 .planning/AUDIT.jsonl | [parse last complete JSON objects]`
+- For requirement counts, count lines starting with `| FR-` instead of parsing the whole file.

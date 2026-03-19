@@ -55,6 +55,22 @@ Are there more phases in ROADMAP.md?
   NO  → Tell user: "All phases complete! Run /mindforge:ship [N] for the final release."
 ```
 
+## Partial phase execution handling
+In the decision tree step "Do SUMMARY files exist for all plans?":
+
+Do not treat this as binary. Check individually:
+
+```
+PLAN-[N]-01.md exists?          SUMMARY-[N]-01.md exists?
+PLAN-[N]-02.md exists?          SUMMARY-[N]-02.md exists?
+PLAN-[N]-03.md exists?          SUMMARY-[N]-03.md exists?
+```
+
+If some SUMMARY files exist and some don't: this is a partially-executed phase.
+Report: "Phase [N] is partially executed: plans [X, Y] are done, [Z] is not."
+Ask: "Resume execution from Plan [Z]? (yes/no)"
+Do not restart the entire phase — resume from the first missing SUMMARY.
+
 ## Before auto-executing: always confirm
 Before running any command automatically, tell the user:
 
