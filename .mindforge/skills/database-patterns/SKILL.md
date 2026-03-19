@@ -49,6 +49,11 @@ updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 deleted_at  TIMESTAMPTZ  -- NULL = active, timestamp = deleted
 ```
 
+**UUID strategy:**
+- Prefer UUIDv7 or ULID for time-ordered inserts (better index locality)
+- Use random UUIDv4 for high-entropy IDs when ordering is not important
+- Document the choice in ARCHITECTURE.md and keep it consistent across tables
+
 **Soft delete implementation:**
 Use soft delete (setting `deleted_at`) instead of hard delete for:
 - User records (GDPR right to erasure exception: anonymise, don't delete)
@@ -76,6 +81,20 @@ const users = await db.users.findMany({
 const userIds = users.map(u => u.id)
 const orders = await db.orders.findMany({ where: { userId: { in: userIds } } })
 const ordersByUser = groupBy(orders, 'userId')
+```
+
+**Framework-agnostic SQL example (N+1):**
+```sql
+-- ❌ N+1 pattern (application loops)
+-- SELECT * FROM users LIMIT 50;
+-- then for each user:
+-- SELECT * FROM orders WHERE user_id = ?;
+
+-- ✅ Single query with JOIN
+SELECT u.*, o.*
+FROM users u
+LEFT JOIN orders o ON o.user_id = u.id
+WHERE u.id IN (:user_ids);
 ```
 
 **Pagination patterns:**
@@ -120,6 +139,8 @@ await db.$transaction(async (tx) => {
   // All three succeed or all three roll back
 })
 ```
+For financial operations or ledger updates, use `SERIALIZABLE` isolation or
+explicit row-level locks to prevent lost updates and double-spend conditions.
 
 ### Index strategy
 

@@ -16,6 +16,7 @@ triggers: GDPR, CCPA, privacy, PII, personal data, personal information, consent
 Any task touching personal data collection, storage, processing, or transfer.
 Also activates for consent management, analytics, cookie handling, and any
 feature where user data flows to third parties.
+These rules are language-agnostic — apply them regardless of framework or stack.
 
 ## Regulatory coverage
 This skill covers: GDPR (EU/UK), CCPA/CPRA (California), PIPEDA (Canada),
@@ -41,6 +42,7 @@ If you cannot answer all 5: stop. Write the answers in ARCHITECTURE.md under
 - Collect the minimum data required for the stated purpose (data minimisation)
 - Obtain consent before collecting non-essential data (analytics, marketing)
 - Consent must be: specific, informed, freely given, unambiguous, and withdrawable
+- Withdrawing consent must be as easy as giving it (no dark patterns, no extra steps)
 - Never pre-tick consent checkboxes. Never bundle consent for different purposes.
 
 **Storage:**
@@ -60,6 +62,18 @@ If you cannot answer all 5: stop. Write the answers in ARCHITECTURE.md under
 - Implement "right to erasure": a complete user delete must remove or anonymise ALL their PII
 - Implement "right to access": export of all user data in a portable format (JSON/CSV)
 - Test deletion: verify that deleted user data does not appear in any API response
+
+**Retention examples (defaults, adjust to policy/legal requirements):**
+- Authentication logs: 30–90 days
+- Security/audit logs: 90–365 days
+- Billing records: 6–7 years (jurisdiction dependent)
+- Analytics events: 12–24 months
+Always confirm with legal/compliance for your jurisdiction.
+
+**Erasure vs anonymisation:**
+- Erasure: delete or irreversibly remove identifiers from all systems
+- Anonymisation: permanently remove identifying attributes so data cannot be re-linked
+If anonymisation is used, document the method and verify re-identification risk.
 
 ### Cookie and tracking standards
 ```javascript

@@ -16,7 +16,7 @@ Any task involving UI components, forms, interactive elements, or user-facing HT
 Load this skill for ALL frontend work — accessibility is not optional.
 
 ## Mandatory standard
-WCAG 2.1 Level AA is the minimum. This is the legal requirement in most jurisdictions.
+WCAG 2.2 Level AA is the minimum. This is the legal requirement in most jurisdictions.
 Level AAA elements (where achievable without design compromise) are recommended.
 
 ## Mandatory actions when this skill is active
@@ -36,6 +36,7 @@ Level AAA elements (where achievable without design compromise) are recommended.
 - [ ] One `<h1>` per page. Heading hierarchy is sequential (h1 → h2 → h3, never skip levels)
 - [ ] Landmark roles present: `<main>`, `<nav>`, `<header>`, `<footer>`, `<aside>`
 - [ ] Skip navigation link as the first focusable element on every page
+- [ ] Focus order follows DOM order (do not rely on visual layout to imply order)
 
 **Forms:**
 - [ ] Every input has a visible `<label>` (not just placeholder text)
@@ -49,6 +50,7 @@ Level AAA elements (where achievable without design compromise) are recommended.
 - [ ] Focus visible: never `outline: none` without a custom visible focus style
 - [ ] Keyboard shortcuts documented and not conflicting with browser/OS shortcuts
 - [ ] Custom widgets implement the correct ARIA pattern (see ARIA Authoring Practices Guide)
+- [ ] Required ARIA props present when using roles (examples below)
 
 **Images and media:**
 - [ ] Decorative images: `alt=""` (empty string, not omitted)
@@ -60,6 +62,7 @@ Level AAA elements (where achievable without design compromise) are recommended.
 - [ ] Content that updates dynamically: `aria-live="polite"` (non-critical) or `aria-live="assertive"` (critical)
 - [ ] Modals/dialogs: focus moves to modal on open, returns to trigger on close, `aria-modal="true"`
 - [ ] Loading states: `aria-busy="true"` on the container being updated
+- [ ] Reduced motion respected: `prefers-reduced-motion` disables non-essential animation
 
 ### ARIA usage rules
 - Use ARIA only when no native HTML element conveys the role
@@ -67,6 +70,13 @@ Level AAA elements (where achievable without design compromise) are recommended.
 - Required ARIA properties: never use a role without its required properties
   (e.g., `role="checkbox"` requires `aria-checked`)
 - Never use `aria-hidden="true"` on focusable elements
+
+### ARIA required properties examples
+- `role="checkbox"` → `aria-checked`
+- `role="switch"` → `aria-checked`
+- `role="textbox"` (non-input element) → `aria-multiline` (if multiline)
+- `role="combobox"` → `aria-expanded`, `aria-controls`, `aria-haspopup`
+- `role="dialog"` → `aria-modal`, `aria-labelledby` (and `aria-describedby` when needed)
 
 ### Testing protocol
 ```bash

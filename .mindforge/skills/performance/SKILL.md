@@ -37,12 +37,16 @@ performance, or user-perceived load time metrics.
 - Cache repeated identical queries: Redis with appropriate TTL
 
 **API response time:**
-- Target: p50 < 100ms, p95 < 500ms, p99 < 2000ms for most endpoints
+- Default targets (override with NFRs): p50 < 100ms, p95 < 500ms, p99 < 2000ms for most endpoints
 - Slow endpoints (> 500ms): must be async (return immediately, use webhooks or polling)
 - Database connection pooling: always use a connection pool (never open/close per request)
+- Pool sizing: start with `min=2`, `max=CPU * 2 + 2` per instance, then tune to DB limits and workload
+- Serverless: prefer a DB proxy (PgBouncer, RDS Proxy) or driver-level pooling that supports bursty concurrency
 - Avoid synchronous I/O in request handlers
+- Cache hot DB reads at the query or service layer when data is read-heavy and tolerant of staleness
 
 **Caching strategy:**
+Defaults below — tune per data freshness requirements and invalidate on writes.
 | Data type | Recommended cache | TTL |
 |---|---|---|
 | User session data | Redis | 24 hours |
@@ -77,6 +81,11 @@ performance, or user-perceived load time metrics.
 - Avoid layout thrashing: batch DOM reads before DOM writes
 - Debounce user input handlers (search: 300ms, resize: 100ms)
 - Memoize expensive computations: `useMemo` / `useCallback` where measured
+
+**SSR/SSG guidance:**
+- Prefer SSG for marketing and content pages with low data volatility
+- Prefer SSR for personalized data, but watch TTFB and cache at the edge where possible
+- For hybrid apps, stream server components or HTML where supported to reduce TTFB and improve LCP
 
 ### Performance measurement commands
 

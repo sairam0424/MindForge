@@ -23,6 +23,7 @@ hotfixes, rollbacks, or post-incident review documentation.
 ### During incident response
 - Keep a timeline of actions taken and outcomes.
 - Prefer reversible mitigations (rollback, feature flag) before invasive changes.
+- Automated mitigations require explicit human approval for P0/P1 incidents.
 
 ### After mitigation
 - Capture root cause and remediation steps.
@@ -100,8 +101,9 @@ File: `docs/postmortems/[YYYY-MM-DD]-[short-title].md`
 **Date of incident:** [ISO-8601]
 **Duration:** [start] → [end] ([X] minutes)
 **Severity:** P[0-3]
-**Author:** [who wrote this]
+**Author:** [human owner who wrote this]
 **Reviewed by:** [who reviewed]
+**AI assistance:** [if used, list tool and confirm human approval]
 
 ## Summary
 [2-3 sentences: what happened, what the impact was, what resolved it]
@@ -147,7 +149,7 @@ File: `docs/postmortems/[YYYY-MM-DD]-[short-title].md`
 
 Every new feature must ship with:
 1. **Health check endpoint:** `GET /health` returns 200 when service is operational
-2. **Key metrics instrumented:** request count, error rate, p95 latency, queue depth
+2. **Key metrics instrumented at the service boundary:** request count, error rate, p95 latency, queue depth
 3. **Alerts defined:** at minimum:
    - Error rate > 1% for 5 minutes → P1 alert
    - p95 latency > [NFR threshold] for 5 minutes → P2 alert
