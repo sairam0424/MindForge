@@ -103,8 +103,10 @@ If a subagent has no SUMMARY file after 30 minutes (for plans touching fewer tha
 After all plans in a wave complete:
 1. Collect all SUMMARY files from this wave
 2. Run the project's full test suite
-3. If tests fail: identify which plan introduced the failure (use `git bisect`)
-4. Do not start the next wave until all tests pass
+3. If no test command exists yet: STOP and instruct the user to define it
+   in CONVENTIONS.md or add an initial test harness.
+4. If tests fail: identify which plan introduced the failure (use `git bisect`)
+5. Do not start the next wave until all tests pass
 
 ### Phase completion
 After all waves complete:
