@@ -359,3 +359,17 @@ grep -o '"event":"[^"]*"' .planning/AUDIT.jsonl | sort | uniq -c | sort -rn
 4. **Write an entry for every significant action** — not just successes.
    Failures, blockers, and security findings are especially important.
 5. **AUDIT.jsonl is committed to git.** Do not write secrets into it.
+
+## Corruption recovery and archiving
+
+If AUDIT.jsonl is corrupted (partial line from crash):
+1. Restore the last clean version from git history, OR
+2. Filter valid lines only:
+   ```bash
+   python3 -c "import sys,json;[print(l.strip()) for l in sys.stdin if l.strip() and json.loads(l)]" < .planning/AUDIT.jsonl > /tmp/AUDIT.clean.jsonl
+   mv /tmp/AUDIT.clean.jsonl .planning/AUDIT.jsonl
+   ```
+
+If AUDIT.jsonl grows beyond 10,000 lines:
+1. Archive to `.planning/AUDIT-archive-YYYY.jsonl`
+2. Start a fresh `.planning/AUDIT.jsonl` with new entries
