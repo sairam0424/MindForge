@@ -129,10 +129,10 @@ skillPaths.forEach(skillPath => {
     assert.ok(isValidSemver(fm.version), `Invalid semver: "${fm.version}"`);
   });
 
-  test(`${skillName}: has at least 5 trigger keywords`, () => {
+  test(`${skillName}: has at least 10 trigger keywords`, () => {
     const fm = parseSkillFrontmatter(skillPath);
     const triggers = fm.triggers.split(',').map(t => t.trim()).filter(Boolean);
-    assert.ok(triggers.length >= 5, `Too few triggers: ${triggers.length} (min 5)`);
+    assert.ok(triggers.length >= 10, `Too few triggers: ${triggers.length} (min 10)`);
   });
 
   test(`${skillName}: status is a valid value`, () => {
@@ -162,6 +162,18 @@ console.log('\nManifest validation:');
 
 test('MANIFEST.md exists', () => {
   assert.ok(fs.existsSync('.mindforge/org/skills/MANIFEST.md'), 'Missing MANIFEST.md');
+});
+
+test('registry defines manifest path and missing-manifest handling', () => {
+  const registry = fs.readFileSync('.mindforge/engine/skills/registry.md', 'utf8');
+  assert.ok(
+    registry.includes('.mindforge/org/skills/MANIFEST.md'),
+    'Registry missing explicit manifest path'
+  );
+  assert.ok(
+    registry.includes('MANIFEST.md was missing') || registry.includes('If MANIFEST.md does not exist'),
+    'Registry missing missing-manifest handling'
+  );
 });
 
 test('MANIFEST.md registers all 10 core skills', () => {
@@ -253,6 +265,29 @@ test('command files are not empty', () => {
       assert.ok(size > 200, `Command file too small (${size} bytes): ${cmd}.md`);
     }
   });
+});
+
+test('command files include usage or step markers', () => {
+  allCommands.forEach(cmd => {
+    const p = `.claude/commands/mindforge/${cmd}.md`;
+    const content = fs.readFileSync(p, 'utf8');
+    const hasMarker = /Usage:|## Step|## Pre-check|Steps/gi.test(content);
+    assert.ok(hasMarker, `Command missing usage/steps markers: ${cmd}.md`);
+  });
+});
+
+console.log('\nSkills loader ordering:');
+
+test('loader prioritizes tiers and protects security skill from summarisation', () => {
+  const content = fs.readFileSync('.mindforge/engine/skills/loader.md', 'utf8');
+  assert.ok(
+    content.includes('Project → Org → Core'),
+    'Loader missing tier priority order'
+  );
+  assert.ok(
+    content.toLowerCase().includes('never summarise a security skill'),
+    'Loader missing security summarisation rule'
+  );
 });
 
 // ── Results ───────────────────────────────────────────────────────────────────
