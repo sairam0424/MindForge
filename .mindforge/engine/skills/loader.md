@@ -32,6 +32,7 @@ Given a task description and the files in `<files>`:
 For every word and phrase in the task description `<n>`, `<action>`, and `<context>` fields:
 - Exact keyword match against the trigger index
 - Case-insensitive matching
+- Word-boundary matching (match whole words, not substrings)
 - Multi-word trigger matching: "database migration" matches "migration" trigger
 - Acronym expansion: "a11y" matches "accessibility" trigger
 
@@ -43,6 +44,25 @@ Examine the file paths in `<files>` for structural hints:
 - `/db/` or `/migrations/` in path → load database-patterns
 - `/components/` or `.tsx` in path → load accessibility (UI components should be accessible)
 - `privacy` or `consent` in path → load data-privacy
+
+**File NAME matching (in addition to directory matching):**
+
+Also check the file name itself (not just the directory path) for trigger signals:
+
+```
+login.ts, logout.ts, auth.ts, session.ts → security-review
+password.ts, token.ts, credentials.ts   → security-review
+payment.ts, billing.ts, stripe.ts       → security-review
+migration.ts, migrate.ts                → database-patterns
+*.test.ts, *.spec.ts                    → testing-standards
+*.component.tsx, *.page.tsx             → accessibility
+privacy.ts, consent.ts, gdpr.ts         → data-privacy
+runbook.md, postmortem.md               → incident-response
+```
+
+File name matching uses ENDS-WITH logic (not contains), to avoid false matches
+on files like `create-user.ts` triggering on "auth" merely because the word
+"authenticate" appears in the file content later.
 
 **Combined match:**
 Skills triggered by EITHER text OR file path matching are loaded.
