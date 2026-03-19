@@ -80,6 +80,21 @@ changelog:
 - Aim for 10-30 triggers per skill
 - Avoid single-letter words and extremely common words (the, be, is, to)
 
+## Security notice for skill authors
+
+MindForge skills are injected directly into AI agent contexts. A skill file
+with adversarial content could manipulate agent behaviour.
+
+MindForge includes an injection guard that blocks skills containing known
+manipulation patterns. However, all skill authors — especially for Tier 2
+and Tier 3 skills — should:
+
+1. Never include instructions that override or disable safety behaviours
+2. Keep skill files in version control with a clear audit trail
+3. Review skill changes in code review before merging
+4. Restrict who can write to `.mindforge/personas/overrides/` and
+   `.mindforge/org/skills/` directories
+
 ## Registering your skill
 After creating SKILL.md:
 ```bash
