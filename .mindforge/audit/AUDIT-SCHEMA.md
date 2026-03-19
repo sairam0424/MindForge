@@ -90,6 +90,104 @@ One JSON object per line. Never modify existing lines. Only append.
 }
 ```
 
+### `session_started`
+```json
+{
+  "id": "uuid",
+  "timestamp": "ISO-8601",
+  "event": "session_started",
+  "agent": "mindforge-orchestrator",
+  "phase": null,
+  "session_id": "sess_abc",
+  "reason": "new_session"
+}
+```
+
+### `quick_task_completed`
+```json
+{
+  "id": "uuid",
+  "timestamp": "ISO-8601",
+  "event": "quick_task_completed",
+  "agent": "mindforge-orchestrator",
+  "phase": null,
+  "session_id": "sess_abc",
+  "quick_task_id": "003-fix-login",
+  "commit_sha": "abc1234",
+  "verify_result": "pass"
+}
+```
+
+### `debug_completed`
+```json
+{
+  "id": "uuid",
+  "timestamp": "ISO-8601",
+  "event": "debug_completed",
+  "agent": "mindforge-debug-specialist",
+  "phase": 2,
+  "plan": "03",
+  "session_id": "sess_abc",
+  "root_cause": "Null pointer in auth middleware",
+  "commit_sha": "def5678",
+  "tests_run": true
+}
+```
+
+### `uat_started`
+```json
+{
+  "id": "uuid",
+  "timestamp": "ISO-8601",
+  "event": "uat_started",
+  "agent": "mindforge-orchestrator",
+  "phase": 1,
+  "session_id": "sess_abc",
+  "owner": "product"
+}
+```
+
+### `uat_completed`
+```json
+{
+  "id": "uuid",
+  "timestamp": "ISO-8601",
+  "event": "uat_completed",
+  "agent": "mindforge-orchestrator",
+  "phase": 1,
+  "session_id": "sess_abc",
+  "result": "pass",
+  "notes": "Signed off by product"
+}
+```
+
+### `ship_started`
+```json
+{
+  "id": "uuid",
+  "timestamp": "ISO-8601",
+  "event": "ship_started",
+  "agent": "mindforge-release-manager",
+  "phase": 1,
+  "session_id": "sess_abc",
+  "version": "v0.1.0"
+}
+```
+
+### `ship_completed`
+```json
+{
+  "id": "uuid",
+  "timestamp": "ISO-8601",
+  "event": "ship_completed",
+  "agent": "mindforge-release-manager",
+  "phase": 1,
+  "session_id": "sess_abc",
+  "version": "v0.1.0",
+  "release_tag": "v0.1.0"
+}
+```
+
 ### `task_started`
 ```json
 {
