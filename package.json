@@ -1,14 +1,25 @@
 {
-  "name": "forge-framework",
+  "name": "mindforge-cc",
   "version": "0.1.0",
-  "description": "Enterprise Agentic Framework for Claude Code and Antigravity",
+  "description": "MindForge — Enterprise Agentic Framework for Claude Code and Antigravity",
   "bin": {
-    "forge": "./bin/install.js"
+    "mindforge": "./bin/install.js"
   },
   "scripts": {
-    "test": "node tests/run.js",
-    "lint": "echo 'Add linter here'"
+    "test": "node tests/install.test.js",
+    "lint": "echo 'Linter not yet configured'"
   },
-  "keywords": ["claude-code", "antigravity", "agentic", "framework", "context-engineering"],
-  "license": "MIT"
+  "keywords": [
+    "claude-code",
+    "antigravity",
+    "agentic-framework",
+    "context-engineering",
+    "enterprise",
+    "mindforge"
+  ],
+  "author": "[Your name]",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }
