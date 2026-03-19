@@ -167,3 +167,8 @@ If compaction is triggered while a wave is executing (subagents are running):
 2. When the running subagent writes its SUMMARY file: trigger compaction
    immediately after, before starting the next task or wave.
 3. Never compact mid-task. Always compact at task boundaries.
+
+### Multiple session risk
+HANDOFF.json is a shared file. If two agents read or write it concurrently,
+the last writer wins. In team environments, each engineer should use their
+own feature branch to avoid collisions.
