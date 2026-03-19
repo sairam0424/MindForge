@@ -108,8 +108,19 @@ Write `.planning/HANDOFF.json`:
   "project": "[project name]",
   "phase": null,
   "plan": null,
-  "last_completed_task": "Project initialisation",
+  "plan_step": null,
+  "last_completed_task": {
+    "description": "Project initialisation",
+    "commit_sha": null,
+    "verified": true
+  },
   "next_task": "Run /mindforge:plan-phase 1",
+  "in_progress": {
+    "file": null,
+    "intent": null,
+    "completed_steps": [],
+    "remaining_steps": []
+  },
   "blockers": [],
   "decisions_needed": [],
   "context_refs": [
@@ -118,7 +129,16 @@ Write `.planning/HANDOFF.json`:
     ".planning/REQUIREMENTS.md"
   ],
   "agent_notes": "Fresh project. Read PROJECT.md and REQUIREMENTS.md before planning.",
-  "updated_at": "[ISO 8601 timestamp]"
+  "session_summary": "Project initialised.",
+  "recent_files": [
+    ".planning/PROJECT.md",
+    ".planning/REQUIREMENTS.md",
+    ".planning/STATE.md",
+    ".planning/HANDOFF.json"
+  ],
+  "recent_commits": [],
+  "updated_at": "[ISO 8601 timestamp]",
+  "_warning": "Never store secrets, tokens, or passwords in this file. It is tracked in git."
 }
 ```
 

@@ -3,8 +3,19 @@
   "project": null,
   "phase": null,
   "plan": null,
-  "last_completed_task": null,
+  "plan_step": null,
+  "last_completed_task": {
+    "description": null,
+    "commit_sha": null,
+    "verified": null
+  },
   "next_task": "Run /mindforge:init-project",
+  "in_progress": {
+    "file": null,
+    "intent": null,
+    "completed_steps": [],
+    "remaining_steps": []
+  },
   "blockers": [],
   "decisions_needed": [],
   "context_refs": [],
