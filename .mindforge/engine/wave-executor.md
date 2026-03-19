@@ -145,6 +145,11 @@ Write to `.planning/phases/[N]/WAVE-REPORT-[N].md`:
 
 **Wave 3 test results:** All passing ✅
 
+### Failure row format (if any task fails)
+| Plan | Task Name         | Status | Duration | Commit  | Error |
+|------|-------------------|--------|----------|---------|-------|
+| 02   | Create product model | ❌  | ~4 min   | n/a     | Verify failed: TypeError ... |
+
 ## Phase summary
 - Total tasks: 5
 - Total commits: 5
