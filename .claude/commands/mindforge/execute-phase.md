@@ -1,104 +1,165 @@
-Execute all task plans for a phase. Usage: /mindforge:execute-phase [N]
+# MindForge — Execute Phase Command
+# Usage: /mindforge:execute-phase [N]
 
-## Pre-check
-Verify these files exist before starting:
-- `.planning/phases/[N]/PLAN-[N]-01.md` (at minimum one plan)
-- `.planning/STATE.md`
-- `.planning/PROJECT.md`
+## Pre-checks (all must pass before execution starts)
 
-If plans are missing: stop and instruct the user to run /mindforge:plan-phase [N] first.
+1. Read STATE.md — confirm phase [N] is in "planned" status.
+   If STATE.md shows phase [N] as already "complete": ask user to confirm re-execution.
 
-## Step 1 — Build execution order
-Read all PLAN files for phase N.
-Parse the `<dependencies>` field of each plan.
+2. Verify plan files exist:
+   ```
+   .planning/phases/[N]/PLAN-[N]-01.md   (minimum one plan required)
+   ```
+   If missing: stop. Tell user: "No plans found for Phase [N]. Run /mindforge:plan-phase [N] first."
 
-If any plan file has malformed XML or is missing required fields:
-- Stop.
-- Report which file is malformed and which fields are missing.
-- Ask the user to correct it before proceeding.
+3. Verify REQUIREMENTS.md exists and has content.
+   If empty: warn user but allow continuation.
 
-Group plans into waves:
-- Wave 1: plans with no dependencies
-- Wave 2: plans whose dependencies are all in Wave 1
-- Wave N: plans whose dependencies are all in earlier waves
+4. Run the dependency parser (`.mindforge/engine/dependency-parser.md`).
+   If validation fails (circular deps, missing deps): stop and report. Do not execute.
 
-## Step 2 — Execute wave by wave
+## Step 1 — Build and display the execution plan
 
-For each wave (in order):
-  For each plan in the wave:
+After dependency parsing succeeds, display the wave plan to the user:
 
-    1. Load the plan's `<persona>` file from `.mindforge/personas/`
-    2. Load any skills listed in the plan's `<context>` from `.mindforge/skills/`
-    3. Read every file listed in `<files>` before touching anything
-    4. Execute the `<action>` precisely as written
-    5. Run the `<verify>` step — if it fails, stop and do not proceed
-    6. Commit: `git add [files] && git commit -m "feat([scope]): [task name]"`
-    7. Write `.planning/phases/[N]/SUMMARY-[N]-[NN].md`:
+```
+Phase [N] Execution Plan
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-```markdown
-# Summary — Phase [N], Plan [NN]: [Task Name]
+  Wave 1 (parallel)     Wave 2 (parallel)     Wave 3
+  ┌─────────────┐       ┌─────────────┐       ┌─────────────┐
+  │ Plan 01     │       │ Plan 03     │       │ Plan 05     │
+  │ User model  │──┐    │ User API    │──┐    │ Checkout UI │
+  └─────────────┘  │    └─────────────┘  │    └─────────────┘
+  ┌─────────────┐  │    ┌─────────────┐  │
+  │ Plan 02     │──┘    │ Plan 04     │──┘
+  │ Product     │       │ Product API │
+  └─────────────┘       └─────────────┘
 
-## Status
-Completed ✅
+  Total tasks: 5    Waves: 3    Est. time: depends on model speed
 
-## What was done
-[Description of what was implemented]
-
-## Files changed
-- `path/to/file.ts` — [what changed and why]
-
-## Verify result
-[Output of the verify command]
-
-## Decisions made
-[Any implementation decisions not in the plan, with rationale]
-
-## Commit
-[git SHA]
-
-## Completed at
-[ISO 8601 timestamp]
+Proceed? (yes/no)
 ```
 
-    8. After each plan in a wave completes, check: does the next plan
-       in this wave depend on the output of this one? If yes: sequential.
-       If no: can run in parallel (spawn separate subagent context).
+If the user says no: stop. Do not execute anything.
 
-## Step 3 — Post-phase verification
-After all waves complete:
-1. Read every REQUIREMENTS.md item tagged v1 for this phase
-2. Confirm each is implemented (check the code, not just the plan)
-3. Run the project's full test suite
-   - If the test suite does not exist yet: stop and instruct the user to add it.
-4. Write `.planning/phases/[N]/VERIFICATION.md`:
+## Step 2 — Write pre-execution audit entry
 
-```markdown
-# Phase [N] Verification
-
-## Requirements check
-| FR ID | Requirement        | Implemented | Evidence          |
-|-------|--------------------|-------------|-------------------|
-| FR-01 | ...                | ✅ / ❌     | file:line or test |
-
-## Test results
-[Output of test run]
-
-## Status
-All requirements met ✅ / Issues found ❌ (see below)
-
-## Issues
-[Any failed requirements with notes]
+Append to `.planning/AUDIT.jsonl`:
+```json
+{
+  "id": "[uuid-v4]",
+  "timestamp": "[ISO-8601]",
+  "event": "phase_execution_started",
+  "phase": [N],
+  "wave_count": [total waves],
+  "task_count": [total tasks],
+  "agent": "mindforge-orchestrator",
+  "session_id": "[session identifier]"
+}
 ```
 
-## Step 4 — Update state
-Update STATE.md: current phase = N, status = "Phase N complete, verification passed".
-Update HANDOFF.json with completed phase and next phase number.
+## Step 3 — Execute waves using the wave executor
 
-Tell the user:
-"✅ Phase [N] execution complete.
+Follow the complete protocol in `.mindforge/engine/wave-executor.md`.
 
-  Tasks completed: [X]
-  Commits made: [X]
-  Test results: [pass/fail summary]
+For each wave:
 
-Run /mindforge:verify-phase [N] for human acceptance testing."
+### Wave start
+Write to console:
+```
+━━━ Wave [W] of [total] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Starting [X] tasks in parallel...
+```
+
+### Per-task execution (inject context per `context-injector.md`)
+For each plan in the wave:
+1. Load context package (per `context-injector.md`)
+2. Execute the plan instructions
+3. Run `<verify>` — capture exact output
+4. If verify PASSES:
+   - Write SUMMARY-[N]-[M].md
+   - Execute commit: `git add [files] && git commit -m "[type]([scope]): [task name]"`
+   - Capture git SHA
+   - Write AUDIT entry for task completion
+5. If verify FAILS:
+   - Write SUMMARY-[N]-[M].md with failure details
+   - Write AUDIT entry for task failure
+   - STOP this wave immediately
+   - Report: "Task [plan ID] failed: [verify output]. Stopping Phase [N]."
+   - Do not start next wave
+   - Ask user: "Spawn debug agent to diagnose? (yes/no)"
+
+### Wave completion (before starting next wave)
+After all tasks in wave complete:
+1. Run: `[project test command]`
+2. If tests fail:
+   - Identify failing tests
+   - Run `git log --oneline -[wave-task-count]` to see wave commits
+   - Report which commit likely introduced the failure
+   - Stop. Ask user how to proceed.
+3. If tests pass:
+   - Report: "Wave [W] complete. All [X] tasks passed. Tests passing. ✅"
+   - Write WAVE-REPORT update
+
+## Step 4 — Phase-level verification
+
+After all waves complete, run the verification pipeline:
+
+1. Read every v1 requirement from REQUIREMENTS.md for this phase
+2. For each requirement, verify it is implemented:
+   - Search the codebase for the implementation
+   - Check if a test covers it
+   - Mark: ✅ implemented + tested | ⚠️ implemented, no test | ❌ not found
+3. Write `.planning/phases/[N]/VERIFICATION.md`
+4. Run the full test suite one final time
+5. If any requirement is ❌: create a fix plan and report to user
+
+## Step 5 — Update state and write wave report
+
+Write `.planning/phases/[N]/WAVE-REPORT-[N].md` (per template in wave-executor.md)
+
+Update STATE.md:
+```markdown
+## Current phase
+[N] — Execution complete ✅
+
+## Last completed task
+Phase [N]: All [X] tasks completed across [W] waves.
+
+## Next action
+Run /mindforge:verify-phase [N] for human acceptance testing.
+```
+
+Update HANDOFF.json with completed phase info.
+
+Write final AUDIT entry:
+```json
+{
+  "id": "[uuid-v4]",
+  "timestamp": "[ISO-8601]",
+  "event": "phase_execution_completed",
+  "phase": [N],
+  "tasks_completed": [X],
+  "waves_executed": [W],
+  "commits": ["sha1", "sha2", "..."],
+  "test_result": "passing",
+  "agent": "mindforge-orchestrator"
+}
+```
+
+## Step 6 — Report to user
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Phase [N] execution complete
+
+  Tasks completed : [X] / [X]
+  Waves executed  : [W]
+  Commits made    : [X]
+  Tests           : All passing
+  Requirements    : [X] / [X] implemented
+
+Next step: Run /mindforge:verify-phase [N] for UAT sign-off.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
