@@ -91,6 +91,14 @@ The executing subagent must:
 4. Write an AUDIT entry (see `audit/AUDIT-SCHEMA.md`)
 5. Report completion status back to the orchestrator
 
+### Subagent hang handling
+If a subagent has no SUMMARY file after 30 minutes (for plans touching fewer than
+5 files), treat it as stalled:
+1. Mark the task as blocked and STOP the wave.
+2. Report the stall to the user and ask whether to wait longer, restart the task,
+   or skip it.
+3. Do not start the next wave while any task is stalled.
+
 ### Wave completion
 After all plans in a wave complete:
 1. Collect all SUMMARY files from this wave
