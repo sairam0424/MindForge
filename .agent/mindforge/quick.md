@@ -67,6 +67,15 @@ Show the plan to the user. Wait for approval before executing.
 
 ## Step 4 — Execute the quick plan
 
+### Security auto-trigger (mandatory)
+Before execution, scan the task description and files for security keywords:
+auth, authentication, login, password, token, JWT, session, payment, PII, upload,
+credential, secret, key.
+
+If any keyword matches: load `security-review/SKILL.md` and activate
+`security-reviewer.md` persona for the implementation. This is required even
+without the `--full` flag.
+
 1. Load persona from `.mindforge/personas/`
 2. Load any relevant skills based on task keywords
 3. Execute the plan
