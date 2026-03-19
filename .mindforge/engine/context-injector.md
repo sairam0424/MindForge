@@ -77,6 +77,8 @@ Before injecting SECURITY.md into a subagent context:
 1. Check for placeholders: `[ORG NAME]`, `[specify]`, `[your-org]`, `TODO`, `[placeholder]`
 2. If found: warn the user that SECURITY.md is incomplete and may misguide subagents.
 3. Allow the user to proceed or update SECURITY.md first.
+4. Log an AUDIT entry:
+   `{"event":"security_config_warning","detail":"SECURITY.md has placeholder text"}`
 
 ## Context size budget
 
@@ -96,6 +98,15 @@ If the context package would exceed 30K tokens:
 1. Summarise ARCHITECTURE.md to only the directly relevant sections
 2. Reference ADRs by title rather than full content if not critical
 3. Never compress the PLAN file or security/conventions files
+
+## Context size enforcement
+Before injecting context to a subagent:
+1. Estimate total token count (rough estimate: characters / 4)
+2. If estimated tokens > 30,000:
+   a. Log which files are contributing most
+   b. Summarise ARCHITECTURE.md to relevant sections only
+   c. If still > 30,000 after summarisation: warn the user and ask to proceed
+3. Never silently inject oversized context — the budget exists for a reason.
 
 ## Subagent completion protocol
 
