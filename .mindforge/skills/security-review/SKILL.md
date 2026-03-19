@@ -56,3 +56,30 @@ Write findings to `.planning/phases/phase-N/SECURITY-REVIEW-N.md`.
 - A password comparison using `==` instead of a constant-time function
 - JWT verification being skipped or using `none` algorithm
 - User input being passed directly to `eval()`, `exec()`, or shell commands
+
+## Self-check before task completion
+
+Before marking a task done when this skill was active:
+
+- [ ] Did I read the full SKILL.md before starting? (Not just the triggers)
+- [ ] Did I activate the corresponding persona file?
+- [ ] Did I apply every mandatory action in this skill, not just the ones
+  I remembered off the top of my head?
+- [ ] If this skill produced an output file (review, security report, etc.),
+  has that file been written to the correct path?
+
+## When you find a vulnerability
+
+Do not silently fix it and move on. For every vulnerability found:
+
+1. **Stop the current task.**
+2. **Classify it** using the severity model (CRITICAL / HIGH / MEDIUM / LOW).
+3. **For CRITICAL or HIGH:** Write to `SECURITY-REVIEW-N.md` immediately.
+   Tell the user. Do not proceed with ANY other work until acknowledged.
+4. **For MEDIUM:** Write to `SECURITY-REVIEW-N.md`. Finish the current task.
+   Flag at the end of the SUMMARY.md.
+5. **For LOW:** Write to `SECURITY-REVIEW-N.md`. Note in SUMMARY.md.
+
+The worst security outcome is a vulnerability that was found, noted mentally,
+and then forgotten when context rolled over. Write it down. Always.
+

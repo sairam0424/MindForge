@@ -68,3 +68,15 @@ Pattern: `should [expected behaviour] when [condition]`
 
 ## Before marking any task done
 Run the full test suite. If any test fails: do not commit. Fix it first.
+
+## Self-check before task completion
+
+Before marking a task done when this skill was active:
+
+- [ ] Did I read the full SKILL.md before starting? (Not just the triggers)
+- [ ] Did I activate the corresponding persona file?
+- [ ] Did I apply every mandatory action in this skill, not just the ones
+  I remembered off the top of my head?
+- [ ] If this skill produced an output file (review, security report, etc.),
+  has that file been written to the correct path?
+

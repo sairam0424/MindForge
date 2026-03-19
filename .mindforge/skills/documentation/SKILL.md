@@ -62,3 +62,15 @@ export function verifyAccessToken(token: string): TokenPayload { ... }
 Every user-visible change must appear in CHANGELOG.md before release.
 Format follows Keep a Changelog (keepachangelog.com).
 Categories: Added, Changed, Deprecated, Removed, Fixed, Security.
+
+## Self-check before task completion
+
+Before marking a task done when this skill was active:
+
+- [ ] Did I read the full SKILL.md before starting? (Not just the triggers)
+- [ ] Did I activate the corresponding persona file?
+- [ ] Did I apply every mandatory action in this skill, not just the ones
+  I remembered off the top of my head?
+- [ ] If this skill produced an output file (review, security report, etc.),
+  has that file been written to the correct path?
+
