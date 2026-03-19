@@ -52,6 +52,36 @@ run in parallel — they must be in different waves. Flag any such conflicts:
 "Plans [A] and [B] both modify [file]. Placing [B] in a later wave."
 Automatically adjust wave assignment to resolve file conflicts.
 
+### Additional validation cases
+
+**Self-referencing plan:**
+If any plan lists its own ID in `<dependencies>` (e.g., Plan 03 depends on 03):
+```
+Error: Plan [N]-[M] declares a dependency on itself.
+This is impossible to satisfy. Remove [M] from its own <dependencies> list.
+```
+
+**Empty plan directory:**
+If the phase directory contains zero PLAN files:
+```
+Error: No PLAN files found in .planning/phases/[N]/.
+Run /mindforge:plan-phase [N] to create plans before executing.
+```
+Do not return an empty graph — return this error explicitly.
+
+**Dependency on a completed phase's plans:**
+If a PLAN in Phase 3 declares a dependency on a PLAN in Phase 2:
+This is valid only if Phase 2 is complete (all SUMMARY files exist and passing).
+If Phase 2 is not complete: flag as a warning, not an error.
+Allow execution to proceed but note the cross-phase dependency.
+
+**All plans in the same wave touch the same file:**
+If all plans in a computed wave touch at least one common file, the wave
+cannot run in parallel without conflicts. In this case:
+Sort the plans into sequential execution order within the wave.
+Notify: "Wave [W]: file conflicts detected — executing plans sequentially."
+This is suboptimal but safe. The user should redesign plans to avoid this.
+
 ### Step 4 — Output the dependency report
 Write to `.planning/phases/[N]/DEPENDENCY-GRAPH-[N].md`:
 
