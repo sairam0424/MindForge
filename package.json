@@ -1,0 +1,14 @@
+{
+  "name": "forge-framework",
+  "version": "0.1.0",
+  "description": "Enterprise Agentic Framework for Claude Code and Antigravity",
+  "bin": {
+    "forge": "./bin/install.js"
+  },
+  "scripts": {
+    "test": "node tests/run.js",
+    "lint": "echo 'Add linter here'"
+  },
+  "keywords": ["claude-code", "antigravity", "agentic", "framework", "context-engineering"],
+  "license": "MIT"
+}
