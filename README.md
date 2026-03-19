@@ -1,4 +1,4 @@
-# MindForge
+# MINDFORGE — Enterprise Agentic Framework
 
 **Enterprise Agentic Framework for Claude Code and Antigravity**
 
