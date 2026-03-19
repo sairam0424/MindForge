@@ -43,6 +43,11 @@ mutually_exclusive_with: graphql-api
 **Resolution: Load the skill whose triggers had the most keyword matches.
 If tied: load the higher-tier skill. If still tied: ask the user.**
 
+If the conflict occurs during wave execution (no user interaction possible):
+- Load neither skill
+- Write an AUDIT entry noting the unresolved conflict
+- Defer resolution to the next interactive session
+
 ## Conflict log
 When any conflict resolution occurs, write to the AUDIT log:
 ```json
