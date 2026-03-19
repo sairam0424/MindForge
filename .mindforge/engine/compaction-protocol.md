@@ -172,3 +172,11 @@ If compaction is triggered while a wave is executing (subagents are running):
 HANDOFF.json is a shared file. If two agents read or write it concurrently,
 the last writer wins. In team environments, each engineer should use their
 own feature branch to avoid collisions.
+
+### Compaction when near 85%+ context
+If compaction was not triggered at 70% and context is now at 85%+:
+1. This is an error condition — the 70% trigger was missed.
+2. Emergency compact immediately: skip the "summarise last 20 tool calls" step.
+3. Write HANDOFF.json from whatever state is available.
+4. Restart immediately with the minimum viable context.
+5. Add an AUDIT entry with `"event":"compaction_late"` to flag this for review.
