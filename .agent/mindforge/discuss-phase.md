@@ -23,7 +23,8 @@ Read:
 - REQUIREMENTS.md for the requirements in this phase
 - ARCHITECTURE.md for relevant architectural context
 
-Identify the phase's primary domain:
+Identify the phase's primary domain and any secondary domains.
+If multiple domains are involved, cover each relevant set of questions.
 - **Visual/UI** → ask about layout, interactions, states, empty states, animations
 - **API/Backend** → ask about response format, error handling, auth approach, versioning
 - **Data/Database** → ask about schema design, migration strategy, data volume expectations
@@ -81,8 +82,9 @@ Answer 1-4:
 If `--auto` flag is provided: skip the discussion entirely.
 The planner will make reasonable defaults for all decisions.
 Use when: the phase is straightforward and you trust the planner's judgment.
-Warn: "Skipping discussion. Planner will make implementation decisions.
-       Results may not match your vision exactly."
+Warn clearly: "Skipping discussion. Planner will make implementation decisions.
+              Results may not match your vision exactly. Proceeding without
+              explicit decisions can create rework later."
 
 ## Step 3 — Write CONTEXT.md
 

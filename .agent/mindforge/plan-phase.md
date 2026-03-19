@@ -14,6 +14,11 @@ Ask:
 
 Write answers to `.planning/phases/phase-[N]/CONTEXT.md`.
 
+If `.planning/phases/phase-[N]/CONTEXT.md` already exists:
+1. Read it first.
+2. If it has "Open questions", ask the user to resolve them before planning.
+3. Update CONTEXT.md with the answers and mark those questions as resolved.
+
 ## Step 2 — Domain research (spawn subagent)
 Spawn a research subagent with this context only:
 - The tech stack from PROJECT.md
