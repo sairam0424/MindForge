@@ -83,19 +83,32 @@ const ordersByUser = groupBy(orders, 'userId')
 // ❌ OFFSET pagination (slow on large datasets — scans all previous rows)
 SELECT * FROM posts ORDER BY created_at DESC LIMIT 20 OFFSET 10000;
 
-// ✅ CURSOR pagination (consistent performance regardless of position)
+// ✅ Compound cursor — handles duplicate timestamps correctly
+// Application layer: encode (created_at, id) as the cursor
 SELECT * FROM posts
-WHERE created_at < :cursor
-ORDER BY created_at DESC
+WHERE (created_at, id) < (:cursor_time::timestamptz, :cursor_id::uuid)
+ORDER BY created_at DESC, id DESC
 LIMIT 20;
 
-// Always return a cursor for the next page:
+// Cursor encoding (application layer):
+// encode: btoa(JSON.stringify({ t: row.created_at, id: row.id }))
+// decode: JSON.parse(atob(cursor))
+// Return:
 {
   "data": [...],
-  "nextCursor": "2026-01-15T10:30:00Z",  // last item's created_at
+  "nextCursor": "[base64 of {t, id} pair]",
   "hasMore": true
 }
 ```
+
+### Why compound cursors matter
+Single-field cursors (created_at only) produce incorrect pagination when
+multiple records share the same timestamp — common in batch imports and
+high-write systems. Always use at least (timestamp, id) as a compound cursor.
+
+For simple cases where records are created sequentially and timestamps are
+guaranteed unique (e.g., a single-writer queue): a single-field cursor is acceptable.
+Document this assumption in the code.
 
 **Transaction usage:**
 ```typescript
