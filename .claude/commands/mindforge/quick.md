@@ -39,6 +39,12 @@ Report research findings to the user before proceeding.
 
 ## Step 3 — Create a quick plan
 
+### Sequential quick task numbering
+Determine the next quick task number by scanning `.planning/quick/`:
+1. List directories matching `[0-9][0-9][0-9]-*`
+2. Take the max numeric prefix and add 1 (start at 001 if none exist)
+3. If a directory already exists for the chosen number, require `--force` to proceed
+
 Create `.planning/quick/[NNN]-[slug]/PLAN.md` where NNN is a sequential number
 and slug is a 2-4 word kebab-case description.
 
