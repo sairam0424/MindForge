@@ -18,6 +18,7 @@ cargo test
 
 Pass criteria: ALL tests pass, zero failures.
 If any fail: stop. Do not proceed to Stage 2.
+Create fix plans for the failing tests before continuing (e.g., `PLAN-[N]-FIX-01.md`).
 Record in VERIFICATION.md: "Stage 1: FAILED — [X] tests failing"
 
 ### Stage 2 — Requirement traceability
