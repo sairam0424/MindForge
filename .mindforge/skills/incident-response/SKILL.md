@@ -14,6 +14,20 @@ triggers: incident, outage, downtime, alert, pagerduty, oncall, on-call, postmor
 Any task involving incident runbooks, monitoring setup, alerting configuration,
 hotfixes, rollbacks, or post-incident review documentation.
 
+## Mandatory actions when this skill is active
+
+### Before making changes
+1. Classify severity (P0-P3) and confirm scope of impact.
+2. Locate or create the relevant runbook.
+
+### During incident response
+- Keep a timeline of actions taken and outcomes.
+- Prefer reversible mitigations (rollback, feature flag) before invasive changes.
+
+### After mitigation
+- Capture root cause and remediation steps.
+- Write or update the postmortem within 48 hours.
+
 ## Incident severity classification
 
 | Level | Definition | Response time | Examples |
@@ -158,3 +172,9 @@ npm test
 # 7. Tag the hotfix release
 git tag -a v[X.Y.Z+1] -m "Hotfix: [description]"
 ```
+
+## Self-check before task completion
+- [ ] Severity classified and communicated
+- [ ] Runbook updated or created
+- [ ] Timeline captured in postmortem
+- [ ] Follow-up actions created and assigned

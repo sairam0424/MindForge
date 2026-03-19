@@ -1,6 +1,8 @@
 ---
 name: documentation
 version: 1.0.0
+min_mindforge_version: 0.1.0
+status: stable
 triggers: README, docs, documentation, changelog, CHANGELOG, runbook, guide,
           getting started, API docs, comment, JSDoc, docstring, explain, describe
 ---
@@ -10,6 +12,21 @@ triggers: README, docs, documentation, changelog, CHANGELOG, runbook, guide,
 ## When this skill activates
 Any task involving writing or updating documentation, comments, or guides.
 Switch to `tech-writer.md` persona when this skill activates.
+
+## Mandatory actions when this skill is active
+
+### Before writing documentation
+1. Identify the target audience and their goal.
+2. Gather the exact commands or steps to reproduce the task.
+
+### During writing
+- Use clear headings and short paragraphs.
+- Provide working examples where possible.
+- Avoid assumptions about prior knowledge.
+
+### After writing
+- Verify examples and commands are correct.
+- Ensure the document is linked from README or relevant index.
 
 ## README.md structure (for every project)
 ```markdown
@@ -73,4 +90,3 @@ Before marking a task done when this skill was active:
   I remembered off the top of my head?
 - [ ] If this skill produced an output file (review, security report, etc.),
   has that file been written to the correct path?
-

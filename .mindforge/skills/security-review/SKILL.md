@@ -1,6 +1,8 @@
 ---
 name: security-review
 version: 1.0.0
+min_mindforge_version: 0.1.0
+status: stable
 triggers: auth, authentication, authorisation, authorization, login, logout, password,
           token, JWT, session, cookie, OAuth, payment, billing, stripe, PII, GDPR,
           personal data, upload, file upload, credentials, API key, secret, env,
@@ -82,4 +84,3 @@ Do not silently fix it and move on. For every vulnerability found:
 
 The worst security outcome is a vulnerability that was found, noted mentally,
 and then forgotten when context rolled over. Write it down. Always.
-

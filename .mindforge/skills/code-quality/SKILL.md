@@ -1,6 +1,8 @@
 ---
 name: code-quality
 version: 1.0.0
+min_mindforge_version: 0.1.0
+status: stable
 triggers: refactor, code review, review, quality, tech debt, complexity, clean up,
           cleanup, lint, linting, code smell, duplication, naming, readability
 ---
@@ -10,6 +12,22 @@ triggers: refactor, code review, review, quality, tech debt, complexity, clean u
 ## When this skill activates
 Any code review, refactoring task, or implementation where maintaining
 quality standards is the primary goal.
+
+## Mandatory actions when this skill is active
+
+### Before writing any code
+1. Read CONVENTIONS.md and apply all rules.
+2. Identify complexity risks (hot paths, long functions, nested logic).
+3. Decide up front where tests will be added or updated.
+
+### During implementation or review
+- Enforce function length and complexity limits.
+- Remove unused code and dead imports.
+- Replace magic numbers with named constants.
+
+### After implementation or review
+- Run linters and type checks for the project.
+- Record findings or fixes in SUMMARY.md or the review report.
 
 ## Quality dimensions to evaluate
 
@@ -69,4 +87,3 @@ Before marking a task done when this skill was active:
   I remembered off the top of my head?
 - [ ] If this skill produced an output file (review, security report, etc.),
   has that file been written to the correct path?
-

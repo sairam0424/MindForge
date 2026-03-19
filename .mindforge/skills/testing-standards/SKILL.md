@@ -1,6 +1,8 @@
 ---
 name: testing-standards
 version: 1.0.0
+min_mindforge_version: 0.1.0
+status: stable
 triggers: test, tests, spec, unit test, integration test, e2e, coverage, jest,
           vitest, pytest, mocha, assertion, mock, stub, spy, fixture, TDD
 ---
@@ -9,6 +11,21 @@ triggers: test, tests, spec, unit test, integration test, e2e, coverage, jest,
 
 ## When this skill activates
 Any task involving writing, running, or improving tests.
+
+## Mandatory actions when this skill is active
+
+### Before writing tests
+1. Identify the exact behavior to verify.
+2. Define the failure condition you expect to prevent.
+
+### During testing
+- Use the AAA pattern with clear separation.
+- Keep tests isolated and deterministic.
+- Cover both happy and error paths.
+
+### After testing
+- Run the full test suite.
+- Record any new tests in SUMMARY.md with paths.
 
 ## Coverage targets
 | Test type        | Target  | Measured on               |
@@ -79,4 +96,3 @@ Before marking a task done when this skill was active:
   I remembered off the top of my head?
 - [ ] If this skill produced an output file (review, security report, etc.),
   has that file been written to the correct path?
-
