@@ -4,6 +4,31 @@ Plan a project phase. Usage: /mindforge:plan-phase [N]
 If N is not given, read STATE.md for the current phase number and increment by 1.
 Read PROJECT.md, REQUIREMENTS.md, ARCHITECTURE.md, and STATE.md before proceeding.
 
+## Pre-read (before any questions or planning)
+
+Read these files in order:
+1. `.planning/PROJECT.md`
+2. `.planning/REQUIREMENTS.md`
+3. `.planning/ARCHITECTURE.md`
+4. `.planning/STATE.md`
+5. `.planning/phases/phase-[N]/CONTEXT.md` (if it exists)
+
+### If CONTEXT.md exists for phase [N]:
+This means `/mindforge:discuss-phase [N]` was already run.
+The user's implementation decisions are already captured.
+DO NOT re-ask questions that CONTEXT.md already answers.
+Read CONTEXT.md completely before asking any clarifying questions.
+Report: "I've read the phase discussion context. [N] decisions were captured.
+Planning will follow these decisions."
+
+### If CONTEXT.md has open questions:
+Read the "Open questions" section in CONTEXT.md.
+Present unresolved questions to the user NOW, before planning begins.
+Do not create plans that assume answers to open questions without confirming first.
+
+### If CONTEXT.md does NOT exist for phase [N]:
+Proceed normally with the discussion → planning flow.
+
 ## Step 1 — Discuss phase scope
 Ask:
 1. "Describe what Phase [N] should accomplish. 2-3 sentences."
@@ -18,6 +43,11 @@ If `.planning/phases/phase-[N]/CONTEXT.md` already exists:
 1. Read it first.
 2. If it has "Open questions", ask the user to resolve them before planning.
 3. Update CONTEXT.md with the answers and mark those questions as resolved.
+
+### If CONTEXT.md exists — skip already-answered questions
+Only ask about areas NOT covered in CONTEXT.md.
+Example: if CONTEXT.md captures the layout decision, do not ask "What layout do you want?"
+Respect the prior discussion. Build on it. Do not repeat it.
 
 ## Step 2 — Domain research (spawn subagent)
 Spawn a research subagent with this context only:
