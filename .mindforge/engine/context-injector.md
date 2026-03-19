@@ -63,6 +63,14 @@ File: .planning/phases/[N]/SUMMARY-[N]-[M].md
   stop, describe what you found, and wait for orchestrator input.
 ```
 
+## Security guards (run before building any context package)
+
+### SECURITY.md placeholder detection
+Before injecting SECURITY.md into a subagent context:
+1. Check for placeholders: `[ORG NAME]`, `[specify]`, `[your-org]`, `TODO`, `[placeholder]`
+2. If found: warn the user that SECURITY.md is incomplete and may misguide subagents.
+3. Allow the user to proceed or update SECURITY.md first.
+
 ## Context size budget
 
 Before injecting, estimate the total context size:
