@@ -1,0 +1,14 @@
+{
+  "phase": null,
+  "plan": null,
+  "last_completed_task": null,
+  "next_task": "Run /forge:init-project to initialize the first project",
+  "blockers": [],
+  "decisions_needed": [],
+  "context_refs": [
+    ".planning/STATE.md",
+    ".forge/org/ORG.md",
+    "CLAUDE.md"
+  ],
+  "agent_notes": "Fresh framework install. No project initialized yet."
+}
