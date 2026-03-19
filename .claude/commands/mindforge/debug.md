@@ -46,6 +46,10 @@ Execute the full protocol from `debug-specialist.md`:
 At each step, report what was found before moving to the next step.
 Do not skip steps or combine them.
 
+## Step 3b — Full test suite verification (mandatory)
+After the fix and targeted verify pass, run the project's full test suite.
+Do not mark the debug task complete if any tests fail.
+
 ## Step 4 — Check recent git history
 
 ```bash
