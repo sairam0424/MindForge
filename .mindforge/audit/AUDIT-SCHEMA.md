@@ -59,6 +59,37 @@ One JSON object per line. Never modify existing lines. Only append.
 }
 ```
 
+### `phase_execution_started`
+```json
+{
+  "id": "uuid",
+  "timestamp": "ISO-8601",
+  "event": "phase_execution_started",
+  "agent": "mindforge-orchestrator",
+  "phase": 1,
+  "session_id": "sess_abc",
+  "plan_count": 5,
+  "wave_count": 3,
+  "dependency_graph_path": ".planning/phases/1/DEPENDENCY-GRAPH-1.md"
+}
+```
+
+### `phase_execution_completed`
+```json
+{
+  "id": "uuid",
+  "timestamp": "ISO-8601",
+  "event": "phase_execution_completed",
+  "agent": "mindforge-orchestrator",
+  "phase": 1,
+  "session_id": "sess_abc",
+  "tasks_completed": 5,
+  "tasks_failed": 0,
+  "verify_status": "pass",
+  "verification_path": ".planning/phases/1/VERIFICATION.md"
+}
+```
+
 ### `task_started`
 ```json
 {
