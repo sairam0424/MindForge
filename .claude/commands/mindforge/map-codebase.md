@@ -107,42 +107,133 @@ Check:
 Note: do not fix anything. Only document what exists.
 ```
 
-## Step 2 — Synthesis
+## Step 2 — Synthesise findings
 
-After all subagents complete, synthesize their outputs into canonical files:
+Read all four temp files. Synthesise into the permanent context files.
 
-1. `.planning/PROJECT.md`
-   - Project name
-   - One-line description
-   - Tech stack summary
-   - Primary users (if inferred)
+### Write `.planning/ARCHITECTURE.md`
 
-2. `.planning/ARCHITECTURE.md`
-   - Based on ARCHITECTURE-RAW.md
-   - Organised by subsystem and data flow
+Use ARCHITECTURE-RAW.md as input. Write a clean, structured architecture document:
 
-3. `.mindforge/org/CONVENTIONS.md`
-   - Based on CONVENTIONS-RAW.md
-   - Capture the existing conventions (do not introduce new ones)
+```markdown
+# [Project Name] — Architecture
 
-4. `.planning/STATE.md`
-   - Status: MindForge onboarded
-   - Last action: map-codebase
-   - Next action: run /mindforge:discuss-phase 1
+## System overview
+[2-3 sentences from the subagent's findings]
 
-5. ADRs (if architectural decisions are inferred)
-   - Create ADRs for any major decisions observed
+## Technology stack
+[From STACK.md — organised by layer]
 
-## Step 3 — Confirm with user
+## Architectural pattern
+[From ARCHITECTURE-RAW.md]
 
-Present a summary of the inferred architecture and conventions.
-Ask the user to confirm or correct any inaccuracies.
-Update files with corrections before continuing.
+## Domain model
+[Core entities and their relationships]
 
-## Step 4 — Clean up
+## API surface
+[Key endpoints / GraphQL operations / gRPC services found]
 
-Delete `.planning/map-temp/` after synthesis to avoid stale info.
+## Module structure
+[How the codebase is organised]
 
-## Audit entry
+## External integrations
+[Third-party services found]
 
-Write a `map_codebase_completed` entry to AUDIT.jsonl.
+## Known architectural decisions
+[Any ADRs, architecture docs, or README decisions found]
+
+## Quality baseline
+[From QUALITY-BASELINE.md — honest assessment]
+
+## MindForge onboarding notes
+[What was inferred vs. confirmed, what needs human review]
+```
+
+### Write `.mindforge/org/CONVENTIONS.md`
+
+Use CONVENTIONS-RAW.md as input. Write the conventions file in the standard format,
+but clearly mark inferred conventions:
+
+```markdown
+# Coding Conventions — [Project Name]
+# Source: Inferred from codebase analysis by MindForge
+# Status: DRAFT — confirm with team before treating as authoritative
+
+## IMPORTANT
+These conventions were inferred from code analysis. Review each section
+and mark as [CONFIRMED] or [NEEDS REVIEW] before running /mindforge:plan-phase.
+
+## Naming conventions [NEEDS REVIEW]
+[What was found]
+```
+
+## Step 3 — Present findings for confirmation
+
+Present a summary to the user. Ask for confirmation and corrections:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MindForge Codebase Analysis Complete
+
+  Stack:
+    Runtime   : Node.js 20 (inferred from .nvmrc)
+    Framework : Next.js 14 (inferred from package.json)
+    Database  : PostgreSQL via Prisma (inferred from prisma/schema.prisma)
+    Auth      : NextAuth.js (inferred from package.json)
+
+  Architecture:
+    Pattern   : Feature-based modular (inferred from src/ structure)
+    Entities  : User, Organization, Project, Task (inferred from Prisma schema)
+    API       : REST API in src/app/api/ (24 route files found)
+
+  Quality baseline:
+    Tests     : Vitest, ~340 test files, ~67% coverage (inferred from coverage report)
+    Linting   : ESLint configured, strict TypeScript
+    CI/CD     : GitHub Actions (4 workflows)
+
+  Conventions: see .mindforge/org/CONVENTIONS.md (DRAFT — needs review)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Does this look correct? (yes / correct [field]: [value] / no)
+```
+
+Wait for user confirmation. Apply any corrections the user provides.
+
+## Step 4 — Write PROJECT.md and STATE.md
+
+After confirmation, write:
+
+`.planning/PROJECT.md` — populated with confirmed findings
+`.planning/STATE.md` — status: "Codebase mapped. Ready to plan first phase."
+`.planning/HANDOFF.json` — updated with onboarding completion
+
+## Step 5 — Clean up and report
+
+```bash
+rm -rf .planning/map-temp/
+```
+
+Report to user:
+"✅ Codebase mapped.
+
+  Files created:
+    .planning/ARCHITECTURE.md
+    .planning/PROJECT.md
+    .mindforge/org/CONVENTIONS.md (DRAFT — please review)
+    .planning/STATE.md
+
+  Review .mindforge/org/CONVENTIONS.md and mark each section as [CONFIRMED].
+  Then run /mindforge:plan-phase 1 to begin your first phase."
+
+Write AUDIT entry:
+```json
+{
+  "event": "codebase_mapped",
+  "files_analysed": [N],
+  "entities_found": [N],
+  "api_routes_found": [N],
+  "conventions_confidence": "medium",
+  "requires_human_review": [".mindforge/org/CONVENTIONS.md"]
+}
+```
