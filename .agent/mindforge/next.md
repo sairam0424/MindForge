@@ -4,6 +4,13 @@
 Auto-detect the current project state and execute the appropriate next step.
 The user does not need to know the workflow. MindForge figures it out.
 
+## HANDOFF.json priority rule
+Check HANDOFF.json BEFORE running the decision tree.
+
+If HANDOFF.json exists AND `updated_at` is within 48 hours AND `next_task` is not null:
+present the HANDOFF state first. Only run the decision tree if the user declines
+or the HANDOFF.json is stale.
+
 ## State detection logic
 
 Read STATE.md and HANDOFF.json. Then follow this decision tree:
