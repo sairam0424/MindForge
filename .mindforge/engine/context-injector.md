@@ -65,6 +65,13 @@ File: .planning/phases/[N]/SUMMARY-[N]-[M].md
 
 ## Security guards (run before building any context package)
 
+### Path traversal guard
+Before reading any file referenced in a plan's `<context>` field:
+1. Resolve the file path to an absolute path.
+2. Verify the absolute path starts with the project root directory.
+3. If it does not: STOP and report a possible path traversal attempt.
+4. Never read files outside the project root, regardless of the reference.
+
 ### SECURITY.md placeholder detection
 Before injecting SECURITY.md into a subagent context:
 1. Check for placeholders: `[ORG NAME]`, `[specify]`, `[your-org]`, `TODO`, `[placeholder]`
