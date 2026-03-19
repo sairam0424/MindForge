@@ -191,6 +191,19 @@ pip-audit --format json 2>/dev/null
 ⚠️  ISSUES — [N] critical, [N] high findings require attention
 ```
 
+## Important: scan report visibility
+
+Security scan reports are written to `.planning/SECURITY-SCAN-[timestamp].md`.
+
+**Private repository:** Keep reports committed — they are valuable for audit
+history and team security review.
+
+**Public repository:** Add `.planning/SECURITY-SCAN-*.md` to `.gitignore`
+to avoid exposing vulnerability information to potential attackers.
+
+MindForge does not make this decision for you — configure `.gitignore`
+based on your repository's visibility.
+
 ## Step 7 — Write AUDIT entry
 
 ```json
