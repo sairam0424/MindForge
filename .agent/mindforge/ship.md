@@ -94,3 +94,7 @@ Tell the user:
 "✅ Phase [N] ready to ship.
  PR description generated above.
  Open your PR, assign reviewers, and merge when approved."
+
+## Step 5 — Update state
+Update STATE.md to mark Phase [N] as shipped.
+Update HANDOFF.json with next phase number.

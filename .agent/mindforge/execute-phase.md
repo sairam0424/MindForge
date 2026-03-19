@@ -11,6 +11,12 @@ If plans are missing: stop and instruct the user to run /mindforge:plan-phase [N
 ## Step 1 — Build execution order
 Read all PLAN files for phase N.
 Parse the `<dependencies>` field of each plan.
+
+If any plan file has malformed XML or is missing required fields:
+- Stop.
+- Report which file is malformed and which fields are missing.
+- Ask the user to correct it before proceeding.
+
 Group plans into waves:
 - Wave 1: plans with no dependencies
 - Wave 2: plans whose dependencies are all in Wave 1
@@ -63,6 +69,7 @@ After all waves complete:
 1. Read every REQUIREMENTS.md item tagged v1 for this phase
 2. Confirm each is implemented (check the code, not just the plan)
 3. Run the project's full test suite
+   - If the test suite does not exist yet: stop and instruct the user to add it.
 4. Write `.planning/phases/[N]/VERIFICATION.md`:
 
 ```markdown

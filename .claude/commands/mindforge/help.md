@@ -1,5 +1,9 @@
 Show all available MindForge commands.
 
+## Pre-check
+If `.planning/STATE.md` exists, read it.
+If `.planning/PROJECT.md` is missing, treat the project as "Not initialised".
+
 1. Scan every .md file in `.claude/commands/mindforge/`
 2. For each file, extract the first non-empty line as the command description
 3. Display as a clean table:
