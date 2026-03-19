@@ -16,6 +16,43 @@
 - `.planning/STATE.md` — current position (MindForge onboarded, ready to plan)
 - `.planning/decisions/ADR-NNN-[title].md` — key architectural decisions found
 
+## Pre-execution security check
+
+Before reading ANY files, build an exclusion list.
+NEVER read these file patterns during codebase mapping:
+
+```bash
+# Build the exclusion list
+EXCLUDED_PATTERNS=(
+  "*.env"         ".env.*"       "*.env.local"
+  "*.key"         "*.pem"        "*.p12"         "*.pfx"
+  "secrets/*"     "**/secrets/*" "**/.secrets/*"
+  "*.secret"      "*credentials*"
+  ".npmrc"        # may contain npm tokens
+  ".pypirc"       # may contain PyPI tokens
+  "~/.aws/*"      "~/.ssh/*"
+)
+```
+
+For any file the agent is about to read, check:
+1. Does the file name match any excluded pattern?
+2. Is the file in a directory named `secrets/`, `.secrets/`, or `credentials/`?
+3. Is the file listed in `.gitignore`? (`.gitignore` files are intentionally excluded from git for a reason)
+
+If yes to any: SKIP the file. Log that it was skipped.
+Do not include any content from excluded files in ARCHITECTURE.md or CONVENTIONS.md.
+
+## Step 0 — Clean up any previous mapping artifacts
+
+```bash
+# Remove any stale temp files from a previous mapping attempt
+if [ -d ".planning/map-temp" ]; then
+  echo "Cleaning up previous mapping session..."
+  rm -rf .planning/map-temp
+fi
+mkdir -p .planning/map-temp
+```
+
 ## Step 1 — Codebase inventory
 
 Spawn FOUR parallel subagents. Each focuses on one analysis area.
@@ -64,9 +101,24 @@ Include:
 - Key design patterns in use: Repository, Service, Factory, Observer, etc.
 ```
 
-For large codebases (> 200 source files): sample representative files from each
-subdirectory rather than reading all files. Read 2-3 files per major directory,
-prioritising entry points and largest files.
+### Scale handling for large codebases
+
+Before reading source files, count them:
+```bash
+find src/ -type f \( -name "*.ts" -o -name "*.py" -o -name "*.go" \) | wc -l
+```
+
+If count > 200 files: use sampling strategy instead of full read:
+- Read 3 files from each top-level subdirectory
+- Prioritise: largest files (by size), entry points (index.*, main.*, app.*)
+- Read the full Prisma schema / SQLAlchemy models / Django models file (always)
+- Read all route/controller index files (always)
+- Sample 2-3 files per feature directory
+- Do NOT read test files during mapping (they follow source patterns, not add to them)
+
+If count > 1000 files: read only entry points, schema files, and top-level indices.
+Report to the user: "Large codebase detected ([N] source files).
+Using sampling strategy — some conventions may require manual confirmation."
 
 ### Subagent C — Conventions Analyst
 Context: minimal
@@ -215,7 +267,7 @@ Add a warning in STATE.md if CONVENTIONS.md is still DRAFT and requires review.
 
 ## Step 5 — Clean up and report
 
-Before analysis begins, delete any existing `.planning/map-temp/` to avoid stale data.
+After analysis completes, delete `.planning/map-temp/` to avoid stale data.
 
 ```bash
 rm -rf .planning/map-temp/
