@@ -154,3 +154,12 @@ Never compact:
 
 Compaction is about capturing IMPLICIT knowledge — the things in the agent's
 working context that haven't been written to disk yet.
+
+## Edge case handling
+
+### Compaction during active wave execution
+If compaction is triggered while a wave is executing (subagents are running):
+1. Do not interrupt running subagents. Let them complete their current task.
+2. When the running subagent writes its SUMMARY file: trigger compaction
+   immediately after, before starting the next task or wave.
+3. Never compact mid-task. Always compact at task boundaries.
