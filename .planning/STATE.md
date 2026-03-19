@@ -3,6 +3,11 @@
 ## Status
 🔴 Not started
 
+## IMPORTANT
+HANDOFF.json is committed to git. Never write secrets or credentials into it.
+Write "see .env" or "stored in secrets manager" if a note needs to reference credentials.
+
+
 ## Current phase
 None
 

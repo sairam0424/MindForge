@@ -4,13 +4,14 @@
   "phase": null,
   "plan": null,
   "last_completed_task": null,
-  "next_task": "Run /mindforge:init-project to initialise the project",
+  "next_task": "Run /mindforge:init-project",
   "blockers": [],
   "decisions_needed": [],
-  "context_refs": [
-    ".planning/STATE.md",
-    ".mindforge/org/ORG.md"
-  ],
-  "agent_notes": "Fresh MindForge install. No project initialised. Start with /mindforge:init-project.",
-  "updated_at": null
+  "context_refs": [],
+  "agent_notes": "",
+  "session_summary": "",
+  "recent_files": [],
+  "recent_commits": [],
+  "updated_at": null,
+  "_warning": "Never store secrets, tokens, or passwords in this file. It is tracked in git."
 }
