@@ -59,13 +59,13 @@ Write to `.planning/phases/[N]/DEPENDENCY-GRAPH-[N].md`:
 # Dependency Graph — Phase [N]
 
 ## Tasks
-| Plan | Name                  | Depends On    | File Conflicts |
-|------|-----------------------|---------------|----------------|
-| 01   | Create user model     | none          | none           |
-| 02   | Create product model  | none          | none           |
-| 03   | User API endpoints    | 01            | none           |
-| 04   | Product API endpoints | 02            | none           |
-| 05   | Checkout UI           | 03, 04        | none           |
+| Plan | Name                  | Depends On    | Wave | File Conflicts |
+|------|-----------------------|---------------|------|----------------|
+| 01   | Create user model     | none          | 1    | none           |
+| 02   | Create product model  | none          | 1    | none           |
+| 03   | User API endpoints    | 01            | 2    | none           |
+| 04   | Product API endpoints | 02            | 2    | none           |
+| 05   | Checkout UI           | 03, 04        | 3    | none           |
 
 ## Validation
 - Circular dependencies: None ✅
@@ -75,4 +75,9 @@ Write to `.planning/phases/[N]/DEPENDENCY-GRAPH-[N].md`:
 ## Execution order
 Wave 1 → Wave 2 → Wave 3
 (see wave-executor.md for wave grouping)
+
+## Wave assignments
+- Wave 1: 01, 02
+- Wave 2: 03, 04
+- Wave 3: 05
 ```
