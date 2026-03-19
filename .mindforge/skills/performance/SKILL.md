@@ -3,10 +3,7 @@ name: performance
 version: 1.0.0
 min_mindforge_version: 0.3.0
 status: stable
-triggers: performance, latency, throughput, cache, caching, slow, optimise, optimize,
-          bottleneck, profil, load time, bundle size, memory, CPU, N+1, query time,
-          response time, timeout, rate limit, debounce, throttle, memoize, lazy load,
-          code split, tree shake, LCP, CLS, FID, INP, Core Web Vitals, lighthouse
+triggers: performance, latency, throughput, cache, caching, slow, optimise, optimize, bottleneck, profil, load time, bundle size, memory, CPU, query time, response time, timeout, rate limit, debounce, throttle, memoize, lazy load, code split, tree shake, LCP, CLS, FID, INP, Core Web Vitals, lighthouse
 ---
 
 # Skill — Performance Engineering

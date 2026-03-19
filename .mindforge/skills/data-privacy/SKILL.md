@@ -3,11 +3,7 @@ name: data-privacy
 version: 1.0.0
 min_mindforge_version: 0.3.0
 status: stable
-triggers: GDPR, CCPA, privacy, PII, personal data, personal information, consent,
-          data retention, right to erasure, right to access, data portability,
-          data subject, anonymise, anonymize, pseudonymise, pseudonymize,
-          data minimisation, data minimization, lawful basis, cookie, tracking,
-          analytics, marketing, third party, data transfer, cross-border
+triggers: GDPR, CCPA, privacy, PII, personal data, personal information, consent, data retention, right to erasure, right to access, data portability, data subject, anonymise, anonymize, pseudonymise, pseudonymize, data minimisation, data minimization, lawful basis, cookie, tracking, analytics, marketing, third party, data transfer, cross-border
 ---
 
 # Skill — Data Privacy Engineering

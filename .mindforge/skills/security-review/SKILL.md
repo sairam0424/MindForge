@@ -3,10 +3,7 @@ name: security-review
 version: 1.0.0
 min_mindforge_version: 0.1.0
 status: stable
-triggers: auth, authentication, authorisation, authorization, login, logout, password,
-          token, JWT, session, cookie, OAuth, payment, billing, stripe, PII, GDPR,
-          personal data, upload, file upload, credentials, API key, secret, env,
-          environment variable, encryption, hashing, bcrypt, argon2
+triggers: auth, authentication, authorisation, authorization, login, logout, password, token, JWT, session, cookie, OAuth, payment, billing, stripe, PII, GDPR, personal data, upload, file upload, credentials, API key, secret, env, environment variable, encryption, hashing, bcrypt, argon2
 ---
 
 # Skill — Security Review

@@ -3,8 +3,7 @@ name: testing-standards
 version: 1.0.0
 min_mindforge_version: 0.1.0
 status: stable
-triggers: test, tests, spec, unit test, integration test, e2e, coverage, jest,
-          vitest, pytest, mocha, assertion, mock, stub, spy, fixture, TDD
+triggers: test, tests, spec, unit test, integration test, e2e, coverage, jest, vitest, pytest, mocha, assertion, mock, stub, spy, fixture, TDD
 ---
 
 # Skill — Testing Standards

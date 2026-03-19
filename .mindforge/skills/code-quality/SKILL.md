@@ -3,8 +3,7 @@ name: code-quality
 version: 1.0.0
 min_mindforge_version: 0.1.0
 status: stable
-triggers: refactor, code review, review, quality, tech debt, complexity, clean up,
-          cleanup, lint, linting, code smell, duplication, naming, readability
+triggers: refactor, code review, review, quality, tech debt, complexity, clean up, cleanup, lint, linting, code smell, duplication, naming, readability
 ---
 
 # Skill — Code Quality

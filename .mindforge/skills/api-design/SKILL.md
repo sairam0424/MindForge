@@ -3,8 +3,7 @@ name: api-design
 version: 1.0.0
 min_mindforge_version: 0.1.0
 status: stable
-triggers: API, endpoint, REST, GraphQL, route, controller, handler, request, response,
-          HTTP, POST, GET, PUT, PATCH, DELETE, schema, contract, versioning, OpenAPI
+triggers: API, endpoint, REST, GraphQL, route, controller, handler, request, response, HTTP, POST, GET, PUT, PATCH, DELETE, contract, versioning, OpenAPI
 ---
 
 # Skill — API Design

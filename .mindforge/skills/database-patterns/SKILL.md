@@ -3,10 +3,7 @@ name: database-patterns
 version: 1.0.0
 min_mindforge_version: 0.3.0
 status: stable
-triggers: database, DB, SQL, query, migration, schema, index, indexing, N+1,
-          transaction, ACID, foreign key, join, aggregate, pagination, cursor,
-          connection pool, ORM, Prisma, SQLAlchemy, Drizzle, Sequelize,
-          PostgreSQL, MySQL, SQLite, MongoDB, Redis, Elasticsearch
+triggers: database, DB, SQL, query, migration, schema, index, indexing, N+1, transaction, ACID, foreign key, join, aggregate, pagination, cursor, connection pool, ORM, Prisma, SQLAlchemy, Drizzle, Sequelize, PostgreSQL, MySQL, SQLite, MongoDB, Redis, Elasticsearch
 ---
 
 # Skill — Database Patterns

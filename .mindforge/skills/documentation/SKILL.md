@@ -3,8 +3,7 @@ name: documentation
 version: 1.0.0
 min_mindforge_version: 0.1.0
 status: stable
-triggers: README, docs, documentation, changelog, CHANGELOG, runbook, guide,
-          getting started, API docs, comment, JSDoc, docstring, explain, describe
+triggers: README, docs, documentation, changelog, CHANGELOG, guide, getting started, API docs, comment, JSDoc, docstring, explain, describe
 ---
 
 # Skill — Documentation
