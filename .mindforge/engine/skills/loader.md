@@ -104,6 +104,29 @@ When injecting 4+ skills: summarise skills ranked 4th and below to their
 trigger keywords, mandatory actions list, and output format only.
 Do not inject the full content. Full content goes to the top 3 most relevant skills.
 
+**Summarisation format for skills ranked 4th and below:**
+
+When injecting 4+ skills, skills beyond the top 3 are summarised.
+Priority for summarisation (summarise these first):
+1. Core (Tier 1) skills if Project (Tier 3) or Org (Tier 2) skills are present
+2. Within same tier: skills with fewest matching trigger keywords for this task
+3. Never summarise a security skill — always inject security-review in full
+
+**Summary format (max 150 words per summarised skill):**
+```
+[Skill name] v[version] — SUMMARISED (full version available at [path])
+
+Triggers: [comma-separated trigger keywords]
+
+Mandatory: [3-5 bullet points — the MUST-DO items only]
+
+Output: [one line — what file the skill produces]
+```
+
+After summarisation, estimate total tokens again. If still > 30K:
+report to user: "Context budget tight with [N] skills. Recommend splitting
+this task into sub-tasks with fewer skills each."
+
 ## Skills loading report format
 
 After loading, write to the task's AUDIT `task_started` entry:
