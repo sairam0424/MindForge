@@ -290,6 +290,105 @@ test('loader prioritizes tiers and protects security skill from summarisation', 
   );
 });
 
+console.log('\nHardening-prompted tests:');
+
+test('all MANIFEST.md skill paths resolve to existing files', () => {
+  const content = fs.readFileSync('.mindforge/org/skills/MANIFEST.md', 'utf8');
+  const pathPattern = /\.mindforge\/skills\/[\w-]+\/SKILL\.md/g;
+  const paths = content.match(pathPattern) || [];
+  assert.ok(paths.length >= 10, `Expected >= 10 paths in manifest, found ${paths.length}`);
+  paths.forEach(p => {
+    assert.ok(fs.existsSync(p), `MANIFEST.md references missing file: ${p}`);
+  });
+});
+
+test('database-patterns SKILL.md has compound cursor documentation', () => {
+  const content = fs.readFileSync('.mindforge/skills/database-patterns/SKILL.md', 'utf8');
+  assert.ok(
+    content.includes('compound cursor') || content.includes('cursor_time') || content.includes('(created_at, id)'),
+    'database-patterns should document compound cursor pagination'
+  );
+});
+
+test('skills loader has injection guard section', () => {
+  const content = fs.readFileSync('.mindforge/engine/skills/loader.md', 'utf8');
+  assert.ok(
+    content.includes('injection') || content.includes('IGNORE ALL PREVIOUS'),
+    'Loader should have injection guard documentation'
+  );
+});
+
+test('skills loader has file-name matching', () => {
+  const content = fs.readFileSync('.mindforge/engine/skills/loader.md', 'utf8');
+  assert.ok(
+    content.includes('File NAME matching') || content.includes('file name') || content.includes('file-name'),
+    'Loader should have file-name matching (not just directory matching)'
+  );
+});
+
+test('plan-phase command references CONTEXT.md', () => {
+  const content = fs.readFileSync('.claude/commands/mindforge/plan-phase.md', 'utf8');
+  assert.ok(
+    content.includes('CONTEXT.md'),
+    'plan-phase should read CONTEXT.md from discuss-phase'
+  );
+});
+
+test('map-codebase has secret exclusion list', () => {
+  const content = fs.readFileSync('.claude/commands/mindforge/map-codebase.md', 'utf8');
+  assert.ok(
+    content.includes('.env') || content.includes('EXCLUDED') || content.includes('secret'),
+    'map-codebase should exclude .env and secret files'
+  );
+});
+
+test('security-scan has visibility guidance', () => {
+  const content = fs.readFileSync('.claude/commands/mindforge/security-scan.md', 'utf8');
+  assert.ok(
+    content.includes('public repository') || content.includes('.gitignore'),
+    'security-scan should mention report visibility guidance'
+  );
+});
+
+test('accessibility skill mentions reduced motion', () => {
+  const content = fs.readFileSync('.mindforge/skills/accessibility/SKILL.md', 'utf8');
+  assert.ok(
+    content.includes('reduced-motion') || content.includes('prefers-reduced-motion') || content.includes('reduced motion'),
+    'Accessibility skill should cover reduced motion preference'
+  );
+});
+
+test('performance skill marks latency targets as adjustable', () => {
+  const content = fs.readFileSync('.mindforge/skills/performance/SKILL.md', 'utf8');
+  assert.ok(
+    content.includes('NFR') || content.includes('override') || content.includes('adjust'),
+    'Performance skill should note that targets are adjustable per NFRs'
+  );
+});
+
+test('data-privacy skill covers consent withdrawal', () => {
+  const content = fs.readFileSync('.mindforge/skills/data-privacy/SKILL.md', 'utf8');
+  assert.ok(
+    content.includes('withdraw') || content.includes('withdrawal') || content.includes('opt-out'),
+    'Data privacy skill should cover consent withdrawal requirement'
+  );
+});
+
+test('package.json version is at least 0.3.0', () => {
+  const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+  const [major, minor, patch] = pkg.version.split('.').map(Number);
+  assert.ok(
+    major > 0 || (major === 0 && minor >= 3),
+    `package.json version ${pkg.version} should be >= 0.3.0 for Day 3 skill compatibility`
+  );
+});
+
+test('CHANGELOG.md exists and has 0.3.0 entry', () => {
+  assert.ok(fs.existsSync('CHANGELOG.md'), 'CHANGELOG.md should exist after Day 3');
+  const content = fs.readFileSync('CHANGELOG.md', 'utf8');
+  assert.ok(content.includes('0.3.0'), 'CHANGELOG.md should have a 0.3.0 entry');
+});
+
 // ── Results ───────────────────────────────────────────────────────────────────
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`Results: ${passed} passed, ${failed} failed`);
