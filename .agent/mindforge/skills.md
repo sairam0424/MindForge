@@ -5,7 +5,8 @@
 ## Subcommand: list
 `/mindforge:skills list`
 
-Read MANIFEST.md. Display all registered skills in a formatted table:
+Read MANIFEST.md. Display all registered skills in a formatted table
+(include path for each skill):
 
 ```
 MindForge Skills Registry
@@ -13,16 +14,16 @@ MindForge Skills Registry
 
   Tier 1 — Core Skills (10 installed)
   ────────────────────────────────────────────────────────────
-  ✅  security-review     v1.0.0   stable
-  ✅  code-quality        v1.0.0   stable
-  ✅  api-design          v1.0.0   stable
-  ✅  testing-standards   v1.0.0   stable
-  ✅  documentation       v1.0.0   stable
-  ✅  performance         v1.0.0   stable
-  ✅  accessibility       v1.0.0   stable
-  ✅  data-privacy        v1.0.0   stable
-  ✅  incident-response   v1.0.0   stable
-  ✅  database-patterns   v1.0.0   stable
+  ✅  security-review     v1.0.0   stable   .mindforge/skills/security-review/SKILL.md
+  ✅  code-quality        v1.0.0   stable   .mindforge/skills/code-quality/SKILL.md
+  ✅  api-design          v1.0.0   stable   .mindforge/skills/api-design/SKILL.md
+  ✅  testing-standards   v1.0.0   stable   .mindforge/skills/testing-standards/SKILL.md
+  ✅  documentation       v1.0.0   stable   .mindforge/skills/documentation/SKILL.md
+  ✅  performance         v1.0.0   stable   .mindforge/skills/performance/SKILL.md
+  ✅  accessibility       v1.0.0   stable   .mindforge/skills/accessibility/SKILL.md
+  ✅  data-privacy        v1.0.0   stable   .mindforge/skills/data-privacy/SKILL.md
+  ✅  incident-response   v1.0.0   stable   .mindforge/skills/incident-response/SKILL.md
+  ✅  database-patterns   v1.0.0   stable   .mindforge/skills/database-patterns/SKILL.md
 
   Tier 2 — Org Skills (0 installed)
   ────────────────────────────────────────────────────────────
@@ -100,9 +101,10 @@ Validating skills...
 Validation checks:
 1. Every manifest entry has a corresponding SKILL.md file
 2. Every SKILL.md has: `name`, `version`, `status`, `triggers` in frontmatter
-3. All versions are valid semver strings
-4. No two skills at the same tier share the same trigger keyword (flag as ⚠️)
-5. Every skill file is readable (not empty, not corrupted)
+3. Every SKILL.md has a self-check or checklist section
+4. All versions are valid semver strings
+5. No two skills at the same tier share the same trigger keyword (flag as ⚠️)
+6. Every skill file is readable (not empty, not corrupted)
 
 ## Subcommand: add
 `/mindforge:skills add [path-to-skill-dir]`
@@ -113,9 +115,10 @@ Register a new skill in the manifest:
 2. Validate the frontmatter (all required fields present)
 3. Check for trigger keyword conflicts with existing skills
 4. Ask the user: "Which tier should this skill be registered as? (2=Org / 3=Project)"
-5. Add the entry to MANIFEST.md in the correct section
-6. Run `/mindforge:skills validate` to confirm registration is clean
-7. Commit: `feat(skills): register [skill-name] v[version] as tier [N] skill`
+5. Show the exact MANIFEST.md entry that will be written and ask for confirmation
+6. Add the entry to MANIFEST.md in the correct section
+7. Run `/mindforge:skills validate` to confirm registration is clean
+8. Commit: `feat(skills): register [skill-name] v[version] as tier [N] skill`
 
 ## Subcommand: update
 `/mindforge:skills update [skill-name]`
@@ -128,7 +131,8 @@ Update a skill to a newer version:
 4. If MINOR or PATCH: update automatically
 5. Update MANIFEST.md version entry
 6. Run `/mindforge:skills validate` after update
-7. Commit: `chore(skills): update [name] v[old] → v[new]`
+7. Run `node tests/skills-platform.test.js` after update
+8. Commit: `chore(skills): update [name] v[old] → v[new]`
 
 ## Error handling
 - If MANIFEST.md does not exist: offer to create it with current skills
