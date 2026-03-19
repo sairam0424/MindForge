@@ -91,5 +91,12 @@ After the subagent completes, the orchestrator must receive:
 4. The path to SUMMARY-[N]-[M].md
 5. Any decisions made that deviated from the plan (for escalation)
 
+### Completion signal
+Completion is confirmed ONLY when the SUMMARY file exists AND contains a
+status line:
+- `Status: Completed ✅`
+- `Status: Failed ❌`
+- `Status: Blocked 🚫`
+
 If status is failed or blocked: the orchestrator stops the wave and
 reports to the user before taking any further action.
