@@ -101,8 +101,8 @@ For each file in scope, check all 10 OWASP categories:
 - Scan for: server-side requests to user-controlled URLs
 - Patterns to flag:
   ```
-  fetch(req.body.url,       # SSRF via user input
-  axios.get(params.webhook, # SSRF via user input
+  fetch(req., axios.get(req., axios.post(req., http.get(req.,
+  req.body.url, req.params.url, req.query.url, req.headers
   ```
 
 ## Step 4 — Secret detection (--secrets or always as part of default scan)
@@ -116,6 +116,12 @@ grep -rn -E "(sk-[a-zA-Z0-9]{20,}|AKIA[A-Z0-9]{16}|ghp_[a-zA-Z0-9]{36})" .
 # Credential assignment patterns (flag as HIGH)
 grep -rn -E "(password|passwd|secret|api_key|apikey|access_token)\s*=\s*['\"][^'\"]{8,}" .
 
+# Azure connection strings
+grep -rn -E "DefaultEndpointsProtocol=https;AccountName=" .
+
+# GCP service account keys
+grep -rn -E "\"type\"\\s*:\\s*\"service_account\"" .
+
 # PEM/Certificate content
 grep -rn "-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----" .
 
@@ -127,6 +133,7 @@ Report each finding with:
 - File and line number
 - The matched pattern (redact the actual secret value: show first 4 chars + ***)
 - Severity: CRITICAL if a real credential pattern, HIGH if credential-shaped pattern
+Redaction applies to both console output and the report file.
 
 ## Step 5 — Dependency audit (--deps flag)
 
