@@ -91,14 +91,6 @@ The executing subagent must:
 4. Write an AUDIT entry (see `audit/AUDIT-SCHEMA.md`)
 5. Report completion status back to the orchestrator
 
-### Subagent hang handling
-If a subagent has no SUMMARY file after 30 minutes (for plans touching fewer than
-5 files), treat it as stalled:
-1. Mark the task as blocked and STOP the wave.
-2. Report the stall to the user and ask whether to wait longer, restart the task,
-   or skip it.
-3. Do not start the next wave while any task is stalled.
-
 ### Wave completion
 After all plans in a wave complete:
 1. Collect all SUMMARY files from this wave
@@ -107,6 +99,90 @@ After all plans in a wave complete:
    in CONVENTIONS.md or add an initial test harness.
 4. If tests fail: identify which plan introduced the failure (use `git bisect`)
 5. Do not start the next wave until all tests pass
+
+## Failure handling
+
+### Task verify failure (mid-wave)
+
+When a task's `<verify>` step fails:
+
+1. **Stop the task immediately.** Do not attempt a second run automatically.
+2. **Write the SUMMARY file** with status `Failed ❌` and the full verify output.
+3. **Write a `task_failed` AUDIT entry** (see AUDIT-SCHEMA.md).
+4. **Stop the entire wave.** Other tasks in this wave that have not yet started:
+   do not start them. Tasks already running in parallel: let them complete
+   naturally, but do not start the next wave regardless of their outcome.
+5. **Report to the orchestrator:**
+   ```
+   ━━━ Wave [W] STOPPED — Task Failure ━━━━━━━━━━━━━━━━━━━━━━
+   Failed task : Plan [N]-[M]: [task name]
+   Verify output:
+   [full verify output]
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ```
+6. **Ask the user:**
+   ```
+   Options:
+     1. Spawn debug agent to diagnose the failure
+     2. Show me the failing code and I'll fix it manually
+     3. Skip this task and continue the wave (not recommended)
+     4. Abort the entire phase
+   
+   Choose 1, 2, 3, or 4:
+   ```
+7. If user chooses 1: invoke `/mindforge:debug` with the failure context pre-loaded.
+8. If user chooses 3 (skip): write a `quality_gate_failed` AUDIT entry with
+   `"gate": "verify_skipped_by_user"` and continue. This is tracked.
+9. If user chooses 4: update STATE.md with `status: Phase [N] aborted` and stop.
+
+### Test suite failure (between waves)
+
+When the test suite fails after a wave completes:
+
+1. **Identify the failing tests** — capture the full test output.
+2. **Identify the likely causal commit:**
+   ```bash
+   git log --oneline -[number of tasks in this wave]
+   ```
+3. **Report specifically:**
+   ```
+   ━━━ Test Suite Failure After Wave [W] ━━━━━━━━━━━━━━━━━━━━━
+   [N] tests failing.
+   
+   Likely cause: [commit sha] — [commit message]
+   Failing tests:
+     - [test name]: [error]
+     - [test name]: [error]
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ```
+4. **Write a `quality_gate_failed` AUDIT entry.**
+5. **Do not start the next wave.** This is absolute — no exceptions.
+6. **Ask the user:**
+   ```
+   Options:
+     1. Debug the failing tests now
+     2. Revert the last wave's commits and re-plan
+     3. I'll fix the tests manually — notify me when done
+   ```
+
+### Subagent hang (no SUMMARY file after expected duration)
+
+When a subagent has been running for an unexpectedly long time:
+(Heuristic: if a task with < 5 files has no SUMMARY after 30 minutes of session time)
+
+1. Alert the user: "Task [N]-[M] appears to be taking longer than expected.
+   Check if the subagent is still running or has stalled."
+2. Provide the option to: wait longer | restart the task | skip the task.
+3. Never silently let a wave stall indefinitely.
+
+### Missing PLAN file detected at runtime
+
+When execute-phase discovers a PLAN file referenced in the dependency graph is missing:
+
+1. Stop immediately.
+2. Report: "PLAN-[N]-[M].md was referenced but does not exist.
+   Run /mindforge:plan-phase [N] to regenerate the missing plan."
+3. Do not continue with partial plan execution.
 
 ### Phase completion
 After all waves complete:
