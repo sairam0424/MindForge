@@ -46,9 +46,22 @@ The MANIFEST.md uses a structured table format readable by both humans and agent
 | [project-skill-name] | 1.0.0 | stable | 0.1.0 | [trigger keywords] |
 ```
 
+## Parsing rules for MANIFEST.md
+
+1. Only parse rows inside the three tier tables.
+2. Treat the header row as column definitions.
+3. Columns are positional: Name | Version | Status | Min MindForge | Triggers (excerpt) or Path.
+4. Ignore placeholder rows like `(none yet ...)`.
+5. If a row is missing required columns: mark as invalid and warn.
+
 ## Registry operations
 
 ### Scan and build registry (run at session start)
+If MANIFEST.md does not exist on first install:
+1. Create it with the current Core skills table from the MindForge default template
+2. Log a warning: "MANIFEST.md was missing; created default registry."
+3. Continue scan on the newly created file
+
 1. Read `.mindforge/org/skills/MANIFEST.md`
 2. For each skill in the manifest, verify its SKILL.md file exists at the expected path
 3. If a skill in the manifest has no corresponding file: mark as `missing`
