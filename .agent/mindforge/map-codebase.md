@@ -64,6 +64,10 @@ Include:
 - Key design patterns in use: Repository, Service, Factory, Observer, etc.
 ```
 
+For large codebases (> 200 source files): sample representative files from each
+subdirectory rather than reading all files. Read 2-3 files per major directory,
+prioritising entry points and largest files.
+
 ### Subagent C — Conventions Analyst
 Context: minimal
 Persona: developer.md
@@ -206,9 +210,12 @@ After confirmation, write:
 
 `.planning/PROJECT.md` — populated with confirmed findings
 `.planning/STATE.md` — status: "Codebase mapped. Ready to plan first phase."
+Add a warning in STATE.md if CONVENTIONS.md is still DRAFT and requires review.
 `.planning/HANDOFF.json` — updated with onboarding completion
 
 ## Step 5 — Clean up and report
+
+Before analysis begins, delete any existing `.planning/map-temp/` to avoid stale data.
 
 ```bash
 rm -rf .planning/map-temp/
