@@ -56,6 +56,13 @@ Wave 3: [05]              ← Depends on both Wave 2 tasks — runs after Wave 2
 For each plan in the current wave, spawn a subagent with this exact context
 package (see `context-injector.md` for the injection protocol):
 
+### Subagent invocation protocol (runtime-agnostic)
+Use the runtime-specific mechanism, but keep the inputs identical:
+- **Claude Code:** spawn a subagent with the context package and the PLAN file.
+  Require the subagent to write `SUMMARY-[N]-[M].md` and report completion.
+- **Antigravity:** spawn an agent via `.agent/` command with the same context
+  package and the PLAN file. Require the same SUMMARY file output.
+
 **Context package per subagent:**
 ```
 REQUIRED (always inject):
