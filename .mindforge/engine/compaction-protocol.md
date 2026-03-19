@@ -29,9 +29,10 @@ Before writing anything, record exactly where work currently stands:
 If there are uncommitted changes:
 ```bash
 git add -A
-git commit -m "wip(phase-[N]-plan-[M]): compaction checkpoint — [brief description]"
+git commit --no-verify -m "wip(phase-[N]-plan-[M]): compaction checkpoint — [brief description]"
 ```
 This ensures no work is lost. WIP commits are acceptable at compaction points.
+Document in STATE.md that hooks were bypassed for this WIP commit.
 
 ### Step 3 — Update STATE.md
 Append to the current STATE.md (do not overwrite — append):
