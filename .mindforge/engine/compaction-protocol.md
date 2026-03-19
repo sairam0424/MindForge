@@ -139,12 +139,15 @@ After all state is written:
 When a new session begins and HANDOFF.json exists:
 
 1. Read HANDOFF.json completely
-2. Read every file in `context_refs` list
-3. Run `git log --oneline -10` to verify recent history matches `recent_commits`
-4. Report to user: "Resuming from: [next_task field]"
-5. Ask: "Shall I continue from where we left off? (yes/no)"
-6. If yes: begin from the `plan_step` position
-7. If no: ask what the user wants to do instead
+2. Check `updated_at`:
+   - If older than 48 hours: warn the user and offer a fresh state detection
+3. Read every file in `context_refs` list
+4. Run `git log --oneline -10` to verify recent history matches `recent_commits`
+   - If git shows commits not in HANDOFF: list them and ask how to proceed
+5. Report to user: "Resuming from: [next_task field]"
+6. Ask: "Shall I continue from where we left off? (yes/no)"
+7. If yes: begin from the `plan_step` position
+8. If no: ask what the user wants to do instead
 
 ## What NOT to compact
 Never compact:
