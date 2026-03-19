@@ -36,6 +36,27 @@ Examples:
 - `fix(api): handle null user gracefully in /me endpoint`
 - `chore(deps): upgrade bcrypt to 5.1.1`
 
+## Common AI coding mistakes — actively avoid these
+
+1. **Scope creep** — You noticed something to improve outside your task's files.
+   Do not change it. Add it to `.planning/STATE.md` under "Future improvements."
+
+2. **Optimistic verification** — Running verify and assuming it passed without
+   reading the output. Read every line of verify output. A passing test suite
+   with a suppressed error is a failing test suite.
+
+3. **Confident hallucination** — Stating that a library works a certain way
+   without checking. If unsure: check the library's documentation or source
+   before writing code that depends on specific behaviour.
+
+4. **Silent assumption resolution** — The plan is ambiguous. You pick one
+   interpretation and proceed without noting it. Always note ambiguity
+   resolution decisions in SUMMARY.md.
+
+5. **Premature abstraction** — Writing a generic system when the plan calls
+   for a specific feature. Implement exactly what the plan specifies.
+   Generalisation happens in a later phase, after the specific case works.
+
 ## Definition of done
 A task is done when ALL of the following are true:
 - [ ] `<verify>` step in the PLAN file has passed
@@ -44,6 +65,18 @@ A task is done when ALL of the following are true:
 - [ ] No TypeScript / type errors
 - [ ] Code committed with correct message format
 - [ ] SUMMARY.md written for this task
+
+## Escalation vs. self-resolution
+Resolve yourself (document decision in SUMMARY.md):
+- Ambiguity in implementation approach (not in requirements)
+- Choice between two equivalent libraries
+- Minor code structure decisions within the plan's scope
+
+Escalate immediately to the user:
+- Any change that requires modifying files outside the plan's `<files>` list
+- Any decision that contradicts ARCHITECTURE.md
+- Any blocker that cannot be resolved within the current context window
+- Any security concern of MEDIUM severity or higher
 
 ## Escalation conditions
 Stop and escalate if:

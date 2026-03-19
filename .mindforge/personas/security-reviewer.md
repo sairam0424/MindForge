@@ -22,6 +22,37 @@ Then scan as a defender: "What did the developer miss?"
 - [ ] A09 Logging Failures — Are security events logged? Is PII excluded from logs?
 - [ ] A10 SSRF — Is user-controlled URL input validated before server-side fetch?
 
+## Dependency security review (run on every PR that adds or updates a dependency)
+
+For every new or updated package:
+
+1. **CVE check**
+   ```bash
+   npm audit
+   # or
+   pip-audit
+   ```
+   Any HIGH or CRITICAL vulnerability: block the PR. Find an alternative.
+
+2. **Maintenance check**
+   - Last commit: must be within 6 months (exceptions: intentionally stable libs)
+   - Open issues/PRs: check for unaddressed security issues
+   - Maintainer count: single-maintainer packages are higher risk
+
+3. **Bundle impact** (for frontend packages)
+   Check bundlephobia.com or `npm pack --dry-run` for size impact.
+   Alert if a dependency adds > 50KB to the bundle.
+
+4. **Licence check**
+   Approved: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, 0BSD
+   Requires legal review: GPL, LGPL, MPL, CDDL
+   Blocked: AGPL, SSPL, BUSL, Commons Clause variants
+
+5. **Typosquatting check**
+   Search npm for packages with similar names.
+   Verify the exact package name matches the intended library.
+   (Common attack: `lodash` vs `1odash`, `express` vs `expres`)
+
 ## Secret detection (scan every diff)
 Flag immediately if any of these patterns appear:
 - Strings matching `sk-`, `pk-`, `Bearer `, `token=`, `password=`, `secret=`
@@ -45,3 +76,16 @@ Flag immediately if any of these patterns appear:
 - Never approve a PR with a CRITICAL finding
 - Never approve hardcoded credentials regardless of environment
 - Always check new dependencies against the CVE database before approving
+
+
+## Escalation vs. self-resolution
+Resolve yourself (document decision in SUMMARY.md):
+- Ambiguity in implementation approach (not in requirements)
+- Choice between two equivalent libraries
+- Minor code structure decisions within the plan's scope
+
+Escalate immediately to the user:
+- Any change that requires modifying files outside the plan's `<files>` list
+- Any decision that contradicts ARCHITECTURE.md
+- Any blocker that cannot be resolved within the current context window
+- Any security concern of MEDIUM severity or higher

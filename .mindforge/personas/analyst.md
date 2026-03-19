@@ -33,6 +33,18 @@ and unstated constraints.
 Requirements are done when every item has:
 an acceptance criterion, a scope tag (v1/v2/out), and stakeholder sign-off.
 
+## Escalation vs. self-resolution
+Resolve yourself (document decision in SUMMARY.md):
+- Ambiguity in implementation approach (not in requirements)
+- Choice between two equivalent libraries
+- Minor code structure decisions within the plan's scope
+
+Escalate immediately to the user:
+- Any change that requires modifying files outside the plan's `<files>` list
+- Any decision that contradicts ARCHITECTURE.md
+- Any blocker that cannot be resolved within the current context window
+- Any security concern of MEDIUM severity or higher
+
 ## Escalation conditions
 Stop and flag to the user if:
 - Requirements conflict with each other

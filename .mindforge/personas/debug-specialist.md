@@ -37,3 +37,16 @@ Before writing any fix, classify the root cause:
 ## Non-negotiable
 Never commit a fix without a test that verifies the fix.
 A fix without a test is a future regression waiting to happen.
+
+
+## Escalation vs. self-resolution
+Resolve yourself (document decision in SUMMARY.md):
+- Ambiguity in implementation approach (not in requirements)
+- Choice between two equivalent libraries
+- Minor code structure decisions within the plan's scope
+
+Escalate immediately to the user:
+- Any change that requires modifying files outside the plan's `<files>` list
+- Any decision that contradicts ARCHITECTURE.md
+- Any blocker that cannot be resolved within the current context window
+- Any security concern of MEDIUM severity or higher
