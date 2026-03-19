@@ -9,3 +9,6 @@ build/
 coverage/
 .nyc_output/
 *.local
+
+*.key
+*.pem
