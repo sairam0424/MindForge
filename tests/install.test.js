@@ -30,6 +30,10 @@ const dirs = [
   '.claude/commands/mindforge',
   '.agent/mindforge',
   '.mindforge/personas',
+  '.mindforge/integrations',
+  '.mindforge/governance',
+  '.mindforge/team',
+  '.mindforge/org/integrations',
   '.mindforge/skills/security-review',
   '.mindforge/skills/code-quality',
   '.mindforge/skills/api-design',
@@ -40,6 +44,9 @@ const dirs = [
   'bin',
   'docs',
   'tests',
+  '.planning/audit-archive',
+  '.planning/approvals',
+  '.planning/milestones',
 ];
 dirs.forEach(d => test(d, () => assert.ok(fs.existsSync(d), `Missing: ${d}`)));
 
@@ -54,6 +61,12 @@ const files = [
   '.claude/commands/mindforge/execute-phase.md',
   '.claude/commands/mindforge/verify-phase.md',
   '.claude/commands/mindforge/ship.md',
+  '.claude/commands/mindforge/audit.md',
+  '.claude/commands/mindforge/milestone.md',
+  '.claude/commands/mindforge/complete-milestone.md',
+  '.claude/commands/mindforge/approve.md',
+  '.claude/commands/mindforge/sync-jira.md',
+  '.claude/commands/mindforge/sync-confluence.md',
   '.mindforge/personas/analyst.md',
   '.mindforge/personas/architect.md',
   '.mindforge/personas/developer.md',
@@ -71,11 +84,28 @@ const files = [
   '.mindforge/org/CONVENTIONS.md',
   '.mindforge/org/SECURITY.md',
   '.mindforge/org/TOOLS.md',
+  '.mindforge/integrations/connection-manager.md',
+  '.mindforge/integrations/jira.md',
+  '.mindforge/integrations/confluence.md',
+  '.mindforge/integrations/slack.md',
+  '.mindforge/integrations/github.md',
+  '.mindforge/integrations/gitlab.md',
+  '.mindforge/governance/change-classifier.md',
+  '.mindforge/governance/approval-workflow.md',
+  '.mindforge/governance/compliance-gates.md',
+  '.mindforge/governance/GOVERNANCE-CONFIG.md',
+  '.mindforge/team/multi-handoff.md',
+  '.mindforge/team/session-merger.md',
+  '.mindforge/org/integrations/INTEGRATIONS-CONFIG.md',
   '.planning/STATE.md',
   '.planning/HANDOFF.json',
+  '.planning/jira-sync.json',
+  '.planning/slack-threads.json',
   'bin/install.js',
   'package.json',
   'README.md',
+  'docs/enterprise-setup.md',
+  'docs/governance-guide.md',
 ];
 files.forEach(f => test(f, () => assert.ok(fs.existsSync(f), `Missing: ${f}`)));
 
@@ -88,6 +118,8 @@ test('CLAUDE.md has session start protocol', () => {
   assert.ok(content.includes('PLAN-FIRST RULE'), 'Missing plan-first rule');
   assert.ok(content.includes('Quality gates'), 'Missing quality gates');
   assert.ok(content.includes('SECURITY AUTO-TRIGGER'), 'Missing security auto-trigger');
+  assert.ok(content.includes('/mindforge:audit'), 'Missing Day 4 command awareness');
+  assert.ok(content.includes('Tier 3'), 'Missing governance tier awareness');
 });
 
 test('CLAUDE.md and .agent/CLAUDE.md are identical', () => {
