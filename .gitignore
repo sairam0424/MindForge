@@ -12,3 +12,11 @@ coverage/
 
 *.key
 *.pem
+
+# Security scan reports (may contain vulnerability details)
+# Remove from this list if your repo is private and team visibility is desired
+# .planning/SECURITY-SCAN-*.md
+# .planning/phases/*/SECURITY-REVIEW-*.md
+
+# Uncomment the above ONLY if this is a public repository.
+# Private repos: keep scan reports for team review and audit history.

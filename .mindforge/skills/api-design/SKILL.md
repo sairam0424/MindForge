@@ -1,8 +1,9 @@
 ---
 name: api-design
 version: 1.0.0
-triggers: API, endpoint, REST, GraphQL, route, controller, handler, request, response,
-          HTTP, POST, GET, PUT, PATCH, DELETE, schema, contract, versioning, OpenAPI
+min_mindforge_version: 0.1.0
+status: stable
+triggers: API, endpoint, REST, GraphQL, route, controller, handler, request, response, HTTP, POST, GET, PUT, PATCH, DELETE, contract, versioning, OpenAPI
 ---
 
 # Skill — API Design
@@ -10,6 +11,21 @@ triggers: API, endpoint, REST, GraphQL, route, controller, handler, request, res
 ## When this skill activates
 Any task involving creating or modifying API endpoints, request/response schemas,
 or API contracts.
+
+## Mandatory actions when this skill is active
+
+### Before writing any code
+1. Define the endpoint contract: method, path, auth requirement.
+2. Define request and response schemas (including error shape).
+
+### During implementation
+- Validate input at the boundary.
+- Use consistent status codes.
+- Add security headers to responses.
+
+### After implementation
+- Document the endpoint in ARCHITECTURE.md.
+- Add or update tests for the new contract.
 
 ## REST API standards
 
@@ -80,4 +96,3 @@ Before marking a task done when this skill was active:
   I remembered off the top of my head?
 - [ ] If this skill produced an output file (review, security report, etc.),
   has that file been written to the correct path?
-

@@ -263,6 +263,43 @@ When unsure what to do next: run the state detection logic from
 `.claude/commands/mindforge/next.md` internally to determine the correct action.
 This is the same logic `/mindforge:next` uses — it can be applied any time.
 
+---
+
+## SKILLS PLATFORM (Day 3)
+
+### Skills loading is now multi-tier
+The skills engine has three tiers: Core (Tier 1) → Org (Tier 2) → Project (Tier 3).
+Higher tiers override lower tiers when skill names conflict.
+Load skills using the full protocol in `.mindforge/engine/skills/loader.md`.
+
+### Skills registry
+All installed skills are registered in `.mindforge/org/skills/MANIFEST.md`.
+Run `/mindforge:skills validate` if you suspect a skill is misconfigured.
+
+### Context budget with multiple skills
+If more than 3 skills are loaded simultaneously:
+Inject the full content of the top 3 most relevant skills.
+Summarise skills 4+ to: trigger keywords + mandatory actions list + output format.
+Never silently exceed the 30K token context budget for skills.
+
+### Persona overrides
+Before loading any persona, check:
+`.mindforge/personas/overrides/[persona-name].md` (project override)
+`.planning/phases/[N]/persona-overrides/[persona-name].md` (phase override)
+Merge override with base persona: additive sections stack, override sections replace.
+
+### New commands available
+- `/mindforge:skills` — manage the skills registry
+- `/mindforge:review` — code review using code-quality + security skills
+- `/mindforge:security-scan` — standalone security scan
+- `/mindforge:map-codebase` — brownfield codebase onboarding
+- `/mindforge:discuss-phase` — pre-planning implementation discussion
+
+### Pre-planning discussion
+For complex phases: run `/mindforge:discuss-phase [N]` before `/mindforge:plan-phase [N]`.
+The CONTEXT.md it produces makes plans dramatically more accurate.
+Skip for trivial phases. Use `--auto` when in a hurry.
+
 ## MINDFORGE COMMANDS
 
 All commands: `.claude/commands/mindforge/`
