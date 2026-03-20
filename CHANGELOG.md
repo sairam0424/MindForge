@@ -3,6 +3,28 @@
 All notable changes to MindForge are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com).
 
+## [0.4.0] — Day 4 Enterprise Integrations and Governance
+
+### Added
+- enterprise integration specs for Jira, Confluence, Slack, GitHub, and GitLab
+- integration connection manager with credential hygiene and retry guidance
+- governance layer: change classification, approvals, and compliance gates
+- multi-developer handoff and session merger protocols
+- 6 new commands: `/mindforge:audit`, `/mindforge:milestone`,
+  `/mindforge:complete-milestone`, `/mindforge:approve`,
+  `/mindforge:sync-jira`, `/mindforge:sync-confluence`
+- Day 4 test suites: `tests/integrations.test.js`, `tests/governance.test.js`
+- enterprise setup and governance guide docs
+
+### Changed
+- README and CLAUDE entrypoint updated for enterprise governance workflows
+- audit schema expanded for integration and governance events
+
+### Fixed
+- Jira transition handling now documents dynamic transition lookup instead of
+  hardcoded IDs
+- governance tiering now covers code-content matches and audit-history escalation
+
 ## [0.3.0] — Day 3 Skills Platform
 
 ### Added

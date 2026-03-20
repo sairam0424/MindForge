@@ -235,22 +235,24 @@ test('personas/overrides/README.md exists and has content', () => {
   assert.ok(content.includes('override'), 'README.md should explain overrides');
 });
 
-console.log('\nNew commands (15 total):');
+console.log('\nNew commands (21 total):');
 
 const allCommands = [
   'help', 'init-project', 'plan-phase', 'execute-phase', 'verify-phase', 'ship',  // Day 1
   'next', 'quick', 'status', 'debug',                                               // Day 2
-  'skills', 'review', 'security-scan', 'map-codebase', 'discuss-phase'             // Day 3
+  'skills', 'review', 'security-scan', 'map-codebase', 'discuss-phase',            // Day 3
+  'audit', 'milestone', 'complete-milestone', 'approve', 'sync-jira',              // Day 4
+  'sync-confluence'
 ];
 
-test('all 15 commands exist in .claude/commands/mindforge/', () => {
+test('all 21 commands exist in .claude/commands/mindforge/', () => {
   allCommands.forEach(cmd => {
     const p = `.claude/commands/mindforge/${cmd}.md`;
     assert.ok(fs.existsSync(p), `Missing command: ${p}`);
   });
 });
 
-test('all 15 commands mirrored to .agent/mindforge/', () => {
+test('all 21 commands mirrored to .agent/mindforge/', () => {
   allCommands.forEach(cmd => {
     const p = `.agent/mindforge/${cmd}.md`;
     assert.ok(fs.existsSync(p), `Missing mirrored command: ${p}`);
