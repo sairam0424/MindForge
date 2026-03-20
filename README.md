@@ -21,6 +21,7 @@ Decisions get forgotten. MindForge solves this with:
 - **Skill packs** — just-in-time domain knowledge loaded only when needed
 - **Atomic execution** — one commit per task, wave-based parallelism, clean git history
 - **Verification gates** — nothing ships without automated checks and human sign-off
+- **Enterprise governance** — approvals, audit queries, milestones, and safe integrations
 
 ---
 
@@ -59,6 +60,12 @@ Open Claude Code in your project. Run:
 | `/mindforge:execute-phase [N]`  | Execute plans with wave-based parallelism     |
 | `/mindforge:verify-phase [N]`   | Human acceptance testing + automated checks  |
 | `/mindforge:ship [N]`           | Generate changelog, run quality gates, create PR |
+| `/mindforge:audit`              | Query audit history by phase, event, date, severity |
+| `/mindforge:milestone`          | Group phases into milestones and track health |
+| `/mindforge:complete-milestone` | Archive a milestone and prepare release metadata |
+| `/mindforge:approve`            | Process Tier 2 / Tier 3 approvals and emergency overrides |
+| `/mindforge:sync-jira`          | Sync phases and plans to Jira |
+| `/mindforge:sync-confluence`    | Publish approved docs to Confluence |
 
 ---
 
@@ -142,6 +149,9 @@ grep '\"event\":\"security_finding\"' .planning/AUDIT.jsonl | jq '{severity,find
 # Today's activity
 grep \"$(date -u +%Y-%m-%d)\" .planning/AUDIT.jsonl | jq .event
 ```
+
+Day 4 also adds archive rotation guidance and governance-aware audit querying
+ via `/mindforge:audit`.
 
 ---
 

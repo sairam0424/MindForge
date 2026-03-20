@@ -192,6 +192,23 @@ Immediately load `security-reviewer.md` persona for any change that touches:
 
 No exceptions. Security review is not optional for these categories.
 
+## ENTERPRISE GOVERNANCE AWARENESS
+
+Day 4 capabilities add enterprise integrations and governance controls:
+- `/mindforge:audit`
+- `/mindforge:milestone`
+- `/mindforge:complete-milestone`
+- `/mindforge:approve`
+- `/mindforge:sync-jira`
+- `/mindforge:sync-confluence`
+
+Treat Tier 3 changes as highest priority. Tier 3 may be triggered by file paths,
+ code-content patterns such as `jwt.sign` or `stripe.`, or recent HIGH/CRITICAL
+ security findings in AUDIT history.
+
+Integration failures are non-fatal unless they block a required approval or
+ compliance decision from being observed.
+
 ---
 
 ## STATE ARTIFACTS — KEEP THESE CURRENT
