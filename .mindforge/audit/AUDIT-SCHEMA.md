@@ -16,6 +16,21 @@ One JSON object per line. Never modify existing lines. Only append.
 {"id":"...","timestamp":"...","event":"...","phase":1,...}
 ```
 
+## Archiving and rotation
+When `.planning/AUDIT.jsonl` exceeds 10,000 lines, rotate it into
+ `.planning/audit-archive/` instead of truncating or rewriting history.
+
+Recommended archive naming:
+- `AUDIT-2026-03-20T14-32-10Z.jsonl`
+- `AUDIT-phase-4-rotation-001.jsonl`
+
+Rotation procedure:
+1. Validate the active log is valid JSONL
+2. Copy it into `.planning/audit-archive/`
+3. Replace the active log with a new empty `AUDIT.jsonl`
+4. Write an AUDIT entry or rotation manifest noting archive filename, line count,
+   and timestamp
+
 ## Universal fields (present in every entry)
 
 | Field | Type | Description |
@@ -258,6 +273,67 @@ One JSON object per line. Never modify existing lines. Only append.
   "line": 47,
   "remediated": false,
   "report_path": ".planning/phases/1/SECURITY-REVIEW-1.md"
+}
+```
+
+### `integration_action`
+```json
+{
+  "id": "uuid",
+  "timestamp": "ISO-8601",
+  "event": "integration_action",
+  "agent": "mindforge-orchestrator",
+  "phase": 2,
+  "session_id": "sess_abc",
+  "integration": "jira",
+  "action": "create_ticket",
+  "status": "success",
+  "external_id": "ENG-42",
+  "detail": "Created Epic for Phase 2",
+  "attempts": 1
+}
+```
+
+### `integration_credential_expired`
+```json
+{
+  "id": "uuid",
+  "timestamp": "ISO-8601",
+  "event": "integration_credential_expired",
+  "agent": "mindforge-orchestrator",
+  "phase": null,
+  "session_id": "sess_abc",
+  "integration": "jira",
+  "detail": "Health check returned 401"
+}
+```
+
+### `change_classified`
+```json
+{
+  "id": "uuid",
+  "timestamp": "ISO-8601",
+  "event": "change_classified",
+  "agent": "mindforge-orchestrator",
+  "phase": 4,
+  "session_id": "sess_abc",
+  "tier": 3,
+  "classification_reason": "code pattern: jwt.sign found in src/utils/helper.ts",
+  "signal_triggered": "code_content"
+}
+```
+
+### `compliance_gate_failed`
+```json
+{
+  "id": "uuid",
+  "timestamp": "ISO-8601",
+  "event": "compliance_gate_failed",
+  "agent": "mindforge-security-reviewer",
+  "phase": 4,
+  "session_id": "sess_abc",
+  "gate": "GDPR_retention",
+  "detail": "PII field added without retention policy"
 }
 ```
 
