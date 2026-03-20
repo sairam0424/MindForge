@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0.0",
+  "last_sync": null,
+  "project_key": null,
+  "phase_mappings": {},
+  "transition_cache": {},
+  "security_bugs": [],
+  "_warning": "Do not store credentials in this file."
+}
