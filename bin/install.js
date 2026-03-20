@@ -8,7 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '0.1.0';
+const VERSION = require('../package.json').version;
 const ARGS = process.argv.slice(2);
 
 const nodeVersion = process.versions.node.split('.').map(Number);
@@ -106,19 +106,20 @@ function verifyInstall(targetBase, commandsDir) {
 }
 
 // ── Install for a single runtime ──────────────────────────────────────────────
-function install(runtimeName) {
+function install(runtimeName, explicitScope) {
   const cfg = targets[runtimeName];
   if (!cfg) {
     console.error(`Unknown runtime: ${runtimeName}`);
     process.exit(1);
   }
 
-  const targetBase = scope === 'global' ? cfg.global : cfg.local;
+  const installScope = explicitScope || scope;
+  const targetBase = installScope === 'global' ? cfg.global : cfg.local;
   const commandsDest = path.join(targetBase, cfg.commandsDir);
 
   console.log(`\n📦 Installing MindForge v${VERSION}`);
   console.log(`   Runtime : ${runtimeName}`);
-  console.log(`   Scope   : ${scope}`);
+  console.log(`   Scope   : ${installScope}`);
   console.log(`   Target  : ${targetBase}\n`);
 
   // Copy CLAUDE.md entry point
@@ -140,7 +141,7 @@ function install(runtimeName) {
   }
 
   // Copy .mindforge framework files to local project
-  if (scope === 'local') {
+  if (installScope === 'local') {
     const forgeSrc  = path.join(__dirname, '..', '.mindforge');
     const forgeDest = path.join(cwd, '.mindforge');
     if (fs.existsSync(forgeSrc)) {
@@ -169,14 +170,15 @@ function install(runtimeName) {
 }
 
 // ── Uninstall ─────────────────────────────────────────────────────────────────
-function uninstall(runtimeName) {
+function uninstall(runtimeName, explicitScope) {
   const cfg = targets[runtimeName];
-  const targetBase = scope === 'global' ? cfg.global : cfg.local;
+  const installScope = explicitScope || scope;
+  const targetBase = installScope === 'global' ? cfg.global : cfg.local;
   const commandsDest = path.join(targetBase, cfg.commandsDir);
 
   console.log(`\n🗑️  Uninstalling MindForge`);
   console.log(`   Runtime : ${runtimeName}`);
-  console.log(`   Scope   : ${scope}`);
+  console.log(`   Scope   : ${installScope}`);
 
   if (fs.existsSync(commandsDest)) {
     fs.rmSync(commandsDest, { recursive: true, force: true });
@@ -198,19 +200,28 @@ function uninstall(runtimeName) {
   console.log(`\n✅ MindForge uninstalled.\n`);
 }
 
-// ── Entry point ───────────────────────────────────────────────────────────────
-if (isUninstall) {
-  if (runtime === 'all') {
-    uninstall('claude');
-    uninstall('antigravity');
-  } else {
-    uninstall(runtime);
+async function runCli() {
+  if (isUninstall) {
+    if (runtime === 'all') {
+      uninstall('claude');
+      uninstall('antigravity');
+    } else {
+      uninstall(runtime);
+    }
+    return;
   }
-} else {
+
   if (runtime === 'all') {
     install('claude');
     install('antigravity');
   } else {
     install(runtime);
   }
+}
+
+module.exports = { install, uninstall, verifyInstall, runCli };
+
+// ── Entry point ───────────────────────────────────────────────────────────────
+if (require.main === module) {
+  runCli();
 }
