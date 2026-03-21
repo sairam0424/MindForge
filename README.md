@@ -136,6 +136,11 @@ See `.mindforge/production/token-optimiser.md`.
 - **User Guide:** `docs/user-guide.md`
 - **Troubleshooting:** `docs/troubleshooting.md`
 - **CI Quickstart:** `docs/ci-quickstart.md`
+- **Requirements:** `docs/requirements.md`
+- **Quick verify:** `docs/quick-verify.md`
+- **Upgrade guide:** `docs/upgrade.md`
+- **FAQ:** `docs/faq.md`
+- **Release checklist guide:** `docs/release-checklist-guide.md`
 - **Commands:** `docs/reference/commands.md`
 - **Config reference:** `docs/reference/config-reference.md`
 - **SDK:** `docs/reference/sdk-api.md`

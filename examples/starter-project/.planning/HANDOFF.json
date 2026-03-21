@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0.0",
+  "plugin_api_version": "1.0.0",
+  "project": "Example Project",
+  "phase": null,
+  "plan": null,
+  "next_task": "Run /mindforge:plan-phase 1",
+  "blockers": [],
+  "decisions_needed": [],
+  "decisions_made": [],
+  "discoveries": [],
+  "implicit_knowledge": [],
+  "quality_signals": [],
+  "context_refs": [
+    ".planning/PROJECT.md",
+    ".planning/STATE.md"
+  ],
+  "recent_commits": [],
+  "recent_files": [],
+  "session_id": "example-session",
+  "_warning": "Never store secrets, tokens, or passwords in this file.",
+  "updated_at": "2026-03-22T00:00:00.000Z"
+}
