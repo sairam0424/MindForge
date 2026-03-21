@@ -1,0 +1,20 @@
+{
+  "name": "@mindforge/sdk",
+  "version": "0.6.0",
+  "description": "MindForge SDK — Programmatic API for embedding MindForge in tools",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "node tests/sdk.test.js",
+    "lint": "eslint src/ --ext .ts"
+  },
+  "keywords": ["mindforge", "agentic-framework", "claude", "sdk"],
+  "license": "MIT",
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}
