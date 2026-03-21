@@ -118,8 +118,8 @@ jobs:
 
       - name: Lint
         run: |
-          if [ -f "sdk/package.json" ] && grep -q "eslint" sdk/package.json; then
-            cd sdk && npx eslint src/ --ext .ts --max-warnings 0 && cd ..
+          if [ -d "sdk" ] && ( [ -f "sdk/eslint.config.js" ] || [ -f "sdk/eslint.config.mjs" ] || [ -f "sdk/.eslintrc.json" ] || [ -f "sdk/.eslintrc.js" ] ); then
+            cd sdk && npx eslint src/ --max-warnings 0 && cd ..
           else
             echo "::notice::No ESLint configured for SDK - skipping"
           fi
