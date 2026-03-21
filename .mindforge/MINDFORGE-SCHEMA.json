@@ -1,0 +1,165 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MindForge Project Configuration Schema",
+  "description": "JSON Schema for MINDFORGE.md key-value settings",
+  "type": "object",
+  "properties": {
+    "MINDFORGE_VERSION_REQUIRED": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Minimum MindForge version required for this config"
+    },
+    "PLANNER_MODEL": {
+      "type": "enum",
+      "values": ["claude-opus-4-5", "claude-sonnet-4-5", "claude-haiku-4-5", "inherit"],
+      "description": "Claude model to use for the planning agent"
+    },
+    "EXECUTOR_MODEL": {
+      "type": "enum",
+      "values": ["claude-opus-4-5", "claude-sonnet-4-5", "claude-haiku-4-5", "inherit"],
+      "description": "Claude model to use for execution agents"
+    },
+    "REVIEWER_MODEL": {
+      "type": "enum",
+      "values": ["claude-opus-4-5", "claude-sonnet-4-5", "claude-haiku-4-5", "inherit"],
+      "description": "Claude model to use for the code reviewer"
+    },
+    "SECURITY_MODEL": {
+      "type": "enum",
+      "values": ["claude-opus-4-5", "claude-sonnet-4-5", "claude-haiku-4-5", "inherit"],
+      "description": "Claude model to use for security review (recommend Opus for thoroughness)"
+    },
+    "TIER1_AUTO_APPROVE": {
+      "type": "boolean",
+      "description": "Auto-approve Tier 1 changes without user confirmation"
+    },
+    "WAVE_CONFIRMATION_REQUIRED": {
+      "type": "boolean",
+      "description": "Require user confirmation before each execution wave"
+    },
+    "AUTO_DISCUSS_PHASE": {
+      "type": "boolean",
+      "description": "Automatically run discuss-phase before every plan-phase"
+    },
+    "VERIFY_PASS_RATE_WARNING_THRESHOLD": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Warn when first-attempt verify pass rate drops below this"
+    },
+    "COMPACTION_THRESHOLD_PCT": {
+      "type": "number",
+      "minimum": 50,
+      "maximum": 90,
+      "description": "Context window percentage that triggers compaction"
+    },
+    "MAX_TASKS_PER_PHASE": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 50,
+      "description": "Suggest phase split when task count exceeds this"
+    },
+    "MIN_TEST_COVERAGE_PCT": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Minimum test coverage percentage required"
+    },
+    "MAX_FUNCTION_LINES": {
+      "type": "number",
+      "minimum": 10,
+      "maximum": 200,
+      "description": "Maximum allowed function length in lines"
+    },
+    "MAX_CYCLOMATIC_COMPLEXITY": {
+      "type": "number",
+      "minimum": 3,
+      "maximum": 30,
+      "description": "Maximum allowed cyclomatic complexity per function"
+    },
+    "BLOCK_ON_MEDIUM_SECURITY_FINDINGS": {
+      "type": "boolean",
+      "description": "Block PR creation on MEDIUM security findings (default: only HIGH+)"
+    },
+    "ALWAYS_LOAD_SKILLS": {
+      "type": "string",
+      "description": "Comma-separated list of skills to always load regardless of triggers"
+    },
+    "DISABLED_SKILLS": {
+      "type": "string",
+      "description": "Comma-separated list of skills to never load"
+    },
+    "MAX_FULL_SKILL_INJECTIONS": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 10,
+      "description": "Maximum number of skills to inject in full (rest are summarised)"
+    },
+    "COMMIT_FORMAT": {
+      "type": "enum",
+      "values": ["conventional-commits", "custom", "none"],
+      "description": "Commit message format convention"
+    },
+    "BRANCHING_STRATEGY": {
+      "type": "enum",
+      "values": ["none", "phase", "milestone"],
+      "description": "Git branching strategy for MindForge phases"
+    },
+    "NOTIFY_ON": {
+      "type": "string",
+      "description": "Comma-separated events that trigger Slack notifications"
+    },
+    "DISCUSS_PHASE_REQUIRED_ABOVE_DIFFICULTY": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Require discuss-phase when difficulty score exceeds this value"
+    },
+    "AI_REVIEW_DAILY_LIMIT": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 500,
+      "description": "Maximum AI PR reviews per day (0 = unlimited)"
+    },
+    "CI_AUTO_APPROVE_TIER2": {
+      "type": "boolean",
+      "nonOverridable": false,
+      "description": "Auto-approve Tier 2 changes in CI mode"
+    },
+    "CI_SECURITY_SCAN": {
+      "type": "boolean",
+      "description": "Run security scan in CI mode"
+    },
+    "CI_MIN_COVERAGE_PCT": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Minimum test coverage in CI (may differ from interactive threshold)"
+    },
+    "CI_OUTPUT_FORMAT": {
+      "type": "enum",
+      "values": ["json", "text", "github-annotations"],
+      "description": "Output format for CI execution logs"
+    },
+    "SECURITY_AUTOTRIGGER": {
+      "type": "boolean",
+      "nonOverridable": true,
+      "description": "NON-OVERRIDABLE: security auto-trigger for auth/payment/PII changes"
+    },
+    "SECRET_DETECTION": {
+      "type": "boolean",
+      "nonOverridable": true,
+      "description": "NON-OVERRIDABLE: secret detection compliance gate"
+    },
+    "PLAN_FIRST": {
+      "type": "boolean",
+      "nonOverridable": true,
+      "description": "NON-OVERRIDABLE: plan-first rule (no implementation without a PLAN)"
+    },
+    "AUDIT_WRITING": {
+      "type": "boolean",
+      "nonOverridable": true,
+      "description": "NON-OVERRIDABLE: AUDIT.jsonl writing for every significant action"
+    }
+  }
+}
