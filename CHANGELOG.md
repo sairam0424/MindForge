@@ -3,6 +3,56 @@
 All notable changes to MindForge are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com).
 
+## [1.0.0] — v1.0.0 First Stable Public Release — 2026-03-22
+
+🎉 **MindForge v1.0.0 — Enterprise Agentic Framework — First Stable Release**
+
+Built over 7 focused sprints, MindForge transforms Claude Code and Antigravity
+from powerful-but-unstructured AI tools into production-grade engineering
+partners with full governance, observability, and enterprise integration.
+
+### What ships in v1.0.0
+
+**36 commands** across 7 workflow categories  
+**10 core skill packs** with three-tier registry (Core/Org/Project)  
+**8 specialised agent personas** covering all engineering roles  
+**Wave-based parallel execution** with dependency graph and automatic compaction  
+**Enterprise integrations**: Jira, Confluence, Slack, GitHub, GitLab  
+**Three-tier governance**: Tier 1 (auto) / Tier 2 (peer review) / Tier 3 (compliance)  
+**Five non-bypassable compliance gates** (secret detection, CRITICAL findings, tests, CVEs, GDPR)  
+**Intelligence layer**: health engine, difficulty scorer, anti-pattern detector, team profiling  
+**Public skills registry**: npm-based `mindforge-skill-*` ecosystem  
+**CI/CD integration**: GitHub Actions, GitLab CI, Jenkins adapters  
+**@mindforge/sdk**: TypeScript SDK with client, event stream, and command builders  
+**Monorepo support**: npm/pnpm/Nx/Turborepo/Lerna workspace detection  
+**AI PR Review**: Claude API-powered code review with context loading  
+**Self-update mechanism**: version check, changelog diff, scope-preserving apply  
+**Version migration engine**: schema migration from v0.1.0 through v1.0.0  
+**Plugin system**: extensible via `mindforge-plugin-*` npm namespace  
+**Token usage optimiser**: profiling and efficiency strategies  
+**50-point production readiness checklist**: fully verified before this release  
+
+**20 Architecture Decision Records** documenting every major design choice  
+**15 test suites** with 3× consecutive run requirement  
+**Complete reference documentation**: commands, security, ADR index, threat model  
+
+### Stable interface contract
+See ADR-020. All 36 commands, HANDOFF.json schema, AUDIT event types,
+@mindforge/sdk exports, and plugin.json format are stable in 1.x.x.
+
+### Breaking changes from 0.6.0
+- VERIFY_PASS_RATE_WARNING_THRESHOLD in MINDFORGE.md is now 0.0-1.0 (was 0-100)
+  Run `/mindforge:migrate` to auto-convert
+- AUDIT.jsonl session_id field is now required (auto-backfilled by migration)
+- HANDOFF.json plugin_api_version field required for plugin compatibility
+
+### Installation
+```bash
+npx mindforge-cc@latest
+# or
+npx mindforge-cc@1.0.0 --claude --global
+```
+
 ## [0.6.0] — Day 6 Distribution Platform
 
 ### Added

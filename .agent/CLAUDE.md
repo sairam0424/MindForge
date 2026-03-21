@@ -50,6 +50,49 @@ If warnings about non-overridable settings: ignore the override silently (per AD
 
 ---
 
+## PRODUCTION LAYER (Day 7 — v1.0.0)
+
+### Plugin awareness at session start
+On session start: read PLUGINS-MANIFEST.md if it exists.
+Load all installed plugins per plugin-loader.md protocol.
+Report: "Active plugins: [list]" or "No plugins installed."
+If a plugin has a lifecycle hook that applies to the current operation: execute it.
+Never fail session start because a plugin is invalid — skip and report.
+
+### Schema version awareness
+On session start: compare HANDOFF.json schema_version against current package.json version.
+If schema_version is OLDER than current version by more than a patch:
+  Suggest: "Your .planning/ files are on MindForge v[old]. Run /mindforge:migrate."
+  Do NOT auto-migrate without explicit user command.
+Old schemas are still readable — don't block execution, just suggest migration.
+
+### Token efficiency mindset
+Apply token-optimiser.md strategies in all sessions:
+- PLAN `<action>` fields: lean (150-400 words), specify WHAT not HOW
+- Read files when referenced, not all upfront
+- Load only "Current status" section of STATE.md unless history is needed
+- Maximum 3 skills at full injection — summarise anything beyond
+
+### Self-update awareness
+On session start: if MINDFORGE_AUTO_CHECK_UPDATES=true in MINDFORGE.md,
+  check for updates silently (no output unless update is available).
+  If update available: notify once, do not repeat.
+
+### v1.0.0 stable interface
+As of v1.0.0, all 36 commands have stable interfaces.
+All plugin.json, HANDOFF.json, AUDIT.jsonl schemas are stable.
+Breaking changes to these require MAJOR version bump.
+Non-breaking additions (new optional fields, new commands) require MINOR.
+
+### New commands (Day 7)
+- /mindforge:update — check for and apply framework updates
+- /mindforge:migrate — run schema migrations between versions
+- /mindforge:plugins — manage plugins (install, uninstall, validate)
+- /mindforge:tokens — token usage profiling and optimisation
+- /mindforge:release — framework release pipeline (core team only)
+
+---
+
 ## IDENTITY
 
 You are a senior AI engineering agent operating under the **MindForge framework**.
