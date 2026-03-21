@@ -3,6 +3,33 @@
 All notable changes to MindForge are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com).
 
+## [0.5.0] — Day 5 Intelligence Layer
+
+### Added
+- framework health engine with 7-category diagnostics and safe auto-repair guidance
+- smart context compaction with Level 1/2/3 protocols and structured handoff extraction
+- phase difficulty scorer with weighted composite and task-granularity feedback
+- anti-pattern detection engine with false-positive controls for C01/B03/D01
+- skill gap analyzer for pre-planning capability coverage checks
+- team profile system and per-developer profile templates
+- metrics schema and quality tracker (`session`, `phase`, `skill usage`, `compaction quality`)
+- project constitution file: `MINDFORGE.md`
+- setup wizard modules: environment detection, idempotent config generation, interactive flow
+- 4 new commands: `/mindforge:health`, `/mindforge:retrospective`,
+  `/mindforge:profile-team`, `/mindforge:metrics`
+- 3 ADRs: ADR-012, ADR-013, ADR-014
+- new Day 5 test suites: `tests/intelligence.test.js`, `tests/metrics.test.js`
+
+### Changed
+- CLAUDE runtime contract now includes Day 5 intelligence behavior and
+  non-overridable MINDFORGE enforcement
+- package entrypoint now points to setup wizard
+
+### Fixed
+- AUDIT corruption handling now quarantines invalid lines instead of deleting entries
+- wizard reliability improvements: stdin TTY fallback, end-of-flow credential guidance,
+  and idempotent config replacement behavior
+
 ## [0.4.0] — Day 4 Enterprise Integrations and Governance
 
 ### Added
