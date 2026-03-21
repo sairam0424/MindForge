@@ -42,6 +42,16 @@ npx mindforge-cc@latest --antigravity --global
 
 Local installs use `agents/` by default. Legacy `.agent/` is supported for existing projects.
 
+Optional: add bin utilities on local install
+```bash
+npx mindforge-cc@latest --claude --local --with-utils
+```
+
+Optional: minimal project scaffolding
+```bash
+npx mindforge-cc@latest --claude --local --minimal
+```
+
 ### Both runtimes
 ```bash
 npx mindforge-cc@latest --all --global

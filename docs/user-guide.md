@@ -15,6 +15,16 @@ npx mindforge-cc@latest --claude --global
 npx mindforge-cc@latest --claude --local
 ```
 
+Optional utilities:
+```bash
+npx mindforge-cc@latest --claude --local --with-utils
+```
+
+Minimal scaffolding:
+```bash
+npx mindforge-cc@latest --claude --local --minimal
+```
+
 ### Antigravity
 ```bash
 npx mindforge-cc@latest --antigravity --global
