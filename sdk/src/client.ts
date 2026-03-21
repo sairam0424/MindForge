@@ -6,7 +6,7 @@ import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import * as path from 'path';
 import type {
-  MindForgeConfig, PhaseResult, TaskResult, HealthReport, MindForgeEvent
+  MindForgeConfig, HealthReport, MindForgeEvent
 } from './types';
 
 export class MindForgeClient extends EventEmitter {
@@ -106,7 +106,7 @@ export class MindForgeClient extends EventEmitter {
       .filter(Boolean)
       .map(line => { try { return JSON.parse(line); } catch { return null; } })
       .filter(Boolean)
-      .filter(entry => {
+      .filter((entry: any) => {
         if (filter?.event && entry.event !== filter.event) return false;
         if (filter?.phase !== undefined && entry.phase !== filter.phase) return false;
         if (filter?.since && new Date(entry.timestamp) < filter.since) return false;
