@@ -78,3 +78,10 @@ export type MindForgeEvent =
   | { type: 'security_finding'; finding: SecurityFinding }
   | { type: 'gate_result';    gate: GateResult }
   | { type: 'log';            level: 'info' | 'warn' | 'error'; message: string };
+
+export interface AuditLogEntry {
+  timestamp: string;
+  event: string;
+  phase?: number;
+  [key: string]: unknown;
+}

@@ -1,0 +1,214 @@
+# MindForge v1.0.0 — Unique Selling Points, Features, and Best Practices
+
+This document summarizes what makes MindForge v1.0.0 distinct, what features
+are included in the first stable release, and how to use them effectively.
+
+---
+
+## Unique Selling Points (USPs)
+
+1. **File‑driven governance, not magic**
+   - MindForge defines behavior through Markdown and JSON schemas, so teams can
+     audit, review, and version everything like normal code.
+
+2. **Wave‑based parallel execution**
+   - Plans run in dependency‑ordered “waves,” delivering speed without chaos.
+
+3. **Non‑bypassable compliance gates**
+   - Security, secrets, and test gates are enforced by design, not optional.
+
+4. **Session compaction with continuity**
+   - When context fills, MindForge writes machine‑readable handoffs that preserve
+     state, decisions, and next steps.
+
+5. **Production‑ready installer + updater**
+   - Full install/update/uninstall support for both Claude Code and Antigravity,
+     plus scoped updates and schema migrations.
+
+6. **Built‑in audit trail**
+   - `AUDIT.jsonl` provides a complete, append‑only history of actions and results.
+
+7. **Extensible with plugins and skills**
+   - Plugins add commands and skills without changing core files, keeping upgrades safe.
+
+---
+
+## Feature Set (v1.0.0)
+
+### 1. Installation & Distribution
+**What it does:** Production‑grade installer with update, uninstall, and CI support.
+
+**How to use:**
+```bash
+npx mindforge-cc@latest --claude --global
+npx mindforge-cc@latest --claude --local
+npx mindforge-cc@latest --antigravity --global
+```
+
+---
+
+### 2. Core Workflow Engine
+**What it does:** End‑to‑end lifecycle for planning, execution, verification, and shipping.
+
+**How to use:**
+```
+/mindforge:init-project
+/mindforge:plan-phase 1
+/mindforge:execute-phase 1
+/mindforge:verify-phase 1
+/mindforge:ship 1
+```
+
+---
+
+### 3. Wave Execution
+**What it does:** Runs independent plans in parallel waves based on dependencies.
+
+**How to use:**
+- Create a phase plan with dependencies
+- Run `/mindforge:execute-phase N`
+- MindForge groups tasks into waves automatically
+
+---
+
+### 4. Governance & Compliance Gates
+**What it does:** Enforces secret scanning, CRITICAL security findings, tests,
+CVE checks, and GDPR retention.
+
+**How to use:**
+```
+/mindforge:security-scan --deep --secrets --deps
+/mindforge:verify-phase 1
+```
+
+---
+
+### 5. Intelligence Layer
+**What it does:** Health checks, difficulty scoring, anti‑pattern detection,
+team profiling, and metrics.
+
+**How to use:**
+```
+/mindforge:health
+/mindforge:metrics
+/mindforge:profile-team
+```
+
+---
+
+### 6. Skills Platform
+**What it does:** Loads skill packs on keyword triggers (Core/Org/Project tiers).
+
+**How to use:**
+```
+/mindforge:skills list
+/mindforge:skills validate
+```
+
+---
+
+### 7. Plugin System
+**What it does:** Extends MindForge with new commands, skills, personas, and hooks.
+
+**How to use:**
+```
+/mindforge:plugins list
+/mindforge:plugins install mindforge-plugin-<name>
+/mindforge:plugins validate
+```
+
+---
+
+### 8. Migration Engine
+**What it does:** Safely upgrades `.planning/` schemas across versions with backups.
+
+**How to use:**
+```
+/mindforge:migrate --from v0.6.0 --to v1.0.0
+```
+
+---
+
+### 9. Self‑Update System
+**What it does:** Checks for updates, shows changelog diff, applies updates while
+preserving scope (local vs global).
+
+**How to use:**
+```
+/mindforge:update
+/mindforge:update --apply
+```
+
+---
+
+### 10. Token Usage Optimiser
+**What it does:** Profiles and reduces token usage across sessions.
+
+**How to use:**
+```
+/mindforge:tokens --profile
+/mindforge:tokens --summary
+```
+
+---
+
+### 11. SDK (TypeScript)
+**What it does:** Programmatic access to health, audit log, event stream, and commands.
+
+**How to use:**
+```ts
+import { MindForgeClient } from '@mindforge/sdk';
+const client = new MindForgeClient({ projectRoot: '.' });
+const report = await client.health();
+```
+
+---
+
+## Best Practices for v1.0.0
+
+1. **Always run health after install**
+   - `/mindforge:health --repair` fixes drift immediately.
+
+2. **Keep PLAN files lean**
+   - Focus on *what*, not *how* (150–400 words).
+
+3. **Use local installs for repos**
+   - Local installs are safer and prevent cross‑project drift.
+
+4. **Run migrations explicitly**
+   - Don’t rely on auto‑inference when upgrading older state files.
+
+5. **Treat plugins like production dependencies**
+   - Validate plugins and prefer pinned versions.
+
+6. **Use the audit log as ground truth**
+   - Query `.planning/AUDIT.jsonl` for accountability and traceability.
+
+7. **Gate Tier 3 changes through approvals**
+   - CI will block Tier 3 changes without explicit approval.
+
+8. **Keep secrets out of files**
+   - Use environment variables only. MindForge enforces this.
+
+---
+
+## Using MindForge for Your Requirements
+
+### If you need strict governance
+- Run full workflow (`plan → execute → verify → ship`)
+- Enable security scans and approvals
+
+### If you need fast iteration
+- Use `/mindforge:quick` for single tasks
+- Keep local install with minimal setup
+
+### If you need team scale
+- Use milestones, approvals, and `/mindforge:profile-team`
+- Enable CI mode for consistent enforcement
+
+---
+
+## Summary
+MindForge v1.0.0 combines governance, observability, and execution rigor into a
+single workflow engine that works across Claude Code and Antigravity. Its core
+value is consistent, repeatable quality in long‑running AI development sessions.

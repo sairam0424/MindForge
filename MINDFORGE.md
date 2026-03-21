@@ -22,9 +22,9 @@ If a configured model is unavailable, fallback to `inherit` and warn.
 
 ## Project identity
 NAME=MindForge
-VERSION=0.5.0
+VERSION=1.0.0
 DESCRIPTION=Enterprise agentic framework with intelligence and observability layer
-MINDFORGE_VERSION_REQUIRED=0.5.0
+MINDFORGE_VERSION_REQUIRED=1.0.0
 
 ## Model preferences
 PLANNER_MODEL=claude-opus-4-5
