@@ -6,7 +6,7 @@ import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import * as path from 'path';
 import type {
-  MindForgeConfig, HealthReport, MindForgeEvent, AuditLogEntry
+  MindForgeConfig, HealthReport, AuditLogEntry
 } from './types';
 
 export class MindForgeClient extends EventEmitter {
@@ -24,12 +24,6 @@ export class MindForgeClient extends EventEmitter {
       taskTimeoutMs:  config.taskTimeoutMs ?? 600_000,
     };
   }
-
-  // ── Event emission helper ──────────────────────────────────────────────────
-  private emit<T extends MindForgeEvent>(event: T): boolean {
-    return super.emit(event.type, event);
-  }
-
   // ── Project state ──────────────────────────────────────────────────────────
   isInitialised(): boolean {
     return fs.existsSync(path.join(this.projectRoot, '.planning', 'PROJECT.md'));
