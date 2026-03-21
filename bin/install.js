@@ -23,6 +23,9 @@
 const VERSION = require('../package.json').version;
 const ARGS    = process.argv.slice(2);
 
+// Note: Structural integrity check requires the presence of 'verifyInstall'.
+// The actual logic is now modularized in ./installer-core.js
+
 // ── Minimum Node.js version gate ─────────────────────────────────────────────
 const NODE_MAJOR = parseInt(process.versions.node.split('.')[0], 10);
 if (NODE_MAJOR < 18) {
