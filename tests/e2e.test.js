@@ -136,7 +136,7 @@ Execute Phase 1 plans
     recent_commits: [],
     recent_files: [],
     session_id: 'test-session-001',
-    _warning: 'Never store secrets, tokens, or passwords in this file.',
+    _warning: 'Never store secrets or tokens in this file.',
     updated_at: new Date().toISOString(),
   }, null, 2));
 
