@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "test": "node tests/sdk.test.js",
-    "lint": "eslint src/ --ext .ts"
+    "lint": "eslint ."
   },
   "keywords": ["mindforge", "agentic-framework", "claude", "sdk"],
   "license": "MIT",
@@ -15,6 +15,10 @@
     "typescript": ">=5.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.4.0"
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "globals": "^15.0.0",
+    "typescript": "^5.4.0",
+    "typescript-eslint": "^8.0.0"
   }
 }
