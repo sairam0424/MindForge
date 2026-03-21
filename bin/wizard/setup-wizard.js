@@ -209,7 +209,10 @@ async function main() {
   printBanner();
 
   if (!IS_INTERACTIVE) {
-    require('../install');
+    const installer = require('../install');
+    if (installer && typeof installer.runCli === 'function') {
+      installer.runCli();
+    }
     return;
   }
 

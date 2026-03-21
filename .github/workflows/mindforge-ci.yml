@@ -24,8 +24,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - name: Install dependencies
+        run: npm install
+
       - name: Install MindForge
-        run: npx mindforge-cc@latest --claude --local
+        run: node bin/wizard/setup-wizard.js --claude --local
 
       - name: Validate MINDFORGE.md
         run: node bin/validate-config.js
@@ -183,8 +186,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - name: Install dependencies
+        run: npm install
+
       - name: Install MindForge
-        run: npx mindforge-cc@latest --claude --local
+        run: node bin/wizard/setup-wizard.js --claude --local
 
       - name: Run AI PR Review
         run: |
