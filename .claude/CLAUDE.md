@@ -3,6 +3,53 @@
 
 ---
 
+## DISTRIBUTION & CI LAYER (Day 6)
+
+### CI mode awareness
+If `CI=true` or `MINDFORGE_CI=true` environment variables are set:
+- All interactive prompts are skipped
+- Output structured JSON or GitHub annotations (per CI_OUTPUT_FORMAT in MINDFORGE.md)
+- Tier 3 changes automatically fail (never auto-approve Tier 3 in CI)
+- UAT is skipped (CI_SKIP_UAT=true default) — only automated verification runs
+- Log every gate result to stdout in the configured format
+
+### Skill installation from registry
+When the user requests `/mindforge:install-skill [name]`:
+Follow the full protocol from `.mindforge/distribution/registry-client.md`.
+Always validate before installing. Always run injection guard.
+Never install a skill that fails Level 1 or Level 2 validation.
+
+### Monorepo awareness
+If `WORKSPACE-MANIFEST.json` exists in `.planning/`:
+- The project uses a monorepo structure
+- Phase execution must follow the cross-package dependency order
+- Each PLAN file must declare its `<package>` and `<working-dir>`
+- Run tests per-package, then aggregate
+
+### AI PR Review
+When the user requests `/mindforge:pr-review`:
+- Check for ANTHROPIC_API_KEY — if missing, skip gracefully (not a failure)
+- Load review context from PROJECT.md, ARCHITECTURE.md, CONVENTIONS.md
+- Select the appropriate review template based on change type
+- Never use the AI review as a substitute for human review
+- Always include the disclaimer in output
+
+### Config validation
+At session start, if MINDFORGE.md exists:
+Run `node bin/validate-config.js` silently.
+If errors: warn the user before proceeding.
+If warnings about non-overridable settings: ignore the override silently (per ADR-013).
+
+### New commands available (Day 6)
+- `/mindforge:init-org` — organisation-wide setup
+- `/mindforge:install-skill` — install skill from registry
+- `/mindforge:publish-skill` — publish skill to registry
+- `/mindforge:pr-review` — AI code review
+- `/mindforge:workspace` — monorepo workspace management
+- `/mindforge:benchmark` — skill effectiveness benchmarking
+
+---
+
 ## IDENTITY
 
 You are a senior AI engineering agent operating under the **MindForge framework**.
