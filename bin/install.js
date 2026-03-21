@@ -1,227 +1,117 @@
 #!/usr/bin/env node
-
 /**
- * MindForge Installer
- * Usage: npx mindforge-cc [--claude|--antigravity|--all] [--global|--local]
+ * MindForge Installer — v1.0.0 Production Release
+ *
+ * USAGE:
+ *   npx mindforge-cc@latest                   → Interactive setup wizard
+ *   npx mindforge-cc@latest --claude --local  → Install for Claude Code, local project
+ *   npx mindforge-cc@latest --all --global    → Install for all runtimes, globally
+ *   npx mindforge-cc@latest --update          → Update existing installation
+ *   npx mindforge-cc@latest --uninstall       → Remove MindForge
+ *   npx mindforge-cc@latest --check           → Check for updates (no install)
+ *   npx mindforge-cc@latest --version         → Print version and exit
+ *   npx mindforge-cc@latest --help            → Print usage and exit
+ *
+ * Runtime flags:    --claude | --antigravity | --all
+ * Scope flags:      --global (-g) | --local (-l)
+ * Action flags:     --install (default) | --update | --uninstall | --check
+ * Control flags:    --skip-wizard | --dry-run | --verbose | --force
  */
 
-const fs = require('fs');
-const path = require('path');
+'use strict';
 
 const VERSION = require('../package.json').version;
-const ARGS = process.argv.slice(2);
+const ARGS    = process.argv.slice(2);
 
-const nodeVersion = process.versions.node.split('.').map(Number);
-if (nodeVersion[0] < 18) {
-  console.error('❌ MindForge requires Node.js 18 or higher.');
-  console.error(`   Current version: ${process.versions.node}`);
-  console.error('   Install Node.js 18 LTS: https://nodejs.org');
+// ── Minimum Node.js version gate ─────────────────────────────────────────────
+const NODE_MAJOR = parseInt(process.versions.node.split('.')[0], 10);
+if (NODE_MAJOR < 18) {
+  process.stderr.write(
+    `\n❌  MindForge requires Node.js 18 or later.\n` +
+    `    Current: v${process.versions.node}\n` +
+    `    Install: https://nodejs.org/en/download/\n\n`
+  );
   process.exit(1);
 }
 
-// ── Argument parsing ──────────────────────────────────────────────────────────
-const runtime = ARGS.includes('--antigravity') ? 'antigravity'
-              : ARGS.includes('--all')          ? 'all'
-              : 'claude'; // default
-
-const scope = ARGS.includes('--global') ? 'global' : 'local';
-const isUninstall = ARGS.includes('--uninstall');
-
-// ── Target directories ────────────────────────────────────────────────────────
-const home = process.env.HOME || process.env.USERPROFILE;
-const cwd = process.cwd();
-
-const targets = {
-  claude: {
-    global: path.join(home, '.claude'),
-    local:  path.join(cwd, '.claude'),
-    commandsDir: 'commands/mindforge',
-  },
-  antigravity: {
-    global: path.join(home, '.gemini', 'antigravity'),
-    local:  path.join(cwd, '.agent'),
-    commandsDir: 'mindforge',
-  },
-};
-
-// ── Utilities ─────────────────────────────────────────────────────────────────
-function ensureDir(dirPath) {
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, { recursive: true });
-  }
+// ── Quick-exit flags ──────────────────────────────────────────────────────────
+if (ARGS.includes('--version') || ARGS.includes('-v')) {
+  process.stdout.write(`mindforge-cc v${VERSION}\n`);
+  process.exit(0);
 }
 
-function copyFile(src, dest) {
-  ensureDir(path.dirname(dest));
-  fs.copyFileSync(src, dest);
+if (ARGS.includes('--help') || ARGS.includes('-h')) {
+  printHelp();
+  process.exit(0);
 }
 
-function safeCopyClaude(src, dest) {
-  if (fs.existsSync(dest)) {
-    const existing = fs.readFileSync(dest, 'utf8');
-    if (!existing.includes('MindForge')) {
-      const backup = dest + '.backup-' + Date.now();
-      fs.copyFileSync(dest, backup);
-      console.log(`  ⚠️  Existing CLAUDE.md backed up to ${backup}`);
-    }
-  }
-  copyFile(src, dest);
-}
+// ── Determine execution mode ──────────────────────────────────────────────────
+const NON_INTERACTIVE_FLAGS = [
+  '--claude', '--antigravity', '--all',
+  '--global', '-g', '--local', '-l',
+  '--uninstall', '--update', '--check',
+  '--skip-wizard', '--dry-run',
+];
 
-function copyDir(srcDir, destDir) {
-  if (!fs.existsSync(srcDir)) return;
-  ensureDir(destDir);
-  for (const entry of fs.readdirSync(srcDir, { withFileTypes: true })) {
-    const srcPath  = path.join(srcDir, entry.name);
-    const destPath = path.join(destDir, entry.name);
-    if (entry.isDirectory()) {
-      copyDir(srcPath, destPath);
-    } else {
-      copyFile(srcPath, destPath);
-    }
-  }
-}
+const IS_NON_INTERACTIVE =
+  NON_INTERACTIVE_FLAGS.some(f => ARGS.includes(f)) ||
+  process.env.CI === 'true'                          ||
+  process.env.MINDFORGE_CI === 'true'                ||
+  process.stdin.isTTY === false;
 
-function verifyInstall(targetBase, commandsDir) {
-  const requiredFiles = [
-    path.join(targetBase, 'CLAUDE.md'),
-    path.join(commandsDir, 'help.md'),
-    path.join(commandsDir, 'init-project.md'),
-    path.join(commandsDir, 'plan-phase.md'),
-    path.join(commandsDir, 'execute-phase.md'),
-    path.join(commandsDir, 'verify-phase.md'),
-    path.join(commandsDir, 'ship.md'),
-  ];
-
-  const missing = requiredFiles.filter(f => !fs.existsSync(f));
-
-  if (missing.length > 0) {
-    console.error('\n❌ Install verification failed. Missing files:');
-    missing.forEach(f => console.error(`   ${f}`));
-    console.error('\nTry re-running the installer.');
+if (IS_NON_INTERACTIVE) {
+  require('./installer-core').run(ARGS).catch(err => {
+    process.stderr.write(`\n❌  Installation failed: ${err.message}\n`);
+    process.stderr.write(`    For help: npx mindforge-cc --help\n\n`);
     process.exit(1);
-  }
-
-  console.log('  ✅ Install verified — all required files present');
-}
-
-// ── Install for a single runtime ──────────────────────────────────────────────
-function install(runtimeName, explicitScope) {
-  const cfg = targets[runtimeName];
-  if (!cfg) {
-    console.error(`Unknown runtime: ${runtimeName}`);
+  });
+} else {
+  require('./wizard/setup-wizard').main().catch(err => {
+    process.stderr.write(`\n❌  Setup wizard failed: ${err.message}\n`);
+    process.stderr.write(`    Try non-interactive: npx mindforge-cc --claude --local\n\n`);
     process.exit(1);
-  }
-
-  const installScope = explicitScope || scope;
-  const targetBase = installScope === 'global' ? cfg.global : cfg.local;
-  const commandsDest = path.join(targetBase, cfg.commandsDir);
-
-  console.log(`\n📦 Installing MindForge v${VERSION}`);
-  console.log(`   Runtime : ${runtimeName}`);
-  console.log(`   Scope   : ${installScope}`);
-  console.log(`   Target  : ${targetBase}\n`);
-
-  // Copy CLAUDE.md entry point
-  const claudeSrc = path.join(__dirname, '..', '.claude', 'CLAUDE.md');
-  if (fs.existsSync(claudeSrc)) {
-    safeCopyClaude(claudeSrc, path.join(targetBase, 'CLAUDE.md'));
-    console.log(`  ✅ CLAUDE.md`);
-  }
-
-  // Copy commands
-  const commandsSrc = runtimeName === 'claude'
-    ? path.join(__dirname, '..', '.claude', 'commands', 'mindforge')
-    : path.join(__dirname, '..', '.agent', 'mindforge');
-
-  if (fs.existsSync(commandsSrc)) {
-    copyDir(commandsSrc, commandsDest);
-    const count = fs.readdirSync(commandsSrc).length;
-    console.log(`  ✅ ${count} commands → ${commandsDest}`);
-  }
-
-  // Copy .mindforge framework files to local project
-  if (installScope === 'local') {
-    const forgeSrc  = path.join(__dirname, '..', '.mindforge');
-    const forgeDest = path.join(cwd, '.mindforge');
-    if (fs.existsSync(forgeSrc)) {
-      copyDir(forgeSrc, forgeDest);
-      console.log(`  ✅ .mindforge/ framework files`);
-    }
-
-    // Copy .planning templates
-    const planningSrc  = path.join(__dirname, '..', '.planning');
-    const planningDest = path.join(cwd, '.planning');
-    if (fs.existsSync(planningSrc) && !fs.existsSync(planningDest)) {
-      copyDir(planningSrc, planningDest);
-      console.log(`  ✅ .planning/ state templates`);
-    } else if (fs.existsSync(planningDest)) {
-      console.log(`  ⏭️  .planning/ already exists — skipped`);
-    }
-  }
-
-  verifyInstall(targetBase, commandsDest);
-
-  console.log(`\n✅ MindForge installed successfully!\n`);
-  console.log(`Next steps:`);
-  console.log(`  1. Open Claude Code or Antigravity in your project directory`);
-  console.log(`  2. Run: /mindforge:help`);
-  console.log(`  3. Run: /mindforge:init-project\n`);
+  });
 }
 
-// ── Uninstall ─────────────────────────────────────────────────────────────────
-function uninstall(runtimeName, explicitScope) {
-  const cfg = targets[runtimeName];
-  const installScope = explicitScope || scope;
-  const targetBase = installScope === 'global' ? cfg.global : cfg.local;
-  const commandsDest = path.join(targetBase, cfg.commandsDir);
+function printHelp() {
+  process.stdout.write(`
+  ⚡  MindForge v${VERSION} — Enterprise Agentic Framework
 
-  console.log(`\n🗑️  Uninstalling MindForge`);
-  console.log(`   Runtime : ${runtimeName}`);
-  console.log(`   Scope   : ${installScope}`);
+  USAGE
+    npx mindforge-cc@latest [runtime] [scope] [action] [options]
 
-  if (fs.existsSync(commandsDest)) {
-    fs.rmSync(commandsDest, { recursive: true, force: true });
-    console.log(`  ✅ Removed ${commandsDest}`);
-  }
+  RUNTIMES (pick one or use --all)
+    --claude          Claude Code  (~/.claude or .claude/)
+    --antigravity     Antigravity  (~/.gemini/antigravity or .agent/)
+    --all             Both runtimes
 
-  const claudeMd = path.join(targetBase, 'CLAUDE.md');
-  // Only remove CLAUDE.md if it contains MindForge marker
-  if (fs.existsSync(claudeMd)) {
-    const content = fs.readFileSync(claudeMd, 'utf8');
-    if (content.includes('MindForge')) {
-      fs.unlinkSync(claudeMd);
-      console.log(`  ✅ Removed CLAUDE.md`);
-    } else {
-      console.log(`  ⏭️  CLAUDE.md is not a MindForge file — preserved`);
-    }
-  }
+  SCOPE
+    --global, -g      Install to home directory (all projects)
+    --local,  -l      Install to current directory (this project only)
 
-  console.log(`\n✅ MindForge uninstalled.\n`);
-}
+  ACTIONS (default: install)
+    --install         Install MindForge (default)
+    --update          Update existing installation
+    --uninstall       Remove MindForge
+    --check           Check for updates without installing
 
-async function runCli() {
-  if (isUninstall) {
-    if (runtime === 'all') {
-      uninstall('claude');
-      uninstall('antigravity');
-    } else {
-      uninstall(runtime);
-    }
-    return;
-  }
+  OPTIONS
+    --dry-run         Show what would happen without making changes
+    --force           Override existing installation without backup
+    --skip-wizard     Skip interactive wizard even in TTY
+    --verbose         Detailed output
+    --version, -v     Print version
+    --help, -h        Print this help
 
-  if (runtime === 'all') {
-    install('claude');
-    install('antigravity');
-  } else {
-    install(runtime);
-  }
-}
+  EXAMPLES
+    npx mindforge-cc@latest                       Interactive setup
+    npx mindforge-cc@latest --claude --local      Local Claude Code install
+    npx mindforge-cc@latest --all --global        Global install for all runtimes
+    npx mindforge-cc@latest --update --global     Update global install
+    npx mindforge-cc@latest --uninstall --local   Remove local install
 
-module.exports = { install, uninstall, verifyInstall, runCli };
-
-// ── Entry point ───────────────────────────────────────────────────────────────
-if (require.main === module) {
-  runCli();
+  DOCUMENTATION
+    https://github.com/mindforge-dev/mindforge
+    docs/enterprise-setup.md (after install)
+\n`);
 }
