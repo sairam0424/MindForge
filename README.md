@@ -2,6 +2,7 @@
 
 MindForge turns Claude Code and Antigravity into production-grade engineering
 partners with governance, observability, and a disciplined workflow engine.
+Release published: v1.0.0 (GitHub Releases).
 
 ```bash
 npx mindforge-cc@latest
@@ -140,6 +141,7 @@ See `.mindforge/production/token-optimiser.md`.
 - **Quick verify:** `docs/quick-verify.md`
 - **Upgrade guide:** `docs/upgrade.md`
 - **FAQ:** `docs/faq.md`
+- **Release notes:** `RELEASENOTES.md`
 - **Release checklist guide:** `docs/release-checklist-guide.md`
 - **USPs and features:** `docs/usp-features.md`
 - **Full tutorial:** `docs/tutorial.md`
