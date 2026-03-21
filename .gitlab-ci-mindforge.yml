@@ -1,0 +1,18 @@
+stages:
+  - mindforge
+
+mindforge:
+  stage: mindforge
+  image: node:20
+  variables:
+    CI: "true"
+    MINDFORGE_CI: "true"
+  script:
+    - npx mindforge-cc@latest --claude --local
+    - node bin/validate-config.js
+    - node tests/ci-mode.test.js
+  artifacts:
+    when: always
+    paths:
+      - .planning/HANDOFF.json
+      - .planning/STATE.md
