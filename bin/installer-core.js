@@ -20,7 +20,7 @@ const RUNTIMES = {
   },
   antigravity: {
     globalDir:      path.join(os.homedir(), '.gemini', 'antigravity'),
-    localDir:       '.agents',
+    localDir:       'agents',
     commandsSubdir: 'mindforge',
     entryFile:      'CLAUDE.md',
   },
@@ -79,6 +79,24 @@ const SENSITIVE_EXCLUDE = [
 
 const norm = p => path.normalize(p);
 
+function resolveBaseDir(runtime, scope) {
+  const cfg = RUNTIMES[runtime];
+  if (scope === 'global') return norm(cfg.globalDir);
+
+  if (runtime === 'antigravity') {
+    const agentsDir = norm(path.join(process.cwd(), 'agents'));
+    const legacyAgentDir = norm(path.join(process.cwd(), '.agent'));
+    if (fsu.exists(agentsDir)) return agentsDir;
+    if (fsu.exists(legacyAgentDir)) {
+      console.log(`  ℹ️  Detected legacy .agent/ — installing there for compatibility`);
+      return legacyAgentDir;
+    }
+    return agentsDir;
+  }
+
+  return norm(path.join(process.cwd(), cfg.localDir));
+}
+
 // ── CLAUDE.md safe copy ───────────────────────────────────────────────────────
 function safeCopyClaude(src, dst, options = {}) {
   const { force = false, verbose = false } = options;
@@ -131,7 +149,7 @@ function verifyInstall(baseDir, cmdsDir, runtime, scope) {
 async function install(runtime, scope, options = {}) {
   const { dryRun = false, force = false, verbose = false } = options;
   const cfg     = RUNTIMES[runtime];
-  const baseDir = norm(scope === 'global' ? cfg.globalDir : path.join(process.cwd(), cfg.localDir));
+  const baseDir = resolveBaseDir(runtime, scope);
   const cmdsDir = norm(path.join(baseDir, cfg.commandsSubdir));
   const selfInstall = isSelfInstall();
 
@@ -217,7 +235,7 @@ async function install(runtime, scope, options = {}) {
 async function uninstall(runtime, scope, options = {}) {
   const { dryRun = false } = options;
   const cfg     = RUNTIMES[runtime];
-  const baseDir = norm(scope === 'global' ? cfg.globalDir : path.join(process.cwd(), cfg.localDir));
+  const baseDir = resolveBaseDir(runtime, scope);
   const cmdsDir = norm(path.join(baseDir, cfg.commandsSubdir));
   const claudeMd = norm(path.join(baseDir, 'CLAUDE.md'));
 
