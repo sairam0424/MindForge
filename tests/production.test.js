@@ -361,9 +361,12 @@ test('SENSITIVE_EXCLUDE properly excludes .env and .key files', () => {
 test('SENSITIVE_EXCLUDE uses regex for .key and .pem (not glob strings)', () => {
   const c = fs.readFileSync('bin/installer-core.js', 'utf8');
   // Should use regex pattern /\.key$/ not string '*.key'
-  assert.ok(!c.includes(\"'*.key'\"), 'Should not use glob string for .key');
-  assert.ok(!c.includes(\"'*.pem'\"), 'Should not use glob string for .pem');
-  assert.ok(c.includes('/\\\\.key$/') || c.includes('/.key$/'), 'Should use regex for .key');
+  assert.ok(!c.includes("'*.key'"), 'Should not use glob string for .key');
+  assert.ok(!c.includes("'*.pem'"), 'Should not use glob string for .pem');
+  assert.ok(
+    c.includes('\\.key$') || c.includes('/\\.key$/') || c.includes('/.key$/'),
+    'Should use regex for .key'
+  );
 });
 
 test('migration filter uses toVersion range check (not fromVersion)', () => {

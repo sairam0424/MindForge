@@ -24,6 +24,10 @@ For each installed plugin directory at `.mindforge/plugins/[plugin-name]/`:
    - If injection patterns found: do NOT load. Log AUDIT entry, alert user
 5. **Level 1 + Level 2 validation**: for every `SKILL.md` in the plugin
 
+**Permission model note:** permissions are advisory, not OS‑enforced. They are
+declared for user trust decisions and logged in `AUDIT.jsonl`. Governance gates
+still apply to all plugin actions.
+
 ### Step 3 — Load plugin components
 
 **Commands:**

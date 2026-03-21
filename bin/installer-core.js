@@ -70,8 +70,8 @@ const src         = (...parts) => path.join(SOURCE_ROOT, ...parts);
 const SENSITIVE_EXCLUDE = [
   '.env',        // exact filename match
   /^\.env\..*/,  // .env.local, .env.production, etc.
-  /\.key$/,      // anything ending in .key (was '*.key' — broken)
-  /\.pem$/,      // anything ending in .pem (was '*.pem' — broken)
+  /\.key$/,      // anything ending in .key (previous glob was incorrect)
+  /\.pem$/,      // anything ending in .pem (previous glob was incorrect)
   'secrets',     // exact directory name
   '.secrets',    // exact directory name
   /^secrets$/,   // exact match at directory level
