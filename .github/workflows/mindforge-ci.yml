@@ -23,7 +23,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
 
       - name: Install MindForge
         run: npx mindforge-cc@latest --claude --local
@@ -58,7 +57,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -97,10 +95,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          if [ -d "sdk" ]; then
+            cd sdk && npm install && cd ..
+          fi
 
       - name: Type check
         run: |
@@ -148,18 +149,18 @@ jobs:
             echo "::error title=Tier 3 Governance Block::${PENDING_T3} Tier 3 change(s) require compliance review."
             echo "::error::Tier 3 changes (auth/payment/PII) cannot be auto-approved in CI."
             echo "::error::To resolve: get human approval with /mindforge:approve [id], then push again."
-          cat >> "${GITHUB_STEP_SUMMARY}" << 'SUMMARY_EOF'
-          ## 🔴 Governance Block: Tier 3 Approval Required
-          
-          This PR contains changes that require compliance review (auth, payment, or PII handling).
-          
-          **Next steps:**
-          1. Run `/mindforge:approve` to see pending approval requests
-          2. Have your compliance officer approve with `/mindforge:approve [id]`
-          3. Push again — CI will pass once the approval is recorded
-          
-          See `.planning/approvals/` for details.
-          SUMMARY_EOF
+            cat >> "${GITHUB_STEP_SUMMARY}" << 'SUMMARY_EOF'
+            ## 🔴 Governance Block: Tier 3 Approval Required
+            
+            This PR contains changes that require compliance review (auth, payment, or PII handling).
+            
+            **Next steps:**
+            1. Run `/mindforge:approve` to see pending approval requests
+            2. Have your compliance officer approve with `/mindforge:approve [id]`
+            3. Push again — CI will pass once the approval is recorded
+            
+            See `.planning/approvals/` for details.
+            SUMMARY_EOF
             exit 1
           fi
 
@@ -181,7 +182,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
 
       - name: Install MindForge
         run: npx mindforge-cc@latest --claude --local
