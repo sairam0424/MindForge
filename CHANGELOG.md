@@ -3,6 +3,11 @@
 All notable changes to MindForge are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com).
 
+## [1.0.4] — v1.0.4 Antigravity Install Fix — 2026-03-22
+
+### Fixed
+- Antigravity local install now correctly copies commands and CLAUDE.md into `agents/`.
+
 ## [1.0.3] — v1.0.3 Antigravity Agents Folder — 2026-03-22
 
 ### Changed

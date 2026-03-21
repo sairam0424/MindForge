@@ -147,7 +147,7 @@ function verifyInstall(baseDir, cmdsDir, runtime, scope) {
 
 // ── Install single runtime ────────────────────────────────────────────────────
 async function install(runtime, scope, options = {}) {
-  const { dryRun = false, force = false, verbose = false } = options;
+  const { dryRun = false, force = false, verbose = false, withUtils = false } = options;
   const cfg     = RUNTIMES[runtime];
   const baseDir = resolveBaseDir(runtime, scope);
   const cmdsDir = norm(path.join(baseDir, cfg.commandsSubdir));
@@ -168,7 +168,7 @@ async function install(runtime, scope, options = {}) {
   // ── 1. Install CLAUDE.md ────────────────────────────────────────────────────
   const claudeSrc = runtime === 'claude'
     ? src('.claude', 'CLAUDE.md')
-    : src('.agents', 'CLAUDE.md');
+    : src('.agent', 'CLAUDE.md');
 
   if (fsu.exists(claudeSrc)) {
     safeCopyClaude(claudeSrc, path.join(baseDir, 'CLAUDE.md'), { force, verbose });
@@ -178,7 +178,7 @@ async function install(runtime, scope, options = {}) {
   // ── 2. Install commands ─────────────────────────────────────────────────────
   const cmdSrc = runtime === 'claude'
     ? src('.claude', 'commands', 'mindforge')
-    : src('.agents', 'mindforge');
+    : src('.agent', 'mindforge');
 
   if (fsu.exists(cmdSrc)) {
     fsu.ensureDir(cmdsDir);
@@ -217,13 +217,18 @@ async function install(runtime, scope, options = {}) {
       console.log(`  ✅  MINDFORGE.md (project constitution)`);
     }
 
-    // bin/ utilities (validate-config, wizard)
-    const binDst = path.join(process.cwd(), 'bin');
-    const binSrc = src('bin');
-    if (fsu.exists(binSrc) && !fsu.exists(binDst)) {
-      fsu.copyDir(binSrc, binDst, { excludePatterns: SENSITIVE_EXCLUDE });
-      console.log(`  ✅  bin/ (utilities)`);
+    // bin/ utilities (optional)
+    if (withUtils) {
+      const binDst = path.join(process.cwd(), 'bin');
+      const binSrc = src('bin');
+      if (fsu.exists(binSrc) && !fsu.exists(binDst)) {
+        fsu.copyDir(binSrc, binDst, { excludePatterns: SENSITIVE_EXCLUDE });
+        console.log(`  ✅  bin/ (utilities)`);
+      } else if (fsu.exists(binDst)) {
+        console.log(`  ⏭️  bin/ already exists — preserved`);
+      }
     }
+
   }
 
   // ── 4. Verify installation ──────────────────────────────────────────────────
@@ -273,10 +278,11 @@ async function run(args) {
   const dryRun     = args.includes('--dry-run');
   const force      = args.includes('--force');
   const verbose    = args.includes('--verbose');
+  const withUtils  = args.includes('--with-utils');
   const isUninstall = args.includes('--uninstall');
   const isUpdate    = args.includes('--update');
   const isCheck     = args.includes('--check');
-  const options     = { dryRun, force, verbose };
+  const options     = { dryRun, force, verbose, withUtils };
 
   console.log(`\n⚡  MindForge v${VERSION} — Enterprise Agentic Framework\n`);
 
