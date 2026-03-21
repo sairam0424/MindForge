@@ -140,6 +140,7 @@ See `.mindforge/production/token-optimiser.md`.
 - **Quick verify:** `docs/quick-verify.md`
 - **Upgrade guide:** `docs/upgrade.md`
 - **FAQ:** `docs/faq.md`
+- **Release notes:** `RELEASENOTES.md`
 - **Release checklist guide:** `docs/release-checklist-guide.md`
 - **USPs and features:** `docs/usp-features.md`
 - **Full tutorial:** `docs/tutorial.md`
