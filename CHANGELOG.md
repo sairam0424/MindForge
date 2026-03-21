@@ -6,6 +6,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com).
 ## [1.0.0] — v1.0.0 First Stable Public Release — 2026-03-22
 
 🎉 **MindForge v1.0.0 — Enterprise Agentic Framework — First Stable Release**
+Release published: v1.0.0 (GitHub Releases).
 
 Built over 7 focused sprints, MindForge transforms Claude Code and Antigravity
 from powerful-but-unstructured AI tools into production-grade engineering
