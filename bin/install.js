@@ -15,7 +15,7 @@
  * Runtime flags:    --claude | --antigravity | --all
  * Scope flags:      --global (-g) | --local (-l)
  * Action flags:     --install (default) | --update | --uninstall | --check
- * Control flags:    --skip-wizard | --dry-run | --verbose | --force
+ * Control flags:    --skip-wizard | --dry-run | --verbose | --force | --with-utils | --minimal
  */
 
 'use strict';
@@ -53,7 +53,7 @@ const NON_INTERACTIVE_FLAGS = [
   '--claude', '--antigravity', '--all',
   '--global', '-g', '--local', '-l',
   '--uninstall', '--update', '--check',
-  '--skip-wizard', '--dry-run',
+  '--skip-wizard', '--dry-run', '--with-utils', '--minimal',
 ];
 
 const IS_NON_INTERACTIVE =
@@ -102,6 +102,8 @@ function printHelp() {
     --dry-run         Show what would happen without making changes
     --force           Override existing installation without backup
     --skip-wizard     Skip interactive wizard even in TTY
+    --with-utils      Install local bin/ utilities (optional)
+    --minimal         Install only essential project scaffolding
     --verbose         Detailed output
     --version, -v     Print version
     --help, -h        Print this help

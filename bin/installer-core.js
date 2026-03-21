@@ -147,7 +147,13 @@ function verifyInstall(baseDir, cmdsDir, runtime, scope) {
 
 // ── Install single runtime ────────────────────────────────────────────────────
 async function install(runtime, scope, options = {}) {
-  const { dryRun = false, force = false, verbose = false, withUtils = false } = options;
+  const {
+    dryRun = false,
+    force = false,
+    verbose = false,
+    withUtils = false,
+    minimal = false,
+  } = options;
   const cfg     = RUNTIMES[runtime];
   const baseDir = resolveBaseDir(runtime, scope);
   const cmdsDir = norm(path.join(baseDir, cfg.commandsSubdir));
@@ -193,8 +199,29 @@ async function install(runtime, scope, options = {}) {
     const forgeSrc = src('.mindforge');
     const forgeDst = path.join(process.cwd(), '.mindforge');
     if (fsu.exists(forgeSrc)) {
-      fsu.copyDir(forgeSrc, forgeDst, { excludePatterns: SENSITIVE_EXCLUDE });
-      console.log(`  ✅  .mindforge/ (framework engine)`);
+      if (minimal) {
+        const minimalEntries = new Set([
+          'MINDFORGE-SCHEMA.json',
+          'engine',
+          'org',
+          'governance',
+          'integrations',
+          'personas',
+          'skills',
+          'team',
+        ]);
+        fsu.ensureDir(forgeDst);
+        for (const entry of fs.readdirSync(forgeSrc, { withFileTypes: true })) {
+          if (!minimalEntries.has(entry.name)) continue;
+          const s = path.join(forgeSrc, entry.name);
+          const d = path.join(forgeDst, entry.name);
+          entry.isDirectory() ? fsu.copyDir(s, d, { excludePatterns: SENSITIVE_EXCLUDE }) : fsu.copy(s, d);
+        }
+        console.log(`  ✅  .mindforge/ (minimal core)`);
+      } else {
+        fsu.copyDir(forgeSrc, forgeDst, { excludePatterns: SENSITIVE_EXCLUDE });
+        console.log(`  ✅  .mindforge/ (framework engine)`);
+      }
     }
 
     // .planning/ — create only if it doesn't already exist (preserve project state)
@@ -202,8 +229,18 @@ async function install(runtime, scope, options = {}) {
     if (!fsu.exists(planningDst)) {
       const planningSrc = src('.planning');
       if (fsu.exists(planningSrc)) {
-        fsu.copyDir(planningSrc, planningDst, { excludePatterns: SENSITIVE_EXCLUDE });
-        console.log(`  ✅  .planning/ (state templates)`);
+        if (minimal) {
+          fsu.ensureDir(planningDst);
+          ['STATE.md', 'HANDOFF.json', 'PROJECT.md'].forEach((name) => {
+            const s = path.join(planningSrc, name);
+            const d = path.join(planningDst, name);
+            if (fsu.exists(s)) fsu.copy(s, d);
+          });
+          console.log(`  ✅  .planning/ (minimal state)`);
+        } else {
+          fsu.copyDir(planningSrc, planningDst, { excludePatterns: SENSITIVE_EXCLUDE });
+          console.log(`  ✅  .planning/ (state templates)`);
+        }
       }
     } else {
       console.log(`  ⏭️  .planning/ already exists — preserved (run /mindforge:health to verify)`);
@@ -279,10 +316,11 @@ async function run(args) {
   const force      = args.includes('--force');
   const verbose    = args.includes('--verbose');
   const withUtils  = args.includes('--with-utils');
+  const minimal    = args.includes('--minimal');
   const isUninstall = args.includes('--uninstall');
   const isUpdate    = args.includes('--update');
   const isCheck     = args.includes('--check');
-  const options     = { dryRun, force, verbose, withUtils };
+  const options     = { dryRun, force, verbose, withUtils, minimal };
 
   console.log(`\n⚡  MindForge v${VERSION} — Enterprise Agentic Framework\n`);
 

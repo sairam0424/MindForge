@@ -48,6 +48,16 @@ function askChoice(rl, q, choices, defaultIdx = 0) {
   });
 }
 
+function askYesNo(rl, q, defaultYes = false) {
+  const def = defaultYes ? 'y' : 'n';
+  return new Promise((resolve) => {
+    rl.question(`${q} [${def}]: `, (answer) => {
+      const val = (answer.trim() || def).toLowerCase();
+      resolve(val === 'y' || val === 'yes');
+    });
+  });
+}
+
 function askMultiChoice(rl, q, choices) {
   console.log(`\n${q}`);
   choices.forEach((choice, i) => console.log(`  ${i + 1}) ${choice}`));
@@ -149,11 +159,11 @@ async function configureFeatures(rl) {
   return { config, credGuidance };
 }
 
-async function install(runtimes, scope) {
+async function install(runtimes, scope, options = {}) {
   const installer = require('../installer-core');
   if (!installer || typeof installer.install !== 'function') return;
   for (const runtime of runtimes) {
-    await installer.install(runtime, scope);
+    await installer.install(runtime, scope, options);
   }
 }
 
@@ -222,9 +232,11 @@ async function main() {
     const runtimes = await selectRuntime(rl, env.runtimes);
     const scope = await selectScope(rl);
     const { config, credGuidance } = await configureFeatures(rl);
+    const minimal = await askYesNo(rl, 'Install minimal project scaffolding?', false);
+    const withUtils = await askYesNo(rl, 'Install optional bin/ utilities?', false);
     rl.close();
 
-    await install(runtimes, scope);
+    await install(runtimes, scope, { withUtils, minimal });
     await generator.writeIntegrationsConfig(config);
     printNextSteps(runtimes, scope, credGuidance);
   } catch (err) {
