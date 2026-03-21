@@ -3,6 +3,11 @@
 All notable changes to MindForge are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com).
 
+## [1.0.3] — v1.0.3 Antigravity Agents Folder — 2026-03-22
+
+### Changed
+- Local Antigravity installs now target `agents/` by default (legacy `.agent/` detected and supported).
+
 ## [1.0.2] — v1.0.2 CLI Bin Fix — 2026-03-22
 
 ### Fixed

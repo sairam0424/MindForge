@@ -26,7 +26,13 @@ async function detect() {
 
   const runtimes = [];
   if (fs.existsSync(path.join(home, '.claude')) || fs.existsSync(path.join(cwd, '.claude'))) runtimes.push('claude');
-  if (fs.existsSync(path.join(home, '.gemini', 'antigravity')) || fs.existsSync(path.join(cwd, '.agent'))) runtimes.push('antigravity');
+  if (
+    fs.existsSync(path.join(home, '.gemini', 'antigravity')) ||
+    fs.existsSync(path.join(cwd, '.agent')) ||
+    fs.existsSync(path.join(cwd, 'agents'))
+  ) {
+    runtimes.push('antigravity');
+  }
 
   let projectType = 'unknown';
   const pkgPath = path.join(cwd, 'package.json');

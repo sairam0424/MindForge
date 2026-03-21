@@ -40,6 +40,8 @@ npx mindforge-cc@latest --claude --local
 npx mindforge-cc@latest --antigravity --global
 ```
 
+Local installs use `agents/` by default. Legacy `.agent/` is supported for existing projects.
+
 ### Both runtimes
 ```bash
 npx mindforge-cc@latest --all --global
