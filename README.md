@@ -142,6 +142,7 @@ See `.mindforge/production/token-optimiser.md`.
 - **FAQ:** `docs/faq.md`
 - **Release checklist guide:** `docs/release-checklist-guide.md`
 - **USPs and features:** `docs/usp-features.md`
+- **Full tutorial:** `docs/tutorial.md`
 - **Commands:** `docs/reference/commands.md`
 - **Config reference:** `docs/reference/config-reference.md`
 - **SDK:** `docs/reference/sdk-api.md`
