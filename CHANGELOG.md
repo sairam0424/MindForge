@@ -3,6 +3,34 @@
 All notable changes to MindForge are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com).
 
+## [0.6.0] — Day 6 Distribution Platform
+
+### Added
+- Public skills registry: `npx mindforge-skills install/publish/search` (npm-based)
+- Skill validator: 3-level validation schema (schema, content, quality)
+- MINDFORGE.md JSON Schema: validation with non-overridable field markers
+- MindForge CI mode: GitHub Actions / GitLab CI / Jenkins integration
+- GitHub Actions workflow: health, security, quality, AI review jobs
+- AI PR Review Engine: Claude API-powered code review with context loading
+- Monorepo/workspace support: npm/pnpm/Nx/Turborepo/Lerna detection
+- Cross-package planner: topological execution order for monorepo phases
+- @mindforge/sdk: TypeScript SDK with client, event stream, and command builders
+- SSE event stream: real-time progress events via Server-Sent Events
+- /mindforge:init-org — organisation-wide MindForge setup command
+- /mindforge:install-skill — install skill from public/private registry
+- /mindforge:publish-skill — publish skill to npm registry
+- /mindforge:pr-review — AI code review powered by Claude API
+- /mindforge:workspace — monorepo workspace management
+- /mindforge:benchmark — skill effectiveness benchmarking
+- 3 new ADRs: ADR-015 npm registry, ADR-016 CI timeout, ADR-017 localhost SDK
+
+### Hardened
+- Registry: TOCTOU-safe temp directory (chmod 700), tarball size verification
+- CI: timeout exits with code 0 (soft stop), clear Tier 3 block messages
+- SDK: localhost-only SSE binding, Linux inotify fallback
+- AI review: robust daily limit (parse error tolerant), file-based diff truncation
+- Monorepo: affected package detection uses manifest paths (not depth assumption)
+
 ## [0.5.0] — Day 5 Intelligence Layer
 
 ### Added
