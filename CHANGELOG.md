@@ -3,6 +3,15 @@
 All notable changes to MindForge are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com).
 
+## [1.0.1] — v1.0.1 Installer and Packaging Fixes — 2026-03-22
+
+### Fixed
+- Interactive setup now uses installer-core directly (no recursive wizard call).
+- Package bin entry corrected to use `mindforge-cc` → `bin/install.js`.
+
+### Changed
+- Added publish whitelist to reduce package size and exclude build-only files.
+
 ## [1.0.0] — v1.0.0 First Stable Public Release — 2026-03-22
 
 🎉 **MindForge v1.0.0 — Enterprise Agentic Framework — First Stable Release**

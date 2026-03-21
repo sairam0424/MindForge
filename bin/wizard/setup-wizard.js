@@ -150,7 +150,7 @@ async function configureFeatures(rl) {
 }
 
 async function install(runtimes, scope) {
-  const installer = require('../install');
+  const installer = require('../installer-core');
   if (!installer || typeof installer.install !== 'function') return;
   for (const runtime of runtimes) {
     await installer.install(runtime, scope);

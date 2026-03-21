@@ -1,10 +1,26 @@
 {
   "name": "mindforge-cc",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MindForge \u2014 Enterprise Agentic Framework for Claude Code and Antigravity",
   "bin": {
-    "mindforge": "./bin/wizard/setup-wizard.js"
+    "mindforge-cc": "./bin/install.js"
   },
+  "files": [
+    ".agent/",
+    ".claude/",
+    ".mindforge/",
+    ".planning/",
+    "bin/",
+    "docs/",
+    "examples/",
+    "CHANGELOG.md",
+    "LICENSE",
+    "MINDFORGE.md",
+    "README.md",
+    "RELEASENOTES.md",
+    "SECURITY.md",
+    "package.json"
+  ],
   "scripts": {
     "test": "node tests/install.test.js",
     "lint": "eslint ."

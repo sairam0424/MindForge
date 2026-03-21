@@ -144,7 +144,7 @@ test('HANDOFF.json is valid JSON', () => {
 test('package.json has bin field', () => {
   const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
   assert.ok(pkg.bin, 'Missing bin field');
-  assert.ok(pkg.bin.mindforge, 'Missing bin.mindforge');
+  assert.ok(pkg.bin['mindforge-cc'], 'Missing bin.mindforge-cc');
   assert.ok(pkg.engines, 'Missing engines field');
   assert.ok(pkg.engines.node, 'Missing engines.node');
 });
