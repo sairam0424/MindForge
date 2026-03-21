@@ -6,7 +6,7 @@ import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import * as path from 'path';
 import type {
-  MindForgeConfig, HealthReport, MindForgeEvent
+  MindForgeConfig, HealthReport, MindForgeEvent, AuditLogEntry
 } from './types';
 
 export class MindForgeClient extends EventEmitter {
@@ -97,16 +97,16 @@ export class MindForgeClient extends EventEmitter {
   }
 
   // ── Audit log reading ──────────────────────────────────────────────────────
-  readAuditLog(filter?: { event?: string; phase?: number; since?: Date }): unknown[] {
+  readAuditLog(filter?: { event?: string; phase?: number; since?: Date }): AuditLogEntry[] {
     const auditPath = path.join(this.projectRoot, '.planning', 'AUDIT.jsonl');
     if (!fs.existsSync(auditPath)) return [];
 
     return fs.readFileSync(auditPath, 'utf8')
       .split('\n')
       .filter(Boolean)
-      .map(line => { try { return JSON.parse(line); } catch { return null; } })
-      .filter(Boolean)
-      .filter((entry: any) => {
+      .map((line: string) => { try { return JSON.parse(line) as AuditLogEntry; } catch { return null; } })
+      .filter((entry: AuditLogEntry | null): entry is AuditLogEntry => !!entry)
+      .filter(entry => {
         if (filter?.event && entry.event !== filter.event) return false;
         if (filter?.phase !== undefined && entry.phase !== filter.phase) return false;
         if (filter?.since && new Date(entry.timestamp) < filter.since) return false;
@@ -123,7 +123,7 @@ export class MindForgeClient extends EventEmitter {
       .split('\n')
       .filter(Boolean)
       .slice(-limit)
-      .map(line => { try { return JSON.parse(line); } catch { return null; } })
+      .map((line: string) => { try { return JSON.parse(line); } catch { return null; } })
       .filter(Boolean);
   }
 
