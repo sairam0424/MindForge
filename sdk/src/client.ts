@@ -6,7 +6,7 @@ import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import * as path from 'path';
 import type {
-  MindForgeConfig, HealthReport, MindForgeEvent, AuditLogEntry
+  MindForgeConfig, HealthReport, AuditLogEntry
 } from './types';
 
 export class MindForgeClient extends EventEmitter {

@@ -6,6 +6,7 @@
 export { MindForgeClient } from './client';
 export { MindForgeEventStream } from './events';
 export { commands } from './commands';
+export type { CommandOptions } from './commands';
 export type {
   MindForgeConfig,
   PhaseResult,
@@ -15,7 +16,7 @@ export type {
   HealthReport,
   HealthIssue,
   MindForgeEvent,
-  CommandOptions,
+  AuditLogEntry,
 } from './types';
 
 export const VERSION = '1.0.0';
