@@ -20,7 +20,7 @@ const RUNTIMES = {
   },
   antigravity: {
     globalDir:      path.join(os.homedir(), '.gemini', 'antigravity'),
-    localDir:       '.agent',
+    localDir:       '.agents',
     commandsSubdir: 'mindforge',
     entryFile:      'CLAUDE.md',
   },
@@ -150,7 +150,7 @@ async function install(runtime, scope, options = {}) {
   // ── 1. Install CLAUDE.md ────────────────────────────────────────────────────
   const claudeSrc = runtime === 'claude'
     ? src('.claude', 'CLAUDE.md')
-    : src('.agent', 'CLAUDE.md');
+    : src('.agents', 'CLAUDE.md');
 
   if (fsu.exists(claudeSrc)) {
     safeCopyClaude(claudeSrc, path.join(baseDir, 'CLAUDE.md'), { force, verbose });
@@ -160,7 +160,7 @@ async function install(runtime, scope, options = {}) {
   // ── 2. Install commands ─────────────────────────────────────────────────────
   const cmdSrc = runtime === 'claude'
     ? src('.claude', 'commands', 'mindforge')
-    : src('.agent', 'mindforge');
+    : src('.agents', 'mindforge');
 
   if (fsu.exists(cmdSrc)) {
     fsu.ensureDir(cmdsDir);

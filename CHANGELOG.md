@@ -3,6 +3,11 @@
 All notable changes to MindForge are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com).
 
+## [1.0.2] — v1.0.2 CLI Bin Fix — 2026-03-22
+
+### Fixed
+- npm bin entry now uses a path format accepted by npm publish.
+
 ## [1.0.1] — v1.0.1 Installer and Packaging Fixes — 2026-03-22
 
 ### Fixed
