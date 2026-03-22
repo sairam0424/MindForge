@@ -8,7 +8,6 @@
 
 const fs   = require('fs');
 const path = require('path');
-const os   = require('os');
 const assert = require('assert');
 let passed = 0, failed = 0;
 

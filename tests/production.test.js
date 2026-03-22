@@ -8,7 +8,6 @@
 'use strict';
 
 const fs   = require('fs');
-const path = require('path');
 const assert = require('assert');
 let passed = 0, failed = 0;
 

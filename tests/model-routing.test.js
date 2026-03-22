@@ -7,7 +7,6 @@ const assert = require('assert');
 const Router = require('../bin/models/model-router');
 const CostTracker = require('../bin/models/cost-tracker');
 const FindingSynthesizer = require('../bin/review/finding-synthesizer');
-const GeminiProvider = require('../bin/models/gemini-provider');
 
 async function testRouter() {
   console.log('Testing Model Router...');
