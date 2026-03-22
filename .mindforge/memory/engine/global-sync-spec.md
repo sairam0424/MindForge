@@ -13,11 +13,10 @@ which loads into every future project's session start.
 
 ## Sync rules
 
-- Promotion is MANUAL — nothing is auto-promoted to global
-  (project-specific decisions should stay project-specific)
-- Loading is AUTOMATIC — global entries load at every session start
-- Project entries take precedence over global entries (same ID = local wins)
-- Global entries get confidence penalty of 0.1 (less reliable than local decisions)
+- Promotion is MANUAL — nothing is auto-promoted to global. Use `/mindforge:remember --promote [ID]`.
+- Loading is AUTOMATIC — global entries load at every session start if relevant.
+- Project entries take precedence over global entries (same ID = local wins).
+- Global entries receive a metadata flag `global: true` but are ranked alongside project entries based on relevance.
 
 ## What should be promoted to global
 
