@@ -11,6 +11,7 @@ Markdown protocols and JSON schemas, with a small Node.js CLI runtime.
 4. **Intelligence Layer** — Health, difficulty, anti-patterns in `.mindforge/intelligence/`
 5. **Knowledge Layer** — Long-term memory, capture, and sync in `.mindforge/memory/`
 6. **Distribution Layer** — Installer, registry, CI, SDK, plugins
+7. **Observability Layer (v2)** — Real-time dashboard, SSE bridge, metrics aggregator
 
 ## Key data artifacts
 - `.planning/PROJECT.md` — project brief
@@ -24,6 +25,7 @@ Markdown protocols and JSON schemas, with a small Node.js CLI runtime.
 2. `/mindforge:execute-phase` runs plans in waves
 3. `/mindforge:verify-phase` runs automated + human gates
 4. `/mindforge:ship` generates release artifacts and PR metadata
+5. `/mindforge:dashboard` provides real-time observability and governance
 
 ## Installation targets
 - Claude Code: `~/.claude/` or `.claude/`

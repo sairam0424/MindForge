@@ -1,4 +1,4 @@
-# MindForge User Guide (v2.0.0-alpha.4)
+# MindForge User Guide (v2.0.0-alpha.5)
 
 This guide gets you from install to productive, with the minimum needed to run
 MindForge in a real project. It assumes Node.js 18+.
@@ -152,7 +152,29 @@ Relevant memories are automatically loaded at the start of every session, provid
 
 ---
 
-## 10. Update and migration
+## 10. Real-time Dashboard (v2)
+MindForge provides a premium web-based dashboard for real-time observability of your agent waves, metrics, and team activity.
+
+### Start the Dashboard
+```bash
+/mindforge:dashboard --start --open
+```
+This will start the Express-based SSE bridge and open `http://localhost:7339` in your default browser.
+
+### Features
+- **Live Activity**: Real-time stream of audit logs and agent status.
+- **Metrics & Costs**: Live visualization of token spend and session quality.
+- **Browser Governance**: Approve or reject Tier 2/3 changes directly from the UI.
+- **Team Feed**: See what other agents are doing in a multi-agent environment.
+
+### Stop the Dashboard
+```bash
+/mindforge:dashboard --stop
+```
+
+---
+
+## 11. Update and migration
 ### Check for updates
 ```
 /mindforge:update

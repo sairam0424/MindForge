@@ -3,6 +3,19 @@
 All notable changes to MindForge are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com).
 
+## [2.0.0-alpha.5] — Day 12: Real-time Observability Dashboard — 2026-03-22
+
+- [v2.0.0-alpha.5 (2026-03-22)]
+  - [NEW] Real-time Dashboard Server (Express + SSE Bridge).
+  - [NEW] Premium 5-tab UI: Activity, Metrics, Approvals, Memory, Team.
+  - [NEW] Live Data Streaming for Audit Logs, Quality, Costs, and Team Activity.
+  - [NEW] Hardened Tier 3 Governance: Mandatory Plan ID typing for sensitive approvals.
+  - [NEW] Metrics Aggregator: Multi-source JSONL processing for observability.
+  - [NEW] CLI Command: `/mindforge:dashboard` for server lifecycle management.
+  - [NEW] ADR-033: Real-time Observability Architecture.
+  - [HARDENED] SSE Rotation Detection (Inode-based).
+  - [HARDENED] Localhost-only Security Model (Strict CORS/Binding).
+
 ## [2.0.0-alpha.4] — Day 11: Persistent Knowledge Graph (Long-Term Memory) — 2026-03-22
 
 - [v2.0.0-alpha.4 (2026-03-22)]

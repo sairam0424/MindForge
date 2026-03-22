@@ -1,4 +1,4 @@
-# MindForge v2.0.0 — Unique Selling Points, Features, and Best Practices (v2.0.0-alpha.4)
+# MindForge v2.0.0 — Unique Selling Points, Features, and Best Practices (v2.0.0-alpha.5)
 
 This document summarizes what makes MindForge v2.0.0 distinct, what features
 are included in the latest alpha release, and how to use them effectively.
@@ -42,6 +42,9 @@ are included in the latest alpha release, and how to use them effectively.
 
 11. **Persistent Knowledge Graph (v2)**
     - Captures and ranks engineering context (decisions, bug patterns, preferences) across project sessions using TF-IDF and confidence reinforcement.
+
+12. **Real-time Observability Dashboard (v2)**
+    - High-fidelity web interface for live audit streams, metrics visualization, and browser-based governance with zero performance overhead.
 
 ---
 
@@ -197,6 +200,17 @@ preserving scope (local vs global).
 /mindforge:remember --promote [ID] # Promote to machine-wide global store
 /mindforge:remember --stats # View memory health
 ```
+
+---
+
+### 16. Real-time Dashboard (v2)
+**What it does:** Web-based control plane for observing agent waves, costs, and quality metrics in real-time.
+
+**How to use:**
+```bash
+/mindforge:dashboard --start --open
+```
+Access at `http://localhost:7339` (Localhost-only for security).
 
 ---
 

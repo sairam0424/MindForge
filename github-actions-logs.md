@@ -1,118 +1,88 @@
-Results: 81 passed, 0 failed
-
-✅ All tests passed. Day 1 foundation is solid.
-
-
-> mindforge-cc@2.0.0-alpha.2 lint
-> eslint .
-
-
-/home/runner/work/MindForge/MindForge/bin/autonomous/auto-runner.js
-Warning:    9:7  warning  'repairOperator' is assigned a value but never used   no-unused-vars
-Warning:   11:7  warning  'steeringManager' is assigned a value but never used  no-unused-vars
-
-/home/runner/work/MindForge/MindForge/bin/autonomous/repair-operator.js
-Warning:   17:5  warning  'planId' is assigned a value but never used        no-unused-vars
-Warning:   18:5  warning  'phase' is assigned a value but never used         no-unused-vars
-Warning:   20:5  warning  'errorOutput' is assigned a value but never used   no-unused-vars
-Warning:   24:5  warning  'repairBudget' is assigned a value but never used  no-unused-vars
-
-/home/runner/work/MindForge/MindForge/bin/autonomous/stuck-monitor.js
-Warning:   7:7  warning  'fs' is assigned a value but never used  no-unused-vars
-
-/home/runner/work/MindForge/MindForge/bin/browser/browser-daemon.js
-Warning:   10:7   warning  'fs' is assigned a value but never used       no-unused-vars
-Warning:   11:7   warning  'path' is assigned a value but never used     no-unused-vars
-Warning:   67:87  warning  'name' is assigned a value but never used     no-unused-vars
-Warning:   68:21  warning  'context' is assigned a value but never used  no-unused-vars
-
-/home/runner/work/MindForge/MindForge/bin/browser/daemon-manager.js
-Warning:   66:30  warning  'opts' is assigned a value but never used  no-unused-vars
-
-/home/runner/work/MindForge/MindForge/bin/browser/session-manager.js
-Warning:   36:14  warning  'err' is defined but never used  no-unused-vars
-
-/home/runner/work/MindForge/MindForge/bin/change-classifier.js
-Error:   80:52  error  Strings must use singlequote  quotes
-
-/home/runner/work/MindForge/MindForge/bin/governance/approve.js
-Error:   50:15  error  Strings must use singlequote  quotes
-Error:   54:15  error  Strings must use singlequote  quotes
-
-/home/runner/work/MindForge/MindForge/bin/migrations/migrate.js
-Warning:    90:5   warning  'backupCreated' is assigned a value but never used  no-unused-vars
-Warning:    98:16  warning  'err' is defined but never used                     no-unused-vars
-Warning:   144:14  warning  'err' is defined but never used                     no-unused-vars
-
-/home/runner/work/MindForge/MindForge/bin/models/cost-tracker.js
-Warning:    34:14  warning  'e' is defined but never used  no-unused-vars
-Error:    35:28  error    Strings must use singlequote   quotes
-Warning:   113:14  warning  'e' is defined but never used  no-unused-vars
-Error:   113:17  error    Empty block statement          no-empty
-
-/home/runner/work/MindForge/MindForge/bin/research/research-engine.js
-Warning:   14:7   warning  'Router' is assigned a value but never used  no-unused-vars
-Error:   28:12  error    Strings must use singlequote                 quotes
-Error:   29:23  error    Strings must use singlequote                 quotes
-Error:   30:22  error    Strings must use singlequote                 quotes
-Error:   31:15  error    Strings must use singlequote                 quotes
-
-/home/runner/work/MindForge/MindForge/bin/review/cross-review-engine.js
-Warning:   6:7  warning  'fs' is assigned a value but never used    no-unused-vars
-Warning:   7:7  warning  'path' is assigned a value but never used  no-unused-vars
-
-/home/runner/work/MindForge/MindForge/bin/review/review-report-writer.js
-Error:   40:14  error  Strings must use singlequote  quotes
-
-/home/runner/work/MindForge/MindForge/bin/updater/self-update.js
-Warning:   10:9  warning  'compareSemver' is assigned a value but never used  no-unused-vars
-
-/home/runner/work/MindForge/MindForge/bin/validate-config.js
-Warning:   11:7  warning  'path' is assigned a value but never used  no-unused-vars
-
-/home/runner/work/MindForge/MindForge/tests/audit.test.js
-Warning:    7:7   warning  'path' is assigned a value but never used  no-unused-vars
-Warning:   44:16  warning  'e' is defined but never used              no-unused-vars
-
-/home/runner/work/MindForge/MindForge/tests/autonomous.test.js
-Warning:   7:7  warning  'fs' is assigned a value but never used  no-unused-vars
-
-/home/runner/work/MindForge/MindForge/tests/browser.test.js
-Warning:   9:7  warning  'SessionMgr' is assigned a value but never used  no-unused-vars
-
-/home/runner/work/MindForge/MindForge/tests/ci-mode.test.js
-Warning:   15:10  warning  'isCiMode' is defined but never used  no-unused-vars
-
-/home/runner/work/MindForge/MindForge/tests/compaction.test.js
-Warning:   38:10  warning  'validateStateHasCompactionCheckpoint' is defined but never used  no-unused-vars
-
-/home/runner/work/MindForge/MindForge/tests/distribution.test.js
-Warning:    6:27  warning  'path' is assigned a value but never used          no-unused-vars
-Warning:   21:10  warning  'parseSkillFrontmatter' is defined but never used  no-unused-vars
-Warning:   36:10  warning  'parseMindforgeMd' is defined but never used       no-unused-vars
-
-/home/runner/work/MindForge/MindForge/tests/migration.test.js
-Warning:   10:7  warning  'path' is assigned a value but never used  no-unused-vars
-Warning:   11:7  warning  'os' is assigned a value but never used    no-unused-vars
-
-/home/runner/work/MindForge/MindForge/tests/model-routing.test.js
-Warning:   10:7  warning  'GeminiProvider' is assigned a value but never used  no-unused-vars
-
-/home/runner/work/MindForge/MindForge/tests/production.test.js
-Warning:   11:7  warning  'path' is assigned a value but never used  no-unused-vars
-
-/home/runner/work/MindForge/MindForge/tests/skills-platform.test.js
-Warning:    61:10  warning  'parseManifest' is defined but never used   no-unused-vars
-Warning:   381:24  warning  'patch' is assigned a value but never used  no-unused-vars
-
-/home/runner/work/MindForge/MindForge/tests/wave-engine.test.js
-Warning:   7:7  warning  'fs' is assigned a value but never used    no-unused-vars
-Warning:   8:7  warning  'path' is assigned a value but never used  no-unused-vars
-
-✖ 50 problems (10 errors, 40 warnings)
-  9 errors and 0 warnings potentially fixable with the `--fix` option.
-
-Error: Process completed with exit code 1.
+Skip to content
+sairam0424
+MindForge
+Repository navigation
+Code
+Issues
+Pull requests
+1
+ (1)
+Actions
+Projects
+Security
+Insights
+Settings
+Back to pull request #24
+Feature/mindforge realtime dashboard #8
+All jobs
+Run details
+Annotations
+1 error and 1 warning
+Cross-Model Code Review
+failed 1 minute ago in 9s
+Search logs
+1s
+1s
+2s
+3s
+Run npm ci
+npm error code EUSAGE
+npm error
+npm error `npm ci` can only install packages when your package.json and package-lock.json or npm-shrinkwrap.json are in sync. Please update your lock file with `npm install` before continuing.
+npm error
+npm error Missing: express@4.22.1 from lock file
+npm error Missing: accepts@1.3.8 from lock file
+npm error Missing: array-flatten@1.1.1 from lock file
+npm error Missing: body-parser@1.20.4 from lock file
+npm error Missing: content-disposition@0.5.4 from lock file
+npm error Missing: content-type@1.0.5 from lock file
+npm error Missing: cookie@0.7.2 from lock file
+npm error Missing: cookie-signature@1.0.7 from lock file
+npm error Missing: debug@2.6.9 from lock file
+npm error Missing: depd@2.0.0 from lock file
+npm error Missing: encodeurl@2.0.0 from lock file
+npm error Missing: escape-html@1.0.3 from lock file
+npm error Missing: etag@1.8.1 from lock file
+npm error Missing: finalhandler@1.3.2 from lock file
+npm error Missing: fresh@0.5.2 from lock file
+npm error Missing: http-errors@2.0.1 from lock file
+npm error Missing: merge-descriptors@1.0.3 from lock file
+npm error Missing: methods@1.1.2 from lock file
+npm error Missing: on-finished@2.4.1 from lock file
+npm error Missing: parseurl@1.3.3 from lock file
+npm error Missing: path-to-regexp@0.1.12 from lock file
+npm error Missing: proxy-addr@2.0.7 from lock file
+npm error Missing: qs@6.14.2 from lock file
+npm error Missing: range-parser@1.2.1 from lock file
+npm error Missing: safe-buffer@5.2.1 from lock file
+npm error Missing: send@0.19.2 from lock file
+npm error Missing: serve-static@1.16.3 from lock file
+npm error Missing: setprototypeof@1.2.0 from lock file
+npm error Missing: statuses@2.0.2 from lock file
+npm error Missing: type-is@1.6.18 from lock file
+npm error Missing: utils-merge@1.0.1 from lock file
+npm error Missing: vary@1.1.2 from lock file
+npm error Missing: mime-types@2.1.35 from lock file
+npm error Missing: negotiator@0.6.3 from lock file
+npm error Missing: bytes@3.1.2 from lock file
+npm error Missing: debug@2.6.9 from lock file
+npm error Missing: destroy@1.2.0 from lock file
+npm error Missing: iconv-lite@0.4.24 from lock file
 0s
 0s
 0s
+0s
+0s
+0s
+Footer
+© 2026 GitHub, Inc.
+Footer navigation
+Terms
+Privacy
+Security
+Status
+Community
+Docs
+Contact
+Manage cookies
+Do not share my personal information
