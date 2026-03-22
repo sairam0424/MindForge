@@ -20,6 +20,15 @@
         "tier2_auto_approve": { "type": "boolean" },
         "tier3_require_human": { "type": "boolean", "const": true }
       }
+    },
+    "browser": {
+      "type": "object",
+      "properties": {
+        "port": { "type": "integer", "default": 7338 },
+        "headless": { "type": "boolean", "default": true },
+        "dev_server_url": { "type": "string" },
+        "auto_qa": { "type": "boolean", "default": true }
+      }
     }
   },
   "required": ["schema_version", "auto_mode_active", "status"]
