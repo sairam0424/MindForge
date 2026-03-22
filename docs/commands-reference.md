@@ -8,4 +8,5 @@
 | `/mindforge:execute-phase [N]`  | Execute plans with wave-based parallelism     |
 | `/mindforge:verify-phase [N]`   | Human acceptance testing + automated checks  |
 | `/mindforge:ship [N]`           | Generate changelog, run quality gates, create PR |
+| `/mindforge:dashboard`           | Manage the real-time web observability dashboard |
 

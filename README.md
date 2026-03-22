@@ -1,4 +1,4 @@
-# MindForge — Enterprise Agentic Framework (v2.0.0-alpha.4)
+# MindForge — Enterprise Agentic Framework (v2.0.0-alpha.5)
 
 MindForge turns Claude Code and Antigravity into production-grade engineering
 partners with governance, observability, and a disciplined workflow engine.
@@ -19,6 +19,7 @@ Decisions get forgotten. MindForge fixes that with:
 - **Skills** — just-in-time domain knowledge loaded on demand
 - **Wave execution** — parallelism with dependency safety
 - **Autonomous Engine** — walk-away execution with steerability (v2)
+- **Real-time Dashboard** — web-based observability and governance (v2)
 - **Browser Runtime** — headful/headless visual QA and sessions (v2)
 - **Multi-Model Intelligence** — dynamic routing, adversarial reviews, and deep research (v2)
 - **Persistent Knowledge Graph** — long-term memory across all engineering sessions (v2)
@@ -154,6 +155,10 @@ If issues are found, run:
 / mindforge:remember
     → Manual knowledge management and search (v2)
     → Persistent knowledge graph retrieval and promotion
+
+/ mindforge:dashboard
+    → Real-time web observability and governance at localhost:7339 (v2)
+    → Live audit logs, metrics, activity, and team feed
 ```
 
 ---
@@ -210,7 +215,8 @@ See `.mindforge/production/token-optimiser.md`.
 
 ---
 
-## What ships in v2.0.0-alpha.4
+## What ships in v2.0.0-alpha.5
+- **Real-time Dashboard**: `/mindforge:dashboard` and web-based observability.
 - **Persistent Knowledge Graph**: `/mindforge:remember` and long-term memory engine.
 - **Multi-Model Intelligence Layer**: `/mindforge:cross-review`, `/mindforge:research`, and `/mindforge:costs`.
 - **Visual QA Engine**: `/mindforge:qa` and automated regression tests.

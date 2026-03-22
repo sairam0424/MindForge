@@ -10,69 +10,34 @@ This guide outlines the standard procedure for publishing a new version of `mind
 
 ## Step-by-Step Workflow
 
-### 1. Versioning Strategy
+### 1. Pre-Flight Verification & Adversarial Review
+Before any release, ensure the following is completed:
 
-MindForge follows [Semantic Versioning (SemVer)](https://semver.org/).
+- **Structural Integrity**: Run `npm test` to verify layout and command mirroring.
+- **Security Check**: Run `/mindforge:security-scan` to ensure no keys or CVEs are present.
+- **Mult-Model Review**: Run `/mindforge:cross-review` to have multiple models (Claude, GPT, Gemini) audit the new features for edge cases.
 
-- **Major (X.0.0)**: Breaking changes or significant architecture shifts.
-- **Minor (0.X.0)**: New features, non-breaking.
-- **Patch (0.0.X)**: Bug fixes, performance improvements.
-- **Prereleases**: Append `-alpha.N`, `-beta.N`, or `-rc.N` (e.g., `2.0.0-alpha.4`).
+### 2. Versioning Strategy
+MindForge follows SemVer. Update `package.json` and `CHANGELOG.md` first.
 
-### 2. Pre-Publish Verification
+### 3. Automated Release Workflow
+MindForge provides a built-in workflow to handle the heavy lifting:
 
-Always run the integrity suite before publishing:
+1. Run the slash command: `/publish-release`
+2. Follow the interactive prompts to execute tests and dry runs.
 
-```bash
-npm test
-```
-
-This verifies that:
-- All required directories and files exist.
-- Commands are mirrored between `.claude/` and `.agent/`.
-- `package.json` metadata is valid.
-- No secrets are leaked.
-
-### 3. Dry Run
-
-Validate the package contents:
+### 4. Manual Publishing (Fallback)
+If the workflow is unavailable:
 
 ```bash
-npm pack --dry-run
+npm publish --tag alpha --access public
 ```
 
-Review the file list in the output to ensure no internal config or temporary files are included.
-
-### 4. Publishing
-
-#### Stable Releases
-For stable versions (e.g., `2.0.0`), use a standard publish:
-
-```bash
-npm publish --access public
-```
-
-#### Prereleases (Alpha/Beta/RC)
-For prerelease versions, you **MUST** specify a tag to avoid them being installed as `@latest`:
-
-```bash
-npm publish --tag [alpha|beta|rc] --access public
-```
-
-### 5. Git Tagging
-
-After a successful publish, tag the commit in Git:
-
+### 5. Git Tagging & Origin Sync
 ```bash
 git tag v[version]
-git push origin v[version]
+git push origin --tags
 ```
-
-## Troubleshooting
-
-- **403 Forbidden**: Usually means the version already exists on npm or you don't have permissions.
-- **Tag Required**: If you get an error about specifying a tag, it's because you are publishing a version with a hyphen (prerelease) without the `--tag` flag.
-- **Integrity Failure**: Fix the structural issues reported by `npm test` before retrying.
 
 ---
 *Last Updated: 2026-03-22*
