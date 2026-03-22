@@ -11,7 +11,7 @@ From `sdk/src/index.ts`:
 - `MindForgeClient`
 - `MindForgeEventStream`
 - `commands`
-- `MindForgeMemory` (Day 11)
+- `MindForgeMemory`
 - Types: `MindForgeConfig`, `PhaseResult`, `TaskResult`, `SecurityFinding`,
   `GateResult`, `HealthReport`, `HealthIssue`, `MindForgeEvent`, `CommandOptions`
 - `VERSION`

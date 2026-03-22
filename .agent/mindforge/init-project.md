@@ -10,11 +10,10 @@ Verify that `CLAUDE.md` exists at the root of the project and `.claude/commands/
 ```bash
 mkdir -p .claude/commands/mindforge
 cp -r .agent/mindforge/* .claude/commands/mindforge/ 2>/dev/null || true
-cp -r agents/mindforge/* .claude/commands/mindforge/ 2>/dev/null || true
+cp -r .agents/workflows/* .claude/commands/mindforge/ 2>/dev/null || true
 cp .agent/CLAUDE.md ./CLAUDE.md 2>/dev/null || true
-cp agents/CLAUDE.md ./CLAUDE.md 2>/dev/null || true
-cp ./CLAUDE.md ./.cursorrules 2>/dev/null || true
-cp ./CLAUDE.md ./.windsurfrules 2>/dev/null || true
+cp .agent/CLAUDE.md ./.cursorrules 2>/dev/null || true
+cp .agent/CLAUDE.md ./.windsurfrules 2>/dev/null || true
 ```
 
 ## Step 1 — Requirements interview

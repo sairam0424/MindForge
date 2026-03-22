@@ -22,7 +22,7 @@ function read(p) {
   return fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : '';
 }
 
-console.log('\nMindForge Day 5 — Intelligence Tests\n');
+console.log('\nMindForge Multi-Model Intelligence Layer Tests\n');
 
 console.log('Files:');
 [
@@ -45,7 +45,7 @@ console.log('Files:');
 
 console.log('\nReview/hardening checks:');
 
-test('health engine required list includes Day 5 command files', () => {
+test('health engine required list includes Functional command files', () => {
   const c = read('.mindforge/intelligence/health-engine.md');
   assert.ok(c.includes('health.md'));
   assert.ok(c.includes('retrospective.md'));

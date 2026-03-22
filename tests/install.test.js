@@ -22,7 +22,7 @@ function test(name, fn) {
   }
 }
 
-console.log('\nMindForge Day 1 — Structural Integrity Tests\n');
+console.log('\nMindForge Core Installation & Structural Tests\n');
 
 // ── Directory structure tests ─────────────────────────────────────────────────
 console.log('Directories:');
@@ -205,5 +205,5 @@ if (failed > 0) {
   console.error(`\n❌ ${failed} test(s) failed. Fix before pushing.\n`);
   process.exit(1);
 } else {
-  console.log('\n✅ All tests passed. Day 1 foundation is solid.\n');
+  console.log('\n✅ All tests passed. Foundation is solid.\n');
 }

@@ -26,3 +26,5 @@ coverage/
 # The decision depends on sensitivity of decisions and patterns stored.
 # By default: gitignored. Opt-in to git tracking by removing these lines.
 .mindforge/memory/*.jsonl
+
+temp-test-install/

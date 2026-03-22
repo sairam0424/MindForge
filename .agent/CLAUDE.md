@@ -3,7 +3,7 @@
 
 ---
 
-## MULTI-MODEL INTELLIGENCE LAYER (v2.0.0 — Day 10)
+## MULTI-MODEL INTELLIGENCE LAYER (v2.0.0)
 
 ### Model Routing
 
@@ -26,7 +26,7 @@
 
 ---
 
-## DISTRIBUTION & CI LAYER (Day 6)
+## DISTRIBUTION & CI LAYER
 
 ### CI mode awareness
 If `CI=true` or `MINDFORGE_CI=true` environment variables are set:
@@ -63,7 +63,7 @@ Run `node bin/validate-config.js` silently.
 If errors: warn the user before proceeding.
 If warnings about non-overridable settings: ignore the override silently (per ADR-013).
 
-### New commands available (Day 6)
+### New commands available
 - `/mindforge:init-org` — organisation-wide setup
 - `/mindforge:install-skill` — install skill from registry
 - `/mindforge:publish-skill` — publish skill to registry
@@ -107,7 +107,7 @@ All plugin.json, HANDOFF.json, AUDIT.jsonl schemas are stable.
 Breaking changes to these require MAJOR version bump.
 Non-breaking additions (new optional fields, new commands) require MINOR.
 
-### New commands (Day 7)
+### New commands
 - /mindforge:update — check for and apply framework updates
 - /mindforge:migrate — run schema migrations between versions
 - /mindforge:plugins — manage plugins (install, uninstall, validate)
@@ -140,7 +140,7 @@ If `--headless` is used:
 - Structure all stdout as line-delimited JSON.
 - Handle SIGTERM by pausing execution and snapshotting HANDOFF.json.
 
-### New commands (Day 8)
+### New commands
 - /mindforge:auto — start/resume autonomous execution engine
 - /mindforge:steer — inject mid-execution guidance
 - /mindforge:browse — persistent browser control and actions
@@ -148,7 +148,7 @@ If `--headless` is used:
 
 ---
 
-## REAL-TIME DASHBOARD (v2.0.0 — Day 12)
+## REAL-TIME DASHBOARD (v2.0.0)
 
 ### Dashboard server
 The MindForge dashboard runs at localhost:7339 when started.
@@ -171,7 +171,7 @@ Suggest starting the dashboard when:
 - approval_granted / approval_rejected: when approved via browser UI
 - steering_queued: when steering instruction sent via browser UI
 
-### New command (Day 12)
+### New command
 - /mindforge:dashboard — start/stop/status the real-time web dashboard
 
 ---
@@ -455,7 +455,7 @@ This is the same logic `/mindforge:next` uses — it can be applied any time.
 
 ---
 
-## SKILLS PLATFORM (Day 3)
+## SKILLS PLATFORM
 
 ### Skills loading is now multi-tier
 The skills engine has three tiers: Core (Tier 1) → Org (Tier 2) → Project (Tier 3).
@@ -500,7 +500,7 @@ When a user invokes `/mindforge:*`, route to the corresponding command file
 and execute its full protocol precisely.
 
 ---
-## INTELLIGENCE LAYER (Day 5)
+## INTELLIGENCE LAYER
 
 ### MINDFORGE.md loading and override behavior
 After ORG + PROJECT + STATE + HANDOFF loading, read `MINDFORGE.md` if present.

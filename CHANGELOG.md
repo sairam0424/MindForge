@@ -1,11 +1,20 @@
 # Changelog
 
-All notable changes to MindForge are documented here.
-Format follows [Keep a Changelog](https://keepachangelog.com).
+## [2.0.0-alpha.9] — Verified Antigravity Compatibility — 2026-03-23
+### Fixed
+- Fixed critical installer regression where `files` variable was undefined during command installation.
+- Fixed `resolveBaseDir` hardcoding that prevented `.agents/` relocation in non-standard environments.
+- Verified end-to-end Antigravity fix for command visibility and YAML frontmatter.
 
-## [2.0.0-alpha.6] — Day 12: Real-time Observability Dashboard — 2026-03-22
+## [2.0.0-alpha.8] — Antigravity Visibility Fix — 2026-03-23
 
-- [v2.0.0-alpha.6 (2026-03-22)]
+### Fixed
+- **Antigravity Command Visibility**: Relocated workflows to `.agents/workflows/` (from `agents/`) and injected mandatory YAML frontmatter (`description`) to ensure registration in Antigravity.
+- **Zero-Config Sync**: Updated `init-project` command to reflect the new `.agents` directory standard.
+
+## [2.0.0-alpha.7] — Day 12: Real-time Observability Dashboard — 2026-03-22
+
+- [v2.0.0-alpha.7 (2026-03-22)]
   - [NEW] Real-time Dashboard Server (Express + SSE Bridge).
   - [NEW] Premium 5-tab UI: Activity, Metrics, Approvals, Memory, Team.
   - [NEW] Live Data Streaming for Audit Logs, Quality, Costs, and Team Activity.
