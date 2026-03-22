@@ -85,7 +85,7 @@ function printHelp() {
 
   RUNTIMES (pick one or use --all)
     --claude          Claude Code  (~/.claude or .claude/)
-    --antigravity     Antigravity  (~/.gemini/antigravity or agents/; .agent/ legacy)
+    --antigravity     Antigravity  (~/.gemini/antigravity or .agents/; .agent/ legacy)
     --all             Both runtimes
 
   SCOPE

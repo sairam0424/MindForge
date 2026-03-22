@@ -29,6 +29,7 @@ async function detect() {
   if (
     fs.existsSync(path.join(home, '.gemini', 'antigravity')) ||
     fs.existsSync(path.join(cwd, '.agent')) ||
+    fs.existsSync(path.join(cwd, '.agents')) ||
     fs.existsSync(path.join(cwd, 'agents'))
   ) {
     runtimes.push('antigravity');
