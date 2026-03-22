@@ -3,9 +3,14 @@
  * TypeScript interface to the MindForge knowledge graph.
  */
 
-import * as fs   from 'fs';
 import * as path from 'path';
 import * as os   from 'os';
+
+// Import JS implementations
+// @ts-expect-error - JS modules lack declaration files
+import * as Store  from '../../bin/memory/knowledge-store';
+// @ts-expect-error - JS modules lack declaration files
+import * as Loader from '../../bin/memory/session-memory-loader';
 
 export type KnowledgeType =
   | 'architectural_decision'
@@ -90,8 +95,6 @@ export class MindForgeMemory {
    * Add a new knowledge entry.
    */
   public async remember(entry: Partial<KnowledgeEntry>): Promise<string> {
-    // Import the JS implementation to reuse logic
-    const Store = require('../../bin/memory/knowledge-store');
     return Store.add(entry);
   }
 
@@ -99,7 +102,6 @@ export class MindForgeMemory {
    * Query the knowledge base.
    */
   public async query(params: QueryParams = {}): Promise<KnowledgeEntry[]> {
-    const Store = require('../../bin/memory/knowledge-store');
     return Store.query(params);
   }
 
@@ -107,7 +109,6 @@ export class MindForgeMemory {
    * Reinforce an entry (increase confidence).
    */
   public async reinforce(id: string): Promise<void> {
-    const Store = require('../../bin/memory/knowledge-store');
     Store.reinforce(id);
   }
 
@@ -115,7 +116,6 @@ export class MindForgeMemory {
    * Deprecate an entry.
    */
   public async deprecate(id: string, reason: string, supersededBy?: string): Promise<void> {
-    const Store = require('../../bin/memory/knowledge-store');
     Store.deprecate(id, reason, supersededBy);
   }
 
@@ -123,7 +123,6 @@ export class MindForgeMemory {
    * Get memory statistics.
    */
   public async getStats(): Promise<MemoryStats> {
-    const Store = require('../../bin/memory/knowledge-store');
     return Store.stats();
   }
 
@@ -131,7 +130,6 @@ export class MindForgeMemory {
    * Load context for a session.
    */
   public async loadContext(opts: { techStack?: string[], phase?: string, topic?: string }): Promise<SessionContext> {
-    const Loader = require('../../bin/memory/session-memory-loader');
     const result = Loader.loadForSession(opts);
     return result;
   }
