@@ -1,7 +1,10 @@
 # Changelog
+...
+## [2.0.0-alpha.8] — Antigravity Visibility Fix — 2026-03-23
 
-All notable changes to MindForge are documented here.
-Format follows [Keep a Changelog](https://keepachangelog.com).
+### Fixed
+- **Antigravity Command Visibility**: Relocated workflows to `.agents/workflows/` (from `agents/`) and injected mandatory YAML frontmatter (`description`) to ensure registration in Antigravity.
+- **Zero-Config Sync**: Updated `init-project` command to reflect the new `.agents` directory standard.
 
 ## [2.0.0-alpha.7] — Day 12: Real-time Observability Dashboard — 2026-03-22
 

@@ -1,4 +1,4 @@
-# MindForge User Guide (v2.0.0-alpha.7)
+# MindForge User Guide (v2.0.0-alpha.8)
 
 This guide gets you from install to productive, with the minimum needed to run
 MindForge in a real project. It assumes Node.js 18+.

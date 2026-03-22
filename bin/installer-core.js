@@ -20,7 +20,7 @@ const RUNTIMES = {
   },
   antigravity: {
     globalDir:      path.join(os.homedir(), '.gemini', 'antigravity'),
-    localDir:       'agents',
+    localDir:       '.agents',
     commandsSubdir: 'workflows',
     entryFile:      'CLAUDE.md',
   },
@@ -227,12 +227,21 @@ async function install(runtime, scope, options = {}) {
 
   if (fsu.exists(cmdSrc)) {
     fsu.ensureDir(cmdsDir);
-    const files = fsu.listFiles(cmdSrc).filter(f => f.endsWith('.md'));
-    
     // Install for specific runtime
     files.forEach(f => {
       const targetName = runtime === 'antigravity' ? `mindforge:${f}` : f;
-      fsu.copy(path.join(cmdSrc, f), path.join(cmdsDir, targetName));
+      const srcPath = path.join(cmdSrc, f);
+      const dstPath = path.join(cmdsDir, targetName);
+
+      if (runtime === 'antigravity') {
+        const content = fsu.read(srcPath);
+        const firstLine = content.split('\n')[0].trim();
+        // Mandatory Antigravity frontmatter metadata
+        const metadata = `---\ndescription: ${firstLine}\n---\n`;
+        fsu.write(dstPath, metadata + content);
+      } else {
+        fsu.copy(srcPath, dstPath);
+      }
     });
 
     // ✨ STANDARD: Mirror to .claude/commands for cross-IDE compatibility (Cursor/Windsurf/Claude Code)
