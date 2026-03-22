@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MindForge v2 | Real-time Dashboard</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface-hover: #1c2128;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --red: #f85149;
+      --orange: #db6d28;
+      --purple: #bc8cff;
+      --cyan: #39c5bb;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Ubuntu Mono', monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 13px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header & Nav ────────────────────────────────────────────────────────── */
+    header {
+      padding: 12px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+    .logo-area { display: flex; align-items: center; gap: 12px; }
+    .logo-text { font-size: 16px; font-weight: 700; letter-spacing: -0.5px; }
+    .badge { padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; background: var(--border); }
+    .badge-live { background: rgba(63, 185, 80, 0.15); color: var(--green); border: 1px solid rgba(63, 185, 80, 0.3); }
+
+    nav {
+      padding: 0 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 4px;
+      height: 48px;
+    }
+    .tab {
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-weight: 500;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      outline: none;
+    }
+    .tab:hover { color: var(--text); background: var(--surface-hover); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); background: rgba(88, 166, 255, 0.05); }
+
+    /* ── Layout ──────────────────────────────────────────────────────────────── */
+    main { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; }
+    .page { display: none; opacity: 0; transform: translateY(10px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .page.active { display: flex; flex-direction: column; gap: 24px; opacity: 1; transform: translateY(0); }
+
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; }
+
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+    .card-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); }
+    .card-title { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .card-body { padding: 16px; flex: 1; }
+
+    /* ── Components ──────────────────────────────────────────────────────────── */
+    .stat-value { font-size: 28px; font-weight: 700; margin-top: 4px; display: flex; align-items: baseline; gap: 8px; }
+    .stat-unit { font-size: 14px; font-weight: 400; color: var(--muted); }
+    .stat-trend { font-size: 12px; font-weight: 600; padding: 2px 6px; border-radius: 4px; }
+    .trend-up { color: var(--green); background: rgba(63, 185, 80, 0.1); }
+    .trend-down { color: var(--red); background: rgba(248, 81, 73, 0.1); }
+
+    #audit-feed {
+      font-family: var(--font-mono); font-size: 12px; line-height: 1.6;
+      background: #000; padding: 12px; height: 400px; overflow-y: auto;
+      scroll-behavior: smooth; color: #d1d5db;
+    }
+    .event { padding: 4px 8px; border-left: 2px solid transparent; transition: background 0.2s; }
+    .event:hover { background: rgba(255,255,255,0.05); }
+    .event-time { color: var(--muted); margin-right: 12px; min-width: 80px; display: inline-block; }
+    .event-type { font-weight: 700; margin-right: 12px; min-width: 120px; display: inline-block; text-transform: uppercase; font-size: 10px; }
+    .event-msg { color: #eee; }
+
+    .type-task_completed { border-left-color: var(--green); color: var(--green); }
+    .type-task_failed { border-left-color: var(--red); color: var(--red); }
+    .type-security_finding { border-left-color: var(--yellow); color: var(--yellow); }
+    .type-approval_pending { border-left-color: var(--purple); color: var(--purple); }
+    .type-approval_granted { border-left-color: var(--green); color: var(--green); }
+    .type-approval_rejected { border-left-color: var(--red); color: var(--red); }
+
+    /* ── Approvals UI ────────────────────────────────────────────────────────── */
+    .approval-card { margin-bottom: 12px; }
+    .tier-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-right: 8px; }
+    .tier-1 { background: rgba(88, 166, 255, 0.2); color: var(--accent); }
+    .tier-2 { background: rgba(210, 153, 34, 0.2); color: var(--yellow); }
+    .tier-3 { background: rgba(248, 81, 73, 0.2); color: var(--red); }
+
+    .btn { padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; outline: none; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-approve { background: var(--green); color: white; }
+    .btn-approve:hover { filter: brightness(1.1); }
+    .btn-reject { background: var(--red); color: white; }
+    .btn-reject:hover { filter: brightness(1.1); }
+    .btn-disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .confirm-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center; z-index: 1000;
+    }
+    .confirm-modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+    .confirm-modal h3 { margin-bottom: 12px; }
+    .confirm-modal p { color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+    .confirm-input { width: 100%; background: var(--bg); border: 1px solid var(--border); padding: 10px; border-radius: 6px; color: var(--text); font-family: var(--font-mono); margin-bottom: 20px; outline: none; }
+    .confirm-input:focus { border-color: var(--accent); }
+
+    /* ── Charts ──────────────────────────────────────────────────────────────── */
+    canvas { width: 100%; height: 200px; image-rendering: -webkit-optimize-contrast; }
+
+    /* ── Team Feed ───────────────────────────────────────────────────────────── */
+    .activity-row { display: flex; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border); }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--border); border: 1px solid var(--muted); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
+    .activity-info { flex: 1; }
+    .activity-user { font-weight: 600; margin-right: 8px; }
+    .activity-action { color: var(--muted); }
+    .activity-time { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-area">
+      <div style="background:var(--accent); width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--bg); font-weight:900;">M</div>
+      <div class="logo-text">MindForge <span style="color:var(--muted); font-weight:400">Dash</span></div>
+      <div id="project-name" class="badge">PROJ: UNSET</div>
+    </div>
+    <div id="connection-status" class="badge badge-live">● Connected</div>
+  </header>
+
+  <nav>
+    <button class="tab active" onclick="showPage('activity')">Activity</button>
+    <button class="tab" onclick="showPage('metrics')">Metrics</button>
+    <button class="tab" onclick="showPage('approvals')">Approvals</button>
+    <button class="tab" onclick="showPage('memory')">Memory</button>
+    <button class="tab" onclick="showPage('team')">Team</button>
+  </nav>
+
+  <main>
+    <!-- PAGE: ACTIVITY -->
+    <div id="activity" class="page active">
+      <div class="grid-4">
+        <div class="card"><div class="card-body"><div class="stat-label">System Phase</div><div id="stat-phase" class="stat-value">-</div></div></div>
+        <div class="card"><div class="card-body"><div class="stat-label">Agent Status</div><div id="stat-status" class="stat-value" style="color:var(--green)">IDLE</div></div></div>
+        <div class="card"><div class="card-body"><div class="stat-label">Task Progress</div><div id="stat-tasks" class="stat-value">-</div></div></div>
+        <div class="card"><div class="card-body"><div class="stat-label">Elapsed Time</div><div id="stat-elapsed" class="stat-value">-</div></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Live Audit Feed</div>
+          <div style="font-size:10px; color:var(--muted)">SSE STREAMING ACTIVE</div>
+        </div>
+        <div id="audit-feed"></div>
+      </div>
+    </div>
+
+    <!-- PAGE: METRICS -->
+    <div id="metrics" class="page">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Token Costs (USD)</div></div>
+          <div class="card-body"><canvas id="chart-costs"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Session Quality Score</div></div>
+          <div class="card-body"><canvas id="chart-quality"></canvas></div>
+        </div>
+      </div>
+      <div class="grid-4">
+        <div class="card"><div class="card-body"><div class="stat-label">Cumulative Cost</div><div id="stat-total-cost" class="stat-value">$0.00</div></div></div>
+        <div class="card"><div class="card-body"><div class="stat-label">Avg Quality</div><div id="stat-avg-quality" class="stat-value">0.0</div></div></div>
+        <div class="card"><div class="card-body"><div class="stat-label">LSPs Registered</div><div id="stat-lsp-count" class="stat-value">0</div></div></div>
+        <div class="card"><div class="card-body"><div class="stat-label">Token Velocity</div><div id="stat-velocity" class="stat-value">0 <span class="stat-unit">tx/m</span></div></div></div>
+      </div>
+    </div>
+
+    <!-- PAGE: APPROVALS -->
+    <div id="approvals" class="page">
+      <div class="card" style="max-width: 800px; margin: 0 auto; width: 100%;">
+        <div class="card-header"><div class="card-title">Pending Governance Decisions</div></div>
+        <div id="approval-list" class="card-body">
+          <div style="text-align:center; padding: 40px; color:var(--muted)">No pending approvals</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: MEMORY -->
+    <div id="memory" class="page">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Knowledge Base Map</div></div>
+          <div class="card-body" id="memory-map" style="font-family:var(--font-mono); font-size:11px; color:var(--cyan)">
+            Loading graph...
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Persistent Engine Stats</div></div>
+          <div class="card-body">
+            <div id="memory-stats-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: TEAM -->
+    <div id="team" class="page">
+      <div class="card" style="max-width: 1000px; margin: 0 auto; width: 100%;">
+        <div class="card-header"><div class="card-title">Real-time Team Activity</div></div>
+        <div id="team-activity-list" class="card-body" style="padding:0">
+          <div style="text-align:center; padding: 40px; color:var(--muted)">No recent team activity</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- CONFIRMATION MODAL -->
+  <div id="confirm-overlay" class="confirm-overlay">
+    <div class="confirm-modal">
+      <h3 id="confirm-title">Confirm Action</h3>
+      <p id="confirm-desc">This is a Tier 3 change. Please confirm.</p>
+      <div id="tier3-input-group" style="display:none">
+        <label style="display:block; font-size:11px; margin-bottom:8px; color:var(--red); font-weight:700;">TYPE PLAN ID TO CONFIRM:</label>
+        <input type="text" id="confirm-input" class="confirm-input" placeholder="e.g. 1.1-auth_fix">
+      </div>
+      <div style="display:flex; gap:12px; justify-content:flex-end;">
+        <button class="btn" style="background:var(--border)" onclick="closeConfirm()">Cancel</button>
+        <button id="confirm-btn" class="btn btn-approve">Proceed</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── State ─────────────────────────────────────────────────────────────────
+    let currentApprovals = [];
+    let state = { costs: [], quality: [] };
+    let currentTier3Approval = null;
+
+    function showPage(id) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      const tab = Array.from(document.querySelectorAll('.tab')).find(t => t.innerText.toLowerCase() === id.toLowerCase());
+      if (tab) tab.classList.add('active');
+      
+      if (id === 'metrics') drawCharts();
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[m]));
+    }
+
+    // ── WebSocket / SSE ───────────────────────────────────────────────────────
+    const es = new EventSource('/events');
+    const feed = document.getElementById('audit-feed');
+
+    es.onopen = () => {
+      const el = document.getElementById('connection-status');
+      el.textContent = '● Connected';
+      el.style.color = 'var(--green)';
+      refreshData();
+    };
+
+    es.onerror = () => {
+      const el = document.getElementById('connection-status');
+      el.textContent = '● Disconnected';
+      el.style.color = 'var(--red)';
+    };
+
+    es.addEventListener('status:update', (e) => {
+      const data = JSON.parse(e.data);
+      updateStatusUI(data);
+    });
+
+    es.addEventListener('audit:new', (e) => {
+      const data = JSON.parse(e.data);
+      appendAuditEvent(data);
+    });
+
+    es.addEventListener('approval:new', (e) => {
+      const data = JSON.parse(e.data);
+      refreshApprovals();
+    });
+
+    // ── API Interactions ──────────────────────────────────────────────────────
+    async function refreshData() {
+      try {
+        const res = await fetch('/api/metrics');
+        const data = await res.json();
+        state = data;
+        updateMetricsUI(data);
+        refreshApprovals();
+        refreshMemory();
+        refreshTeam();
+      } catch(e) { console.error('Refresh fail', e); }
+    }
+
+    async function refreshApprovals() {
+      try {
+        const res = await fetch('/api/approvals');
+        const data = await res.json();
+        currentApprovals = data;
+        renderApprovals();
+      } catch(e) {}
+    }
+
+    async function refreshMemory() {
+      try {
+        const res = await fetch('/api/memory');
+        const data = await res.json();
+        document.getElementById('memory-map').innerHTML = `<pre>${escapeHtml(JSON.stringify(data.graph || {}, null, 2))}</pre>`;
+        document.getElementById('memory-stats-list').innerHTML = `<div class="stat-value">${data.count || 0} <span class="stat-unit">Items Indexed</span></div>`;
+      } catch(e) {}
+    }
+
+    async function refreshTeam() {
+      try {
+        const res = await fetch('/api/team');
+        const data = await res.json();
+        renderTeam(data);
+      } catch(e) {}
+    }
+
+    async function decide(id, decision) {
+      const approval = currentApprovals.find(a => a.id === id);
+      if (!approval) return;
+
+      if (decision === 'approve' && approval.tier === 3) {
+        currentTier3Approval = approval;
+        const expected = `${approval.phase}-${approval.plan}`;
+        document.getElementById('confirm-title').innerText = 'Critical Tier 3 Approval';
+        document.getElementById('confirm-desc').innerText = `Danger: You are approving a sensitive change (Phase ${approval.phase}, Plan ${approval.plan}). This requires manual confirmation.`;
+        document.getElementById('tier3-input-group').style.display = 'block';
+        document.getElementById('confirm-input').value = '';
+        document.getElementById('confirm-overlay').style.display = 'flex';
+        document.getElementById('confirm-btn').onclick = () => submitDecision(id, decision, document.getElementById('confirm-input').value);
+        return;
+      }
+
+      submitDecision(id, decision);
+    }
+
+    async function submitDecision(id, decision, confirmationId = null) {
+      try {
+        const res = await fetch(`/api/approve/${id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            decision,
+            comment: 'Decided via Dashboard',
+            approver: 'admin-dash',
+            confirmation_id: confirmationId
+          })
+        });
+        const result = await res.json();
+        if (!result.success) alert(result.error);
+        closeConfirm();
+        refreshApprovals();
+      } catch(e) { alert('Action failed'); }
+    }
+
+    function closeConfirm() {
+      document.getElementById('confirm-overlay').style.display = 'none';
+    }
+
+    // ── UI Rendering ──────────────────────────────────────────────────────────
+    function updateStatusUI(data) {
+      document.getElementById('project-name').textContent = `PROJ: ${data.project_name || 'UNSET'}`;
+      document.getElementById('stat-phase').textContent = data.phase || '0';
+      document.getElementById('stat-status').textContent = (data.auto_status || 'IDLE').toUpperCase();
+      document.getElementById('stat-tasks').textContent = `${data.tasks_completed || 0}/${data.tasks_total || 0}`;
+      document.getElementById('stat-elapsed').textContent = data.elapsed_ms ? (data.elapsed_ms / 1000).toFixed(1) + 's' : '0s';
+    }
+
+    function updateMetricsUI(data) {
+      document.getElementById('stat-total-cost').textContent = `$${(data.costs?.reduce((a,b) => a + b.cost, 0) || 0).toFixed(4)}`;
+      document.getElementById('stat-avg-quality').textContent = (data.quality?.reduce((a,b) => a + b.score, 0) / (data.quality?.length || 1)).toFixed(1);
+    }
+
+    function appendAuditEvent(data) {
+      const div = document.createElement('div');
+      div.className = `event type-${data.event}`;
+      const time = new Date(data.timestamp).toLocaleTimeString([], { hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit' });
+      div.innerHTML = `<span class="event-time">${time}</span><span class="event-type type-${data.event}">${data.event}</span><span class="event-msg">${escapeHtml(data.message || data.task || '')}</span>`;
+      feed.prepend(div);
+      if (feed.children.length > 200) feed.lastChild.remove();
+    }
+
+    function renderApprovals() {
+      const list = document.getElementById('approval-list');
+      if (currentApprovals.length === 0) {
+        list.innerHTML = '<div style="text-align:center; padding: 40px; color:var(--muted)">No pending approvals</div>';
+        return;
+      }
+
+      list.innerHTML = currentApprovals.map(a => `
+        <div class="card approval-card">
+          <div class="card-body">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+              <div>
+                <span class="tier-badge tier-${a.tier}">Tier ${a.tier}</span>
+                <span style="font-weight:700">Phase ${a.phase} | ${a.plan}</span>
+              </div>
+              <div style="font-size:11px; color:var(--muted)">Expires: ${new Date(a.expires_at).toLocaleTimeString()}</div>
+            </div>
+            <p style="margin-bottom:16px; font-size:12px; line-height:1.4">${escapeHtml(a.summary || 'No summary provided')}</p>
+            <div style="display:flex; gap:12px;">
+              <button class="btn btn-approve" onclick="decide('${a.id}', 'approve')">Approve Selection</button>
+              <button class="btn btn-reject" onclick="decide('${a.id}', 'reject')">Reject</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderTeam(data) {
+      const list = document.getElementById('team-activity-list');
+      if (!data || data.length === 0) {
+        list.innerHTML = '<div style="text-align:center; padding: 40px; color:var(--muted)">No recent team activity</div>';
+        return;
+      }
+      list.innerHTML = data.map(ev => `
+        <div class="activity-row">
+          <div class="avatar">${(ev.user || '?').charAt(0).toUpperCase()}</div>
+          <div class="activity-info">
+            <div><span class="activity-user">${escapeHtml(ev.user)}</span> <span class="activity-action">${escapeHtml(ev.action)}</span></div>
+            <div class="activity-time">${new Date(ev.timestamp).toLocaleString()}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ── Simple Charts Implementation ──────────────────────────────────────────
+    function drawCharts() {
+      drawCanvasChart('chart-costs', state.costs?.map(c => c.cost) || [], varColor('--accent'));
+      drawCanvasChart('chart-quality', state.quality?.map(q => q.score) || [], varColor('--green'), 100);
+    }
+
+    function varColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+    function drawCanvasChart(id, data, color, maxVal = null) {
+      const canvas = document.getElementById(id);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = canvas.offsetWidth * dpr;
+      canvas.height = canvas.offsetHeight * dpr;
+      ctx.scale(dpr, dpr);
+
+      const w = canvas.offsetWidth;
+      const h = canvas.offsetHeight;
+      ctx.clearRect(0,0,w,h);
+      
+      if (data.length < 2) return;
+      
+      const max = maxVal || Math.max(...data) * 1.2 || 1;
+      const step = w / (data.length - 1);
+      
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.lineJoin = 'round';
+      
+      data.forEach((val, i) => {
+        const x = i * step;
+        const y = h - (val / max) * h;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      // Area fill
+      ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath();
+      ctx.fillStyle = color.replace(')', ', 0.1)').replace('rgb', 'rgba');
+      ctx.fill();
+    }
+
+    window.onresize = drawCharts;
+    setInterval(refreshData, 30000); // Periodic full refresh
+    showPage('activity');
+  </script>
+</body>
+</html>

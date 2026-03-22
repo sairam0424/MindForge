@@ -8,8 +8,11 @@
 const fs   = require('fs');
 const path = require('path');
 
-const APPROVAL_DIR = path.join(process.cwd(), '.planning', 'approvals');
-const AUDIT_PATH   = path.join(process.cwd(), '.planning', 'AUDIT.jsonl');
+// Paths resolved lazily for testing
+const getPaths = () => ({
+  approvals: path.join(process.cwd(), '.planning', 'approvals'),
+  audit:     path.join(process.cwd(), '.planning', 'AUDIT.jsonl'),
+});
 
 /**
  * Process an approval decision from the dashboard.
@@ -19,7 +22,7 @@ const AUDIT_PATH   = path.join(process.cwd(), '.planning', 'AUDIT.jsonl');
  * @param {string} approver   - Approver identifier (email or name)
  * @returns {{ success, decision, message }}
  */
-function processDecision(approvalId, decision, comment, approver) {
+function processDecision(approvalId, decision, comment, approver, confirmationId = null) {
   // Input validation
   if (!approvalId || typeof approvalId !== 'string') {
     return { success: false, error: 'Invalid approval ID' };
@@ -35,7 +38,8 @@ function processDecision(approvalId, decision, comment, approver) {
   }
 
   // Find the approval file
-  const filePath = path.join(APPROVAL_DIR, `APPROVAL-${approvalId}.json`);
+  const paths    = getPaths();
+  const filePath = path.join(paths.approvals, `APPROVAL-${approvalId}.json`);
   if (!fs.existsSync(filePath)) {
     return { success: false, error: `Approval not found: ${approvalId}` };
   }
@@ -57,19 +61,21 @@ function processDecision(approvalId, decision, comment, approver) {
     return { success: false, error: 'Approval has expired' };
   }
 
-  // Update approval file
-  const updated = {
-    ...approval,
-    status:       decision === 'approve' ? 'approved' : 'rejected',
-    resolved_at:  new Date().toISOString(),
-    resolved_by:  approver || 'dashboard',
-    comment:      comment || null,
-    resolution_channel: 'mindforge-dashboard',
-  };
+  // TIER 3 CONFIRMATION — require typing the plan ID
+  if (approval.tier === 3 && decision === 'approve') {
+    const expectedConfirmation = `${approval.phase}-${approval.plan}`;
+    if (!confirmationId || confirmationId.trim() !== expectedConfirmation) {
+      return {
+        success: false,
+        error: `Tier 3 approval requires typing the plan ID "${expectedConfirmation}" to confirm.`,
+        confirmation_required: true,
+        expected: expectedConfirmation,
+        tier3_warning: 'This is a Tier 3 change (auth/payment/PII). Review the code diff before approving.',
+      };
+    }
+  }
 
-  fs.writeFileSync(filePath, JSON.stringify(updated, null, 2));
-
-  // Write AUDIT entry
+  // Write AUDIT entry FIRST (before updating file)
   writeAuditEntry({
     id:          require('crypto').randomBytes(8).toString('hex'),
     timestamp:   new Date().toISOString(),
@@ -84,6 +90,18 @@ function processDecision(approvalId, decision, comment, approver) {
     session_id:  'dashboard',
   });
 
+  // Update approval file
+  const updated = {
+    ...approval,
+    status:       decision === 'approve' ? 'approved' : 'rejected',
+    resolved_at:  new Date().toISOString(),
+    resolved_by:  approver || 'dashboard',
+    comment:      comment || null,
+    resolution_channel: 'mindforge-dashboard',
+  };
+
+  fs.writeFileSync(filePath, JSON.stringify(updated, null, 2));
+
   return {
     success:     true,
     decision,
@@ -95,17 +113,19 @@ function processDecision(approvalId, decision, comment, approver) {
 
 function writeAuditEntry(entry) {
   try {
-    if (!fs.existsSync(path.dirname(AUDIT_PATH))) return;
-    fs.appendFileSync(AUDIT_PATH, JSON.stringify(entry) + '\n');
+    const paths = getPaths();
+    if (!fs.existsSync(path.dirname(paths.audit))) return;
+    fs.appendFileSync(paths.audit, JSON.stringify(entry) + '\n');
   } catch { /* ignore AUDIT write failures */ }
 }
 
 function listApprovals() {
-  if (!fs.existsSync(APPROVAL_DIR)) return [];
-  return fs.readdirSync(APPROVAL_DIR)
+  const paths = getPaths();
+  if (!fs.existsSync(paths.approvals)) return [];
+  return fs.readdirSync(paths.approvals)
     .filter(f => f.startsWith('APPROVAL-') && f.endsWith('.json'))
     .map(f => {
-      try { return JSON.parse(fs.readFileSync(path.join(APPROVAL_DIR, f), 'utf8')); }
+      try { return JSON.parse(fs.readFileSync(path.join(paths.approvals, f), 'utf8')); }
       catch { return null; }
     })
     .filter(Boolean);

@@ -8,14 +8,18 @@
 const fs   = require('fs');
 const path = require('path');
 
-const QUALITY_LOG    = path.join(process.cwd(), '.mindforge', 'metrics', 'session-quality.jsonl');
-const USAGE_LOG      = path.join(process.cwd(), '.mindforge', 'metrics', 'token-usage.jsonl');
-const AUDIT_PATH     = path.join(process.cwd(), '.planning', 'AUDIT.jsonl');
-const HANDOFF_PATH   = path.join(process.cwd(), '.planning', 'HANDOFF.json');
-const AUTO_STATE     = path.join(process.cwd(), '.planning', 'auto-state.json');
-const APPROVAL_DIR   = path.join(process.cwd(), '.planning', 'approvals');
-const TEAM_STATE     = path.join(process.cwd(), '.planning', 'TEAM-STATE.jsonl');
-const KB_PATH        = path.join(process.cwd(), '.mindforge', 'memory', 'knowledge-base.jsonl');
+// Paths are resolved lazily to support testing in temp directories
+const getPaths = () => ({
+  quality:   path.join(process.cwd(), '.mindforge', 'metrics', 'session-quality.jsonl'),
+  usage:     path.join(process.cwd(), '.mindforge', 'metrics', 'token-usage.jsonl'),
+  audit:     path.join(process.cwd(), '.planning', 'AUDIT.jsonl'),
+  handoff:   path.join(process.cwd(), '.planning', 'HANDOFF.json'),
+  auto:      path.join(process.cwd(), '.planning', 'auto-state.json'),
+  approvals: path.join(process.cwd(), '.planning', 'approvals'),
+  team:      path.join(process.cwd(), '.planning', 'TEAM-STATE.jsonl'),
+  kb:        path.join(process.cwd(), '.mindforge', 'memory', 'knowledge-base.jsonl'),
+  project:   path.join(process.cwd(), '.planning', 'PROJECT.md'),
+});
 
 function readJSONL(filePath, limit = 500) {
   if (!fs.existsSync(filePath)) return [];
@@ -32,12 +36,13 @@ function readJSON(filePath) {
 
 // ── Status ────────────────────────────────────────────────────────────────────
 function getStatus() {
-  const handoff   = readJSON(HANDOFF_PATH);
-  const autoState = readJSON(AUTO_STATE);
+  const paths     = getPaths();
+  const handoff   = readJSON(paths.handoff);
+  const autoState = readJSON(paths.auto);
 
   // Read project name from PROJECT.md
   let projectName = 'MindForge Project';
-  const projectMd = path.join(process.cwd(), '.planning', 'PROJECT.md');
+  const projectMd = paths.project;
   if (fs.existsSync(projectMd)) {
     const m = fs.readFileSync(projectMd, 'utf8').match(/^# (.+)/m);
     if (m) projectName = m[1].trim();
@@ -65,7 +70,8 @@ function getStatus() {
 
 // ── Audit ─────────────────────────────────────────────────────────────────────
 function getAuditEntries(limit = 50, offset = 0, eventFilter = null) {
-  const all = readJSONL(AUDIT_PATH, 1000);
+  const paths = getPaths();
+  const all   = readJSONL(paths.audit, 1000);
   const reversed = all.reverse(); // Newest first
 
   const filtered = eventFilter
@@ -82,9 +88,10 @@ function getAuditEntries(limit = 50, offset = 0, eventFilter = null) {
 
 // ── Metrics ───────────────────────────────────────────────────────────────────
 function getMetrics() {
-  const qualityEntries = readJSONL(QUALITY_LOG, 20);
-  const usageEntries   = readJSONL(USAGE_LOG, 200);
-  const auditEntries   = readJSONL(AUDIT_PATH, 500);
+  const paths          = getPaths();
+  const qualityEntries = readJSONL(paths.quality, 20);
+  const usageEntries   = readJSONL(paths.usage, 200);
+  const auditEntries   = readJSONL(paths.audit, 500);
 
   // Quality scores (last 20 sessions)
   const sessions = qualityEntries.map(e => ({
@@ -128,10 +135,11 @@ function getMetrics() {
 
 // ── Approvals ─────────────────────────────────────────────────────────────────
 function getApprovals() {
-  if (!fs.existsSync(APPROVAL_DIR)) return { pending: [], approved: [], rejected: [], expired: [] };
+  const paths = getPaths();
+  if (!fs.existsSync(paths.approvals)) return { pending: [], approved: [], rejected: [], expired: [] };
 
   const now   = Date.now();
-  const files = fs.readdirSync(APPROVAL_DIR)
+  const files = fs.readdirSync(paths.approvals)
     .filter(f => f.startsWith('APPROVAL-') && f.endsWith('.json'))
     .sort();
 
@@ -142,7 +150,7 @@ function getApprovals() {
 
   for (const f of files) {
     try {
-      const data    = JSON.parse(fs.readFileSync(path.join(APPROVAL_DIR, f), 'utf8'));
+      const data    = JSON.parse(fs.readFileSync(path.join(paths.approvals, f), 'utf8'));
       const expiry  = data.expires_at ? new Date(data.expires_at).getTime() : Infinity;
       const hoursRemaining = expiry === Infinity ? null : (expiry - now) / 3_600_000;
 
@@ -160,7 +168,8 @@ function getApprovals() {
 
 // ── Team activity ─────────────────────────────────────────────────────────────
 function getTeamActivity() {
-  const auditEntries = readJSONL(AUDIT_PATH, 200);
+  const paths        = getPaths();
+  const auditEntries = readJSONL(paths.audit, 200);
 
   // Group by author (git email from session_id or authored_by field)
   const byAuthor = {};
@@ -213,9 +222,10 @@ function detectFileConflicts(auditEntries) {
 
 // ── Memory ────────────────────────────────────────────────────────────────────
 function getMemory(query = '', limit = 20) {
-  if (!fs.existsSync(KB_PATH)) return { entries: [], total: 0 };
+  const paths = getPaths();
+  if (!fs.existsSync(paths.kb)) return { entries: [], total: 0 };
 
-  const lines  = fs.readFileSync(KB_PATH, 'utf8').split('\n').filter(Boolean);
+  const lines  = fs.readFileSync(paths.kb, 'utf8').split('\n').filter(Boolean);
   const byId   = new Map();
   for (const l of lines) {
     try { const e = JSON.parse(l); byId.set(e.id, e); } catch { /* skip */ }
@@ -239,7 +249,8 @@ function getMemory(query = '', limit = 20) {
 
 // ── Costs ─────────────────────────────────────────────────────────────────────
 function getCosts(windowDays = 7) {
-  const entries    = readJSONL(USAGE_LOG, 1000);
+  const paths      = getPaths();
+  const entries    = readJSONL(paths.usage, 1000);
   const cutoff     = new Date(Date.now() - windowDays * 86_400_000).toISOString().slice(0, 10);
   const today      = new Date().toISOString().slice(0, 10);
 
@@ -256,7 +267,7 @@ function getCosts(windowDays = 7) {
     const cost = e.total_cost_usd || 0;
     stats.total_usd += cost;
     
-    if (e.timestamp.startsWith(today)) {
+    if (e.timestamp && e.timestamp.startsWith(today)) {
       stats.today_usd += cost;
     }
 

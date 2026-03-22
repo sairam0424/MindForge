@@ -21,6 +21,7 @@ const APPROVAL_DIR    = path.join(process.cwd(), '.planning', 'approvals');
 const clients = new Set(); // Connected SSE response objects
 
 let _lastAuditSize  = 0;
+let _auditInode     = 0; // Track file inode for rotation detection
 let _lastAutoState  = '';
 let _lastApprovals  = '';
 
@@ -35,12 +36,20 @@ function addClient(res) {
 
 function broadcast(eventName, data) {
   const message = `event: ${eventName}\ndata: ${JSON.stringify(data)}\n\n`;
+  const toRemove = [];
+
   for (const res of clients) {
     try {
       res.write(message);
-    } catch {
-      clients.delete(res);
+    } catch (err) {
+      // Connection died ungracefully (EPIPE, ECONNRESET, etc.)
+      toRemove.push(res);
     }
+  }
+
+  // Remove dead clients outside iteration
+  for (const res of toRemove) {
+    clients.delete(res);
   }
 }
 
@@ -60,8 +69,16 @@ function pollAuditLog() {
   if (!fs.existsSync(AUDIT_PATH)) return;
 
   try {
-    const stat    = fs.statSync(AUDIT_PATH);
-    const newSize = stat.size;
+    const stat     = fs.statSync(AUDIT_PATH);
+    const newSize  = stat.size;
+    const newIno   = stat.ino;
+
+    // File rotation detected: inode changed or new file is smaller
+    if (newIno !== _auditInode && _auditInode !== 0) {
+      process.stderr.write(`[sse-bridge] AUDIT.jsonl rotation detected (old ino: ${_auditInode}, new ino: ${newIno})\n`);
+      _lastAuditSize = 0;
+    }
+    _auditInode = newIno;
 
     if (newSize <= _lastAuditSize) return; // No new data
 
@@ -130,7 +147,9 @@ let _pingInterval  = null;
 function start() {
   // Initialize AUDIT position
   if (fs.existsSync(AUDIT_PATH)) {
-    _lastAuditSize = fs.statSync(AUDIT_PATH).size;
+    const stat = fs.statSync(AUDIT_PATH);
+    _lastAuditSize = stat.size;
+    _auditInode    = stat.ino;
   }
 
   // Poll every 2 seconds

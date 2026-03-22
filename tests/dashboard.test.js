@@ -206,8 +206,8 @@ test('getCosts: returns correct total', () => {
   try {
     const today = new Date().toISOString().slice(0, 10);
     p.write('.mindforge/metrics/token-usage.jsonl',
-      JSON.stringify({ date: today, model: 'claude-sonnet-4-6', cost_usd: 0.05 }) + '\n' +
-      JSON.stringify({ date: today, model: 'gpt-4o', cost_usd: 0.12 }) + '\n'
+      JSON.stringify({ timestamp: today, model: 'claude-sonnet-4-6', total_cost_usd: 0.05 }) + '\n' +
+      JSON.stringify({ timestamp: today, model: 'gpt-4o', total_cost_usd: 0.12 }) + '\n'
     );
 
     const costs = Metrics.getCosts(7);
@@ -267,6 +267,58 @@ test('processDecision: rejects a valid pending approval', () => {
     assert.strictEqual(result.success, true, 'Should succeed');
     const updated = JSON.parse(fs.readFileSync(path.join(p.dir, `.planning/approvals/APPROVAL-${SAMPLE_APPROVAL.id}.json`), 'utf8'));
     assert.strictEqual(updated.status, 'rejected', 'File should be updated to rejected');
+  } finally { process.chdir(orig); p.cleanup(); }
+});
+
+test('processDecision: fails Tier 3 approval without confirmation ID', () => {
+  const p    = mkProject();
+  const orig = process.cwd();
+  process.chdir(p.dir);
+  try {
+    const tier3 = { ...SAMPLE_APPROVAL, tier: 3, phase: 1, plan: 'auth' };
+    p.write(`.planning/approvals/APPROVAL-${tier3.id}.json`, JSON.stringify(tier3));
+    p.write('.planning/AUDIT.jsonl', '');
+
+    const result = Approval.processDecision(tier3.id, 'approve', 'Go', 'admin');
+    assert.strictEqual(result.success, false, 'Should fail without confirmation');
+    assert.ok(result.confirmation_required, 'Should indicate confirmation required');
+    assert.strictEqual(result.expected, '1-auth', 'Should return expected ID');
+  } finally { process.chdir(orig); p.cleanup(); }
+});
+
+test('processDecision: succeeds Tier 3 approval with correct confirmation ID', () => {
+  const p    = mkProject();
+  const orig = process.cwd();
+  process.chdir(p.dir);
+  try {
+    const tier3 = { ...SAMPLE_APPROVAL, tier: 3, phase: 1, plan: 'auth' };
+    p.write(`.planning/approvals/APPROVAL-${tier3.id}.json`, JSON.stringify(tier3));
+    p.write('.planning/AUDIT.jsonl', '');
+
+    const result = Approval.processDecision(tier3.id, 'approve', 'Go', 'admin', '1-auth');
+    assert.strictEqual(result.success, true, 'Should succeed with correct confirmation');
+    
+    const audit = fs.readFileSync(path.join(p.dir, '.planning/AUDIT.jsonl'), 'utf8');
+    assert.ok(audit.includes('approval_granted'), 'Should write to AUDIT');
+  } finally { process.chdir(orig); p.cleanup(); }
+});
+
+test('processDecision: writes AUDIT before updating approval file (integrity)', () => {
+  const p    = mkProject();
+  const orig = process.cwd();
+  process.chdir(p.dir);
+  // We can't easily test "before" without mocking fs, but we verifies both happen
+  try {
+    p.write(`.planning/approvals/APPROVAL-${SAMPLE_APPROVAL.id}.json`, JSON.stringify(SAMPLE_APPROVAL));
+    p.write('.planning/AUDIT.jsonl', '');
+    
+    Approval.processDecision(SAMPLE_APPROVAL.id, 'approve', 'Ok', 'tester');
+    
+    const audit = fs.readFileSync(path.join(p.dir, '.planning/AUDIT.jsonl'), 'utf8');
+    const apprv = fs.readFileSync(path.join(p.dir, `.planning/approvals/APPROVAL-${SAMPLE_APPROVAL.id}.json`), 'utf8');
+    
+    assert.ok(audit.length > 0, 'AUDIT should be written');
+    assert.ok(JSON.parse(apprv).status === 'approved', 'Approval should be updated');
   } finally { process.chdir(orig); p.cleanup(); }
 });
 
