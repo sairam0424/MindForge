@@ -3,6 +3,7 @@
 ## All 40+ commands
 
 ### Lifecycle commands (core workflow)
+
 | Command | Usage | Description | Added |
 |---|---|---|---|
 | `/mindforge:init-project` | `init-project` | Guided project setup — creates all `.planning/` files | Day 1 |
@@ -16,9 +17,10 @@
 | `/mindforge:next` | `next` | Auto-detect and execute the correct next workflow step | Day 2 |
 | `/mindforge:cross-review` | `cross-review` | Adversarial multi-model code review and synthesis | Day 10 |
 | `/mindforge:research` | `research "query"` | Deep research using Gemini 1.5 Pro 1M context | Day 10 |
-| `/mindforge:costs` | `costs [--summary|--profile]` | Token usage and cost profiling across models | Day 10 |
+| `/mindforge:remember` | `remember [--add X|--search Y|--promote ID|--stats]` | Persistent knowledge graph management | Day 11 |
 
 ### Project setup & discovery
+
 | Command | Usage | Description | Added |
 |---|---|---|---|
 | `/mindforge:map-codebase` | `map-codebase` | Brownfield onboarding: infer stack and seed docs | Day 6 |
@@ -29,6 +31,7 @@
 | `/mindforge:debug` | `debug [plan-id]` | Debug a failed plan with root-cause workflow | Day 5 |
 
 ### Governance & compliance
+
 | Command | Usage | Description | Added |
 |---|---|---|---|
 | `/mindforge:approve` | `approve [--tier 2|3]` | Process approvals and emergency overrides | Day 4 |
@@ -39,6 +42,7 @@
 | `/mindforge:retrospective` | `retrospective [N]` | Phase retrospective and improvement actions | Day 5 |
 
 ### Skills & plugins
+
 | Command | Usage | Description | Added |
 |---|---|---|---|
 | `/mindforge:skills` | `skills [list|validate|refresh]` | Manage core/org/project skills | Day 3 |
@@ -47,6 +51,7 @@
 | `/mindforge:plugins` | `plugins [list|install|uninstall|validate]` | Manage plugin lifecycle | Day 7 |
 
 ### Intelligence & metrics
+
 | Command | Usage | Description | Added |
 |---|---|---|---|
 | `/mindforge:metrics` | `metrics [--phase N]` | Compute quality and throughput metrics | Day 5 |
@@ -55,6 +60,7 @@
 | `/mindforge:tokens` | `tokens [--profile] [--summary]` | Token usage profiling and optimisation | Day 7 |
 
 ### Integrations & distribution
+
 | Command | Usage | Description | Added |
 |---|---|---|---|
 | `/mindforge:init-org` | `init-org` | Org-wide MindForge setup | Day 6 |
@@ -66,6 +72,7 @@
 | `/mindforge:qa` | `qa [--diff] [--all]` | Run systematic visual QA and regression tests | Day 9 |
 
 ### Release & maintenance
+
 | Command | Usage | Description | Added |
 |---|---|---|---|
 | `/mindforge:update` | `update [--apply] [--force] [--check]` | Check for and apply framework updates | Day 7 |
@@ -73,6 +80,7 @@
 | `/mindforge:release` | `release [--tag vX]` | Framework release pipeline (core team) | Day 7 |
 
 ### Utility
+
 | Command | Usage | Description | Added |
 |---|---|---|---|
 | `/mindforge:help` | `help` | Show all available commands and current project status | Day 1 |

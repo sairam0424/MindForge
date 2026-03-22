@@ -3,6 +3,18 @@
 All notable changes to MindForge are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com).
 
+## [2.0.0-alpha.4] — Day 11: Persistent Knowledge Graph (Long-Term Memory) — 2026-03-22
+
+- [v2.0.0-alpha.4 (2026-03-22)]
+  - [NEW] Persistent Knowledge Graph for long-term memory across sessions.
+  - [NEW] TF-IDF search engine with confidence-based relevance ranking.
+  - [NEW] Automated Knowledge Capture from ADRs, Debug Reports, and Retrospectives.
+  - [NEW] Global Knowledge Sync for machine-wide insight sharing (`~/.mindforge/global-knowledge-base.jsonl`).
+  - [NEW] Skill SDK integration for programmatic memory access.
+  - [NEW] Manual memory management command (`/mindforge:remember`).
+  - [NEW] Append-only audit-ready storage schema for all knowledge types.
+  - [NEW] ADR-030, ADR-031, ADR-032.
+
 ## [2.0.0-alpha.3] — Day 10: Multi-Model Intelligence Layer — 2026-03-22
 
 - [v2.0.0-alpha.3 (2026-03-22)]
