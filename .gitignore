@@ -20,3 +20,9 @@ coverage/
 
 # Uncomment the above ONLY if this is a public repository.
 # Private repos: keep scan reports for team review and audit history.
+
+# MindForge v2 — knowledge graph (contains project-specific insights)
+# NOTE: Teams may CHOOSE to commit .mindforge/memory/ for shared team memory
+# The decision depends on sensitivity of decisions and patterns stored.
+# By default: gitignored. Opt-in to git tracking by removing these lines.
+.mindforge/memory/*.jsonl
