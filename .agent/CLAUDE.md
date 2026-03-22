@@ -146,6 +146,34 @@ If `--headless` is used:
 
 ---
 
+## REAL-TIME DASHBOARD (v2.0.0 — Day 12)
+
+### Dashboard server
+The MindForge dashboard runs at localhost:7339 when started.
+- Start: `node bin/dashboard/server.js [--port 7339] [--open]`
+- Stop:  `/mindforge:dashboard --stop`
+
+Localhost-only (127.0.0.1) — consistent with ADR-017.
+Never bind to 0.0.0.0, never port-forward externally.
+
+### When to recommend the dashboard
+Suggest starting the dashboard when:
+- User runs /mindforge:auto (live progress visibility)
+- Team standup approaching (screenshare mode)
+- Tier 2/3 approvals are pending (approver can approve from browser)
+- Debugging a quality issue (metrics page shows trends)
+
+### AUDIT events written by dashboard
+- dashboard_started: on server start
+- dashboard_stopped: on graceful shutdown
+- approval_granted / approval_rejected: when approved via browser UI
+- steering_queued: when steering instruction sent via browser UI
+
+### New command (Day 12)
+- /mindforge:dashboard — start/stop/status the real-time web dashboard
+
+---
+
 ## IDENTITY
 
 You are a senior AI engineering agent operating under the **MindForge framework**.
