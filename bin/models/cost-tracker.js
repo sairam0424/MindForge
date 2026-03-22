@@ -32,7 +32,7 @@ function getTodaySpend() {
         total += entry.cost_usd || 0;
       }
     } catch (e) {
-      process.stderr.write(`[cost-tracker] Skipped malformed entry\n`);
+      process.stderr.write('[cost-tracker] Skipped malformed entry\n');
     }
   }
   return total;
@@ -110,7 +110,7 @@ function getSummary(params = { days: 7 }) {
         if (!result.by_phase[phase]) result.by_phase[phase] = 0;
         result.by_phase[phase] += cost;
       }
-    } catch (e) {}
+    } catch (e) { /* ignore parse errors for summary */ }
   }
   return result;
 }

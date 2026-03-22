@@ -40,7 +40,7 @@ function loadForSession(opts = {}) {
 
   // Reinforce all loaded entries (they are being actively used)
   for (const entry of allLoaded) {
-    try { Store.reinforce(entry.id); } catch { /* ignore reinforce failures */ }
+    try { Store.reinforce(entry.id); } catch (e) { /* ignore cleanup errors */ }
   }
 
   const formatted = formatForContext(context);
@@ -104,7 +104,7 @@ function readTechStack() {
   if (!fs.existsSync(projectMd)) return [];
   const content = fs.readFileSync(projectMd, 'utf8');
   // Extract tech stack section
-  const techSection = content.match(/## Tech stack\n+([\s\S]*?)(?=\n##|\Z)/i)?.[1] || '';
+  const techSection = content.match(/## Tech stack\n+([\s\S]*?)(?=\n##|$)/i)?.[1] || '';
   return techSection
     .split('\n')
     .map(l => l.replace(/^[-*•]\s*/, '').split(/[\s,/]/).filter(w => w.length > 2))
