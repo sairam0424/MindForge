@@ -1,6 +1,6 @@
 {
   "name": "mindforge-cc",
-  "version": "2.0.0-alpha.5",
+  "version": "2.0.0-alpha.6",
   "description": "MindForge - Enterprise Agentic Framework for Claude Code and Antigravity",
   "bin": {
     "mindforge-cc": "bin/install.js"
