@@ -41,6 +41,10 @@ const COMMANDS = {
   'classify': {
     script: 'bin/change-classifier.js',
     description: 'Classify changes into governance tiers'
+  },
+  'approve': {
+    script: 'bin/governance/approve.js',
+    description: 'Generate a governance approval signature to unblock Tier 3 gates'
   }
 };
 
