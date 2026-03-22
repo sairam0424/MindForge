@@ -76,13 +76,13 @@ async function checkAndUpdate(options = {}) {
 
   console.log(`\n${bold('⚡  MindForge Update Check')}\n`);
   console.log(`  Current : v${CURRENT_VERSION}`);
-  process.stdout.write(`  Latest  : checking npm registry... `);
+  process.stdout.write('  Latest  : checking npm registry... ');
 
   const latestVersion = await fetchLatestVersion();
   if (!latestVersion) {
     console.log(`${warn('unavailable')}`);
     console.log(`\n  ${warn('⚠️')}  Cannot reach npm registry. Check your internet connection.`);
-    console.log(`  Manual check: npm info mindforge-cc version\n`);
+    console.log('  Manual check: npm info mindforge-cc version\n');
     return { status: 'check-failed' };
   }
 
@@ -99,30 +99,30 @@ async function checkAndUpdate(options = {}) {
   // Major version safety gate
   if (type === 'major' && !force) {
     console.log(`\n  ${warn('⚠️  MAJOR UPDATE')} — may contain breaking changes.`);
-    console.log(`  Review the changelog before applying.`);
-    console.log(`  To apply anyway: /mindforge:update --apply --force\n`);
+    console.log('  Review the changelog before applying.');
+    console.log('  To apply anyway: /mindforge:update --apply --force\n');
   }
 
   // Fetch and display changelog
   if (!skipChangelog) {
-    process.stdout.write(`\n  Fetching changelog... `);
+    process.stdout.write('\n  Fetching changelog... ');
     const changelog = await fetchChangelog(CURRENT_VERSION, latestVersion);
     if (changelog) {
-      console.log(`done\n`);
+      console.log('done\n');
       console.log('─'.repeat(62));
       console.log(changelog.slice(0, 3000));  // Max 3000 chars to avoid flooding terminal
-      if (changelog.length > 3000) console.log(`\n  [changelog truncated — see CHANGELOG.md for full details]`);
+      if (changelog.length > 3000) console.log('\n  [changelog truncated — see CHANGELOG.md for full details]');
       console.log('─'.repeat(62));
     } else {
-      console.log(`unavailable\n`);
+      console.log('unavailable\n');
     }
   }
 
   if (!apply) {
     if (isCI) {
-      console.log(`\n  CI mode: check-only (no apply without --apply)`);
+      console.log('\n  CI mode: check-only (no apply without --apply)');
     }
-    console.log(`\n  To apply: /mindforge:update --apply`);
+    console.log('\n  To apply: /mindforge:update --apply');
     console.log(`  Or directly: npx mindforge-cc@${latestVersion} --update\n`);
     return { status: 'update-available', current: CURRENT_VERSION, latest: latestVersion, type };
   }
@@ -136,7 +136,7 @@ async function checkAndUpdate(options = {}) {
   // Detect original install scope to preserve it
   const { scope, runtime } = detectInstallScope();
   console.log(`  Install scope : ${runtime} / ${scope}`);
-  console.log(`\n  Applying update...`);
+  console.log('\n  Applying update...');
 
   try {
     execSync(
@@ -158,11 +158,11 @@ async function checkAndUpdate(options = {}) {
     }
   } catch (migErr) {
     console.warn(`  ${warn('⚠️')}  Schema migration had an issue: ${migErr.message}`);
-    console.warn(`      Run /mindforge:migrate manually if state files look wrong.`);
+    console.warn('      Run /mindforge:migrate manually if state files look wrong.');
   }
 
   console.log(`\n  ${ok('✅')}  MindForge updated to v${latestVersion}\n`);
-  console.log(`  Run /mindforge:health to verify the update.\n`);
+  console.log('  Run /mindforge:health to verify the update.\n');
   return { status: 'updated', from: CURRENT_VERSION, to: latestVersion };
 }
 

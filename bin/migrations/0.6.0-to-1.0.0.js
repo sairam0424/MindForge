@@ -32,7 +32,7 @@ module.exports = {
       }
 
       fs.writeFileSync(paths.handoff, JSON.stringify(handoff, null, 2) + '\n');
-      console.log(`    • HANDOFF.json: added plugin_api_version, normalised arrays`);
+      console.log('    • HANDOFF.json: added plugin_api_version, normalised arrays');
     }
 
     // ── 2. AUDIT.jsonl ────────────────────────────────────────────────────────
@@ -59,7 +59,7 @@ module.exports = {
         fs.writeFileSync(paths.audit, updated.join('\n') + '\n');
         console.log(`    • AUDIT.jsonl: backfilled session_id in ${modified} of ${lines.length} entries`);
       } else {
-        console.log(`    • AUDIT.jsonl: all entries already have session_id`);
+        console.log('    • AUDIT.jsonl: all entries already have session_id');
       }
     }
 
@@ -93,7 +93,7 @@ module.exports = {
         fs.appendFileSync(paths.state,
           `\n\n---\n*Migrated to MindForge v1.0.0 schema on ${new Date().toISOString().slice(0,10)}*\n`
         );
-        console.log(`    • STATE.md: added v1.0.0 migration note`);
+        console.log('    • STATE.md: added v1.0.0 migration note');
       }
     }
   },

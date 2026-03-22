@@ -88,7 +88,7 @@ function resolveBaseDir(runtime, scope) {
     const legacyAgentDir = norm(path.join(process.cwd(), '.agent'));
     if (fsu.exists(agentsDir)) return agentsDir;
     if (fsu.exists(legacyAgentDir)) {
-      console.log(`  ℹ️  Detected legacy .agent/ — installing there for compatibility`);
+      console.log('  ℹ️  Detected legacy .agent/ — installing there for compatibility');
       return legacyAgentDir;
     }
     return agentsDir;
@@ -112,8 +112,8 @@ function safeCopyClaude(src, dst, options = {}) {
         const sizeKb = (existing.length / 1024).toFixed(1);
         console.log(`  ⚠️  Backed up existing CLAUDE.md (${sizeKb}KB) → ${path.basename(backup)}`);
         if (existing.length > 5000) {
-          console.log(`      Large file detected — review the backup for custom instructions`);
-          console.log(`      to merge into the new CLAUDE.md.`);
+          console.log('      Large file detected — review the backup for custom instructions');
+          console.log('      to merge into the new CLAUDE.md.');
         }
       }
     }
@@ -161,11 +161,11 @@ async function install(runtime, scope, options = {}) {
 
   console.log(`\n  Runtime : ${runtime}`);
   console.log(`  Scope   : ${scope} → ${baseDir}`);
-  if (dryRun) console.log(`  Mode    : DRY RUN (no changes)`);
-  if (selfInstall) console.log(`  ⚠️  Self-install detected — skipping framework file copy`);
+  if (dryRun) console.log('  Mode    : DRY RUN (no changes)');
+  if (selfInstall) console.log('  ⚠️  Self-install detected — skipping framework file copy');
 
   if (dryRun) {
-    console.log(`\n  Would install:`);
+    console.log('\n  Would install:');
     console.log(`    CLAUDE.md → ${path.join(baseDir, 'CLAUDE.md')}`);
     console.log(`    ${fsu.listFiles(src('.claude', 'commands', 'mindforge')).length} commands → ${cmdsDir}`);
     return;
@@ -178,7 +178,7 @@ async function install(runtime, scope, options = {}) {
 
   if (fsu.exists(claudeSrc)) {
     safeCopyClaude(claudeSrc, path.join(baseDir, 'CLAUDE.md'), { force, verbose });
-    console.log(`  ✅  CLAUDE.md`);
+    console.log('  ✅  CLAUDE.md');
   }
 
   // ── 2. Install commands ─────────────────────────────────────────────────────
@@ -217,10 +217,10 @@ async function install(runtime, scope, options = {}) {
           const d = path.join(forgeDst, entry.name);
           entry.isDirectory() ? fsu.copyDir(s, d, { excludePatterns: SENSITIVE_EXCLUDE }) : fsu.copy(s, d);
         }
-        console.log(`  ✅  .mindforge/ (minimal core)`);
+        console.log('  ✅  .mindforge/ (minimal core)');
       } else {
         fsu.copyDir(forgeSrc, forgeDst, { excludePatterns: SENSITIVE_EXCLUDE });
-        console.log(`  ✅  .mindforge/ (framework engine)`);
+        console.log('  ✅  .mindforge/ (framework engine)');
       }
     }
 
@@ -236,14 +236,14 @@ async function install(runtime, scope, options = {}) {
             const d = path.join(planningDst, name);
             if (fsu.exists(s)) fsu.copy(s, d);
           });
-          console.log(`  ✅  .planning/ (minimal state)`);
+          console.log('  ✅  .planning/ (minimal state)');
         } else {
           fsu.copyDir(planningSrc, planningDst, { excludePatterns: SENSITIVE_EXCLUDE });
-          console.log(`  ✅  .planning/ (state templates)`);
+          console.log('  ✅  .planning/ (state templates)');
         }
       }
     } else {
-      console.log(`  ⏭️  .planning/ already exists — preserved (run /mindforge:health to verify)`);
+      console.log('  ⏭️  .planning/ already exists — preserved (run /mindforge:health to verify)');
     }
 
     // MINDFORGE.md — create only if it doesn't already exist
@@ -251,7 +251,7 @@ async function install(runtime, scope, options = {}) {
     const mindforgemSrc = src('MINDFORGE.md');
     if (!fsu.exists(mindforgemDst) && fsu.exists(mindforgemSrc)) {
       fsu.copy(mindforgemSrc, mindforgemDst);
-      console.log(`  ✅  MINDFORGE.md (project constitution)`);
+      console.log('  ✅  MINDFORGE.md (project constitution)');
     }
 
     // bin/ utilities (optional)
@@ -260,9 +260,9 @@ async function install(runtime, scope, options = {}) {
       const binSrc = src('bin');
       if (fsu.exists(binSrc) && !fsu.exists(binDst)) {
         fsu.copyDir(binSrc, binDst, { excludePatterns: SENSITIVE_EXCLUDE });
-        console.log(`  ✅  bin/ (utilities)`);
+        console.log('  ✅  bin/ (utilities)');
       } else if (fsu.exists(binDst)) {
-        console.log(`  ⏭️  bin/ already exists — preserved`);
+        console.log('  ⏭️  bin/ already exists — preserved');
       }
     }
 
@@ -270,7 +270,7 @@ async function install(runtime, scope, options = {}) {
 
   // ── 4. Verify installation ──────────────────────────────────────────────────
   verifyInstall(baseDir, cmdsDir, runtime, scope);
-  console.log(`  ✅  Install verified`);
+  console.log('  ✅  Install verified');
 }
 
 // ── Uninstall ─────────────────────────────────────────────────────────────────
@@ -302,8 +302,8 @@ async function uninstall(runtime, scope, options = {}) {
   }
 
   // Preserve .planning/ and .mindforge/ — user data, not our files to delete
-  console.log(`  ℹ️  .planning/ and .mindforge/ preserved (user data)`);
-  console.log(`      Remove manually if desired.`);
+  console.log('  ℹ️  .planning/ and .mindforge/ preserved (user data)');
+  console.log('      Remove manually if desired.');
 }
 
 // ── Main run ──────────────────────────────────────────────────────────────────
@@ -341,13 +341,13 @@ async function run(args) {
 
   if (!isUninstall) {
     console.log(`\n  ✅  MindForge v${VERSION} installed (${runtime} / ${scope})\n`);
-    console.log(`  Next steps:`);
-    console.log(`    1. Open Claude Code or Antigravity in your project directory`);
-    console.log(`    2. Run: /mindforge:health  (verify installation)`);
-    console.log(`    3. Run: /mindforge:init-project  (new project)`);
-    console.log(`         OR /mindforge:map-codebase  (existing project)\n`);
+    console.log('  Next steps:');
+    console.log('    1. Open Claude Code or Antigravity in your project directory');
+    console.log('    2. Run: /mindforge:health  (verify installation)');
+    console.log('    3. Run: /mindforge:init-project  (new project)');
+    console.log('         OR /mindforge:map-codebase  (existing project)\n');
   } else {
-    console.log(`\n  ✅  MindForge uninstalled\n`);
+    console.log('\n  ✅  MindForge uninstalled\n');
   }
 }
 

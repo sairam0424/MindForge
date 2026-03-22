@@ -66,6 +66,13 @@ AUTO_NODE_REPAIR_BUDGET=2
 AUTO_PLAN_AMBIGUITY_THRESHOLD=3.5
 SLACK_WEBHOOK_URL=
 
+## Browser Runtime
+BROWSER_PORT=7338
+BROWSER_HEADLESS=true
+DEV_SERVER_URL=http://localhost:3000
+AUTO_RUN_QA_AFTER_UI_WAVES=true
+BROWSER_IDLE_TIMEOUT_MINUTES=30
+
 ## Project-specific agent instructions
 ADDITIONAL_AGENT_INSTRUCTIONS="""
 - Check packages/shared before creating utilities.

@@ -235,7 +235,7 @@ test('converts VERIFY_PASS_RATE_WARNING_THRESHOLD from 75 to 0.75', () => {
 test('converts VERIFY_PASS_RATE_WARNING_THRESHOLD from 80 to 0.80', () => {
   const content = 'VERIFY_PASS_RATE_WARNING_THRESHOLD=80\nOTHER=value\n';
   const migrated = simulateMindforgeMdMigration(content);
-  assert.ok(migrated.includes('0.80') || migrated.includes('0.8'), `Expected 0.80`);
+  assert.ok(migrated.includes('0.80') || migrated.includes('0.8'), 'Expected 0.80');
   assert.ok(migrated.includes('OTHER=value'), 'Should preserve other settings');
 });
 
@@ -305,5 +305,5 @@ if (failed > 0) {
   console.error(`\n❌  ${failed} test(s) failed.\n`);
   process.exit(1);
 } else {
-  console.log(`\n✅  All migration tests passed.\n`);
+  console.log('\n✅  All migration tests passed.\n');
 }

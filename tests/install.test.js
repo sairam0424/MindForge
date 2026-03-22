@@ -128,7 +128,7 @@ test('CLAUDE.md and .agent/CLAUDE.md are identical', () => {
   assert.strictEqual(claude, agent, '.claude/CLAUDE.md and .agent/CLAUDE.md differ');
 });
 
-test('All 6 commands mirrored to .agent/mindforge/', () => {
+test('All commands mirrored to .agent/mindforge/', () => {
   const claudeCommands = fs.readdirSync('.claude/commands/mindforge/').sort();
   const agentCommands = fs.readdirSync('.agent/mindforge/').sort();
   assert.deepStrictEqual(claudeCommands, agentCommands, 'Command files differ between runtimes');
@@ -205,5 +205,5 @@ if (failed > 0) {
   console.error(`\n❌ ${failed} test(s) failed. Fix before pushing.\n`);
   process.exit(1);
 } else {
-  console.log(`\n✅ All tests passed. Day 1 foundation is solid.\n`);
+  console.log('\n✅ All tests passed. Day 1 foundation is solid.\n');
 }

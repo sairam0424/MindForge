@@ -38,7 +38,7 @@ test('bin/installer-core.js exists and exports run()', () => {
 
 test('installer handles --version flag correctly', () => {
   const c = read('bin/install.js');
-  assert.ok(c.includes("'--version'") || c.includes('"--version"'), 'Missing --version');
+  assert.ok(c.includes('\'--version\'') || c.includes('"--version"'), 'Missing --version');
   assert.ok(c.includes('process.exit(0)'), 'Should exit 0 for --version');
 });
 
@@ -50,7 +50,7 @@ test('installer has Node.js version gate (≥ 18)', () => {
 
 test('installer has CI mode detection', () => {
   const c = read('bin/install.js');
-  assert.ok(c.includes("process.env.CI"), 'Should detect CI environment');
+  assert.ok(c.includes('process.env.CI'), 'Should detect CI environment');
   assert.ok(c.includes('IS_NON_INTERACTIVE'), 'Should have non-interactive flag');
 });
 
@@ -62,7 +62,7 @@ test('installer backs up existing CLAUDE.md', () => {
 test('installer has self-install detection', () => {
   const c = read('bin/installer-core.js');
   assert.ok(
-    c.includes('isSelfInstall') || c.includes("'mindforge-cc'"),
+    c.includes('isSelfInstall') || c.includes('\'mindforge-cc\''),
     'Should detect self-install scenario'
   );
 });
@@ -361,8 +361,8 @@ test('SENSITIVE_EXCLUDE properly excludes .env and .key files', () => {
 test('SENSITIVE_EXCLUDE uses regex for .key and .pem (not glob strings)', () => {
   const c = fs.readFileSync('bin/installer-core.js', 'utf8');
   // Should use regex pattern /\.key$/ not string '*.key'
-  assert.ok(!c.includes("'*.key'"), 'Should not use glob string for .key');
-  assert.ok(!c.includes("'*.pem'"), 'Should not use glob string for .pem');
+  assert.ok(!c.includes('\'*.key\''), 'Should not use glob string for .key');
+  assert.ok(!c.includes('\'*.pem\''), 'Should not use glob string for .pem');
   assert.ok(
     c.includes('\\.key$') || c.includes('/\\.key$/') || c.includes('/.key$/'),
     'Should use regex for .key'
@@ -412,5 +412,5 @@ if (failed > 0) {
   console.error(`\n❌  ${failed} test(s) failed — not production ready.\n`);
   process.exit(1);
 } else {
-  console.log(`\n✅  All production readiness tests passed.\n`);
+  console.log('\n✅  All production readiness tests passed.\n');
 }

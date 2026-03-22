@@ -1,6 +1,6 @@
 {
   "name": "mindforge-cc",
-  "version": "2.0.0-alpha.1",
+  "version": "2.0.0-alpha.2",
   "description": "MindForge - Enterprise Agentic Framework for Claude Code and Antigravity",
   "bin": {
     "mindforge-cc": "bin/install.js"
@@ -39,7 +39,8 @@
     "@eslint/js": "^9.0.0",
     "@types/node": "^20.0.0",
     "eslint": "^9.0.0",
-    "globals": "^15.0.0"
+    "globals": "^15.0.0",
+    "playwright": "^1.40.0"
   },
   "engines": {
     "node": ">=18.0.0"

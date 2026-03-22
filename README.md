@@ -1,4 +1,4 @@
-# MindForge — Enterprise Agentic Framework (v1.0.0)
+# MindForge — Enterprise Agentic Framework (v2.0.0-alpha.2)
 
 MindForge turns Claude Code and Antigravity into production-grade engineering
 partners with governance, observability, and a disciplined workflow engine.
@@ -18,6 +18,8 @@ Decisions get forgotten. MindForge fixes that with:
 - **Role personas** — specialised agent modes for each task type
 - **Skills** — just-in-time domain knowledge loaded on demand
 - **Wave execution** — parallelism with dependency safety
+- **Autonomous Engine** — walk-away execution with steerability (v2)
+- **Browser Runtime** — headful/headless visual QA and sessions (v2)
 - **Quality gates** — compliance and security are non-bypassable
 - **Audit trail** — append-only history of every action
 
@@ -113,6 +115,16 @@ If issues are found, run:
     → Changelog generation
     → Final quality gates
     → PR creation
+
+/ mindforge:auto --phase 1
+    → Walk-away autonomous execution (v2)
+    → Intelligent stuck detection and node repair
+    → External steering via steering-queue
+
+/ mindforge:qa
+    → Systematic visual verification of UI changes (v2)
+    → Automated regression test generation
+    → Persistent browser sessions and daemon
 ```
 
 ---
@@ -169,17 +181,20 @@ See `.mindforge/production/token-optimiser.md`.
 
 ---
 
-## What ships in v1.0.0
-- 36 commands across 7 workflow categories
-- 10 core skill packs with a three-tier registry (Core/Org/Project)
-- 8 specialised agent personas
-- Wave-based execution with dependency graph and compaction
-- Enterprise integrations: Jira, Confluence, Slack, GitHub, GitLab
-- Three-tier governance with 5 non-bypassable compliance gates
-- Intelligence layer: health engine, difficulty scoring, anti-pattern detection
-- Public skills registry and plugin system
-- @mindforge/sdk with event stream and command builders
-- 15 test suites, production checklist, and threat model
+## What ships in v2.0.0-alpha.2
+- **Autonomous Execution Engine**: `/mindforge:auto` and `/mindforge:steer`.
+- **Persistent Browser Runtime**: `/mindforge:browse` and Playwright integration.
+- **Visual QA Engine**: `/mindforge:qa` and automated regression tests.
+- 40+ commands across 8 workflow categories.
+- 12 core skill packs with a three-tier registry.
+- 8 specialised agent personas.
+- Wave-based execution with dependency graph and compaction.
+- Enterprise integrations: Jira, Confluence, Slack, GitHub, GitLab.
+- Three-tier governance with 6 non-bypassable compliance gates.
+- Intelligence layer: health engine, difficulty scoring, anti-pattern detection.
+- Public skills registry and plugin system.
+- @mindforge/sdk with event stream and command builders.
+- 18 test suites, production checklist, and 26 ADRs.
 
 ---
 

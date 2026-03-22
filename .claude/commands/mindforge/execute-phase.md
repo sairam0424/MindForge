@@ -76,9 +76,11 @@ Write to console:
 For each plan in the wave:
 1. Load context package (per `context-injector.md`)
 2. Execute the plan instructions
-3. Run `<verify>` — capture exact output
-4. If verify PASSES:
-   - Write SUMMARY-[N]-[M].md
+   - Run `<verify>` — capture exact output
+   - If verify PASSES:
+     - Run `<verify-visual>` via `visual-verify-executor.js`
+     - If visual verify FAILS: stop and report (treat as verify failure)
+     - Write SUMMARY-[N]-[M].md
    - Execute commit: `git add [files] && git commit -m "[type]([scope]): [task name]"`
    - Capture git SHA
    - Write AUDIT entry for task completion

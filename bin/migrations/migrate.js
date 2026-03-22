@@ -30,12 +30,12 @@ async function runMigrations(fromVersion, toVersion) {
   console.log(`\n  Migration: v${fromVersion} → v${toVersion}`);
 
   if (!fs.existsSync(PLANNING_DIR)) {
-    console.log(`  ℹ️  No .planning/ directory found — skipping migration`);
+    console.log('  ℹ️  No .planning/ directory found — skipping migration');
     return { status: 'no-planning-dir' };
   }
 
   if (compareSemver(fromVersion, toVersion) >= 0) {
-    console.log(`  ✅  No migration needed`);
+    console.log('  ✅  No migration needed');
     return { status: 'no-migration-needed' };
   }
 
@@ -54,7 +54,7 @@ async function runMigrations(fromVersion, toVersion) {
   );
 
   if (migrationsToRun.length === 0) {
-    console.log(`  ✅  No applicable migrations`);
+    console.log('  ✅  No applicable migrations');
     return { status: 'no-migrations' };
   }
 
@@ -69,7 +69,7 @@ async function runMigrations(fromVersion, toVersion) {
     const filesToBackup = Object.values(PATHS).filter(p => fs.existsSync(p));
 
     if (filesToBackup.length === 0) {
-      console.log(`  ℹ️  No files to migrate`);
+      console.log('  ℹ️  No files to migrate');
       fs.rmdirSync(backupDir);
       return { status: 'no-files' };
     }
@@ -93,11 +93,15 @@ async function runMigrations(fromVersion, toVersion) {
   } catch (backupErr) {
     // Abort cleanly — no migration is safer than a migration without backup
     if (fs.existsSync(backupDir)) {
-      try { fs.rmSync(backupDir, { recursive: true, force: true }); } catch {}
+      try {
+        fs.rmSync(backupDir, { recursive: true, force: true });
+      } catch (err) {
+        // Ignore backup cleanup failures if backup creation already failed
+      }
     }
     throw new Error(
       `Migration aborted: cannot create backup (${backupErr.message}). ` +
-      `Free disk space and retry.`
+      'Free disk space and retry.'
     );
   }
 
@@ -106,10 +110,10 @@ async function runMigrations(fromVersion, toVersion) {
     console.log(`\n  Running: v${migration.fromVersion} → v${migration.toVersion}...`);
     try {
       await migration.run(PATHS);
-      console.log(`  ✅  Complete`);
+      console.log('  ✅  Complete');
     } catch (migErr) {
       console.error(`  ❌  Failed: ${migErr.message}`);
-      console.log(`  Restoring from backup...`);
+      console.log('  Restoring from backup...');
 
       // Restore all files from backup
       for (const f of fs.readdirSync(backupDir)) {
@@ -117,7 +121,7 @@ async function runMigrations(fromVersion, toVersion) {
                     path.join(PLANNING_DIR, f);
         fs.copyFileSync(path.join(backupDir, f), dst);
       }
-      console.log(`  ✅  Restored from backup. No changes applied.`);
+      console.log('  ✅  Restored from backup. No changes applied.');
       throw new Error(`Migration failed at v${migration.toVersion}: ${migErr.message}`);
     }
   }
@@ -136,8 +140,8 @@ async function runMigrations(fromVersion, toVersion) {
   if (process.env.CI === 'true') {
     try {
       fs.rmSync(backupDir, { recursive: true, force: true });
-      console.log(`  🗑️  CI mode: backup auto-deleted (disk space)`);
-    } catch {
+      console.log('  🗑️  CI mode: backup auto-deleted (disk space)');
+    } catch (err) {
       // Silent failure on cleanup — migration succeeded, cleanup is optional
     }
   } else {
