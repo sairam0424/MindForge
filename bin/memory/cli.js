@@ -74,7 +74,7 @@ async function run() {
     const type = args[args.indexOf('--list') + 1];
     const entries = type ? Store.readByType(type) : Store.readAll(args.includes('--global'));
     
-    console.log(`\nShowing last 10 entries:`);
+    console.log('\nShowing last 10 entries:');
     entries.slice(-10).reverse().forEach((e, i) => {
       console.log(`${i+1}. [${e.type}] ${e.topic} (${e.id})`);
     });

@@ -56,7 +56,7 @@ function deduplicateOrAdd(entry) {
         return { action: 'reinforced', id: e.id };
       } else {
         // New entry has higher confidence — supersede old
-        Store.deprecate(e.id, `Superseded by higher-confidence entry`, null);
+        Store.deprecate(e.id, 'Superseded by higher-confidence entry', null);
       }
     }
   }
