@@ -51,6 +51,31 @@ const fsu = {
   },
 };
 
+// ── Registry Management ────────────────────────────────────────────────────────
+const RegistryManager = {
+  getRegistryPath: () => path.join(os.homedir(), '.mindforge', 'registry.json'),
+
+  registerProject(projectPath) {
+    const regPath = this.getRegistryPath();
+    fsu.ensureDir(path.dirname(regPath));
+
+    let registry = { projects: [] };
+    if (fsu.exists(regPath)) {
+      try {
+        registry = JSON.parse(fsu.read(regPath));
+      } catch (e) {
+        console.error('  ⚠️  Registry file corrupted, recreating...');
+      }
+    }
+
+    if (!registry.projects.includes(projectPath)) {
+      registry.projects.push(projectPath);
+      fsu.write(regPath, JSON.stringify(registry, null, 2));
+      console.log(`  ✅  Registered project in ${regPath}`);
+    }
+  }
+};
+
 // ── Self-install detection ────────────────────────────────────────────────────
 function isSelfInstall() {
   const pkgPath = path.join(process.cwd(), 'package.json');
@@ -266,6 +291,7 @@ async function install(runtime, scope, options = {}) {
       }
     }
 
+    RegistryManager.registerProject(process.cwd());
   }
 
   // ── 4. Verify installation ──────────────────────────────────────────────────
