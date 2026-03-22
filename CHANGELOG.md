@@ -3,6 +3,38 @@
 All notable changes to MindForge are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com).
 
+## [2.0.0-alpha.1] — Day 8: Autonomous Execution Engine — 2026-03-22
+
+### Added (MindForge v2.0.0-alpha.1)
+**Autonomous execution engine:**
+- `/mindforge:auto` — walk-away autonomous phase/milestone execution
+- `/mindforge:steer` — mid-execution guidance injection from second terminal
+- Node repair operator: RETRY → DECOMPOSE → PRUNE → ESCALATE
+- Stuck detection engine: 5 patterns (S01-S05)
+- Headless CLI mode: `mindforge-cc headless --phase N`
+- `.planning/steering-queue.jsonl` — steering instruction queue
+- `.planning/auto-state.json` — real-time execution state
+
+**MINDFORGE.md v2 settings:**
+- AUTO_MODE_DEFAULT_TIMEOUT_MINUTES, AUTO_MODE_UAT
+- AUTO_NODE_REPAIR_BUDGET, AUTO_RETRY_ON_VERIFY_FAIL
+- AUTO_TASK_MAX_TOKENS, AUTO_TASK_TIMEOUT_MINUTES
+- AUTO_PUSH_ON_WAVE_COMPLETE, AUTO_NOTIFY_ON_ESCALATION
+
+### Hardened
+- Gate 3 (secret detection) now runs PRE-COMMIT in auto mode
+- Pre-flight dirty check excludes `.planning/` state files
+- DECOMPOSE: dependency chain correctly updated in downstream plans
+- S01 stuck detection requires consecutive failures
+- S03 error normalization preserves module/package names
+- Steering injection guard validates all instructions
+- SIGTERM handler waits for task cleanup before saving state
+
+### Architecture Decisions
+- ADR-021: Autonomy Boundary
+- ADR-022: Node Repair Hierarchy
+- ADR-023: Gate 3 Timing
+
 ## [1.0.5] — v1.0.5 Minimal Install Option — 2026-03-22
 
 ### Added
