@@ -6,6 +6,7 @@
 export { MindForgeClient } from './client';
 export { MindForgeEventStream } from './events';
 export { commands } from './commands';
+export { MindForgeMemory } from './memory';
 export type { CommandOptions } from './commands';
 export type {
   MindForgeConfig,
