@@ -14,6 +14,9 @@
 | `/mindforge:auto` | `auto [--phase N] [--milestone M]` | Walk-away autonomous execution with stuck detection | Day 8 |
 | `/mindforge:steer` | `steer "instruction"` | Inject guidance into a running autonomous session | Day 8 |
 | `/mindforge:next` | `next` | Auto-detect and execute the correct next workflow step | Day 2 |
+| `/mindforge:cross-review` | `cross-review` | Adversarial multi-model code review and synthesis | Day 10 |
+| `/mindforge:research` | `research "query"` | Deep research using Gemini 1.5 Pro 1M context | Day 10 |
+| `/mindforge:costs` | `costs [--summary|--profile]` | Token usage and cost profiling across models | Day 10 |
 
 ### Project setup & discovery
 | Command | Usage | Description | Added |

@@ -22,9 +22,9 @@ If a configured model is unavailable, fallback to `inherit` and warn.
 
 ## Project identity
 NAME=MindForge
-VERSION=1.0.0
-DESCRIPTION=Enterprise agentic framework with intelligence and observability layer
-MINDFORGE_VERSION_REQUIRED=1.0.0
+VERSION=2.0.0
+DESCRIPTION=Enterprise agentic framework with Multi-Model Intelligence Layer
+MINDFORGE_VERSION_REQUIRED=2.0.0
 
 ## Model preferences
 PLANNER_MODEL=claude-opus-4-5
@@ -33,6 +33,15 @@ REVIEWER_MODEL=claude-sonnet-4-5
 VERIFIER_MODEL=claude-sonnet-4-5
 SECURITY_MODEL=claude-opus-4-5
 DEBUG_MODEL=claude-opus-4-5
+RESEARCH_MODEL=gemini-1.5-pro
+QA_MODEL=claude-4-5-sonnet
+QUICK_MODEL=claude-4-5-haiku
+
+## Cost Management
+MODEL_COST_WARN_USD=1.00
+MODEL_COST_HARD_LIMIT_USD=10.00
+MODEL_PREFER_CHEAP_BELOW_DIFFICULTY=2.0
+REQUIRE_CROSS_REVIEW=false
 
 ## Execution behavior
 TIER1_AUTO_APPROVE=true

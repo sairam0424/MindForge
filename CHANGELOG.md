@@ -3,6 +3,18 @@
 All notable changes to MindForge are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com).
 
+## [2.0.0-alpha.3] — Day 10: Multi-Model Intelligence Layer — 2026-03-22
+
+- [v2.0.0-alpha.3 (2026-03-22)]
+  - [NEW] Unified Multi-Model Intelligence Layer (Anthropic, OpenAI, Gemini).
+  - [NEW] Dynamic Model Router with Persona and Tier-based logic.
+  - [NEW] Real-time Cost Tracking and Daily Budget Enforcement.
+  - [NEW] Adversarial Cross-Model Code Review Engine (`/mindforge:cross-review`).
+  - [NEW] Deep Research Engine with Gemini 1.5 Pro 1M context support (`/mindforge:research`).
+  - [NEW] Model usage and cost reporting (`/mindforge:costs`).
+  - [NEW] Secure API handling with SSRF protection and header-based auth.
+  - [NEW] ADR-027, ADR-028, ADR-029.
+
 ## [2.0.0-alpha.2] — Day 9: Visual QA Engine (Browser Runtime Engine) — 2026-03-22
 
 - [v2.0.0-alpha.2 (2026-03-22)]

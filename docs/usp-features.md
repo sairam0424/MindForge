@@ -37,6 +37,9 @@ are included in the latest alpha release, and how to use them effectively.
 9. **Persistent Visual QA (v2)**
    - Headful/headless browser runtime with named session persistence and systematic visual diff verification.
 
+10. **Multi-Model Intelligence Layer (v2)**
+    - Dynamic routing between Anthropic, OpenAI, and Gemini based on task persona and security tier. Adversarial code reviews ensure maximum coverage.
+
 ---
 
 ## Feature Set (v1.0.0)
@@ -165,6 +168,18 @@ preserving scope (local vs global).
 ```bash
 /mindforge:browse --navigate https://example.com
 /mindforge:qa --diff
+```
+
+---
+
+### 13. Multi-Model Intelligence (v2)
+**What it does:** Unified API client for Anthropic, OpenAI, and Gemini with persona-based routing and automated cost tracking.
+
+**How to use:**
+```bash
+/mindforge:cross-review # Adversarial multi-model review
+/mindforge:research "Deep search query" # 1M context research
+/mindforge:costs # Usage and budget summary
 ```
 
 ---

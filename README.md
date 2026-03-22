@@ -1,4 +1,4 @@
-# MindForge — Enterprise Agentic Framework (v2.0.0-alpha.2)
+# MindForge — Enterprise Agentic Framework (v2.0.0-alpha.3)
 
 MindForge turns Claude Code and Antigravity into production-grade engineering
 partners with governance, observability, and a disciplined workflow engine.
@@ -20,6 +20,7 @@ Decisions get forgotten. MindForge fixes that with:
 - **Wave execution** — parallelism with dependency safety
 - **Autonomous Engine** — walk-away execution with steerability (v2)
 - **Browser Runtime** — headful/headless visual QA and sessions (v2)
+- **Multi-Model Intelligence** — dynamic routing, adversarial reviews, and deep research (v2)
 - **Quality gates** — compliance and security are non-bypassable
 - **Audit trail** — append-only history of every action
 
@@ -125,6 +126,18 @@ If issues are found, run:
     → Systematic visual verification of UI changes (v2)
     → Automated regression test generation
     → Persistent browser sessions and daemon
+
+/ mindforge:cross-review
+    → Adversarial multi-model code review and synthesis (v2)
+    → Consensus detection and severity normalization
+
+/ mindforge:research
+    → Deep research using Gemini 1.5 Pro 1M context (v2)
+    → Codebase-wide context packaging and SSRF protection
+
+/ mindforge:costs
+    → Real-time token usage and cost profiling (v2)
+    → Daily budget tracking across all providers
 ```
 
 ---
@@ -181,11 +194,12 @@ See `.mindforge/production/token-optimiser.md`.
 
 ---
 
-## What ships in v2.0.0-alpha.2
+## What ships in v2.0.0-alpha.3
 - **Autonomous Execution Engine**: `/mindforge:auto` and `/mindforge:steer`.
 - **Persistent Browser Runtime**: `/mindforge:browse` and Playwright integration.
 - **Visual QA Engine**: `/mindforge:qa` and automated regression tests.
-- 40+ commands across 8 workflow categories.
+- **Multi-Model Intelligence Layer**: `/mindforge:cross-review`, `/mindforge:research`, and `/mindforge:costs`.
+- 45+ commands across 9 workflow categories.
 - 12 core skill packs with a three-tier registry.
 - 8 specialised agent personas.
 - Wave-based execution with dependency graph and compaction.
@@ -194,7 +208,7 @@ See `.mindforge/production/token-optimiser.md`.
 - Intelligence layer: health engine, difficulty scoring, anti-pattern detection.
 - Public skills registry and plugin system.
 - @mindforge/sdk with event stream and command builders.
-- 18 test suites, production checklist, and 26 ADRs.
+- 20 test suites, production checklist, and 29 ADRs.
 
 ---
 
