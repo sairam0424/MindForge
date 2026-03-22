@@ -1,0 +1,70 @@
+name: MindForge Autonomous Engine
+
+on:
+  workflow_dispatch:
+    inputs:
+      phase:
+        description: 'Phase number to execute'
+        required: true
+        default: '1'
+      timeout:
+        description: 'Execution timeout (minutes)'
+        required: true
+        default: '60'
+      dry_run:
+        description: 'Run in dry-run mode'
+        type: boolean
+        default: false
+  schedule:
+    - cron: '0 0 * * *' # Daily at midnight
+
+env:
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+jobs:
+  headless-agent:
+    name: Headless Execution (Phase ${{ github.event.inputs.phase || 'Auto' }})
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+
+      - name: Start Autonomous Session
+        run: |
+          DRY_RUN_FLAG=""
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            DRY_RUN_FLAG="--dry-run"
+          fi
+          
+          PHASE_ARG="--phase ${{ github.event.inputs.phase || 'current' }}"
+          
+          # Run the headless runner
+          node bin/autonomous/headless.js $PHASE_ARG --timeout ${{ github.event.inputs.timeout || 60 }} $DRY_RUN_FLAG \
+            --output json > /tmp/autonomous-results.json
+
+      - name: Generate Report
+        run: |
+          node -e "
+            const fs = require('fs');
+            const results = JSON.parse(fs.readFileSync('/tmp/autonomous-results.json', 'utf8'));
+            const report = '# 🤖 Autonomous Execution Report\n\n' +
+                           '| Metric | Value |\n| --- | --- |\n' +
+                           '| Status | ' + results.status + ' |\n' +
+                           '| Phase | ' + results.phase + ' |\n' +
+                           '| Duration | ' + results.duration + 'ms |\n\n' +
+                           '## Outcome\n' + results.outcome;
+            fs.writeFileSync('AUTONOMOUS-REPORT.md', report);
+          " 2>/dev/null || echo "Report generation failed" > AUTONOMOUS-REPORT.md
+
+      - name: Upload Session Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: autonomous-session-${{ github.run_id }}
+          path: |
+            .planning/HANDOFF.json
+            .planning/AUDIT.jsonl
+            AUTONOMOUS-REPORT.md

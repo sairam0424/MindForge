@@ -57,20 +57,6 @@ function getAllSkillPaths() {
     .filter(p => fs.existsSync(p));
 }
 
-// ── Manifest parser ───────────────────────────────────────────────────────────
-function parseManifest() {
-  const manifestPath = '.mindforge/org/skills/MANIFEST.md';
-  if (!fs.existsSync(manifestPath)) return { skills: [] };
-  const content = fs.readFileSync(manifestPath, 'utf8');
-  const rows = content.match(/\|\s+(\S+)\s+\|\s+(\d+\.\d+\.\d+)\s+\|\s+(\w+)\s+\|\s+(\d+\.\d+\.\d+)\s+\|/g) || [];
-  return {
-    skills: rows.map(row => {
-      const parts = row.split('|').map(p => p.trim()).filter(Boolean);
-      return { name: parts[0], version: parts[1], status: parts[2] };
-    })
-  };
-}
-
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 console.log('\nMindForge Day 3 — Skills Platform Tests\n');
@@ -378,7 +364,7 @@ test('data-privacy skill covers consent withdrawal', () => {
 
 test('package.json version is at least 0.3.0', () => {
   const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-  const [major, minor, patch] = pkg.version.split('.').map(Number);
+  const [major, minor] = pkg.version.split('.').map(Number);
   assert.ok(
     major > 0 || (major === 0 && minor >= 3),
     `package.json version ${pkg.version} should be >= 0.3.0 for Day 3 skill compatibility`

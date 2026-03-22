@@ -1,0 +1,40 @@
+name: MindForge Observability Plane
+
+on:
+  workflow_run:
+    workflows: ["MindForge Control Plane"]
+    types:
+      - completed
+
+jobs:
+  analytics:
+    name: 📊 Run Analytics
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          
+      - name: Collect Data
+        run: |
+          mkdir -p .metrics
+          # Mock data collection logic - extracts from artifacts of the triggered run
+          # In a real environment, you'd download the artifacts from the workflow_run event
+          echo '{"run_id": "${{ github.event.workflow_run.id }}", "status": "${{ github.event.workflow_run.conclusion }}"}' > .metrics/run-data.json
+
+      - name: Generate Summary Report
+        run: |
+          echo "## 📊 MindForge Analytics Report" >> $GITHUB_STEP_SUMMARY
+          echo "- **Original Run ID:** ${{ github.event.workflow_run.id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Conclusion:** ${{ github.event.workflow_run.conclusion }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: observability-report-${{ github.run_id }}
+          path: .metrics/
