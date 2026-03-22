@@ -157,5 +157,5 @@ if (failed > 0) {
   console.error(`\n❌ ${failed} test(s) failed.\n`);
   process.exit(1);
 } else {
-  console.log(`\n✅ All compaction tests passed.\n`);
+  console.log('\n✅ All compaction tests passed.\n');
 }

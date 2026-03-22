@@ -2,6 +2,7 @@
  * MindForge v2 — Session Manager
  * Persists browser state (cookies, localStorage) to disk.
  */
+/* global localStorage */
 'use strict';
 
 const fs   = require('fs');
@@ -32,7 +33,9 @@ async function saveSession(name, context) {
         }).catch(() => ({}));
         if (Object.keys(ls).length) storageByOrigin[origin] = { localStorage: ls };
       }
-    } catch {}
+    } catch (err) {
+      // Ignore navigation or evaluation errors for individual pages during session save
+    }
   }
 
   const data = {

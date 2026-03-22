@@ -20,13 +20,13 @@ function generateReport(auditPath, phaseNum) {
   const start = events.find(e => e.event === 'auto_mode_started');
   const end = events.find(e => e.event === 'auto_mode_completed' || e.event === 'auto_mode_escalated');
 
-  report += `## Summary\n`;
+  report += '## Summary\n';
   report += `- **Status**: ${end ? end.event.replace('auto_mode_', '').toUpperCase() : 'IN PROGRESS'}\n`;
   report += `- **Started**: ${start ? start.timestamp : 'Unknown'}\n`;
   report += `- **Duration**: ${calculateDuration(start, end)}\n`;
   report += `- **Tasks Completed**: ${events.filter(e => e.event === 'task_completed').length}\n\n`;
 
-  report += `## Audit Log\n`;
+  report += '## Audit Log\n';
   events.forEach(e => {
     const time = e.timestamp.split('T')[1].split('.')[0];
     if (e.event === 'task_completed') report += `- [${time}] ✅ Task ${e.plan} completed\n`;

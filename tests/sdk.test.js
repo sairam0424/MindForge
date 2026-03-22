@@ -73,7 +73,7 @@ console.log('SDK source files:');
 console.log('\nSDK type exports:');
 test('index.ts exports VERSION', () => {
   const c = read('sdk/src/index.ts');
-  assert.ok(c.includes("VERSION"), 'Should export VERSION');
+  assert.ok(c.includes('VERSION'), 'Should export VERSION');
 });
 
 test('types.ts defines MindForgeConfig', () => {
@@ -173,7 +173,7 @@ console.log('\nHardening-prompted SDK tests:');
 test('SDK SSE server binds to 127.0.0.1 (localhost only)', () => {
   const c = read('sdk/src/events.ts');
   assert.ok(
-    c.includes("'127.0.0.1'") || c.includes('"127.0.0.1"'),
+    c.includes('\'127.0.0.1\'') || c.includes('"127.0.0.1"'),
     'SSE server should bind to 127.0.0.1 only'
   );
 });
@@ -197,4 +197,4 @@ test('SDK has inotify fallback for Linux', () => {
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`Results: ${passed} passed, ${failed} failed`);
 if (failed > 0) { console.error(`\n❌ ${failed} test(s) failed.\n`); process.exit(1); }
-else { console.log(`\n✅ All SDK tests passed.\n`); }
+else { console.log('\n✅ All SDK tests passed.\n'); }

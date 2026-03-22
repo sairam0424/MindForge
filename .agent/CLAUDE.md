@@ -103,7 +103,8 @@ When the user requests `/mindforge:auto --phase [N]`:
 4. Monitor every action for S01-S05 stuck patterns (stuck-detector.md).
 5. On failure: apply RETRY → DECOMPOSE → PRUNE logic (node-repair.md).
 6. Compliance Gate 3 (secrets) runs PRE-COMMIT on staged diffs.
-7. Governance: ESCALATE immediately on Tier 3 changes (Auth/Payment/PII).
+7. Visual Verification: runs <verify-visual> AFTER successful <verify> (unit tests).
+8. Governance: ESCALATE immediately on Tier 3 changes (Auth/Payment/PII).
 
 ### Steering awareness
 Check `.planning/steering-queue.jsonl` at every task boundary.
@@ -119,6 +120,8 @@ If `--headless` is used:
 ### New commands (Day 8)
 - /mindforge:auto — start/resume autonomous execution engine
 - /mindforge:steer — inject mid-execution guidance
+- /mindforge:browse — persistent browser control and actions
+- /mindforge:qa — systematic post-phase visual QA
 
 ---
 

@@ -30,9 +30,9 @@ const ARGS    = process.argv.slice(2);
 const NODE_MAJOR = parseInt(process.versions.node.split('.')[0], 10);
 if (NODE_MAJOR < 18) {
   process.stderr.write(
-    `\n❌  MindForge requires Node.js 18 or later.\n` +
+    '\n❌  MindForge requires Node.js 18 or later.\n' +
     `    Current: v${process.versions.node}\n` +
-    `    Install: https://nodejs.org/en/download/\n\n`
+    '    Install: https://nodejs.org/en/download/\n\n'
   );
   process.exit(1);
 }
@@ -65,13 +65,13 @@ const IS_NON_INTERACTIVE =
 if (IS_NON_INTERACTIVE) {
   require('./installer-core').run(ARGS).catch(err => {
     process.stderr.write(`\n❌  Installation failed: ${err.message}\n`);
-    process.stderr.write(`    For help: npx mindforge-cc --help\n\n`);
+    process.stderr.write('    For help: npx mindforge-cc --help\n\n');
     process.exit(1);
   });
 } else {
   require('./wizard/setup-wizard').main().catch(err => {
     process.stderr.write(`\n❌  Setup wizard failed: ${err.message}\n`);
-    process.stderr.write(`    Try non-interactive: npx mindforge-cc --claude --local\n\n`);
+    process.stderr.write('    Try non-interactive: npx mindforge-cc --claude --local\n\n');
     process.exit(1);
   });
 }

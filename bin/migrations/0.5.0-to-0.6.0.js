@@ -12,6 +12,6 @@ module.exports = {
     if (!Array.isArray(handoff.recent_commits)) handoff.recent_commits = [];
     if (!Array.isArray(handoff.recent_files))   handoff.recent_files   = [];
     fs.writeFileSync(paths.handoff, JSON.stringify(handoff, null, 2) + '\n');
-    console.log(`    • HANDOFF.json: added distribution platform fields`);
+    console.log('    • HANDOFF.json: added distribution platform fields');
   },
 };
