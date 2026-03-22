@@ -1,5 +1,11 @@
 # Changelog
-...
+
+## [2.0.0-alpha.9] — Verified Antigravity Compatibility — 2026-03-23
+### Fixed
+- Fixed critical installer regression where `files` variable was undefined during command installation.
+- Fixed `resolveBaseDir` hardcoding that prevented `.agents/` relocation in non-standard environments.
+- Verified end-to-end Antigravity fix for command visibility and YAML frontmatter.
+
 ## [2.0.0-alpha.8] — Antigravity Visibility Fix — 2026-03-23
 
 ### Fixed

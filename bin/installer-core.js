@@ -109,9 +109,18 @@ function resolveBaseDir(runtime, scope) {
   if (scope === 'global') return norm(cfg.globalDir);
 
   if (runtime === 'antigravity') {
-    const agentsDir = norm(path.join(process.cwd(), 'agents'));
+    const agentsDir = norm(path.join(process.cwd(), '.agents'));
+    const legacyAgentsDir = norm(path.join(process.cwd(), 'agents'));
     const legacyAgentDir = norm(path.join(process.cwd(), '.agent'));
+    
     if (fsu.exists(agentsDir)) return agentsDir;
+    
+    // Support transition from 'agents/' to '.agents/'
+    if (fsu.exists(legacyAgentsDir)) {
+      console.log('  ℹ️  Detected legacy agents/ — installing there for compatibility');
+      return legacyAgentsDir;
+    }
+    
     if (fsu.exists(legacyAgentDir)) {
       console.log('  ℹ️  Detected legacy .agent/ — installing there for compatibility');
       return legacyAgentDir;
@@ -227,6 +236,7 @@ async function install(runtime, scope, options = {}) {
 
   if (fsu.exists(cmdSrc)) {
     fsu.ensureDir(cmdsDir);
+    const files = fsu.listFiles(cmdSrc).filter(f => f.endsWith('.md'));
     // Install for specific runtime
     files.forEach(f => {
       const targetName = runtime === 'antigravity' ? `mindforge:${f}` : f;
