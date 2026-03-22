@@ -39,6 +39,16 @@ npx mindforge-cc@latest --claude --global
 npx mindforge-cc@latest --claude --local
 ```
 
+### Quick Start
+
+```bash
+# Install the latest stable version
+npm install -g mindforge-cc
+
+# Or try the v2.0.0-alpha (latest features)
+npm install -g mindforge-cc@alpha
+```
+
 ### Antigravity
 ```bash
 npx mindforge-cc@latest --antigravity --global
