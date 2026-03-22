@@ -1,4 +1,4 @@
-# MindForge User Guide (v2.0.0-alpha.2)
+# MindForge User Guide (v2.0.0-alpha.3)
 
 This guide gets you from install to productive, with the minimum needed to run
 MindForge in a real project. It assumes Node.js 18+.
@@ -98,6 +98,31 @@ To scan for UI bugs and generate regression tests:
 ```bash
 /mindforge:qa --diff
 ```
+
+---
+
+## 8. Multi-Model Intelligence (v2)
+MindForge v2 can route tasks between Claude, GPT, and Gemini for the best balance of context, cost, and quality.
+
+### Cross-Model Review
+To get an adversarial review from multiple high-tier models:
+```bash
+/mindforge:cross-review
+```
+This will aggregate findings, detect consensus, and generate a `CROSS-REVIEW-[N].md` report.
+
+### Deep Research
+To leverage Gemini 1.5 Pro's huge context window for codebase-wide research:
+```bash
+/mindforge:research "How does the governance layer handle emergency overrides?"
+```
+
+### Cost Tracking
+Monitor your daily spend and model-specific usage:
+```bash
+/mindforge:costs --summary
+```
+MindForge will block further calls if `MODEL_COST_HARD_LIMIT_USD` is reached.
 
 ---
 
