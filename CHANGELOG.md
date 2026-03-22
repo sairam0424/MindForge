@@ -3,6 +3,18 @@
 All notable changes to MindForge are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com).
 
+## [2.0.0-alpha.2] — Day 9: Visual QA Engine (Browser Runtime Engine) — 2026-03-22
+
+- [v2.0.0-alpha.2 (2026-03-22)]
+  - [NEW] Persistent Browser Runtime (Playwright-powered Chromium daemon).
+  - [NEW] Visual Verification Hook (`<verify-visual>`) in PLAN files.
+  - [NEW] Systematic Visual QA Engine (`/mindforge:qa`).
+  - [NEW] Persistent Session Management for Browser Control.
+  - [NEW] ADR-024, ADR-025, ADR-026.
+
+- [v2.0.0-alpha.1 (2026-03-22)]
+  - Initial v2 scaffolding.
+
 ## [2.0.0-alpha.1] — Day 8: Autonomous Execution Engine — 2026-03-22
 
 ### Added (MindForge v2.0.0-alpha.1)

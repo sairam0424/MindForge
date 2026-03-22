@@ -1,6 +1,6 @@
-# MindForge v1.0.0 — Complete Commands Reference
+# MindForge v2.0.0 — Complete Commands Reference
 
-## All 36 commands
+## All 40+ commands
 
 ### Lifecycle commands (core workflow)
 | Command | Usage | Description | Added |
@@ -11,6 +11,8 @@
 | `/mindforge:execute-phase` | `execute-phase [N]` | Wave-based parallel execution of all phase plans | Day 1+2 |
 | `/mindforge:verify-phase` | `verify-phase [N]` | Automated + human acceptance testing pipeline | Day 1 |
 | `/mindforge:ship` | `ship [N]` | Create PR, write release notes, push to remote | Day 1 |
+| `/mindforge:auto` | `auto [--phase N] [--milestone M]` | Walk-away autonomous execution with stuck detection | Day 8 |
+| `/mindforge:steer` | `steer "instruction"` | Inject guidance into a running autonomous session | Day 8 |
 | `/mindforge:next` | `next` | Auto-detect and execute the correct next workflow step | Day 2 |
 
 ### Project setup & discovery
@@ -57,6 +59,8 @@
 | `/mindforge:sync-confluence` | `sync-confluence [--page ...]` | Publish docs to Confluence | Day 4 |
 | `/mindforge:pr-review` | `pr-review [--range A..B]` | AI PR review with context | Day 6 |
 | `/mindforge:workspace` | `workspace [detect|plan|test]` | Monorepo workspace management | Day 6 |
+| `/mindforge:browse` | `browse [--navigate URL] [--command]` | Control persistent browser daemon and sessions | Day 9 |
+| `/mindforge:qa` | `qa [--diff] [--all]` | Run systematic visual QA and regression tests | Day 9 |
 
 ### Release & maintenance
 | Command | Usage | Description | Added |

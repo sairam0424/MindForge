@@ -1,4 +1,4 @@
-# MindForge User Guide (v1.0.0)
+# MindForge User Guide (v2.0.0-alpha.2)
 
 This guide gets you from install to productive, with the minimum needed to run
 MindForge in a real project. It assumes Node.js 18+.
@@ -68,7 +68,40 @@ This generates `.planning/ARCHITECTURE.md` and an inferred conventions file.
 /mindforge:ship 1
 ```
 
-## 6. Update and migration
+## 6. Autonomous Execution (v2)
+For complex phases that require no human intervention, use the autonomous engine.
+
+### Start autonomous phase
+```bash
+/mindforge:auto --phase 1
+```
+
+### Steering mid-execution
+If you need to guide the agent while it is running in another terminal:
+```bash
+/mindforge:steer "Focus on bug fixes in the auth module"
+```
+
+---
+
+## 7. Browser Runtime & Visual QA (v2)
+MindForge can now control a persistent browser for visual verification and QA.
+
+### Navigate and interact
+```bash
+/mindforge:browse --navigate https://example.com
+/mindforge:browse --click "#login-btn"
+```
+
+### Run visual QA
+To scan for UI bugs and generate regression tests:
+```bash
+/mindforge:qa --diff
+```
+
+---
+
+## 8. Update and migration
 ### Check for updates
 ```
 /mindforge:update

@@ -1,7 +1,7 @@
-# MindForge v1.0.0 — Unique Selling Points, Features, and Best Practices
+# MindForge v2.0.0 — Unique Selling Points, Features, and Best Practices
 
-This document summarizes what makes MindForge v1.0.0 distinct, what features
-are included in the first stable release, and how to use them effectively.
+This document summarizes what makes MindForge v2.0.0 distinct, what features
+are included in the latest alpha release, and how to use them effectively.
 
 ---
 
@@ -30,6 +30,12 @@ are included in the first stable release, and how to use them effectively.
 
 7. **Extensible with plugins and skills**
    - Plugins add commands and skills without changing core files, keeping upgrades safe.
+
+8. **Autonomous “Walk-Away” Execution (v2)**
+   - `/mindforge:auto` allows for full phase/milestone completion with intelligent stuck detection and node repair (RETRY → DECOMPOSE → ESCALATE).
+
+9. **Persistent Visual QA (v2)**
+   - Headful/headless browser runtime with named session persistence and systematic visual diff verification.
 
 ---
 
@@ -141,18 +147,29 @@ preserving scope (local vs global).
 
 ---
 
-### 10. Token Usage Optimiser
-**What it does:** Profiles and reduces token usage across sessions.
+### 11. Autonomous Execution (v2)
+**What it does:** Enables handoff-free execution of complex phases and milestones.
 
 **How to use:**
-```
-/mindforge:tokens --profile
-/mindforge:tokens --summary
+```bash
+/mindforge:auto --phase 1
+/mindforge:steer "Focus on security hardening next"
 ```
 
 ---
 
-### 11. SDK (TypeScript)
+### 12. Browser Runtime & Visual QA (v2)
+**What it does:** Playwright-powered browser control with session persistence and automated UI bug detection.
+
+**How to use:**
+```bash
+/mindforge:browse --navigate https://example.com
+/mindforge:qa --diff
+```
+
+---
+
+### 13. SDK (TypeScript)
 **What it does:** Programmatic access to health, audit log, event stream, and commands.
 
 **How to use:**
