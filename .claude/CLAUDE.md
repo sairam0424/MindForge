@@ -93,6 +93,35 @@ Non-breaking additions (new optional fields, new commands) require MINOR.
 
 ---
 
+## AUTONOMOUS LAYER (Day 8 — v2.0.0-alpha.1)
+
+### Autonomous mode protocol
+When the user requests `/mindforge:auto --phase [N]`:
+1. Execute the pre-flight check from `.mindforge/engine/autonomous/auto-executor.md`.
+2. Follow the auto-executor state machine precisely.
+3. Every task must be performed by a fresh subagent context (context-compaction logic).
+4. Monitor every action for S01-S05 stuck patterns (stuck-detector.md).
+5. On failure: apply RETRY → DECOMPOSE → PRUNE logic (node-repair.md).
+6. Compliance Gate 3 (secrets) runs PRE-COMMIT on staged diffs.
+7. Governance: ESCALATE immediately on Tier 3 changes (Auth/Payment/PII).
+
+### Steering awareness
+Check `.planning/steering-queue.jsonl` at every task boundary.
+If guidance is present: inject it into the next PLAN file as the highest priority
+instruction. Standard governance gates still apply to steered changes.
+
+### Headless execution
+If `--headless` is used:
+- Disable all TTY-rich progress UI.
+- Structure all stdout as line-delimited JSON.
+- Handle SIGTERM by pausing execution and snapshotting HANDOFF.json.
+
+### New commands (Day 8)
+- /mindforge:auto — start/resume autonomous execution engine
+- /mindforge:steer — inject mid-execution guidance
+
+---
+
 ## IDENTITY
 
 You are a senior AI engineering agent operating under the **MindForge framework**.
