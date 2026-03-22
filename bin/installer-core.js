@@ -7,6 +7,7 @@
 const fs   = require('fs');
 const path = require('path');
 const os   = require('os');
+const SessionMemoryLoader = require('./memory/session-memory-loader');
 
 const VERSION = require('../package.json').version;
 
@@ -210,9 +211,26 @@ async function install(runtime, scope, options = {}) {
     ? src('.claude', 'CLAUDE.md')
     : src('.agent', 'CLAUDE.md');
 
-  if (fsu.exists(claudeSrc)) {
+    // ✨ PERSISTENT MEMORY: Load relevant context for this session
+    let injectedContent = fsu.read(claudeSrc);
+    if (scope === 'local') {
+      try {
+        const stack = SessionMemoryLoader.readTechStack();
+        const memory = SessionMemoryLoader.loadForSession({ techStack: stack });
+        if (memory.count > 0) {
+          const header = SessionMemoryLoader.generateSessionHeader(memory);
+          const injection = `\n\n## 🧠 Knowledge Context (Auto-loaded)\n${header}\n${memory.formatted}\n`;
+          injectedContent += injection;
+        }
+      } catch (err) {
+        console.error('  ⚠️  Memory injection failed:', err.message);
+      }
+    }
+
     // Keep legacy location based on runtime config
-    safeCopyClaude(claudeSrc, path.join(baseDir, 'CLAUDE.md'), { force, verbose });
+    const tempClaude = path.join(os.tmpdir(), `CLAUDE-${Date.now()}.md`);
+    fsu.write(tempClaude, injectedContent);
+    safeCopyClaude(tempClaude, path.join(baseDir, 'CLAUDE.md'), { force, verbose });
 
     // ✨ STANDARD: Inject into project root and IDE-specific rules files
     if (scope === 'local' && !selfInstall) {

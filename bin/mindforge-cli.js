@@ -64,6 +64,14 @@ const COMMANDS = {
     script: 'bin/skill-registry.js',
     description: 'Record skill life cycle events in audit log',
     defaultArgs: ['audit']
+  },
+  'remember': {
+    script: 'bin/memory/cli.js',
+    description: 'Manage the MindForge long-term memory (knowledge graph)'
+  },
+  'test-memory': {
+    script: 'tests/memory.test.js',
+    description: 'Run the persistent memory test suite'
   }
 };
 

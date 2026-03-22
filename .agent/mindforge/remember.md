@@ -4,10 +4,22 @@ Manage the MindForge long-term memory (knowledge graph).
 
 ## Usage
 
-- `/mindforge:remember --add "Your knowledge content"`: Manually add an entry.
-- `/mindforge:remember --search "your query"`: Search the knowledge base.
-- `/mindforge:remember --stats`: View memory statistics.
-- `/mindforge:remember --promote "id"`: Promote a project entry to global memory.
+- Add an entry:
+  ```bash
+  node bin/mindforge-cli.js remember --add "Your knowledge" --topic "Title"
+  ```
+- Search memories:
+  ```bash
+  node bin/mindforge-cli.js remember --search "query" --global
+  ```
+- View statistics:
+  ```bash
+  node bin/mindforge-cli.js remember --stats
+  ```
+- Promote to global:
+  ```bash
+  node bin/mindforge-cli.js remember --promote "id"
+  ```
 
 ## Description
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.0-alpha.11] — Persistent Knowledge Graph — 2026-03-24
+### Added
+- **Persistent Knowledge Graph**: Core engine for long-term memory across projects.
+- **`remember` CLI**: New command for manual knowledge management and semantic search.
+- **Automated Capture**: Hooks in `AutoRunner` and `CrossReviewEngine` to ingest insights automatically from phase completions and review reports.
+- **Context Injection**: `installer-core.js` now auto-injects relevant historical context into `CLAUDE.md` during installation.
+- **`test-memory` CLI**: New command for memory suite verification.
+
 ## [2.0.0-alpha.10] — Skill Installation & Validation CLI — 2026-03-24
 ### Added
 - New CLI commands: `validate-skill`, `install-skill`, `register-skill`, `audit-skill`.
