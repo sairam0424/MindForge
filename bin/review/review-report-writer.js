@@ -37,7 +37,7 @@ function write(phaseNum, result) {
     }
   }
 
-  content += `\n## Full Model Outputs\n`;
+  content += '\n## Full Model Outputs\n';
   for (const review of result.reviews) {
     content += `\n### ${review.model} (${review.role})\n\n${review.content}\n\n---\n`;
   }

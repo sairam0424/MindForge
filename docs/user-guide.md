@@ -1,4 +1,4 @@
-# MindForge User Guide (v2.0.0-alpha.3)
+# MindForge User Guide (v2.0.0-alpha.4)
 
 This guide gets you from install to productive, with the minimum needed to run
 MindForge in a real project. It assumes Node.js 18+.
@@ -126,7 +126,33 @@ MindForge will block further calls if `MODEL_COST_HARD_LIMIT_USD` is reached.
 
 ---
 
-## 8. Update and migration
+## 9. Persistent Knowledge Graph (v2)
+MindForge now has long-term memory. It captures architectural decisions, bug patterns, and team preferences, making them available across project sessions.
+
+### Manual Memory entry
+To explicitly record a project-wide preference:
+```bash
+/mindforge:remember --add "preference: Use direct imports for internal modules" --tags "#nodejs"
+```
+
+### Search and retrieval
+To find related knowledge manually:
+```bash
+/mindforge:remember --search "Tailwind best practices"
+```
+
+### Global Promotion
+To make a specific project insight available across ALL your MindForge projects on this machine:
+```bash
+/mindforge:remember --promote [ENTRY_ID]
+```
+
+### Automatic Loading
+Relevant memories are automatically loaded at the start of every session, providing context about past decisions and patterns.
+
+---
+
+## 10. Update and migration
 ### Check for updates
 ```
 /mindforge:update
@@ -142,7 +168,7 @@ MindForge will block further calls if `MODEL_COST_HARD_LIMIT_USD` is reached.
 /mindforge:migrate --from v0.6.0 --to v1.0.0
 ```
 
-## 7. Plugins
+## 11. Plugins
 ### List / validate
 ```
 /mindforge:plugins list
@@ -154,7 +180,7 @@ MindForge will block further calls if `MODEL_COST_HARD_LIMIT_USD` is reached.
 /mindforge:plugins install mindforge-plugin-<name>
 ```
 
-## 8. Skills
+## 12. Skills
 ```
 /mindforge:skills list
 /mindforge:skills validate
@@ -162,7 +188,7 @@ MindForge will block further calls if `MODEL_COST_HARD_LIMIT_USD` is reached.
 
 To publish or install a skill, see `docs/skills-publishing-guide.md`.
 
-## 9. Token usage profiling
+## 13. Token usage profiling
 ```
 /mindforge:tokens --profile
 /mindforge:tokens --summary
@@ -171,7 +197,7 @@ To publish or install a skill, see `docs/skills-publishing-guide.md`.
 Token optimization policies are defined in:
 - `.mindforge/production/token-optimiser.md`
 
-## 10. Configuration (MINDFORGE.md)
+## 14. Configuration (MINDFORGE.md)
 Key settings live in `MINDFORGE.md`. See:
 - `docs/reference/config-reference.md`
 
@@ -181,18 +207,18 @@ Common settings:
 - `TOKEN_WARN_THRESHOLD`, `TOKEN_LEAN_MODE`
 - `MINDFORGE_AUTO_CHECK_UPDATES`
 
-## 11. Troubleshooting
+## 15. Troubleshooting
 - Health issues: run `/mindforge:health --repair`
 - Schema drift: run `/mindforge:migrate --dry-run` then apply
 - Installer issues: re-run with `--force`
 - CI mode: set `CI=true` and check `.mindforge/ci/` docs
 
-## 12. Security
+## 16. Security
 MindForge never stores credentials in files. See:
 - `docs/security/SECURITY.md`
 - `docs/security/threat-model.md`
 
-## 13. Reference docs
+## 17. Reference docs
 - Commands: `docs/reference/commands.md`
 - SDK: `docs/reference/sdk-api.md`
 - Skills: `docs/reference/skills-api.md`

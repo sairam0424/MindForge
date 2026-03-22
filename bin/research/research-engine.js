@@ -25,10 +25,10 @@ const PRIVATE_RANGES = [
 ];
 
 const SYSTEM_PROMPTS = {
-  general: `You are a thorough technical researcher. Analyze the provided context deeply and answer the question comprehensively. Cite specific evidence.`,
-  library_comparison: `You are a senior engineer evaluating libraries. Analyze: API design, maintenance, performance, security, and community.`,
-  codebase_analysis: `You are a senior architect auditing a codebase. Identify patterns, debt, security issues, and bottlenecks.`,
-  compliance: `You are a compliance engineer reviewing implementation against regulations. Identify gaps and remediation steps.`,
+  general: 'You are a thorough technical researcher. Analyze the provided context deeply and answer the question comprehensively. Cite specific evidence.',
+  library_comparison: 'You are a senior engineer evaluating libraries. Analyze: API design, maintenance, performance, security, and community.',
+  codebase_analysis: 'You are a senior architect auditing a codebase. Identify patterns, debt, security issues, and bottlenecks.',
+  compliance: 'You are a compliance engineer reviewing implementation against regulations. Identify gaps and remediation steps.',
 };
 
 async function isSafeUrl(url) {

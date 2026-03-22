@@ -1,4 +1,4 @@
-# MindForge — Enterprise Agentic Framework (v2.0.0-alpha.3)
+# MindForge — Enterprise Agentic Framework (v2.0.0-alpha.4)
 
 MindForge turns Claude Code and Antigravity into production-grade engineering
 partners with governance, observability, and a disciplined workflow engine.
@@ -21,6 +21,7 @@ Decisions get forgotten. MindForge fixes that with:
 - **Autonomous Engine** — walk-away execution with steerability (v2)
 - **Browser Runtime** — headful/headless visual QA and sessions (v2)
 - **Multi-Model Intelligence** — dynamic routing, adversarial reviews, and deep research (v2)
+- **Persistent Knowledge Graph** — long-term memory across all engineering sessions (v2)
 - **Quality gates** — compliance and security are non-bypassable
 - **Audit trail** — append-only history of every action
 
@@ -64,18 +65,19 @@ npx mindforge-cc@latest --all --global
 
 ## Verify
 Open Claude Code or Antigravity in your project directory and run:
-```
+```bash
 /mindforge:health
 ```
+
 If issues are found, run:
-```
+```bash
 /mindforge:health --repair
 ```
 
 ---
 
 ## Quick start (new project)
-```
+```bash
 /mindforge:init-project
 /mindforge:plan-phase 1
 /mindforge:execute-phase 1
@@ -84,7 +86,7 @@ If issues are found, run:
 ```
 
 ## Quick start (existing codebase)
-```
+```bash
 /mindforge:map-codebase
 /mindforge:plan-phase 1
 ```
@@ -92,7 +94,7 @@ If issues are found, run:
 ---
 
 ## Core workflow
-```
+```bash
 / mindforge:init-project
     → Requirements interview
     → Creates PROJECT.md, REQUIREMENTS.md, STATE.md
@@ -138,12 +140,16 @@ If issues are found, run:
 / mindforge:costs
     → Real-time token usage and cost profiling (v2)
     → Daily budget tracking across all providers
+
+/ mindforge:remember
+    → Manual knowledge management and search (v2)
+    → Persistent knowledge graph retrieval and promotion
 ```
 
 ---
 
 ## Updates and migrations
-```
+```bash
 /mindforge:update
 /mindforge:update --apply
 /mindforge:migrate --from v0.6.0 --to v1.0.0
@@ -194,12 +200,13 @@ See `.mindforge/production/token-optimiser.md`.
 
 ---
 
-## What ships in v2.0.0-alpha.3
-- **Autonomous Execution Engine**: `/mindforge:auto` and `/mindforge:steer`.
-- **Persistent Browser Runtime**: `/mindforge:browse` and Playwright integration.
-- **Visual QA Engine**: `/mindforge:qa` and automated regression tests.
+## What ships in v2.0.0-alpha.4
+- **Persistent Knowledge Graph**: `/mindforge:remember` and long-term memory engine.
 - **Multi-Model Intelligence Layer**: `/mindforge:cross-review`, `/mindforge:research`, and `/mindforge:costs`.
-- 45+ commands across 9 workflow categories.
+- **Visual QA Engine**: `/mindforge:qa` and automated regression tests.
+- **Persistent Browser Runtime**: `/mindforge:browse` and Playwright integration.
+- **Autonomous Execution Engine**: `/mindforge:auto` and `/mindforge:steer`.
+- 48+ commands across 10 workflow categories.
 - 12 core skill packs with a three-tier registry.
 - 8 specialised agent personas.
 - Wave-based execution with dependency graph and compaction.
@@ -208,7 +215,7 @@ See `.mindforge/production/token-optimiser.md`.
 - Intelligence layer: health engine, difficulty scoring, anti-pattern detection.
 - Public skills registry and plugin system.
 - @mindforge/sdk with event stream and command builders.
-- 20 test suites, production checklist, and 29 ADRs.
+- 20 test suites, production checklist, and 32 ADRs.
 
 ---
 

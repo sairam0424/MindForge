@@ -1,4 +1,4 @@
-# MindForge v2.0.0 — Unique Selling Points, Features, and Best Practices
+# MindForge v2.0.0 — Unique Selling Points, Features, and Best Practices (v2.0.0-alpha.4)
 
 This document summarizes what makes MindForge v2.0.0 distinct, what features
 are included in the latest alpha release, and how to use them effectively.
@@ -39,6 +39,9 @@ are included in the latest alpha release, and how to use them effectively.
 
 10. **Multi-Model Intelligence Layer (v2)**
     - Dynamic routing between Anthropic, OpenAI, and Gemini based on task persona and security tier. Adversarial code reviews ensure maximum coverage.
+
+11. **Persistent Knowledge Graph (v2)**
+    - Captures and ranks engineering context (decisions, bug patterns, preferences) across project sessions using TF-IDF and confidence reinforcement.
 
 ---
 
@@ -184,7 +187,20 @@ preserving scope (local vs global).
 
 ---
 
-### 13. SDK (TypeScript)
+### 14. Persistent Knowledge Graph (v2)
+**What it does:** Long-term memory system that ensures architectural decisions and bug patterns are never forgotten. Supports TF-IDF search, confidence scoring, and global promotion.
+
+**How to use:**
+```bash
+/mindforge:remember --add "insight" # Manual capture
+/mindforge:remember --search "query" # Manual retrieval
+/mindforge:remember --promote [ID] # Promote to machine-wide global store
+/mindforge:remember --stats # View memory health
+```
+
+---
+
+### 15. SDK (TypeScript)
 **What it does:** Programmatic access to health, audit log, event stream, and commands.
 
 **How to use:**

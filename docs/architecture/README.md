@@ -8,13 +8,15 @@ Markdown protocols and JSON schemas, with a small Node.js CLI runtime.
 1. **Command layer** — Markdown commands in `.claude/commands/mindforge/`
 2. **Engine layer** — Execution protocols under `.mindforge/engine/`
 3. **Governance layer** — Approvals, audit, compliance gates in `.mindforge/governance/`
-4. **Intelligence layer** — Health, difficulty, anti-patterns in `.mindforge/intelligence/`
-5. **Distribution layer** — Installer, registry, CI, SDK, plugins
+4. **Intelligence Layer** — Health, difficulty, anti-patterns in `.mindforge/intelligence/`
+5. **Knowledge Layer** — Long-term memory, capture, and sync in `.mindforge/memory/`
+6. **Distribution Layer** — Installer, registry, CI, SDK, plugins
 
 ## Key data artifacts
 - `.planning/PROJECT.md` — project brief
 - `.planning/STATE.md` — current execution state
 - `.planning/HANDOFF.json` — machine-readable session handoff
+- `.mindforge/memory/knowledge-base.jsonl` — local project memory
 - `.planning/AUDIT.jsonl` — append-only audit log
 
 ## Runtime flow (high level)

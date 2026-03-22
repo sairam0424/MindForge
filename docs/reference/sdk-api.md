@@ -1,18 +1,23 @@
-# MindForge SDK API — Reference (v1.0.0)
+# MindForge SDK API — Reference (v2.0.0-alpha.4)
 
 ## Package
+
 `@mindforge/sdk`
 
 ## Exports
+
 From `sdk/src/index.ts`:
+
 - `MindForgeClient`
 - `MindForgeEventStream`
 - `commands`
+- `MindForgeMemory` (Day 11)
 - Types: `MindForgeConfig`, `PhaseResult`, `TaskResult`, `SecurityFinding`,
   `GateResult`, `HealthReport`, `HealthIssue`, `MindForgeEvent`, `CommandOptions`
 - `VERSION`
 
 ## MindForgeClient
+
 High-level API for reading local project state.
 
 Methods:
