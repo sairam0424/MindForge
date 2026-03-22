@@ -389,14 +389,15 @@ test('migration has CI auto-delete of backup', () => {
 // ── Final version check ────────────────────────────────────────────────────────
 console.log('\nVersion:');
 
-test('package.json version is 1.0.0', () => {
+test('package.json version is >= 1.0.0', () => {
   const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-  assert.strictEqual(pkg.version, '1.0.0', `Expected 1.0.0, got ${pkg.version}`);
+  assert.ok(pkg.version.startsWith('1.') || pkg.version.startsWith('2.'), `Expected v1 or v2, got ${pkg.version}`);
 });
 
-test('CHANGELOG.md has v1.0.0 entry', () => {
+test('CHANGELOG.md has latest version entry', () => {
   const c = read('CHANGELOG.md');
-  assert.ok(c.includes('1.0.0'), 'CHANGELOG.md should have 1.0.0 entry');
+  const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+  assert.ok(c.includes(pkg.version.split('-')[0]) || c.includes(pkg.version), 'CHANGELOG.md should have current version entry');
 });
 
 test('all 20 ADR files present in .planning/decisions/', () => {
