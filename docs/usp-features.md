@@ -1,4 +1,4 @@
-# MindForge v2.0.0 — Unique Selling Points, Features, and Best Practices (v2.0.0-alpha.6)
+# MindForge v2.0.0 — Unique Selling Points, Features, and Best Practices (v2.0.0-alpha.7)
 
 This document summarizes what makes MindForge v2.0.0 distinct, what features
 are included in the latest alpha release, and how to use them effectively.

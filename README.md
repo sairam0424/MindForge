@@ -1,4 +1,4 @@
-# MindForge — Enterprise Agentic Framework (v2.0.0-alpha.6)
+# MindForge — Enterprise Agentic Framework (v2.0.0-alpha.7)
 
 MindForge turns Claude Code and Antigravity into production-grade engineering
 partners with governance, observability, and a disciplined workflow engine.
@@ -215,7 +215,7 @@ See `.mindforge/production/token-optimiser.md`.
 
 ---
 
-## What ships in v2.0.0-alpha.6
+## What ships in v2.0.0-alpha.7
 - **Real-time Dashboard**: `/mindforge:dashboard` and web-based observability.
 - **Persistent Knowledge Graph**: `/mindforge:remember` and long-term memory engine.
 - **Multi-Model Intelligence Layer**: `/mindforge:cross-review`, `/mindforge:research`, and `/mindforge:costs`.

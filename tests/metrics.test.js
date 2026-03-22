@@ -41,7 +41,7 @@ function calcScore(opts = {}) {
   return Math.max(0, Math.min(100, s));
 }
 
-console.log('\nMindForge Day 5 — Metrics Tests\n');
+console.log('\nMindForge Performance & Quality Metrics Tests\n');
 
 console.log('Files:');
 [

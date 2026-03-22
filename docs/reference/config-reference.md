@@ -44,12 +44,12 @@ Unavailable values fallback to `inherit` with a warning.
 - `ANTIPATTERN_SENSITIVITY`
 - `BLOCK_ON_HIGH_ANTIPATTERNS`
 
-## Token settings (Day 7)
+## Token settings
 - `TOKEN_WARN_THRESHOLD`
 - `TOKEN_LEAN_MODE`
 - `TOKEN_MAX_FILE_LINES`
 
-## Update settings (Day 7)
+## Update settings
 - `MINDFORGE_AUTO_CHECK_UPDATES` (true/false)
 
 ## Non-overridable rules

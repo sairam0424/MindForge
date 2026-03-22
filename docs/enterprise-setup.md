@@ -18,7 +18,7 @@ Configure Jira, Confluence, Slack, and SCM governance safely without storing
 - never use `curl -v` with Authorization headers
 - rotate credentials by updating the environment, not config files
 
-## Supported Day 4 outputs
+## Supported outputs
 - Jira epics and stories for phases/plans
 - Confluence architecture and ADR publishing
 - Slack notifications and thread tracking

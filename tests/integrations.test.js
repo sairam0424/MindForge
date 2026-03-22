@@ -1,5 +1,5 @@
 /**
- * MindForge Day 4 — Enterprise Integration Tests
+ * MindForge Enterprise Integration Integration Tests
  * Run: node tests/integrations.test.js
  */
 
@@ -25,7 +25,7 @@ function read(file) {
   return fs.readFileSync(file, 'utf8');
 }
 
-console.log('\nMindForge Day 4 — Integration Tests\n');
+console.log('\nMindForge Enterprise Integration Tests\n');
 
 console.log('Scaffold and config:');
 

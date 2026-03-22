@@ -1,4 +1,4 @@
-# MindForge v2.0.0-alpha.6: In-Depth Testing Guide (Antigravity)
+# MindForge v2.0.0-alpha.7: In-Depth Testing Guide (Antigravity)
 
 This document provides a step-by-step rigorous testing flow to validate the entire MindForge framework from a blank project state. It is designed to be shared and logged for architectural review.
 
@@ -9,7 +9,7 @@ This document provides a step-by-step rigorous testing flow to validate the enti
      ```bash
      /Users/sairamugge/.vite-plus/js_runtime/node/24.14.0/bin/mindforge-cc --antigravity --local
      ```
-   - *Confirmation*: Run the command with `--version`. It must show `v2.0.0-alpha.6`.
+   - *Confirmation*: Run the command with `--version`. It must show `v2.0.0-alpha.7`.
 3. Verify the local binary exists: `ls agents/bin/install.js` (or `.agent/bin/install.js` if legacy)
 
 ## 🏗 Phase 1: Registry & Integrity
@@ -126,5 +126,5 @@ All Antigravity sessions are logged. To share your results for review, zip and s
 - `CHANGELOG.md` (Outcome summary)
 ## 💡 Troubleshooting
 - **Command not found**: Ensure you are using `./mindforge:command` or `/mindforge:command` within the agent.
-- **Wrong Version**: Run `/mindforge:health` and check for "v2.0.0-alpha.6". If it shows "v1.0.5", your installation failed or you are using the global `npx` version.
+- **Wrong Version**: Run `/mindforge:health` and check for "v2.0.0-alpha.7". If it shows "v1.0.5", your installation failed or you are using the global `npx` version.
 - **Registry Error**: Check `~/.mindforge/registry.json` exists; it is now automatically created by the v2 installer.
