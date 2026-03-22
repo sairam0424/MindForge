@@ -1,55 +1,67 @@
-# 🚀 MindForge CI/CD Architecture
+# 🚀 MindForge 5-Layer Plane Architecture (CI/CD)
 
-MindForge v2 uses a modular, enterprise-grade GitHub Actions system designed for agentic workflows, security-first compliance, and observability.
+MindForge v2.0.0 uses a sophisticated Control + Execution Plane architecture for its GitHub Actions, ensuring enterprise-grade governance and autonomous execution capabilities.
 
-## 🏗️ Workflow Overview
+## 🏗️ The 5 Planes
 
-| Workflow | Trigger | Description |
+| Plane | Purpose | Trigger |
 | --- | --- | --- |
-| **MindForge Core CI** | Push / PR | Health check, Linting, Testing, Security Scanning, and Governance Gates. |
-| **MindForge AI Review** | Pull Request | Cross-model architectural review (Claude + GPT-4o). |
-| **MindForge Autonomous** | Manual / Schedule | Headless execution for autonomous agents to complete phases. |
-| **MindForge Release** | Version Tag (`v*`) | Automated push to npm and creation of GitHub Releases. |
-| **MindForge Observability** | Post-CI | Resource usage tracking and session quality analysis. |
+| **Control Plane** | Change classification & Routing | `push`, `pull_request` |
+| **Execution Plane** | Headless agent runtime | `workflow_call` |
+| **AI Intelligence** | Multi-model code validation | PRs (reusable) |
+| **Release Plane** | Packaging & Deployment | Tags (`v*`) |
+| **Observability** | Run metrics & Analytics | Post-run |
 
 ---
 
-## ⚖️ Governance & Compliance
+## 🔄 PR Workflow Lifecycle
 
-MindForge enforces **Tier 3 (Block-by-Design)** governance. If a PR touches sensitive components:
+When you open or update a Pull Request, MindForge triggers the following "Beast" sequence:
 
-- **Auth Systems**
-- **Payment Rails**
-- **PII / Sensitive Data**
-
-The `mindforge-ci` workflow will **FAIL** immediately with a "Governance Block".
-
-### To Resolve a Block
-
-1. Review the pending approval in `.planning/approvals/`.
-2. Run `/mindforge:approve [id]` within the MindForge environment.
-3. Commit the resulting approval signature and push again.
-
----
-
-## 🛡️ Security Gates
-
-The CI pipeline includes non-bypassable security checks:
-
-1. **Secret Detection**: Scans for API keys, tokens, and private keys.
-2. **Dependency Audit**: `npm audit` is configured to fail on `high` or `critical` vulnerabilities.
-3. **OWASP Compliance**: Automated security scans via `node bin/validate-config.js --security`.
+1. **🔍 Classify**: Analyzes diffs to assign a **Governance Tier (1, 2, or 3)**.
+2. **⚖️ Govern**:
+    - **Tier 3 Enforcement**: Blocks the PR if sensitive changes are detected without an approval file.
+    - **Security Scan**: Automatically validates `MINDFORGE.md` and project configurations.
+3. **⚡ Execute**:
+    - Runs **Headless Agent** to verify autonomous logic.
+    - Executes full **Test Suite** and **Linter**.
+4. **🤖 Review**:
+    - Triggers **AI Intelligence Layer** (Claude + GPT-4o).
+    - Posts architectural/security findings as a **PR Comment**.
+5. **📊 Observe**: Generates a performance and audit trace report.
 
 ---
 
-## 🤖 AI Code Review
+## 🔍 Control Plane & Tiers
 
-When a PR is opened, MindForge triggers a cross-model review:
+Every change is automatically classified into a governance tier:
 
-- **Primary**: Claude-3-5-Sonnet (Architectural alignment).
-- **Adversarial**: GPT-4o (Edge case detection & security).
+- **Tier 1 (Trivial)**: Auto-approves and executes basic verification.
+- **Tier 2 (Logic)**: Executes full test suites and AI review.
+- **Tier 3 (Sensitive)**: Blocks the pipeline unless a manual approval is found in `.planning/approvals/`.
 
-Findings are posted as a summary comment on the PR and listed in detailed artifacts (`CODE-REVIEW.md`).
+---
+
+## 🛠️ MindForge CLI (`bin/mindforge-cli.js`)
+
+All planes interact with MindForge via a centralized CLI router:
+
+- `health`: Validates project integrity.
+- `security-scan`: Scans for secrets and PII.
+- `headless`: Executes agents in non-interactive mode.
+- `pr-review`: Standard code review.
+- `cross-review`: Multi-model architecture validation.
+
+---
+
+## 🛡️ Governance Enforcement
+
+If a PR touches sensitive components (Auth, Payments, Security):
+1. The **Control Plane** identifies it as **Tier 3**.
+2. The **Governance Gate** fails unless a valid `.planning/approvals/*.json` file exists.
+3. Once approved, the **Execution Plane** resumes the workflow.
+
+
 
 ---
 
@@ -73,7 +85,8 @@ This will automatically:
 
 ## 📊 Observability
 
-After every CI run, metrics are collected and stored:
-- **Token Usage**: Tracked per session.
-- **Success Rate**: Phase completion percentage.
-- **Audit Logs**: Full trace available in `.planning/AUDIT.jsonl`.
+MindForge tracks every CI execution:
+
+- **Success Rate**: Phase completion status.
+- **Token Usage**: AI cost monitoring.
+- **Audit Trace**: Full execution history in `AUDIT.jsonl`.

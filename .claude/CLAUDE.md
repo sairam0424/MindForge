@@ -6,6 +6,7 @@
 ## MULTI-MODEL INTELLIGENCE LAYER (v2.0.0 — Day 10)
 
 ### Model Routing
+
 - Resolve model using `bin/models/model-router.js` based on persona and tier.
 - Tier 3 (Security) always uses `SECURITY_MODEL`.
 
@@ -18,6 +19,7 @@
 - Block calls if `MODEL_COST_HARD_LIMIT_USD` is reached.
 
 ### New Commands
+
 - `/mindforge:cross-review` — Adversarial multi-model review.
 - `/mindforge:research` — Deep research via Gemini 1M.
 - `/mindforge:costs` — Cost tracking dashboard.

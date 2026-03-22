@@ -1,0 +1,52 @@
+name: MindForge Execution Plane
+
+on:
+  workflow_call:
+    inputs:
+      phase:
+        type: string
+        default: 'current'
+      dry_run:
+        type: boolean
+        default: false
+
+jobs:
+  headless-agent:
+    name: ⚡ Agent Runtime
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Health Check
+        run: node bin/mindforge-cli.js health --repair
+
+      - name: Execute Workflow
+        run: |
+          DRY_FLAG=""
+          if [ "${{ inputs.dry_run }}" == "true" ]; then DRY_FLAG="--dry-run"; fi
+          node bin/mindforge-cli.js headless --phase ${{ inputs.phase }} $DRY_FLAG --output json > /tmp/headless-results.json
+
+      - name: Verification
+        run: |
+          npm test
+          npm run lint
+
+      - name: Upload Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: execution-artifacts-${{ github.run_id }}
+          path: |
+            .planning/HANDOFF.json
+            .planning/AUDIT.jsonl
+            AUTONOMOUS-REPORT.md
+            /tmp/headless-results.json
