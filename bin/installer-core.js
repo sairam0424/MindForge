@@ -21,7 +21,7 @@ const RUNTIMES = {
   antigravity: {
     globalDir:      path.join(os.homedir(), '.gemini', 'antigravity'),
     localDir:       'agents',
-    commandsSubdir: 'mindforge',
+    commandsSubdir: 'workflows',
     entryFile:      'CLAUDE.md',
   },
 };
@@ -49,6 +49,31 @@ const fsu = {
       entry.isDirectory() ? fsu.copyDir(s, d, options) : fsu.copy(s, d);
     }
   },
+};
+
+// ── Registry Management ────────────────────────────────────────────────────────
+const RegistryManager = {
+  getRegistryPath: () => path.join(os.homedir(), '.mindforge', 'registry.json'),
+
+  registerProject(projectPath) {
+    const regPath = this.getRegistryPath();
+    fsu.ensureDir(path.dirname(regPath));
+
+    let registry = { projects: [] };
+    if (fsu.exists(regPath)) {
+      try {
+        registry = JSON.parse(fsu.read(regPath));
+      } catch (e) {
+        console.error('  ⚠️  Registry file corrupted, recreating...');
+      }
+    }
+
+    if (!registry.projects.includes(projectPath)) {
+      registry.projects.push(projectPath);
+      fsu.write(regPath, JSON.stringify(registry, null, 2));
+      console.log(`  ✅  Registered project in ${regPath}`);
+    }
+  }
 };
 
 // ── Self-install detection ────────────────────────────────────────────────────
@@ -125,14 +150,14 @@ function safeCopyClaude(src, dst, options = {}) {
 
 // ── Install verification ──────────────────────────────────────────────────────
 function verifyInstall(baseDir, cmdsDir, runtime, scope) {
-  // Minimum required files for a functional installation
+  const pfx = runtime === 'antigravity' ? 'mindforge:' : '';
   const required = [
-    path.join(baseDir, 'CLAUDE.md'),
-    path.join(cmdsDir, 'help.md'),
-    path.join(cmdsDir, 'init-project.md'),
-    path.join(cmdsDir, 'health.md'),
-    path.join(cmdsDir, 'execute-phase.md'),
-    path.join(cmdsDir, 'security-scan.md'),
+    scope === 'local' ? path.join(process.cwd(), 'CLAUDE.md') : path.join(baseDir, 'CLAUDE.md'),
+    path.join(cmdsDir, `${pfx}help.md`),
+    path.join(cmdsDir, `${pfx}init-project.md`),
+    path.join(cmdsDir, `${pfx}health.md`),
+    path.join(cmdsDir, `${pfx}execute-phase.md`),
+    path.join(cmdsDir, `${pfx}security-scan.md`),
   ];
 
   const missing = required.filter(f => !fsu.exists(f));
@@ -171,14 +196,28 @@ async function install(runtime, scope, options = {}) {
     return;
   }
 
-  // ── 1. Install CLAUDE.md ────────────────────────────────────────────────────
+  // ── 1. Install CLAUDE.md (Root standardization for IDEs) ────────────────────
   const claudeSrc = runtime === 'claude'
     ? src('.claude', 'CLAUDE.md')
     : src('.agent', 'CLAUDE.md');
 
   if (fsu.exists(claudeSrc)) {
+    // Keep legacy location based on runtime config
     safeCopyClaude(claudeSrc, path.join(baseDir, 'CLAUDE.md'), { force, verbose });
-    console.log('  ✅  CLAUDE.md');
+
+    // ✨ STANDARD: Inject into project root and IDE-specific rules files
+    if (scope === 'local' && !selfInstall) {
+      const rootClaude = path.join(process.cwd(), 'CLAUDE.md');
+      const rootCursor = path.join(process.cwd(), '.cursorrules');
+      const rootWindsurf = path.join(process.cwd(), '.windsurfrules');
+      
+      safeCopyClaude(claudeSrc, rootClaude, { force, verbose });
+      safeCopyClaude(claudeSrc, rootCursor, { force, verbose });
+      safeCopyClaude(claudeSrc, rootWindsurf, { force, verbose });
+      console.log('  ✅  CLAUDE.md (Mirrored to project root & .cursorrules)');
+    } else {
+      console.log('  ✅  CLAUDE.md');
+    }
   }
 
   // ── 2. Install commands ─────────────────────────────────────────────────────
@@ -189,8 +228,24 @@ async function install(runtime, scope, options = {}) {
   if (fsu.exists(cmdSrc)) {
     fsu.ensureDir(cmdsDir);
     const files = fsu.listFiles(cmdSrc).filter(f => f.endsWith('.md'));
-    files.forEach(f => fsu.copy(path.join(cmdSrc, f), path.join(cmdsDir, f)));
-    console.log(`  ✅  ${files.length} commands`);
+    
+    // Install for specific runtime
+    files.forEach(f => {
+      const targetName = runtime === 'antigravity' ? `mindforge:${f}` : f;
+      fsu.copy(path.join(cmdSrc, f), path.join(cmdsDir, targetName));
+    });
+
+    // ✨ STANDARD: Mirror to .claude/commands for cross-IDE compatibility (Cursor/Windsurf/Claude Code)
+    if (scope === 'local' && runtime !== 'claude' && !selfInstall) {
+      const standardCmdDir = path.join(process.cwd(), '.claude', 'commands', 'mindforge');
+      fsu.ensureDir(standardCmdDir);
+      files.forEach(f => {
+        fsu.copy(path.join(cmdSrc, f), path.join(standardCmdDir, f));
+      });
+      console.log(`  ✅  ${files.length} commands (Mirrored to .claude/commands/mindforge/)`);
+    } else {
+      console.log(`  ✅  ${files.length} commands`);
+    }
   }
 
   // ── 3. Framework files (local scope only, non-self-install) ─────────────────
@@ -266,6 +321,7 @@ async function install(runtime, scope, options = {}) {
       }
     }
 
+    RegistryManager.registerProject(process.cwd());
   }
 
   // ── 4. Verify installation ──────────────────────────────────────────────────

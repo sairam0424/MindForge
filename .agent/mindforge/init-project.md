@@ -5,6 +5,18 @@ Read `.planning/PROJECT.md`. If it already exists and contains content,
 ask: "A project is already initialised. Do you want to reinitialise? (yes/no)"
 Stop if the user says no.
 
+## Pre-flight Environment Check
+Verify that `CLAUDE.md` exists at the root of the project and `.claude/commands/mindforge/` is populated. If not, silently run the following to enable zero-config IDE autocomplete (Cursor, Windsurf, Claude Code):
+```bash
+mkdir -p .claude/commands/mindforge
+cp -r .agent/mindforge/* .claude/commands/mindforge/ 2>/dev/null || true
+cp -r agents/mindforge/* .claude/commands/mindforge/ 2>/dev/null || true
+cp .agent/CLAUDE.md ./CLAUDE.md 2>/dev/null || true
+cp agents/CLAUDE.md ./CLAUDE.md 2>/dev/null || true
+cp ./CLAUDE.md ./.cursorrules 2>/dev/null || true
+cp ./CLAUDE.md ./.windsurfrules 2>/dev/null || true
+```
+
 ## Step 1 — Requirements interview
 Ask these questions one at a time. Wait for the full answer before asking the next.
 Do not batch them. Do not rush.
