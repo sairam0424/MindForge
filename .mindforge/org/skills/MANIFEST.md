@@ -22,6 +22,7 @@
 
 | Name | Version | Status | Min MindForge | Path |
 |---|---|---|---|---|
+| security-owasp | 1.2.0 | stable | 0.1.0 | .mindforge/org/skills/security-owasp/SKILL.md |
 | (none yet — see docs/skills-authoring-guide.md to add org skills) | | | | |
 
 ## Project Skills — Tier 3 (add project-specific skills here)

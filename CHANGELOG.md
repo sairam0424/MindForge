@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.0-alpha.10] — Skill Installation & Validation CLI — 2026-03-24
+### Added
+- New CLI commands: `validate-skill`, `install-skill`, `register-skill`, `audit-skill`.
+- Robust skill validation logic (Level 1 & 2) in `bin/skill-validator.js`.
+- Automated manifest management and audit logging in `bin/skill-registry.js`.
+- Integrated CLI commands into the `install-skill.md` agentic workflow for higher reliability.
+
 ## [2.0.0-alpha.9] — Verified Antigravity Compatibility — 2026-03-23
 ### Fixed
 - Fixed critical installer regression where `files` variable was undefined during command installation.
