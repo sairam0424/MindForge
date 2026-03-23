@@ -30,10 +30,15 @@ Markdown protocols and JSON schemas, with a small Node.js CLI runtime.
 ## Installation targets
 - Claude Code: `~/.claude/` or `.claude/`
 - Antigravity: `~/.gemini/antigravity/` or `.agent/`
+- Cursor: `.cursor/rules/`
+- Gemini CLI: `.gemini/`
+- GitHub Copilot: `.github/copilot-instructions.md`
+- OpenCode: `.opencode/`
 
 ## SDK integration
 `@mindforge/sdk` provides programmatic access to health checks, audit log
 streaming, and command builders.
 
 ## Stability contract
-See ADR-020: command interfaces, schemas, and SDK exports are stable in v1.x.x.
+See ADR-020: command interfaces, schemas, and SDK exports are stable in v2.x.x.
+See ADR-041: runtime interfaces are stabilized for community extension.

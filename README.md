@@ -1,8 +1,8 @@
-# MindForge — Enterprise Agentic Framework (v2.0.0-alpha.10)
+# MindForge — Enterprise Agentic Framework (v2.0.0)
 
 MindForge turns Claude Code and Antigravity into production-grade engineering
 partners with governance, observability, and a disciplined workflow engine.
-Release published: v1.0.0 (GitHub Releases).
+Release published: v2.0.0.
 
 ```bash
 npx mindforge-cc@latest
@@ -68,9 +68,34 @@ Optional: minimal project scaffolding
 npx mindforge-cc@latest --claude --local --minimal
 ```
 
-### Both runtimes
+### Cursor
 ```bash
-npx mindforge-cc@latest --all --global
+npx mindforge-cc@latest --cursor --local
+```
+
+### Gemini CLI
+```bash
+npx mindforge-cc@latest --gemini --global
+```
+
+### GitHub Copilot
+```bash
+npx mindforge-cc@latest --copilot --local
+```
+
+### OpenCode
+```bash
+npx mindforge-cc@latest --opencode --global
+```
+
+### Specific Runtime (Universal)
+```bash
+npx mindforge-cc@latest --runtime <name>
+```
+
+### Multiple runtimes
+```bash
+npx mindforge-cc@latest --runtime claude,cursor --local
 ```
 
 ---
@@ -168,6 +193,9 @@ If issues are found, run:
 / mindforge:marketplace
     → Search, install, and publish community skills (v2)
     → Verified installation via npm-based registry
+
+/ mindforge:new-runtime
+    → Scaffold custom runtime configurations for any AI agent (v2)
 ```
 
 ---
