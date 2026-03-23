@@ -1,12 +1,35 @@
-Create or update a milestone definition in `.planning/milestones/` and track the
- health of grouped phases. Usage: `/mindforge:milestone <name> [phase list]`
+---
+name: mindforge:milestone
+description: Create or update a milestone definition and track grouped phase health
+argument-hint: <name> [phase list]
+allowed-tools:
+  - list_dir
+  - write_to_file
+  - view_file
+---
 
-## Outputs
-- milestone document with included phases
-- health summary (on track, at risk, blocked)
-- linked approvals, blockers, and verification status
+<objective>
+Define and track major project milestones by grouping phases, monitoring their health, and linking approvals and verification status.
+</objective>
 
-## Health rules
-- any blocked phase makes the milestone at risk
-- missing verification keeps milestone status yellow
-- completed verified phases count toward release readiness
+<execution_context>
+.claude/commands/mindforge/milestone.md
+</execution_context>
+
+<context>
+Arguments: $ARGUMENTS (Name of milestone and optional list of phase numbers)
+Storage: .planning/milestones/
+Health Rules: Any blocked phase makes the milestone "at risk".
+</context>
+
+<process>
+1. **Parse Arguments**: Extract milestone name and phase list.
+2. **Read State**: Check existing phases in `.planning/phases/`.
+3. **Generate/Update Milestone**:
+    - Create/update `.planning/milestones/[name].md`.
+    - Include phase list, health summary (on track, at risk, blocked), and verification status.
+4. **Evaluate Health**:
+    - Mark as "at risk" if any linked phase is blocked.
+    - Monitor for completed vs. verified phases for release readiness.
+5. **Report**: Summarize milestone health and next actions to the user.
+</process>

@@ -1,14 +1,29 @@
-# /mindforge:remember
+---
+name: mindforge:remember
+description: Manage long-term memory and knowledge graph entries
+argument-hint: [--add "content"] [--search "query"] [--promote "id"]
+allowed-tools:
+  - view_file
+  - write_to_file
+  - run_command
+---
 
-Manage the MindForge long-term memory (knowledge graph).
+<objective>
+Provide a manual interface for steering the agent's long-term memory, allowing users to add specific project knowledge, search the existing graph, and promote local learnings to global availability.
+</objective>
 
-## Usage
+<execution_context>
+.claude/commands/mindforge/remember.md
+</execution_context>
 
-- `/mindforge:remember --add "Your knowledge content"`: Manually add an entry.
-- `/mindforge:remember --search "your query"`: Search the knowledge base.
-- `/mindforge:remember --stats`: View memory statistics.
-- `/mindforge:remember --promote "id"`: Promote a project entry to global memory.
+<context>
+Storage: MindForge Knowledge Graph.
+Visibility: Project-local vs. Global memory.
+</context>
 
-## Description
-
-MindForge capture, stores, and retrieves knowledge (architectural decisions, code patterns, team preferences) across all sessions and projects. This command allows for manual management and querying of this data.
+<process>
+1. **Add**: Capture one-off decisions or constraints manually into the memory store.
+2. **Search**: Query the knowledge base across sessions to retrieve previously captured patterns.
+3. **Promote**: Elevate a specific project-level finding to "Global" status for use in future repositories.
+4. **Analyze**: Provide stats on memory usage and activation frequency.
+</process>

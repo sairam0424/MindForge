@@ -1,23 +1,29 @@
-Show all available MindForge commands.
+---
+name: mindforge:help
+description: Show all available MindForge commands and current project summary
+argument-hint: none
+allowed-tools:
+  - list_dir
+  - view_file
+---
 
-## Pre-check
-If `.planning/STATE.md` exists, read it.
-If `.planning/PROJECT.md` is missing, treat the project as "Not initialised".
+<objective>
+Provide a searchable, categorized directory of all accessible MindForge commands, along with a quick snapshot of the project's current state.
+</objective>
 
-1. Scan every .md file in `.claude/commands/mindforge/`
-2. For each file, extract the first non-empty line as the command description
-3. Display as a clean table:
+<execution_context>
+.claude/commands/mindforge/help.md
+</execution_context>
 
-| Command                      | Description                                  |
-|------------------------------|----------------------------------------------|
-| /mindforge:help              | Show all available commands                  |
-| /mindforge:init-project      | ...                                          |
-| ...                          | ...                                          |
+<context>
+Discovery: Scans `.claude/commands/mindforge/*.md`
+State: PROJECT.md and STATE.md
+</context>
 
-4. After the table, print:
-   "Current project: [read PROJECT.md first line, or 'Not initialised']"
-   "Current phase:   [read STATE.md current phase, or 'None']"
-   "Next step:       [read STATE.md next action]"
-
-5. If CLAUDE.md has not been read this session, remind the user to ensure
-   it is loaded as the agent's system context.
+<process>
+1. **Command Scan**: List all markdown definitions in the command directory and extract their first-line descriptions or YAML metadata.
+2. **Read Project Info**: Summarize the current project name, active phase, and recommended next step.
+3. **Format Dashboard**: Render a clean table of commands and descriptions.
+4. **Verify Context**: If `CLAUDE.md` hasn't been read in the current session, remind the user to load it as the agent's context.
+5. **Display**: Present the help table and project summary.
+</process>

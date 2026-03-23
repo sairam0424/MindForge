@@ -1,18 +1,32 @@
-Archive a completed milestone, generate a release report, and prepare the next
- milestone. Usage: `/mindforge:complete-milestone <name> <version>`
+---
+name: mindforge:complete-milestone
+description: Archive a completed milestone and prepare the next version
+argument-hint: <name> <version>
+allowed-tools:
+  - list_dir
+  - view_file
+  - write_to_file
+  - run_command
+---
 
-## Step 1 — Validate milestone completion
-Ensure every included phase is verified and has no pending blocking approvals.
+<objective>
+Finalize a project milestone by summarizing shipped value, archiving phase artifacts, and preparing the environment for the next development cycle.
+</objective>
 
-## Step 2 — Generate milestone report
-Summarise shipped phases, notable changes, risks, approvals, and unresolved
- follow-ups.
+<execution_context>
+.claude/commands/mindforge/complete-milestone.md
+</execution_context>
 
-## Step 3 — Archive milestone artifacts
-Archive only the phases included in the milestone, not the entire
- `.planning/phases/` directory. Preserve history in the archive while keeping
- active planning files available in place.
+<context>
+Validation: Ensures all included phases are verified and have no pending approvals.
+Storage: Moves phase files to a milestone-specific archive.
+</context>
 
-## Step 4 — Release metadata
-Create the release tag, update `STATE.md` with milestone summary, and mark the
- project ready for the next version.
+<process>
+1. **Validate**: Confirm every phase in the milestone is signed off and verified.
+2. **Summarize**: Generate a MILESTONE-REPORT with shipped functionality, risks, and follow-ups.
+3. **Archive**: Move the included `.planning/phases/` directories to a persistent milestone archive.
+4. **Tag**: Create a git release tag for the milestone.
+5. **State Reset**: Update `STATE.md` to reflect the milestone completion and target the next version.
+6. **Audit**: Log `milestone_completed` event.
+</process>
