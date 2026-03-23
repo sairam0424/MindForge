@@ -1,18 +1,30 @@
-Process pending approvals and emergency overrides. Usage:
-`/mindforge:approve [approval-id] [--approve|--reject] [--reason "..."] [--emergency]`
+---
+name: mindforge:approve
+description: Process pending approvals and emergency overrides
+argument-hint: [approval-id] [--approve|--reject] [--reason "..."] [--emergency]
+allowed-tools:
+  - list_dir
+  - view_file
+  - write_to_file
+---
 
-## Listing approvals
-Scan `.planning/approvals/` and show only files with `status: pending` unless
- the user explicitly asks for historical records.
+<objective>
+Manage the governance layer by reviewing and confirming high-tier architectural or security changes, ensuring all sensitive operations have explicit human authorization.
+</objective>
 
-## Standard approval flow
-1. Read the approval file
-2. Confirm current identity from `git config user.email` or `$USER`
-3. Validate approver eligibility from `INTEGRATIONS-CONFIG.md`
-4. Record approval or rejection with timestamp and reason
+<execution_context>
+.claude/commands/mindforge/approve.md
+</execution_context>
 
-## Emergency overrides
-Emergency override requires the `--emergency` flag.
-Read `EMERGENCY_APPROVERS` from `INTEGRATIONS-CONFIG.md` and deny the request if
- the current identity is not listed. Document that git-config-based identity is
- a convenience layer, not a high-assurance identity proof.
+<context>
+Storage: .planning/approvals/
+Governance Config: INTEGRATIONS-CONFIG.md
+</context>
+
+<process>
+1. **List**: Scan for pending approval requests and present them to the user.
+2. **Identity Verification**: Confirm the user's identity via git config or environment.
+3. **Audit Eligibility**: Verify the user has sufficient permissions for the requested tier.
+4. **Record Verdict**: Update the approval file with status, timestamp, and the provided reason.
+5. **Emergency Override**: If `--emergency` is used, bypass standard checks if the identity matches the pre-defined emergency approver list.
+</process>
