@@ -543,3 +543,29 @@ preferences while keeping governance and quality gates intact.
 - `/mindforge:metrics`
 
 ---
+
+## SELF-BUILDING SKILLS PLATFORM (v2.0.0 — Day 13)
+
+### When to suggest /mindforge:learn
+- After a productive phase that introduced a new technology
+- When the user mentions struggling with a specific library
+- After `/mindforge:research` produces findings worth capturing as skills
+- When debug sessions uncover patterns worth remembering
+
+### Auto-capture hook
+When AUTO_CAPTURE_SKILLS=true in MINDFORGE.md:
+After every phase that passes all gates:
+  Run `bin/skills-builder/pattern-detector.js` on the phase SUMMARY files.
+  If patterns found (frequency ≥ 2): present for user approval.
+  If approved: run the full learn pipeline to create a skill.
+
+### AUDIT events for skill learning
+- skill_learned: source_type, source, skill_name, quality_score, tier, cost_usd
+- auto_capture_skipped: phase, patterns_found (0 = no patterns, N = user declined)
+- marketplace_action: action, query/skill_name, quality_score
+
+### New commands (Day 13)
+- /mindforge:learn — convert any documentation into a reusable skill
+- /mindforge:marketplace — discover and install community skills
+
+---

@@ -14,18 +14,78 @@ const VERSION = require('../package.json').version;
 // ── Runtime configurations ────────────────────────────────────────────────────
 const RUNTIMES = {
   claude: {
+    displayName:    'Claude Code',
     globalDir:      path.join(os.homedir(), '.claude'),
     localDir:       '.claude',
     commandsSubdir: 'commands/mindforge',
     entryFile:      'CLAUDE.md',
+    supportsSlash:  true,
   },
   antigravity: {
+    displayName:    'Antigravity',
     globalDir:      path.join(os.homedir(), '.gemini', 'antigravity'),
     localDir:       '.agents',
     commandsSubdir: 'workflows',
     entryFile:      'CLAUDE.md',
+    supportsSlash:  true,
+  },
+  cursor: {
+    displayName:    'Cursor',
+    globalDir:      path.join(os.homedir(), '.cursor'),
+    localDir:       '.cursor',
+    commandsSubdir: 'rules',
+    entryFile:      '.cursorrules',
+    supportsSlash:  false,
+  },
+  opencode: {
+    displayName:    'OpenCode',
+    globalDir:      path.join(os.homedir(), '.opencode'),
+    localDir:       '.opencode',
+    commandsSubdir: 'commands/mindforge',
+    entryFile:      'CLAUDE.md',
+    supportsSlash:  true,
+  },
+  gemini: {
+    displayName:    'Gemini CLI',
+    globalDir:      path.join(os.homedir(), '.gemini'),
+    localDir:       '.gemini',
+    commandsSubdir: 'commands/mindforge',
+    entryFile:      'GEMINI.md',
+    supportsSlash:  true,
+  },
+  copilot: {
+    displayName:    'GitHub Copilot',
+    globalDir:      path.join(os.homedir(), '.github', 'copilot'),
+    localDir:       '.github',
+    commandsSubdir: 'copilot-instructions/mindforge',
+    entryFile:      'copilot-instructions.md',
+    supportsSlash:  false,
   },
 };
+
+/**
+ * Generates runtime-specific entry file content.
+ * e.g. replacing "Claude" with "Gemini" in GEMINI.md
+ */
+function generateEntryContent(runtime, sourceContent) {
+  if (runtime === 'gemini') {
+    return sourceContent
+      .replace(/claude-3-5-sonnet/gi, 'gemini-2.0-flash-exp')
+      .replace(/Claude Code/g, 'Gemini CLI')
+      .replace(/CLAUDE.md/g, 'GEMINI.md');
+  }
+  
+  if (runtime === 'cursor' || runtime === 'copilot') {
+    // Add preamble for non-slash runtimes as per review feedback
+    const preamble = `<!--
+  MindForge Rule Set for ${RUNTIMES[runtime].displayName}
+  MindForge command reference: @[command name without .md]
+-->\n\n`;
+    return preamble + sourceContent;
+  }
+
+  return sourceContent;
+}
 
 // ── File system utilities ─────────────────────────────────────────────────────
 const fsu = {
@@ -160,9 +220,10 @@ function safeCopyClaude(src, dst, options = {}) {
 
 // ── Install verification ──────────────────────────────────────────────────────
 function verifyInstall(baseDir, cmdsDir, runtime, scope) {
+  const cfg = RUNTIMES[runtime];
   const pfx = runtime === 'antigravity' ? 'mindforge:' : '';
   const required = [
-    scope === 'local' ? path.join(process.cwd(), 'CLAUDE.md') : path.join(baseDir, 'CLAUDE.md'),
+    scope === 'local' ? path.join(process.cwd(), cfg.entryFile) : path.join(baseDir, cfg.entryFile),
     path.join(cmdsDir, `${pfx}help.md`),
     path.join(cmdsDir, `${pfx}init-project.md`),
     path.join(cmdsDir, `${pfx}health.md`),
@@ -201,14 +262,15 @@ async function install(runtime, scope, options = {}) {
 
   if (dryRun) {
     console.log('\n  Would install:');
-    console.log(`    CLAUDE.md → ${path.join(baseDir, 'CLAUDE.md')}`);
+    console.log(`    ${cfg.entryFile} → ${path.join(baseDir, cfg.entryFile)}`);
     console.log(`    ${fsu.listFiles(src('.claude', 'commands', 'mindforge')).length} commands → ${cmdsDir}`);
     return;
   }
 
+  const claudeSrc = src('.claude', 'CLAUDE.md');
   if (fsu.exists(claudeSrc)) {
     // ✨ PERSISTENT MEMORY: Load relevant context for this session
-    let injectedContent = fsu.read(claudeSrc);
+    let content = fsu.read(claudeSrc);
     if (scope === 'local') {
       try {
         const stack = SessionMemoryLoader.readTechStack();
@@ -216,30 +278,40 @@ async function install(runtime, scope, options = {}) {
         if (memory.count > 0) {
           const header = SessionMemoryLoader.generateSessionHeader(memory);
           const injection = `\n\n## 🧠 Knowledge Context (Auto-loaded)\n${header}\n${memory.formatted}\n`;
-          injectedContent += injection;
+          content += injection;
         }
       } catch (err) {
         console.error('  ⚠️  Memory injection failed:', err.message);
       }
     }
 
+    // ✨ RUNTIME ADAPTATION: Generate specific content for this runtime
+    const adaptedContent = generateEntryContent(runtime, content);
+
     // Keep legacy location based on runtime config
-    const tempClaude = path.join(os.tmpdir(), `CLAUDE-${Date.now()}.md`);
-    fsu.write(tempClaude, injectedContent);
-    safeCopyClaude(tempClaude, path.join(baseDir, 'CLAUDE.md'), { force, verbose });
+    const tempEntry = path.join(os.tmpdir(), `${cfg.entryFile}-${Date.now()}.md`);
+    fsu.write(tempEntry, adaptedContent);
+    
+    const targetPath = path.join(baseDir, cfg.entryFile);
+    safeCopyClaude(tempEntry, targetPath, { force, verbose });
 
     // ✨ STANDARD: Inject into project root and IDE-specific rules files
     if (scope === 'local' && !selfInstall) {
       const rootClaude = path.join(process.cwd(), 'CLAUDE.md');
-      const rootCursor = path.join(process.cwd(), '.cursorrules');
-      const rootWindsurf = path.join(process.cwd(), '.windsurfrules');
+      const rootEntry  = path.join(process.cwd(), cfg.entryFile);
       
-      safeCopyClaude(claudeSrc, rootClaude, { force, verbose });
-      safeCopyClaude(claudeSrc, rootCursor, { force, verbose });
-      safeCopyClaude(claudeSrc, rootWindsurf, { force, verbose });
-      console.log('  ✅  CLAUDE.md (Mirrored to project root & .cursorrules)');
+      // Always provide CLAUDE.md as the base standard
+      safeCopyClaude(tempEntry, rootClaude, { force, verbose });
+      
+      // If the runtime entry file is different (e.g. .cursorrules, copilot-instructions.md), copy that too
+      if (cfg.entryFile !== 'CLAUDE.md') {
+        safeCopyClaude(tempEntry, rootEntry, { force, verbose });
+        console.log(`  ✅  ${cfg.entryFile} (Mirrored to project root)`);
+      } else {
+        console.log('  ✅  CLAUDE.md (Mirrored to project root)');
+      }
     } else {
-      console.log('  ✅  CLAUDE.md');
+      console.log(`  ✅  ${cfg.entryFile}`);
     }
   }
 
@@ -368,13 +440,13 @@ async function uninstall(runtime, scope, options = {}) {
   const cfg     = RUNTIMES[runtime];
   const baseDir = resolveBaseDir(runtime, scope);
   const cmdsDir = norm(path.join(baseDir, cfg.commandsSubdir));
-  const claudeMd = norm(path.join(baseDir, 'CLAUDE.md'));
+  const entryFile = norm(path.join(baseDir, cfg.entryFile));
 
   console.log(`\n  Uninstalling MindForge (${runtime} / ${scope})...`);
   if (dryRun) {
     console.log(`  Would remove: ${cmdsDir}`);
-    if (fsu.exists(claudeMd) && fsu.read(claudeMd).includes('MindForge'))
-      console.log(`  Would remove: ${claudeMd}`);
+    if (fsu.exists(entryFile) && fsu.read(entryFile).includes('MindForge'))
+      console.log(`  Would remove: ${entryFile}`);
     return;
   }
 
@@ -384,10 +456,10 @@ async function uninstall(runtime, scope, options = {}) {
     console.log(`  ✅  Removed: ${cmdsDir}`);
   }
 
-  // Remove CLAUDE.md only if it's a MindForge-generated file
-  if (fsu.exists(claudeMd) && fsu.read(claudeMd).includes('MindForge')) {
-    fs.unlinkSync(claudeMd);
-    console.log(`  ✅  Removed: ${claudeMd}`);
+  // Remove entry file only if it's a MindForge-generated file
+  if (fsu.exists(entryFile) && fsu.read(entryFile).includes('MindForge')) {
+    fs.unlinkSync(entryFile);
+    console.log(`  ✅  Removed: ${entryFile}`);
   }
 
   // Preserve .planning/ and .mindforge/ — user data, not our files to delete
@@ -397,9 +469,27 @@ async function uninstall(runtime, scope, options = {}) {
 
 // ── Main run ──────────────────────────────────────────────────────────────────
 async function run(args) {
-  const runtime    = args.includes('--antigravity') ? 'antigravity'
-                   : args.includes('--all')         ? 'all'
-                   : 'claude';
+  // Parse runtime from flags
+  let runtime = args.includes('--all') ? 'all' : null;
+  
+  if (!runtime) {
+    // Check for explicit --runtime flag
+    const rtIdx = args.indexOf('--runtime');
+    if (rtIdx !== -1 && args[rtIdx + 1]) {
+      runtime = args[rtIdx + 1].toLowerCase();
+    } else {
+      // Check for boolean flags (e.g. --cursor, --gemini)
+      for (const key of Object.keys(RUNTIMES)) {
+        if (args.includes(`--${key}`)) {
+          runtime = key;
+          break;
+        }
+      }
+    }
+  }
+  
+  // Default to claude if no runtime specified
+  if (!runtime) runtime = 'claude';
   const scope      = args.includes('--global') || args.includes('-g') ? 'global' : 'local';
   const dryRun     = args.includes('--dry-run');
   const force      = args.includes('--force');
@@ -440,4 +530,4 @@ async function run(args) {
   }
 }
 
-module.exports = { run, install, uninstall };
+module.exports = { run, install, uninstall, RUNTIMES, generateEntryContent };
