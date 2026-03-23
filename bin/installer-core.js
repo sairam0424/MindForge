@@ -267,10 +267,9 @@ async function install(runtime, scope, options = {}) {
     return;
   }
 
-  const claudeSrc = src('.claude', 'CLAUDE.md');
-  if (fsu.exists(claudeSrc)) {
+  if (fsu.exists(src('.claude', 'CLAUDE.md'))) {
     // ✨ PERSISTENT MEMORY: Load relevant context for this session
-    let content = fsu.read(claudeSrc);
+    let content = fsu.read(src('.claude', 'CLAUDE.md'));
     if (scope === 'local') {
       try {
         const stack = SessionMemoryLoader.readTechStack();
