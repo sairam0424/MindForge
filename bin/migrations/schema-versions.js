@@ -59,6 +59,18 @@ const SCHEMA_HISTORY = [
       'HANDOFF.json plugin_api_version field is now required for plugin compatibility',
     ],
   },
+  {
+    version: '2.0.0',
+    date: '2026-03-23',
+    description: 'v2.0.0 - The Autonomous Enterprise: multi-runtime and enhanced governance',
+    handoff_fields_added: [],
+    handoff_fields_removed: [],
+    audit_fields_added: ['runtime', 'agent_id'],
+    breaking: [
+      'Additive migration required to backfill audit/token fields',
+      'Plugin API version upgraded to 2.0.0',
+    ],
+  },
 ];
 
 module.exports = { SCHEMA_HISTORY };
