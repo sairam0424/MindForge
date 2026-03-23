@@ -223,7 +223,7 @@ function verifyInstall(baseDir, cmdsDir, runtime, scope) {
   const cfg = RUNTIMES[runtime];
   const pfx = runtime === 'antigravity' ? 'mindforge:' : '';
   const required = [
-    scope === 'local' ? path.join(process.cwd(), cfg.entryFile) : path.join(baseDir, cfg.entryFile),
+    scope === 'local' ? path.join(process.cwd(), (cfg.entryFile || 'CLAUDE.md').replace(/\.rd$/, '.md')) : path.join(baseDir, (cfg.entryFile || 'CLAUDE.md').replace(/\.rd$/, '.md')),
     path.join(cmdsDir, `${pfx}help.md`),
     path.join(cmdsDir, `${pfx}init-project.md`),
     path.join(cmdsDir, `${pfx}health.md`),
