@@ -1,98 +1,35 @@
-# MindForge v2 — Dashboard Command
-# Usage: /mindforge:dashboard [--port 7339] [--open] [--stop] [--status]
-# Version: v2.0.0-alpha.5
+---
+name: mindforge:dashboard
+description: Start the MindForge real-time web dashboard
+argument-hint: [--port N] [--open] [--stop] [--status]
+allowed-tools:
+  - run_command
+  - list_dir
+  - view_file
+  - open_browser_url
+---
 
-## Purpose
-Start the MindForge real-time web dashboard — a live observability UI for the
-entire team. Shows execution progress, quality metrics, pending approvals,
-knowledge graph, and team activity without requiring CLI access.
+<objective>
+Provide a real-time web-based observability interface for the project, allowing the team to monitor execution progress, quality metrics, pending approvals, and team activity.
+</objective>
 
-## Design
-The dashboard is a localhost-only web server:
-- No build step — single HTML file, no bundler, no npm packages on client
-- No authentication — binding to 127.0.0.1 is the security model
-- Live updates via Server-Sent Events — no WebSocket library needed
-- Designed for screensharing at standups, not external access
+<execution_context>
+.claude/commands/mindforge/dashboard.md
+</execution_context>
 
-## Usage
+<context>
+Port: Default 7339 (configurable via --port).
+Security: Binding to 127.0.0.1 (local only).
+Features: Server-Sent Events for live updates, no-auth by design.
+</context>
 
-### Start the dashboard
-```
-/mindforge:dashboard
-→ Dashboard running at: http://localhost:7339
-→ Press CTRL+C to stop (or /mindforge:dashboard --stop)
-```
-
-### Start and open in browser
-```
-/mindforge:dashboard --open
-→ Opens http://localhost:7339 in your default browser
-```
-
-### Custom port
-```
-/mindforge:dashboard --port 7340
-→ Useful if 7339 is already in use
-```
-
-### Stop the dashboard
-```
-/mindforge:dashboard --stop
-→ Finds the running dashboard process (from PID file) and sends SIGTERM
-```
-
-### Check dashboard status
-```
-/mindforge:dashboard --status
-→ Checks if dashboard is running, shows port and PID
-→ Also shows: http://localhost:7339/api/status
-```
-
-## Dashboard pages
-
-### Activity (default)
-- Phase name, auto mode status (RUNNING/PAUSED/ESCALATED/IDLE)
-- Wave progress bar (tasks completed / total)
-- Live AUDIT event feed with color-coded event types
-- Steering input: send guidance to auto mode without touching the CLI
-
-### Quality Metrics
-- Session quality score trend (last 20 sessions)
-- Verify pass rate over time
-- Security findings by severity (CRITICAL/HIGH/MEDIUM/LOW)
-- Cost per session trend
-
-### Approvals
-- All pending Tier 2/3 governance requests
-- [Approve] and [Reject] buttons — no CLI needed for approval
-- Tier, phase/plan, description, time since requested, expiry warning
-- Recent approval history
-
-### Knowledge
-- Search the knowledge graph from the browser
-- Entries filtered by confidence, type, tags
-- Color-coded by knowledge type
-
-### Team
-- Active developers (by git email, from AUDIT.jsonl)
-- What each person is working on (last task)
-- File conflict warnings (two developers recently touching the same file)
-
-## Security rules
-1. Never expose the dashboard on 0.0.0.0 — localhost only
-2. Never forward the port externally (no ngrok, no port forwarding)
-3. For remote team visibility: screenshare your browser instead
-4. The dashboard shows project details including code patterns and decisions
-
-## Integration with auto mode
-When `/mindforge:auto` is running and the dashboard is open:
-- Activity feed updates live as tasks complete
-- Wave progress bar advances in real-time
-- Any escalations appear immediately with red indicator
-- The Steering input is active — inject guidance without a second terminal
-
-## AUDIT entry
-```json
-{ "event": "dashboard_started", "port": 7339, "pid": 12345 }
-{ "event": "dashboard_stopped", "pid": 12345 }
-```
+<process>
+1. **Handle Flags**:
+    - If `--stop`: Find the PID from the PID file and terminate the process.
+    - If `--status`: Check if the dashboard is running and report the URL/PID.
+    - Default: Start the server.
+2. **Start Server**: Execute the dashboard binary/script on the specified port.
+3. **Open Browser**: If `--open` is provided, trigger the default system browser to the dashboard URL.
+4. **Monitor**: Listen for steering inputs from the dashboard and route them to the active MindForge session.
+5. **Log**: Record `dashboard_started` or `dashboard_stopped` in the audit log.
+</process>
