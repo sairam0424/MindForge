@@ -206,11 +206,7 @@ async function install(runtime, scope, options = {}) {
     return;
   }
 
-  // ── 1. Install CLAUDE.md (Root standardization for IDEs) ────────────────────
-  const claudeSrc = runtime === 'claude'
-    ? src('.claude', 'CLAUDE.md')
-    : src('.agent', 'CLAUDE.md');
-
+  if (fsu.exists(claudeSrc)) {
     // ✨ PERSISTENT MEMORY: Load relevant context for this session
     let injectedContent = fsu.read(claudeSrc);
     if (scope === 'local') {
