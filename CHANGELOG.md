@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.0.0] — The Autonomous Enterprise — 2026-03-24
+
+🚀 **MindForge v2.0.0 — The Autonomous Enterprise — Major Release**
+
+This major release transforms MindForge from a Claude-centric framework into a universal AI agent operating system. With support for 6 major runtimes and a hardened autonomous execution engine, v2.0.0 is built for enterprise-scale AI orchestration.
+
+### Added
+- **6-Runtime Multi-Platform Support**: Official support for Claude Code, Antigravity, Cursor, OpenCode, Gemini CLI, and GitHub Copilot.
+- **Runtime Adapters**: Automatic content transformation for Gemini (model/filename mapping) and preambles for non-slash runtimes (Cursor/Copilot).
+- **`/mindforge:new-runtime`**: Rapidly scaffold custom AI agent runtimes with correct directory structures and command visibility.
+- **Unified Migration Engine (v2.0.0)**: Additive schema upgrades for `AUDIT.jsonl` (runtime/agent_id) and `token-usage.jsonl` (model_group).
+- **Hardened Self-Building Skills**: Automated skill capture from documentation and phase outputs.
+- **7-Dimension Quality Scorer**: Enhanced static analysis for skill authoring.
+- **65-Point Production Checklist**: Exhaustive verification suite for enterprise readiness.
+
+### Changed
+- **Directory Standard**: Antigravity local workflows moved to `.agents/workflows/` with mandatory YAML frontmatter.
+- **Migration Strategy**: Transitioned to an idempotent, backup-first migration model with smart skipping.
+- **Stable Interface Contract**: Hardened internal members (RUNTIMES, generateEntryContent) for extensibility.
+
+### Architecture Decisions
+- **ADR-039**: Multi-Runtime Platform Support.
+- **ADR-040**: Additive Schema Migration Strategy.
+- **ADR-041**: Stable Runtime Interface Contract.
+
+---
+
 ## [2.0.0-alpha.12] — Self-Building Skills Platform — 2026-03-24
 ### Added
 - **Self-Building Skills Platform**: Intelligent engine for automatically capturing skills from documentation, sessions, and npm packages.

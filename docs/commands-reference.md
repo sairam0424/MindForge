@@ -11,4 +11,5 @@
 | `/mindforge:dashboard`           | Manage the real-time web observability dashboard |
 | `/mindforge:learn [SRC]`         | Automatically capture skills from Docs, Sessions, or npm |
 | `/mindforge:marketplace [SEARCH]`| Search, install, and publish community skills        |
+| `/mindforge:new-runtime`     | Scaffold custom runtime configurations for any AI agent |
 

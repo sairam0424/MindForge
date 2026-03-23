@@ -1,7 +1,7 @@
-# MindForge v2.0.0 — Unique Selling Points, Features, and Best Practices (v2.0.0-alpha.10)
+# MindForge v2.0.0 — Unique Selling Points, Features, and Best Practices (v2.0.0)
 
 This document summarizes what makes MindForge v2.0.0 distinct, what features
-are included in the latest alpha release, and how to use them effectively.
+are included in the official release, and how to use them effectively.
 
 ---
 
@@ -51,7 +51,7 @@ are included in the latest alpha release, and how to use them effectively.
 
 ---
 
-## Feature Set (v1.0.0)
+## Feature Set (v2.0.0)
 
 ### 1. Installation & Distribution
 **What it does:** Production‑grade installer with update, uninstall, and CI support.
@@ -241,7 +241,7 @@ const report = await client.health();
 
 ---
 
-## Best Practices for v1.0.0
+## Best Practices for v2.0.0
 
 1. **Always run health after install**
    - `/mindforge:health --repair` fixes drift immediately.
@@ -286,6 +286,6 @@ const report = await client.health();
 ---
 
 ## Summary
-MindForge v1.0.0 combines governance, observability, and execution rigor into a
-single workflow engine that works across Claude Code and Antigravity. Its core
+MindForge v2.0.0 combines governance, observability, and autonomous execution rigor into a
+single workflow engine that works across 6 major AI runtimes. Its core
 value is consistent, repeatable quality in long‑running AI development sessions.

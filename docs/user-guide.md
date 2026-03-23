@@ -1,4 +1,4 @@
-# MindForge User Guide (v2.0.0-alpha.10)
+# MindForge User Guide (v2.0.0)
 
 This guide gets you from install to productive, with the minimum needed to run
 MindForge in a real project. It assumes Node.js 18+.
@@ -32,9 +32,34 @@ npx mindforge-cc@latest --antigravity --global
 npx mindforge-cc@latest --antigravity --local
 ```
 
-### Both runtimes
+### Cursor
 ```bash
-npx mindforge-cc@latest --all --global
+npx mindforge-cc@latest --cursor --local
+```
+
+### Gemini CLI
+```bash
+npx mindforge-cc@latest --gemini --global
+```
+
+### GitHub Copilot
+```bash
+npx mindforge-cc@latest --copilot --local
+```
+
+### OpenCode
+```bash
+npx mindforge-cc@latest --opencode --global
+```
+
+### Specific Runtime (Universal)
+```bash
+npx mindforge-cc@latest --runtime <name>
+```
+
+### Multiple runtimes
+```bash
+npx mindforge-cc@latest --runtime claude,cursor --local
 ```
 
 ## 2. Verify installation
@@ -187,7 +212,10 @@ This will start the Express-based SSE bridge and open `http://localhost:7339` in
 
 ### Run schema migrations manually
 ```
-/mindforge:migrate --from v0.6.0 --to v1.0.0
+### Run schema migrations manually
+```
+/mindforge:migrate --from v1.0.0 --to v2.0.0
+```
 ```
 
 ## 11. Plugins
@@ -201,6 +229,15 @@ This will start the Express-based SSE bridge and open `http://localhost:7339` in
 ```
 /mindforge:plugins install mindforge-plugin-<name>
 ```
+
+## 12. Custom Runtimes (v2)
+MindForge v2 allows you to scaffold support for any AI agent runtime by generating the necessary instruction files and directory structures.
+
+### Scaffold a New Runtime
+```bash
+/mindforge:new-runtime
+```
+This command will interview you about the runtime's name, entry file (e.g., `INSTRUCTIONS.md`), and whether it supports slash commands. It then scaffolds the standard MindForge preamble and directory structure for that agent.
 
 ## 12. Self-Building Skills (v2)
 MindForge can now learn new skills automatically from documentation, project history, or the community marketplace.

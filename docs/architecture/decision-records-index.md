@@ -24,3 +24,6 @@ All 20 ADRs in chronological order.
 | ADR-018 | Installer detects and handles self-install | Accepted | Installer running inside its own repo = no-op for framework files |
 | ADR-019 | Self-update preserves original install scope | Accepted | Update local→local, global→global |
 | ADR-020 | v1.0.0 stable interface contract | Accepted | Defines what "stable" means for plugins and SDK consumers |
+| ADR-039 | Multi-runtime platform support | Accepted | Native support for Cursor, Gemini, Copilot, etc. |
+| ADR-040 | Additive schema migration strategy | Accepted | Non-destructive, backup-first backfill logic |
+| ADR-041 | Stable runtime interface contract | Accepted | Exported RUNTIMES and adapters for extensibility |

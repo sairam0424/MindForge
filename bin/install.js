@@ -50,7 +50,8 @@ if (ARGS.includes('--help') || ARGS.includes('-h')) {
 
 // ── Determine execution mode ──────────────────────────────────────────────────
 const NON_INTERACTIVE_FLAGS = [
-  '--claude', '--antigravity', '--all',
+  '--claude', '--antigravity', '--cursor', '--opencode', '--gemini', '--copilot',
+  '--all', '--runtime',
   '--global', '-g', '--local', '-l',
   '--uninstall', '--update', '--check',
   '--skip-wizard', '--dry-run', '--with-utils', '--minimal',
@@ -86,7 +87,12 @@ function printHelp() {
   RUNTIMES (pick one or use --all)
     --claude          Claude Code  (~/.claude or .claude/)
     --antigravity     Antigravity  (~/.gemini/antigravity or .agents/; .agent/ legacy)
-    --all             Both runtimes
+    --cursor          Cursor       (~/.cursor or .cursor/)
+    --opencode        OpenCode     (~/.opencode or .opencode/)
+    --gemini          Gemini CLI   (~/.gemini or .gemini/)
+    --copilot         GitHub Copilot (~/.github/copilot or .github/)
+    --all             All 6 runtimes
+    --runtime <name>  Explicitly specify runtime by name
 
   SCOPE
     --global, -g      Install to home directory (all projects)
