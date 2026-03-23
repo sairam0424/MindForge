@@ -202,13 +202,25 @@ This will start the Express-based SSE bridge and open `http://localhost:7339` in
 /mindforge:plugins install mindforge-plugin-<name>
 ```
 
-## 12. Skills
+## 12. Self-Building Skills (v2)
+MindForge can now learn new skills automatically from documentation, project history, or the community marketplace.
+
+### Learn from Source
+To create a new skill from a URL, local file, or npm package:
+```bash
+/mindforge:learn https://docs.prisma.io "prisma-best-practices"
 ```
-/mindforge:skills list
-/mindforge:skills validate
+This triggers a 7-step generation pipeline that researches, extracts patterns, and scores the resulting skill.
+
+### Skills Marketplace
+Discover and install community-authored skills:
+```bash
+/mindforge:marketplace search "tailwind"
+/mindforge:marketplace install mindforge-skill-react-patterns
 ```
 
-To publish or install a skill, see `docs/skills-publishing-guide.md`.
+### Auto-Capture
+MindForge automatically detects recurring patterns in your phase outputs. After a successful `/mindforge:execute-phase`, the agent may suggest capturing a new skill if it identifies high-value engineering patterns.
 
 ## 13. Token usage profiling
 ```

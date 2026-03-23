@@ -15,6 +15,28 @@ Write a new skill when:
 - Your team has standards that aren't captured in CONVENTIONS.md
 - An existing core skill doesn't match your organisation's approach
 
+## Automated Skill Generation (New in v2)
+MindForge can now generate skills automatically. Instead of writing `SKILL.md` from scratch, use the intelligent learning engine:
+
+### 1. Learn from Documentation
+```bash
+/mindforge:learn https://react.dev/learn "react-best-practices"
+```
+The agent will research the URL, extract high-value engineering patterns, and generate a high-quality `SKILL.md` with examples and triggers.
+
+### 2. Learn from Project History
+```bash
+/mindforge:learn ./src/modules/auth "auth-patterns"
+```
+This analyzes your codebase and session history to capture project-specific expertise.
+
+### 3. Community Marketplace
+```bash
+/mindforge:marketplace search "performance"
+/mindforge:marketplace install mindforge-skill-latency-optimizer
+```
+Discover and install verified skills from the MindForge community.
+
 ## Skill file structure
 
 ```
@@ -102,6 +124,13 @@ After creating SKILL.md:
 # Choose tier: 2 (org) or 3 (project)
 # Commit the manifest update
 ```
+
+### Quality Scoring
+All skills (automated or manual) are passed through the **7-Dimension Scorer**. To manually score a skill:
+```bash
+/mindforge:skills validate .mindforge/skills/[your-skill]
+```
+A minimum score of **60** is required for registration.
 
 ## Tier guidance
 

@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.0.0-alpha.12] — Self-Building Skills Platform — 2026-03-24
+### Added
+- **Self-Building Skills Platform**: Intelligent engine for automatically capturing skills from documentation, sessions, and npm packages.
+- **`/mindforge:learn`**: High-level orchestration command for 7-step skill generation pipeline.
+- **`/mindforge:marketplace`**: Seamless integration with npm registry for community skills discovery and installation.
+- **7-Dimension Quality Scorer**: Static analysis tool ensuring high-quality, injection-safe skill authoring.
+- **Auto-Capture Hook**: Automatic pattern detection from phase outputs (SUMMARY, ADR, HANDOFF).
+- **CLI Commands**: `learn-skill` and `marketplace` added to `bin/mindforge-cli.js`.
+- **ADR-036, ADR-037, ADR-038**: New architectural decisions for skill sourcing, capture thresholds, and quality gates.
+
 ## [2.0.0-alpha.11] — Persistent Knowledge Graph — 2026-03-24
 ### Added
 - **Persistent Knowledge Graph**: Core engine for long-term memory across projects.
