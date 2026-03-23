@@ -97,3 +97,12 @@ PROJECT_FORBIDDEN_PATTERNS="""
 - No console.log in API services
 - No TODO comments in committed code
 """
+
+## Self-Building Skills
+AUTO_CAPTURE_SKILLS=false
+AUTO_CAPTURE_MIN_PATTERN_COUNT=2
+AUTO_CAPTURE_MIN_CONFIDENCE=0.75
+LEARN_MODEL=inherit
+MARKETPLACE_REGISTRY=https://registry.mindforge.dev/v1
+MARKETPLACE_DAILY_FETCH_LIMIT=50
+SKILL_QUALITY_MIN_SCORE=60

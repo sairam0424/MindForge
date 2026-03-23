@@ -164,4 +164,27 @@ Write final AUDIT entry:
 
 Next step: Run /mindforge:verify-phase [N] for UAT sign-off.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## Step 7 — Auto-capture check (when AUTO_CAPTURE_SKILLS=true)
+
+After all gates pass and the phase is verified:
+
+```bash
+# Check if auto-capture is enabled
+CAPTURE=$(grep -m1 "^AUTO_CAPTURE_SKILLS=" MINDFORGE.md 2>/dev/null | cut -d= -f2 | tr -d ' ')
+if [ "$CAPTURE" = "true" ]; then
+  node -e "
+    const { detectPatterns, formatForPresentation } = require('./bin/skills-builder/pattern-detector');
+    detectPatterns(${PHASE_NUM}).then(result => {
+      const display = formatForPresentation(result);
+      console.log(display);
+    }).catch(err => console.error('[auto-capture] Error:', err.message));
+  "
+fi
+```
+
+If patterns are found: display the prompt and await user input.
+If user selects yes: run `/mindforge:learn --session` targeting this phase's SUMMARY files.
+If user selects no: write AUDIT entry `auto_capture_skipped` and continue.
+If no patterns found: exit silently (no noise in the output).
 ```

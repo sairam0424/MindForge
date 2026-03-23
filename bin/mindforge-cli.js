@@ -72,6 +72,14 @@ const COMMANDS = {
   'test-memory': {
     script: 'tests/memory.test.js',
     description: 'Run the persistent memory test suite'
+  },
+  'learn-skill': {
+    script: 'bin/skills-builder/learn-cli.js',
+    description: 'Ingest source and generate a validated SKILL.md'
+  },
+  'marketplace': {
+    script: 'bin/skills-builder/marketplace-cli.js',
+    description: 'Search and install community skills from the marketplace'
   }
 };
 
