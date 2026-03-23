@@ -11,7 +11,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ### Persona Categories
 
 | Category | Count | Personas |
-|----------|-------|--------|
+| --- | --- | --- |
 | **Analyzers & Researchers** | 8 | analyst, assumptions-analyzer, advisor-researcher, assumptions-analyzer-extend, project-researcher, research-synthesizer, ui-researcher, research-agent |
 | **Architects & Planners** | 5 | architect, decision-architect, planner, phase-researcher, plan-checker |
 | **Executors** | 2 | developer, executor |
@@ -28,7 +28,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 **Role:** Translates ambiguous business intent into precise, testable, scoped specifications.
 
 | Property | Value |
-|----------|-------|
+| --- | --- |
 | **Spawned by** | `/mindforge:init-project`, `/mindforge:plan-phase`, `/mindforge:agent analyst` |
 | **Tools** | Read, Write, Bash, Grep |
 | **Color** | `blue` |
@@ -45,7 +45,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 **Role:** Principal systems architect and technical decision maker. Responsible for system design, data modeling, and architectural integrity.
 
 | Property | Value |
-|----------|-------|
+| --- | --- |
 | **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent architect` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `purple` |
@@ -62,7 +62,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 **Role:** Senior software engineer. Writes clean, minimal, well-tested code following strict naming and architectural conventions.
 
 | Property | Value |
-|----------|-------|
+| --- | --- |
 | **Spawned by** | `/mindforge:execute-phase`, `/mindforge:agent developer` |
 | **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
 | **Color** | `green` |
@@ -79,7 +79,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 **Role:** Senior test engineer. Thinks adversarially to find failure modes, boundary conditions, and logic gaps.
 
 | Property | Value |
-|----------|-------|
+| --- | --- |
 | **Spawned by** | `/mindforge:verify-phase`, `/mindforge:agent qa-engineer` |
 | **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
 | **Color** | `yellow` |
@@ -96,7 +96,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 **Role:** Senior application security engineer. Reviews code for vulnerabilities, hardcoded secrets, and compliance with the OWASP Top 10.
 
 | Property | Value |
-|----------|-------|
+| --- | --- |
 | **Spawned by** | `/mindforge:security-scan`, `/mindforge:agent security-reviewer` |
 | **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
 | **Color** | `red` |

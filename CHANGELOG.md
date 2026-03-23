@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.1.0] — The Specialized Expansion — 2026-03-24
+
+🧩 **MindForge v2.1.0 — The Specialized Expansion**
+
+This release significantly expands the MindForge persona ecosystem, integrating 18+ high-performance specialized agents from the GSD framework. This expansion doubles the framework's baseline capabilities in research, architecture, execution, and quality assurance.
+
+### Added
+- **18+ New Specialized Personas**: Integration of advanced agents including `nyquist-auditor`, `user-profiler`, `advisor-researcher`, `ui-auditor`, and more.
+- **Extended Mapping & Strategy**: Enhanced `roadmapper-extend` and `codebase-mapper-extend` for deep project lifecycle management.
+- **Comprehensive Permissions Audit**: Full tool-access transparency for all 32 personas in `docs/PERSONAS.md`.
+- **Architectural State Update**: `Master-Context.md` now reflects the 32-persona structural foundation.
+
+### Changed
+- **Documentation Overhaul**: Complete update of `PERSONAS.md` and `Master-Context.md` to reflect the expanded ecosystem.
+- **Branding Alignment**: All integrated GSD personas rebranded and fully sanitized for MindForge native use.
+
+---
+
 ## [2.0.0] — The Autonomous Enterprise — 2026-03-24
 
 🚀 **MindForge v2.0.0 — The Autonomous Enterprise — Major Release**
