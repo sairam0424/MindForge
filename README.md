@@ -23,6 +23,7 @@ Decisions get forgotten. MindForge fixes that with:
 - **Browser Runtime** — headful/headless visual QA and sessions (v2)
 - **Multi-Model Intelligence** — dynamic routing, adversarial reviews, and deep research (v2)
 - **Persistent Knowledge Graph** — long-term memory across all engineering sessions (v2)
+- **Self-Building Skills** — automatically capture knowledge from any source into reusable skills (v2)
 - **Quality gates** — compliance and security are non-bypassable
 - **Audit trail** — append-only history of every action
 
@@ -159,6 +160,14 @@ If issues are found, run:
 / mindforge:dashboard
     → Real-time web observability and governance at localhost:7339 (v2)
     → Live audit logs, metrics, activity, and team feed
+
+/ mindforge:learn
+    → Automatically capture skills from Docs, Sessions, or npm (v2)
+    → 7-dimension quality scoring and injection protection
+
+/ mindforge:marketplace
+    → Search, install, and publish community skills (v2)
+    → Verified installation via npm-based registry
 ```
 
 ---

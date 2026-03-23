@@ -46,6 +46,9 @@ are included in the latest alpha release, and how to use them effectively.
 12. **Real-time Observability Dashboard (v2)**
     - High-fidelity web interface for live audit streams, metrics visualization, and browser-based governance with zero performance overhead.
 
+13. **Self-Building Skills Platform (v2)**
+    - Automatically capture and score engineering patterns from docs, npm, or session history into high-quality `SKILL.md` files with non-bypassable quality gates.
+
 ---
 
 ## Feature Set (v1.0.0)
@@ -211,6 +214,18 @@ preserving scope (local vs global).
 /mindforge:dashboard --start --open
 ```
 Access at `http://localhost:7339` (Localhost-only for security).
+
+---
+
+### 17. Self‑Building Skills Platform (v2)
+**What it does:** Automatically captures engineering knowledge into high-quality `SKILL.md` files. Features a 7-dimension quality scorer and npm-based marketplace integration.
+
+**How to use:**
+```bash
+/mindforge:learn https://docs.example.com "my-skill"
+/mindforge:marketplace search "auth"
+/mindforge:marketplace install mindforge-skill-example
+```
 
 ---
 

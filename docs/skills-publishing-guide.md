@@ -10,11 +10,12 @@ Skills are distributed as npm packages with the `mindforge-skill-` prefix.
 - `CHANGELOG.md`
 
 ## Publish checklist
-1. Run `npx mindforge-cc validate-skill ./SKILL.md --quality`
+1. Run `/mindforge:skills validate ./SKILL.md --quality`
 2. Verify `package.json` metadata is complete
 3. Ensure `CHANGELOG.md` includes the current version
 4. Run `npm pack --dry-run` to inspect files
-5. Publish with `npm publish --access public`
+5. Publish with `/mindforge:marketplace publish` (handles pre-flight scoring)
+   - Or manually via `npm publish --access public`
 
 ## Private registries
 Set `MINDFORGE_SKILL_REGISTRY` in `.mindforge/org/integrations/INTEGRATIONS-CONFIG.md`
