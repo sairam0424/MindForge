@@ -1,6 +1,6 @@
 # MindForge Persona Reference
 
-> A comprehensive guide to the 13 specialized enterprise personas — roles, tools, and orchestration patterns.
+> A comprehensive guide to the 31 specialized enterprise personas — roles, tools, and orchestration patterns.
 
 ---
 
@@ -11,13 +11,14 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ### Persona Categories
 
 | Category | Count | Personas |
-|----------|-------|--------|
-| **Analyzers** | 2 | analyst, assumptions-analyzer |
-| **Architects** | 2 | architect, decision-architect |
-| **Executors** | 1 | developer |
-| **Quality & Security** | 3 | qa-engineer, security-reviewer, coverage-specialist |
-| **Strategy & Ops** | 4 | roadmapper, research-agent, release-manager, tech-writer |
-| **Debuggers** | 1 | debug-specialist |
+| --- | --- | --- |
+| **Analyzers & Researchers** | 8 | analyst, assumptions-analyzer, advisor-researcher, assumptions-analyzer-extend, project-researcher, research-synthesizer, ui-researcher, research-agent |
+| **Architects & Planners** | 5 | architect, decision-architect, planner, phase-researcher, plan-checker |
+| **Executors** | 2 | developer, executor |
+| **Quality & Security** | 8 | qa-engineer, security-reviewer, coverage-specialist, ui-auditor, ui-checker, nyquist-auditor, integration-checker, verifier |
+| **Strategy & Ops** | 5 | roadmapper, release-manager, tech-writer, roadmapper-extend, user-profiler |
+| **Debuggers** | 2 | debug-specialist, debugger |
+| **Mapping** | 1 | codebase-mapper-extend |
 
 ---
 
@@ -27,7 +28,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 **Role:** Translates ambiguous business intent into precise, testable, scoped specifications.
 
 | Property | Value |
-|----------|-------|
+| --- | --- |
 | **Spawned by** | `/mindforge:init-project`, `/mindforge:plan-phase`, `/mindforge:agent analyst` |
 | **Tools** | Read, Write, Bash, Grep |
 | **Color** | `blue` |
@@ -44,7 +45,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 **Role:** Principal systems architect and technical decision maker. Responsible for system design, data modeling, and architectural integrity.
 
 | Property | Value |
-|----------|-------|
+| --- | --- |
 | **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent architect` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `purple` |
@@ -61,7 +62,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 **Role:** Senior software engineer. Writes clean, minimal, well-tested code following strict naming and architectural conventions.
 
 | Property | Value |
-|----------|-------|
+| --- | --- |
 | **Spawned by** | `/mindforge:execute-phase`, `/mindforge:agent developer` |
 | **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
 | **Color** | `green` |
@@ -78,7 +79,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 **Role:** Senior test engineer. Thinks adversarially to find failure modes, boundary conditions, and logic gaps.
 
 | Property | Value |
-|----------|-------|
+| --- | --- |
 | **Spawned by** | `/mindforge:verify-phase`, `/mindforge:agent qa-engineer` |
 | **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
 | **Color** | `yellow` |
@@ -95,7 +96,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 **Role:** Senior application security engineer. Reviews code for vulnerabilities, hardcoded secrets, and compliance with the OWASP Top 10.
 
 | Property | Value |
-|----------|-------|
+| --- | --- |
 | **Spawned by** | `/mindforge:security-scan`, `/mindforge:agent security-reviewer` |
 | **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
 | **Color** | `red` |
@@ -244,6 +245,329 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 
 ---
 
+### mindforge-advisor-researcher (The Trade-off Specialist)
+**Role:** Researches single decision points and provides structured comparisons with rationale.
+
+| Property | Value |
+|----------|-------|
+| **Spawned by** | `/mindforge:research`, `/mindforge:agent advisor-researcher` |
+| **Tools** | Read, Write, Bash, Grep, Glob, Browser |
+| **Color** | `cyan` |
+| **Produces** | Comparison tables, Rationale documents |
+
+**Capabilities:**
+- Structured evaluation of technical trade-offs between libraries or patterns.
+- Data-driven recommendations grounded in codebase constraints.
+- Identifying architectural impact and risk surface.
+
+---
+
+### mindforge-project-researcher (The Ecosystem Explorer)
+**Role:** Researches the technical ecosystem for new projects or milestones.
+
+| Property | Value |
+|----------|-------|
+| **Spawned by** | `/mindforge:init-project`, `/mindforge:agent project-researcher` |
+| **Tools** | Read, Write, Bash, Grep, Glob, Browser |
+| **Color** | `purple` |
+| **Produces** | `SUMMARY.md`, `STACK.md`, `ARCHITECTURE.md` |
+
+**Capabilities:**
+- Investigation of third-party integrations and platform limitations.
+- Mapping high-level technical requirements to specific stack choices.
+- Initial feasibility analysis for large-scale features.
+
+---
+
+### mindforge-research-synthesizer (The Strategy Fuser)
+**Role:** Synthesizes research outputs from multiple parallel agents into a cohesive strategy.
+
+| Property | Value |
+|----------|-------|
+| **Spawned by** | `/mindforge:research`, `/mindforge:agent research-synthesizer` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `purple` |
+| **Produces** | Integrated `SUMMARY.md` |
+
+**Capabilities:**
+- Consolidating fragmented findings into a unified technical direction.
+- Identifying cross-cutting patterns and risks.
+- Providing "Commanders Intent" for the Roadmapper.
+
+---
+
+### mindforge-ui-researcher (The Visual Architect)
+**Role:** Produces design contracts (UI-SPEC.md) for frontend phases.
+
+| Property | Value |
+|----------|-------|
+| **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent ui-researcher` |
+| **Tools** | Read, Write, Bash, Grep, Glob, Browser |
+| **Color** | `#E879F9` |
+| **Produces** | `UI-SPEC.md` |
+
+**Capabilities:**
+- Defining design tokens, typography, and spacing scales.
+- Inventing and specifying component-level behaviors.
+- Drafting final user-facing copywriting for critical flows.
+
+---
+
+### mindforge-phase-researcher (The Domain Deep-Diver)
+**Role:** Investigates the specific technical domain or codebase area for an active phase.
+
+| Property | Value |
+|----------|-------|
+| **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent phase-researcher` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `blue` |
+| **Produces** | `RESEARCH.md` |
+
+**Capabilities:**
+- Deep-codebase discovery to identify existing patterns.
+- Surface-area analysis of proposed changes.
+- Locating undocumented side-effects and technical traps.
+
+---
+
+### mindforge-planner (The Task Architect)
+**Role:** Decomposes phase goals into precise, atomic, executable implementation plans.
+
+| Property | Value |
+|----------|-------|
+| **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent planner` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `blue` |
+| **Produces** | `PLAN-*.md` (XML task breakdown) |
+
+**Capabilities:**
+- Goal-backward task decomposition.
+- Precise dependency mapping between implementation steps.
+- Defining verification steps for every atomic task.
+
+---
+
+### mindforge-integration-checker (The Connection Auditor)
+**Role:** Verifies cross-component wiring, API consumers, and end-to-end user flows.
+
+| Property | Value |
+|----------|-------|
+| **Spawned by** | `/mindforge:verify-phase`, `/mindforge:agent integration-checker` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `blue` |
+| **Produces** | `INTEGRATION-REPORT.md` |
+
+**Capabilities:**
+- Tracing data flows from source to UI rendering.
+- Identifying orphaned components and broken API connections.
+- Auditing sensitive routes for required auth protection.
+
+---
+
+### mindforge-nyquist-auditor (The Fidelity Inspector)
+**Role:** Specialized verification auditor focused on filling testing gaps.
+
+| Property | Value |
+|----------|-------|
+| **Spawned by** | `/mindforge:validate-phase`, `/mindforge:agent nyquist-auditor` |
+| **Tools** | Read, Write, Bash, Grep, Glob, CmdStatus, ReadTerminal |
+| **Color** | `#8B5CF6` |
+| **Produces** | `VALIDATION-REPORT.md` |
+
+**Capabilities:**
+- Identifying "sampling gaps" in automated test suites.
+- Generating minimal, high-impact behavioral tests.
+- Escalating implementation bugs found during audit.
+
+---
+
+### mindforge-plan-checker (The Logic Guard)
+**Role:** Verifies implementation plans against project goals and constraints.
+
+| Property | Value |
+|----------|-------|
+| **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent plan-checker` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `yellow` |
+| **Produces** | `PLAN-VERDICT.md` |
+
+**Capabilities:**
+- Detecting missing tasks or logical errors in plans.
+- Ensuring hard dependencies are respected.
+- Checking for alignment with ARCHITECTURE.md and ADRs.
+
+---
+
+### mindforge-ui-auditor (The Polish Inspector)
+**Role:** Performs retroactive visual and interaction audits of UI code.
+
+| Property | Value |
+|----------|-------|
+| **Spawned by** | `/mindforge:verify-phase`, `/mindforge:agent ui-auditor` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `#F472B6` |
+| **Produces** | `UI-REVIEW.md` |
+
+**Capabilities:**
+- 6-Pillar audit of copywriting, visuals, color, type, spacing, and experience.
+- Identifying "skeleton UI" and missing loading states.
+- Providing specific, coordinate-based visual fix-its.
+
+---
+
+### mindforge-ui-checker (The Design Gatekeeper)
+**Role:** Validates UI-SPEC.md design contracts before planning starts.
+
+| Property | Value |
+|----------|-------|
+| **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent ui-checker` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `#22D3EE` |
+| **Produces** | `UI-SPEC-VERDICT.md` |
+
+**Capabilities:**
+- Ensuring design tokens follow a disciplined spacing and type scale.
+- Blocking vague design requirements or missing empty states.
+- Verifying that final copywriting is professional and noun+verb based.
+
+---
+
+### mindforge-verifier (The Goal Sentinel)
+**Role:** Principal specialist in goal-backward verification.
+
+| Property | Value |
+|----------|-------|
+| **Spawned by** | `/mindforge:verify-phase`, `/mindforge:agent verifier` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `green` |
+| **Produces** | `VERIFICATION.md` |
+
+**Capabilities:**
+- Multi-level truth verification (Existence, Substance, Wiring).
+- Mapping code artifacts back to specific Requirement IDs.
+- Detecting "hollow implementation" (stubs/TODOs) in finished work.
+
+---
+
+### mindforge-executor (The Implementation Pilot)
+**Role:** Executes implementation plans with atomic commit discipline.
+
+| Property | Value |
+|----------|-------|
+| **Spawned by** | `/mindforge:execute-phase`, `/mindforge:agent executor` |
+| **Tools** | Read, Write, Bash, Grep, Glob, CmdStatus, ReadTerminal |
+| **Color** | `yellow` |
+| **Produces** | Atomic commits, Execution summaries |
+
+**Capabilities:**
+- High-fidelity execution of XML-tagged task plans.
+- Autonomous handling of minor technical blockers and deviations.
+- Maintaining repository cleanliness through strict staging rules.
+
+---
+
+### mindforge-debugger (The RCA Scientist)
+**Role:** Specialist in systematic root cause analysis and complex defect resolution.
+
+| Property | Value |
+|----------|-------|
+| **Spawned by** | `/mindforge:debug`, `/mindforge:agent debugger` |
+| **Tools** | Read, Write, Bash, Grep, Glob, CmdStatus, ReadTerminal, Browser |
+| **Color** | `orange` |
+| **Produces** | `DEBUG-REPORT.md` (RCA) |
+
+**Capabilities:**
+- Falsifiable hypothesis testing for non-obvious failures.
+- Binary search isolation of defects across layers.
+- Implementation of minimal, regression-proof fixes.
+
+---
+
+### mindforge-assumptions-analyzer (Extended)
+**Role:** Reality checker for identifying hidden codebase constraints and risks.
+
+| Property | Value |
+|----------|-------|
+| **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent assumptions-analyzer-extend` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `blue` |
+| **Produces** | `ASSUMPTIONS-REPORT.md` |
+
+**Capabilities:**
+- Evidence-based validation of technical assumptions.
+- Identifying "impossible" plan tasks early.
+- Gap detection between mental models and file-system reality.
+
+---
+
+### mindforge-codebase-mapper (The Explorer)
+**Role:** Senior engineer specialized in autonomous codebase discovery and high-fidelity documentation.
+
+| Property | Value |
+|----------|-------|
+| **Spawned by** | `/mindforge:map-codebase`, `/mindforge:agent codebase-mapper` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `cyan` |
+| **Produces** | `CONVENTIONS.md`, `STRUCTURE.md` |
+
+**Capabilities:**
+- Exploration of unfamiliar brownfield codebases.
+- Identification of testing patterns, linting rules, and directory layers.
+- Production of [DRAFT] conventions for project alignment.
+
+---
+
+### mindforge-codebase-mapper (Extended)
+**Role:** Generates structured maps of tech stacks, architecture, and conventions.
+
+| Property | Value |
+|----------|-------|
+| **Spawned by** | `/mindforge:map-codebase`, `/mindforge:agent codebase-mapper-extend` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `cyan` |
+| **Produces** | `STACK.md`, `ARCHITECTURE.md`, `CONVENTIONS.md` |
+
+**Capabilities:**
+- Explaining how the codebase *should* be interacted with.
+- Context reduction for incoming subagents.
+- Inventory of packages, versions, and critical data flows.
+
+---
+
+### mindforge-roadmapper (Extended)
+**Role:** Enhanced execution strategist focused on requirement traceability.
+
+| Property | Value |
+|----------|-------|
+| **Spawned by** | `/mindforge:milestone`, `/mindforge:agent roadmapper-extend` |
+| **Tools** | Read, Write, Bash, Grep, Glob, Browser |
+| **Color** | `cyan` |
+| **Produces** | `ROADMAP.md`, `STATE.md` |
+
+**Capabilities:**
+- Goal-backward phase derivation from requirements.
+- Zero-orphan requirement mapping.
+- Definition of verifiable behavioral success criteria.
+
+---
+
+### mindforge-user-profiler (The Behavioral Analyst)
+**Role:** Analyzes session history to personalize agent interactions.
+
+| Property | Value |
+|----------|-------|
+| **Spawned by** | `/mindforge:agent user-profiler` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `magenta` |
+| **Produces** | `USER-PROFILE.md` |
+
+**Capabilities:**
+- Identifying technical preferences and risk tolerance from logs.
+- Generating imperative interaction directives for other agents.
+- Evidence-based scoring of developer working patterns.
+
+---
+
 ## Tool Permissions Summary
 
 | Persona | Read | Write | Bash | Grep | Glob | CmdStatus | Browser | Terminal |
@@ -261,9 +585,27 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Release Manager** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | |
 | **Tech Writer** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
 | **Coverage Specialist** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | |
+| **Advisor Researcher** | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ | |
+| **Project Researcher** | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ | |
+| **Research Synthesizer** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
+| **UI Researcher** | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ | |
+| **Phase Researcher** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
+| **Planner** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
+| **Integration Checker**| ✓ | ✓ | ✓ | ✓ | ✓ | | | |
+| **Nyquist Auditor** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ |
+| **Plan Checker** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
+| **UI Auditor** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
+| **UI Checker** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
+| **Verifier** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
+| **Executor** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ |
+| **Debugger** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| **Assumptions (Ext)** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
+| **Codebase Map (Ext)** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
+| **Roadmapper (Ext)** | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ | |
+| **User Profiler** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
 
 **Principle of Least Privilege:**
 - **Analyzers** and **Architects** primarily use discovery tools to inform design.
-- **Executors** (Developer) have the broadest implementation access.
+- **Executors** (Developer/Executor) have the broadest implementation access.
 - **Security** and **QA** have specialized tools for validation and auditing.
 - **Researchers** have browser access for external documentation.
