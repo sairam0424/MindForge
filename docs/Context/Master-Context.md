@@ -34,15 +34,8 @@ anti-pattern detector, quality metrics, team profiling).
 Built the entire structural foundation:
 
 - **`.claude/CLAUDE.md`** — The agent entry point. Session start protocol, plan-first rule, quality gates, security auto-trigger, state artifact table. Mirrored identically to `.agent/CLAUDE.md` (Antigravity runtime).
-- **8 agent persona files** in `.mindforge/personas/`:
-  - `analyst.md` — Requirements decomposition and gap identification
-  - `architect.md` — System design, ADRs, technology decisions
-  - `developer.md` — Implementation with 5 common AI anti-pattern guards
-  - `qa-engineer.md` — Test strategy and verification
-  - `security-reviewer.md` — OWASP-aligned security review
-  - `tech-writer.md` — Documentation and changelog authoring
-  - `debug-specialist.md` — 10-step root cause analysis protocol
-  - `release-manager.md` — Deployment coordination
+- **32 agent persona files** in `.mindforge/personas/`:
+  - `advisor-researcher.md`, `analyst.md`, `architect.md`, `assumptions-analyzer-extend.md`, `assumptions-analyzer.md`, `codebase-mapper-extend.md`, `codebase-mapper.md`, `coverage-specialist.md`, `debug-specialist.md`, `debugger.md`, `decision-architect.md`, `developer.md`, `executor.md`, `integration-checker.md`, `nyquist-auditor.md`, `phase-researcher.md`, `plan-checker.md`, `planner.md`, `project-researcher.md`, `qa-engineer.md`, `release-manager.md`, `research-agent.md`, `research-synthesizer.md`, `roadmapper-extend.md`, `roadmapper.md`, `security-reviewer.md`, `tech-writer.md`, `ui-auditor.md`, `ui-checker.md`, `ui-researcher.md`, `user-profiler.md`, `verifier.md`
 - **5 initial core skill packs** in `.mindforge/skills/`:
   - `security-review/SKILL.md` — 29 trigger keywords, OWASP A01-A10
   - `code-quality/SKILL.md` — Complexity, naming, error handling
@@ -331,7 +324,7 @@ mindforge-cc/                         ← npm package root
 │       └── [36 .md command files]
 │
 ├── .mindforge/
-│   ├── personas/                     ← 8 persona definitions + overrides/
+│   ├── personas/                     ← 32 persona definitions + overrides/
 │   ├── skills/                       ← 10 core skill packs (SKILL.md each)
 │   ├── engine/
 │   │   ├── wave-executor.md          ← Kahn's topological sort, parallel waves
@@ -490,9 +483,9 @@ mindforge-cc/                         ← npm package root
 9. `incident-response` — P0-P3, runbooks, postmortems
 10. `database-patterns` — Compound cursor, UUIDv7, indexes
 
-### 8 Agent Personas
+### 32 Agent Personas
 
-analyst, architect, developer, qa-engineer, security-reviewer, tech-writer, debug-specialist, release-manager
+advisor-researcher, analyst, architect, assumptions-analyzer-extend, assumptions-analyzer, codebase-mapper-extend, codebase-mapper, coverage-specialist, debug-specialist, debugger, decision-architect, developer, executor, integration-checker, nyquist-auditor, phase-researcher, plan-checker, planner, project-researcher, qa-engineer, release-manager, research-agent, research-synthesizer, roadmapper-extend, roadmapper, security-reviewer, tech-writer, ui-auditor, ui-checker, ui-researcher, user-profiler, verifier
 
 ### 20 Architecture Decision Records
 
@@ -698,4 +691,4 @@ All prompt files are in `/mnt/user-data/outputs/`:
 
 ---
 
-*State file generated at completion. MindForge v1.0.0 — 36 commands · 10 skills · 8 personas · 20 ADRs · 15 test suites.*
+*State file generated at completion. MindForge v1.0.0 — 36 commands · 10 skills · 32 personas · 20 ADRs · 15 test suites.*
