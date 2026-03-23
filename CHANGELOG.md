@@ -13,6 +13,14 @@ This major release transforms MindForge from a Claude-centric framework into a u
 - **Unified Migration Engine (v2.0.0)**: Additive schema upgrades for `AUDIT.jsonl` (runtime/agent_id) and `token-usage.jsonl` (model_group).
 - **Hardened Self-Building Skills**: Automated skill capture from documentation and phase outputs.
 - **7-Dimension Quality Scorer**: Enhanced static analysis for skill authoring.
+- **GSD Integration**: 10 new advanced commands for design-first planning, zero-friction capture, and smart routing.
+- **`/mindforge:do`**: Smart natural language dispatcher that routes intent to the correct command.
+- **`/mindforge:ui-phase` & `/mindforge:ui-review`**: Tier-1 visual design contract and visual audit engine.
+- **`/mindforge:note`**: Instant idea capture with todo promotion.
+- **`/mindforge:validate-phase`**: Requirement coverage and test gap identification.
+- **`/mindforge:session-report`**: Professional stakeholder summary with token profiling.
+- **Backlog & Seed Management**: `/mindforge:add-backlog`, `/mindforge:review-backlog`, and `/mindforge:plant-seed`.
+- **Parallel Workstreams**: `/mindforge:workstreams` for concurrent milestone execution.
 - **65-Point Production Checklist**: Exhaustive verification suite for enterprise readiness.
 
 ### Changed

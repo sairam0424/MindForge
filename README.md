@@ -125,6 +125,7 @@ If issues are found, run:
 ## Quick start (existing codebase)
 ```bash
 /mindforge:map-codebase
+/mindforge:do I want to plan the next phase
 /mindforge:plan-phase 1
 ```
 
@@ -136,10 +137,45 @@ If issues are found, run:
     → Requirements interview
     → Creates PROJECT.md, REQUIREMENTS.md, STATE.md
 
+/ mindforge:do <text>
+    → Smart natural language dispatcher (v2)
+
+/ mindforge:note <text>
+    → Zero-friction idea capture and todo promotion (v2)
+
+/ mindforge:ui-phase 1
+    → Create UI design contract (UI-SPEC.md) (v2)
+
 / mindforge:plan-phase 1
     → Discuss scope and decisions
     → Research domain (parallel)
     → Create atomic XML task plans
+
+/ mindforge:execute-phase 1
+    → Wave-based parallel execution
+    → One commit per task
+    → Automated verification
+
+/ mindforge:ui-review 1
+    → Retroactive 6-pillar visual audit (v2)
+
+/ mindforge:validate-phase 1
+    → Requirement coverage and test gap audit (v2)
+
+/ mindforge:session-report
+    → Automated post-session stakeholder summary (v2)
+
+/ mindforge:add-backlog <desc>
+    → Park ideas in 999.x "parking lot" (v2)
+
+/ mindforge:review-backlog
+    → Review and promote backlog items (v2)
+
+/ mindforge:plant-seed <idea>
+    → Capture speculative ideas with triggers (v2)
+
+/ mindforge:workstreams
+    → Parallel feature tracks with isolated state (v2)
 
 / mindforge:execute-phase 1
     → Wave-based parallel execution
@@ -259,7 +295,8 @@ See `.mindforge/production/token-optimiser.md`.
 - **Visual QA Engine**: `/mindforge:qa` and automated regression tests.
 - **Persistent Browser Runtime**: `/mindforge:browse` and Playwright integration.
 - **Autonomous Execution Engine**: `/mindforge:auto` and `/mindforge:steer`.
-- 48+ commands across 10 workflow categories.
+- **GSD Integration**: 10 new advanced commands for design, capture, and routing.
+- 58+ commands across 12 workflow categories.
 - 12 core skill packs with a three-tier registry.
 - 8 specialised agent personas.
 - Wave-based execution with dependency graph and compaction.
