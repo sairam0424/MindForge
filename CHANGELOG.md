@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.0.0-alpha.11] — Persistent Knowledge Graph — 2026-03-24
+### Added
+- **Persistent Knowledge Graph**: Core engine for long-term memory across projects.
+- **`remember` CLI**: New command for manual knowledge management and semantic search.
+- **Automated Capture**: Hooks in `AutoRunner` and `CrossReviewEngine` to ingest insights automatically from phase completions and review reports.
+- **Context Injection**: `installer-core.js` now auto-injects relevant historical context into `CLAUDE.md` during installation.
+- **`test-memory` CLI**: New command for memory suite verification.
+
+## [2.0.0-alpha.10] — Skill Installation & Validation CLI — 2026-03-24
+### Added
+- New CLI commands: `validate-skill`, `install-skill`, `register-skill`, `audit-skill`.
+- Robust skill validation logic (Level 1 & 2) in `bin/skill-validator.js`.
+- Automated manifest management and audit logging in `bin/skill-registry.js`.
+- Integrated CLI commands into the `install-skill.md` agentic workflow for higher reliability.
+
 ## [2.0.0-alpha.9] — Verified Antigravity Compatibility — 2026-03-23
 ### Fixed
 - Fixed critical installer regression where `files` variable was undefined during command installation.

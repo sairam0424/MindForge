@@ -8,6 +8,7 @@ const path = require('path');
 const ModelClient = require('../models/model-client');
 const { synthesizeFindings, extractVerdict } = require('./finding-synthesizer');
 const { write: writeReport } = require('./review-report-writer');
+const KnowledgeCapture = require('../memory/knowledge-capture');
 
 const PRIMARY_PROMPT = `You are a senior codebase architect performing a code review.
 Focus on: architectural alignment, logic correctness, maintainability, and complexity.
@@ -74,6 +75,16 @@ async function runCrossReview(params) {
 
   const reportPath = writeReport(phaseNum, result);
   process.stdout.write(`✅ Cross-review complete. Saved to ${reportPath}\n`);
+
+  // Auto-capture knowledge from review report
+  try {
+    const captured = KnowledgeCapture.captureFromCrossReview(reportPath);
+    if (captured.length > 0) {
+      process.stdout.write(`🧠 Knowledge Graph: Captured ${captured.length} security/quality findings.\n`);
+    }
+  } catch (err) {
+    process.stdout.write(`⚠️ Knowledge Capture failed: ${err.message}\n`);
+  }
   
   return result;
 }

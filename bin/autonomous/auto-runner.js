@@ -11,6 +11,7 @@ const stuckMonitor = require('./stuck-monitor');
 const steeringManager = require('./steer');
 const progressStream = require('./progress-stream');
 const headlessAdapter = require('./headless');
+const KnowledgeCapture = require('../memory/knowledge-capture');
 
 class AutoRunner {
   constructor(options = {}) {
@@ -66,6 +67,17 @@ class AutoRunner {
     console.log('✅ Phase complete!');
     const report = progressStream.generateReport(this.auditPath, this.phase);
     fs.writeFileSync(path.join(process.cwd(), `.planning/phases/${this.phase}/AUTONOMOUS-REPORT.md`), report);
+    
+    // Auto-capture knowledge from completed phase (ADRs, findings)
+    try {
+      const captured = KnowledgeCapture.captureFromPhaseCompletion(this.phase);
+      if (captured.length > 0) {
+        console.log(`🧠 Knowledge Graph: Captured ${captured.length} new insights from phase completion.`);
+      }
+    } catch (err) {
+      console.error('⚠️ Knowledge Capture failed:', err.message);
+    }
+    
     this.writeAudit({ event: 'auto_mode_completed', timestamp: new Date().toISOString() });
   }
 

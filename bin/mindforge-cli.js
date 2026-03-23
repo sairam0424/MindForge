@@ -45,6 +45,33 @@ const COMMANDS = {
   'approve': {
     script: 'bin/governance/approve.js',
     description: 'Generate a governance approval signature to unblock Tier 3 gates'
+  },
+  'validate-skill': {
+    script: 'bin/skill-validator.js',
+    description: 'Run Level 1 & 2 validation on a SKILL.md file'
+  },
+  'install-skill': {
+    script: 'bin/skill-registry.js',
+    description: 'Install a skill to the correct tier folder (Tier 1/2/3)',
+    defaultArgs: ['install']
+  },
+  'register-skill': {
+    script: 'bin/skill-registry.js',
+    description: 'Register a skill in MANIFEST.md',
+    defaultArgs: ['register']
+  },
+  'audit-skill': {
+    script: 'bin/skill-registry.js',
+    description: 'Record skill life cycle events in audit log',
+    defaultArgs: ['audit']
+  },
+  'remember': {
+    script: 'bin/memory/cli.js',
+    description: 'Manage the MindForge long-term memory (knowledge graph)'
+  },
+  'test-memory': {
+    script: 'tests/memory.test.js',
+    description: 'Run the persistent memory test suite'
   }
 };
 
