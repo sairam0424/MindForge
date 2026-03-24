@@ -32,16 +32,31 @@ async function main() {
     process.exit(0);
   }
 
-  // 3. Check if gh is installed
-  const ghVersion = run('gh --version');
-  if (!ghVersion) {
+  // 3. Check if gh is installed (and search common paths on macOS)
+  let ghPath = run('which gh');
+  if (!ghPath) {
+    const commonPaths = [
+      '/opt/homebrew/bin/gh',
+      '/usr/local/bin/gh',
+      '/usr/bin/gh',
+      '/bin/gh'
+    ];
+    for (const p of commonPaths) {
+      if (run(`ls ${p}`)) {
+        ghPath = p;
+        break;
+      }
+    }
+  }
+
+  if (!ghPath) {
     console.warn('⚠️ GitHub CLI (gh) not found. Skipping Auto-PR creation.');
     console.warn('💡 Install gh and run "gh auth login" to enable this feature.');
     process.exit(0);
   }
 
   // 4. Check if PR already exists for this branch
-  const existingPR = run(`gh pr list --head ${branch} --json url --jq ".[0].url"`);
+  const existingPR = run(`${ghPath} pr list --head ${branch} --json url --jq ".[0].url"`);
   if (existingPR) {
     console.log(`✅ Pull Request already exists: ${existingPR}`);
     process.exit(0);
@@ -49,11 +64,9 @@ async function main() {
 
   // 5. Create Draft PR
   console.log(`📝 Creating Draft Pull Request for ${branch}...`);
-  // Try to determine the base branch (default to develop, fallback to main)
-  const remotes = run('git remote show origin');
-  const baseBranch = remotes && remotes.includes('HEAD branch: develop') ? 'develop' : 'main';
+  const baseBranch = 'main'; // DEFAULT to main
 
-  const createPRCmd = `gh pr create --base ${baseBranch} --fill --draft`;
+  const createPRCmd = `${ghPath} pr create --base ${baseBranch} --fill --draft`;
   const prUrl = run(createPRCmd);
 
   if (prUrl) {
