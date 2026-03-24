@@ -20,4 +20,4 @@ If `.planning/PROJECT.md` is missing, treat the project as "Not initialised".
    "Next step:       [read STATE.md next action]"
 
 5. If CLAUDE.md has not been read this session, remind the user to ensure
-   it is loaded as the agent's system context.
+   it is loaded as MindForge's system context.

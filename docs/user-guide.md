@@ -102,7 +102,7 @@ For complex phases that require no human intervention, use the autonomous engine
 ```
 
 ### Steering mid-execution
-If you need to guide the agent while it is running in another terminal:
+If you need to guide MindForge while it is running in another terminal:
 ```bash
 /mindforge:steer "Focus on bug fixes in the auth module"
 ```
