@@ -1,6 +1,6 @@
 # MindForge Persona Reference
 
-> A comprehensive guide to the 31 specialized enterprise personas — roles, tools, and orchestration patterns.
+> A comprehensive guide to the 32 specialized enterprise personas — roles, tools, and orchestration patterns.
 
 ---
 
@@ -11,24 +11,25 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ### Persona Categories
 
 | Category | Count | Personas |
-| --- | --- | --- |
-| **Analyzers & Researchers** | 8 | analyst, assumptions-analyzer, advisor-researcher, assumptions-analyzer-extend, project-researcher, research-synthesizer, ui-researcher, research-agent |
-| **Architects & Planners** | 5 | architect, decision-architect, planner, phase-researcher, plan-checker |
+| :--- | :--- | :--- |
+| **Analyzers & Researchers** | 9 | analyst, assumptions-analyzer, advisor-researcher, assumptions-analyzer-extend, project-researcher, research-synthesizer, ui-researcher, research-agent, phase-researcher |
+| **Architects & Planners** | 4 | architect, decision-architect, planner, plan-checker |
 | **Executors** | 2 | developer, executor |
-| **Quality & Security** | 8 | qa-engineer, security-reviewer, coverage-specialist, ui-auditor, ui-checker, nyquist-auditor, integration-checker, verifier |
+| **Quality & Security** | 9 | qa-engineer, security-reviewer, coverage-specialist, ui-auditor, ui-checker, nyquist-auditor, integration-checker, verifier, debug-specialist |
 | **Strategy & Ops** | 5 | roadmapper, release-manager, tech-writer, roadmapper-extend, user-profiler |
-| **Debuggers** | 2 | debug-specialist, debugger |
-| **Mapping** | 1 | codebase-mapper-extend |
+| **Debuggers** | 1 | debugger |
+| **Mapping** | 2 | codebase-mapper, codebase-mapper-extend |
 
 ---
 
 ## Persona Details
 
 ### mindforge-analyst (The Requirements Engineer)
+
 **Role:** Translates ambiguous business intent into precise, testable, scoped specifications.
 
 | Property | Value |
-| --- | --- |
+| :--- | :--- |
 | **Spawned by** | `/mindforge:init-project`, `/mindforge:plan-phase`, `/mindforge:agent analyst` |
 | **Tools** | Read, Write, Bash, Grep |
 | **Color** | `blue` |
@@ -42,10 +43,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-architect (The System Designer)
+
 **Role:** Principal systems architect and technical decision maker. Responsible for system design, data modeling, and architectural integrity.
 
 | Property | Value |
-| --- | --- |
+| :--- | :--- |
 | **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent architect` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `purple` |
@@ -59,10 +61,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-developer (The Engine of Execution)
+
 **Role:** Senior software engineer. Writes clean, minimal, well-tested code following strict naming and architectural conventions.
 
 | Property | Value |
-| --- | --- |
+| :--- | :--- |
 | **Spawned by** | `/mindforge:execute-phase`, `/mindforge:agent developer` |
 | **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus, Context7 |
 | **Color** | `green` |
@@ -76,10 +79,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-qa-engineer (The Adversarial Verifier)
+
 **Role:** Senior test engineer. Thinks adversarially to find failure modes, boundary conditions, and logic gaps.
 
 | Property | Value |
-| --- | --- |
+| :--- | :--- |
 | **Spawned by** | `/mindforge:verify-phase`, `/mindforge:agent qa-engineer` |
 | **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
 | **Color** | `yellow` |
@@ -93,10 +97,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-security-reviewer (The Gatekeeper)
+
 **Role:** Senior application security engineer. Reviews code for vulnerabilities, hardcoded secrets, and compliance with the OWASP Top 10.
 
 | Property | Value |
-| --- | --- |
+| :--- | :--- |
 | **Spawned by** | `/mindforge:security-scan`, `/mindforge:agent security-reviewer` |
 | **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
 | **Color** | `red` |
@@ -110,10 +115,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-debug-specialist (The Root Cause Expert)
+
 **Role:** Principal engineering specialist in production debugging and root cause analysis (RCA). Solves complex defects by finding causes, not patching symptoms.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:debug`, `/mindforge:agent debug-specialist` |
 | **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus, ReadTerminal, Context7 |
 | **Color** | `orange` |
@@ -127,10 +133,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-roadmapper (The Execution Strategist)
+
 **Role:** Strategic technical program manager. Defines the optimal sequence of delivery and ensures every task has a clear "Proof of Done".
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:milestone`, `/mindforge:agent roadmapper` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `cyan` |
@@ -144,10 +151,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-assumptions-analyzer (The Pre-flight Auditor)
+
 **Role:** Senior systems auditor. Audits codebase against requirements to find hidden problems and conflicts before work starts.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent assumptions-analyzer` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `blue` |
@@ -161,10 +169,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-research-agent (The Knowledge Detective)
+
 **Role:** Technical research specialist. Ingests large documentation sets and codebases to identify patterns and integration paths.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:research`, `/mindforge:agent research-agent` |
 | **Tools** | Read, Write, Bash, Grep, Glob, Browser, Context7 |
 | **Color** | `cyan` |
@@ -178,10 +187,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-decision-architect (The Chief of Logic)
+
 **Role:** Principal engineering lead. Synthesizes research and audits into actionable architectural verdicts and roadmap adjustments.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent decision-architect` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `purple` |
@@ -195,10 +205,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-release-manager (The Delivery Gatekeeper)
+
 **Role:** Senior release manager. Ensures every release is traceable, reversible, and communicated through structured semver and changelogs.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:release`, `/mindforge:agent release-manager` |
 | **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
 | **Color** | `blue` |
@@ -212,10 +223,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-tech-writer (The Doc Specialist)
+
 **Role:** Senior technical writer. Produces minimal, high-utility documentation for developers and stakeholders.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:ship`, `/mindforge:agent tech-writer` |
 | **Tools** | Read, Write, Bash, Grep, Glob, Context7 |
 | **Color** | `cyan` |
@@ -229,10 +241,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-coverage-specialist (The Logic Auditor)
+
 **Role:** Senior test engineer specialized in logic sampling and adversarial gap detection (Nyquist-level coverage).
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:validate-phase`, `/mindforge:agent coverage-specialist` |
 | **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
 | **Color** | `yellow` |
@@ -246,10 +259,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-advisor-researcher (The Trade-off Specialist)
+
 **Role:** Researches single decision points and provides structured comparisons with rationale.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:research`, `/mindforge:agent advisor-researcher` |
 | **Tools** | Read, Write, Bash, Grep, Glob, Browser, Context7 |
 | **Color** | `cyan` |
@@ -263,10 +277,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-project-researcher (The Ecosystem Explorer)
+
 **Role:** Researches the technical ecosystem for new projects or milestones.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:init-project`, `/mindforge:agent project-researcher` |
 | **Tools** | Read, Write, Bash, Grep, Glob, Browser, Context7 |
 | **Color** | `purple` |
@@ -280,10 +295,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-research-synthesizer (The Strategy Fuser)
+
 **Role:** Synthesizes research outputs from multiple parallel agents into a cohesive strategy.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:research`, `/mindforge:agent research-synthesizer` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `purple` |
@@ -297,10 +313,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-ui-researcher (The Visual Architect)
+
 **Role:** Produces design contracts (UI-SPEC.md) for frontend phases.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent ui-researcher` |
 | **Tools** | Read, Write, Bash, Grep, Glob, Browser, Context7 |
 | **Color** | `#E879F9` |
@@ -314,10 +331,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-phase-researcher (The Domain Deep-Diver)
+
 **Role:** Investigates the specific technical domain or codebase area for an active phase.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent phase-researcher` |
 | **Tools** | Read, Write, Bash, Grep, Glob, Context7 |
 | **Color** | `blue` |
@@ -331,14 +349,15 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-planner (The Task Architect)
+
 **Role:** Decomposes phase goals into precise, atomic, executable implementation plans.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent planner` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `blue` |
-| **Produces** | `PLAN-*.md` (XML task breakdown) |
+| **Produces** | `PLAN-*.md` (XML task breakdown)|
 
 **Capabilities:**
 - Goal-backward task decomposition.
@@ -348,10 +367,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-integration-checker (The Connection Auditor)
+
 **Role:** Verifies cross-component wiring, API consumers, and end-to-end user flows.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:verify-phase`, `/mindforge:agent integration-checker` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `blue` |
@@ -365,10 +385,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-nyquist-auditor (The Fidelity Inspector)
+
 **Role:** Specialized verification auditor focused on filling testing gaps.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:validate-phase`, `/mindforge:agent nyquist-auditor` |
 | **Tools** | Read, Write, Bash, Grep, Glob, CmdStatus, ReadTerminal |
 | **Color** | `#8B5CF6` |
@@ -382,10 +403,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-plan-checker (The Logic Guard)
+
 **Role:** Verifies implementation plans against project goals and constraints.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent plan-checker` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `yellow` |
@@ -399,10 +421,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-ui-auditor (The Polish Inspector)
+
 **Role:** Performs retroactive visual and interaction audits of UI code.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:verify-phase`, `/mindforge:agent ui-auditor` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `#F472B6` |
@@ -416,10 +439,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-ui-checker (The Design Gatekeeper)
+
 **Role:** Validates UI-SPEC.md design contracts before planning starts.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent ui-checker` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `#22D3EE` |
@@ -433,10 +457,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-verifier (The Goal Sentinel)
+
 **Role:** Principal specialist in goal-backward verification.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:verify-phase`, `/mindforge:agent verifier` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `green` |
@@ -450,10 +475,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-executor (The Implementation Pilot)
+
 **Role:** Executes implementation plans with atomic commit discipline.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:execute-phase`, `/mindforge:agent executor` |
 | **Tools** | Read, Write, Bash, Grep, Glob, CmdStatus, ReadTerminal |
 | **Color** | `yellow` |
@@ -467,10 +493,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-debugger (The RCA Scientist)
+
 **Role:** Specialist in systematic root cause analysis and complex defect resolution.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:debug`, `/mindforge:agent debugger` |
 | **Tools** | Read, Write, Bash, Grep, Glob, CmdStatus, ReadTerminal, Browser, Context7 |
 | **Color** | `orange` |
@@ -483,11 +510,12 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 
 ---
 
-### mindforge-assumptions-analyzer (Extended)
+### mindforge-assumptions-analyzer-extend (The Reality Checker)
+
 **Role:** Reality checker for identifying hidden codebase constraints and risks.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent assumptions-analyzer-extend` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `blue` |
@@ -501,10 +529,11 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-codebase-mapper (The Explorer)
+
 **Role:** Senior engineer specialized in autonomous codebase discovery and high-fidelity documentation.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:map-codebase`, `/mindforge:agent codebase-mapper` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `cyan` |
@@ -517,11 +546,12 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 
 ---
 
-### mindforge-codebase-mapper (Extended)
+### mindforge-codebase-mapper-extend (The Structuralist)
+
 **Role:** Generates structured maps of tech stacks, architecture, and conventions.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:map-codebase`, `/mindforge:agent codebase-mapper-extend` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `cyan` |
@@ -534,11 +564,12 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 
 ---
 
-### mindforge-roadmapper (Extended)
-**Role:** Enhanced execution strategist focused on requirement traceability.
+### mindforge-roadmapper-extend (The Continuity Lead)
+
+**Role:** Enhanced execution strategist focused on requirement traceability and phase continuity.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:milestone`, `/mindforge:agent roadmapper-extend` |
 | **Tools** | Read, Write, Bash, Grep, Glob, Browser |
 | **Color** | `cyan` |
@@ -551,11 +582,12 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 
 ---
 
-### mindforge-user-profiler (The Behavioral Analyst)
-**Role:** Analyzes session history to personalize agent interactions.
+### mindforge-user-profiler (The Relationship Manager)
+
+**Role:** Analyzes session history to personalize agent interactions and technical alignment.
 
 | Property | Value |
-|----------|-------|
+| :--- | :--- |
 | **Spawned by** | `/mindforge:agent user-profiler` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `magenta` |
@@ -571,7 +603,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ## Tool Permissions Summary
 
 | Persona | Read | Write | Bash | Grep | Glob | CmdStatus | Browser | Terminal | Context7 |
-|---------|------|-------|------|------|------|-----------|---------|----------|----------|
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Analyst** | ✓ | ✓ | ✓ | ✓ | | | | | |
 | **Architect** | ✓ | ✓ | ✓ | ✓ | ✓ | | | | |
 | **Developer** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | | ✓ |
@@ -591,7 +623,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **UI Researcher** | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ | | ✓ |
 | **Phase Researcher** | ✓ | ✓ | ✓ | ✓ | ✓ | | | | ✓ |
 | **Planner** | ✓ | ✓ | ✓ | ✓ | ✓ | | | | |
-| **Integration Checker**| ✓ | ✓ | ✓ | ✓ | ✓ | | | | |
+| **Integration Checker** | ✓ | ✓ | ✓ | ✓ | ✓ | | | | |
 | **Nyquist Auditor** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ | |
 | **Plan Checker** | ✓ | ✓ | ✓ | ✓ | ✓ | | | | |
 | **UI Auditor** | ✓ | ✓ | ✓ | ✓ | ✓ | | | | |
