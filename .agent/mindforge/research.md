@@ -3,9 +3,10 @@
 
 ## Purpose
 Deep research using Gemini 1.5 Pro's 1-million-token context window.
-Incorporate local code context and remote documentation simultaneously.
+Uses **Context7 MCP** as the primary engine for real-time documentation and code example retrieval.
 
 ## Capabilities
-- Ingest full library documentation.
+- Ingest full library documentation via Context7.
 - Codebase-wide architectural analysis.
 - Regulatory compliance audits.
+- Real-time resolution of version-specific API contracts.

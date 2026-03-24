@@ -58,7 +58,7 @@ Do not batch questions (unless `--batch` flag is provided).
 5. "Data retention requirements? When can records be deleted?"
 
 ### Integration phases — ask about:
-1. "Have you already chosen the third-party service / API? If so, which?"
+1. "Have you already chosen the third-party service / API? If so, which? (I will query Context7 for current docs if available)"
 2. "What should happen if the third-party service is down? Queue / fail / fallback?"
 3. "Webhooks or polling for receiving updates?"
 4. "Any rate limits you know about on their end?"
