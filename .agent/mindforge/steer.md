@@ -1,7 +1,7 @@
 # /mindforge:steer "[instruction]"
 
 **Purpose**: Injects mid-execution guidance into the running autonomous engine.
-Steering guidance is applied at the next task boundary to course-correct the agent.
+Steering guidance is applied at the next task boundary to course-correct MindForge.
 
 ## Usage
 - `/mindforge:steer "Use the new logger in all created files"`

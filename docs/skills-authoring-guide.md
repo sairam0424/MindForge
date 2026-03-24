@@ -4,7 +4,7 @@
 A skill is a self-contained folder containing a `SKILL.md` file that gives
 the MindForge agent domain-specific expertise for a specific type of task.
 
-Skills are loaded just-in-time: the agent discovers them by matching trigger
+Skills are loaded just-in-time: MindForge discovers them by matching trigger
 keywords against the task description. They inject the right knowledge at the
 right moment without cluttering the context with irrelevant information.
 

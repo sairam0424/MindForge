@@ -37,10 +37,11 @@ load automatically whenever relevant work begins.
 ### Learn from npm package docs
 ```
 /mindforge:learn npm:zod
+/mindforge:learn context7:zod
 /mindforge:learn npm:drizzle-orm
-/mindforge:learn npm:@tanstack/react-query
+/mindforge:learn context7:drizzle-orm
 ```
-→ Fetches README from npm registry
+→ Fetches README from npm registry or real-time docs from Context7
 → Extracts patterns from the package documentation
 
 ### Learn from current session

@@ -64,7 +64,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | Property | Value |
 | --- | --- |
 | **Spawned by** | `/mindforge:execute-phase`, `/mindforge:agent developer` |
-| **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
+| **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus, Context7 |
 | **Color** | `green` |
 | **Produces** | Source code, Unit tests, Implementation Summaries |
 
@@ -115,7 +115,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | Property | Value |
 |----------|-------|
 | **Spawned by** | `/mindforge:debug`, `/mindforge:agent debug-specialist` |
-| **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus, ReadTerminal |
+| **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus, ReadTerminal, Context7 |
 | **Color** | `orange` |
 | **Produces** | `DEBUG-REPORT.md` (RCA) |
 
@@ -166,7 +166,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | Property | Value |
 |----------|-------|
 | **Spawned by** | `/mindforge:research`, `/mindforge:agent research-agent` |
-| **Tools** | Read, Write, Bash, Grep, Glob, Browser |
+| **Tools** | Read, Write, Bash, Grep, Glob, Browser, Context7 |
 | **Color** | `cyan` |
 | **Produces** | `RESEARCH-NOTES-*.md` |
 
@@ -217,7 +217,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | Property | Value |
 |----------|-------|
 | **Spawned by** | `/mindforge:ship`, `/mindforge:agent tech-writer` |
-| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Tools** | Read, Write, Bash, Grep, Glob, Context7 |
 | **Color** | `cyan` |
 | **Produces** | `README.md`, API Reference, Runbooks |
 
@@ -251,7 +251,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | Property | Value |
 |----------|-------|
 | **Spawned by** | `/mindforge:research`, `/mindforge:agent advisor-researcher` |
-| **Tools** | Read, Write, Bash, Grep, Glob, Browser |
+| **Tools** | Read, Write, Bash, Grep, Glob, Browser, Context7 |
 | **Color** | `cyan` |
 | **Produces** | Comparison tables, Rationale documents |
 
@@ -268,7 +268,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | Property | Value |
 |----------|-------|
 | **Spawned by** | `/mindforge:init-project`, `/mindforge:agent project-researcher` |
-| **Tools** | Read, Write, Bash, Grep, Glob, Browser |
+| **Tools** | Read, Write, Bash, Grep, Glob, Browser, Context7 |
 | **Color** | `purple` |
 | **Produces** | `SUMMARY.md`, `STACK.md`, `ARCHITECTURE.md` |
 
@@ -302,7 +302,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | Property | Value |
 |----------|-------|
 | **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent ui-researcher` |
-| **Tools** | Read, Write, Bash, Grep, Glob, Browser |
+| **Tools** | Read, Write, Bash, Grep, Glob, Browser, Context7 |
 | **Color** | `#E879F9` |
 | **Produces** | `UI-SPEC.md` |
 
@@ -319,7 +319,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | Property | Value |
 |----------|-------|
 | **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent phase-researcher` |
-| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Tools** | Read, Write, Bash, Grep, Glob, Context7 |
 | **Color** | `blue` |
 | **Produces** | `RESEARCH.md` |
 
@@ -472,7 +472,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | Property | Value |
 |----------|-------|
 | **Spawned by** | `/mindforge:debug`, `/mindforge:agent debugger` |
-| **Tools** | Read, Write, Bash, Grep, Glob, CmdStatus, ReadTerminal, Browser |
+| **Tools** | Read, Write, Bash, Grep, Glob, CmdStatus, ReadTerminal, Browser, Context7 |
 | **Color** | `orange` |
 | **Produces** | `DEBUG-REPORT.md` (RCA) |
 
@@ -570,39 +570,39 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 
 ## Tool Permissions Summary
 
-| Persona | Read | Write | Bash | Grep | Glob | CmdStatus | Browser | Terminal |
-|---------|------|-------|------|------|------|-----------|---------|----------|
-| **Analyst** | ✓ | ✓ | ✓ | ✓ | | | | |
-| **Architect** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
-| **Developer** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | |
-| **QA Engineer** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | |
-| **Security Reviewer** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | |
-| **Debug Specialist** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ |
-| **Roadmapper** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
-| **Assumptions Analyzer** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
-| **Research Agent** | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ | |
+| Persona | Read | Write | Bash | Grep | Glob | CmdStatus | Browser | Terminal | Context7 |
+|---------|------|-------|------|------|------|-----------|---------|----------|----------|
+| **Analyst** | ✓ | ✓ | ✓ | ✓ | | | | | |
+| **Architect** | ✓ | ✓ | ✓ | ✓ | ✓ | | | | |
+| **Developer** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | | ✓ |
+| **QA Engineer** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
+| **Security Reviewer** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
+| **Debug Specialist** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ | ✓ |
+| **Roadmapper** | ✓ | ✓ | ✓ | ✓ | ✓ | | | | |
+| **Assumptions Analyzer** | ✓ | ✓ | ✓ | ✓ | ✓ | | | | |
+| **Research Agent** | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ | | ✓ |
 | **Decision Architect** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
-| **Release Manager** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | |
-| **Tech Writer** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
-| **Coverage Specialist** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | |
-| **Advisor Researcher** | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ | |
-| **Project Researcher** | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ | |
-| **Research Synthesizer** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
-| **UI Researcher** | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ | |
-| **Phase Researcher** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
-| **Planner** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
-| **Integration Checker**| ✓ | ✓ | ✓ | ✓ | ✓ | | | |
-| **Nyquist Auditor** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ |
-| **Plan Checker** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
-| **UI Auditor** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
-| **UI Checker** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
-| **Verifier** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
-| **Executor** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ |
-| **Debugger** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| **Assumptions (Ext)** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
-| **Codebase Map (Ext)** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
-| **Roadmapper (Ext)** | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ | |
-| **User Profiler** | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
+| **Release Manager** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
+| **Tech Writer** | ✓ | ✓ | ✓ | ✓ | ✓ | | | | ✓ |
+| **Coverage Specialist** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
+| **Advisor Researcher** | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ | | ✓ |
+| **Project Researcher** | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ | | ✓ |
+| **Research Synthesizer** | ✓ | ✓ | ✓ | ✓ | ✓ | | | | |
+| **UI Researcher** | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ | | ✓ |
+| **Phase Researcher** | ✓ | ✓ | ✓ | ✓ | ✓ | | | | ✓ |
+| **Planner** | ✓ | ✓ | ✓ | ✓ | ✓ | | | | |
+| **Integration Checker**| ✓ | ✓ | ✓ | ✓ | ✓ | | | | |
+| **Nyquist Auditor** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ | |
+| **Plan Checker** | ✓ | ✓ | ✓ | ✓ | ✓ | | | | |
+| **UI Auditor** | ✓ | ✓ | ✓ | ✓ | ✓ | | | | |
+| **UI Checker** | ✓ | ✓ | ✓ | ✓ | ✓ | | | | |
+| **Verifier** | ✓ | ✓ | ✓ | ✓ | ✓ | | | | |
+| **Executor** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ | |
+| **Debugger** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| **Assumptions (Ext)** | ✓ | ✓ | ✓ | ✓ | ✓ | | | | |
+| **Codebase Map (Ext)** | ✓ | ✓ | ✓ | ✓ | ✓ | | | | |
+| **Roadmapper (Ext)** | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ | | |
+| **User Profiler** | ✓ | ✓ | ✓ | ✓ | ✓ | | | | |
 
 **Principle of Least Privilege:**
 - **Analyzers** and **Architects** primarily use discovery tools to inform design.
