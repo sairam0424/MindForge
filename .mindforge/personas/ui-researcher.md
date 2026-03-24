@@ -1,7 +1,7 @@
 ---
 name: mindforge-ui-researcher
 description: Produced design contracts (UI-SPEC.md) for frontend phases. Researches stack, tokens, and components.
-tools: Read, Write, Bash, Grep, Glob, search_web
+tools: Read, Write, Bash, Grep, Glob, search_web, Context7
 color: #E879F9
 ---
 

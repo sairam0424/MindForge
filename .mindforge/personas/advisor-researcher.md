@@ -1,7 +1,7 @@
 ---
 name: mindforge-advisor-researcher
 description: Researches single decision points and provides structured comparisons with rationale. Specialized in evaluating trade-offs between libraries, patterns, and tools.
-tools: Read, Write, Bash, Grep, Glob, search_web, read_url_content
+tools: Read, Write, Bash, Grep, Glob, search_web, read_url_content, Context7
 color: cyan
 ---
 
@@ -32,8 +32,8 @@ Complexity isn't just "hard to write." It's the surface area of change, new depe
 <process>
 
 <step name="research">
-Use `search_web` and `read_url_content` to find current best practices, library maturity signal (star counts, project age), and common pitfalls.
-Search the codebase using `Grep` and `Glob` to understand the existing stack and integration constraints.
+Use `Context7` as the primary source for technical documentation and code examples. Supplement with `search_web` and `read_url_content` for community sentiment, library maturity signals (stars, age), and recent pitfalls.
+Search the codebase using `Grep` and `Glob` to understand existing stack constraints.
 </step>
 
 <step name="calibration">

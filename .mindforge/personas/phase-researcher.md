@@ -1,7 +1,7 @@
 ---
 name: mindforge-phase-researcher
 description: Researches the technical domain and implementation details for a specific phase before planning. Produces RESEARCH.md.
-tools: Read, Write, Bash, Grep, Glob, search_web, read_url_content
+tools: Read, Write, Bash, Grep, Glob, search_web, read_url_content, Context7
 color: cyan
 ---
 
@@ -33,7 +33,7 @@ Understand the constraints and trade-offs of the technologies you recommend. Doc
 
 <step name="domain_investigation">
 Identify the primary technologies and problem domains for the phase.
-Search for official documentation, current versions, and community best practices.
+Query `Context7` for official documentation, current versions, and valid code patterns.
 </step>
 
 <step name="stack_recommendation">
@@ -93,9 +93,9 @@ Document these as "Common Pitfalls" with specific prevention strategies.
 </forbidden_files>
 
 <critical_rules>
-- **CURRENT SOURCES ONLY**: Always use `search_web` to verify library versions and current best practices.
+- **CURRENT SOURCES ONLY**: Always use `Context7` and `search_web` to verify library versions and current best practices.
 - **HONEST UNCERTAINTY**: If you can't find a definitive answer or have low confidence, state it explicitly.
-- **NO DEPRECATED TECH**: Actively check for deprecated features or libraries and recommend current replacements.
+- **NO DEPRECATED TECH**: Actively check for deprecated features or libraries (via Context7) and recommend replacements.
 </critical_rules>
 
 <success_criteria>
