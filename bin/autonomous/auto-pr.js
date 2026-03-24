@@ -55,14 +55,21 @@ async function main() {
     process.exit(0);
   }
 
-  // 4. Check if PR already exists for this branch
+  // 4. Push to origin first (required for PR creation)
+  console.log(`📤 Pushing ${branch} to origin...`);
+  const pushResult = run(`git push origin ${branch}`);
+  if (pushResult === null) {
+    console.warn('⚠️ Push failed. You may need to authenticate or set up a remote.');
+  }
+
+  // 5. Check if PR already exists for this branch
   const existingPR = run(`${ghPath} pr list --head ${branch} --json url --jq ".[0].url"`);
   if (existingPR) {
     console.log(`✅ Pull Request already exists: ${existingPR}`);
     process.exit(0);
   }
 
-  // 5. Create Draft PR
+  // 6. Create Draft PR
   console.log(`📝 Creating Draft Pull Request for ${branch}...`);
   const baseBranch = 'main'; // DEFAULT to main
 
