@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.1.1] — Core Migration Finalization — 2026-03-25
+
+🧩 **MindForge v2.1.1 — Core Migration Finalization**
+
+This release completes the structural rebranding and migration of the GSD framework into MindForge. It finalizes the path alignment for all 120+ assets and hardens the core configuration management.
+
+### Added
+- **Finalized Path Mapping**: All framework assets now reside in a unified, flat `.agent/` structure.
+- **Rebranded Lifecycle Hooks**: 5 new high-performance hooks for context monitoring, prompt guarding, and status line updates.
+- **Enterprise Manifest**: New `file-manifest.json` with multi-project traceability.
+
+### Changed
+- **Zero-Watermark Integrity**: All residual "GSD" and "get-shit-done" identifiers have been eliminated from the codebase, metadata, and configuration paths.
+- **Hardened Settings**: `settings.json` now features dynamic hook pathing for increased portability.
+
 ## [2.1.0] — The Specialized Expansion — 2026-03-24
 
 🧩 **MindForge v2.1.0 — The Specialized Expansion**

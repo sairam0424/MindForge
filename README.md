@@ -1,8 +1,8 @@
-# MindForge — Enterprise Agentic Framework (v2.0.0)
+# MindForge — Enterprise Agentic Framework (v2.1.1)
 
 MindForge turns Claude Code and Antigravity into production-grade engineering
 partners with governance, observability, and a disciplined workflow engine.
-Release published: v2.0.0.
+Release published: v2.1.1.
 
 ```bash
 npx mindforge-cc@latest
