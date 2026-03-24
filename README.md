@@ -1,8 +1,8 @@
-# MindForge — Enterprise Agentic Framework (v2.0.0)
+# MindForge — Enterprise Agentic Framework (v2.1.1)
 
 MindForge turns Claude Code and Antigravity into production-grade engineering
 partners with governance, observability, and a disciplined workflow engine.
-Release published: v2.0.0.
+Release published: v2.1.1.
 
 ```bash
 npx mindforge-cc@latest
@@ -10,7 +10,9 @@ npx mindforge-cc@latest
 
 ---
 
+
 ## Why MindForge
+
 AI coding agents degrade over long sessions. Context fills up. Quality drops.
 Decisions get forgotten. MindForge fixes that with:
 
@@ -29,14 +31,18 @@ Decisions get forgotten. MindForge fixes that with:
 
 ---
 
+
 ## Install
 
 ### Claude Code (global)
+
 ```bash
 npx mindforge-cc@latest --claude --global
 ```
 
+
 ### Claude Code (local)
+
 ```bash
 npx mindforge-cc@latest --claude --local
 ```
@@ -51,7 +57,9 @@ npm install -g mindforge-cc
 npm install -g mindforge-cc@alpha
 ```
 
+
 ### Antigravity
+
 ```bash
 npx mindforge-cc@latest --antigravity --global
 ```
@@ -68,40 +76,55 @@ Optional: minimal project scaffolding
 npx mindforge-cc@latest --claude --local --minimal
 ```
 
+
 ### Cursor
+
 ```bash
 npx mindforge-cc@latest --cursor --local
 ```
 
+
 ### Gemini CLI
+
 ```bash
 npx mindforge-cc@latest --gemini --global
 ```
 
+
 ### GitHub Copilot
+
 ```bash
 npx mindforge-cc@latest --copilot --local
 ```
 
+
 ### OpenCode
+
 ```bash
 npx mindforge-cc@latest --opencode --global
 ```
 
+
 ### Specific Runtime (Universal)
+
 ```bash
 npx mindforge-cc@latest --runtime <name>
 ```
 
+
 ### Multiple runtimes
+
 ```bash
 npx mindforge-cc@latest --runtime claude,cursor --local
 ```
 
 ---
 
+
 ## Verify
+
 Open Claude Code or Antigravity in your project directory and run:
+
 ```bash
 /mindforge:health
 ```
@@ -113,7 +136,9 @@ If issues are found, run:
 
 ---
 
+
 ## Quick start (new project)
+
 ```bash
 /mindforge:init-project
 /mindforge:plan-phase 1
@@ -122,7 +147,9 @@ If issues are found, run:
 /mindforge:ship 1
 ```
 
+
 ## Quick start (existing codebase)
+
 ```bash
 /mindforge:map-codebase
 /mindforge:do I want to plan the next phase
@@ -131,106 +158,108 @@ If issues are found, run:
 
 ---
 
+
 ## Core workflow
+
 ```bash
-/ mindforge:init-project
+/mindforge:init-project
     → Requirements interview
     → Creates PROJECT.md, REQUIREMENTS.md, STATE.md
 
-/ mindforge:do <text>
+/mindforge:do <text>
     → Smart natural language dispatcher (v2)
 
-/ mindforge:note <text>
+/mindforge:note <text>
     → Zero-friction idea capture and todo promotion (v2)
 
-/ mindforge:ui-phase 1
+/mindforge:ui-phase 1
     → Create UI design contract (UI-SPEC.md) (v2)
 
-/ mindforge:plan-phase 1
+/mindforge:plan-phase 1
     → Discuss scope and decisions
     → Research domain (parallel)
     → Create atomic XML task plans
 
-/ mindforge:execute-phase 1
+/mindforge:execute-phase 1
     → Wave-based parallel execution
     → One commit per task
     → Automated verification
 
-/ mindforge:ui-review 1
+/mindforge:ui-review 1
     → Retroactive 6-pillar visual audit (v2)
 
-/ mindforge:validate-phase 1
+/mindforge:validate-phase 1
     → Requirement coverage and test gap audit (v2)
 
-/ mindforge:session-report
+/mindforge:session-report
     → Automated post-session stakeholder summary (v2)
 
-/ mindforge:add-backlog <desc>
+/mindforge:add-backlog <desc>
     → Park ideas in 999.x "parking lot" (v2)
 
-/ mindforge:review-backlog
+/mindforge:review-backlog
     → Review and promote backlog items (v2)
 
-/ mindforge:plant-seed <idea>
+/mindforge:plant-seed <idea>
     → Capture speculative ideas with triggers (v2)
 
-/ mindforge:workstreams
+/mindforge:workstreams
     → Parallel feature tracks with isolated state (v2)
 
-/ mindforge:execute-phase 1
+/mindforge:execute-phase 1
     → Wave-based parallel execution
     → One commit per task
     → Automated verification
 
-/ mindforge:verify-phase 1
+/mindforge:verify-phase 1
     → Human acceptance testing
     → Debug agent on failures
     → UAT sign-off
 
-/ mindforge:ship 1
+/mindforge:ship 1
     → Changelog generation
     → Final quality gates
     → PR creation
 
-/ mindforge:auto --phase 1
+/mindforge:auto --phase 1
     → Walk-away autonomous execution (v2)
     → Intelligent stuck detection and node repair
     → External steering via steering-queue
 
-/ mindforge:qa
+/mindforge:qa
     → Systematic visual verification of UI changes (v2)
     → Automated regression test generation
     → Persistent browser sessions and daemon
 
-/ mindforge:cross-review
+/mindforge:cross-review
     → Adversarial multi-model code review and synthesis (v2)
     → Consensus detection and severity normalization
 
-/ mindforge:research
+/mindforge:research
     → Deep research using Gemini 1.5 Pro 1M context (v2)
     → Codebase-wide context packaging and SSRF protection
 
-/ mindforge:costs
+/mindforge:costs
     → Real-time token usage and cost profiling (v2)
     → Daily budget tracking across all providers
 
-/ mindforge:remember
+/mindforge:remember
     → Manual knowledge management and search (v2)
     → Persistent knowledge graph retrieval and promotion
 
-/ mindforge:dashboard
+/mindforge:dashboard
     → Real-time web observability and governance at localhost:7339 (v2)
     → Live audit logs, metrics, activity, and team feed
 
-/ mindforge:learn
+/mindforge:learn
     → Automatically capture skills from Docs, Sessions, or npm (v2)
     → 7-dimension quality scoring and injection protection
 
-/ mindforge:marketplace
+/mindforge:marketplace
     → Search, install, and publish community skills (v2)
     → Verified installation via npm-based registry
 
-/ mindforge:new-runtime
+/mindforge:new-runtime
     → Scaffold custom runtime configurations for any AI agent (v2)
 ```
 
@@ -288,24 +317,20 @@ See `.mindforge/production/token-optimiser.md`.
 
 ---
 
-## What ships in v2.0.0-alpha.10
-- **Real-time Dashboard**: `/mindforge:dashboard` and web-based observability.
-- **Persistent Knowledge Graph**: `/mindforge:remember` and long-term memory engine.
+## What's new in v2.1.1
+- **Unified 4-Pillar Workflow**: `plan`, `execute`, `verify`, `ship` now hardened with `.agent/` structural integrity.
+- **Expanded Persona Ecosystem**: 32+ specialized engineering personas integrated from the GSD core.
+- **Real-time Dashboard**: `/mindforge:dashboard` and high-performance web-based observability.
+- **Persistent Knowledge Graph**: `/mindforge:remember` and long-term project memory.
 - **Multi-Model Intelligence Layer**: `/mindforge:cross-review`, `/mindforge:research`, and `/mindforge:costs`.
-- **Visual QA Engine**: `/mindforge:qa` and automated regression tests.
-- **Persistent Browser Runtime**: `/mindforge:browse` and Playwright integration.
-- **Autonomous Execution Engine**: `/mindforge:auto` and `/mindforge:steer`.
-- **GSD Integration**: 10 new advanced commands for design, capture, and routing.
-- 58+ commands across 12 workflow categories.
-- 12 core skill packs with a three-tier registry.
-- 8 specialised agent personas.
-- Wave-based execution with dependency graph and compaction.
-- Enterprise integrations: Jira, Confluence, Slack, GitHub, GitLab.
-- Three-tier governance with 6 non-bypassable compliance gates.
-- Intelligence layer: health engine, difficulty scoring, anti-pattern detection.
-- Public skills registry and plugin system.
-- @mindforge/sdk with event stream and command builders.
-- 20 test suites, production checklist, and 32 ADRs.
+- **Visual QA Engine**: `/mindforge:qa` and automated regression test generation.
+- **Persistent Browser Runtime**: `/mindforge:browse` and Playwright-powered Chromium daemon.
+- **Autonomous Execution Engine**: `/mindforge:auto` and mid-execution `/mindforge:steer`.
+- **Unified Skills Registry**: 3-tier registry (Core/Org/Project) with 12 core skill packs.
+- **120+ Framework Assets**: Standardized directory structure for cross-IDE compatibility.
+- **Enterprise Manifest**: `file-manifest.json` for multi-project codebase mapping.
+- **Enterprise Integrations**: Jira, Confluence, Slack, GitHub, GitLab.
+- **Governance Pillars**: 6 non-bypassable compliance gates and Tier 3 security scaffolding.
 
 ---
 

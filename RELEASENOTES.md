@@ -1,41 +1,41 @@
-# MindForge v1.0.0 — First Stable Public Release
+# MindForge v2.1.1 — Core Migration & Persona Expansion
 
 ## Top Summary
-MindForge v1.0.0 is the first stable, production-ready release of the agentic delivery framework.
-This release hardens installation, upgrades, and migrations for real-world team usage.
-It adds a first-class plugin system, token optimization workflows, and a full public doc set.
-Quality gates, security posture, and release readiness are documented for enterprise adoption.
+
+MindForge v2.1.1 is a major structural update that finalizes the migration of the GSD framework into the MindForge ecosystem. This release establishes a unified `.agent/` asset structure, expands the persona count from 8 to 32+, and hardens the 4-pillar workflow (`plan`, `execute`, `verify`, `ship`) for enterprise-scale AI orchestration.
 
 ## Highlights
-- Production-grade installer with full install/update/uninstall/CI flows.
-- Self-update system with changelog diffing and scope-preserving patches.
-- Migration engine for schema evolution with safety backups and CI-safe behavior.
-- First-class plugin system with schema, loader, and registry guidance.
-- Token usage optimizer with measurement, baselining, and reduction playbooks.
-- Complete public documentation hierarchy (reference, architecture, contributing, security).
+
+- **Unified .agent/ Structure**: 120+ framework assets consolidated for maximum compatibility across Claude Code, Antigravity, and Cursor.
+- **32-Persona Expansion**: Integrated advanced personas including `advisor-researcher`, `nyquist-auditor`, and `ui-auditor`.
+- **Zero-Watermark Integrity**: 100% removal of legacy rebranding fragments across the entire core and documentation.
+- **Enterprise Manifest**: Single source of truth via `file-manifest.json` for multi-project codebase intelligence.
+- **Hardened Governance**: Unified settings and non-bypassable quality gates across all runtimes.
 
 ## Developer Experience
-- New user guide and end-to-end tutorial (install to advanced workflows).
-- CI quickstart for real pipelines and troubleshooting for common issues.
-- Upgrade guide, FAQ, and release checklist guide for release managers.
-- Example starter project with MindForge structure ready for onboarding teams.
+
+- **Consolidated Documentation**: Modernized guides for Skills Authoring, Architecture, and Persona-based engineering.
+- **Enhanced Hooks**: New lifecycle hooks for better context monitoring and real-time status reporting.
+- **Command Parity**: Full support for `/mindforge:browse`, `/mindforge:remember`, and `/mindforge:costs`.
 
 ## Quality & Stability
-- production, migration, and e2e test suites added.
-- Full 12-suite regression loop validated across prior-day coverage.
-- Triple-run stability verification completed with all tests passing.
-- Threat model and penetration test results documented.
+
+- **Grep-Audit Verified**: Verified zero residual branding through recursive deep scanning.
+- **Path-Aligned Workflows**: All 60+ workflows now strictly follow the v2.1.1 directory standards.
+- **Cross-IDE Tested**: Core features validated across multiple AI-native IDE runtimes.
 
 ## Getting Started
+
 - Install: `npx mindforge-cc@latest --claude --local`
-- Quick verify: `node tests/install.test.js`
-- Docs entry point: `README.md`
+- Verify Health: `/mindforge:health`
+- Docs Entry: `README.md`
 
 ## Upgrade Notes
-- v1.0.0 formalizes the stable interface contract.
-- Migration engine handles prior schema versions automatically.
-- See: `docs/upgrade.md` and `.mindforge/production/migration-engine.md`.
+
+- Projects on v1.0.0 or v2.0.0 should run `/mindforge:migrate` to align with the new path standards.
+- Residual custom skills in legacy folders may need manual relocation to `.agent/skills/`.
 
 ## Breaking Changes
-- None intended for users following the documented upgrade paths.
-- If you are on pre-0.6.0 custom forks, review `docs/upgrade.md` before upgrading.
+
+- Legacy `.agent/workflows` (without YAML frontmatter) is no longer automatically registered in Antigravity mode.
+- See `docs/upgrade.md` for detailed migration paths.

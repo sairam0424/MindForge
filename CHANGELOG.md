@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.1.1] — Core Migration Finalization — 2026-03-25
+
+🧩 **MindForge v2.1.1 — Core Migration Finalization**
+
+This release completes the structural rebranding and migration of the GSD framework into MindForge. It finalizes the path alignment for all 120+ assets, hardens the core configuration management, and fully integrates the expanded persona ecosystem.
+
+### Added
+- **Finalized Path Mapping**: All framework assets (skills, workflows, bin) now reside in a unified, flat `.agent/` structure for cross-IDE compatibility.
+- **32-Persona Ecosystem**: Full integration of 32 specialized engineering personas with defined tool permissions and capability matrices.
+- **Unified 4-Pillar Workflow**: Hardened `plan`, `execute`, `verify`, and `ship` logic with project-level `.agent/` integrity.
+- **Enterprise Manifest**: New `file-manifest.json` serving as the single source of truth for multi-project codebase mapping.
+- **Consolidated Configuration**: Unified framework settings and project-level governance in `.mindforge/` and `.agent/`.
+- **Rebranded Lifecycle Hooks**: 5 new high-performance hooks for context monitoring, prompt guarding, and real-time status updates.
+
+### Changed
+- **Zero-Watermark Integrity**: 100% elimination of residual "GSD" and "get-shit-done" identifiers from codebase, documentation, and metadata.
+- **Documentation Overhaul**: Modernized the entire documentation suite, including Architecture, Personas, Skills Authoring, and Command References.
+- **Hardened Settings**: `settings.json` now features dynamic hook pathing for increased portability across system environments.
+
 ## [2.1.0] — The Specialized Expansion — 2026-03-24
 
 🧩 **MindForge v2.1.0 — The Specialized Expansion**

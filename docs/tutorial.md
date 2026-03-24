@@ -1,195 +1,162 @@
-# MindForge v1.0.0 — Full Tutorial (Install → Advanced Usage)
+# MindForge v2.1.1 — Full Tutorial (Install → Advanced Usage)
 
-This tutorial walks a new user from installation to advanced usage. It is
-written for engineers who want to adopt MindForge in a real codebase.
+This tutorial walks a new user from installation to advanced usage. It is written for engineers who want to adopt MindForge in a real codebase.
 
 ---
 
 ## 1. Install MindForge
 
-### Claude Code (global)
-```bash
-npx mindforge-cc@latest --claude --global
-```
-
 ### Claude Code (local, per repo)
+
 ```bash
 npx mindforge-cc@latest --claude --local
 ```
 
 ### Antigravity
+
 ```bash
-npx mindforge-cc@latest --antigravity --global
+npx mindforge-cc@latest --antigravity --local
+```
+
+### Specific Runtime (Universal)
+
+```bash
+npx mindforge-cc@latest --runtime <name>
 ```
 
 ---
 
-## 2. Verify installation
-Open Claude Code or Antigravity in your repo and run:
-```
+## 2. Verify Installation
+
+Open your agentic runtime (Claude Code, Antigravity, etc.) in your repo and run:
+
+```bash
 /mindforge:health
 ```
-If anything is wrong:
-```
+
+If anything is wrong, run the repair command:
+
+```bash
 /mindforge:health --repair
 ```
 
 ---
 
-## 3. Create a new project
-```
+## 3. Create a New Project
+
+```bash
 /mindforge:init-project
 ```
-This creates:
-- `.planning/PROJECT.md`
-- `.planning/REQUIREMENTS.md`
-- `.planning/STATE.md`
-- `.planning/HANDOFF.json`
-- `.planning/AUDIT.jsonl`
+
+This command scaffolds the framework in `.agent/` and initializes project planning:
+
+- `.planning/PROJECT.md`: High-level vision and roadmap.
+- `.planning/REQUIREMENTS.md`: Functional and technical specs.
+- `.planning/STATE.md`: Real-time project health and milestone status.
 
 ---
 
-## 4. Brownfield onboarding (existing codebase)
-```
+## 4. Onboarding an Existing Codebase
+
+```bash
 /mindforge:map-codebase
 ```
-This generates:
-- `.planning/ARCHITECTURE.md`
-- `.mindforge/org/CONVENTIONS.md`
+
+This command generates architectural insights:
+
+- `.planning/ARCHITECTURE.md`: Module relationships and data flow.
+- `.planning/CONVENTIONS.md`: Inferred coding styles and patterns.
 
 ---
 
-## 5. Standard workflow (Phase 1)
-```
-/mindforge:plan-phase 1
-/mindforge:execute-phase 1
-/mindforge:verify-phase 1
-/mindforge:ship 1
-```
+## 5. Unified Workflow (Phase 1)
 
-What each step does:
-- **plan**: creates atomic task plans with dependencies
-- **execute**: runs tasks in waves
-- **verify**: runs automated + human gates
-- **ship**: generates release output
+MindForge uses a 4-pillar iterative cycle:
 
----
-
-## 6. Using skills
-Skills load automatically by keyword triggers. You can also manage them:
-```
-/mindforge:skills list
-/mindforge:skills validate
-```
-
-Best practice: keep `ALWAYS_LOAD_SKILLS` minimal to avoid token bloat.
-
----
-
-## 7. Security & governance
-MindForge enforces compliance gates by design.
-
-Run a deep security scan:
-```
-/mindforge:security-scan --deep --secrets --deps
-```
-
-If Tier 3 compliance changes appear, approvals are required.
-
----
-
-## 8. Plugins (advanced extension)
-Plugins add commands, skills, personas, and hooks.
-
-Install a plugin:
-```
-/mindforge:plugins install mindforge-plugin-<name>
-```
-
-Validate installed plugins:
-```
-/mindforge:plugins validate
-```
-
----
-
-## 9. Token usage profiling
-```
-/mindforge:tokens --profile
-/mindforge:tokens --summary
-```
-
-Use this to reduce wasted tokens and improve session quality.
-
----
-
-## 10. Updates and migrations
-Check for updates:
-```
-/mindforge:update
-```
-
-Apply updates:
-```
-/mindforge:update --apply
-```
-
-Migrate schema:
-```
-/mindforge:migrate --from v0.6.0 --to v1.0.0
-```
-
----
-
-## 11. CI integration
-In CI, MindForge is non‑interactive by default.
-
-Set environment:
 ```bash
-CI=true
-MINDFORGE_CI=true
+/mindforge:plan-phase 1     # discuss → research → plan
+/mindforge:execute-phase 1  # parallel execution of task plans
+/mindforge:verify-phase 1   # UAT + automated validation
+/mindforge:ship 1           # generate release output + PR
 ```
 
-Run tests:
+---
+
+## 6. High-Performance Personas
+
+MindForge v2.1.1 provides 32+ specialized personas. Each is a "digital twin" of a senior role.
+
+- To list all personas: `/mindforge:personas --list`
+- To switch persona: `/mindforge:personas --set executor`
+
+---
+
+## 7. Real-time Dashboard
+
+Observable engineering is core to MindForge. Start the dashboard to see live agent activity:
+
 ```bash
-node tests/install.test.js
+/mindforge:dashboard --start --open
 ```
 
-See `docs/ci-quickstart.md` for full pipelines.
+Visit `http://localhost:7339` for the premium web interface.
 
 ---
 
-## 12. SDK usage (advanced)
-Use the SDK in tooling or CI:
+## 8. Knowledge & Memory Management
 
-```ts
-import { MindForgeClient } from '@mindforge/sdk';
+MindForge records architectural decisions to prevent regression.
 
-const client = new MindForgeClient({ projectRoot: '.' });
-const report = await client.health();
-console.log(report);
+- Capture a note: `/mindforge:note "Preference: Use absolute imports for shared libs"`
+- Search memory: `/mindforge:remember --search "api patterns"`
+
+---
+
+## 9. Self-Building Skills
+
+Learn new capabilities from documentation URL or local files:
+
+```bash
+/mindforge:learn https://docs.nextjs.org "nextjs-best-practices"
 ```
 
 ---
 
-## 13. Best practices checklist
-- Run `/mindforge:health` after install and upgrades
-- Keep PLAN `<action>` fields lean (150–400 words)
-- Use local install per repo for isolation
-- Pin plugin versions in production workflows
-- Review `.planning/AUDIT.jsonl` for traceability
+## 10. Security & Governance
+
+MindForge enforces strict compliance gates.
+
+```bash
+/mindforge:security-scan --deep
+```
+
+This checks for secrets, dependency vulnerabilities, and architectural drift.
 
 ---
 
-## 14. Troubleshooting
-If you hit issues, see:
-- `docs/troubleshooting.md`
-- `docs/faq.md`
-- `docs/upgrade.md`
+## 11. CI/CD Integration
+
+MindForge is designed for non-interactive execution in CI environments.
+
+- Set `CI=true` in your environment.
+- Use `/mindforge:ship --auto-pr` for automated delivery.
+
+See `docs/ci-cd-integration.md` for full pipeline examples.
 
 ---
 
-## 15. Next steps
-- Add your org defaults in `.mindforge/org/ORG.md`
-- Configure `MINDFORGE.md` for your team
-- Start Phase 2 planning
+## 12. Troubleshooting
+
+If you hit issues, consult these specialized guides:
+
+- `docs/troubleshooting.md`: Common technical fixes.
+- `docs/faq.md`: Frequent questions and architectural patterns.
+- `docs/upgrade.md`: Migration guides between versions.
+
+---
+
+## 13. Next Steps
+
+1. Configure your team preferences in `docs/Templates/Profile/user-profile.md`.
+2. Start your first Phase 1 planning.
+3. Join our community: `/mindforge:join-discord`.

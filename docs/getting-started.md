@@ -4,33 +4,41 @@ This guide gets you from zero to a working MindForge project in under five minut
 
 ## Install
 
+MindForge is typically installed as a project-local dependency to ensure environment isolation.
+
 ```bash
-# Claude Code (global)
-npx mindforge-cc --claude --global
+# Antigravity (recommended for local development)
+npx mindforge-cc@latest --antigravity --local
 
-# Project-local install
-npx mindforge-cc --claude --local
+# Claude Code (alternative)
+npx mindforge-cc@latest --claude --local
 ```
 
-## Initialise your project
+## Initialise Your Project
 
-Open Claude Code in your repository and run:
+Open your agentic runtime (Antigravity or Claude Code) in your repository and run:
 
-```
-/mindforge:help
+```bash
 /mindforge:init-project
 ```
 
-The init command creates your core planning files:
-- `.planning/PROJECT.md`
-- `.planning/REQUIREMENTS.md`
-- `.planning/STATE.md`
-- `.planning/HANDOFF.json`
+The `init-project` command scaffolds the framework in `.agent/` and creates your core planning files:
 
-## Next steps
+- `.planning/PROJECT.md`: Your roadmap and high-level vision.
+- `.planning/REQUIREMENTS.md`: Detailed functional and technical specs.
+- `.planning/STATE.md`: Real-time tracking of project health and milestones.
 
-1. Plan Phase 1: `/mindforge:plan-phase 1`
-2. Execute Phase 1: `/mindforge:execute-phase 1`
-3. Verify Phase 1: `/mindforge:verify-phase 1`
-4. Ship Phase 1: `/mindforge:ship 1`
+## The Standard Workflow
 
+MindForge operates on a high-velocity 4-pillar lifecycle:
+
+1. **Plan**: `/mindforge:plan-phase 1` (Strategic planning and task breakdown)
+2. **Execute**: `/mindforge:execute-phase 1` (Autonomous execution in parallel waves)
+3. **Verify**: `/mindforge:verify-phase 1` (Automated tests + Human-in-the-loop validation)
+4. **Ship**: `/mindforge:ship 1` (Final delivery, PR generation, and release output)
+
+## Next Steps
+
+- Explore the [User Guide](user-guide.md) for advanced features.
+- Switch to a specialized [Persona](PERSONAS.md) for target tasks.
+- Join the community: `/mindforge:join-discord`.
