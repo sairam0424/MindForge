@@ -1,0 +1,80 @@
+name: MindForge Auto-PR
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - master
+      - develop
+      - "release/**"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create PR if missing
+        uses: actions/github-script@v7
+        env:
+          BRANCH_NAME: ${{ github.ref_name }}
+          BASE_BRANCH: main
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const { owner, repo } = context.repo;
+            const headBranch = process.env.BRANCH_NAME;
+            const baseBranch = process.env.BASE_BRANCH;
+
+            if (!headBranch || headBranch === baseBranch) {
+              core.info(`Skipping PR creation for head branch: ${headBranch}`);
+              return;
+            }
+
+            const head = `${owner}:${headBranch}`;
+            const existing = await github.rest.pulls.list({
+              owner,
+              repo,
+              state: 'open',
+              head,
+              base: baseBranch,
+            });
+
+            if (existing.data.length > 0) {
+              core.info(`Open PR already exists for ${head} -> ${baseBranch}.`);
+              return;
+            }
+
+            // Detect template
+            let body = '';
+            const templatePath = '.github/pull_request_template.md';
+            if (fs.existsSync(templatePath)) {
+              body = fs.readFileSync(templatePath, 'utf8');
+            } else {
+              core.warning(`PR template not found at ${templatePath}`);
+              body = 'Draft PR created by MindForge Auto-PR Engine.';
+            }
+
+            const title = (process.env.COMMIT_MESSAGE || `feat: update ${headBranch}`).split('\n')[0].trim();
+
+            const created = await github.rest.pulls.create({
+              owner,
+              repo,
+              title,
+              body,
+              head: headBranch,
+              base: baseBranch,
+              draft: true
+            });
+
+            core.info(`Created Draft PR #${created.data.number}: ${created.data.html_url}`);
