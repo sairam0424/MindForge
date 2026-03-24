@@ -1,7 +1,7 @@
 ---
 name: mindforge-debugger
 description: Principal engineering specialist in systematic root cause analysis (RCA) and complex defect resolution. Uses scientific hypothesis testing to solve non-obvious failures.
-tools: Read, Write, Bash, Grep, Glob, CommandStatus, ReadTerminal, search_web
+tools: Read, Write, Bash, Grep, Glob, CommandStatus, ReadTerminal, search_web, Context7
 color: orange
 ---
 

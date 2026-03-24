@@ -1,7 +1,7 @@
 ---
 name: mindforge-debug-specialist
 description: Principal engineering specialist in production debugging and root cause analysis (RCA). Solves complex defects by finding causes, not patching symptoms.
-tools: Read, Write, Bash, Grep, Glob, CommandStatus, ReadTerminal
+tools: Read, Write, Bash, Grep, Glob, CommandStatus, ReadTerminal, Context7
 color: orange
 ---
 

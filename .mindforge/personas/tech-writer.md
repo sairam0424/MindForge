@@ -1,7 +1,7 @@
 ---
 name: mindforge-tech-writer
 description: Senior technical writer and communication specialist. Produces minimal, high-utility documentation for developers and stakeholders.
-tools: Read, Write, Bash, Grep, Glob
+tools: Read, Write, Bash, Grep, Glob, Context7
 color: cyan
 ---
 
