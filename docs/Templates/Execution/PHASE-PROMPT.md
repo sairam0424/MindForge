@@ -286,7 +286,7 @@ See `.agent/get-shit-done/references/tdd.md` for TDD plan structure.
 
 | Type | Use For | Autonomy |
 |------|---------|----------|
-| `auto` | Everything the agent can do independently | Fully MindForge Principal presentation to user |
+| `auto` | Everything the agent can do independently | Fully autonomous |
 | `checkpoint:human-verify` | Visual/functional verification | Pauses, returns to MindForge Principal |
 | `checkpoint:decision` | Implementation choices | Pauses, returns to MindForge Principal |
 | `checkpoint:human-action` | Truly unavoidable manual steps (rare) | Pauses, returns to MindForge Principal |
