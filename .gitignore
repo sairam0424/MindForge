@@ -28,3 +28,5 @@ coverage/
 .mindforge/memory/*.jsonl
 
 temp-test-install/
+# Husky
+.husky/_

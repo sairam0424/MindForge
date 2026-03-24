@@ -23,7 +23,9 @@
   ],
   "scripts": {
     "test": "node tests/install.test.js",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "commit": "cz",
+    "prepare": "husky"
   },
   "keywords": [
     "claude-code",
@@ -38,8 +40,11 @@
   "devDependencies": {
     "@eslint/js": "^9.0.0",
     "@types/node": "^20.0.0",
+    "commitizen": "4.3.1",
+    "cz-conventional-changelog": "3.3.0",
     "eslint": "^9.0.0",
     "globals": "^15.0.0",
+    "husky": "9.1.7",
     "playwright": "^1.40.0"
   },
   "engines": {
