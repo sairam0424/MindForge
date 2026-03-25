@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "skills": {
+    "ai-image-generation": {
+      "source": "inferen-sh/skills",
+      "sourceType": "github",
+      "computedHash": "e45c0ee94791e67e355130109fd827bd8b4bd0fb1d6b2ff8f782eb566d435174"
+    },
+    "ai-video-generation": {
+      "source": "inferen-sh/skills",
+      "sourceType": "github",
+      "computedHash": "6fedc9632f486cef1f562b83563b0b38f135f5bc691445dabea2ee1a905b7712"
+    },
+    "critique": {
+      "source": "pbakaus/impeccable",
+      "sourceType": "github",
+      "computedHash": "59d3facaee0d7c969f23e938c35239183d3fdd9befff526908585e55afa3a9dd"
+    },
+    "elevenlabs-music": {
+      "source": "inferen-sh/skills",
+      "sourceType": "github",
+      "computedHash": "1c5e90ff78fb564cd97a1c381d96f78dcbdf708307b6f4a7d124b57e629a5698"
+    },
+    "ui-ux-pro-max": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "computedHash": "0a413bf988d06481f69bb81df2070741c3ba12dd9f1be2706d57f259c905992d"
+    }
+  }
+}

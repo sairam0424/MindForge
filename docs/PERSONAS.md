@@ -652,6 +652,19 @@ MindForge identities can be invoked through multiple channels depending on your 
 
 ---
 
+### Specialized Workflows
+
+These high-fidelity workflows bridge multiple skills and personas to solve specific engineering challenges.
+
+| Workflow | Command | Context / Skill |
+| :--- | :--- | :--- |
+| **TDD Loop** | `/mindforge:tdd` | mindforge-tdd skill |
+| **System Architecture** | `/mindforge:architecture` | mindforge-system-architecture skill |
+| **Strategic Planning** | `/mindforge:planner` | mf-planner persona |
+| **Implementation Pilot** | `/mindforge:executor` | mf-executor persona |
+
+---
+
 | Persona | Read | Write | Bash | Grep | Glob | CmdStatus | Browser | Terminal | Context7 |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Analyst** | ✓ | ✓ | ✓ | ✓ | | | | | |

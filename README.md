@@ -271,8 +271,8 @@ If issues are found, run:
 MindForge supports multiple interaction models to fit your engineering workflow:
 
 - **In-IDE Orchestration**: Use `/mindforge:agent <persona>` for real-time delegation.
+- **Enterprise Workflows**: Specialized commands like `/mindforge:tdd`, `/mindforge:architecture`, and `/mindforge:planner`.
 - **CLI Automation**: Run `node bin/mindforge-cli.js spawn <persona>` for scripted tasks.
-- **Specialized Identities**: Invoke `node bin/mindforge-cli.js identity <role>` to leverage deep research-backed logic from `/agents/`.
 
 ---
 
