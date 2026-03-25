@@ -266,6 +266,16 @@ If issues are found, run:
 
 ---
 
+## Execution Modes
+
+MindForge supports multiple interaction models to fit your engineering workflow:
+
+- **In-IDE Orchestration**: Use `/mindforge:agent <persona>` for real-time delegation.
+- **CLI Automation**: Run `node bin/mindforge-cli.js spawn <persona>` for scripted tasks.
+- **Specialized Identities**: Invoke `node bin/mindforge-cli.js identity <role>` to leverage deep research-backed logic from `/agents/`.
+
+---
+
 ## Updates and migrations
 ```bash
 /mindforge:update
