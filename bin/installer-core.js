@@ -213,11 +213,38 @@ const src         = (...parts) => path.join(SOURCE_ROOT, ...parts);
 const SENSITIVE_EXCLUDE = [
   '.env',        // exact filename match
   /^\.env\..*/,  // .env.local, .env.production, etc.
-  /\.key$/,      // anything ending in .key (previous glob was incorrect)
-  /\.pem$/,      // anything ending in .pem (previous glob was incorrect)
+  /\.key$/i,     // anything ending in .key
+  /\.pem$/i,     // anything ending in .pem
   'secrets',     // exact directory name
   '.secrets',    // exact directory name
-  /^secrets$/,   // exact match at directory level
+  /^secrets$/i,  // exact match at directory level
+  'node_modules',
+  '.git',
+  '.DS_Store',
+  'browser-daemon.log',
+  /audit\.jsonl/i,
+  /handoff\.json/i,
+  /jira-sync\.json/i,
+  /slack-threads\.json/i,
+  // Specific legacy or project-private folders
+  '01-migrate-gsd-to-mindforge',
+  'day1',
+  'day2',
+  'day3',
+  'research',
+  'screenshots',
+];
+
+// Special-case folders in .mindforge that are development-only
+const MINDFORGE_DEV_EXCLUDE = [
+  'distribution',
+  'monorepo',
+  'production',
+  'pr-review',
+  'skills-builder',
+  'ci',
+  'browser',
+  'audit'
 ];
 
 const norm = p => path.normalize(p);
@@ -504,7 +531,7 @@ async function install(runtime, scope, options = {}) {
         }
         Theme.printResolved(`${c.bold('.mindforge/')} (minimal core)`);
       } else {
-        fsu.copyDir(forgeSrc, forgeDst, { excludePatterns: SENSITIVE_EXCLUDE });
+        fsu.copyDir(forgeSrc, forgeDst, { excludePatterns: [...SENSITIVE_EXCLUDE, ...MINDFORGE_DEV_EXCLUDE] });
         Theme.printResolved(`${c.bold('.mindforge/')} (framework engine)`);
       }
     }

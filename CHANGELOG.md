@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.3.3] — Payload Cleanup & Enterprise Pruning — 2026-03-25
+
+🚀 **MindForge v2.3.3 — Payload Cleanup & Enterprise Pruning**
+
+This release strictly prunes the installation payload to remove legacy GSD artifacts, project-specific state, and development-only folders, ensuring a clean "out-of-the-box" enterprise experience.
+
+### Fixed
+
+- **Installation Payload**: Removed legacy migration folders (`01-migrate-gsd-to-mindforge`, `day1`, `day2`, `day3`).
+- **State Leakage**: Excluded project-specific state files (`AUDIT.jsonl`, `HANDOFF.json`, `jira-sync.json`, `slack-threads.json`) from distribution.
+- **Enterprise Pruning**: Updated `installer-core.js` to automatically filter out development-only framework folders (e.g., `distribution`, `monorepo`, `production`).
+
+## [2.3.2] — Asset Sync Repair — 2026-03-25
+
+🚀 **MindForge v2.3.2 — Asset Sync Repair**
+
+This release fixes documentation asset synchronization and repairs logic corruption in the installer core.
+
+### Added
+
+- **Docs & Templates Sync**: Integrated `docs/references` and `docs/templates` into the standard installation payload.
+- **Recursive Counting**: Implemented deep directory file counting for accurate manifest reporting.
+
+### Fixed
+
+- **Installer Logic**: Repaired syntax corruption and removed duplicated code blocks in `installer-core.js`.
+
 ## [2.1.2] — Beast Mode Branding & CI Fix — 2026-03-25
 
 🚀 **MindForge v2.1.2 — Beast Mode Branding & CI Fix**
