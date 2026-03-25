@@ -18,6 +18,7 @@ Decisions get forgotten. MindForge fixes that with:
 
 - **Context engineering** — structured project state, always current
 - **Role personas** — specialised agent modes for each task type
+- **Specialized Identities** — custom `/agents/` workspace with enriched `IDENTITY.md` protocols
 - **Skills** — just-in-time domain knowledge loaded on demand
 - **Wave execution** — parallelism with dependency safety
 - **Autonomous Engine** — walk-away execution with steerability (v2)
