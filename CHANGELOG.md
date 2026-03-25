@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.1.2] — Beast Mode Branding & CI Fix — 2026-03-25
+
+🚀 **MindForge v2.1.2 — Beast Mode Branding & CI Fix**
+
+This release transforms the MindForge installation experience with a high-impact "Beast Mode" CLI interface and resolves critical CI/CD integration issues.
+
+### Added
+- **Beast Mode CLI Branding**: New ultra-blocky ASCII "MINDFORGE" branding and high-contrast "Digital Architect" design system.
+- **Payload Manifest Summary**: Architectural summary screen displaying dynamic counts of deployed Personas, Skills, and Integrations.
+- **"TRY IT NOW" Utility**: Boxed terminal widget providing immediate post-install command guidance.
+- **Enhanced Status Reporting**: Unified architectural status grid for environment detection.
+
+### Fixed
+- **CI/CD Permissions**: Resolved `RequestError [HttpError]: GitHub Actions is not permitted to create or approve pull requests` by adding `contents: write` to `auto-pr.yml`.
+
 ## [2.1.1] — Core Migration Finalization — 2026-03-25
 
 🧩 **MindForge v2.1.1 — Core Migration Finalization**
