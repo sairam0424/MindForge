@@ -258,8 +258,8 @@ async function install(runtime, scope, options = {}) {
   const selfInstall = isSelfInstall();
   const targetDir = baseDir; // Define targetDir for the new printStatus line
 
-  Theme.printStatus(`Runtime : ${c.cyan(runtime)}`, 'info');
-  Theme.printStatus(`Scope   : ${c.dim(scope)} → ${c.bold(targetDir)}`, 'info');
+  Theme.printPrompt(`Runtime : ${c.cyan(runtime)}`);
+  Theme.printPrompt(`Scope   : ${c.dim(scope)} → ${c.bold(targetDir)}`);
   if (options.dryRun) Theme.printStatus('Mode    : DRY RUN (no changes)', 'warn');
   if (selfInstall) Theme.printStatus(c.yellow('Self-install detected — skipping framework file copy'), 'warn');
 
@@ -308,12 +308,12 @@ async function install(runtime, scope, options = {}) {
       // If the runtime entry file is different (e.g. .cursorrules, copilot-instructions.md), copy that too
       if (cfg.entryFile !== 'CLAUDE.md') {
         safeCopyClaude(tempEntry, rootEntry, { force, verbose });
-        Theme.status(`${c.bold(cfg.entryFile)} (Mirrored to project root)`, 'done');
+        Theme.printResolved(`${c.bold(cfg.entryFile)} (Mirrored to project root)`);
       } else {
-        Theme.status(`${c.bold('CLAUDE.md')} (Mirrored to project root)`, 'done');
+        Theme.printResolved(`${c.bold('CLAUDE.md')} (Mirrored to project root)`);
       }
     } else {
-      Theme.status(c.bold(cfg.entryFile), 'done');
+      Theme.printResolved(c.bold(cfg.entryFile));
     }
   }
 
@@ -349,9 +349,9 @@ async function install(runtime, scope, options = {}) {
       files.forEach(f => {
         fsu.copy(path.join(cmdSrc, f), path.join(standardCmdDir, f));
       });
-      Theme.status(`${c.bold(files.length)} commands (Mirrored to .claude/commands/mindforge/)`, 'done');
+      Theme.printResolved(`${c.bold(files.length)} commands (Mirrored to .claude/commands/mindforge/)`);
     } else {
-      Theme.status(`${c.bold(files.length)} commands`, 'done');
+      Theme.printResolved(`${c.bold(files.length)} commands`);
     }
   }
 
@@ -379,10 +379,10 @@ async function install(runtime, scope, options = {}) {
           const d = path.join(forgeDst, entry.name);
           entry.isDirectory() ? fsu.copyDir(s, d, { excludePatterns: SENSITIVE_EXCLUDE }) : fsu.copy(s, d);
         }
-        Theme.status(`${c.bold('.mindforge/')} (minimal core)`, 'done');
+        Theme.printResolved(`${c.bold('.mindforge/')} (minimal core)`);
       } else {
         fsu.copyDir(forgeSrc, forgeDst, { excludePatterns: SENSITIVE_EXCLUDE });
-        Theme.status(`${c.bold('.mindforge/')} (framework engine)`, 'done');
+        Theme.printResolved(`${c.bold('.mindforge/')} (framework engine)`);
       }
     }
 
@@ -401,11 +401,11 @@ async function install(runtime, scope, options = {}) {
           console.log('  ✅  .planning/ (minimal state)');
         } else {
           fsu.copyDir(planningSrc, planningDst, { excludePatterns: SENSITIVE_EXCLUDE });
-          Theme.status(`${c.bold('.planning/')} (state templates)`, 'done');
+          Theme.printResolved(`${c.bold('.planning/')} (state templates)`);
         }
       }
     } else {
-      Theme.status(c.dim('.planning/ already exists — preserved (run /mindforge:health to verify)'), 'info');
+      Theme.printPrompt(c.dim('.planning/ already exists — preserved (run /mindforge:health to verify)'));
     }
 
     // MINDFORGE.md — create only if it doesn't already exist
@@ -413,7 +413,7 @@ async function install(runtime, scope, options = {}) {
     const mindforgemSrc = src('MINDFORGE.md');
     if (!fsu.exists(mindforgemDst) && fsu.exists(mindforgemSrc)) {
       fsu.copy(mindforgemSrc, mindforgemDst);
-      Theme.status(`${c.bold('MINDFORGE.md')} (project constitution)`, 'done');
+      Theme.printResolved(`${c.bold('MINDFORGE.md')} (project constitution)`);
     }
 
     // bin/ utilities (optional)
@@ -422,9 +422,9 @@ async function install(runtime, scope, options = {}) {
       const binSrc = src('bin');
       if (fsu.exists(binSrc) && !fsu.exists(binDst)) {
         fsu.copyDir(binSrc, binDst, { excludePatterns: SENSITIVE_EXCLUDE });
-        Theme.status(`${c.bold('bin/')} (utilities)`, 'done');
+        Theme.printResolved(`${c.bold('bin/')} (utilities)`);
       } else if (fsu.exists(binDst)) {
-        Theme.status(c.dim('bin/ already exists — preserved'), 'info');
+        Theme.printPrompt(c.dim('bin/ already exists — preserved'));
       }
     }
 
@@ -432,7 +432,7 @@ async function install(runtime, scope, options = {}) {
   }
 
   // ── 4. Verify installation ──────────────────────────────────────────────────
-  Theme.status(c.bold('Install verified'), 'done');
+  Theme.printResolved(c.bold('Install verified'));
 }
 
 // ── Uninstall ─────────────────────────────────────────────────────────────────
@@ -543,9 +543,10 @@ async function run(args) {
   // Get package.json for version
   const pJSON = JSON.parse(fsu.read(path.join(SOURCE_ROOT, 'package.json')));
 
-  // Print header only if verbose or not in non-interactive mode
+  // Print header and brand manifest
   if (options.verbose || !process.stdout.isTTY) {
-    Theme.printHeader('MindForge', pJSON.version);
+    Theme.printHeader(pJSON.version);
+    Theme.printBrandManifest();
   }
   // Check for updates only
   if (isCheck) {
@@ -566,7 +567,7 @@ async function run(args) {
     const stats = collectManifestStats();
     Theme.printSuccess(runtime, scope, stats);
   } else {
-    Theme.status(c.bold('MindForge uninstalled'), 'done');
+    Theme.printResolved(c.bold('MindForge uninstalled'));
   }
 }
 

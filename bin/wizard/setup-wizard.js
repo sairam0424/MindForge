@@ -67,12 +67,12 @@ function askMultiChoice(rl, q, choices) {
 }
 
 function printBanner() {
-  Theme.printHeader('MindForge Setup Wizard', VERSION);
-  Theme.printFeatures();
+  Theme.printHeader(VERSION);
+  Theme.printBrandManifest();
 }
 
 async function detectEnvironment() {
-  Theme.status(c.bold('Detecting environment...'), 'info');
+  Theme.printPrompt(c.bold('Detecting environment...'));
   const env = await detector.detect();
   const rows = [
     ['Runtime(s)', env.runtimes.join(', ') || 'none'],
@@ -159,7 +159,7 @@ async function install(runtimes, scope, options = {}) {
 }
 
 function printNextSteps(runtimes, scope, credGuidance = []) {
-  Theme.printSuccess(runtimes.join(', '), scope);
+  Theme.printSuccessV2(runtimes.join(', '), scope);
 
   if (credGuidance.length > 0) {
     console.log(c.bold('  CONFIGURE CREDENTIALS\n'));
