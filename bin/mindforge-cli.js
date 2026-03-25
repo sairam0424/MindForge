@@ -80,6 +80,16 @@ const COMMANDS = {
   'marketplace': {
     script: 'bin/skills-builder/marketplace-cli.js',
     description: 'Search and install community skills from the marketplace'
+  },
+  'spawn': {
+    script: 'bin/spawn-agent.js',
+    description: 'Spawn a persona essence (e.g., mf-planner)',
+    defaultArgs: ['spawn']
+  },
+  'identity': {
+    script: 'bin/spawn-agent.js',
+    description: 'Invoke a specialized identity from /agents/',
+    defaultArgs: ['identity']
   }
 };
 

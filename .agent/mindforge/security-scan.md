@@ -1,3 +1,7 @@
+---
+description: - Default: OWASP Top 10 review on the changed files or specified path
+---
+
 # MindForge — Security Scan Command
 # Usage: /mindforge:security-scan [path] [--deep] [--deps] [--secrets]
 # Standalone security scan. Can be run independently of the phase lifecycle.

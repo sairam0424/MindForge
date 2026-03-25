@@ -1,3 +1,7 @@
+---
+description: Manage the MindForge long-term memory (knowledge graph).
+---
+
 # /mindforge:remember
 
 Manage the MindForge long-term memory (knowledge graph).

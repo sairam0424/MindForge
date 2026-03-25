@@ -1,3 +1,7 @@
+---
+description: - /mindforge:review (no args) → review all uncommitted changes (git diff)
+---
+
 # MindForge — Review Command
 # Usage: /mindforge:review [path|phase N|--staged|--last-commit]
 # Performs a comprehensive code review using code-quality and security skills.

@@ -18,6 +18,7 @@ Decisions get forgotten. MindForge fixes that with:
 
 - **Context engineering** — structured project state, always current
 - **Role personas** — specialised agent modes for each task type
+- **Specialized Identities** — custom `/agents/` workspace with enriched `IDENTITY.md` protocols
 - **Skills** — just-in-time domain knowledge loaded on demand
 - **Wave execution** — parallelism with dependency safety
 - **Autonomous Engine** — walk-away execution with steerability (v2)
@@ -265,6 +266,16 @@ If issues are found, run:
 
 ---
 
+## Execution Modes
+
+MindForge supports multiple interaction models to fit your engineering workflow:
+
+- **In-IDE Orchestration**: Use `/mindforge:agent <persona>` for real-time delegation.
+- **CLI Automation**: Run `node bin/mindforge-cli.js spawn <persona>` for scripted tasks.
+- **Specialized Identities**: Invoke `node bin/mindforge-cli.js identity <role>` to leverage deep research-backed logic from `/agents/`.
+
+---
+
 ## Updates and migrations
 ```bash
 /mindforge:update
@@ -319,7 +330,7 @@ See `.mindforge/production/token-optimiser.md`.
 
 ## What's new in v2.1.1
 - **Unified 4-Pillar Workflow**: `plan`, `execute`, `verify`, `ship` now hardened with `.agent/` structural integrity.
-- **Expanded Persona Ecosystem**: 32+ specialized engineering personas integrated from the GSD core.
+- **Expanded Persona Ecosystem**: 32+ specialized engineering personas integrated from the MindForge core.
 - **Real-time Dashboard**: `/mindforge:dashboard` and high-performance web-based observability.
 - **Persistent Knowledge Graph**: `/mindforge:remember` and long-term project memory.
 - **Multi-Model Intelligence Layer**: `/mindforge:cross-review`, `/mindforge:research`, and `/mindforge:costs`.

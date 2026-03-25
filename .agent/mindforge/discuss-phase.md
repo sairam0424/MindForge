@@ -1,3 +1,7 @@
+---
+description: Planning without discussion produces generic plans.
+---
+
 # MindForge — Discuss Phase Command
 # Usage: /mindforge:discuss-phase [N] [--batch] [--auto]
 # Captures implementation decisions before planning begins.

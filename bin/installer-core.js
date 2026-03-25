@@ -22,6 +22,12 @@ const RUNTIMES = {
     commandsSubdir: 'commands/mindforge',
     entryFile:      'CLAUDE.md',
     supportsSlash:  true,
+    skillsSubdir:   'skills',
+    hooksSubdir:    'hooks',
+    personasSubdir: 'personas',
+    docsSubdir:     'docs',
+    memorySubdir:   'memory',
+    pluginsSubdir:  'plugins',
   },
   antigravity: {
     displayName:    'Antigravity',
@@ -30,6 +36,12 @@ const RUNTIMES = {
     commandsSubdir: 'workflows',
     entryFile:      'CLAUDE.md',
     supportsSlash:  true,
+    skillsSubdir:   'skills',
+    hooksSubdir:    'hooks',
+    personasSubdir: 'personas',
+    docsSubdir:     'docs',
+    memorySubdir:   'memory',
+    pluginsSubdir:  'plugins',
   },
   cursor: {
     displayName:    'Cursor',
@@ -38,6 +50,12 @@ const RUNTIMES = {
     commandsSubdir: 'rules',
     entryFile:      '.cursorrules',
     supportsSlash:  false,
+    skillsSubdir:   'skills',
+    hooksSubdir:    'hooks',
+    personasSubdir: 'personas',
+    docsSubdir:     'docs',
+    memorySubdir:   'memory',
+    pluginsSubdir:  'plugins',
   },
   opencode: {
     displayName:    'OpenCode',
@@ -46,6 +64,12 @@ const RUNTIMES = {
     commandsSubdir: 'commands/mindforge',
     entryFile:      'CLAUDE.md',
     supportsSlash:  true,
+    skillsSubdir:   'skills',
+    hooksSubdir:    'hooks',
+    personasSubdir: 'personas',
+    docsSubdir:     'docs',
+    memorySubdir:   'memory',
+    pluginsSubdir:  'plugins',
   },
   gemini: {
     displayName:    'Gemini CLI',
@@ -54,6 +78,12 @@ const RUNTIMES = {
     commandsSubdir: 'commands/mindforge',
     entryFile:      'GEMINI.md',
     supportsSlash:  true,
+    skillsSubdir:   'skills',
+    hooksSubdir:    'hooks',
+    personasSubdir: 'personas',
+    docsSubdir:     'docs',
+    memorySubdir:   'memory',
+    pluginsSubdir:  'plugins',
   },
   copilot: {
     displayName:    'GitHub Copilot',
@@ -89,6 +119,31 @@ function generateEntryContent(runtime, sourceContent) {
   return sourceContent;
 }
 
+/**
+ * Extract an enterprise-grade description from command markdown.
+ * Prioritizes YAML frontmatter 'description' field, then falls back to first non-empty text.
+ */
+function getCommandDescription(content) {
+  // Check for YAML frontmatter
+  const frontmatterMatch = content.match(/^---\s*\n([\s\S]*?)\n---\s*\n/);
+  if (frontmatterMatch) {
+    const frontmatter = frontmatterMatch[1];
+    const descMatch = frontmatter.match(/^description:\s*(.*)$/m);
+    if (descMatch) return descMatch[1].trim();
+  }
+
+  // Fallback to first non-empty, non-header line
+  const lines = content.split('\n');
+  for (let line of lines) {
+    line = line.trim();
+    if (line && !line.startsWith('#') && !line.startsWith('---')) {
+      return line.length > 100 ? line.substring(0, 97) + '...' : line;
+    }
+  }
+
+  return 'No description available';
+}
+
 // ── File system utilities ─────────────────────────────────────────────────────
 const fsu = {
   exists:     p  => fs.existsSync(p),
@@ -97,9 +152,19 @@ const fsu = {
   ensureDir:  p  => { if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true }); },
   copy:       (src, dst) => { fsu.ensureDir(path.dirname(dst)); fs.copyFileSync(src, dst); },
   listFiles:  p  => fs.existsSync(p) ? fs.readdirSync(p) : [],
+  listFilesRecursive: (p, ext = '.md') => {
+    if (!fs.existsSync(p)) return [];
+    let results = [];
+    for (const entry of fs.readdirSync(p, { withFileTypes: true })) {
+      const full = path.join(p, entry.name);
+      if (entry.isDirectory()) results = results.concat(fsu.listFilesRecursive(full, ext));
+      else if (entry.name.endsWith(ext)) results.push(full);
+    }
+    return results;
+  },
 
   copyDir(src, dst, options = {}) {
-    const { excludePatterns = [] } = options;
+    const { excludePatterns = [], noOverwrite = false } = options;
     fsu.ensureDir(dst);
     for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
       const skip = excludePatterns.some(pat =>
@@ -109,7 +174,12 @@ const fsu = {
 
       const s = path.join(src, entry.name);
       const d = path.join(dst, entry.name);
-      entry.isDirectory() ? fsu.copyDir(s, d, options) : fsu.copy(s, d);
+      if (entry.isDirectory()) {
+        fsu.copyDir(s, d, options);
+      } else {
+        if (noOverwrite && fsu.exists(d)) continue;
+        fsu.copy(s, d);
+      }
     }
   },
 };
@@ -158,11 +228,38 @@ const src         = (...parts) => path.join(SOURCE_ROOT, ...parts);
 const SENSITIVE_EXCLUDE = [
   '.env',        // exact filename match
   /^\.env\..*/,  // .env.local, .env.production, etc.
-  /\.key$/,      // anything ending in .key (previous glob was incorrect)
-  /\.pem$/,      // anything ending in .pem (previous glob was incorrect)
+  /\.key$/i,     // anything ending in .key
+  /\.pem$/i,     // anything ending in .pem
   'secrets',     // exact directory name
   '.secrets',    // exact directory name
-  /^secrets$/,   // exact match at directory level
+  /^secrets$/i,  // exact match at directory level
+  'node_modules',
+  '.git',
+  '.DS_Store',
+  'browser-daemon.log',
+  /audit\.jsonl/i,
+  /handoff\.json/i,
+  /jira-sync\.json/i,
+  /slack-threads\.json/i,
+  // Specific legacy or project-private folders
+  '01-migrate-legacy-to-mindforge',
+  'day1',
+  'day2',
+  'day3',
+  'research',
+  'screenshots',
+];
+
+// Special-case folders in .mindforge that are development-only
+const MINDFORGE_DEV_EXCLUDE = [
+  'distribution',
+  'monorepo',
+  'production',
+  'pr-review',
+  'skills-builder',
+  'ci',
+  'browser',
+  'audit'
 ];
 
 const norm = p => path.normalize(p);
@@ -256,17 +353,40 @@ async function install(runtime, scope, options = {}) {
   const baseDir = resolveBaseDir(runtime, scope);
   const cmdsDir = norm(path.join(baseDir, cfg.commandsSubdir));
   const selfInstall = isSelfInstall();
-  const targetDir = baseDir; // Define targetDir for the new printStatus line
+  const targetDir = baseDir;
 
-  Theme.printStatus(`Runtime : ${c.cyan(runtime)}`, 'info');
-  Theme.printStatus(`Scope   : ${c.dim(scope)} → ${c.bold(targetDir)}`, 'info');
+  Theme.printPrompt(`Runtime : ${c.cyan(runtime)}`);
+  Theme.printPrompt(`Scope   : ${c.dim(scope)} → ${c.bold(targetDir)}`);
   if (options.dryRun) Theme.printStatus('Mode    : DRY RUN (no changes)', 'warn');
   if (selfInstall) Theme.printStatus(c.yellow('Self-install detected — skipping framework file copy'), 'warn');
 
   if (dryRun) {
     console.log('\n  Would install:');
-    console.log(`    ${cfg.entryFile} → ${path.join(baseDir, cfg.entryFile)}`);
-    console.log(`    ${fsu.listFiles(src('.claude', 'commands', 'mindforge')).length} commands → ${cmdsDir}`);
+    console.log(`    ${cfg.entryFile.padEnd(12)} → ${path.join(baseDir, cfg.entryFile)}`);
+    
+    const cmdCountStr = `${fsu.listFiles(src('.agent', 'mindforge')).length} commands`.padEnd(12);
+    console.log(`    ${cmdCountStr} → ${cmdsDir}`);
+
+    const assetMappings = [
+      { key: 'skillsSubdir',   src: src('.agent', 'skills'),      label: 'skills' },
+      { key: 'hooksSubdir',    src: src('.agent', 'hooks'),       label: 'hooks' },
+      { key: 'personasSubdir', src: src('.mindforge', 'personas'), label: 'personas' },
+      { key: 'docsSubdir',     src: src('docs', 'references'),    label: 'references' },
+      { key: 'docsSubdir',     src: src('docs', 'templates'),     label: 'templates' }
+    ];
+
+    assetMappings.forEach(asset => {
+      const subDir = cfg[asset.key];
+      if (subDir && fsu.exists(asset.src)) {
+        if (asset.label === 'references' || asset.label === 'templates') {
+          console.log(`    ${asset.label.padEnd(12)} → ${path.join(baseDir, subDir, asset.label)}`);
+        } else {
+          const count = fsu.listFiles(asset.src).length;
+          const countStr = `${count} ${asset.label}`.padEnd(12);
+          console.log(`    ${countStr} → ${path.join(baseDir, subDir)}`);
+        }
+      }
+    });
     return;
   }
 
@@ -308,51 +428,98 @@ async function install(runtime, scope, options = {}) {
       // If the runtime entry file is different (e.g. .cursorrules, copilot-instructions.md), copy that too
       if (cfg.entryFile !== 'CLAUDE.md') {
         safeCopyClaude(tempEntry, rootEntry, { force, verbose });
-        Theme.status(`${c.bold(cfg.entryFile)} (Mirrored to project root)`, 'done');
+        Theme.printResolved(`${c.bold(cfg.entryFile)} (Mirrored to project root)`);
       } else {
-        Theme.status(`${c.bold('CLAUDE.md')} (Mirrored to project root)`, 'done');
+        Theme.printResolved(`${c.bold('CLAUDE.md')} (Mirrored to project root)`);
       }
     } else {
-      Theme.status(c.bold(cfg.entryFile), 'done');
+      Theme.printResolved(c.bold(cfg.entryFile));
     }
   }
 
   // ── 2. Install commands ─────────────────────────────────────────────────────
-  const cmdSrc = runtime === 'claude'
-    ? src('.claude', 'commands', 'mindforge')
-    : src('.agent', 'mindforge');
+  const cmdSources = [
+    { src: src('.agent', 'mindforge'), namespace: 'mindforge' },
+    { src: src('.agent', 'forge'),     namespace: 'forge' }
+  ];
 
-  if (fsu.exists(cmdSrc)) {
+  if (runtime === 'claude') {
+    // Claude Code specifically looks in .claude/commands/mindforge
+    cmdSources.length = 0;
+    cmdSources.push({ src: src('.claude', 'commands', 'mindforge'), namespace: 'mindforge' });
+  }
+
+  let totalCount = 0;
+  cmdSources.forEach(source => {
+    if (!fsu.exists(source.src)) return;
+
+    const files = fsu.listFiles(source.src).filter(f => f.endsWith('.md'));
+    totalCount += files.length;
     fsu.ensureDir(cmdsDir);
-    const files = fsu.listFiles(cmdSrc).filter(f => f.endsWith('.md'));
-    // Install for specific runtime
+
     files.forEach(f => {
-      const targetName = runtime === 'antigravity' ? `mindforge:${f}` : f;
-      const srcPath = path.join(cmdSrc, f);
+      // Logic for naming: antigravity uses namespace:prefix, others use just the file name
+      const targetName = runtime === 'antigravity' ? `${source.namespace}:${f}` : f;
+      const srcPath = path.join(source.src, f);
       const dstPath = path.join(cmdsDir, targetName);
 
       if (runtime === 'antigravity') {
         const content = fsu.read(srcPath);
-        const firstLine = content.split('\n')[0].trim();
-        // Mandatory Antigravity frontmatter metadata
-        const metadata = `---\ndescription: ${firstLine}\n---\n`;
-        fsu.write(dstPath, metadata + content);
+        const description = getCommandDescription(content);
+        const metadata = `---\ndescription: ${description}\n---\n`;
+        
+        // Strip existing frontmatter from source when injecting into Antigravity
+        const cleanContent = content.replace(/^---\s*\n[\s\S]*?\n---\s*\n/, '');
+        fsu.write(dstPath, metadata + cleanContent);
       } else {
         fsu.copy(srcPath, dstPath);
       }
     });
 
-    // ✨ STANDARD: Mirror to .claude/commands for cross-IDE compatibility (Cursor/Windsurf/Claude Code)
+    // Mirror to .claude/commands for cross-IDE compatibility (Cursor/Windsurf/Claude Code)
     if (scope === 'local' && runtime !== 'claude' && !selfInstall) {
-      const standardCmdDir = path.join(process.cwd(), '.claude', 'commands', 'mindforge');
+      const standardCmdDir = path.join(process.cwd(), '.claude', 'commands', source.namespace);
       fsu.ensureDir(standardCmdDir);
       files.forEach(f => {
-        fsu.copy(path.join(cmdSrc, f), path.join(standardCmdDir, f));
+        fsu.copy(path.join(source.src, f), path.join(standardCmdDir, f));
       });
-      Theme.status(`${c.bold(files.length)} commands (Mirrored to .claude/commands/mindforge/)`, 'done');
-    } else {
-      Theme.status(`${c.bold(files.length)} commands`, 'done');
     }
+  });
+
+  if (totalCount > 0) {
+    if (scope === 'local' && runtime !== 'claude' && !selfInstall) {
+      Theme.printResolved(`${c.bold(totalCount)} commands (Mirrored to .claude/commands/)`);
+    } else {
+      Theme.printResolved(`${c.bold(totalCount)} commands`);
+    }
+  }
+
+  // ── 2.1 Install Enterprise Assets (Skills, Hooks, Personas) ─────────────────
+  if (scope === 'local' && !selfInstall) {
+    const assetTypes = [
+      { key: 'skillsSubdir',   src: src('.agent', 'skills'),      label: 'skills' },
+      { key: 'hooksSubdir',    src: src('.agent', 'hooks'),       label: 'hooks' },
+      { key: 'personasSubdir', src: src('.mindforge', 'personas'), label: 'personas' },
+      { key: 'docsSubdir',     src: src('docs', 'references'),    label: 'references' },
+      { key: 'docsSubdir',     src: src('docs', 'templates'),     label: 'templates' },
+      { key: 'memorySubdir',   src: src('.mindforge', 'memory'),   label: 'memory' },
+      { key: 'pluginsSubdir',  src: src('.mindforge', 'plugins'),  label: 'plugins' }
+    ];
+
+    assetTypes.forEach(asset => {
+      const subDir = cfg[asset.key];
+      if (subDir && fsu.exists(asset.src)) {
+        let dstDir = path.join(baseDir, subDir);
+        // Documentation and templates go into subdirectories of their own
+        if (asset.label === 'references' || asset.label === 'templates') {
+          dstDir = path.join(dstDir, asset.label);
+        }
+        fsu.ensureDir(dstDir);
+        // Use copyDir for the whole directory
+        fsu.copyDir(asset.src, dstDir, { excludePatterns: SENSITIVE_EXCLUDE, noOverwrite: !force });
+        Theme.printResolved(`${c.bold(asset.label.padEnd(12))} (Enterprise sync)`);
+      }
+    });
   }
 
   // ── 3. Framework files (local scope only, non-self-install) ─────────────────
@@ -361,51 +528,69 @@ async function install(runtime, scope, options = {}) {
     const forgeSrc = src('.mindforge');
     const forgeDst = path.join(process.cwd(), '.mindforge');
     if (fsu.exists(forgeSrc)) {
+      // Define all required enterprise framework folders
+      const standardFrameworkFolders = [
+        'engine', 'org', 'governance', 'integrations', 'personas', 'skills', 
+        'team', 'intelligence', 'memory', 'metrics', 'models', 'plugins', 'dashboard'
+      ];
+
       if (minimal) {
         const minimalEntries = new Set([
           'MINDFORGE-SCHEMA.json',
-          'engine',
-          'org',
-          'governance',
-          'integrations',
-          'personas',
-          'skills',
-          'team',
+          'engine', 'org', 'governance', 'integrations', 'personas', 'skills', 'team'
         ]);
         fsu.ensureDir(forgeDst);
         for (const entry of fs.readdirSync(forgeSrc, { withFileTypes: true })) {
           if (!minimalEntries.has(entry.name)) continue;
           const s = path.join(forgeSrc, entry.name);
           const d = path.join(forgeDst, entry.name);
-          entry.isDirectory() ? fsu.copyDir(s, d, { excludePatterns: SENSITIVE_EXCLUDE }) : fsu.copy(s, d);
+          if (entry.isDirectory()) {
+            fsu.copyDir(s, d, { excludePatterns: SENSITIVE_EXCLUDE, noOverwrite: true });
+          } else {
+            if (!fsu.exists(d) || force) fsu.copy(s, d);
+          }
         }
-        Theme.status(`${c.bold('.mindforge/')} (minimal core)`, 'done');
+        Theme.printResolved(`${c.bold('.mindforge/')} (minimal sync)`);
       } else {
-        fsu.copyDir(forgeSrc, forgeDst, { excludePatterns: SENSITIVE_EXCLUDE });
-        Theme.status(`${c.bold('.mindforge/')} (framework engine)`, 'done');
+        // Standard merge: Ensure missing folders are added, but don't overwrite existing user configs
+        fsu.copyDir(forgeSrc, forgeDst, { 
+          excludePatterns: [...SENSITIVE_EXCLUDE, ...MINDFORGE_DEV_EXCLUDE],
+          noOverwrite: !force 
+        });
+        Theme.printResolved(`${c.bold('.mindforge/')} (synchronized framework)`);
       }
     }
 
-    // .planning/ — create only if it doesn't already exist (preserve project state)
+    // .planning/ — merge templates but preserve existing state
     const planningDst = path.join(process.cwd(), '.planning');
-    if (!fsu.exists(planningDst)) {
-      const planningSrc = src('.planning');
-      if (fsu.exists(planningSrc)) {
-        if (minimal) {
-          fsu.ensureDir(planningDst);
-          ['STATE.md', 'HANDOFF.json', 'PROJECT.md'].forEach((name) => {
-            const s = path.join(planningSrc, name);
-            const d = path.join(planningDst, name);
-            if (fsu.exists(s)) fsu.copy(s, d);
-          });
-          console.log('  ✅  .planning/ (minimal state)');
-        } else {
-          fsu.copyDir(planningSrc, planningDst, { excludePatterns: SENSITIVE_EXCLUDE });
-          Theme.status(`${c.bold('.planning/')} (state templates)`, 'done');
-        }
+    const planningSrc = src('.planning');
+    if (fsu.exists(planningSrc)) {
+      fsu.ensureDir(planningDst);
+      
+      // Define standard planning templates that must exist
+      const standardPlanningFiles = [
+        'STATE.md', 'HANDOFF.json', 'PROJECT.md', 
+        'ROADMAP.md', 'ARCHITECTURE.md', 'REQUIREMENTS.md', 
+        'RELEASE-CHECKLIST.md'
+      ];
+
+      // Always ensure top-level standard templates are copied if missing
+      standardPlanningFiles.forEach((name) => {
+        const s = path.join(planningSrc, name);
+        const d = path.join(planningDst, name);
+        if (fsu.exists(s) && (!fsu.exists(d) || force)) fsu.copy(s, d);
+      });
+
+      if (!minimal) {
+        // Merge subdirectories (empty ones persist via .gitkeep)
+        fsu.copyDir(planningSrc, planningDst, { 
+          excludePatterns: SENSITIVE_EXCLUDE,
+          noOverwrite: true 
+        });
+        Theme.printResolved(`${c.bold('.planning/')} (merged templates)`);
+      } else {
+        Theme.printResolved(`${c.bold('.planning/')} (minimal sync)`);
       }
-    } else {
-      Theme.status(c.dim('.planning/ already exists — preserved (run /mindforge:health to verify)'), 'info');
     }
 
     // MINDFORGE.md — create only if it doesn't already exist
@@ -413,7 +598,7 @@ async function install(runtime, scope, options = {}) {
     const mindforgemSrc = src('MINDFORGE.md');
     if (!fsu.exists(mindforgemDst) && fsu.exists(mindforgemSrc)) {
       fsu.copy(mindforgemSrc, mindforgemDst);
-      Theme.status(`${c.bold('MINDFORGE.md')} (project constitution)`, 'done');
+      Theme.printResolved(`${c.bold('MINDFORGE.md')} (project constitution)`);
     }
 
     // bin/ utilities (optional)
@@ -422,9 +607,9 @@ async function install(runtime, scope, options = {}) {
       const binSrc = src('bin');
       if (fsu.exists(binSrc) && !fsu.exists(binDst)) {
         fsu.copyDir(binSrc, binDst, { excludePatterns: SENSITIVE_EXCLUDE });
-        Theme.status(`${c.bold('bin/')} (utilities)`, 'done');
+        Theme.printResolved(`${c.bold('bin/')} (utilities)`);
       } else if (fsu.exists(binDst)) {
-        Theme.status(c.dim('bin/ already exists — preserved'), 'info');
+        Theme.printPrompt(c.dim('bin/ already exists — preserved'));
       }
     }
 
@@ -432,7 +617,7 @@ async function install(runtime, scope, options = {}) {
   }
 
   // ── 4. Verify installation ──────────────────────────────────────────────────
-  Theme.status(c.bold('Install verified'), 'done');
+  Theme.printResolved(c.bold('Install verified'));
 }
 
 // ── Uninstall ─────────────────────────────────────────────────────────────────
@@ -477,17 +662,25 @@ function collectManifestStats() {
     skills: 0,
     governance: 0,
     integrations: 0,
-    actions: 0
+    actions: 0,
+    docs: 0,
+    templates: 0
   };
 
   try {
     const forgeSrc = src('.mindforge');
     if (fsu.exists(forgeSrc)) {
       stats.personas = fsu.listFiles(path.join(forgeSrc, 'personas')).filter(f => f.endsWith('.md')).length;
-      stats.skills = fsu.listFiles(path.join(forgeSrc, 'skills')).length;
+      stats.skills = fsu.listFiles(path.join(SOURCE_ROOT, '.agent', 'skills')).length;
       stats.governance = fsu.listFiles(path.join(forgeSrc, 'governance')).filter(f => f.endsWith('.md')).length;
       stats.integrations = fsu.listFiles(path.join(forgeSrc, 'integrations')).filter(f => f.endsWith('.md')).length;
     }
+
+    // Docs & Templates count
+    const refSrc = src('docs', 'references');
+    const tmpSrc = src('docs', 'templates');
+    if (fsu.exists(refSrc)) stats.docs = fsu.listFiles(refSrc).filter(f => f.endsWith('.md')).length;
+    if (fsu.exists(tmpSrc)) stats.templates = fsu.listFilesRecursive(tmpSrc).length;
     
     // Commands count
     const claudeCmdSrc = src('.claude', 'commands', 'mindforge');
@@ -500,7 +693,7 @@ function collectManifestStats() {
     }
   } catch (e) {
     // Fallback to default values if counting fails
-    return { personas: 32, skills: 10, governance: 4, integrations: 6, actions: 60 };
+    return { personas: 32, skills: 10, governance: 4, integrations: 6, actions: 60, docs: 12, templates: 5 };
   }
 
   return stats;
@@ -543,10 +736,10 @@ async function run(args) {
   // Get package.json for version
   const pJSON = JSON.parse(fsu.read(path.join(SOURCE_ROOT, 'package.json')));
 
-  // Print header only if verbose or not in non-interactive mode
-  if (options.verbose || !process.stdout.isTTY) {
-    Theme.printHeader('MindForge', pJSON.version);
-  }
+  // Print header and brand manifest
+  // Print header and brand manifest
+  Theme.printHeader(pJSON.version);
+  Theme.printBrandManifest();
   // Check for updates only
   if (isCheck) {
     const { checkAndUpdate } = require('./updater/self-update');
@@ -564,9 +757,9 @@ async function run(args) {
 
   if (!isUninstall) {
     const stats = collectManifestStats();
-    Theme.printSuccess(runtime, scope, stats);
+    Theme.printSuccessV2(runtime, scope, stats);
   } else {
-    Theme.status(c.bold('MindForge uninstalled'), 'done');
+    Theme.printResolved(c.bold('MindForge uninstalled'));
   }
 }
 

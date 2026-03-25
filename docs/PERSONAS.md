@@ -12,10 +12,12 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 
 | Category | Count | Personas |
 | :--- | :--- | :--- |
-| **Analyzers & Researchers** | 9 | analyst, assumptions-analyzer, advisor-researcher, assumptions-analyzer-extend, project-researcher, research-synthesizer, ui-researcher, research-agent, phase-researcher |
-| **Architects & Planners** | 4 | architect, decision-architect, planner, plan-checker |
-| **Executors** | 2 | developer, executor |
-| **Quality & Security** | 9 | qa-engineer, security-reviewer, coverage-specialist, ui-auditor, ui-checker, nyquist-auditor, integration-checker, verifier, debug-specialist |
+| **Analyzers & Researchers** | 10 | analyst, assumptions-analyzer, advisor-researcher, assumptions-analyzer-extend, project-researcher, research-synthesizer, ui-researcher, research-agent, phase-researcher, mf-researcher |
+| **Architects & Planners** | 5 | architect, decision-architect, planner, plan-checker, mf-planner |
+| **Executors** | 3 | developer, executor, mf-executor |
+| **Quality & Security** | 10 | qa-engineer, security-reviewer, coverage-specialist, ui-auditor, ui-checker, nyquist-auditor, integration-checker, verifier, debug-specialist, mf-reviewer |
+| **Persistence & Memory** | 1 | mf-memory |
+| **Infrastructure & Tools** | 1 | mf-tool |
 | **Strategy & Ops** | 5 | roadmapper, release-manager, tech-writer, roadmapper-extend, user-profiler |
 | **Debuggers** | 1 | debugger |
 | **Mapping** | 2 | codebase-mapper, codebase-mapper-extend |
@@ -600,7 +602,55 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 
 ---
 
-## Tool Permissions Summary
+### MF-Series: Fundamental Framework Identities
+
+The MF-Series represents the "Core Essence" of the MindForge agentic framework. These personas provide a standardized, high-value foundation for delegation and multi-agent interaction.
+
+#### mf-planner (The Strategist)
+**Role:** High-level goal decomposition and structured planning.
+- **Triggers:** `plan`, `decompose`, `roadmap`.
+- **Produces:** Structured JSON/Markdown execution plans.
+
+#### mf-executor (The Pilot)
+**Role:** Precise implementation and high-fidelity plan execution.
+- **Triggers:** `execute`, `implement`, `fix`.
+- **Produces:** Implementation details and completion status.
+
+#### mf-researcher (The Detective)
+**Role:** Knowledge gathering and objective approach comparison.
+- **Triggers:** `research`, `explore`, `benchmark`.
+- **Produces:** Tradeoff analysis and strategy recommendations.
+
+#### mf-reviewer (The Auditor)
+**Role:** Quality assurance and output validation.
+- **Triggers:** `review`, `audit`, `validate`.
+- **Produces:** Feedback, issues, and approval status.
+
+#### mf-memory (The Clerk)
+**Role:** Persistence management and knowledge graph maintenance.
+- **Triggers:** `remember`, `store`, `learning`.
+- **Produces:** Memory updates and linked patterns.
+
+#### mf-tool (The Operator)
+**Role:** Safe external system interaction and tool execution.
+- **Triggers:** `tool`, `git`, `api`, `shell`.
+- **Produces:** Action results and safety logs.
+
+---
+
+### Invocation Matrix
+
+MindForge identities can be invoked through multiple channels depending on your environment.
+
+| Method | Syntax | Use Case |
+| :--- | :--- | :--- |
+| **In-IDE (Command)** | `/mindforge:agent <name>` | Quick task delegation while coding. |
+| **In-IDE (Persona)** | Use `mf-planner` etc. | Specialized logic for complex phases. |
+| **CLI (Execution)** | `mindforge-cli spawn <name>` | CI/CD pipelines and remote execution. |
+| **CLI (Identity)** | `mindforge-cli identity <role>` | Direct loading of specialized research identities. |
+| **Shell (Global)** | `mindforge <command>` | Fast access from any terminal directory. |
+
+---
 
 | Persona | Read | Write | Bash | Grep | Glob | CmdStatus | Browser | Terminal | Context7 |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |

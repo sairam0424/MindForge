@@ -1,3 +1,7 @@
+---
+description: Monorepo workspace management.
+---
+
 # MindForge — Workspace Command
 # Usage: /mindforge:workspace [detect|list|plan phase N|test]
 

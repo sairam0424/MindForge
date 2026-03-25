@@ -16,7 +16,7 @@ git checkout -b feat/mindforge-core-scaffold
 ## CONTEXT — What you are building
 
 You are implementing **Day 1 of MindForge** — an enterprise-grade agentic framework
-for Claude Code and Antigravity. MindForge synthesises the best patterns from GSD,
+for Claude Code and Antigravity. MindForge synthesises the best patterns from MindForge,
 BMAD, Superpowers, and GStack into a single, governance-ready system.
 
 Day 1 scope is the **foundation layer only**:
@@ -2368,7 +2368,7 @@ Open Claude Code in your project. Run:
 ## Inspired by
 
 MindForge synthesises the best patterns from:
-- **GSD** — wave execution, context engineering, atomic commits
+- **MindForge** — wave execution, context engineering, atomic commits
 - **BMAD** — role personas, document-driven architecture
 - **Superpowers** — skills library, just-in-time knowledge loading
 - **GStack** — quality gates, deliberate execution discipline

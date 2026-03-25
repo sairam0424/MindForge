@@ -1,3 +1,7 @@
+---
+description: Follow the full installation protocol from .mindforge/distribution/registry-client.md.
+---
+
 Follow the full installation protocol from `.mindforge/distribution/registry-client.md`.
 
 Steps:

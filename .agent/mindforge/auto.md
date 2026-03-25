@@ -1,3 +1,7 @@
+---
+description: Starts the MindForge Autonomous Execution Engine for the
+---
+
 # /mindforge:auto [Phase N]
 
 **Purpose**: Starts the MindForge Autonomous Execution Engine for the

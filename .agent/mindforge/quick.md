@@ -1,3 +1,7 @@
+---
+description: Use QUICK for:
+---
+
 # MindForge — Quick Command
 # Usage: /mindforge:quick [--research] [--review] [--full]
 # For ad-hoc tasks that don't need full lifecycle management.

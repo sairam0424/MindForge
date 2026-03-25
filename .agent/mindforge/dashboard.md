@@ -1,3 +1,7 @@
+---
+description: Start the MindForge real-time web dashboard — a live observability UI for the
+---
+
 # MindForge v2 — Dashboard Command
 # Usage: /mindforge:dashboard [--port 7339] [--open] [--stop] [--status]
 # Version: v2.0.0-alpha.5

@@ -1,3 +1,7 @@
+---
+description: Injects mid-execution guidance into the running autonomous engine.
+---
+
 # /mindforge:steer "[instruction]"
 
 **Purpose**: Injects mid-execution guidance into the running autonomous engine.

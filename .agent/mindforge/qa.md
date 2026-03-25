@@ -1,3 +1,7 @@
+---
+description: @mindforge qa [--phase N] [--auto]
+---
+
 # /mindforge:qa
 
 ## Usage

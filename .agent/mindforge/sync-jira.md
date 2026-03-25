@@ -1,3 +1,7 @@
+---
+description: Synchronise MindForge phase and plan metadata to Jira. Usage:
+---
+
 Synchronise MindForge phase and plan metadata to Jira. Usage:
 `/mindforge:sync-jira [--phase N] [--plan M]`
 

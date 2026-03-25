@@ -23,7 +23,8 @@ const Theme = {
     side: '│',
     divider: '├──────────────────────────────────────────────────────────────────────────────┤',
     bullet: '◇',
-    check: '✔',
+    resolved: '●',
+    check: '✓',
     cross: '✘',
     arrow: '→',
     prompt: '❯',
@@ -41,34 +42,106 @@ const Theme = {
   tagline: "THE AUTONOMOUS ENTERPRISE AGENTIC ECOSYSTEM",
 
   /**
-   * Print a styled header
+   * Print a styled header with BMad-style border flare
    */
-  printHeader(title, subtitle) {
-    console.log('\n');
+  printHeader(subtitle) {
+    console.log(`\n  ${this.colors.dim('┌' + '─'.repeat(78) + '┐')}`);
     this.logo.split('\n').forEach(line => {
-      console.log(`    ${line}`);
+      console.log(`  ${this.colors.dim('│')}  ${line.padEnd(74)}  ${this.colors.dim('│')}`);
     });
-    console.log(`\n  ${this.colors.dim('—'.repeat(74))}`);
-    console.log(`\n    ${this.colors.bold(this.tagline)}`);
-    console.log(`    ${this.colors.dim(`RELEASE v${subtitle}`)}\n`);
+    console.log(`  ${this.colors.dim('│')}  ${this.colors.bold(this.tagline.padEnd(74))}  ${this.colors.dim('│')}`);
+    console.log(`  ${this.colors.dim('│')}  ${this.colors.dim(`RELEASE v${subtitle}`.padEnd(74))}  ${this.colors.dim('│')}`);
+    console.log(`  ${this.colors.dim('└' + '─'.repeat(78) + '┘')}\n`);
   },
 
   /**
-   * Print a feature grid
+   * Print Brand Manifest (BMad V6 style)
    */
-  printFeatures() {
-    console.log(`  ${this.colors.bold('CORE CAPABILITIES')}`);
-    const features = [
-      ['6-RUNTIME ORCHESTRATION', 'Unified support for Claude, Gemini, Cursor & more'],
-      ['AUTONOMOUS EXECUTION', 'Walk-away autonomy with self-healing capabilities'],
-      ['MULTI-MODEL INTELLIGENCE', 'Dynamic routing across Anthropic, OpenAI, and Google'],
-      ['ENTERPRISE GOVERNANCE', 'Role-based access and mandatory compliance gates'],
+  printBrandManifest() {
+    console.log(`  ${this.colors.dim('│')}`);
+    console.log(`  ${this.colors.dim('│')}  ${this.colors.green('🎉 V2.3.0 IS HERE!')} Welcome to MindForge V2!`);
+    console.log(`  ${this.colors.dim('│')}`);
+    console.log(`  ${this.colors.dim('│')}  ${this.colors.bold('THE PLATFORM VISION:')}`);
+    console.log(`  ${this.colors.dim('│')}    - Unified Enterprise Agentic Ecosystem`);
+    console.log(`  ${this.colors.dim('│')}    - Modular Skills & Persona Architecture`);
+    console.log(`  ${this.colors.dim('│')}    - Autonomous Governance & Self-Healing`);
+    console.log(`  ${this.colors.dim('│')}`);
+    console.log(`  ${this.colors.dim('│')}  ${this.colors.yellow('🌟 100% FREE & OPEN SOURCE')}`);
+    console.log(`  ${this.colors.dim('│')}    - No paywalls. No gated content.`);
+    console.log(`  ${this.colors.dim('│')}    - Empowering everyone with AI-Native tools.`);
+    console.log(`  ${this.colors.dim('│')}`);
+    console.log(`  ${this.colors.dim('│')}  ${this.colors.cyan('⭐ HELP US GROW:')}`);
+    console.log(`  ${this.colors.dim('│')}    - GitHub:  ${this.colors.dim('https://github.com/sairam0424/MindForge')}`);
+    console.log(`  ${this.colors.dim('│')}    - Discord: ${this.colors.dim('https://discord.gg/mindforge')}`);
+    console.log(`  ${this.colors.dim('│')}    - Docs:    ${this.colors.dim('https://docs.mindforge.cc')}`);
+    console.log(`  ${this.colors.dim('│')}`);
+    console.log(`  ${this.colors.dim('—'.repeat(80))}\n`);
+  },
+
+  printPrompt(label) {
+    console.log(`  ${this.colors.cyan(this.chars.bullet)}  ${label}`);
+  },
+
+  printResolved(label) {
+    console.log(`  ${this.colors.green(this.chars.resolved)}  ${label}`);
+  },
+
+  /**
+   * Success Banner (  V2 Architectural Style)
+   */
+  printSuccessV2(runtime, scope, stats = {}) {
+    const { personas = 32, skills = 12, governance = 4, integrations = 7 } = stats;
+    const boxWidth = 72;
+
+    console.log(`\n  ${this.colors.green('MINDFORGE is ready! ')} ${this.colors.dim('─'.repeat(boxWidth - 20))}╮`);
+    console.log(`  ${this.colors.dim('│')}                                                                        ${this.colors.dim('│')}`);
+    console.log(`  ${this.colors.dim('│')}    ${this.colors.green('✓')}  ${this.colors.bold('MindForge Core')} (installed)                             ${this.colors.dim('│')}`);
+    console.log(`  ${this.colors.dim('│')}    ${this.colors.green('✓')}  ${this.colors.bold('Personas')}     (${personas} active)                            ${this.colors.dim('│')}`);
+    console.log(`  ${this.colors.dim('│')}    ${this.colors.green('✓')}  ${this.colors.bold('Skill Packs')}  (${skills} verified)                          ${this.colors.dim('│')}`);
+    console.log(`  ${this.colors.dim('│')}                                                                        ${this.colors.dim('│')}`);
+    console.log(`  ${this.colors.dim('│')}    ${this.colors.bold('Environment')}: ${this.colors.cyan(runtime)} (${this.colors.dim(scope)})                         ${this.colors.dim('│')}`);
+    console.log(`  ${this.colors.dim('│')}                                                                        ${this.colors.dim('│')}`);
+    console.log(`  ${this.colors.dim('│')}    ${this.colors.bold('Next steps:')}                                                   ${this.colors.dim('│')}`);
+    console.log(`  ${this.colors.dim('│')}      ${this.colors.bold('mindforge-cc init')}   ${this.colors.dim('— Initialize your first workspace')}      ${this.colors.dim('│')}`);
+    console.log(`  ${this.colors.dim('│')}      ${this.colors.bold('/mindforge:help')}    ${this.colors.dim('— Explore the command suite')}        ${this.colors.dim('│')}`);
+    console.log(`  ${this.colors.dim('│')}                                                                        ${this.colors.dim('│')}`);
+    console.log(`  ${this.colors.dim('├' + '─'.repeat(boxWidth) + '╯')}\n`);
+
+    this.printManifest(stats);
+  },
+
+  /**
+   * Legacy printSuccess (Redirects to V2)
+   */
+  printSuccess(runtime, scope, stats = {}) {
+    this.printSuccessV2(runtime, scope, stats);
+  },
+
+  /**
+   * Print Manifest (Hardened for V2)
+   */
+  printManifest(stats = {}) {
+    const { personas = 32, skills = 12, governance = 4, integrations = 7, actions = 60, docs = 12, templates = 8 } = stats;
+    
+    console.log(`  ${this.colors.bold('PAYLOAD MANIFEST')}`);
+    console.log(`  ${this.colors.dim('┌' + '─'.repeat(74) + '┐')}`);
+    
+    const rows = [
+      ['PERSONAS', personas, 'The autonomous persona ecosystem'],
+      ['SKILLS', skills, 'Enterprise-grade skill packs'],
+      ['GOVERNANCE', governance, 'Compliance and safety modules'],
+      ['INTEGRATIONS', integrations, 'Multi-platform connector suite'],
+      ['REFERENCES', docs, 'Standardized architecture references'],
+      ['TEMPLATES', templates, 'Engineering and planning templates'],
+      ['ACTIONS', actions, 'Total autonomous commands deployed'],
     ];
 
-    features.forEach(([name, desc]) => {
-      console.log(`    ${this.colors.cyan('█')} ${this.colors.bold(name.padEnd(28))} ${this.colors.dim(desc)}`);
+    rows.forEach(([label, count, desc]) => {
+      const countStr = count.toString().padStart(3);
+      console.log(`  ${this.colors.dim('│')}  ${this.colors.cyan('█')} ${this.colors.bold(label.padEnd(14))} ${this.colors.cyan(countStr)}   ${this.colors.dim(desc.padEnd(48))} ${this.colors.dim('│')}`);
     });
-    console.log('');
+
+    console.log(`  ${this.colors.dim('└' + '─'.repeat(74) + '┘')}\n`);
   },
 
   /**
@@ -87,33 +160,11 @@ const Theme = {
   },
 
   /**
-   * Print the installation manifest
+   * Print a status line
    */
-  printManifest(stats = {}) {
-    const { personas = 32, skills = 12, governance = 4, integrations = 7, actions = 60 } = stats;
-    
-    console.log(`  ${this.colors.bold('PAYLOAD MANIFEST')}`);
-    console.log(`  ${this.colors.dim('┌' + '─'.repeat(74) + '┐')}`);
-    
-    const rows = [
-      ['PERSONAS', personas, 'The autonomous persona ecosystem'],
-      ['SKILLS', skills, 'Enterprise-grade skill packs'],
-      ['GOVERNANCE', governance, 'Compliance and safety modules'],
-      ['INTEGRATIONS', integrations, 'Multi-platform connector suite'],
-      ['ACTIONS', actions, 'Total autonomous commands deployed'],
-    ];
-
-    rows.forEach(([label, count, desc]) => {
-      const countStr = count.toString().padStart(3);
-      console.log(`  ${this.colors.dim('│')}  ${this.colors.cyan('█')} ${this.colors.bold(label.padEnd(14))} ${this.colors.cyan(countStr)}   ${this.colors.dim(desc.padEnd(48))} ${this.colors.dim('│')}`);
-    });
-
-    console.log(`  ${this.colors.dim('└' + '─'.repeat(74) + '┘')}\n`);
-  },
-
   printStatus(label, state = 'info') {
     const icons = {
-      done: this.colors.green(this.chars.check),
+      done: this.colors.green(this.chars.resolved),
       fail: this.colors.red(this.chars.cross),
       info: this.colors.cyan(this.chars.bullet),
       warn: this.colors.yellow('!'),
@@ -121,21 +172,9 @@ const Theme = {
     console.log(`  ${icons[state] || icons.info}  ${label}`);
   },
 
-  /**
-   * Print a success banner
-   */
-  printSuccess(runtime, scope, stats = {}) {
-    console.log(`\n  ${this.colors.green(this.colors.bold(this.chars.check))} ${this.colors.bold('INSTALLATION COMPLETE')}`);
-    console.log(`    MindForge is now active for ${this.colors.cyan(runtime)} (${this.colors.dim(scope)})\n`);
-    
-    this.printManifest(stats);
-    this.printTryItNow('mindforge-cc init');
-
-    console.log(`  ${this.colors.bold('POST-INSTALL COMMANDS')}`);
-    console.log(`    ${this.colors.cyan('1.')} ${this.colors.bold('/mindforge:health')}        ${this.colors.dim('— Verify environment stability')}`);
-    console.log(`    ${this.colors.cyan('2.')} ${this.colors.bold('/mindforge:map-codebase')}  ${this.colors.dim('— Contextualize existing repos')}`);
-    console.log(`    ${this.colors.cyan('3.')} ${this.colors.bold('/mindforge:ship')}          ${this.colors.dim('— Deploy features with confidence')}\n`);
-  }
+  // --- Aliases for legacy compatibility ---
+  status(label, state) { this.printStatus(label, state); },
+  printSuccess(runtime, scope, stats) { this.printSuccessV2(runtime, scope, stats); }
 };
 
 module.exports = Theme;

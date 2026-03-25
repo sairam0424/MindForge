@@ -1,3 +1,7 @@
+---
+description: Read PLUGINS-MANIFEST.md. Display installed plugins with version and permissions.
+---
+
 # MindForge — Plugins Command
 # Usage: /mindforge:plugins [list|install|uninstall|info|validate|create] [name]
 

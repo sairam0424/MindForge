@@ -1,12 +1,86 @@
 # Changelog
 
+## [2.3.5] — Intelligent Asset Sync & Merge — 2026-03-26
+
+🚀 **MindForge v2.3.5 — Intelligent Asset Sync & Merge**
+
+This release transforms the installation engine from a static "skip if exists" model to an intelligent "Merge & Sync" system, ensuring all framework assets, documentation, and advanced modules are correctly deployed even into existing project environments.
+
+### Added (v2.3.5)
+
+- **Intelligent Merging**: Refactored `copyDir` to support `noOverwrite` mode, allowing the installer to add missing subfolders and templates without disrupting user-customized files.
+- **Advanced Module Sync**: Added explicit path mapping for `memory`, `plugins`, `intelligence`, and `dashboard` modules into the standard installation payload.
+- **Expanded Asset Types**: Upgraded runtime definitions to include `memorySubdir` and `pluginsSubdir` for all supported IDE environments.
+
+### Fixed (v2.3.5)
+
+- **Sync Gating**: Removed restrictive directory existence checks that caused the installer to skip entire asset categories if the parent folder already existed.
+- **Documentation Parity**: Hardened the documentation sync logic to ensure `references/` and `templates/` always reach the `.agents/docs/` target.
+
+## [2.3.4] — Architectural Sync & Zero-GSD Purge — 2026-03-25
+
+### Added (v2.3.4)
+
+- **Comprehensive Planning Sync**: Expanded `.planning` deployment to include `ROADMAP.md`, `ARCHITECTURE.md`, `REQUIREMENTS.md`, and `RELEASE-CHECKLIST.md` by default.
+- **Zero-GSD Standard**: Completed the removal of all "GSD" instances from the installer logic and internal system identifiers.
+
+### Fixed (v2.3.4)
+
+- **Documentation Payload**: Fixed a discrepancy in the path-mapping for documentation subdirectories (`references/`, `templates/`) ensuring they correctly sync into `.agents/docs/`.
+- **Directory Persistence**: Ensured that empty planning subdirectories correctly persist with `.gitkeep` during fresh installations.
+
+## [2.3.3] — Payload Cleanup & Enterprise Pruning — 2026-03-25
+
+🚀 **MindForge v2.3.3 — Payload Cleanup & Enterprise Pruning**
+
+This release strictly prunes the installation payload to remove legacy GSD artifacts, project-specific state, and development-only folders, ensuring a clean "out-of-the-box" enterprise experience.
+
+### Fixed (v2.3.3)
+
+- **Installation Payload**: Removed legacy migration folders (`01-migrate-legacy-to-mindforge`, `day1`, `day2`, `day3`).
+- **State Leakage**: Excluded project-specific state files (`AUDIT.jsonl`, `HANDOFF.json`, `jira-sync.json`, `slack-threads.json`) from distribution.
+- **Enterprise Pruning**: Updated `installer-core.js` to automatically filter out development-only framework folders (e.g., `distribution`, `monorepo`, `production`).
+
+## [2.3.2] — Asset Sync Repair — 2026-03-25
+
+🚀 **MindForge v2.3.2 — Asset Sync Repair**
+
+This release fixes documentation asset synchronization and repairs logic corruption in the installer core.
+
+### Added (v2.3.2)
+
+- **Docs & Templates Sync**: Integrated `docs/references` and `docs/templates` into the standard installation payload.
+- **Recursive Counting**: Implemented deep directory file counting for accurate manifest reporting.
+
+### Fixed (v2.3.2)
+
+- **Installer Logic**: Repaired syntax corruption and removed duplicated code blocks in `installer-core.js`.
+
+## [2.1.2] — Beast Mode Branding & CI Fix — 2026-03-25
+
+🚀 **MindForge v2.1.2 — Beast Mode Branding & CI Fix**
+
+This release transforms the MindForge installation experience with a high-impact "Beast Mode" CLI interface and resolves critical CI/CD integration issues.
+
+### Added (v2.1.2)
+
+- **Beast Mode CLI Branding**: New ultra-blocky ASCII "MINDFORGE" branding and high-contrast "Digital Architect" design system.
+- **Payload Manifest Summary**: Architectural summary screen displaying dynamic counts of deployed Personas, Skills, and Integrations.
+- **"TRY IT NOW" Utility**: Boxed terminal widget providing immediate post-install command guidance.
+- **Enhanced Status Reporting**: Unified architectural status grid for environment detection.
+
+### Fixed (v2.1.2)
+
+- **CI/CD Permissions**: Resolved `RequestError [HttpError]: GitHub Actions is not permitted to create or approve pull requests` by adding `contents: write` to `auto-pr.yml`.
+
 ## [2.1.1] — Core Migration Finalization — 2026-03-25
 
 🧩 **MindForge v2.1.1 — Core Migration Finalization**
 
-This release completes the structural rebranding and migration of the GSD framework into MindForge. It finalizes the path alignment for all 120+ assets, hardens the core configuration management, and fully integrates the expanded persona ecosystem.
+This release completes the structural rebranding and migration of the MindForge framework into MindForge. It finalizes the path alignment for all 120+ assets, hardens the core configuration management, and fully integrates the expanded persona ecosystem.
 
-### Added
+### Added (v2.1.1)
+
 - **Finalized Path Mapping**: All framework assets (skills, workflows, bin) now reside in a unified, flat `.agent/` structure for cross-IDE compatibility.
 - **32-Persona Ecosystem**: Full integration of 32 specialized engineering personas with defined tool permissions and capability matrices.
 - **Unified 4-Pillar Workflow**: Hardened `plan`, `execute`, `verify`, and `ship` logic with project-level `.agent/` integrity.
@@ -14,8 +88,9 @@ This release completes the structural rebranding and migration of the GSD framew
 - **Consolidated Configuration**: Unified framework settings and project-level governance in `.mindforge/` and `.agent/`.
 - **Rebranded Lifecycle Hooks**: 5 new high-performance hooks for context monitoring, prompt guarding, and real-time status updates.
 
-### Changed
-- **Zero-Watermark Integrity**: 100% elimination of residual "GSD" and "get-shit-done" identifiers from codebase, documentation, and metadata.
+### Changed (v2.1.1)
+
+- **Zero-Watermark Integrity**: 100% elimination of residual "MindForge" and "get-shit-done" identifiers from codebase, documentation, and metadata.
 - **Documentation Overhaul**: Modernized the entire documentation suite, including Architecture, Personas, Skills Authoring, and Command References.
 - **Hardened Settings**: `settings.json` now features dynamic hook pathing for increased portability across system environments.
 
@@ -23,7 +98,7 @@ This release completes the structural rebranding and migration of the GSD framew
 
 🧩 **MindForge v2.1.0 — The Specialized Expansion**
 
-This release significantly expands the MindForge persona ecosystem, integrating 18+ high-performance specialized agents from the GSD framework. This expansion doubles the framework's baseline capabilities in research, architecture, execution, and quality assurance.
+This release significantly expands the MindForge persona ecosystem, integrating 18+ high-performance specialized agents from the MindForge framework. This expansion doubles the framework's baseline capabilities in research, architecture, execution, and quality assurance.
 
 ### Added
 - **18+ New Specialized Personas**: Integration of advanced agents including `nyquist-auditor`, `user-profiler`, `advisor-researcher`, `ui-auditor`, and more.
@@ -33,7 +108,7 @@ This release significantly expands the MindForge persona ecosystem, integrating 
 
 ### Changed
 - **Documentation Overhaul**: Complete update of `PERSONAS.md` and `Master-Context.md` to reflect the expanded ecosystem.
-- **Branding Alignment**: All integrated GSD personas rebranded and fully sanitized for MindForge native use.
+- **Branding Alignment**: All integrated MindForge personas rebranded and fully sanitized for MindForge native use.
 
 ---
 
@@ -50,7 +125,7 @@ This major release transforms MindForge from a Claude-centric framework into a u
 - **Unified Migration Engine (v2.0.0)**: Additive schema upgrades for `AUDIT.jsonl` (runtime/agent_id) and `token-usage.jsonl` (model_group).
 - **Hardened Self-Building Skills**: Automated skill capture from documentation and phase outputs.
 - **7-Dimension Quality Scorer**: Enhanced static analysis for skill authoring.
-- **GSD Integration**: 10 new advanced commands for design-first planning, zero-friction capture, and smart routing.
+- **MindForge Integration**: 10 new advanced commands for design-first planning, zero-friction capture, and smart routing.
 - **`/mindforge:do`**: Smart natural language dispatcher that routes intent to the correct command.
 - **`/mindforge:ui-phase` & `/mindforge:ui-review`**: Tier-1 visual design contract and visual audit engine.
 - **`/mindforge:note`**: Instant idea capture with todo promotion.

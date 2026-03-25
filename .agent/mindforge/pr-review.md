@@ -1,3 +1,7 @@
+---
+description: Run the AI PR review engine on a pull request diff.
+---
+
 # MindForge — PR Review Command
 # Usage: /mindforge:pr-review [--diff path] [--sha base..head] [--output github|json|markdown]
 

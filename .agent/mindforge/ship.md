@@ -1,3 +1,7 @@
+---
+description: Create a release PR for a verified phase. Usage: /mindforge:ship [N]
+---
+
 Create a release PR for a verified phase. Usage: /mindforge:ship [N]
 
 ## Pre-check

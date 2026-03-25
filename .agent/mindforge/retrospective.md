@@ -1,3 +1,7 @@
+---
+description: Facilitate a structured retrospective with objective metrics + qualitative insights.
+---
+
 # MindForge — Retrospective Command
 # Usage: /mindforge:retrospective [phase N|milestone M] [--template agile|4ls|starfish]
 

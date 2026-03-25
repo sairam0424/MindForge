@@ -80,7 +80,8 @@ if (IS_NON_INTERACTIVE) {
 }
 
 function printHelp() {
-  Theme.printHeader('MindForge', VERSION);
+  Theme.printHeader(VERSION);
+  Theme.printBrandManifest();
 
   process.stdout.write(`
   ${c.bold('USAGE')}

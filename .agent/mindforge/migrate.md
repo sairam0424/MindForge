@@ -1,3 +1,7 @@
+---
+description: Run explicit schema migrations for .planning/ files.
+---
+
 # MindForge — Migrate Command
 # Usage: /mindforge:migrate [--from X.Y.Z] [--to X.Y.Z] [--dry-run] [--force]
 

@@ -1,3 +1,7 @@
+---
+description: Real-time cost tracking for all AI model usage.
+---
+
 # MindForge v2 — Costs Command
 # Usage: /mindforge:costs [--phase N] [--session ID] [--window 7d]
 

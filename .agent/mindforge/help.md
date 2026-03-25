@@ -1,3 +1,7 @@
+---
+description: Show all available MindForge commands.
+---
+
 Show all available MindForge commands.
 
 ## Pre-check

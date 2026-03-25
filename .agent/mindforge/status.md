@@ -1,3 +1,7 @@
+---
+description: Display a rich dashboard of the current project state.
+---
+
 # MindForge — Status Command
 # Usage: /mindforge:status
 

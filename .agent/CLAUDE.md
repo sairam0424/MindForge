@@ -569,3 +569,17 @@ After every phase that passes all gates:
 - /mindforge:marketplace — discover and install community skills
 
 ---
+
+
+## 🧠 Knowledge Context (Auto-loaded)
+🧠 Knowledge Base — 5 relevant memories loaded:
+  Preferences  : 1
+  Code patterns: 1
+  Domain       : 3
+### Team Preferences
+- [90% confidence] Use Tailwind: Always use Tailwind for CSS.
+
+### Domain Knowledge
+- Auth with JWT: Secure JWT with httpOnly cookies.
+- Global Tip: Always fix lints.
+- Database SQL: Use indexed columns for fast queries.

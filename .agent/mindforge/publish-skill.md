@@ -1,3 +1,7 @@
+---
+description: Publish a skill to the npm registry (or private registry).
+---
+
 # MindForge — Publish Skill Command
 # Usage: /mindforge:publish-skill [skill-dir] [--registry URL] [--dry-run]
 

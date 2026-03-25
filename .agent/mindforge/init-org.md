@@ -1,3 +1,7 @@
+---
+description: Set up MindForge at the organisation level — create standardised org-level
+---
+
 # MindForge — Init Org Command
 # Usage: /mindforge:init-org [--org-name "Name"] [--update]
 

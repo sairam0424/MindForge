@@ -1,3 +1,7 @@
+---
+description: Archive a completed milestone, generate a release report, and prepare the next
+---
+
 Archive a completed milestone, generate a release report, and prepare the next
  milestone. Usage: `/mindforge:complete-milestone <name> <version>`
 

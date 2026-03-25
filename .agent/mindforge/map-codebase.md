@@ -1,3 +1,7 @@
+---
+description: - Joining an existing project that has no MindForge context files
+---
+
 # MindForge — Map Codebase Command
 # Usage: /mindforge:map-codebase [area]
 # Onboards MindForge to an existing (brownfield) codebase.

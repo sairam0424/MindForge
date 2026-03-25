@@ -2,7 +2,7 @@
 
 ## Context
 - **Project**: Weather Proxy API
-- **Framework**: Mind-Forge (GSD)
+- **Framework**: MindForge (MindForge)
 - **Language**: Node.js
 - **Date**: 2026-03-23
 
@@ -13,7 +13,7 @@
 3. **Environment Setup**: Initialized npm project.
 4. **Planning Documentation**: Populated `PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`, and `STATE.md` with Weather Proxy API specifics.
 5. **Registry Setup**: Created `.planning/REGISTRY.md` to map project components and dependencies.
-6. **Framework Alignment**: Verified `.mindforge` structure and ensured compliance with GSD/Mind-Forge standards.
+6. **Framework Alignment**: Verified `.mindforge` structure and ensured compliance with MindForge/MindForge standards.
 7. **Phase 1 Planning**: Generated detailed implementation plan for Phase 1 (API Structure).
 8. **Phase Structure**: Organized phases as: Phase 1 (Structure), Phase 2 (Logic), Phase 3 (Caching).
 
@@ -24,7 +24,7 @@ Based on my research into the framework files:
 Does ./mindforge:init-project exist?
 No and Yes. It does not exist as a literal executable file in your project root (e.g., you cannot run ./mindforge in a standard shell).
 
-However, it definitely exists as a core command within the Mind-Forge agentic framework:
+However, it definitely exists as a core command within the MindForge agentic framework:
 
 It is documented in .mindforge/intelligence/health-engine.md as a required command file (Section 1.1).
 It is a "Production Readiness" gate (B02) in .mindforge/production/production-checklist.md.
@@ -44,7 +44,7 @@ benchmark logs10. **Dashboard Query**: Investigated `/mindforge:dashboard --star
 
 
 
-(base) sairamugge@Administrators-MacBook-Pro-8 Mind-Forge-Test % npx mindforge-cc dashboard --start --open
+(base) sairamugge@Administrators-MacBook-Pro-8 MindForge-Test % npx mindforge-cc dashboard --start --open
 
 Need to install the following packages:14. **Cross-Review Query**: Investigated `/mindforge:cross-review`. Confirmed that no such command exists. The standard review command is `/mindforge:review`.
 mindforge-cc@1.0.5
@@ -71,7 +71,7 @@ TypeError: require(...).main is not a function
     at node:internal/main/run_main_module:33:47
 
 Node.js v24.14.0
-(base) sairamugge@Administrators-MacBook-Pro-8 Mind-Forge-Test % 
+(base) sairamugge@Administrators-MacBook-Pro-8 MindForge-Test % 
 
 ----
 
@@ -101,7 +101,7 @@ No. This command is not defined in the core framework or any of the existing age
 ----
 
 
-(base) sairamugge@Administrators-MacBook-Pro-8 Mind-Forge-Test % npx mindforge-cc@latest --antigravity --global
+(base) sairamugge@Administrators-MacBook-Pro-8 MindForge-Test % npx mindforge-cc@latest --antigravity --global
 Need to install the following packages:
 mindforge-cc@1.0.5
 Ok to proceed? (y) 
@@ -123,13 +123,13 @@ Ok to proceed? (y)
     3. Run: /mindforge:init-project  (new project)
          OR /mindforge:map-codebase  (existing project)
 
-(base) sairamugge@Administrators-MacBook-Pro-8 Mind-Forge-Test % npx mindforge-cc@latest --antigravity --local
+(base) sairamugge@Administrators-MacBook-Pro-8 MindForge-Test % npx mindforge-cc@latest --antigravity --local
 
 ⚡  MindForge v1.0.5 — Enterprise Agentic Framework
 
 
   Runtime : antigravity
-  Scope   : local → /Users/sairamugge/Desktop/Mind-Forge-Test/agents
+  Scope   : local → /Users/sairamugge/Desktop/MindForge-Test/agents
   ✅  CLAUDE.md
   ✅  36 commands
   ✅  .mindforge/ (framework engine)
@@ -145,17 +145,17 @@ Ok to proceed? (y)
     3. Run: /mindforge:init-project  (new project)
          OR /mindforge:map-codebase  (existing project)
 
-(base) sairamugge@Administrators-MacBook-Pro-8 Mind-Forge-Test % cat ~/.mindforge/registry.json
+(base) sairamugge@Administrators-MacBook-Pro-8 MindForge-Test % cat ~/.mindforge/registry.json
 cat: /Users/sairamugge/.mindforge/registry.json: No such file or directory
-(base) sairamugge@Administrators-MacBook-Pro-8 Mind-Forge-Test % ./mindforge:init-project
+(base) sairamugge@Administrators-MacBook-Pro-8 MindForge-Test % ./mindforge:init-project
 zsh: no such file or directory: ./mindforge:init-project
-(base) sairamugge@Administrators-MacBook-Pro-8 Mind-Forge-Test % npx mindforge-cc@latest --antigravity --local
+(base) sairamugge@Administrators-MacBook-Pro-8 MindForge-Test % npx mindforge-cc@latest --antigravity --local
 
 ⚡  MindForge v1.0.5 — Enterprise Agentic Framework
 
 
   Runtime : antigravity
-  Scope   : local → /Users/sairamugge/Desktop/Mind-Forge-Test/agents
+  Scope   : local → /Users/sairamugge/Desktop/MindForge-Test/agents
   ✅  CLAUDE.md
   ✅  36 commands
   ✅  .mindforge/ (framework engine)
