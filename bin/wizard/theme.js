@@ -50,7 +50,7 @@ const Theme = {
       console.log(`  ${this.colors.dim('│')}  ${line.padEnd(74)}  ${this.colors.dim('│')}`);
     });
     console.log(`  ${this.colors.dim('│')}  ${this.colors.bold(this.tagline.padEnd(74))}  ${this.colors.dim('│')}`);
-    console.log(`  ${this.colors.dim('│')}  ${this.colors.dim(`RELEASE v2.1.3`.padEnd(74))}  ${this.colors.dim('│')}`);
+    console.log(`  ${this.colors.dim('│')}  ${this.colors.dim(`RELEASE v${subtitle}`.padEnd(74))}  ${this.colors.dim('│')}`);
     console.log(`  ${this.colors.dim('└' + '─'.repeat(78) + '┘')}\n`);
   },
 
@@ -59,7 +59,7 @@ const Theme = {
    */
   printBrandManifest() {
     console.log(`  ${this.colors.dim('│')}`);
-    console.log(`  ${this.colors.dim('│')}  ${this.colors.green('🎉 V2.1.3 IS HERE!')} Welcome to MindForge V2!`);
+    console.log(`  ${this.colors.dim('│')}  ${this.colors.green('🎉 V2.1.4 IS HERE!')} Welcome to MindForge V2!`);
     console.log(`  ${this.colors.dim('│')}`);
     console.log(`  ${this.colors.dim('│')}  ${this.colors.bold('THE PLATFORM VISION:')}`);
     console.log(`  ${this.colors.dim('│')}    - Unified Enterprise Agentic Ecosystem`);
