@@ -22,6 +22,9 @@ const RUNTIMES = {
     commandsSubdir: 'commands/mindforge',
     entryFile:      'CLAUDE.md',
     supportsSlash:  true,
+    skillsSubdir:   'skills',
+    hooksSubdir:    'hooks',
+    personasSubdir: 'personas',
   },
   antigravity: {
     displayName:    'Antigravity',
@@ -30,6 +33,9 @@ const RUNTIMES = {
     commandsSubdir: 'workflows',
     entryFile:      'CLAUDE.md',
     supportsSlash:  true,
+    skillsSubdir:   'skills',
+    hooksSubdir:    'hooks',
+    personasSubdir: 'personas',
   },
   cursor: {
     displayName:    'Cursor',
@@ -38,6 +44,9 @@ const RUNTIMES = {
     commandsSubdir: 'rules',
     entryFile:      '.cursorrules',
     supportsSlash:  false,
+    skillsSubdir:   'skills',
+    hooksSubdir:    'hooks',
+    personasSubdir: 'personas',
   },
   opencode: {
     displayName:    'OpenCode',
@@ -46,6 +55,9 @@ const RUNTIMES = {
     commandsSubdir: 'commands/mindforge',
     entryFile:      'CLAUDE.md',
     supportsSlash:  true,
+    skillsSubdir:   'skills',
+    hooksSubdir:    'hooks',
+    personasSubdir: 'personas',
   },
   gemini: {
     displayName:    'Gemini CLI',
@@ -54,6 +66,9 @@ const RUNTIMES = {
     commandsSubdir: 'commands/mindforge',
     entryFile:      'GEMINI.md',
     supportsSlash:  true,
+    skillsSubdir:   'skills',
+    hooksSubdir:    'hooks',
+    personasSubdir: 'personas',
   },
   copilot: {
     displayName:    'GitHub Copilot',
@@ -265,8 +280,25 @@ async function install(runtime, scope, options = {}) {
 
   if (dryRun) {
     console.log('\n  Would install:');
-    console.log(`    ${cfg.entryFile} → ${path.join(baseDir, cfg.entryFile)}`);
-    console.log(`    ${fsu.listFiles(src('.claude', 'commands', 'mindforge')).length} commands → ${cmdsDir}`);
+    console.log(`    ${cfg.entryFile.padEnd(12)} → ${path.join(baseDir, cfg.entryFile)}`);
+    
+    const cmdCountStr = `${fsu.listFiles(src('.agent', 'mindforge')).length} commands`.padEnd(12);
+    console.log(`    ${cmdCountStr} → ${cmdsDir}`);
+
+    const assetMappings = [
+      { key: 'skillsSubdir',   src: src('.agent', 'skills'),      label: 'skills' },
+      { key: 'hooksSubdir',    src: src('.agent', 'hooks'),       label: 'hooks' },
+      { key: 'personasSubdir', src: src('.mindforge', 'personas'), label: 'personas' }
+    ];
+
+    assetMappings.forEach(asset => {
+      const subDir = cfg[asset.key];
+      if (subDir && fsu.exists(asset.src)) {
+        const count = fsu.listFiles(asset.src).length;
+        const countStr = `${count} ${asset.label}`.padEnd(12);
+        console.log(`    ${countStr} → ${path.join(baseDir, subDir)}`);
+      }
+    });
     return;
   }
 
@@ -353,6 +385,26 @@ async function install(runtime, scope, options = {}) {
     } else {
       Theme.printResolved(`${c.bold(files.length)} commands`);
     }
+  }
+
+  // ── 2.1 Install Enterprise Assets (Skills, Hooks, Personas) ─────────────────
+  if (scope === 'local' && !selfInstall) {
+    const assetTypes = [
+      { key: 'skillsSubdir',   src: src('.agent', 'skills'),      label: 'skills' },
+      { key: 'hooksSubdir',    src: src('.agent', 'hooks'),       label: 'hooks' },
+      { key: 'personasSubdir', src: src('.mindforge', 'personas'), label: 'personas' }
+    ];
+
+    assetTypes.forEach(asset => {
+      const subDir = cfg[asset.key];
+      if (subDir && fsu.exists(asset.src)) {
+        const dstDir = path.join(baseDir, subDir);
+        fsu.ensureDir(dstDir);
+        // Use copyDir for the whole directory
+        fsu.copyDir(asset.src, dstDir, { excludePatterns: SENSITIVE_EXCLUDE });
+        Theme.printResolved(`${c.bold(asset.label.padEnd(10))} (Enterprise sync)`);
+      }
+    });
   }
 
   // ── 3. Framework files (local scope only, non-self-install) ─────────────────
