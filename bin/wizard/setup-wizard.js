@@ -12,15 +12,8 @@ const IS_INTERACTIVE =
   !ARGS.some((a) => ['--claude', '--antigravity', '--all', '--help'].includes(a)) &&
   process.stdin.isTTY !== false;
 
-const TTY = process.stdout.isTTY;
-const c = {
-  bold: (s) => (TTY ? `\x1b[1m${s}\x1b[0m` : s),
-  cyan: (s) => (TTY ? `\x1b[36m${s}\x1b[0m` : s),
-  green: (s) => (TTY ? `\x1b[32m${s}\x1b[0m` : s),
-  yellow: (s) => (TTY ? `\x1b[33m${s}\x1b[0m` : s),
-  red: (s) => (TTY ? `\x1b[31m${s}\x1b[0m` : s),
-  dim: (s) => (TTY ? `\x1b[2m${s}\x1b[0m` : s),
-};
+const Theme = require('./theme');
+const c = Theme.colors;
 
 function createReadline() {
   return readline.createInterface({
@@ -74,14 +67,12 @@ function askMultiChoice(rl, q, choices) {
 }
 
 function printBanner() {
-  console.log('');
-  console.log(c.bold(c.cyan('  MindForge Setup Wizard')));
-  console.log(c.dim(`  v${VERSION}`));
-  console.log('');
+  Theme.printHeader('MindForge Setup Wizard', VERSION);
+  Theme.printFeatures();
 }
 
 async function detectEnvironment() {
-  console.log(c.bold('  Detecting environment...\n'));
+  Theme.status(c.bold('Detecting environment...'), 'info');
   const env = await detector.detect();
   const rows = [
     ['Runtime(s)', env.runtimes.join(', ') || 'none'],
@@ -91,7 +82,7 @@ async function detectEnvironment() {
     ['Package manager', env.packageManager],
     ['Existing MindForge', env.existingInstall ? `yes (${env.existingVersion})` : 'no'],
   ];
-  rows.forEach(([k, v]) => console.log(`  ${c.dim(k.padEnd(20))} ${v}`));
+  rows.forEach(([k, v]) => console.log(`    ${c.dim(k.padEnd(20))} ${v}`));
   console.log('');
   return env;
 }
@@ -168,18 +159,14 @@ async function install(runtimes, scope, options = {}) {
 }
 
 function printNextSteps(runtimes, scope, credGuidance = []) {
-  console.log('');
-  console.log(c.bold(c.green('  Setup complete')));
-  console.log(`  Runtime: ${runtimes.join(', ')}`);
-  console.log(`  Scope: ${scope}`);
-  console.log('  Next: run /mindforge:health');
+  Theme.printSuccess(runtimes.join(', '), scope);
 
   if (credGuidance.length > 0) {
-    console.log(c.bold('\n  Configure credentials:\n'));
+    console.log(c.bold('  CONFIGURE CREDENTIALS\n'));
     credGuidance.forEach((g) => {
-      console.log(`  ${c.cyan(g.service)}`);
-      console.log(`    ${g.instruction} (${g.envVar})`);
-      console.log(c.dim(`    Docs: ${g.url}\n`));
+      console.log(`    ${c.cyan(Theme.chars.bullet)} ${c.bold(g.service)}`);
+      console.log(`      ${g.instruction} (${c.yellow(g.envVar)})`);
+      console.log(`      ${c.dim(`Docs: ${g.url}`)}\n`);
     });
   }
 }
