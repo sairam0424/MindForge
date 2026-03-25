@@ -638,6 +638,20 @@ The MF-Series represents the "Core Essence" of the MindForge agentic framework. 
 
 ---
 
+### Invocation Matrix
+
+MindForge identities can be invoked through multiple channels depending on your environment.
+
+| Method | Syntax | Use Case |
+| :--- | :--- | :--- |
+| **In-IDE (Command)** | `/mindforge:agent <name>` | Quick task delegation while coding. |
+| **In-IDE (Persona)** | Use `mf-planner` etc. | Specialized logic for complex phases. |
+| **CLI (Execution)** | `mindforge-cli spawn <name>` | CI/CD pipelines and remote execution. |
+| **CLI (Identity)** | `mindforge-cli identity <role>` | Direct loading of specialized research identities. |
+| **Shell (Global)** | `mindforge <command>` | Fast access from any terminal directory. |
+
+---
+
 | Persona | Read | Write | Bash | Grep | Glob | CmdStatus | Browser | Terminal | Context7 |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Analyst** | ✓ | ✓ | ✓ | ✓ | | | | | |
