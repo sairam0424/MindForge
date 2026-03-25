@@ -1,3 +1,7 @@
+---
+description: Generate and maintain team/developer profiles for response personalization.
+---
+
 # MindForge — Profile Team Command
 # Usage: /mindforge:profile-team [--refresh] [--developer email] [--questionnaire]
 

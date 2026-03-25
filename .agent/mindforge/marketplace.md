@@ -1,3 +1,7 @@
+---
+description: Discover, evaluate, and install community-published MindForge skills from the
+---
+
 # MindForge v2 — Marketplace Command
 # Usage: /mindforge:marketplace [search|featured|trending|install|publish]
 # Version: v2.0.0-alpha.6

@@ -1,3 +1,7 @@
+---
+description: Query .planning/AUDIT.jsonl by phase, event, date, severity, integration, or
+---
+
 Query `.planning/AUDIT.jsonl` by phase, event, date, severity, integration, or
  agent. Usage: `/mindforge:audit [filters]`
 

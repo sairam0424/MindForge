@@ -1,3 +1,7 @@
+---
+description: Display session and phase quality trends with early warning signals.
+---
+
 # MindForge — Metrics Command
 # Usage: /mindforge:metrics [--phase N] [--window short|medium|long] [--export path]
 

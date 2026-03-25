@@ -1,3 +1,7 @@
+---
+description: Process pending approvals and emergency overrides. Usage:
+---
+
 Process pending approvals and emergency overrides. Usage:
 `/mindforge:approve [approval-id] [--approve|--reject] [--reason "..."] [--emergency]`
 

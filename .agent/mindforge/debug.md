@@ -1,3 +1,7 @@
+---
+description: Systematic debugging using the Debug Specialist persona with full RCA protocol.
+---
+
 # MindForge — Debug Command
 # Usage: /mindforge:debug [description]
 

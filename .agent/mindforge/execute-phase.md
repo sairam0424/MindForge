@@ -1,3 +1,7 @@
+---
+description: 1. Read STATE.md — confirm phase [N] is in "planned" status.
+---
+
 # MindForge — Execute Phase Command
 # Usage: /mindforge:execute-phase [N]
 

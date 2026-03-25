@@ -1,3 +1,7 @@
+---
+description: @mindforge browse <url | action>
+---
+
 # /mindforge:browse
 
 ## Usage

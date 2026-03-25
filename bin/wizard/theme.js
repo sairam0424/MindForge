@@ -59,7 +59,7 @@ const Theme = {
    */
   printBrandManifest() {
     console.log(`  ${this.colors.dim('│')}`);
-    console.log(`  ${this.colors.dim('│')}  ${this.colors.green('🎉 V2.2.0 IS HERE!')} Welcome to MindForge V2!`);
+    console.log(`  ${this.colors.dim('│')}  ${this.colors.green('🎉 V2.3.0 IS HERE!')} Welcome to MindForge V2!`);
     console.log(`  ${this.colors.dim('│')}`);
     console.log(`  ${this.colors.dim('│')}  ${this.colors.bold('THE PLATFORM VISION:')}`);
     console.log(`  ${this.colors.dim('│')}    - Unified Enterprise Agentic Ecosystem`);

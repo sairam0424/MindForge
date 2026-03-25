@@ -1,3 +1,7 @@
+---
+description: Show all available FORGE commands and what they do.
+---
+
 Show all available FORGE commands and what they do.
 
 List every .md file in .claude/commands/forge/ and display:

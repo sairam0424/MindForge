@@ -104,6 +104,31 @@ function generateEntryContent(runtime, sourceContent) {
   return sourceContent;
 }
 
+/**
+ * Extract an enterprise-grade description from command markdown.
+ * Prioritizes YAML frontmatter 'description' field, then falls back to first non-empty text.
+ */
+function getCommandDescription(content) {
+  // Check for YAML frontmatter
+  const frontmatterMatch = content.match(/^---\s*\n([\s\S]*?)\n---\s*\n/);
+  if (frontmatterMatch) {
+    const frontmatter = frontmatterMatch[1];
+    const descMatch = frontmatter.match(/^description:\s*(.*)$/m);
+    if (descMatch) return descMatch[1].trim();
+  }
+
+  // Fallback to first non-empty, non-header line
+  const lines = content.split('\n');
+  for (let line of lines) {
+    line = line.trim();
+    if (line && !line.startsWith('#') && !line.startsWith('---')) {
+      return line.length > 100 ? line.substring(0, 97) + '...' : line;
+    }
+  }
+
+  return 'No description available';
+}
+
 // ── File system utilities ─────────────────────────────────────────────────────
 const fsu = {
   exists:     p  => fs.existsSync(p),
@@ -350,40 +375,59 @@ async function install(runtime, scope, options = {}) {
   }
 
   // ── 2. Install commands ─────────────────────────────────────────────────────
-  const cmdSrc = runtime === 'claude'
-    ? src('.claude', 'commands', 'mindforge')
-    : src('.agent', 'mindforge');
+  const cmdSources = [
+    { src: src('.agent', 'mindforge'), namespace: 'mindforge' },
+    { src: src('.agent', 'forge'),     namespace: 'forge' }
+  ];
 
-  if (fsu.exists(cmdSrc)) {
+  if (runtime === 'claude') {
+    // Claude Code specifically looks in .claude/commands/mindforge
+    cmdSources.length = 0;
+    cmdSources.push({ src: src('.claude', 'commands', 'mindforge'), namespace: 'mindforge' });
+  }
+
+  let totalCount = 0;
+  cmdSources.forEach(source => {
+    if (!fsu.exists(source.src)) return;
+
+    const files = fsu.listFiles(source.src).filter(f => f.endsWith('.md'));
+    totalCount += files.length;
     fsu.ensureDir(cmdsDir);
-    const files = fsu.listFiles(cmdSrc).filter(f => f.endsWith('.md'));
-    // Install for specific runtime
+
     files.forEach(f => {
-      const targetName = runtime === 'antigravity' ? `mindforge:${f}` : f;
-      const srcPath = path.join(cmdSrc, f);
+      // Logic for naming: antigravity uses namespace:prefix, others use just the file name
+      const targetName = runtime === 'antigravity' ? `${source.namespace}:${f}` : f;
+      const srcPath = path.join(source.src, f);
       const dstPath = path.join(cmdsDir, targetName);
 
       if (runtime === 'antigravity') {
         const content = fsu.read(srcPath);
-        const firstLine = content.split('\n')[0].trim();
-        // Mandatory Antigravity frontmatter metadata
-        const metadata = `---\ndescription: ${firstLine}\n---\n`;
-        fsu.write(dstPath, metadata + content);
+        const description = getCommandDescription(content);
+        const metadata = `---\ndescription: ${description}\n---\n`;
+        
+        // Strip existing frontmatter from source when injecting into Antigravity
+        const cleanContent = content.replace(/^---\s*\n[\s\S]*?\n---\s*\n/, '');
+        fsu.write(dstPath, metadata + cleanContent);
       } else {
         fsu.copy(srcPath, dstPath);
       }
     });
 
-    // ✨ STANDARD: Mirror to .claude/commands for cross-IDE compatibility (Cursor/Windsurf/Claude Code)
+    // Mirror to .claude/commands for cross-IDE compatibility (Cursor/Windsurf/Claude Code)
     if (scope === 'local' && runtime !== 'claude' && !selfInstall) {
-      const standardCmdDir = path.join(process.cwd(), '.claude', 'commands', 'mindforge');
+      const standardCmdDir = path.join(process.cwd(), '.claude', 'commands', source.namespace);
       fsu.ensureDir(standardCmdDir);
       files.forEach(f => {
-        fsu.copy(path.join(cmdSrc, f), path.join(standardCmdDir, f));
+        fsu.copy(path.join(source.src, f), path.join(standardCmdDir, f));
       });
-      Theme.printResolved(`${c.bold(files.length)} commands (Mirrored to .claude/commands/mindforge/)`);
+    }
+  });
+
+  if (totalCount > 0) {
+    if (scope === 'local' && runtime !== 'claude' && !selfInstall) {
+      Theme.printResolved(`${c.bold(totalCount)} commands (Mirrored to .claude/commands/)`);
     } else {
-      Theme.printResolved(`${c.bold(files.length)} commands`);
+      Theme.printResolved(`${c.bold(totalCount)} commands`);
     }
   }
 

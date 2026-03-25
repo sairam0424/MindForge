@@ -1,3 +1,7 @@
+---
+description: Human acceptance testing for a completed phase. Usage: /mindforge:verify-phase [N]
+---
+
 Human acceptance testing for a completed phase. Usage: /mindforge:verify-phase [N]
 
 ## Pre-check

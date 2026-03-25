@@ -1,3 +1,7 @@
+---
+description: Publish approved planning artifacts to Confluence. Usage:
+---
+
 Publish approved planning artifacts to Confluence. Usage:
 `/mindforge:sync-confluence [--architecture] [--phase N] [--milestone name]`
 

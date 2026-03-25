@@ -1,3 +1,7 @@
+---
+description: Initialise a new project under the MindForge framework.
+---
+
 Initialise a new project under the MindForge framework.
 
 ## Pre-check

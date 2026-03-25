@@ -1,3 +1,7 @@
+---
+description: Create or update a milestone definition in .planning/milestones/ and track the
+---
+
 Create or update a milestone definition in `.planning/milestones/` and track the
  health of grouped phases. Usage: `/mindforge:milestone <name> [phase list]`
 

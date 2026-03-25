@@ -1,3 +1,7 @@
+---
+description: Auto-detect the current project state and execute the appropriate next step.
+---
+
 # MindForge — Next Command
 # Usage: /mindforge:next
 

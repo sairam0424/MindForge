@@ -1,3 +1,7 @@
+---
+description: Convert any knowledge source into a reusable, validated, committed MindForge SKILL.md.
+---
+
 # MindForge v2 — Learn Command
 # Usage: /mindforge:learn [url|path|--session|npm:package] [--name skill-name] [--tier project|org|core]
 # Version: v2.0.0-alpha.6

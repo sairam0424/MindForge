@@ -1,3 +1,7 @@
+---
+description: Check for and apply MindForge framework updates in a safe, scope-preserving way.
+---
+
 # MindForge — Update Command
 # Usage: /mindforge:update [--apply] [--force] [--check] [--skip-changelog]
 

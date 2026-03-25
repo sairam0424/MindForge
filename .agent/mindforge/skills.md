@@ -1,3 +1,7 @@
+---
+description: /mindforge:skills list
+---
+
 # MindForge — Skills Command
 # Usage: /mindforge:skills [subcommand] [args]
 # Subcommands: list | add | update | validate | info | search

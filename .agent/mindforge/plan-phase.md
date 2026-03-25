@@ -1,3 +1,7 @@
+---
+description: Plan a project phase. Usage: /mindforge:plan-phase [N]
+---
+
 Plan a project phase. Usage: /mindforge:plan-phase [N]
 
 ## Pre-check

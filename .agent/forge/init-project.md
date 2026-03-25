@@ -1,3 +1,7 @@
+---
+description: Initialize a new project under the FORGE framework.
+---
+
 Initialize a new project under the FORGE framework.
 
 Follow these steps in order:

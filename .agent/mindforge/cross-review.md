@@ -1,3 +1,7 @@
+---
+description: Get the same code diff reviewed by multiple AI models simultaneously.
+---
+
 # MindForge v2 — Cross-Review Command
 # Usage: /mindforge:cross-review [--phase N] [--models list] [--focus area]
 

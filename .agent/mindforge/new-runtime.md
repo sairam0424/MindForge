@@ -1,3 +1,7 @@
+---
+description: Scaffold support for a new AI coding runtime.
+---
+
 # /mindforge:new-runtime
 
 Scaffold support for a new AI coding runtime.

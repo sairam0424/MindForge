@@ -1,3 +1,7 @@
+---
+description: Measure skill effectiveness over time.
+---
+
 # MindForge — Benchmark Command
 # Usage: /mindforge:benchmark [--skill skill-name] [--compare skill-a skill-b]
 

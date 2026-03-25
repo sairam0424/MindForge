@@ -1,3 +1,7 @@
+---
+description: Run all seven health-engine categories from .mindforge/intelligence/health-engine.md.
+---
+
 # MindForge — Health Command
 # Usage: /mindforge:health [--repair] [--category C] [--verbose]
 
