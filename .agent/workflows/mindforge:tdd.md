@@ -8,7 +8,7 @@ Execute a strict Test-Driven Development (TDD) loop using the Red-Green-Refactor
 </instruction>
 
 <context>
-Follow the specialized MindForge TDD standards defined in [.agent/skills/mindforge-tdd/SKILL.md](file:///Users/sairamugge/Desktop/MindForge/.agent/skills/mindforge-tdd/SKILL.md).
+Follow the specialized MindForge TDD standards defined in [.agent/skills/mindforge-tdd/SKILL.md](.agent/skills/mindforge-tdd/SKILL.md).
 </context>
 
 <rules>
@@ -26,11 +26,11 @@ Follow the specialized MindForge TDD standards defined in [.agent/skills/mindfor
 </process>
 
 <supporting_documents>
-- [Deep Modules](file:///Users/sairamugge/Desktop/MindForge/.agent/skills/mindforge-tdd/deep-modules.md)
-- [Interface Design](file:///Users/sairamugge/Desktop/MindForge/.agent/skills/mindforge-tdd/interface-design.md)
-- [Mocking Strategies](file:///Users/sairamugge/Desktop/MindForge/.agent/skills/mindforge-tdd/mocking.md)
-- [Refactoring Guide](file:///Users/sairamugge/Desktop/MindForge/.agent/skills/mindforge-tdd/refactoring.md)
-- [Test Infrastructure](file:///Users/sairamugge/Desktop/MindForge/.agent/skills/mindforge-tdd/tests.md)
+- [Deep Modules](.agent/skills/mindforge-tdd/deep-modules.md)
+- [Interface Design](.agent/skills/mindforge-tdd/interface-design.md)
+- [Mocking Strategies](.agent/skills/mindforge-tdd/mocking.md)
+- [Refactoring Guide](.agent/skills/mindforge-tdd/refactoring.md)
+- [Test Infrastructure](.agent/skills/mindforge-tdd/tests.md)
 </supporting_documents>
 
 <output_format>

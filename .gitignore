@@ -30,3 +30,6 @@ coverage/
 temp-test-install/
 # Husky
 .husky/_
+
+.agents/
+.claude/

@@ -8,7 +8,7 @@ Architect robust systems with clear boundaries, explicit trade-offs, and justifi
 </instruction>
 
 <context>
-Follow the architectural governance defined in [.agent/skills/mindforge-system-architecture/SKILL.md](file:///Users/sairamugge/Desktop/MindForge/.agent/skills/mindforge-system-architecture/SKILL.md).
+Follow the architectural governance defined in [.agent/skills/mindforge-system-architecture/SKILL.md](.agent/skills/mindforge-system-architecture/SKILL.md).
 </context>
 
 <rules>
@@ -22,13 +22,13 @@ Follow the architectural governance defined in [.agent/skills/mindforge-system-a
 1.  **Constraint Analysis**: Clarify scale, team size, and system lifespan.
 2.  **Domain Mapping**: Identify core entities and their relationships.
 3.  **Data Flow Design**: Map end-to-end flows and state transitions.
-4.  **Complexity Audit**: Run the [Scaling Checklist](file:///Users/sairamugge/Desktop/MindForge/.agent/skills/mindforge-system-architecture/scaling-checklist.md) to eliminate over-engineering.
+4.  **Complexity Audit**: Run the [Scaling Checklist](.agent/skills/mindforge-system-architecture/scaling-checklist.md) to eliminate over-engineering.
 5.  **Trade-off Matrix**: Document selected approach vs. alternatives with pros/cons.
 </process>
 
 <supporting_documents>
-- [Architecture Examples](file:///Users/sairamugge/Desktop/MindForge/.agent/skills/mindforge-system-architecture/examples.md)
-- [Complexity Checklist](file:///Users/sairamugge/Desktop/MindForge/.agent/skills/mindforge-system-architecture/scaling-checklist.md)
+- [Architecture Examples](.agent/skills/mindforge-system-architecture/examples.md)
+- [Complexity Checklist](.agent/skills/mindforge-system-architecture/scaling-checklist.md)
 </supporting_documents>
 
 <output_format>
