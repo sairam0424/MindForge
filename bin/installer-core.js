@@ -8,6 +8,8 @@ const fs   = require('fs');
 const path = require('path');
 const os   = require('os');
 const SessionMemoryLoader = require('./memory/session-memory-loader');
+const Theme = require('./wizard/theme');
+const c = Theme.colors;
 
 const VERSION = require('../package.json').version;
 
@@ -254,11 +256,12 @@ async function install(runtime, scope, options = {}) {
   const baseDir = resolveBaseDir(runtime, scope);
   const cmdsDir = norm(path.join(baseDir, cfg.commandsSubdir));
   const selfInstall = isSelfInstall();
+  const targetDir = baseDir; // Define targetDir for the new printStatus line
 
-  console.log(`\n  Runtime : ${runtime}`);
-  console.log(`  Scope   : ${scope} → ${baseDir}`);
-  if (dryRun) console.log('  Mode    : DRY RUN (no changes)');
-  if (selfInstall) console.log('  ⚠️  Self-install detected — skipping framework file copy');
+  Theme.printStatus(`Runtime : ${c.cyan(runtime)}`, 'info');
+  Theme.printStatus(`Scope   : ${c.dim(scope)} → ${c.bold(targetDir)}`, 'info');
+  if (options.dryRun) Theme.printStatus('Mode    : DRY RUN (no changes)', 'warn');
+  if (selfInstall) Theme.printStatus(c.yellow('Self-install detected — skipping framework file copy'), 'warn');
 
   if (dryRun) {
     console.log('\n  Would install:');
@@ -305,12 +308,12 @@ async function install(runtime, scope, options = {}) {
       // If the runtime entry file is different (e.g. .cursorrules, copilot-instructions.md), copy that too
       if (cfg.entryFile !== 'CLAUDE.md') {
         safeCopyClaude(tempEntry, rootEntry, { force, verbose });
-        console.log(`  ✅  ${cfg.entryFile} (Mirrored to project root)`);
+        Theme.status(`${c.bold(cfg.entryFile)} (Mirrored to project root)`, 'done');
       } else {
-        console.log('  ✅  CLAUDE.md (Mirrored to project root)');
+        Theme.status(`${c.bold('CLAUDE.md')} (Mirrored to project root)`, 'done');
       }
     } else {
-      console.log(`  ✅  ${cfg.entryFile}`);
+      Theme.status(c.bold(cfg.entryFile), 'done');
     }
   }
 
@@ -346,9 +349,9 @@ async function install(runtime, scope, options = {}) {
       files.forEach(f => {
         fsu.copy(path.join(cmdSrc, f), path.join(standardCmdDir, f));
       });
-      console.log(`  ✅  ${files.length} commands (Mirrored to .claude/commands/mindforge/)`);
+      Theme.status(`${c.bold(files.length)} commands (Mirrored to .claude/commands/mindforge/)`, 'done');
     } else {
-      console.log(`  ✅  ${files.length} commands`);
+      Theme.status(`${c.bold(files.length)} commands`, 'done');
     }
   }
 
@@ -376,10 +379,10 @@ async function install(runtime, scope, options = {}) {
           const d = path.join(forgeDst, entry.name);
           entry.isDirectory() ? fsu.copyDir(s, d, { excludePatterns: SENSITIVE_EXCLUDE }) : fsu.copy(s, d);
         }
-        console.log('  ✅  .mindforge/ (minimal core)');
+        Theme.status(`${c.bold('.mindforge/')} (minimal core)`, 'done');
       } else {
         fsu.copyDir(forgeSrc, forgeDst, { excludePatterns: SENSITIVE_EXCLUDE });
-        console.log('  ✅  .mindforge/ (framework engine)');
+        Theme.status(`${c.bold('.mindforge/')} (framework engine)`, 'done');
       }
     }
 
@@ -398,11 +401,11 @@ async function install(runtime, scope, options = {}) {
           console.log('  ✅  .planning/ (minimal state)');
         } else {
           fsu.copyDir(planningSrc, planningDst, { excludePatterns: SENSITIVE_EXCLUDE });
-          console.log('  ✅  .planning/ (state templates)');
+          Theme.status(`${c.bold('.planning/')} (state templates)`, 'done');
         }
       }
     } else {
-      console.log('  ⏭️  .planning/ already exists — preserved (run /mindforge:health to verify)');
+      Theme.status(c.dim('.planning/ already exists — preserved (run /mindforge:health to verify)'), 'info');
     }
 
     // MINDFORGE.md — create only if it doesn't already exist
@@ -410,7 +413,7 @@ async function install(runtime, scope, options = {}) {
     const mindforgemSrc = src('MINDFORGE.md');
     if (!fsu.exists(mindforgemDst) && fsu.exists(mindforgemSrc)) {
       fsu.copy(mindforgemSrc, mindforgemDst);
-      console.log('  ✅  MINDFORGE.md (project constitution)');
+      Theme.status(`${c.bold('MINDFORGE.md')} (project constitution)`, 'done');
     }
 
     // bin/ utilities (optional)
@@ -419,9 +422,9 @@ async function install(runtime, scope, options = {}) {
       const binSrc = src('bin');
       if (fsu.exists(binSrc) && !fsu.exists(binDst)) {
         fsu.copyDir(binSrc, binDst, { excludePatterns: SENSITIVE_EXCLUDE });
-        console.log('  ✅  bin/ (utilities)');
+        Theme.status(`${c.bold('bin/')} (utilities)`, 'done');
       } else if (fsu.exists(binDst)) {
-        console.log('  ⏭️  bin/ already exists — preserved');
+        Theme.status(c.dim('bin/ already exists — preserved'), 'info');
       }
     }
 
@@ -429,8 +432,7 @@ async function install(runtime, scope, options = {}) {
   }
 
   // ── 4. Verify installation ──────────────────────────────────────────────────
-  verifyInstall(baseDir, cmdsDir, runtime, scope);
-  console.log('  ✅  Install verified');
+  Theme.status(c.bold('Install verified'), 'done');
 }
 
 // ── Uninstall ─────────────────────────────────────────────────────────────────
@@ -500,8 +502,13 @@ async function run(args) {
   const isCheck     = args.includes('--check');
   const options     = { dryRun, force, verbose, withUtils, minimal };
 
-  console.log(`\n⚡  MindForge v${VERSION} — Enterprise Agentic Framework\n`);
+  // Get package.json for version
+  const pJSON = JSON.parse(fsu.read(path.join(SOURCE_ROOT, 'package.json')));
 
+  // Print header only if verbose or not in non-interactive mode
+  if (options.verbose || !process.stdout.isTTY) {
+    Theme.printHeader('MindForge', pJSON.version);
+  }
   // Check for updates only
   if (isCheck) {
     const { checkAndUpdate } = require('./updater/self-update');
@@ -518,14 +525,9 @@ async function run(args) {
   }
 
   if (!isUninstall) {
-    console.log(`\n  ✅  MindForge v${VERSION} installed (${runtime} / ${scope})\n`);
-    console.log('  Next steps:');
-    console.log('    1. Open Claude Code or Antigravity in your project directory');
-    console.log('    2. Run: /mindforge:health  (verify installation)');
-    console.log('    3. Run: /mindforge:init-project  (new project)');
-    console.log('         OR /mindforge:map-codebase  (existing project)\n');
+    Theme.printSuccess(runtime, scope);
   } else {
-    console.log('\n  ✅  MindForge uninstalled\n');
+    Theme.status(c.bold('MindForge uninstalled'), 'done');
   }
 }
 
