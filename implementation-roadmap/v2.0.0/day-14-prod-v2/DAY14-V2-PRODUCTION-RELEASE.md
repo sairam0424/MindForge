@@ -2235,7 +2235,7 @@ git push origin feat/mindforge-v2-release
 > autonomously capable. Everything else is either enterprise without autonomy,
 > or autonomous without enterprise."**
 
-| Capability | MindForge v2 | GSD v2 | BMAD v6 | Superpowers | gstack |
+| Capability | MindForge v2 | MindForge v2 | BMAD v6 | Superpowers | gstack |
 |---|---|---|---|---|---|
 | Autonomous walk-away mode | ✅✅ | ✅ | ❌ | ❌ | ❌ |
 | Node repair / stuck recovery | ✅✅ | ✅ | ❌ | ❌ | ❌ |

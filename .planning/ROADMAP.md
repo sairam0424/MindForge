@@ -1,5 +1,6 @@
+# MindForge Roadmap
 
-### Phase 1: Migrate GSD to MindForge
+### Phase 1: MindForge Enterprise Stabilization
 
 **Goal:** [To be planned]
 **Requirements**: TBD
@@ -7,4 +8,5 @@
 **Plans:** 0 plans
 
 Plans:
+
 - [ ] TBD (run /mindforge-plan-phase 1 to break down)

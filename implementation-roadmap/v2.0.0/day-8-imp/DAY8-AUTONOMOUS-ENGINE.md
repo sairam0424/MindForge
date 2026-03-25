@@ -34,7 +34,7 @@ git checkout -b feat/mindforge-v2-autonomous-engine
 
 Day 8 is the **Autonomous Execution Engine** — the single most impactful feature
 addition in MindForge v2. This is what closes the biggest competitive gap
-(GSD v2's `/gsd auto`) while adding capabilities that go well beyond what any
+(MindForge v2's `/mindforge auto`) while adding capabilities that go well beyond what any
 other framework in the ecosystem offers.
 
 The goal: **You describe the phase. You walk away. You come back to a committed,
@@ -43,13 +43,13 @@ completed without your input.**
 
 | Component | Description | Competitive benchmark |
 |---|---|---|
-| `/mindforge:auto` command | Walk-away autonomous phase execution | Exceeds GSD v2's `/gsd auto` |
+| `/mindforge:auto` command | Walk-away autonomous phase execution | Exceeds MindForge v2's `/mindforge auto` |
 | Auto-mode execution engine | Fresh-context subagent per task, wave-aware | Unique to MindForge |
-| Node repair operator | RETRY → DECOMPOSE → PRUNE → ESCALATE | Matches GSD v2 node repair |
+| Node repair operator | RETRY → DECOMPOSE → PRUNE → ESCALATE | Matches MindForge v2 node repair |
 | Stuck detection engine | 5 stuck patterns with automatic responses | Unique to MindForge |
 | Dual-terminal steering model | `.planning/steering-queue.jsonl` | Unique to MindForge |
 | `/mindforge:steer` command | Mid-execution guidance injection | Unique to MindForge |
-| Headless CLI mode | `mindforge-cc headless` for CI pipelines | Matches GSD v2 headless |
+| Headless CLI mode | `mindforge-cc headless` for CI pipelines | Matches MindForge v2 headless |
 | Progress persistence | HANDOFF.json written after every task | MindForge-native |
 | Autonomous report | `AUTONOMOUS-REPORT-[phase]-[ts].md` | Unique to MindForge |
 | MINDFORGE.md v2 settings | Full autonomous mode configuration | Unique to MindForge |

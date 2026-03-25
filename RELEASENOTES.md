@@ -2,7 +2,7 @@
 
 ## Top Summary
 
-MindForge v2.1.1 is a major structural update that finalizes the migration of the GSD framework into the MindForge ecosystem. This release establishes a unified `.agent/` asset structure, expands the persona count from 8 to 32+, and hardens the 4-pillar workflow (`plan`, `execute`, `verify`, `ship`) for enterprise-scale AI orchestration.
+MindForge v2.1.1 is a major structural update that finalizes the migration of the MindForge framework into the MindForge ecosystem. This release establishes a unified `.agent/` asset structure, expands the persona count from 8 to 32+, and hardens the 4-pillar workflow (`plan`, `execute`, `verify`, `ship`) for enterprise-scale AI orchestration.
 
 ## Highlights
 

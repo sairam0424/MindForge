@@ -19,7 +19,7 @@ This release transforms the MindForge installation experience with a high-impact
 
 🧩 **MindForge v2.1.1 — Core Migration Finalization**
 
-This release completes the structural rebranding and migration of the GSD framework into MindForge. It finalizes the path alignment for all 120+ assets, hardens the core configuration management, and fully integrates the expanded persona ecosystem.
+This release completes the structural rebranding and migration of the MindForge framework into MindForge. It finalizes the path alignment for all 120+ assets, hardens the core configuration management, and fully integrates the expanded persona ecosystem.
 
 ### Added
 - **Finalized Path Mapping**: All framework assets (skills, workflows, bin) now reside in a unified, flat `.agent/` structure for cross-IDE compatibility.
@@ -30,7 +30,7 @@ This release completes the structural rebranding and migration of the GSD framew
 - **Rebranded Lifecycle Hooks**: 5 new high-performance hooks for context monitoring, prompt guarding, and real-time status updates.
 
 ### Changed
-- **Zero-Watermark Integrity**: 100% elimination of residual "GSD" and "get-shit-done" identifiers from codebase, documentation, and metadata.
+- **Zero-Watermark Integrity**: 100% elimination of residual "MindForge" and "get-shit-done" identifiers from codebase, documentation, and metadata.
 - **Documentation Overhaul**: Modernized the entire documentation suite, including Architecture, Personas, Skills Authoring, and Command References.
 - **Hardened Settings**: `settings.json` now features dynamic hook pathing for increased portability across system environments.
 
@@ -38,7 +38,7 @@ This release completes the structural rebranding and migration of the GSD framew
 
 🧩 **MindForge v2.1.0 — The Specialized Expansion**
 
-This release significantly expands the MindForge persona ecosystem, integrating 18+ high-performance specialized agents from the GSD framework. This expansion doubles the framework's baseline capabilities in research, architecture, execution, and quality assurance.
+This release significantly expands the MindForge persona ecosystem, integrating 18+ high-performance specialized agents from the MindForge framework. This expansion doubles the framework's baseline capabilities in research, architecture, execution, and quality assurance.
 
 ### Added
 - **18+ New Specialized Personas**: Integration of advanced agents including `nyquist-auditor`, `user-profiler`, `advisor-researcher`, `ui-auditor`, and more.
@@ -48,7 +48,7 @@ This release significantly expands the MindForge persona ecosystem, integrating 
 
 ### Changed
 - **Documentation Overhaul**: Complete update of `PERSONAS.md` and `Master-Context.md` to reflect the expanded ecosystem.
-- **Branding Alignment**: All integrated GSD personas rebranded and fully sanitized for MindForge native use.
+- **Branding Alignment**: All integrated MindForge personas rebranded and fully sanitized for MindForge native use.
 
 ---
 
@@ -65,7 +65,7 @@ This major release transforms MindForge from a Claude-centric framework into a u
 - **Unified Migration Engine (v2.0.0)**: Additive schema upgrades for `AUDIT.jsonl` (runtime/agent_id) and `token-usage.jsonl` (model_group).
 - **Hardened Self-Building Skills**: Automated skill capture from documentation and phase outputs.
 - **7-Dimension Quality Scorer**: Enhanced static analysis for skill authoring.
-- **GSD Integration**: 10 new advanced commands for design-first planning, zero-friction capture, and smart routing.
+- **MindForge Integration**: 10 new advanced commands for design-first planning, zero-friction capture, and smart routing.
 - **`/mindforge:do`**: Smart natural language dispatcher that routes intent to the correct command.
 - **`/mindforge:ui-phase` & `/mindforge:ui-review`**: Tier-1 visual design contract and visual audit engine.
 - **`/mindforge:note`**: Instant idea capture with todo promotion.

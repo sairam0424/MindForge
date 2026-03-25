@@ -319,7 +319,7 @@ See `.mindforge/production/token-optimiser.md`.
 
 ## What's new in v2.1.1
 - **Unified 4-Pillar Workflow**: `plan`, `execute`, `verify`, `ship` now hardened with `.agent/` structural integrity.
-- **Expanded Persona Ecosystem**: 32+ specialized engineering personas integrated from the GSD core.
+- **Expanded Persona Ecosystem**: 32+ specialized engineering personas integrated from the MindForge core.
 - **Real-time Dashboard**: `/mindforge:dashboard` and high-performance web-based observability.
 - **Persistent Knowledge Graph**: `/mindforge:remember` and long-term project memory.
 - **Multi-Model Intelligence Layer**: `/mindforge:cross-review`, `/mindforge:research`, and `/mindforge:costs`.
