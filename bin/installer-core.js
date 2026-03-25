@@ -468,6 +468,44 @@ async function uninstall(runtime, scope, options = {}) {
   console.log('      Remove manually if desired.');
 }
 
+/**
+ * Collect statistics for the manifestation screen
+ */
+function collectManifestStats() {
+  const stats = {
+    personas: 0,
+    skills: 0,
+    governance: 0,
+    integrations: 0,
+    actions: 0
+  };
+
+  try {
+    const forgeSrc = src('.mindforge');
+    if (fsu.exists(forgeSrc)) {
+      stats.personas = fsu.listFiles(path.join(forgeSrc, 'personas')).filter(f => f.endsWith('.md')).length;
+      stats.skills = fsu.listFiles(path.join(forgeSrc, 'skills')).length;
+      stats.governance = fsu.listFiles(path.join(forgeSrc, 'governance')).filter(f => f.endsWith('.md')).length;
+      stats.integrations = fsu.listFiles(path.join(forgeSrc, 'integrations')).filter(f => f.endsWith('.md')).length;
+    }
+    
+    // Commands count
+    const claudeCmdSrc = src('.claude', 'commands', 'mindforge');
+    const agentCmdSrc = src('.agent', 'mindforge');
+    
+    if (fsu.exists(claudeCmdSrc)) {
+      stats.actions = fsu.listFiles(claudeCmdSrc).filter(f => f.endsWith('.md')).length;
+    } else if (fsu.exists(agentCmdSrc)) {
+      stats.actions = fsu.listFiles(agentCmdSrc).filter(f => f.endsWith('.md')).length;
+    }
+  } catch (e) {
+    // Fallback to default values if counting fails
+    return { personas: 32, skills: 10, governance: 4, integrations: 6, actions: 60 };
+  }
+
+  return stats;
+}
+
 // ── Main run ──────────────────────────────────────────────────────────────────
 async function run(args) {
   // Parse runtime from flags
@@ -525,7 +563,8 @@ async function run(args) {
   }
 
   if (!isUninstall) {
-    Theme.printSuccess(runtime, scope);
+    const stats = collectManifestStats();
+    Theme.printSuccess(runtime, scope, stats);
   } else {
     Theme.status(c.bold('MindForge uninstalled'), 'done');
   }

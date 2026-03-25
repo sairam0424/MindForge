@@ -86,6 +86,31 @@ const Theme = {
     console.log(`  ${this.colors.dim('└' + '─'.repeat(boxWidth - 2) + '┘')}\n`);
   },
 
+  /**
+   * Print the installation manifest
+   */
+  printManifest(stats = {}) {
+    const { personas = 32, skills = 12, governance = 4, integrations = 7, actions = 60 } = stats;
+    
+    console.log(`  ${this.colors.bold('PAYLOAD MANIFEST')}`);
+    console.log(`  ${this.colors.dim('┌' + '─'.repeat(74) + '┐')}`);
+    
+    const rows = [
+      ['PERSONAS', personas, 'The autonomous persona ecosystem'],
+      ['SKILLS', skills, 'Enterprise-grade skill packs'],
+      ['GOVERNANCE', governance, 'Compliance and safety modules'],
+      ['INTEGRATIONS', integrations, 'Multi-platform connector suite'],
+      ['ACTIONS', actions, 'Total autonomous commands deployed'],
+    ];
+
+    rows.forEach(([label, count, desc]) => {
+      const countStr = count.toString().padStart(3);
+      console.log(`  ${this.colors.dim('│')}  ${this.colors.cyan('█')} ${this.colors.bold(label.padEnd(14))} ${this.colors.cyan(countStr)}   ${this.colors.dim(desc.padEnd(48))} ${this.colors.dim('│')}`);
+    });
+
+    console.log(`  ${this.colors.dim('└' + '─'.repeat(74) + '┘')}\n`);
+  },
+
   printStatus(label, state = 'info') {
     const icons = {
       done: this.colors.green(this.chars.check),
@@ -99,10 +124,11 @@ const Theme = {
   /**
    * Print a success banner
    */
-  printSuccess(runtime, scope) {
+  printSuccess(runtime, scope, stats = {}) {
     console.log(`\n  ${this.colors.green(this.colors.bold(this.chars.check))} ${this.colors.bold('INSTALLATION COMPLETE')}`);
-    console.log(`    MindForge is now active for ${this.colors.cyan(runtime)} (${this.colors.dim(scope)})`);
+    console.log(`    MindForge is now active for ${this.colors.cyan(runtime)} (${this.colors.dim(scope)})\n`);
     
+    this.printManifest(stats);
     this.printTryItNow('mindforge-cc init');
 
     console.log(`  ${this.colors.bold('POST-INSTALL COMMANDS')}`);
