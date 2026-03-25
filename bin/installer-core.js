@@ -544,10 +544,9 @@ async function run(args) {
   const pJSON = JSON.parse(fsu.read(path.join(SOURCE_ROOT, 'package.json')));
 
   // Print header and brand manifest
-  if (options.verbose || !process.stdout.isTTY) {
-    Theme.printHeader(pJSON.version);
-    Theme.printBrandManifest();
-  }
+  // Print header and brand manifest
+  Theme.printHeader(pJSON.version);
+  Theme.printBrandManifest();
   // Check for updates only
   if (isCheck) {
     const { checkAndUpdate } = require('./updater/self-update');
