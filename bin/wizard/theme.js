@@ -121,7 +121,7 @@ const Theme = {
    * Print Manifest (Hardened for V2)
    */
   printManifest(stats = {}) {
-    const { personas = 32, skills = 12, governance = 4, integrations = 7, actions = 60 } = stats;
+    const { personas = 32, skills = 12, governance = 4, integrations = 7, actions = 60, docs = 12, templates = 8 } = stats;
     
     console.log(`  ${this.colors.bold('PAYLOAD MANIFEST')}`);
     console.log(`  ${this.colors.dim('┌' + '─'.repeat(74) + '┐')}`);
@@ -131,6 +131,8 @@ const Theme = {
       ['SKILLS', skills, 'Enterprise-grade skill packs'],
       ['GOVERNANCE', governance, 'Compliance and safety modules'],
       ['INTEGRATIONS', integrations, 'Multi-platform connector suite'],
+      ['REFERENCES', docs, 'Standardized architecture references'],
+      ['TEMPLATES', templates, 'Engineering and planning templates'],
       ['ACTIONS', actions, 'Total autonomous commands deployed'],
     ];
 

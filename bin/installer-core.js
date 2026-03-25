@@ -25,6 +25,7 @@ const RUNTIMES = {
     skillsSubdir:   'skills',
     hooksSubdir:    'hooks',
     personasSubdir: 'personas',
+    docsSubdir:     'docs',
   },
   antigravity: {
     displayName:    'Antigravity',
@@ -36,6 +37,7 @@ const RUNTIMES = {
     skillsSubdir:   'skills',
     hooksSubdir:    'hooks',
     personasSubdir: 'personas',
+    docsSubdir:     'docs',
   },
   cursor: {
     displayName:    'Cursor',
@@ -47,6 +49,7 @@ const RUNTIMES = {
     skillsSubdir:   'skills',
     hooksSubdir:    'hooks',
     personasSubdir: 'personas',
+    docsSubdir:     'docs',
   },
   opencode: {
     displayName:    'OpenCode',
@@ -58,6 +61,7 @@ const RUNTIMES = {
     skillsSubdir:   'skills',
     hooksSubdir:    'hooks',
     personasSubdir: 'personas',
+    docsSubdir:     'docs',
   },
   gemini: {
     displayName:    'Gemini CLI',
@@ -69,6 +73,7 @@ const RUNTIMES = {
     skillsSubdir:   'skills',
     hooksSubdir:    'hooks',
     personasSubdir: 'personas',
+    docsSubdir:     'docs',
   },
   copilot: {
     displayName:    'GitHub Copilot',
@@ -137,6 +142,16 @@ const fsu = {
   ensureDir:  p  => { if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true }); },
   copy:       (src, dst) => { fsu.ensureDir(path.dirname(dst)); fs.copyFileSync(src, dst); },
   listFiles:  p  => fs.existsSync(p) ? fs.readdirSync(p) : [],
+  listFilesRecursive: (p, ext = '.md') => {
+    if (!fs.existsSync(p)) return [];
+    let results = [];
+    for (const entry of fs.readdirSync(p, { withFileTypes: true })) {
+      const full = path.join(p, entry.name);
+      if (entry.isDirectory()) results = results.concat(fsu.listFilesRecursive(full, ext));
+      else if (entry.name.endsWith(ext)) results.push(full);
+    }
+    return results;
+  },
 
   copyDir(src, dst, options = {}) {
     const { excludePatterns = [] } = options;
@@ -296,7 +311,7 @@ async function install(runtime, scope, options = {}) {
   const baseDir = resolveBaseDir(runtime, scope);
   const cmdsDir = norm(path.join(baseDir, cfg.commandsSubdir));
   const selfInstall = isSelfInstall();
-  const targetDir = baseDir; // Define targetDir for the new printStatus line
+  const targetDir = baseDir;
 
   Theme.printPrompt(`Runtime : ${c.cyan(runtime)}`);
   Theme.printPrompt(`Scope   : ${c.dim(scope)} → ${c.bold(targetDir)}`);
@@ -313,15 +328,21 @@ async function install(runtime, scope, options = {}) {
     const assetMappings = [
       { key: 'skillsSubdir',   src: src('.agent', 'skills'),      label: 'skills' },
       { key: 'hooksSubdir',    src: src('.agent', 'hooks'),       label: 'hooks' },
-      { key: 'personasSubdir', src: src('.mindforge', 'personas'), label: 'personas' }
+      { key: 'personasSubdir', src: src('.mindforge', 'personas'), label: 'personas' },
+      { key: 'docsSubdir',     src: src('docs', 'references'),    label: 'references' },
+      { key: 'docsSubdir',     src: src('docs', 'templates'),     label: 'templates' }
     ];
 
     assetMappings.forEach(asset => {
       const subDir = cfg[asset.key];
       if (subDir && fsu.exists(asset.src)) {
-        const count = fsu.listFiles(asset.src).length;
-        const countStr = `${count} ${asset.label}`.padEnd(12);
-        console.log(`    ${countStr} → ${path.join(baseDir, subDir)}`);
+        if (asset.label === 'references' || asset.label === 'templates') {
+          console.log(`    ${asset.label.padEnd(12)} → ${path.join(baseDir, subDir, asset.label)}`);
+        } else {
+          const count = fsu.listFiles(asset.src).length;
+          const countStr = `${count} ${asset.label}`.padEnd(12);
+          console.log(`    ${countStr} → ${path.join(baseDir, subDir)}`);
+        }
       }
     });
     return;
@@ -436,17 +457,23 @@ async function install(runtime, scope, options = {}) {
     const assetTypes = [
       { key: 'skillsSubdir',   src: src('.agent', 'skills'),      label: 'skills' },
       { key: 'hooksSubdir',    src: src('.agent', 'hooks'),       label: 'hooks' },
-      { key: 'personasSubdir', src: src('.mindforge', 'personas'), label: 'personas' }
+      { key: 'personasSubdir', src: src('.mindforge', 'personas'), label: 'personas' },
+      { key: 'docsSubdir',     src: src('docs', 'references'),    label: 'references' },
+      { key: 'docsSubdir',     src: src('docs', 'templates'),     label: 'templates' }
     ];
 
     assetTypes.forEach(asset => {
       const subDir = cfg[asset.key];
       if (subDir && fsu.exists(asset.src)) {
-        const dstDir = path.join(baseDir, subDir);
+        let dstDir = path.join(baseDir, subDir);
+        // Documentation and templates go into subdirectories of their own
+        if (asset.label === 'references' || asset.label === 'templates') {
+          dstDir = path.join(dstDir, asset.label);
+        }
         fsu.ensureDir(dstDir);
         // Use copyDir for the whole directory
         fsu.copyDir(asset.src, dstDir, { excludePatterns: SENSITIVE_EXCLUDE });
-        Theme.printResolved(`${c.bold(asset.label.padEnd(10))} (Enterprise sync)`);
+        Theme.printResolved(`${c.bold(asset.label.padEnd(12))} (Enterprise sync)`);
       }
     });
   }
@@ -573,17 +600,25 @@ function collectManifestStats() {
     skills: 0,
     governance: 0,
     integrations: 0,
-    actions: 0
+    actions: 0,
+    docs: 0,
+    templates: 0
   };
 
   try {
     const forgeSrc = src('.mindforge');
     if (fsu.exists(forgeSrc)) {
       stats.personas = fsu.listFiles(path.join(forgeSrc, 'personas')).filter(f => f.endsWith('.md')).length;
-      stats.skills = fsu.listFiles(path.join(forgeSrc, 'skills')).length;
+      stats.skills = fsu.listFiles(path.join(SOURCE_ROOT, '.agent', 'skills')).length;
       stats.governance = fsu.listFiles(path.join(forgeSrc, 'governance')).filter(f => f.endsWith('.md')).length;
       stats.integrations = fsu.listFiles(path.join(forgeSrc, 'integrations')).filter(f => f.endsWith('.md')).length;
     }
+
+    // Docs & Templates count
+    const refSrc = src('docs', 'references');
+    const tmpSrc = src('docs', 'templates');
+    if (fsu.exists(refSrc)) stats.docs = fsu.listFiles(refSrc).filter(f => f.endsWith('.md')).length;
+    if (fsu.exists(tmpSrc)) stats.templates = fsu.listFilesRecursive(tmpSrc).length;
     
     // Commands count
     const claudeCmdSrc = src('.claude', 'commands', 'mindforge');
@@ -596,7 +631,7 @@ function collectManifestStats() {
     }
   } catch (e) {
     // Fallback to default values if counting fails
-    return { personas: 32, skills: 10, governance: 4, integrations: 6, actions: 60 };
+    return { personas: 32, skills: 10, governance: 4, integrations: 6, actions: 60, docs: 12, templates: 5 };
   }
 
   return stats;
