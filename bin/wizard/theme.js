@@ -168,7 +168,11 @@ const Theme = {
       warn: this.colors.yellow('!'),
     };
     console.log(`  ${icons[state] || icons.info}  ${label}`);
-  }
+  },
+
+  // --- Aliases for legacy compatibility ---
+  status(label, state) { this.printStatus(label, state); },
+  printSuccess(runtime, scope, stats) { this.printSuccessV2(runtime, scope, stats); }
 };
 
 module.exports = Theme;

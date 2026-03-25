@@ -565,7 +565,7 @@ async function run(args) {
 
   if (!isUninstall) {
     const stats = collectManifestStats();
-    Theme.printSuccess(runtime, scope, stats);
+    Theme.printSuccessV2(runtime, scope, stats);
   } else {
     Theme.printResolved(c.bold('MindForge uninstalled'));
   }

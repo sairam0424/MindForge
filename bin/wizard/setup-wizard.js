@@ -19,7 +19,7 @@ function createReadline() {
   return readline.createInterface({
     input: process.stdin,
     output: process.stdout,
-    terminal: TTY,
+    terminal: process.stdin.isTTY,
   });
 }
 
