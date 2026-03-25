@@ -26,6 +26,8 @@ const RUNTIMES = {
     hooksSubdir:    'hooks',
     personasSubdir: 'personas',
     docsSubdir:     'docs',
+    memorySubdir:   'memory',
+    pluginsSubdir:  'plugins',
   },
   antigravity: {
     displayName:    'Antigravity',
@@ -38,6 +40,8 @@ const RUNTIMES = {
     hooksSubdir:    'hooks',
     personasSubdir: 'personas',
     docsSubdir:     'docs',
+    memorySubdir:   'memory',
+    pluginsSubdir:  'plugins',
   },
   cursor: {
     displayName:    'Cursor',
@@ -50,6 +54,8 @@ const RUNTIMES = {
     hooksSubdir:    'hooks',
     personasSubdir: 'personas',
     docsSubdir:     'docs',
+    memorySubdir:   'memory',
+    pluginsSubdir:  'plugins',
   },
   opencode: {
     displayName:    'OpenCode',
@@ -62,6 +68,8 @@ const RUNTIMES = {
     hooksSubdir:    'hooks',
     personasSubdir: 'personas',
     docsSubdir:     'docs',
+    memorySubdir:   'memory',
+    pluginsSubdir:  'plugins',
   },
   gemini: {
     displayName:    'Gemini CLI',
@@ -74,6 +82,8 @@ const RUNTIMES = {
     hooksSubdir:    'hooks',
     personasSubdir: 'personas',
     docsSubdir:     'docs',
+    memorySubdir:   'memory',
+    pluginsSubdir:  'plugins',
   },
   copilot: {
     displayName:    'GitHub Copilot',
@@ -154,7 +164,7 @@ const fsu = {
   },
 
   copyDir(src, dst, options = {}) {
-    const { excludePatterns = [] } = options;
+    const { excludePatterns = [], noOverwrite = false } = options;
     fsu.ensureDir(dst);
     for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
       const skip = excludePatterns.some(pat =>
@@ -164,7 +174,12 @@ const fsu = {
 
       const s = path.join(src, entry.name);
       const d = path.join(dst, entry.name);
-      entry.isDirectory() ? fsu.copyDir(s, d, options) : fsu.copy(s, d);
+      if (entry.isDirectory()) {
+        fsu.copyDir(s, d, options);
+      } else {
+        if (noOverwrite && fsu.exists(d)) continue;
+        fsu.copy(s, d);
+      }
     }
   },
 };
@@ -227,7 +242,7 @@ const SENSITIVE_EXCLUDE = [
   /jira-sync\.json/i,
   /slack-threads\.json/i,
   // Specific legacy or project-private folders
-  '01-migrate-gsd-to-mindforge',
+  '01-migrate-legacy-to-mindforge',
   'day1',
   'day2',
   'day3',
@@ -486,7 +501,9 @@ async function install(runtime, scope, options = {}) {
       { key: 'hooksSubdir',    src: src('.agent', 'hooks'),       label: 'hooks' },
       { key: 'personasSubdir', src: src('.mindforge', 'personas'), label: 'personas' },
       { key: 'docsSubdir',     src: src('docs', 'references'),    label: 'references' },
-      { key: 'docsSubdir',     src: src('docs', 'templates'),     label: 'templates' }
+      { key: 'docsSubdir',     src: src('docs', 'templates'),     label: 'templates' },
+      { key: 'memorySubdir',   src: src('.mindforge', 'memory'),   label: 'memory' },
+      { key: 'pluginsSubdir',  src: src('.mindforge', 'plugins'),  label: 'plugins' }
     ];
 
     assetTypes.forEach(asset => {
@@ -499,7 +516,7 @@ async function install(runtime, scope, options = {}) {
         }
         fsu.ensureDir(dstDir);
         // Use copyDir for the whole directory
-        fsu.copyDir(asset.src, dstDir, { excludePatterns: SENSITIVE_EXCLUDE });
+        fsu.copyDir(asset.src, dstDir, { excludePatterns: SENSITIVE_EXCLUDE, noOverwrite: !force });
         Theme.printResolved(`${c.bold(asset.label.padEnd(12))} (Enterprise sync)`);
       }
     });
@@ -511,51 +528,69 @@ async function install(runtime, scope, options = {}) {
     const forgeSrc = src('.mindforge');
     const forgeDst = path.join(process.cwd(), '.mindforge');
     if (fsu.exists(forgeSrc)) {
+      // Define all required enterprise framework folders
+      const standardFrameworkFolders = [
+        'engine', 'org', 'governance', 'integrations', 'personas', 'skills', 
+        'team', 'intelligence', 'memory', 'metrics', 'models', 'plugins', 'dashboard'
+      ];
+
       if (minimal) {
         const minimalEntries = new Set([
           'MINDFORGE-SCHEMA.json',
-          'engine',
-          'org',
-          'governance',
-          'integrations',
-          'personas',
-          'skills',
-          'team',
+          'engine', 'org', 'governance', 'integrations', 'personas', 'skills', 'team'
         ]);
         fsu.ensureDir(forgeDst);
         for (const entry of fs.readdirSync(forgeSrc, { withFileTypes: true })) {
           if (!minimalEntries.has(entry.name)) continue;
           const s = path.join(forgeSrc, entry.name);
           const d = path.join(forgeDst, entry.name);
-          entry.isDirectory() ? fsu.copyDir(s, d, { excludePatterns: SENSITIVE_EXCLUDE }) : fsu.copy(s, d);
+          if (entry.isDirectory()) {
+            fsu.copyDir(s, d, { excludePatterns: SENSITIVE_EXCLUDE, noOverwrite: true });
+          } else {
+            if (!fsu.exists(d) || force) fsu.copy(s, d);
+          }
         }
-        Theme.printResolved(`${c.bold('.mindforge/')} (minimal core)`);
+        Theme.printResolved(`${c.bold('.mindforge/')} (minimal sync)`);
       } else {
-        fsu.copyDir(forgeSrc, forgeDst, { excludePatterns: [...SENSITIVE_EXCLUDE, ...MINDFORGE_DEV_EXCLUDE] });
-        Theme.printResolved(`${c.bold('.mindforge/')} (framework engine)`);
+        // Standard merge: Ensure missing folders are added, but don't overwrite existing user configs
+        fsu.copyDir(forgeSrc, forgeDst, { 
+          excludePatterns: [...SENSITIVE_EXCLUDE, ...MINDFORGE_DEV_EXCLUDE],
+          noOverwrite: !force 
+        });
+        Theme.printResolved(`${c.bold('.mindforge/')} (synchronized framework)`);
       }
     }
 
-    // .planning/ — create only if it doesn't already exist (preserve project state)
+    // .planning/ — merge templates but preserve existing state
     const planningDst = path.join(process.cwd(), '.planning');
-    if (!fsu.exists(planningDst)) {
-      const planningSrc = src('.planning');
-      if (fsu.exists(planningSrc)) {
-        if (minimal) {
-          fsu.ensureDir(planningDst);
-          ['STATE.md', 'HANDOFF.json', 'PROJECT.md'].forEach((name) => {
-            const s = path.join(planningSrc, name);
-            const d = path.join(planningDst, name);
-            if (fsu.exists(s)) fsu.copy(s, d);
-          });
-          console.log('  ✅  .planning/ (minimal state)');
-        } else {
-          fsu.copyDir(planningSrc, planningDst, { excludePatterns: SENSITIVE_EXCLUDE });
-          Theme.printResolved(`${c.bold('.planning/')} (state templates)`);
-        }
+    const planningSrc = src('.planning');
+    if (fsu.exists(planningSrc)) {
+      fsu.ensureDir(planningDst);
+      
+      // Define standard planning templates that must exist
+      const standardPlanningFiles = [
+        'STATE.md', 'HANDOFF.json', 'PROJECT.md', 
+        'ROADMAP.md', 'ARCHITECTURE.md', 'REQUIREMENTS.md', 
+        'RELEASE-CHECKLIST.md'
+      ];
+
+      // Always ensure top-level standard templates are copied if missing
+      standardPlanningFiles.forEach((name) => {
+        const s = path.join(planningSrc, name);
+        const d = path.join(planningDst, name);
+        if (fsu.exists(s) && (!fsu.exists(d) || force)) fsu.copy(s, d);
+      });
+
+      if (!minimal) {
+        // Merge subdirectories (empty ones persist via .gitkeep)
+        fsu.copyDir(planningSrc, planningDst, { 
+          excludePatterns: SENSITIVE_EXCLUDE,
+          noOverwrite: true 
+        });
+        Theme.printResolved(`${c.bold('.planning/')} (merged templates)`);
+      } else {
+        Theme.printResolved(`${c.bold('.planning/')} (minimal sync)`);
       }
-    } else {
-      Theme.printPrompt(c.dim('.planning/ already exists — preserved (run /mindforge:health to verify)'));
     }
 
     // MINDFORGE.md — create only if it doesn't already exist
