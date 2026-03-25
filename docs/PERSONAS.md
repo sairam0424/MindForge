@@ -658,8 +658,8 @@ These high-fidelity workflows bridge multiple skills and personas to solve speci
 
 | Workflow | Command | Context / Skill |
 | :--- | :--- | :--- |
-| **TDD Loop** | `/mindforge:tdd` | [mindforge-tdd](file:///Users/sairamugge/Desktop/MindForge/.agent/skills/mindforge-tdd/SKILL.md) |
-| **System Architecture** | `/mindforge:architecture` | [mindforge-system-architecture](file:///Users/sairamugge/Desktop/MindForge/.agent/skills/mindforge-system-architecture/SKILL.md) |
+| **TDD Loop** | `/mindforge:tdd` | mindforge-tdd skill |
+| **System Architecture** | `/mindforge:architecture` | mindforge-system-architecture skill |
 | **Strategic Planning** | `/mindforge:planner` | mf-planner persona |
 | **Implementation Pilot** | `/mindforge:executor` | mf-executor persona |
 
