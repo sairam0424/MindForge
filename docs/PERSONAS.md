@@ -59,6 +59,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 - First-principles evaluation of technical trade-offs.
 - Data-first design and component boundary definition.
 - Writing Architectural Decision Records (ADRs).
+- **ADS Blue Team (Architect)**: Proposing performance-first, scalable implementation paths.
 
 ---
 
@@ -95,6 +96,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 - Stress-testing inputs and identifying silent failures.
 - Zero-tolerance regression verification.
 - Objective PASS/FAIL signing of phase goals.
+- **ADS Red Team (Auditor)**: Critiquing architectural over-engineering and finding "Complexity Traps."
 
 ---
 
@@ -203,6 +205,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 - Synthesis of conflicting research and audit data.
 - Force-balancing of technical trade-offs.
 - Updating project stack and roadmap based on verdicts.
+- **ADS Gold Team (Synthesizer)**: Mediating Red/Blue debates and generating SOUL-scored architectural verdicts.
 
 ---
 

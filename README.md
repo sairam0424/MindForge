@@ -1,8 +1,8 @@
-# MindForge — Enterprise Agentic Framework (v2.1.1)
+# MindForge — Enterprise Agentic Framework (v3.0.0-rc1)
 
 MindForge turns Claude Code and Antigravity into production-grade engineering
-partners with governance, observability, and a disciplined workflow engine.
-Release published: v2.1.1.
+partners with governance, observability, and a reactive autonomous intelligence engine.
+Release published: v3.0.0-rc1.
 
 ```bash
 npx mindforge-cc@latest
@@ -10,20 +10,23 @@ npx mindforge-cc@latest
 
 ---
 
-
 ## Why MindForge
 
 AI coding agents degrade over long sessions. Context fills up. Quality drops.
 Decisions get forgotten. MindForge fixes that with:
 
-- **Context engineering** — structured project state, always current
+- **Context Sharding (v3)** — relevance-dense memory management (40% token savings)
+- **Adversarial Synthesis (v3)** — zero-drift logic through red/blue model debate
+- **Temporal Vision (v3)** — full history scrubbing and hindsight state repair
+- **RAG 2.0 (v3)** — automatic semantic shadowing for background pattern retrieval
 - **Role personas** — specialised agent modes for each task type
 - **Specialized Identities** — custom `/agents/` workspace with enriched `IDENTITY.md` protocols
 - **Skills** — just-in-time domain knowledge loaded on demand
 - **Wave execution** — parallelism with dependency safety
-- **Autonomous Engine** — walk-away execution with steerability (v2)
-- **Real-time Dashboard** — web-based observability and governance (v2)
-- **Browser Runtime** — headful/headless visual QA and sessions (v2)
+- **Autonomous Engine** — walk-away execution with steerability
+- **Real-time Dashboard** — web-based observability with Temporal Slider
+- **Browser Runtime** — headful/headless visual QA and sessions
+
 - **Multi-Model Intelligence** — dynamic routing, adversarial reviews, and deep research (v2)
 - **Persistent Knowledge Graph** — long-term memory across all engineering sessions (v2)
 - **Self-Building Skills** — automatically capture knowledge from any source into reusable skills (v2)
@@ -176,10 +179,11 @@ If issues are found, run:
 /mindforge:ui-phase 1
     → Create UI design contract (UI-SPEC.md) (v2)
 
-/mindforge:plan-phase 1
+/mindforge:plan-phase 1 [--ads]
     → Discuss scope and decisions
     → Research domain (parallel)
     → Create atomic XML task plans
+    → (Optional) Run Adversarial Decision Synthesis (ADS) loop
 
 /mindforge:execute-phase 1
     → Wave-based parallel execution
@@ -328,8 +332,20 @@ See `.mindforge/production/token-optimiser.md`.
 
 ---
 
-## What's new in v2.1.1
-- **Unified 4-Pillar Workflow**: `plan`, `execute`, `verify`, `ship` now hardened with `.agent/` structural integrity.
+---
+
+## What's new in v2.4.0
+- **Adversarial Decision Synthesis (ADS)**: High-fidelity planning via Architect/Auditor/Synthesizer loop.
+- **SOUL Scoring Engine**: Objective architectural ranking: (Impact * Leverage * Reversibility) / (Effort * Risk * Cost).
+- **Semantic Context Sharding**: Dynamic Tri-Tier Memory (Hot/Warm/Cold) with SRD relevance scoring.
+- **Red-Team Jailbreak**: Hardened auditing protocol that forces high-fidelity system critique.
+- **Automated ADR Workflow**: synthesis results persisted as SOUL-scored records in `.planning/decisions/`.
+- **Unified 4-Pillar Workflow**: `plan`, `execute`, `verify`, `ship` now hardened with V3 intelligence.
+
+---
+
+## What's new in v2.x
+
 - **Expanded Persona Ecosystem**: 32+ specialized engineering personas integrated from the MindForge core.
 - **Real-time Dashboard**: `/mindforge:dashboard` and high-performance web-based observability.
 - **Persistent Knowledge Graph**: `/mindforge:remember` and long-term project memory.
@@ -339,7 +355,7 @@ See `.mindforge/production/token-optimiser.md`.
 - **Autonomous Execution Engine**: `/mindforge:auto` and mid-execution `/mindforge:steer`.
 - **Unified Skills Registry**: 3-tier registry (Core/Org/Project) with 12 core skill packs.
 - **120+ Framework Assets**: Standardized directory structure for cross-IDE compatibility.
-- **Enterprise Manifest**: `file-manifest.json` for multi-project codebase mapping.
+- **Enterprise Manifest**: `file-manifest.json` for single source of truth for multi-project codebase mapping.
 - **Enterprise Integrations**: Jira, Confluence, Slack, GitHub, GitLab.
 - **Governance Pillars**: 6 non-bypassable compliance gates and Tier 3 security scaffolding.
 

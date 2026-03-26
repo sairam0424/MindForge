@@ -34,7 +34,7 @@ Parse JSON for: `researcher_model`, `planner_model`, `checker_model`, `research_
 
 ## 2. Parse and Normalize Arguments
 
-Extract from $ARGUMENTS: phase number (integer or decimal like `2.1`), flags (`--research`, `--skip-research`, `--gaps`, `--skip-verify`, `--prd <filepath>`, `--reviews`, `--text`).
+Extract from $ARGUMENTS: phase number (integer or decimal like `2.1`), flags (`--research`, `--skip-research`, `--gaps`, `--skip-verify`, `--prd <filepath>`, `--reviews`, `--ads`, `--text`).
 
 Set `TEXT_MODE=true` if `--text` is present in $ARGUMENTS OR `text_mode` from init JSON is `true`. When `TEXT_MODE` is active, replace every `AskUserQuestion` call with a plain-text numbered list and ask the user to type their choice number. This is required for Claude Code remote sessions (`/rc` mode) where TUI menus don't work through the the agent App.
 
@@ -457,6 +457,8 @@ Proceed to Step 8 only if user selects 2 or 3.
 
 ## 8. Spawn mindforge-planner Agent
 
+**Skip if:** `--ads` flag is present. Proceed to Step 8.5.
+
 Display banner:
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -549,6 +551,33 @@ Task(
   description="Plan Phase {phase}"
 )
 ```
+
+## 8.5. Adversarial Decision Synthesis (ADS)
+
+**Skip if:** No `--ads` flag.
+
+Display banner:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ MindForge ► ADS SYNTHESIS LOOP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Spawning Blue-Team Architect...
+◆ Spawning Red-Team Auditor...
+◆ Spawning Gold-Team Synthesizer (SOUL Scorer)...
+```
+
+### Call ADS Engine
+
+Invoke the ADS orchestrator to perform the cross-model synthesis loop:
+
+```bash
+node "bin/review/ads-engine.js" --phase "${PHASE}" --output-dir "${PHASE_DIR}"
+```
+
+The ADS engine handles the 3-model logic, SOUL scoring, and ADR generation. Once complete, it will have written the finalized `PLAN.md` to the phase directory.
+
+Continue to Step 9.
 
 ## 9. Handle Planner Return
 

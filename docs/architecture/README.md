@@ -54,3 +54,58 @@ MindForge provides stable interfaces for extension:
 - **SDK**: Programmatic access via `@mindforge/sdk`.
 
 See [ADR-041](../adr/ADR-041-runtime-interfaces.md) for the stabilization contract.
+
+---
+
+## 6. Semantic Memory Tiering (V3)
+
+MindForge v2.4.0 introduces **Semantic Context Sharding**, a Tri-Tier memory architecture that optimizes context window usage for long-running engineering sessions.
+
+| Tier | Storage | Purpose | Retrieval |
+| :--- | :--- | :--- | :--- |
+| **HOT** | `HANDOFF.json` | Immediate task state and core ADRs (SRD > 0.8). | Loaded every session. |
+| **WARM** | `.planning/memories/` | Phase-specific shards and active project context (SRD 0.5-0.8). | Proactive retrieval via keyword matching. |
+| **COLD** | `.mindforge/memory/` | Historical logs and legacy architectural decisions (SRD < 0.5). | On-demand search via `/mindforge:remember`. |
+
+### SRD Scoring Engine
+
+Semantic Relevance Density (SRD) is calculated using a weighted formula:
+`SRD = (Decisiveness * 0.6) + (Frequency * 0.1) + (Impact * 0.3)`
+
+### Integrity & Hardening
+
+All shards are hardened with **SHA-256 Checksums** and **Semantic Tags** to prevent state drift and enable O(1) keyword-based context injection.
+
+---
+
+
+---
+
+## 7. Adversarial Decision Synthesis (ADS) (V3)
+
+MindForge v3.0.0 introduces **Adversarial Decision Synthesis (ADS)**, a 3-model synthesis loop that ensures every architectural decision is battle-tested.
+
+### The 3-Model Loop
+
+1.  **Blue Team (Architect)**: Proposes the initial high-performance plan.
+2.  **Red Team (Auditor)**: Hardened via "Jailbreak" protocol to identify at least 3 critical flaws (Maintainability, Complexity, Security).
+3.  **Gold Team (Synthesizer)**: Consolidates findings using the **SOUL.md** scoring algorithm.
+
+### SOUL Decision Scoring
+
+| Metric | Factor | Description |
+| :--- | :--- | :--- |
+| **I** | Impact | Overall system-wide importance of the change. |
+| **L** | Leverage | How much this change unblocks future high-value work. |
+| **R** | Reversibility | How easy it is to undo this change if it fails. |
+| **E** | Effort | Total engineering complexity and time required. |
+| **Ri** | Risk | Probability of breakage or system regression. |
+| **C** | Cost | Token/Compute usage and infrastructure weight. |
+
+**Formula**: `Score = (I * L * R) / (E * Ri * C)`
+
+Decisions with a SOUL Score > 1.0 are considered architecturally sound.
+
+---
+
+## 8. Stability & Extension

@@ -33,6 +33,7 @@ try {
 
 const SSE    = require('./sse-bridge');
 const API    = require('./api-router');
+const TemporalAPI = require('./temporal-api');
 
 // ── Express app ───────────────────────────────────────────────────────────────
 const app = express();
@@ -84,6 +85,7 @@ app.get('/', (req, res) => {
 
 // ── Register API routes ───────────────────────────────────────────────────────
 API.register(app);
+app.use('/api/temporal', TemporalAPI);
 
 // ── Start SSE bridge ──────────────────────────────────────────────────────────
 SSE.start();

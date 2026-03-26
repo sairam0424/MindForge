@@ -1,4 +1,4 @@
-# MindForge v2.1.1 — Commands Reference
+# MindForge v2.4.0 — Commands Reference
 
 MindForge commands are organized into functional pillars to support the entire software development lifecycle (SDLC).
 
@@ -19,7 +19,7 @@ MindForge commands are organized into functional pillars to support the entire s
 
 | Command | Description |
 | :--- | :--- |
-| `/mindforge:plan-phase [N]` | Initiates strategic planning for a milestone: discuss → research → plan. |
+| `/mindforge:plan-phase [N]` | Initiates strategic planning for a milestone: discuss → research → plan. Supports `--ads` for adversarial synthesis. |
 | `/mindforge:execute-phase [N]` | Starts autonomous execution of task plans in parallel waves. |
 | `/mindforge:verify-phase [N]` | Runs Human Acceptance Testing (UAT) and automated validation gates. |
 | `/mindforge:ship [N]` | Finalizes delivery, generates release output, and creates a Pull Request. |
@@ -35,6 +35,7 @@ MindForge commands are organized into functional pillars to support the entire s
 | `/mindforge:personas --list` | Displays all 32+ specialized engineering personas. |
 | `/mindforge:personas --set ID` | Switches the current agent to a specific persona (e.g., `architect`, `executor`). |
 | `/mindforge:tokens` | Analyzes and profiles token usage for the current session. |
+| `shard-helper --verify` | (CLI Internal) Verifies the integrity and SHA-256 checksums of memory shards. |
 
 ---
 

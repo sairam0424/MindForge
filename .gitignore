@@ -28,8 +28,11 @@ coverage/
 .mindforge/memory/*.jsonl
 
 temp-test-install/
+tests/tmp-graph/
 # Husky
 .husky/_
 
 .agents/
 .claude/
+.planning/history/
+.planning/TEMPORAL-TEST.md
