@@ -379,7 +379,7 @@ async function testSecurityGuard() {
   // SECRET entries should be filtered
   const secretEntry = {
     topic: 'API Key Storage',
-    content: 'Store api_key sk_live_abc123def456 in environment variables',
+    content: 'Store api_key [REDACTED_MOCK_KEY] in environment variables',
     tags: ['secret'],
   };
   assert.ok(Shadow.containsSecrets(secretEntry), 'Should detect API key pattern');
