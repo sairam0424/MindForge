@@ -63,54 +63,39 @@ workarounds discovered, gotchas found, things that seemed like they would
 work but did not]
 ```
 
-### Step 4 — Write HANDOFF.json
-Overwrite `.planning/HANDOFF.json` with complete current state:
+### Step 4 — Write HANDOFF.json (Hot Context)
+Overwrite `.planning/HANDOFF.json` with the current **Hot** state. This file should only contain high-SRD items required for immediate task resumption.
 
 ```json
 {
-  "schema_version": "1.0.0",
-  "project": "[project name from PROJECT.md]",
+  "schema_version": "2.1.0",
+  "project": "[project name]",
   "phase": [N],
   "plan": [M],
-  "plan_step": "[exact step description — be precise enough to restart from here]",
-  "last_completed_task": {
-    "description": "[task description]",
-    "commit_sha": "[git sha or 'wip-checkpoint']",
-    "verified": true/false
-  },
-  "next_task": "[exact instruction for the next session to execute]",
-  "in_progress": {
-    "file": "[file being modified]",
-    "intent": "[what the modification is trying to achieve]",
-    "completed_steps": ["step 1", "step 2"],
-    "remaining_steps": ["step 3", "step 4"]
+  "plan_step": "[exact step description]",
+  "next_task": "[exact instruction for next session]",
+  "hot_context": {
+    "active_decisions": [],
+    "recent_discoveries": [],
+    "file_offsets": {}
   },
   "blockers": [],
-  "decisions_needed": [],
   "context_refs": [
-    ".planning/PROJECT.md",
     ".planning/STATE.md",
-    ".planning/REQUIREMENTS.md",
-    ".planning/ARCHITECTURE.md",
-    ".planning/phases/[N]/PLAN-[N]-[M].md",
-    "[any other files critical for the next session]"
+    ".planning/HANDOFF.json",
+    ".planning/memories/WARM-SHARD-LATEST.jsonl"
   ],
-  "recent_commits": [
-    "[sha1]: [message]",
-    "[sha2]: [message]"
-  ],
-  "recent_files": [
-    "[most recently touched file 1]",
-    "[most recently touched file 2]",
-    "[most recently touched file 3]",
-    "[most recently touched file 4]",
-    "[most recently touched file 5]"
-  ],
-  "agent_notes": "[anything the agent knows that isn't captured elsewhere]",
-  "_warning": "Never store secrets, tokens, or passwords in this file. It is tracked in git.",
-  "updated_at": "[ISO-8601 timestamp]"
+  "shard_ref": ".planning/memories/WARM-SHARD-N.jsonl",
+  "updated_at": "[ISO-8601]"
 }
 ```
+
+### Step 4.5 — Semantic Sharding (Warm/Cold Context)
+Invoke the [Shard Controller](shard-controller.md) to offload lower-SRD items:
+1. Identify items with SRD < 0.8 (Decisions from earlier in the phase, transient research).
+2. Append these to `.planning/memories/WARM-SHARD-N.jsonl`.
+3. If any item has matured into a Project-wide pattern (SRD > 0.9 + repeated usage), move it to `.mindforge/memory/`.
+4. Ensure `HANDOFF.json` remains under 10KB.
 
 ### Step 5 — Write compaction AUDIT entry
 ```json

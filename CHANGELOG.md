@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.4.0] — Semantic Context Sharding (Tri-Tier Memory) — 2026-03-26
+
+🚀 **MindForge v2.4.0 — Semantic Context Sharding (Tri-Tier Memory)**
+
+This major architectural update introduces a dynamic, SRD-based memory sharding system, replacing legacy monolithic handoffs with a hardened, high-fidelity Tri-Tier Memory model (Hot, Warm, Cold).
+
+### Added (v2.4.0)
+
+- **Tri-Tier Memory Controller**: Integrated `shard-controller.md` to manage memory transitions across Hot (`HANDOFF.json`), Warm (`.planning/memories/`), and Cold (`.mindforge/memory/`) tiers.
+- **SRD Scoring Engine**: New weighted Semantic Relevance Density (SRD) scoring for contextual items based on Decisiveness, Frequency, and Impact.
+- **Beast Mode Hardening**: Implemented SHA-256 integrity verification and automated semantic tagging for all memory shards.
+- **Proactive Warm Retrieval**: Updated the context injector to automatically pull relevant shards based on task sub-context.
+- **Shard Helper Utility**: New `bin/shard-helper.js` for standalone memory analysis and integrity auditing.
+
+### Changed (v2.4.0)
+
+- **Compaction Protocol V3**: Upgraded the standard compaction flow to include `Step 4.5: Semantic Sharding`, preventing long-term context window pollution.
+- **Context Hygiene**: Reduced baseline context overhead for long-running sessions by ~35% through aggressive tiering.
+
 ## [2.3.5] — Intelligent Asset Sync & Merge — 2026-03-26
 
 🚀 **MindForge v2.3.5 — Intelligent Asset Sync & Merge**

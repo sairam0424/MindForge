@@ -108,6 +108,13 @@ Before injecting context to a subagent:
    c. If still > 30,000 after summarisation: warn the user and ask to proceed
 3. Never silently inject oversized context — the budget exists for a reason.
 
+## Semantic Warm Retrieval (New)
+To maximize subagent fidelity without bloat, perform proactive retrieval from shards:
+1. **Query**: The `next_task` description.
+2. **Search**: Scan `.planning/memories/WARM-SHARD-N.jsonl` for semantic keywords (e.g., "auth", "database", "Kafka").
+3. **Inject**: Top 3 most relevant items into a new section: `## Sharded Context (Warm)`.
+4. **Scoring**: Use `bin/shard-helper.js --retrieve "[query]"` for automated matching.
+
 ## Subagent completion protocol
 
 After the subagent completes, the orchestrator must receive:

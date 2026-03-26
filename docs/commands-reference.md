@@ -1,4 +1,4 @@
-# MindForge v2.1.1 — Commands Reference
+# MindForge v2.4.0 — Commands Reference
 
 MindForge commands are organized into functional pillars to support the entire software development lifecycle (SDLC).
 
@@ -35,6 +35,7 @@ MindForge commands are organized into functional pillars to support the entire s
 | `/mindforge:personas --list` | Displays all 32+ specialized engineering personas. |
 | `/mindforge:personas --set ID` | Switches the current agent to a specific persona (e.g., `architect`, `executor`). |
 | `/mindforge:tokens` | Analyzes and profiles token usage for the current session. |
+| `shard-helper --verify` | (CLI Internal) Verifies the integrity and SHA-256 checksums of memory shards. |
 
 ---
 
