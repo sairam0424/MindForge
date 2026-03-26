@@ -1,8 +1,8 @@
 # Changelog
 
-## [3.0.0-rc1] — Reactive Autonomous Intelligence — 2026-03-27
+## [3.0.0] — Reactive Autonomous Intelligence — 2026-03-27
 
-🚀 **MindForge v3.0.0-rc1 — The Architecture Revolution**
+🚀 **MindForge v3.0.0 — The Architecture Revolution**
 
 This major release transforms MindForge from a "disciplined workflow engine" into a **Reactive Autonomous Intelligence**. By sharding context via semantic relevance and debating architectural decisions through adversarial model loops, V3 achieves sub-second reasoning and zero logic-drift in complex engineering sessions.
 

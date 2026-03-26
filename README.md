@@ -4,8 +4,14 @@ MindForge turns Claude Code and Antigravity into production-grade engineering
 partners with governance, observability, and a reactive autonomous intelligence engine.
 Release published: v3.0.0-rc1.
 
+# Install
 ```bash
 npx mindforge-cc@latest
+```
+
+# Install V3 (Latest)
+```bash
+npm install -g mindforge-cc@latest
 ```
 
 ---
@@ -59,6 +65,9 @@ npm install -g mindforge-cc
 
 # Or try the v2.0.0-alpha (latest features)
 npm install -g mindforge-cc@alpha
+
+# Or try the V3 Release (latest features)
+npm install -g mindforge-cc@latest
 ```
 
 
@@ -334,30 +343,28 @@ See `.mindforge/production/token-optimiser.md`.
 
 ---
 
-## What's new in v2.4.0
-- **Adversarial Decision Synthesis (ADS)**: High-fidelity planning via Architect/Auditor/Synthesizer loop.
-- **SOUL Scoring Engine**: Objective architectural ranking: (Impact * Leverage * Reversibility) / (Effort * Risk * Cost).
-- **Semantic Context Sharding**: Dynamic Tri-Tier Memory (Hot/Warm/Cold) with SRD relevance scoring.
-- **Red-Team Jailbreak**: Hardened auditing protocol that forces high-fidelity system critique.
-- **Automated ADR Workflow**: synthesis results persisted as SOUL-scored records in `.planning/decisions/`.
-- **Unified 4-Pillar Workflow**: `plan`, `execute`, `verify`, `ship` now hardened with V3 intelligence.
+## What's new in v3.0.0-rc1
+
+🚀 **The Reactive Intelligence Era**
+
+MindForge V3 transforms the framework from a "disciplined workflow engine" into a **Reactive Autonomous Intelligence**.
+
+- **Context Sharding (SRD)**: Achieve a **40% reduction in token waste** via relevance-dense memory management.
+- **Adversarial Decision Synthesis (ADS)**: Zero-drift architectural logic through a 3-model debate and SOUL-scoring engine.
+- **Temporal Vision**: Full-fidelity history navigation, hindsight state injection, and automated repair.
+- **RAG 2.0 (Auto-Shadowing)**: Background pattern retrieval from the local knowledge graph without manual prompts.
+- **V3 Core Guide**: New definitive architecture guide in `docs/architecture/V3-CORE.md`.
 
 ---
 
-## What's new in v2.x
+## Evolution from v2.x
 
-- **Expanded Persona Ecosystem**: 32+ specialized engineering personas integrated from the MindForge core.
-- **Real-time Dashboard**: `/mindforge:dashboard` and high-performance web-based observability.
-- **Persistent Knowledge Graph**: `/mindforge:remember` and long-term project memory.
-- **Multi-Model Intelligence Layer**: `/mindforge:cross-review`, `/mindforge:research`, and `/mindforge:costs`.
-- **Visual QA Engine**: `/mindforge:qa` and automated regression test generation.
-- **Persistent Browser Runtime**: `/mindforge:browse` and Playwright-powered Chromium daemon.
-- **Autonomous Execution Engine**: `/mindforge:auto` and mid-execution `/mindforge:steer`.
-- **Unified Skills Registry**: 3-tier registry (Core/Org/Project) with 12 core skill packs.
-- **120+ Framework Assets**: Standardized directory structure for cross-IDE compatibility.
-- **Enterprise Manifest**: `file-manifest.json` for single source of truth for multi-project codebase mapping.
-- **Enterprise Integrations**: Jira, Confluence, Slack, GitHub, GitLab.
-- **Governance Pillars**: 6 non-bypassable compliance gates and Tier 3 security scaffolding.
+- **Expanded Persona Ecosystem**: 32+ specialized engineering personas.
+- **Real-time Dashboard**: Web-based observability and governance.
+- **Persistent Knowledge Graph**: Long-term project memory across sessions.
+- **Multi-Model Intelligence**: Dynamic routing, adversarial reviews, and deep research.
+- **Visual QA Engine**: Systematic visual audit and regression test generation.
+- **Autonomous Execution**: Walk-away execution with real-time steerability.
 
 ---
 
