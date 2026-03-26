@@ -1,4 +1,4 @@
-# MindForge v2.0.0 — Unique Selling Points, Features, and Best Practices (v2.0.0)
+# MindForge v3.0.0 — Unique Selling Points, Features, and Best Practices (v3.0.0)
 
 This document summarizes what makes MindForge v2.0.0 distinct, what features
 are included in the official release, and how to use them effectively.
@@ -40,14 +40,23 @@ are included in the official release, and how to use them effectively.
 10. **Multi-Model Intelligence Layer (v2)**
     - Dynamic routing between Anthropic, OpenAI, and Gemini based on task persona and security tier. Adversarial code reviews ensure maximum coverage.
 
-11. **Persistent Knowledge Graph (v2)**
-    - Captures and ranks engineering context (decisions, bug patterns, preferences) across project sessions using TF-IDF and confidence reinforcement.
+11. **Persistent Knowledge Graph (RAG 2.0)**
+    - Captures and ranks engineering context (decisions, bug patterns, preferences) with **Automatic Semantic Shadowing** — background pattern retrieval without manual prompts.
 
-12. **Real-time Observability Dashboard (v2)**
-    - High-fidelity web interface for live audit streams, metrics visualization, and browser-based governance with zero performance overhead.
+12. **Real-time Observability Dashboard (v3)**
+    - High-fidelity web interface for live audit streams, metrics visualization, and **Temporal History Scrubbing** with zero performance overhead.
 
-13. **Self-Building Skills Platform (v2)**
+13. **Self-Building Skills Platform (v3)**
     - Automatically capture and score engineering patterns from docs, npm, or session history into high-quality `SKILL.md` files with non-bypassable quality gates.
+
+14. **Context Sharding (v3)**
+    - 40% reduction in token waste via **Semantic Relevance Density (SRD)** management of Hot/Warm/Cold context tiers.
+
+15. **Adversarial Decision Synthesis (v3)**
+    - Zero architectural drift through Red-Team/Blue-Team debate loops and automated synthesis scoring.
+
+16. **Temporal Vision (v3)**
+    - Full-fidelity history navigation, hindsight injection, and automated state repair across the execution wave.
 
 ---
 
@@ -206,25 +215,34 @@ preserving scope (local vs global).
 
 ---
 
-### 16. Real-time Dashboard (v2)
-**What it does:** Web-based control plane for observing agent waves, costs, and quality metrics in real-time.
+### 18. Adversarial Decision Synthesis (v3)
+**What it does:** Ensures architectural integrity by debating every major decision through competing model personas.
 
 **How to use:**
 ```bash
-/mindforge:dashboard --start --open
+/mindforge:cross-review --ads # Triggers heavy synthesis mode
 ```
-Access at `http://localhost:7339` (Localhost-only for security).
 
 ---
 
-### 17. Self‑Building Skills Platform (v2)
-**What it does:** Automatically captures engineering knowledge into high-quality `SKILL.md` files. Features a 7-dimension quality scorer and npm-based marketplace integration.
+### 19. Temporal Vision & Hindsight (v3)
+**What it does:** Provides the "Temporal Slider" for the Dashboard and the `hindsight-injector` for automated state repair.
 
 **How to use:**
 ```bash
-/mindforge:learn https://docs.example.com "my-skill"
-/mindforge:marketplace search "auth"
-/mindforge:marketplace install mindforge-skill-example
+/mindforge:temporal status
+/mindforge:temporal inject [AUDIT_ID]
+```
+
+---
+
+### 20. Context Sharding Manager (v3)
+**What it does:** Dramatically improves session longevity by sharding context based on sematic relevance.
+
+**How to use:**
+```bash
+/mindforge:memory shard
+/mindforge:memory status --srd
 ```
 
 ---

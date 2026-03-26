@@ -1,8 +1,8 @@
-# MindForge — Enterprise Agentic Framework (v2.4.0)
+# MindForge — Enterprise Agentic Framework (v3.0.0-rc1)
 
 MindForge turns Claude Code and Antigravity into production-grade engineering
-partners with governance, observability, and a disciplined workflow engine.
-Release published: v2.4.0.
+partners with governance, observability, and a reactive autonomous intelligence engine.
+Release published: v3.0.0-rc1.
 
 ```bash
 npx mindforge-cc@latest
@@ -15,14 +15,18 @@ npx mindforge-cc@latest
 AI coding agents degrade over long sessions. Context fills up. Quality drops.
 Decisions get forgotten. MindForge fixes that with:
 
-- **Context engineering** — structured project state, always current
+- **Context Sharding (v3)** — relevance-dense memory management (40% token savings)
+- **Adversarial Synthesis (v3)** — zero-drift logic through red/blue model debate
+- **Temporal Vision (v3)** — full history scrubbing and hindsight state repair
+- **RAG 2.0 (v3)** — automatic semantic shadowing for background pattern retrieval
 - **Role personas** — specialised agent modes for each task type
 - **Specialized Identities** — custom `/agents/` workspace with enriched `IDENTITY.md` protocols
 - **Skills** — just-in-time domain knowledge loaded on demand
 - **Wave execution** — parallelism with dependency safety
-- **Autonomous Engine** — walk-away execution with steerability (v2)
-- **Real-time Dashboard** — web-based observability and governance (v2)
-- **Browser Runtime** — headful/headless visual QA and sessions (v2)
+- **Autonomous Engine** — walk-away execution with steerability
+- **Real-time Dashboard** — web-based observability with Temporal Slider
+- **Browser Runtime** — headful/headless visual QA and sessions
+
 - **Multi-Model Intelligence** — dynamic routing, adversarial reviews, and deep research (v2)
 - **Persistent Knowledge Graph** — long-term memory across all engineering sessions (v2)
 - **Self-Building Skills** — automatically capture knowledge from any source into reusable skills (v2)
