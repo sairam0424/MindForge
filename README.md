@@ -4,7 +4,6 @@ MindForge turns Claude Code and Antigravity into production-grade engineering
 partners with governance, observability, and a reactive autonomous intelligence engine.
 Release published: v3.0.0-rc1.
 
-
 # Install
 ```bash
 npx mindforge-cc@latest
