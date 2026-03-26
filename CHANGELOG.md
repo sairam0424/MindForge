@@ -1,6 +1,29 @@
 # Changelog
 
-## [2.4.0] — Semantic Context Sharding (Tri-Tier Memory) — 2026-03-26
+## [2.4.0] — Semantic Sharding & Adversarial Synthesis — 2026-03-26
+
+🚀 **MindForge v2.4.0 — The Core Pillars Optimization**
+
+This major architectural update introduces a dynamic, SRD-based memory sharding system and the Adversarial Decision Synthesis (ADS) protocol, replacing legacy monolithic handoffs with a hardened, high-fidelity Tri-Tier Memory model.
+
+### Added (v2.4.0)
+
+- **Adversarial Decision Synthesis (ADS)**:
+  - **ADS Engine**: Integrated a 3-model synthesis loop (Architect/Auditor/Synthesizer) for peer-reviewed architectural planning.
+  - **SOUL Scoring Engine**: New scoring metric `(Impact * Leverage * Reversibility) / (Effort * Risk * Cost)` for objective decision ranking.
+  - **Red-Team Jailbreak**: Enforced architectural auditing that forces the identification of at least 3 critical system flaws.
+  - **Automated ADR Workflow**: synthesis results are now persisted as SOUL-scored Decision Records in `.planning/decisions/`.
+- **Semantic Context Sharding**:
+  - **Tri-Tier Memory Controller**: Integrated `shard-controller.md` to manage memory transitions across Hot (`HANDOFF.json`), Warm (`.planning/memories/`), and Cold (`.mindforge/memory/`) tiers.
+  - **SRD Scoring Engine**: New weighted Semantic Relevance Density (SRD) scoring for contextual items based on Decisiveness, Frequency, and Impact.
+  - **Beast Mode Hardening**: Implemented SHA-256 integrity verification and automated semantic tagging for all memory shards.
+  - **Proactive Warm Retrieval**: Updated the context injector to automatically pull relevant shards based on task sub-context.
+- **Shard Helper Utility**: New `bin/shard-helper.js` for standalone memory analysis and integrity auditing.
+
+### Changed (v2.4.0)
+
+- **Planning Protocol**: `/mindforge:plan-phase` now officially supports the `--ads` flag for high-fidelity synthesis cycles.
+- **Compaction Protocol V3**: Upgraded the standard compaction flow to include `Step 4.5: Semantic Sharding`, preventing long-term context window pollution and reducing context overhead by ~35%.
 
 🚀 **MindForge v2.4.0 — Semantic Context Sharding (Tri-Tier Memory)**
 

@@ -78,4 +78,34 @@ All shards are hardened with **SHA-256 Checksums** and **Semantic Tags** to prev
 
 ---
 
-## 7. Stability & Extension
+
+---
+
+## 7. Adversarial Decision Synthesis (ADS) (V3)
+
+MindForge v3.0.0 introduces **Adversarial Decision Synthesis (ADS)**, a 3-model synthesis loop that ensures every architectural decision is battle-tested.
+
+### The 3-Model Loop
+
+1.  **Blue Team (Architect)**: Proposes the initial high-performance plan.
+2.  **Red Team (Auditor)**: Hardened via "Jailbreak" protocol to identify at least 3 critical flaws (Maintainability, Complexity, Security).
+3.  **Gold Team (Synthesizer)**: Consolidates findings using the **SOUL.md** scoring algorithm.
+
+### SOUL Decision Scoring
+
+| Metric | Factor | Description |
+| :--- | :--- | :--- |
+| **I** | Impact | Overall system-wide importance of the change. |
+| **L** | Leverage | How much this change unblocks future high-value work. |
+| **R** | Reversibility | How easy it is to undo this change if it fails. |
+| **E** | Effort | Total engineering complexity and time required. |
+| **Ri** | Risk | Probability of breakage or system regression. |
+| **C** | Cost | Token/Compute usage and infrastructure weight. |
+
+**Formula**: `Score = (I * L * R) / (E * Ri * C)`
+
+Decisions with a SOUL Score > 1.0 are considered architecturally sound.
+
+---
+
+## 8. Stability & Extension

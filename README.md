@@ -175,10 +175,11 @@ If issues are found, run:
 /mindforge:ui-phase 1
     → Create UI design contract (UI-SPEC.md) (v2)
 
-/mindforge:plan-phase 1
+/mindforge:plan-phase 1 [--ads]
     → Discuss scope and decisions
     → Research domain (parallel)
     → Create atomic XML task plans
+    → (Optional) Run Adversarial Decision Synthesis (ADS) loop
 
 /mindforge:execute-phase 1
     → Wave-based parallel execution
@@ -327,8 +328,20 @@ See `.mindforge/production/token-optimiser.md`.
 
 ---
 
-## What's new in v2.1.1
-- **Unified 4-Pillar Workflow**: `plan`, `execute`, `verify`, `ship` now hardened with `.agent/` structural integrity.
+---
+
+## What's new in v2.4.0
+- **Adversarial Decision Synthesis (ADS)**: High-fidelity planning via Architect/Auditor/Synthesizer loop.
+- **SOUL Scoring Engine**: Objective architectural ranking: (Impact * Leverage * Reversibility) / (Effort * Risk * Cost).
+- **Semantic Context Sharding**: Dynamic Tri-Tier Memory (Hot/Warm/Cold) with SRD relevance scoring.
+- **Red-Team Jailbreak**: Hardened auditing protocol that forces high-fidelity system critique.
+- **Automated ADR Workflow**: synthesis results persisted as SOUL-scored records in `.planning/decisions/`.
+- **Unified 4-Pillar Workflow**: `plan`, `execute`, `verify`, `ship` now hardened with V3 intelligence.
+
+---
+
+## What's new in v2.x
+
 - **Expanded Persona Ecosystem**: 32+ specialized engineering personas integrated from the MindForge core.
 - **Real-time Dashboard**: `/mindforge:dashboard` and high-performance web-based observability.
 - **Persistent Knowledge Graph**: `/mindforge:remember` and long-term project memory.
@@ -338,7 +351,7 @@ See `.mindforge/production/token-optimiser.md`.
 - **Autonomous Execution Engine**: `/mindforge:auto` and mid-execution `/mindforge:steer`.
 - **Unified Skills Registry**: 3-tier registry (Core/Org/Project) with 12 core skill packs.
 - **120+ Framework Assets**: Standardized directory structure for cross-IDE compatibility.
-- **Enterprise Manifest**: `file-manifest.json` for multi-project codebase mapping.
+- **Enterprise Manifest**: `file-manifest.json` for single source of truth for multi-project codebase mapping.
 - **Enterprise Integrations**: Jira, Confluence, Slack, GitHub, GitLab.
 - **Governance Pillars**: 6 non-bypassable compliance gates and Tier 3 security scaffolding.
 

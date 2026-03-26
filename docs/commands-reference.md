@@ -19,7 +19,7 @@ MindForge commands are organized into functional pillars to support the entire s
 
 | Command | Description |
 | :--- | :--- |
-| `/mindforge:plan-phase [N]` | Initiates strategic planning for a milestone: discuss → research → plan. |
+| `/mindforge:plan-phase [N]` | Initiates strategic planning for a milestone: discuss → research → plan. Supports `--ads` for adversarial synthesis. |
 | `/mindforge:execute-phase [N]` | Starts autonomous execution of task plans in parallel waves. |
 | `/mindforge:verify-phase [N]` | Runs Human Acceptance Testing (UAT) and automated validation gates. |
 | `/mindforge:ship [N]` | Finalizes delivery, generates release output, and creates a Pull Request. |
