@@ -10,9 +10,9 @@ Release published: v3.0.0-rc1.
 npx mindforge-cc@latest
 ```
 
-# Install V3 Release Candidate
+# Install V3 (Latest)
 ```bash
-npm install -g mindforge-cc@rc
+npm install -g mindforge-cc@latest
 ```
 
 ---
@@ -67,8 +67,8 @@ npm install -g mindforge-cc
 # Or try the v2.0.0-alpha (latest features)
 npm install -g mindforge-cc@alpha
 
-# Or try the V3 Release Candidate (latest features)
-npm install -g mindforge-cc@rc
+# Or try the V3 Release (latest features)
+npm install -g mindforge-cc@latest
 ```
 
 
