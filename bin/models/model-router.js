@@ -30,6 +30,7 @@ const PERSONA_MAP = {
   'qa-engineer':       'QA_MODEL',
   'research-agent':    'RESEARCH_MODEL',
   'debug-specialist':  'DEBUG_MODEL',
+  'decision-architect': 'PLANNER_MODEL',
 };
 
 let _settingsCache = null;

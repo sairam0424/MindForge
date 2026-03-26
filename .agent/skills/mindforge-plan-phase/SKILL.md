@@ -26,6 +26,7 @@ Phase number: $ARGUMENTS (optional — auto-detects next unplanned phase if omit
 - `--skip-verify` — Skip verification loop
 - `--prd <file>` — Use a PRD/acceptance criteria file instead of discuss-phase. Parses requirements into CONTEXT.md automatically. Skips discuss-phase entirely.
 - `--reviews` — Replan incorporating cross-AI review feedback from REVIEWS.md (produced by `/mindforge-review`)
+- `--ads` — Use Adversarial Decision Synthesis (Architect vs Auditor) for high-fidelity planning
 - `--text` — Use plain-text numbered lists instead of TUI menus (required for `/rc` remote sessions)
 
 Normalize phase input in step 2 before any directory lookups.
