@@ -1,13 +1,16 @@
 /**
- * MindForge v2 — Knowledge Capture Engine
+ * MindForge v2.4.0 — Knowledge Capture Engine (RAG 2.0)
  * Automatically extracts and stores knowledge from MindForge lifecycle events.
+ * Extended with graph-aware edge creation for the Knowledge Graph.
  */
 'use strict';
 
-const fs     = require('fs');
-const path   = require('path');
-const Store  = require('./knowledge-store');
-const Indexer = require('./knowledge-indexer');
+const fs       = require('fs');
+const path     = require('path');
+const Store    = require('./knowledge-store');
+const Indexer  = require('./knowledge-indexer');
+const Graph    = require('./knowledge-graph');
+const Embedder = require('./embedding-engine');
 
 const PLANNING_DIR = path.join(process.cwd(), '.planning');
 const DECISIONS_DIR = path.join(PLANNING_DIR, 'decisions');
@@ -53,6 +56,8 @@ function deduplicateOrAdd(entry) {
       // High similarity — reinforce instead of duplicate
       if (e.confidence >= entry.confidence) {
         Store.reinforce(e.id);
+        // Reinforce graph edges too
+        reinforceRelatedEdges(e.id);
         return { action: 'reinforced', id: e.id };
       } else {
         // New entry has higher confidence — supersede old
@@ -62,7 +67,119 @@ function deduplicateOrAdd(entry) {
   }
 
   const id = Store.add(entry);
+
+  // RAG 2.0: Auto-create graph edges for the new entry
+  autoLinkEntry(id, entry);
+
   return { action: 'added', id };
+}
+
+/**
+ * Auto-link a newly added entry to the knowledge graph.
+ * Builds embeddings and creates RELATED_TO edges for high-similarity matches.
+ * @param {string} entryId
+ * @param {object} entry
+ */
+function autoLinkEntry(entryId, entry) {
+  try {
+    const allEntries = Store.readAll();
+    if (allEntries.length < 2) return; // Need at least 2 entries
+
+    const { vectors } = Embedder.buildEmbeddings(allEntries);
+    const created = Graph.autoCreateEdges(entryId, vectors);
+
+    if (created.length > 0) {
+      // If this is a bug_pattern, also create CAUSED_BY edges to related code_patterns
+      if (entry.type === 'bug_pattern') {
+        createCausalEdges(entryId, allEntries, vectors);
+      }
+
+      // If this is an architectural_decision, create INFORMS edges
+      if (entry.type === 'architectural_decision') {
+        createInformsEdges(entryId, allEntries, vectors);
+      }
+    }
+  } catch (err) {
+    // Never crash the capture pipeline for graph errors
+    if (process.env.MINDFORGE_DEBUG) {
+      console.error('[RAG 2.0] Auto-link error:', err.message);
+    }
+  }
+}
+
+/**
+ * Create CAUSED_BY edges from bug patterns to related code patterns.
+ * @param {string} bugId
+ * @param {object[]} allEntries
+ * @param {Map} vectors
+ */
+function createCausalEdges(bugId, allEntries, vectors) {
+  const codePatterns = allEntries.filter(e => e.type === 'code_pattern' && !e.deprecated);
+  const bugVec = vectors.get(bugId);
+  if (!bugVec) return;
+
+  for (const cp of codePatterns) {
+    const cpVec = vectors.get(cp.id);
+    if (!cpVec) continue;
+
+    const sim = Embedder.cosineSimilarity(bugVec, cpVec);
+    if (sim >= 0.50) {
+      try {
+        Graph.addEdge({
+          sourceId: bugId,
+          targetId: cp.id,
+          type: Graph.EDGE_TYPES.CAUSED_BY,
+          weight: sim,
+          reason: `Bug pattern potentially caused by code pattern (sim: ${sim.toFixed(3)})`,
+        });
+      } catch { /* skip duplicates or self-refs */ }
+    }
+  }
+}
+
+/**
+ * Create INFORMS edges from architectural decisions to domain knowledge.
+ * @param {string} decisionId
+ * @param {object[]} allEntries
+ * @param {Map} vectors
+ */
+function createInformsEdges(decisionId, allEntries, vectors) {
+  const domainEntries = allEntries.filter(e =>
+    (e.type === 'domain_knowledge' || e.type === 'team_preference') && !e.deprecated
+  );
+  const decVec = vectors.get(decisionId);
+  if (!decVec) return;
+
+  for (const de of domainEntries) {
+    const deVec = vectors.get(de.id);
+    if (!deVec) continue;
+
+    const sim = Embedder.cosineSimilarity(decVec, deVec);
+    if (sim >= 0.55) {
+      try {
+        Graph.addEdge({
+          sourceId: decisionId,
+          targetId: de.id,
+          type: Graph.EDGE_TYPES.INFORMS,
+          weight: sim,
+          reason: `Decision informs domain knowledge (sim: ${sim.toFixed(3)})`,
+        });
+      } catch { /* skip duplicates or self-refs */ }
+    }
+  }
+}
+
+/**
+ * Reinforce graph edges connected to a reinforced node.
+ * @param {string} nodeId
+ */
+function reinforceRelatedEdges(nodeId) {
+  try {
+    const edges = Graph.getNodeEdges(nodeId);
+    for (const edge of edges.slice(0, 3)) { // Top 3 edges only
+      Graph.reinforceEdge(edge.id);
+    }
+  } catch { /* non-critical */ }
 }
 
 // ── Event-specific capture functions ─────────────────────────────────────────

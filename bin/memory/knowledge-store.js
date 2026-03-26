@@ -33,9 +33,21 @@ function setGlobalDir(dir) {
   globalBaseDir = dir;
 }
 
+// Test-mode override: flat memory dir without .mindforge/ nesting
+let testMemoryDir = null;
+
+/**
+ * Set a flat memory directory for testing (bypasses .mindforge/memory/ nesting).
+ * This avoids macOS App Sandbox EPERM on dot-prefixed directories.
+ * @param {string|null} dir - Flat directory path, or null to reset
+ */
+function setTestMode(dir) {
+  testMemoryDir = dir;
+}
+
 function getPaths() {
-  const memoryDir = path.join(baseDir, '.mindforge', 'memory');
-  const globalDir = path.join(globalBaseDir, '.mindforge');
+  const memoryDir = testMemoryDir || path.join(baseDir, '.mindforge', 'memory');
+  const globalDir = testMemoryDir || path.join(globalBaseDir, '.mindforge');
   return {
     MEMORY_DIR:       memoryDir,
     GLOBAL_DIR:       globalDir,
@@ -315,5 +327,5 @@ function stats() {
 module.exports = {
   add, deprecate, reinforce,
   readAll, readByType, readFile, query, stats,
-  setBaseDir, setGlobalDir, getPaths,
+  setBaseDir, setGlobalDir, setTestMode, getPaths,
 };
