@@ -1,1 +1,2 @@
 {"event":"INIT","date":"2026-03-25T00:00:00Z","summary":"MindForge Project Initialized"}
+{"id":"36525e1d9da1b674","timestamp":"2026-03-26T19:30:32.054Z","event":"hindsight_injected","target_id":"test-audit-001","description":"Recovering from $T_1$ failure","agent":"temporal-hub"}

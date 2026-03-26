@@ -90,6 +90,15 @@ const COMMANDS = {
     script: 'bin/spawn-agent.js',
     description: 'Invoke a specialized identity from /agents/',
     defaultArgs: ['identity']
+  },
+  'temporal': {
+    script: 'bin/engine/temporal-cli.js',
+    description: 'Manage time-travel debugging and state history'
+  },
+  'hindsight': {
+    script: 'bin/engine/temporal-cli.js',
+    description: 'Inject a fix into a past point and regenerate state',
+    defaultArgs: ['inject']
   }
 };
 

@@ -34,3 +34,5 @@ tests/tmp-graph/
 
 .agents/
 .claude/
+.planning/history/
+.planning/TEMPORAL-TEST.md

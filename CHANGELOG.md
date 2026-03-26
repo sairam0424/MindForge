@@ -1,6 +1,28 @@
 # Changelog
 
-## [2.5.0] — Local-First Knowledge Graph (RAG 2.0) — 2026-03-27
+## [2.6.0] — Temporal Vision (Time-Travel Debugging) — 2026-03-27
+
+🚀 **MindForge v2.6.0 — The Observability Revolution**
+
+This update introduces "Temporal Vision," a high-fidelity time-travel debugging system that allows developers to scrub through execution history, explore past states, and perform "Hindsight Injection" to repair architectural drift automatically.
+
+### Added (v2.6.0)
+
+- **Temporal Vision Engine**:
+  - **Temporal Hub**: Synchronous state snapshotting of the `.planning/` directory at every significant audit point.
+  - **State Snapshots**: High-fidelity records of `.md`, `.json`, and `.log` files stored in `.planning/history/[audit_id]/`.
+  - **Hindsight Injection**: Automated state repair protocol that rolls back history to a specific point ($T_n$), injects a correction, and re-triggers autonomous execution.
+- **Observability Interface (Dashboard Integration)**:
+  - **Temporal API**: REST endpoints for history navigation, snapshot exploration, and remote hindsight injection.
+  - **Auto-Runner Integration**: Unified event ID generation and automated state capture embedded in the core loop.
+- **CLI Extensions**:
+  - `/mindforge:temporal status`: View snapshot density and history stats.
+  - `/mindforge:temporal inject`: Manual hindsight injection from the terminal.
+  - `/mindforge:temporal cleanup`: Automated purge of stale history snapshots.
+- **Governance**:
+  - **Temporal Protocol (`temporal-protocol.md`)**: Definition of safety rules, recovery boundaries, and state integrity checks.
+
+### [2.5.0] — Local-First Knowledge Graph (RAG 2.0) — 2026-03-27
 
 🚀 **MindForge v2.5.0 — The Knowledge Graph Revolution**
 

@@ -12,6 +12,8 @@ const steeringManager = require('./steer');
 const progressStream = require('./progress-stream');
 const headlessAdapter = require('./headless');
 const KnowledgeCapture = require('../memory/knowledge-capture');
+const TemporalHub = require('../engine/temporal-hub');
+const crypto = require('crypto');
 
 class AutoRunner {
   constructor(options = {}) {
@@ -82,8 +84,29 @@ class AutoRunner {
   }
 
   writeAudit(event) {
+    if (!event.id) event.id = crypto.randomBytes(8).toString('hex');
     if (!event.timestamp) event.timestamp = new Date().toISOString();
+    
     fs.appendFileSync(this.auditPath, JSON.stringify(event) + '\n');
+    
+    // Auto-capture state for significant events
+    const STATE_CHANGING_EVENTS = [
+      'auto_mode_started',
+      'phase_planned',
+      'phase_execution_started',
+      'task_completed',
+      'hindsight_injected',
+      'auto_mode_completed'
+    ];
+    
+    if (STATE_CHANGING_EVENTS.includes(event.event)) {
+      TemporalHub.captureState(event.id, { 
+        agent: event.agent || 'auto-runner',
+        event: event.event,
+        phase: this.phase
+      });
+    }
+
     const result = this.monitor.analyze(event);
     if (result) this.handleStuck(result);
   }
