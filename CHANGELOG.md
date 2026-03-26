@@ -1,8 +1,30 @@
 # Changelog
 
-## [2.4.0] — Semantic Sharding & Adversarial Synthesis — 2026-03-26
+## [2.5.0] — Local-First Knowledge Graph (RAG 2.0) — 2026-03-27
+
+🚀 **MindForge v2.5.0 — The Knowledge Graph Revolution**
+
+This update introduces a sophisticated Local-First Knowledge Graph (RAG 2.0), moving beyond flat vector search to a typed-edge, traversable knowledge architecture with proactive context shadowing.
+
+### Added (v2.5.0)
+
+- **Local-First Knowledge Graph (RAG 2.0)**:
+  - **Embedding Engine**: Custom local TF-IDF vectorizer with bigram detection and camelCase splitting. Zero external dependencies.
+  - **Graph Engine**: Typed-edge graph (6 types) with BFS traversal, cycle detection, and SHA-256 edge integrity.
+  - **Auto-Shadow Engine**: Proactive "ghost-pattern" context injection for subagents based on graph proximity and semantic similarity.
+  - **Typed Edges**: Support for `RELATED_TO`, `CAUSED_BY`, `SUPERSEDES`, `DEPENDS_ON`, `INFORMS`, and `CONTRADICTS` relationships.
+  - **Graph-Aware Capture**: Automatic edge inference during memory capture from bug patterns and review findings.
+  - **Maintenance Tools**: Integrity verification, edge weight decay (time-based), and orphan node pruning.
+- **SDK Extensions**:
+  - Full TypeScript support for graph traversal, edge management, and hybrid similarity queries.
+
+### Fixed (v2.5.0)
+
+
+- **macOS App Sandbox Compatibility**: Implemented `setTestMode()` in memory engines to bypass nesting-related EPERM errors when running from sandboxed editors.
 
 🚀 **MindForge v2.4.0 — The Core Pillars Optimization**
+
 
 This major architectural update introduces a dynamic, SRD-based memory sharding system and the Adversarial Decision Synthesis (ADS) protocol, replacing legacy monolithic handoffs with a hardened, high-fidelity Tri-Tier Memory model.
 
