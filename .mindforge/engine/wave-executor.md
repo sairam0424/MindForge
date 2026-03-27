@@ -1,6 +1,11 @@
-# MindForge Engine — Wave Executor
+# MindForge Engine — Wave Execution Engine
+
+## Core Objective
+
+Orchestrate the parallel and sequential execution of a MindForge phase with atomic reliability and strict dependency enforcement.
 
 ## Purpose
+
 Group tasks from the dependency graph into waves and execute each wave.
 Within a wave, all tasks are independent and can run in parallel.
 Between waves, execution is strictly sequential.
@@ -8,11 +13,12 @@ Between waves, execution is strictly sequential.
 ## Wave grouping algorithm
 
 ### Input
+
 The dependency graph from `dependency-parser.md`.
 
 ### Algorithm — Kahn's topological sort (adapted for waves)
 
-```
+```text
 Initialize:
   remaining = all plan IDs
   completed = empty set
@@ -34,8 +40,9 @@ Repeat until remaining is empty:
 Return waves
 ```
 
-### Example output for the 5-plan example above:
-```
+### Example output for the 5-plan example above
+
+```text
 Wave 1: [01, 02]          ← No dependencies — run in parallel
 Wave 2: [03, 04]          ← Depend on Wave 1 — run in parallel after Wave 1
 Wave 3: [05]              ← Depends on both Wave 2 tasks — runs after Wave 2
@@ -44,7 +51,9 @@ Wave 3: [05]              ← Depends on both Wave 2 tasks — runs after Wave 2
 ## Wave execution protocol
 
 ### Before starting a wave
-1. Confirm all plans in previous wave have:
+
+1. **Nexus Trace:** Call `NexusTracer.startSpan('wave_[W]')`.
+2. Confirm all plans in previous wave have:
    - Status: Completed in SUMMARY file
    - Git commit SHA recorded
    - `<verify>` step passed
@@ -53,18 +62,41 @@ Wave 3: [05]              ← Depends on both Wave 2 tasks — runs after Wave 2
    Do not start the next wave. Report which plan failed and why.
 
 ### During a wave — parallel execution
+
 For each plan in the current wave, spawn a subagent with this exact context
 package (see `context-injector.md` for the injection protocol):
 
 ### Subagent invocation protocol (runtime-agnostic)
-Use the runtime-specific mechanism, but keep the inputs identical:
-- **Claude Code:** spawn a subagent with the context package and the PLAN file.
-  Require the subagent to write `SUMMARY-[N]-[M].md` and report completion.
-- **Antigravity:** spawn an agent via `.agent/` command with the same context
-  package and the PLAN file. Require the same SUMMARY file output.
 
-**Context package per subagent:**
-```
+Use the runtime-specific mechanism, but keep the inputs identical:
+
+#### 1. Swarm Check (MindForge V4)
+
+Before spawning any subagent, the executor MUST call `swarm-controller.md`.
+- **Input:** The PLAN file, task name, and file list.
+- **Output:** `single_persona` OR `swarm_cluster(template, leader, members)`.
+
+#### 2. Single Persona Execution
+
+If `single_persona` is returned:
+- **Nexus Trace:** Call `NexusTracer.startSpan('task_[N]-[M]', { parent_span_id: 'wave_[W]' })`.
+- **Claude Code:** spawn a subagent with the context package and the PLAN file.
+- **Antigravity:** spawn an agent via `.agent/` command with the same context.
+- Target: `SUMMARY-[N]-[M].md`.
+
+#### 3. Swarm Cluster Execution (The "Mesh" Mode)
+
+If `swarm_cluster` is returned:
+- **Nexus Trace:** Call `NexusTracer.startSpan('swarm_[N]-[M]', { parent_span_id: 'wave_[W]', template: '[Template]' })`.
+- **Initialize Swarm State:** Create `.planning/phases/[N]/SWARM-STATE-[M].json`.
+- **Spawn Cluster:** Simultaneously spawn all members in the cluster (e.g., Architect, Dev, Security).
+- **Communication:** Agents in the swarm MUST read/write to `SWARM-STATE-[M].json` for coordination.
+- **Consolidation:** The **Swarm Leader** is responsible for collecting all findings and writing a unified `SWARM-SUMMARY-[N]-[M].md`.
+- **Context:** Each agent gets a specialized persona from `persona-factory.md` (weighted by Context7 insights).
+
+**Context package per subagent**
+
+```text
 REQUIRED (always inject):
   .mindforge/org/CONVENTIONS.md
   .mindforge/org/SECURITY.md
@@ -84,6 +116,7 @@ NEVER inject to subagents:
 ```
 
 ### After each plan in a wave completes
+
 The executing subagent must:
 1. Run the `<verify>` step and capture output
 2. Write SUMMARY-[N]-[M].md with verify output included
@@ -92,6 +125,7 @@ The executing subagent must:
 5. Report completion status back to the orchestrator
 
 ### Wave completion
+
 After all plans in a wave complete:
 1. Collect all SUMMARY files from this wave
 2. Run the project's full test suite
@@ -112,24 +146,28 @@ When a task's `<verify>` step fails:
 4. **Stop the entire wave.** Other tasks in this wave that have not yet started:
    do not start them. Tasks already running in parallel: let them complete
    naturally, but do not start the next wave regardless of their outcome.
-5. **Report to the orchestrator:**
-   ```
-   ━━━ Wave [W] STOPPED — Task Failure ━━━━━━━━━━━━━━━━━━━━━━
-   Failed task : Plan [N]-[M]: [task name]
-   Verify output:
-   [full verify output]
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   ```
-6. **Ask the user:**
-   ```
-   Options:
-     1. Spawn debug agent to diagnose the failure
-     2. Show me the failing code and I'll fix it manually
-     3. Skip this task and continue the wave (not recommended)
-     4. Abort the entire phase
-   
-   Choose 1, 2, 3, or 4:
-   ```
+5. **Report to the orchestrator**
+
+```text
+━━━ Wave [W] STOPPED — Task Failure ━━━━━━━━━━━━━━━━━━━━━━
+Failed task : Plan [N]-[M]: [task name]
+Verify output:
+[full verify output]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+6. **Ask the user**
+
+```text
+Options:
+  1. Spawn debug agent to diagnose the failure
+  2. Show me the failing code and I'll fix it manually
+  3. Skip this task and continue the wave (not recommended)
+  4. Abort the entire phase
+
+Choose 1, 2, 3, or 4:
+```
+
 7. If user chooses 1: invoke `/mindforge:debug` with the failure context pre-loaded.
 8. If user chooses 3 (skip): write a `quality_gate_failed` AUDIT entry with
    `"gate": "verify_skipped_by_user"` and continue. This is tracked.
@@ -140,30 +178,35 @@ When a task's `<verify>` step fails:
 When the test suite fails after a wave completes:
 
 1. **Identify the failing tests** — capture the full test output.
-2. **Identify the likely causal commit:**
-   ```bash
-   git log --oneline -[number of tasks in this wave]
-   ```
-3. **Report specifically:**
-   ```
-   ━━━ Test Suite Failure After Wave [W] ━━━━━━━━━━━━━━━━━━━━━
-   [N] tests failing.
-   
-   Likely cause: [commit sha] — [commit message]
-   Failing tests:
-     - [test name]: [error]
-     - [test name]: [error]
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   ```
+2. **Identify the likely causal commit**
+
+```bash
+git log --oneline -[number of tasks in this wave]
+```
+
+3. **Report specifically**
+
+```text
+━━━ Test Suite Failure After Wave [W] ━━━━━━━━━━━━━━━━━━━━━
+[N] tests failing.
+
+Likely cause: [commit sha] — [commit message]
+Failing tests:
+  - [test name]: [error]
+  - [test name]: [error]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
 4. **Write a `quality_gate_failed` AUDIT entry.**
 5. **Do not start the next wave.** This is absolute — no exceptions.
-6. **Ask the user:**
-   ```
-   Options:
-     1. Debug the failing tests now
-     2. Revert the last wave's commits and re-plan
-     3. I'll fix the tests manually — notify me when done
-   ```
+6. **Ask the user**
+
+```text
+Options:
+  1. Debug the failing tests now
+  2. Revert the last wave's commits and re-plan
+  3. I'll fix the tests manually — notify me when done
+```
 
 ### Subagent hang (no SUMMARY file after expected duration)
 
@@ -185,6 +228,7 @@ When execute-phase discovers a PLAN file referenced in the dependency graph is m
 3. Do not continue with partial plan execution.
 
 ### Phase completion
+
 After all waves complete:
 1. Run the phase verification pipeline (see `verification-pipeline.md`)
 2. Write VERIFICATION.md
@@ -200,7 +244,7 @@ Write to `.planning/phases/[N]/WAVE-REPORT-[N].md`:
 
 ## Wave 1
 | Plan | Task Name           | Status | Duration | Commit     |
-|------|---------------------|--------|----------|------------|
+| :--- | :--- | :--- | :--- | :--- |
 | 01   | Create user model   | ✅     | ~8 min   | abc1234    |
 | 02   | Create product model| ✅     | ~6 min   | def5678    |
 
@@ -208,7 +252,7 @@ Write to `.planning/phases/[N]/WAVE-REPORT-[N].md`:
 
 ## Wave 2
 | Plan | Task Name             | Status | Duration | Commit     |
-|------|-----------------------|--------|----------|------------|
+| :--- | :--- | :--- | :--- | :--- |
 | 03   | User API endpoints    | ✅     | ~12 min  | ghi9012    |
 | 04   | Product API endpoints | ✅     | ~10 min  | jkl3456    |
 
@@ -216,14 +260,14 @@ Write to `.planning/phases/[N]/WAVE-REPORT-[N].md`:
 
 ## Wave 3
 | Plan | Task Name     | Status | Duration | Commit     |
-|------|---------------|--------|----------|------------|
+| :--- | :--- | :--- | :--- | :--- |
 | 05   | Checkout UI   | ✅     | ~15 min  | mno7890    |
 
 **Wave 3 test results:** All passing ✅
 
 ### Failure row format (if any task fails)
 | Plan | Task Name         | Status | Duration | Commit  | Error |
-|------|-------------------|--------|----------|---------|-------|
+| :--- | :--- | :--- | :--- | :--- | :--- |
 | 02   | Create product model | ❌  | ~4 min   | n/a     | Verify failed: TypeError ... |
 
 ## Phase summary
