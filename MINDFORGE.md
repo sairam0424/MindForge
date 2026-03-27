@@ -1,25 +1,21 @@
-# MINDFORGE.md — Parameter Registry (v3.0.0)
-
-> This file is a machine-optimized source of truth for project parameters.
-> NO PROCEDURAL LOGIC HERE. Logic belongs in .agent/CLAUDE.md.
-
----
+# MINDFORGE.md — Parameter Registry (v4.0.0-alpha.swarm)
 
 ## 1. IDENTITY & VERSIONING
 
 [NAME]    = MindForge
-[VERSION] = 3.0.0
-[STABLE]  = true
-[REQUIRED_CORE_VERSION] = 3.0.0
-[DESCRIPTION] = Reactive Autonomous Intelligence Framework
+[VERSION] = 4.0.0-alpha.swarm
+[STABLE]  = false
+[MODE]    = "Dynamic Orchestration"
+[REQUIRED_CORE_VERSION] = 4.0.0
 
----
+## 2. INTELLIGENCE TOGGLES (V4 UPDATES)
 
-## 2. REACTIVE INTELLIGENCE TOGGLES
-
-# Binary switches for V3 features
-[REACTIVE_MODE]     = true
-[CONTEXT_SHARDING]   = true
+[SWARM_ORCHESTRATION] = true
+[AUTO_SWARM_THRESHOLD] = 7.0
+[CONTEXT7_DEPTH] = "EXTENDED"
+[DYNAMISM_LEVEL] = 5
+[REACTIVE_MODE] = true
+[CONTEXT_SHARDING] = true
 [ADS_LOOP_ENFORCED]  = true
 [TEMPORAL_VISION]    = true
 [RAG_2_AUTO_SHADOW] = true
