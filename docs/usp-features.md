@@ -1,6 +1,6 @@
-# MindForge v3.0.0 — Unique Selling Points, Features, and Best Practices (v3.0.0)
+# MindForge v4.1.0 — Unique Selling Points, Features, and Best Practices (v4.1.0)
 
-This document summarizes what makes MindForge v2.0.0 distinct, what features
+This document summarizes what makes MindForge v4.1.0 distinct, what features
 are included in the official release, and how to use them effectively.
 
 ---
@@ -57,6 +57,15 @@ are included in the official release, and how to use them effectively.
 
 16. **Temporal Vision (v3)**
     - Full-fidelity history navigation, hindsight injection, and automated state repair across the execution wave.
+
+17. **Dynamic Swarm Orchestration (v4)**
+    - Parallel "Agentic Mesh" with shared state (`SWARM-STATE.json`) and leader-led synthesis of specialist outcomes.
+
+18. **Zero-Trust Agentic Identity (v4)**
+    - Non-repudiable audit trails signed by unique Decentralized Identifiers (DIDs) for every swarm action.
+
+19. **MindForge Nexus: Agentic Reasoning Tracing (v4.1)**
+    - High-fidelity **ART** spans embedded in the execution engine, providing deep visibility into agentic "thought chains" and parallel mesh reasoning.
 
 ---
 
@@ -244,6 +253,38 @@ preserving scope (local vs global).
 /mindforge:memory shard
 /mindforge:memory status --srd
 ```
+
+---
+
+### 21. Dynamic Swarm Mesh (v4)
+**What it does:** Orchestrates parallel specialist clusters (e.g., Security, UI, Data) with automated state coordination.
+
+**How to use:**
+```bash
+/mindforge:swarm spawn --template [NAME]
+/mindforge:swarm status --mesh
+```
+
+---
+
+### 22. ZTAI Governance (v4)
+**What it does:** Enforces cryptographic signing and trust-tier validation for all autonomous agent actions.
+
+**How to use:**
+```bash
+/mindforge:identity verify [AGENT_ID]
+/mindforge:identity sign --did
+```
+
+---
+
+### 23. MindForge Nexus (Observability & Tracing) (v4.1)
+**What it does:** High-fidelity Agentic Reasoning Tracing (ART) for the agentic mesh. Logs spans, parent-trace IDs, and granular reasoning traces.
+
+**How to use:**
+- Automated: Every wave/task execution triggers Nexus Tracer spans.
+- Manual: Query `.planning/AUDIT.jsonl` for `trace_id` and `span_id` chains.
+- Dashboard: Real-time visualization of mesh traces and reasoning heatmaps.
 
 ---
 

@@ -1,5 +1,39 @@
 # Changelog
 
+## [4.1.0] — MindForge Nexus (Observability & Tracing) — 2026-03-27
+
+🚀 **MindForge v4.1.0 — The Observability Revolution**
+
+This update introduces **MindForge Nexus**, a high-fidelity observability and tracing system designed for the agentic mesh. It enables deep visibility into agentic "thought chains" and parallel swarm execution through OpenTelemetry-compatible tracing.
+
+### Key Pillars (v4.1.0)
+
+- **Nexus Tracer Engine**: Core engine for managing hierarchical spans and trace context propagation across the mesh.
+- **Agentic Reasoning Tracing (ART)**: New audit event type `reasoning_trace` for capturing granular agentic thought cycles.
+- **Hierarchical Span Orchestration**: Universal ART fields (`trace_id`, `span_id`, `parent_span_id`) integrated into all audit events.
+- **Mesh-Integrated Tracing**: Direct injection of tracing protocols into the `Wave Executor` and `Swarm Controller`.
+- **Nexus Dashboard Spec**: Architectural blueprint for real-time trace visualization and reasoning heatmaps.
+- **ZTAI Observability**: Integrated trust-tier visibility for secure execution monitoring.
+
+---
+
+## [4.0.0] — Dynamic Multi-Agent Swarms (Agentic Mesh) — 2026-03-27
+
+🚀 **MindForge v4.0.0 — The Mesh Revolution**
+
+This landmark release introduces **Dynamic Multi-Agent Swarms (Agentic Mesh)**, shifting MindForge from sequential subagent execution to a parallel, task-aware, and verifiable cluster-based orchestration system. V4 enables mass-scale autonomous engineering through ephemeral specialist clusters and zero-trust resonance.
+
+### Key Pillars (v4.0.0)
+
+- **Dynamic Swarm Orchestration**: The new `SwarmController` analyzes task complexity and spawns ephemeral clusters of specialist personas in parallel.
+- **Micro-Persona Factory**: On-the-fly persona specialization using task-specific knowledge injection via `Context7`.
+- **Wave Executor (Mesh Mode)**: Refactored parallel execution engine with shared `SWARM-STATE` synchronization and leader-led synthesis.
+- **ZTAI (Zero-Trust Agentic Identity)**: DID-based cryptographic signing for swarm actions and multi-tier trust enforcement.
+- **Enterprise specialist Library**: 12+ pre-defined swarm templates including `AIEngineeringSwarm`, `IdentityTrustSwarm`, `DataMeshSwarm`, and `IncidentResponseSwarm`.
+- **HITL Governance Gates**: Human-in-the-loop decision gates for high-risk (Tier 3) architectural and compliance-heavy operations.
+
+---
+
 ## [3.0.0] — Reactive Autonomous Intelligence — 2026-03-27
 
 🚀 **MindForge v3.0.0 — The Architecture Revolution**

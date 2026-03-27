@@ -1,17 +1,17 @@
-# MindForge — Enterprise Agentic Framework (v3.0.0-rc1)
+# MindForge — Enterprise Agentic Framework (v4.1.0-alpha.nexus)
 
 MindForge turns Claude Code and Antigravity into production-grade engineering
 partners with governance, observability, and a reactive autonomous intelligence engine.
-Release published: v3.0.0-rc1.
+Release published: v4.1.0-alpha.nexus.
 
 # Install
 ```bash
-npx mindforge-cc@latest
+npx mindforge-cc@v4-alpha
 ```
 
-# Install V3 (Latest)
+# Install V4 (Experimental)
 ```bash
-npm install -g mindforge-cc@latest
+npm install -g mindforge-cc@v4-alpha
 ```
 
 ---
@@ -21,6 +21,9 @@ npm install -g mindforge-cc@latest
 AI coding agents degrade over long sessions. Context fills up. Quality drops.
 Decisions get forgotten. MindForge fixes that with:
 
+- **MindForge Nexus (v4.1)** — High-fidelity **ART** (Agentic Reasoning Tracing) for the agentic mesh
+- **Dynamic Swarm Orchestration (v4)** — parallel "Agentic Mesh" with shared state (v4)
+- **Zero-Trust Identity (v4)** — DID-signed non-repudiable audit logs (v4)
 - **Context Sharding (v3)** — relevance-dense memory management (40% token savings)
 - **Adversarial Synthesis (v3)** — zero-drift logic through red/blue model debate
 - **Temporal Vision (v3)** — full history scrubbing and hindsight state repair
@@ -343,17 +346,22 @@ See `.mindforge/production/token-optimiser.md`.
 
 ---
 
-## What's new in v3.0.0-rc1
+---
 
-🚀 **The Reactive Intelligence Era**
+## What's new in v4.1.0 (Nexus)
 
-MindForge V3 transforms the framework from a "disciplined workflow engine" into a **Reactive Autonomous Intelligence**.
+🚀 **The High-Fidelity Observability Era**
 
-- **Context Sharding (SRD)**: Achieve a **40% reduction in token waste** via relevance-dense memory management.
-- **Adversarial Decision Synthesis (ADS)**: Zero-drift architectural logic through a 3-model debate and SOUL-scoring engine.
-- **Temporal Vision**: Full-fidelity history navigation, hindsight state injection, and automated repair.
-- **RAG 2.0 (Auto-Shadowing)**: Background pattern retrieval from the local knowledge graph without manual prompts.
-- **V3 Core Guide**: New definitive architecture guide in `docs/architecture/V3-CORE.md`.
+MindForge V4.1 introduces **Nexus**, the definitive observability layer for autonomous agents.
+
+- **Agentic Reasoning Tracing (ART)**: Deep visibility into "thought chains" and parallel mesh reasoning via hierarchical spans.
+- **Trace Context Propagation**: OpenTelemetry-compatible trace IDs across waves, tasks, and swarm clusters.
+- **Reasoning Heatmaps**: Automated visualization of adversarial disagreement and consensus synthesis.
+- **Mesh Visibility**: Live tracing of ephemeral specialist clusters in the agentic mesh.
+
+---
+
+## What's new in v4.0.0 (Swarm)
 
 ---
 
