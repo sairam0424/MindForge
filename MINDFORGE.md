@@ -1,12 +1,12 @@
-# MINDFORGE.md — Parameter Registry (v4.0.0-alpha.swarm)
+# MINDFORGE.md — Parameter Registry (v4.1.0-alpha.nexus)
 
 ## 1. IDENTITY & VERSIONING
 
 [NAME]    = MindForge
-[VERSION] = 4.0.0-alpha.swarm
+[VERSION] = 4.2.0-alpha.ztai
 [STABLE]  = false
-[MODE]    = "Dynamic Orchestration"
-[REQUIRED_CORE_VERSION] = 4.0.0
+[MODE]    = "Zero-Trust Identity"
+[REQUIRED_CORE_VERSION] = 4.2.0
 
 ## 2. INTELLIGENCE TOGGLES (V4 UPDATES)
 
@@ -19,6 +19,10 @@
 [ADS_LOOP_ENFORCED]  = true
 [TEMPORAL_VISION]    = true
 [RAG_2_AUTO_SHADOW] = true
+[ENABLE_ART_TRACING] = true
+[ENABLE_ZTAI] = true
+[ZTAI_KEY_TYPE] = "Ed25519"
+[NEXUS_TRACE_RETENTION_DAYS] = 30
 
 ---
 

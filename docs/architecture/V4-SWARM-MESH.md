@@ -14,7 +14,7 @@ The central engine logic that handles:
 
 - **Cluster Spawning**: Selecting the optimal swarm template based on tech stack and task category.
 
-- **Trust Enforcement**: Validating ZTAI (Zero-Trust Agentic Identity) tiers.
+- **Identity Governance**: Validating **ZTAI (Zero-Trust Agentic Identity)** trust tiers and verifying cryptographic signatures for specialized results.
 
 ### II. PersonaFactory (Micro-Personas)
 Dynamically creates specialized "Micro-Personas" on-the-fly by:
@@ -29,6 +29,24 @@ The `WaveExecutor` has been refactored to support:
 
 - **Consolidation Protocol**: The Swarm Leader synthesizes all findings into a unified `SWARM-SUMMARY.md`.
 
+### IV. MindForge Nexus: ART (Agentic Reasoning Tracing)
+The definitive observability layer for the mesh:
+- **Reasoning Spans**: Hierarchical tracking of every "thought" and decision point.
+- **Trace Propagation**: Context-aware trace IDs that link waves, tasks, and clusters.
+- **Audit Integration**: Direct link to `.planning/AUDIT.jsonl` via `trace_id` and `span_id`.
+
+### V. Global Intelligence Mesh (The Hub)
+The foundation for cross-repository organizational memory:
+- **Semantic Hub**: Syncs local knowledge pieces with the global organizational store (`~/.mindforge/`).
+- **Ghost Pattern Detection**: Proactive risk matching that prevents repeating known organizational failures at the planning stage.
+- **Repository Graph**: Every repo in the mesh contributes to a shared understanding of architectural success and failure.
+
+### VI. Autonomous FinOps Hub (Economics)
+MindForge integrates an **Autonomous FinOps Hub** that treats compute as a first-class resource. The `ModelBroker` utilizes a **Confidence-to-Cost (C2C)** engine to dynamically route tasks based on complexity and trust tier, ensuring maximum ROI without compromising safety.
+
+### VII. Proactive Equilibrium (Reliability)
+The system achieves **Proactive Equilibrium** through a `WaveFeedbackLoop`. If execution divergence exceeds 20%, the system triggers **Temporal Hindsight**—an automated RCA process that rewrites the phase plan to stay within project guardrails.
+
 ---
 
 ## 3. Swarm Governance (v4.2)
@@ -39,7 +57,10 @@ Every swarm cluster operates under strict enterprise governance rules:
 
 - **Resource Budgets**: FinOps-aware routing to optimal models based on the cluster's defined confidence-to-cost (C2C) ratio.
 
-- **Audit Trails**: Non-repudiable logs signed by each agent's unique Decentralized Identifier (DID).
+- **Audit Trails**: Non-repudiable logs signed by each agent's unique **Decentralized Identifier (DID)**.
+
+- **Identity Hardening (Beast Mode)**: High-tier agents (T3) use asymmetric keys anchored in a simulated **Secure Enclave (HSM)**.
+- **Integrity Proofs**: All audit blocks are finalized with **Merkle-root payloads** signed by the archiver to prevent tampering.
 
 ---
 

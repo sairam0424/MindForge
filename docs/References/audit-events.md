@@ -14,6 +14,9 @@ Each line is a JSON object with a required `event` type and a `session_id`.
 - `agent` (string)
 - `phase` (number or null)
 - `session_id` (string)
+- `trace_id` (string, v4.1+) - UUID linking multiple related spans.
+- `span_id` (string, v4.1+) - ID for the current execution unit.
+- `parent_span_id` (string, v4.1+) - Link to the calling span.
 
 ## Common event types
 ### `project_initialised`
@@ -45,6 +48,9 @@ Fields: `plugin_name`, `version`, `permissions`
 
 ### `plugin_uninstalled`
 Fields: `plugin_name`
+
+### `reasoning_trace` (v4.1+)
+Fields: `trace_id`, `span_id`, `persona`, `thought_chain`, `decision_point`, `adversarial_critique` (optional)
 
 ## Rotation
 Rotate when file exceeds 10,000 lines. Archive into `.planning/audit-archive/`.
