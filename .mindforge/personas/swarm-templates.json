@@ -1,0 +1,118 @@
+{
+  "version": "4.2.0",
+  "mesh_protocols": {
+    "shared_state": ".planning/phases/[N]/SWARM-STATE-[M].json",
+    "consolidation_format": "SWARM-SUMMARY-[N]-[M].md",
+    "trust_verification": "ZTAI-v4"
+  },
+  "templates": {
+    "UISwarm": {
+      "leader": "ui-auditor",
+      "members": ["developer", "accessibility", "whimsy-injector"],
+      "focus": "Visual fidelity, interaction states, and WCAG 2.2 compliance.",
+      "trust_tier": 1,
+      "decision_gate": "autonomous",
+      "resource_budget": "medium",
+      "required_skills": ["ui-ux-pro-max"]
+    },
+    "BackendSwarm": {
+      "leader": "architect",
+      "members": ["developer", "security-reviewer", "database-optimizer"],
+      "focus": "Architectural alignment, performance, and API versioning.",
+      "trust_tier": 2,
+      "decision_gate": "autonomous",
+      "resource_budget": "medium",
+      "required_skills": ["system-architecture"]
+    },
+    "SecuritySwarm": {
+      "leader": "security-reviewer",
+      "members": ["architect", "developer", "threat-detection-engineer"],
+      "focus": "OWASP A01-A10 mitigation, secret detection, and trust boundary enforcement.",
+      "trust_tier": 3,
+      "decision_gate": "hitl",
+      "resource_budget": "high",
+      "required_skills": ["security-engineer"]
+    },
+    "AIEngineeringSwarm": {
+      "leader": "ai-engineer",
+      "members": ["prompt-engineer", "developer", "model-qa-specialist"],
+      "focus": "Model orchestration, prompt grounding, hallucination mitigation, and inference optimization.",
+      "trust_tier": 2,
+      "decision_gate": "autonomous",
+      "resource_budget": "high",
+      "required_skills": ["agency-ai-engineer"]
+    },
+    "DeveloperExperienceSwarm": {
+      "leader": "developer-advocate",
+      "members": ["devops-automator", "tech-writer", "workflow-optimizer"],
+      "focus": "CI/CD pipeline ergonomics, DX documentation, and internal tool optimization.",
+      "trust_tier": 1,
+      "decision_gate": "autonomous",
+      "resource_budget": "low",
+      "required_skills": ["agency-developer-advocate"]
+    },
+    "DataMeshSwarm": {
+      "leader": "data-engineer",
+      "members": ["database-optimizer", "analytics-reporter", "compliance-auditor"],
+      "focus": "Data lakehouse patterns, ETL pipelining, and semantic layer integrity.",
+      "trust_tier": 2,
+      "decision_gate": "hitl",
+      "resource_budget": "medium",
+      "required_skills": ["agency-data-engineer"]
+    },
+    "IdentityTrustSwarm": {
+      "leader": "agentic-identity-trust-architect",
+      "members": ["security-reviewer", "architect", "blockchain-security-auditor"],
+      "focus": "Zero-Trust Agentic Identity (ZTAI), DID-based signing, and authentication bypass mitigation.",
+      "trust_tier": 3,
+      "decision_gate": "hitl",
+      "resource_budget": "high",
+      "required_skills": ["agency-agentic-identity-trust-architect"]
+    },
+    "GrowthAnalyticsSwarm": {
+      "leader": "growth-hacker",
+      "members": ["analytics-reporter", "ui-auditor", "tracking-measurement-specialist"],
+      "focus": "A/B testing, conversion funnel optimization, and telemetry instrumentation.",
+      "trust_tier": 1,
+      "decision_gate": "autonomous",
+      "resource_budget": "medium",
+      "required_skills": ["agency-growth-hacker"]
+    },
+    "IncidentResponseSwarm": {
+      "leader": "sre-site-reliability-engineer",
+      "members": ["developer", "incident-response-commander", "debug-specialist"],
+      "focus": "Rapid root cause analysis (RCA), hotfix deployment, and post-mortem drafting.",
+      "trust_tier": 3,
+      "decision_gate": "hitl",
+      "resource_budget": "high",
+      "required_skills": ["gsd-debug"]
+    },
+    "ComplianceSwarm": {
+      "leader": "compliance-auditor",
+      "members": ["legal-compliance-checker", "architect", "security-reviewer"],
+      "focus": "GDPR/SOC2 alignment, PII masking, and regulatory audit trail verification.",
+      "trust_tier": 3,
+      "decision_gate": "hitl",
+      "resource_budget": "medium",
+      "required_skills": ["agency-legal-compliance-checker"]
+    },
+    "QualityAssuranceSwarm": {
+      "leader": "qa-engineer",
+      "members": ["developer", "verifier", "test-results-analyzer"],
+      "focus": "End-to-end regression, edge-case fuzzing, and coverage-gap analysis.",
+      "trust_tier": 1,
+      "decision_gate": "autonomous",
+      "resource_budget": "medium",
+      "required_skills": ["gsd-add-tests"]
+    },
+    "FullStackSwarm": {
+      "leader": "architect",
+      "members": ["ui-auditor", "developer", "security-reviewer", "tech-writer"],
+      "focus": "End-to-end feature delivery with unified UI, API security, and documentation.",
+      "trust_tier": 2,
+      "decision_gate": "autonomous",
+      "resource_budget": "high",
+      "required_skills": ["system-architecture", "ui-ux-pro-max"]
+    }
+  }
+}

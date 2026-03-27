@@ -1,5 +1,22 @@
 # Changelog
 
+## [4.0.0] — Dynamic Multi-Agent Swarms (Agentic Mesh) — 2026-03-27
+
+🚀 **MindForge v4.0.0 — The Mesh Revolution**
+
+This landmark release introduces **Dynamic Multi-Agent Swarms (Agentic Mesh)**, shifting MindForge from sequential subagent execution to a parallel, task-aware, and verifiable cluster-based orchestration system. V4 enables mass-scale autonomous engineering through ephemeral specialist clusters and zero-trust resonance.
+
+### Key Pillars (v4.0.0)
+
+- **Dynamic Swarm Orchestration**: The new `SwarmController` analyzes task complexity and spawns ephemeral clusters of specialist personas in parallel.
+- **Micro-Persona Factory**: On-the-fly persona specialization using task-specific knowledge injection via `Context7`.
+- **Wave Executor (Mesh Mode)**: Refactored parallel execution engine with shared `SWARM-STATE` synchronization and leader-led synthesis.
+- **ZTAI (Zero-Trust Agentic Identity)**: DID-based cryptographic signing for swarm actions and multi-tier trust enforcement.
+- **Enterprise specialist Library**: 12+ pre-defined swarm templates including `AIEngineeringSwarm`, `IdentityTrustSwarm`, `DataMeshSwarm`, and `IncidentResponseSwarm`.
+- **HITL Governance Gates**: Human-in-the-loop decision gates for high-risk (Tier 3) architectural and compliance-heavy operations.
+
+---
+
 ## [3.0.0] — Reactive Autonomous Intelligence — 2026-03-27
 
 🚀 **MindForge v3.0.0 — The Architecture Revolution**
