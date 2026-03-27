@@ -29,6 +29,12 @@ The `WaveExecutor` has been refactored to support:
 
 - **Consolidation Protocol**: The Swarm Leader synthesizes all findings into a unified `SWARM-SUMMARY.md`.
 
+### IV. MindForge Nexus: ART (Agentic Reasoning Tracing)
+The definitive observability layer for the mesh:
+- **Reasoning Spans**: Hierarchical tracking of every "thought" and decision point.
+- **Trace Propagation**: Context-aware trace IDs that link waves, tasks, and clusters.
+- **Audit Integration**: Direct link to `.planning/AUDIT.jsonl` via `trace_id` and `span_id`.
+
 ---
 
 ## 3. Swarm Governance (v4.2)

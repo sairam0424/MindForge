@@ -1,6 +1,6 @@
-# MindForge v3.0.0 — Unique Selling Points, Features, and Best Practices (v3.0.0)
+# MindForge v4.1.0 — Unique Selling Points, Features, and Best Practices (v4.1.0)
 
-This document summarizes what makes MindForge v2.0.0 distinct, what features
+This document summarizes what makes MindForge v4.1.0 distinct, what features
 are included in the official release, and how to use them effectively.
 
 ---
@@ -63,6 +63,9 @@ are included in the official release, and how to use them effectively.
 
 18. **Zero-Trust Agentic Identity (v4)**
     - Non-repudiable audit trails signed by unique Decentralized Identifiers (DIDs) for every swarm action.
+
+19. **MindForge Nexus: Agentic Reasoning Tracing (v4.1)**
+    - High-fidelity **ART** spans embedded in the execution engine, providing deep visibility into agentic "thought chains" and parallel mesh reasoning.
 
 ---
 
@@ -272,6 +275,16 @@ preserving scope (local vs global).
 /mindforge:identity verify [AGENT_ID]
 /mindforge:identity sign --did
 ```
+
+---
+
+### 23. MindForge Nexus (Observability & Tracing) (v4.1)
+**What it does:** High-fidelity Agentic Reasoning Tracing (ART) for the agentic mesh. Logs spans, parent-trace IDs, and granular reasoning traces.
+
+**How to use:**
+- Automated: Every wave/task execution triggers Nexus Tracer spans.
+- Manual: Query `.planning/AUDIT.jsonl` for `trace_id` and `span_id` chains.
+- Dashboard: Real-time visualization of mesh traces and reasoning heatmaps.
 
 ---
 

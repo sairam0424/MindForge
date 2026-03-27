@@ -52,7 +52,8 @@ Wave 3: [05]              ← Depends on both Wave 2 tasks — runs after Wave 2
 
 ### Before starting a wave
 
-1. Confirm all plans in previous wave have:
+1. **Nexus Trace:** Call `NexusTracer.startSpan('wave_[W]')`.
+2. Confirm all plans in previous wave have:
    - Status: Completed in SUMMARY file
    - Git commit SHA recorded
    - `<verify>` step passed
@@ -78,6 +79,7 @@ Before spawning any subagent, the executor MUST call `swarm-controller.md`.
 #### 2. Single Persona Execution
 
 If `single_persona` is returned:
+- **Nexus Trace:** Call `NexusTracer.startSpan('task_[N]-[M]', { parent_span_id: 'wave_[W]' })`.
 - **Claude Code:** spawn a subagent with the context package and the PLAN file.
 - **Antigravity:** spawn an agent via `.agent/` command with the same context.
 - Target: `SUMMARY-[N]-[M].md`.
@@ -85,6 +87,7 @@ If `single_persona` is returned:
 #### 3. Swarm Cluster Execution (The "Mesh" Mode)
 
 If `swarm_cluster` is returned:
+- **Nexus Trace:** Call `NexusTracer.startSpan('swarm_[N]-[M]', { parent_span_id: 'wave_[W]', template: '[Template]' })`.
 - **Initialize Swarm State:** Create `.planning/phases/[N]/SWARM-STATE-[M].json`.
 - **Spawn Cluster:** Simultaneously spawn all members in the cluster (e.g., Architect, Dev, Security).
 - **Communication:** Agents in the swarm MUST read/write to `SWARM-STATE-[M].json` for coordination.
