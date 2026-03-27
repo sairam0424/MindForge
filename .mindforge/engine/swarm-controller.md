@@ -40,11 +40,15 @@ Once a swarm is triggered, select a template from `swarm-templates.json`:
 
 ## Swarm Initialization Protocol
 
-1. **Select Leader:** The designated leader persona is responsible for the final `SUMMARY` write.
-2. **Generate Micro-Personas:** Call `persona-factory.md` for each member of the cluster.
-3. **Establish Shared State:** Initialize `.planning/phases/[N]/SWARM-STATE-[M].json` for inter-agent communication.
-4. **Context Injection:** Inject the base context + swarm-specific documentation (from Context7) into all agents.
-5. **Enforce Trust Tier:** Validate that all agents in the cluster have the required `trust_tier` (ZTAI) for the task.
+1. **Nexus Trace:** Call `NexusTracer.startSpan('swarm_cluster_[Template]')`.
+2. **Assign Identity (ZTAI):** For each specialist, call `ztai-manager.registerAgent(persona, tier)`.
+3. **Select Leader:** The designated leader persona is responsible for the final `SUMMARY` write.
+4. **Generate Micro-Personas:** Call `persona-factory.md` for each member of the cluster.
+5. **Establish Shared State:** Initialize `.planning/phases/[N]/SWARM-STATE-[M].json` for inter-agent communication.
+6. **Nexus ART:** Record reasoning traces for each agent as they join the mesh.
+7. **Context Injection:** Inject the base context + swarm-specific documentation (from Context7) into all agents.
+8. **Enforce Trust Tier:** Validate that all agents in the cluster have the required `trust_tier` (ZTAI) for the task.
+9. **Signing:** All swarm actions MUST be cryptographically signed with the agent's DID (see ZTAI protocol).
 
 ## Decision Gates & Governance
 
