@@ -1,6 +1,18 @@
 # Changelog
-
-## [4.2.0] — Zero-Trust Agentic Identity (ZTAI) — 2026-03-27
+ 
+## [4.3.0] — Enterprise Mesh & Proactive Equilibrium — 2026-03-28
+ 
+🚀 **MindForge v4.3.0 — The Maturity Release**
+ 
+This major update completes the **MindForge V4 Roadmap**, introducing autonomous financial governance and self-healing reliability engines. It also includes a comprehensive structural reorganization of the framework for enterprise scalability.
+ 
+### Key Pillars (v4.3.0)
+ 
+- **Autonomous FinOps Hub (Pillar V)**: Implemented `ModelBroker` for dynamic **C2C (Confidence-to-Cost)** routing and `FinOpsHub` for real-time ROI tracking.
+- **Proactive Equilibrium (Pillar VI)**: Implemented `WaveFeedbackLoop` for divergence detection and `TemporalHindsight` for autonomous state recovery (RCA/Repair).
+- **Structural Reorganization**: Migrated all core engine implementation files from `.mindforge/` logic directories to a standardized `bin/` domain architecture.
+- **Global Memory Sync**: Enhanced `SemanticHub` to support organizational-level knowledge sharing via `~/.mindforge/`.
+- **Hardenened ZTAI Beast Mode**: HSM-simulated signing for Tier 3 principals and automated audit integrity manifests.
 
 🚀 **MindForge v4.2.0 — The Security Revolution**
 
