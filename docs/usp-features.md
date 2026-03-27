@@ -58,6 +58,12 @@ are included in the official release, and how to use them effectively.
 16. **Temporal Vision (v3)**
     - Full-fidelity history navigation, hindsight injection, and automated state repair across the execution wave.
 
+17. **Dynamic Swarm Orchestration (v4)**
+    - Parallel "Agentic Mesh" with shared state (`SWARM-STATE.json`) and leader-led synthesis of specialist outcomes.
+
+18. **Zero-Trust Agentic Identity (v4)**
+    - Non-repudiable audit trails signed by unique Decentralized Identifiers (DIDs) for every swarm action.
+
 ---
 
 ## Feature Set (v2.0.0)
@@ -243,6 +249,28 @@ preserving scope (local vs global).
 ```bash
 /mindforge:memory shard
 /mindforge:memory status --srd
+```
+
+---
+
+### 21. Dynamic Swarm Mesh (v4)
+**What it does:** Orchestrates parallel specialist clusters (e.g., Security, UI, Data) with automated state coordination.
+
+**How to use:**
+```bash
+/mindforge:swarm spawn --template [NAME]
+/mindforge:swarm status --mesh
+```
+
+---
+
+### 22. ZTAI Governance (v4)
+**What it does:** Enforces cryptographic signing and trust-tier validation for all autonomous agent actions.
+
+**How to use:**
+```bash
+/mindforge:identity verify [AGENT_ID]
+/mindforge:identity sign --did
 ```
 
 ---

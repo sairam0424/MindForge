@@ -605,6 +605,32 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 
 ---
 
+## Swarm Clusters (The Agentic Mesh) [v4.2]
+
+MindForge V4 introduces the ability to spawn dynamic, task-aware clusters of specialist personas. These swarms work in parallel with shared state to solve complex enterprise challenges.
+
+### Enterprise Swarm Templates
+
+| Swarm | Leader | Members | Focus |
+| :--- | :--- | :--- | :--- |
+| **UISwarm** | ui-auditor | developer, accessibility, whimsy-injector | Visual fidelity, interaction, WCAG 2.2 |
+| **BackendSwarm** | architect | developer, security-reviewer, db-optimizer | Architecture, performance, API versioning |
+| **SecuritySwarm** | security-reviewer | architect, developer, threat-detection | OWASP mitigation, secret detection |
+| **AIEngineeringSwarm** | ai-engineer | prompt-engineer, developer, model-qa | Hallucination mitigation, grounding |
+| **IncidentResponse** | sre-engineer | developer, incident-commander, debugger | RCA, hotfix, post-mortem |
+| **ComplianceSwarm** | compliance-auditor | legal-compliance, architect, security | GDPR/SOC2 alignment, PII masking |
+| **IdentityTrustSwarm** | identity-architect | security-reviewer, architect, blockchain | Zero-Trust, DID-based signing |
+| **DataMeshSwarm** | data-engineer | db-optimizer, analyst, compliance | Lakehouse patterns, ETL integrity |
+
+### Swarm Governance Protocols
+
+- **Trust Tiers**: Swarms are enforced by ZTAI (Zero-Trust Agentic Identity) tiers (0-3).
+- **Decision Gates**: High-risk swarms (e.g., Compliance) use **Human-in-the-Loop (HITL)** gates.
+- **Resource Budgets**: Performance-aware routing based on confidence-to-cost (C2C) ratios.
+- **Mesh Synthesis**: The Swarm Leader synthesizes all specialist outputs into a single, cohesive `SWARM-SUMMARY`.
+
+---
+
 ### MF-Series: Fundamental Framework Identities
 
 The MF-Series represents the "Core Essence" of the MindForge agentic framework. These personas provide a standardized, high-value foundation for delegation and multi-agent interaction.
@@ -621,16 +647,19 @@ The MF-Series represents the "Core Essence" of the MindForge agentic framework. 
 
 #### mf-researcher (The Detective)
 **Role:** Knowledge gathering and objective approach comparison.
+
 - **Triggers:** `research`, `explore`, `benchmark`.
 - **Produces:** Tradeoff analysis and strategy recommendations.
 
 #### mf-reviewer (The Auditor)
 **Role:** Quality assurance and output validation.
+
 - **Triggers:** `review`, `audit`, `validate`.
 - **Produces:** Feedback, issues, and approval status.
 
 #### mf-memory (The Clerk)
 **Role:** Persistence management and knowledge graph maintenance.
+
 - **Triggers:** `remember`, `store`, `learning`.
 - **Produces:** Memory updates and linked patterns.
 
