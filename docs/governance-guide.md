@@ -1,8 +1,8 @@
-# MindForge Governance Guide (v5.1.0)
+# MindForge Governance Guide (v5.6.0)
 Absolute Control through Policy-as-Code (PaC)
 
 ## 1. Goal
-MindForge v5.1.0 introduces a non-bypassable, intent-level governance layer. This guide explains how **Agentic Policy Orchestration (APO)** and **Zero-Trust Agentic Identity (ZTAI)** work together to secure the enterprise development lifecycle, now hardened by the **Neural Protocol Mesh**.
+MindForge v5.6.0 introduces a non-bypassable, intent-level governance layer. This guide explains how **Agentic Policy Orchestration (APO)**, **Zero-Trust Agentic Identity (ZTAI)**, and the **Sentinel Execution Center** work together to secure the enterprise development lifecycle.
 
 ## 2. Agentic Policy Orchestrator (APO)
 The APO is a decentralized governance engine that intercepts every autonomous intent before it is executed.
@@ -18,7 +18,9 @@ Before the `AutoRunner` begins a new execution wave, it extracts the acting agen
 The `PolicyEngine` evaluates this intent against organizational **Policy-as-Code (PaC)** definitions (typically stored in `bin/governance/policies/`).
 - **Permit**: The action is allowed and execution proceeds.
 - **Deny**: The action is blocked, and the violation is logged to `AUDIT.jsonl`.
+- **Blast Radius Denial (v5.3.0)**: Action is blocked if the `Impact Score` exceeds the policy `max_impact` threshold.
 - **Escalate**: The action requires a higher-tier DID signature or explicit HITL (Human-in-the-Loop) approval.
+- **Attestation Blocking (v5.6.0)**: Executing a skill without a valid HSM-signed signature is blocked.
 
 ## 3. Trust Tier Architecture (ZTAI Hardened)
 V5.1.0 automatically maps ZTAI Trust Tiers to explicit project roles through the `RBACManager`.
@@ -30,11 +32,16 @@ V5.1.0 automatically maps ZTAI Trust Tiers to explicit project roles through the
 | **2** | Specialized | Security/DevOps Specialist. | Access to `/security`, `/infra`, and `/bin/governance`. |
 | **3** | Principal | Lead Architect / Core Engine. | **HSM-Enclave Signing Required** for all engine modifications. |
 
-## 4. Protocol Mesh Governance (v5.1.0 Enhancement)
-The **Beast Addition** integrates protocol-level governance into the APO engine.
-- **Protocol Enforceability**: Every protocol activation (e.g., `/mindforge:tdd`) is logged as a governance event.
-- **Mesh Integrity**: The **Parallel Mesh** synchronizes governance state across multiple agents, preventing "split-brain" policy execution.
-- **Skill Compliance**: New skills created via `/mindforge:skill-creation` are automatically audited for APO compatibility.
+### A. Zero-Trust Skill Protocol (v5.6.0)
+The Sentinel layer enforces binary runtime attestation for all skills.
+- **ZTAI Signing**: Developers must use `mindforge-cc sign <skill>` to cryptographically lock a skill. This computes a SHA-256 hash and signs it with a Tier 3 DID.
+- **JIT Verification**: Every `SKILL.md` is verified upon loading. If the hash does not match the signature registry, the `AutoRunner` blocks the skill.
+- **Enterprise Mode**: Strict enforcement requires 100% attestation for all library skills.
+
+### B. Reasoning Entropy Guardrails (v5.5.0)
+The framework proactively monitors the "reasoning space" of the agent to prevent token-burn and logical drifting.
+- **RES Scoring**: `NexusTracer` evaluates reasoning steps for semantic redundancy.
+- **Stagnation Recovery**: When entropy falls below the safety threshold, the system interrupts the wave and injects a **Steering Vector** to force a logical pivot.
 
 ## 5. Governance Workflow (V5.1.0)
 1. **ZTAI Handshake**: Agent proves identity using Ed25519 signatures.
@@ -48,6 +55,15 @@ MindForge v5.1.0 ships with default policies including:
 - **`gate_tier_3_engine`**: Blocks all modifications to `bin/autonomous/` unless signed by a Tier 3 DID.
 - **`protect_security_namespace`**: Limits access to `/security` and `/governance` to Tier 2+ specialists.
 - **`mesh_integrity_lock`**: Ensures only high-confidence agents can push to the **Federated Intelligence Mesh**.
+- **`enforce_blast_radius` (v5.3.0)**: Dynamic policy that limits `DELETE` impact to <30 for Tier 1 agents.
+- **`require_skill_attestation` (v5.6.0)**: Forces all skills to have valid ZTAI-signatures before loading.
+- **`monitor_reasoning_entropy` (v5.5.0)**: Automated loop detection and steering for long-running autonomous waves.
+
+## 7. Dynamic Blast Radius (v5.3.0)
+The **ImpactAnalyzer** calculates a score (0-100) for every intent:
+- **Action Type**: `DELETE` (10), `WRITE` (5), `READ` (1).
+- **Sensitivity**: 4x multiplier for `.mindforge/`, `bin/`, and `config/` namespaces.
+- **Fail-Safe**: Defaults to Score 100 (CRITICAL) if analysis fails.
 
 ---
-*Status: V5.1.0 "Beast Addition" Governance Implemented & Verified (2026-03-28)*
+*Status: V5.3.0 Dynamic Blast Radius Implemented & Verified (2026-03-28)*

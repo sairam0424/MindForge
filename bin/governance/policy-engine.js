@@ -6,6 +6,7 @@
 
 const fs   = require('node:fs');
 const path = require('node:path');
+const ImpactAnalyzer = require('./impact-analyzer');
 
 class PolicyEngine {
   constructor(config = {}) {
@@ -32,6 +33,22 @@ class PolicyEngine {
     const requestId = `pol_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
     console.log(`[APO-EVAL] [${requestId}] Evaluating intent: ${intent.action} on ${intent.resource} by ${intent.did}`);
 
+    // Pillar II (v5.3.0): Dynamic Impact Scoring
+    let impactScore = 100; // Default to CRITICAL impact if analysis fails (Fail-Safe)
+    let riskTier = 'UNKNOWN';
+
+    try {
+      impactScore = ImpactAnalyzer.analyze({
+        action: intent.action,
+        target: intent.resource,
+        namespace: intent.namespace // Optional namespace context
+      });
+      riskTier = ImpactAnalyzer.getRiskTier(impactScore);
+      console.log(`[APO-BLAST] [${requestId}] Calculated Blast Radius: ${impactScore}/100 [Tier: ${riskTier}]`);
+    } catch (err) {
+      console.error(`[APO-ERR] [${requestId}] Impact analysis failed. Defaulting to high-impact restriction.`, err);
+    }
+
     const policies = this.loadPolicies();
     
     // Default Deny if no policies found
@@ -46,7 +63,21 @@ class PolicyEngine {
       }
     }
 
-    // 2. Check for explicit PERMIT rules
+    // 2. Pillar II (v5.3.0): Dynamic Blast Radius Enforcement
+    // Check if the current intent impact exceeds the policy's max_impact or agent's trust tier
+    for (const policy of policies) {
+      if (this.matches(policy, intent)) {
+        if (policy.max_impact && impactScore > policy.max_impact) {
+          return { 
+            verdict: 'DENY', 
+            reason: `Dynamic Blast Radius Violation: Intent impact (${impactScore}) exceeds policy limit (${policy.max_impact})`, 
+            requestId 
+          };
+        }
+      }
+    }
+
+    // 3. Check for explicit PERMIT rules
     for (const policy of policies) {
       if (policy.effect === 'PERMIT' && this.matches(policy, intent)) {
         return { verdict: 'PERMIT', reason: `Authorized by ${policy.id}`, requestId };

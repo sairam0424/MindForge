@@ -38,7 +38,33 @@ function main() {
   console.log('─'.repeat(60));
 
   const content = fs.readFileSync(filePath, 'utf8');
-  const results = { schema: [], content: [], quality: [], valid: true };
+  const results = { schema: [], content: [], quality: [], valid: true, attestation: { ok: true, msg: 'No signature found (optional)' } };
+
+  // ── Level 0: Binary Runtime Attestation (v5 Pillar IV) ──────────────────────
+  const sigPath = path.join(process.cwd(), '.mindforge', 'org', 'skills', 'SIGNATURES.json');
+  if (fs.existsSync(sigPath)) {
+    const crypto = require('node:crypto');
+    const ztai = require('./governance/ztai-manager');
+    const signatures = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
+    const skillNameCandidate = path.basename(path.dirname(filePath));
+    const sigRecord = signatures[skillNameCandidate];
+
+    if (sigRecord) {
+      const currentHash = crypto.createHash('sha256').update(content).digest('hex');
+      const isHashValid = currentHash === sigRecord.hash;
+      const isSigValid = ztai.verifySignature(sigRecord.did, currentHash, sigRecord.signature);
+
+      if (!isHashValid || !isSigValid) {
+        results.attestation = { ok: false, msg: `INTEGRITY FAILURE: Signature mismatch [Hash: ${isHashValid}, Sig: ${isSigValid}]` };
+        results.valid = false;
+      } else {
+        results.attestation = { ok: true, msg: `VERIFIED: Signed by ${sigRecord.did}` };
+      }
+    } else if (ARGS.includes('--enterprise')) {
+      results.attestation = { ok: false, msg: 'REQUIRED: No signature found for this skill in Enterprise Mode' };
+      results.valid = false;
+    }
+  }
 
   // ── Level 1: Schema ─────────────────────────────────────────────────────────
   const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);

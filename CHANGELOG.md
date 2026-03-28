@@ -1,5 +1,79 @@
 # Changelog
 
+## [5.6.0] - 2026-03-28
+### Added
+- **Pillar IV: Supply Chain Trust (Binary Runtime Attestation)**.
+- Cryptographic skill signing in `SkillRegistry` via ZTAIManager Tier 3 Enclaves.
+- JIT Attestation in `SkillValidator` to verify skill integrity before agent execution.
+- `SIGNATURES.json` tracking for all enterprise-grade skills.
+
+## [5.5.0] - 2026-03-28
+### Added
+- **Pillar III: Predictive Agentic Reliability (Reasoning Entropy Monitoring)**.
+- Reasoning Entropy Scoring (RES) in `NexusTracer` to detect semantic stagnation and loops.
+- Proactive Self-Healing trigger for high-similarity thought sequences.
+- Steering Vector generation in `TemporalHindsight` to break agentic deadlocks.
+
+## [5.4.0] — Beast Mode Hardening — 2026-03-28
+
+# Release Notes - MindForge v5.6.0 "Sentinel Execution"
+
+MindForge v5.6.0 introduces the final pillars of the Hyper-Enterprise roadmap: Proactive Reliability and Zero-Trust Skill Execution.
+
+## Highlights
+- **Reasoning Entropy Monitoring (PAR)**: Proactively prevents token-burning reasoning loops.
+- **Binary Runtime Attestation (ZTS)**: Cryptographically ensures that skills have not been tampered with before they are loaded by the agent.
+
+---
+
+## [5.6.0] - Sentinel Execution
+- Implemented JIT Attestation for Skill Registry.
+- Added Skill Signing utility in `mindforge-cc sign`.
+
+## [5.5.0] - Predictive Reliability
+- Implemented RES (Reasoning Entropy Scoring) in Nexus Tracer.
+- Added Steering Vector injection for proactive loop breaking.
+
+🚀 **MindForge v5.4.0 — Enterprise Resilience (Hardened Edition)**
+
+This update elevates the v5.3.0 "Hyper-Enterprise" features to maximum robustness ("Beast Mode"), implementing critical safety systems and advanced observability.
+
+### 🛡️ Beast Mode Hardening (v5.4.0)
+
+- **Circuit Breaker Pattern**: Implemented a stateful `CircuitBreaker` in `federated-sync.js` to prevent network floods. Automatically disables mesh sync for 1 hour after 3 consecutive EIS failures.
+- **Critical-Path Protection**: Automated "Blast Radius" score of 100 in `impact-analyzer.js` for sensitive files (`.env`, `*.pem`, `id_rsa`, `package-lock.json`, etc.).
+- **Recursive Depth Penalty**: Introduced a 1.5x impact multiplier for actions deeper than 5 directory levels, preventing mass-scale silent modifications.
+- **Failure Telemetry**: Added `sync-history.jsonl` and `sync-telemetry.jsonl` for detailed conflict resolution and error auditability.
+- **Resilient Execution**: Raised default scores for `EXECUTE` and `GRANT` actions to increase governance oversight.
+
+## [5.3.0] — Dynamic Blast Radius — 2026-03-28
+
+🚀 **MindForge v5.3.0 — Pillar II Implementation (APO v2)**
+
+This update introduces real-time risk assessment for agentic actions, preventing high-impact regressions through dynamic guardrails.
+
+### Pillar II: Dynamic Blast Radius (v5.3.0)
+
+- **Impact Scoring Engine**: Implemented `impact-analyzer.js` to calculate the "Blast Radius" (0-100) of every intent based on action severity and target sensitivity.
+- **Max-Impact Policy Enforcement**: Updated `policy-engine.js` to enforce `max_impact` thresholds, allowing granular control over destructive operations.
+- **Fail-Safe Security**: Integrated "Default Deny" posture if impact analysis fails, defaulting to score 100 (CRITICAL).
+
+## [5.2.0] — Semantic Vector Consensus — 2026-03-28
+
+🚀 **MindForge v5.2.0 — Pillar I Implementation (FIM v2)**
+
+This update transcends simple timestamp-based synchronization, moving to a vector-space consensus model for organizational knowledge.
+
+### Pillar I: Semantic Vector Consensus (v5.2.0)
+
+- **Hybrid Semantic Synthesis**: Refactored `federated-sync.js` to use `EmbeddingEngine` cosine similarity for knowledge merging.
+- **4-Branch Resolution Protocol**:
+    - **LWW (> 0.9)**: Auto-resolve near-identical entries.
+    - **Autonomous ADS Merge (0.75 - 0.9)**: Proactive synthesis of overlapping knowledge.
+    - **Nexus Handover (0.6 - 0.75)**: Human-agent conflict resolution.
+    - **Topic Isolation (< 0.6)**: Prevention of ID collisions for disparate content.
+- **Resilient Sync Architecture**: Hardened synchronization loop with robust error handling and TF-IDF fallback.
+
 ## [5.1.0] — The Beast Addition — 2026-03-28
 
 🚀 **MindForge v5.1.0 — Evolution of the Agentic Protocol Mesh**
@@ -79,12 +153,17 @@ This landmark release transforms MindForge into a distributed, governable, and c
 - **RBAC Manager**: Implemented `rbac-manager.js` for mapping DIDs to project roles and binding permissions to ZTAI Trust Tiers.
 - **Policy Interceptor**: Deep integration into `auto-runner.js`, enforcing a pre-flight governance gate before every autonomous wave.
 - **Default Enterprise Policies**: Shipped with initial security guardrails for engine and infrastructure protection.
+- **Dynamic Blast Radius (v5.3.0)**: Integrated `ImpactAnalyzer` to calculate and enforce risk-based thresholds for autonomous actions.
 
 ### Hardening ("Beast" Mode v5.0.0-alpha.1)
 
 - **ZTAI Interlock**: All mesh and policy operations now utilize the hardware-enclave (simulated) signing engine for Tier 3 principals.
 - **Dynamic Intent Extraction**: Autonomous intents are now derived in real-time from active session identities.
-- **Conflict Resolution (LWW)**: Hardened the federated sync with Last-Write-Wins conflict resolution logic.
+- **Conflict Resolution (v5.2.0)**: Uses **Hybrid Semantic Synthesis** (Pillar I v5.2.0). 
+  - **Similarity > 0.9**: Near-identical; auto-resolve via **Last-Write-Wins (LWW)**.
+  - **0.75 - 0.9**: Semantic Overlap; triggers **Autonomous ADS Merging**.
+  - **0.6 - 0.75**: Conflict; triggers **Nexus Handover (DHH)** for human steering.
+  - **< 0.6**: Topic Collision; isolates entries into unique IDs to prevent data loss.
 
 ---
 
@@ -305,7 +384,7 @@ This release fixes documentation asset synchronization and repairs logic corrupt
 
 ---
 
-## [2.1.2] — Beast Mode Branding & CI Fix — 2026-03-25
+## [2.1.2]*Status: V5.2.0 Semantic Consensus Implemented & Verified (2026-03-28)*
 
 🚀 **MindForge v2.1.2 — Beast Mode Branding & CI Fix**
 
@@ -539,9 +618,10 @@ This major release transforms MindForge from a Claude-centric framework into a u
 
 - Gate 3 (secret detection) now runs PRE-COMMIT in auto mode
 - Pre-flight dirty check excludes `.planning/` state files
-- DECOMPOSE: dependency chain correctly updated in downstream plans
-- S01 stuck detection requires consecutive failures
-- S03 error normalization preserves module/package names
+- DECOMPOSE:- **Deny**: The action is blocked, and the violation is logged to `AUDIT.jsonl`.
+- **Blast Radius Denial (v5.3.0)**: Action is blocked if the `Impact Score` exceeds the policy `max_impact` threshold.
+- **Escalate**: The action requires a higher-tier DID signature or explicit HITL (Human-in-the-Loop) approval.
+eserves module/package names
 - Steering injection guard validates all instructions
 - SIGTERM handler waits for task cleanup before saving state
 

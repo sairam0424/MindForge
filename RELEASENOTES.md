@@ -1,3 +1,37 @@
+# MindForge v5.4.0 — Beast Mode Hardening
+## Top Summary
+The v5.4.0 release elevates the "Hyper-Enterprise" features to maximum robustness ("Beast Mode"), implementing critical safety systems, automated blast-radius protection for sensitive files, and advanced failure telemetry.
+
+## Highlights
+- **Circuit Breaker Pattern**: Stateful resilience in `federated-sync.js` to prevent network floods during outages.
+- **Critical-Path Protection**: Automated "Blast Radius" score of 100 for high-risk files (secrets, locks, audits).
+- **Depth-Aware Governance**: 1.5x impact multiplier for deep directory modifications to prevent mass-scale silent regressions.
+- **Enhanced Observability**: Detailed conflict resolution and sync telemetry logs for enterprise auditing.
+
+---
+
+# MindForge v5.3.0 — Dynamic Blast Radius
+## Top Summary
+The v5.3.0 release introduces real-time impact analysis and automated risk-based guardrails for agentic actions, preventing architectural regressions and accidental deletions.
+
+## Highlights
+- **Impact Scoring Engine**: Real-time evaluation of action severity and target namespace sensitivity.
+- **Fail-Safe Policy Enforcement**: Default-deny posture for critical operations exceeding impact thresholds.
+- **Dynamic Governance**: Extensible `max_impact` rules integrated into the Policy Engine.
+
+---
+
+# MindForge v5.2.0 — Semantic Vector Consensus
+## Top Summary
+The v5.2.0 release upgrades the Federated Intelligence Mesh (FIM) from simple LWW logic to a Hybrid Semantic Synthesis model, enabling intelligent knowledge merging across the organization.
+
+## Highlights
+- **Vector-Space Consensus**: Uses cosine similarity to resolve knowledge conflicts between federated agents.
+- **4-Branch Resolution Protocol**: Automated merging, human-in-the-loop handover, and topic isolation based on semantic distance.
+- **ADS Integration**: Proactive synthesis of overlapping insights using the Autonomous Design System engine.
+
+---
+
 # MindForge v5.1.0 — The Beast Addition
 ## Top Summary
 The v5.1.0 release integrates 14 advanced agentic protocols and high-performance session hooks, sanitizing and hardening them for the MindForge ecosystem.

@@ -1,4 +1,4 @@
-# MindForge v5.1.0 — Commands Reference
+# MindForge v5.6.0 — Commands Reference
 
 MindForge commands are organized into functional pillars to support the entire software development lifecycle (SDLC).
 
@@ -37,6 +37,7 @@ MindForge commands are organized into functional pillars to support the entire s
 | `/mindforge:tokens` | Analyzes and profiles token usage for the current session. |
 | `/mindforge:neural-orchestrator` | Activates the advanced protocol layer for the current session. |
 | `shard-helper --verify` | (CLI Internal) Verifies the integrity and SHA-256 checksums of memory shards. |
+| `/mindforge:entropy-check`| (Sentinel) Manually trigger Reasoning Entropy Analysis on the current context. |
 
 ---
 
@@ -51,6 +52,7 @@ MindForge commands are organized into functional pillars to support the entire s
 | `/mindforge:skills validate [PATH]` | Passes a skill through the 7-Dimension Scorer for quality verification. |
 | `/mindforge:marketplace search [Q]`| Searches community skills from the central registry. |
 | `/mindforge:marketplace install ID` | Installs a verified community skill into the project context. |
+| `mindforge-cc sign <SKILL>`| (Sentinel) Cryptographically sign a skill with a Tier 3 DID signature. |
 
 ---
 
@@ -81,3 +83,4 @@ These protocols represent specialized, high-fidelity engineering behaviors porte
 | `/mindforge:tdd` | Enhanced Test-Driven Development protocol with strict verification. |
 | `/mindforge:debug` | Advanced systematic debugging with persistent state tracking. |
 | `/mindforge:verify-work` | Multi-level truth verification (existence, substance, wiring). |
+| `/mindforge:sentinel-status`| Displays real-time integrity and reliability metrics for the mesh. |
