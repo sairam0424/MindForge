@@ -9,6 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const ztai = require('../governance/ztai-manager');
+const SREManager = require('./sre-manager');
 
 class NexusTracer {
   constructor(config = {}) {
@@ -18,6 +19,7 @@ class NexusTracer {
     this.activeSpans = new Map();
     this.did = config.did || null; // Active Agent DID
     this.enableZtai = config.enableZtai !== false;
+    this.sreManager = new SREManager();
 
     // v5 Pillar IV: Agentic SBOM
     this.sbom = {
@@ -62,12 +64,25 @@ class NexusTracer {
     if (attributes.model_id) this.sbom.models.add(attributes.model_id);
     if (attributes.skill) this.sbom.skills.add(attributes.skill);
 
+    // v5 Pillar VI: Enclave Check
+    if (attributes.is_confidential && !attributes.enclave_id) {
+      try {
+        span.attributes.enclave_id = this.sreManager.initializeEnclave({ 
+          tier: attributes.tier || 1, 
+          did: this.did 
+        });
+      } catch (err) {
+        console.warn(`[NexusTracer] Failed to initialize SRE for confidential span: ${err.message}`);
+      }
+    }
+
     // Record span start in AUDIT.jsonl
     this._recordEvent('span_started', { 
       span_id: spanId, 
       parent_span_id: parentSpanId,
       span_name: name,
-      ...attributes 
+      ...attributes,
+      enclave_id: span.attributes.enclave_id
     });
 
     return spanId;
@@ -83,6 +98,11 @@ class NexusTracer {
     span.status = status;
     span.end_time = new Date().toISOString();
     
+    // v5 Pillar VI: Enclave Termination
+    if (span.attributes.enclave_id) {
+      this.sreManager.terminateEnclave(span.attributes.enclave_id);
+    }
+
     this._recordEvent('span_completed', {
       span_id: spanId,
       status,
@@ -96,10 +116,17 @@ class NexusTracer {
    * Record a Reasoning Trace event (ART granularity).
    */
   recordReasoning(spanId, agent, thought, resolution = 'none') {
+    const span = this.activeSpans.get(spanId);
+    let sanitizedThought = thought;
+
+    if (span && span.attributes.enclave_id) {
+      sanitizedThought = this.sreManager.sanitizeThoughtChain(thought, span.attributes.enclave_id);
+    }
+
     this._recordEvent('reasoning_trace', {
       span_id: spanId,
       agent,
-      thought,
+      thought: sanitizedThought,
       resolution
     });
   }

@@ -1,8 +1,7 @@
-# MindForge — Enterprise Agentic Framework (v4.3.0)
+# MindForge — Enterprise Agentic Framework (v5.0.0)
 
-MindForge turns Claude Code and Antigravity into production-grade engineering
-partners with governance, observability, and a reactive autonomous intelligence engine.
-Release published: v4.3.0-stable.
+MindForge turns AI coding agents into production-grade engineering partners with governance, multi-cloud resilience, and a non-bypassable Sovereign Reason Enclave.
+Release published: v5.0.0-PRO.
 
 ## Installation & Setup
 
@@ -37,12 +36,14 @@ npx mindforge-cc@latest --claude --local
 AI coding agents degrade over long sessions. Context fills up. Quality drops.
 Decisions get forgotten. MindForge fixes that with:
 
-- **Autonomous FinOps (v4.3)** — Dynamic **C2C** (Confidence-to-Cost) routing and Agentic ROI tracking (v4.3)
-- **Proactive Equilibrium (v4.3)** — Real-time **Wave Divergence** monitoring and autonomous state recovery (v4.3)
-- **MindForge Nexus (v4.1)** — High-fidelity **ART** (Agentic Reasoning Tracing) for the agentic mesh
-- **Dynamic Swarm Orchestration (v4)** — parallel "Agentic Mesh" with shared state (v4)
-- **Zero-Trust Identity (v4.2)** — DID-signed non-repudiable audit logs with HSM/Enclave support (v4.3)
-- **Global Intelligence Mesh (v4.2)** — Cross-repo knowledge sharing and Ghost Pattern Detection (v4.3)
+- **Multi-Cloud Arbitrage (v5.0)** — Dynamic routing and provider hedging with low-latency arbitrage.
+- **Sovereign Reason Enclave (v5.0)** — TEE-simulated reasoning isolation and sanitization for confidential workloads.
+- **Human-Agent Handover (v5.0)** — Nexus State Bundles and mid-wave steering injection.
+- **Autonomous FinOps (v4.3)** — Dynamic **C2C** (Confidence-to-Cost) routing and Agentic ROI tracking.
+- **Proactive Equilibrium (v4.3)** — Real-time **Wave Divergence** monitoring and autonomous state recovery.
+- **MindForge Nexus (v4.1)** — High-fidelity **ART** (Agentic Reasoning Tracing).
+- **Zero-Trust Identity (v4.2)** — DID-signed non-repudiable audit logs with HSM/Enclave support.
+- **Global Intelligence Mesh (v4.2)** — Cross-repo knowledge sharing and Ghost Pattern Detection.
 - **Context Sharding (v3)** — relevance-dense memory management (40% token savings)
 - **Adversarial Synthesis (v3)** — zero-drift logic through red/blue model debate
 - **Temporal Vision (v3)** — full history scrubbing and hindsight state repair

@@ -1,74 +1,93 @@
-/**
- * MindForge — ModelBroker (Pillar V: Autonomous FinOps Hub)
- * Calculates C2C (Confidence-to-Cost) and routes tasks to optimal models.
- */
-
-const fs = require('fs');
-const path = require('path');
+const CloudBroker = require('./cloud-broker');
 
 class ModelBroker {
   constructor(config = {}) {
     this.projectRoot = config.projectRoot || process.cwd();
+    this.cloudBroker = new CloudBroker(config.cloud);
     this.defaults = {
-      EXECUTOR_MODEL: 'claude-3-5-sonnet',
-      PLANNER_MODEL: 'claude-3-5-sonnet',
-      SECURITY_MODEL: 'claude-3-opus',
-      QA_MODEL: 'claude-3-5-sonnet',
-      RESEARCH_MODEL: 'claude-3-5-sonnet',
-      DEBUG_MODEL: 'claude-3-5-sonnet',
-      QUICK_MODEL: 'claude-3-haiku',
+      EXECUTOR_MODEL: 'sonnet',
+      PLANNER_MODEL: 'sonnet',
+      SECURITY_MODEL: 'opus',
+      QA_MODEL: 'sonnet',
+      RESEARCH_MODEL: 'sonnet',
+      DEBUG_MODEL: 'sonnet',
+      QUICK_MODEL: 'haiku',
     };
   }
 
   /**
-   * Resolves the optimal model for a given task.
+   * Resolves the optimal model for a given task (v5 Multi-Cloud Arbitrage).
    * @param {Object} context - Task context (persona, difficulty, tier)
-   * @returns {Object} - Resolved model details (modelId, costTier, reasoning)
+   * @returns {Object} - Resolved model details (modelId, provider, costTier, reasoning)
    */
   resolveModel(context) {
     const { persona, difficulty, tier } = context;
-    let modelId = this.defaults.EXECUTOR_MODEL;
-    let reasoning = 'Default executor model.';
+    let modelGroup = this.defaults.EXECUTOR_MODEL;
+    let reasoningParts = [];
 
     // 1. Check Security Tier (T3 requires premium models)
     if (tier === 3) {
-      modelId = this.defaults.SECURITY_MODEL;
-      reasoning = 'Tier 3 (Principal) action requires high-trust model (Opus).';
-      return { modelId, costTier: 'high', reasoning };
+      modelGroup = this.defaults.SECURITY_MODEL;
+      reasoningParts.push('Tier 3 (Principal) action requires high-trust model (Opus).');
+    } else {
+      // 2. Map Persona to Base Model
+      const personaMap = {
+        'executor': 'EXECUTOR_MODEL',
+        'planner': 'PLANNER_MODEL',
+        'security-reviewer': 'SECURITY_MODEL',
+        'qa-engineer': 'QA_MODEL',
+        'researcher': 'RESEARCH_MODEL',
+        'debug-specialist': 'DEBUG_MODEL',
+      };
+      if (personaMap[persona]) {
+        modelGroup = this.defaults[personaMap[persona]];
+      }
     }
 
-    // 2. Map Persona to Base Model
-    const personaMap = {
-      'executor': 'EXECUTOR_MODEL',
-      'planner': 'PLANNER_MODEL',
-      'security-reviewer': 'SECURITY_MODEL',
-      'qa-engineer': 'QA_MODEL',
-      'researcher': 'RESEARCH_MODEL',
-      'debug-specialist': 'DEBUG_MODEL',
+    // 3. Complexity-based Overrides
+    if (difficulty < 2.0 && difficulty !== undefined && tier !== 3) {
+      modelGroup = this.defaults.QUICK_MODEL;
+      reasoningParts.push(`Low difficulty (${difficulty}) -> Quick model.`);
+    } else if (difficulty > 4.5 && tier !== 3) {
+      modelGroup = this.defaults.SECURITY_MODEL;
+      reasoningParts.push(`High difficulty (${difficulty}) -> Complexity upgrade.`);
+    }
+
+    // 4. v5 Multi-Cloud Arbitrage
+    const provider = this.cloudBroker.getBestProvider({ 
+      latencyConstraint: tier === 3 ? 500 : 1000 
+    });
+    const modelId = this.cloudBroker.mapToProviderModel(provider, modelGroup);
+    
+    reasoningParts.push(`Arbitrage: Routed to ${provider} (${modelId}) based on latency/cost.`);
+
+    return { 
+      modelId, 
+      provider,
+      modelGroup,
+      costTier: modelGroup === 'opus' ? 'high' : (modelGroup === 'haiku' ? 'low' : 'medium'), 
+      reasoning: reasoningParts.join(' ') 
     };
+  }
 
-    if (personaMap[persona]) {
-      modelId = this.defaults[personaMap[persona]];
-      reasoning = `Routed to ${persona} specialist model.`;
-    }
+  /**
+   * Implements the Provider Fallback Protocol (v5 Pillar V).
+   * @param {string} failedProvider - The provider that failed.
+   * @param {string} modelGroup - The group being requested.
+   * @returns {Object} - New model and provider details.
+   */
+  handleProviderFailure(failedProvider, modelGroup) {
+    const fallbackProvider = this.cloudBroker.getFallbackProvider(failedProvider);
+    const modelId = this.cloudBroker.mapToProviderModel(fallbackProvider, modelGroup);
 
-    // 3. Calculate C2C (Confidence-to-Cost)
-    // If difficulty is low (< 2.0), route to Quick Model (Haiku) to save costs.
-    if (difficulty < 2.0 && difficulty !== undefined) {
-      const originalModel = modelId;
-      modelId = this.defaults.QUICK_MODEL;
-      reasoning = `Low difficulty (${difficulty}) - C2C Optimization: Switched ${originalModel} to Haiku.`;
-      return { modelId, costTier: 'low', reasoning };
-    }
+    console.warn(`[P5-FALLBACK] Provider ${failedProvider} failed. Migrating context to ${fallbackProvider} (${modelId}).`);
 
-    // 4. Handle Complex Tasks (Difficulty > 4.0)
-    if (difficulty > 4.0) {
-      modelId = this.defaults.SECURITY_MODEL; // Use Opus for high complexity
-      reasoning = `High difficulty (${difficulty}) - Complexity routing: Upgraded to Opus.`;
-      return { modelId, costTier: 'high', reasoning };
-    }
-
-    return { modelId, costTier: 'medium', reasoning };
+    return {
+      modelId,
+      provider: fallbackProvider,
+      modelGroup,
+      reasoning: `Provider Fallback Protocol: Emergency migration from ${failedProvider} to ${fallbackProvider}.`
+    };
   }
 
   /**
