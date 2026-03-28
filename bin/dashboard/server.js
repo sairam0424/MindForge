@@ -34,6 +34,7 @@ try {
 const SSE    = require('./sse-bridge');
 const API    = require('./api-router');
 const TemporalAPI = require('./temporal-api');
+const RevOpsAPI   = require('./revops-api');
 
 // ── Express app ───────────────────────────────────────────────────────────────
 const app = express();
