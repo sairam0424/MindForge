@@ -70,6 +70,9 @@ are included in the official release, and how to use them effectively.
 20. **Global Intelligence Mesh (v4.2)**
     - Cross-repository knowledge sharing via the **Semantic Hub**. Proactive **Ghost Pattern Detection** identifies and prevents repeating past organizational failures.
 
+19. **MindForge Nexus: Agentic Reasoning Tracing (v4.1)**
+    - High-fidelity **ART** spans embedded in the execution engine, providing deep visibility into agentic "thought chains" and parallel mesh reasoning.
+
 ---
 
 ## Feature Set (v2.0.0)
