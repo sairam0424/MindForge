@@ -4,14 +4,30 @@ MindForge turns Claude Code and Antigravity into production-grade engineering
 partners with governance, observability, and a reactive autonomous intelligence engine.
 Release published: v4.3.0-stable.
 
-# Install
+## Installation & Setup
+
+### 🚀 Quick Start (No Install)
+
+Run MindForge immediately for a specific runtime without a permanent installation:
+
 ```bash
-npx mindforge-cc@v4-alpha
+npx mindforge-cc@latest --claude --global
 ```
 
-# Install V4 (Experimental)
+### 🌍 Global Installation
+
+Enable system-wide `/mindforge` commands for your primary AI coding runtime:
+
 ```bash
-npm install -g mindforge-cc@v4-alpha
+npm install -g mindforge-cc@latest
+```
+
+### 📂 Local Project Setup
+
+Initialize MindForge in an existing repository with specialized agent identities:
+
+```bash
+npx mindforge-cc@latest --claude --local
 ```
 
 ---
@@ -48,94 +64,22 @@ Decisions get forgotten. MindForge fixes that with:
 ---
 
 
-## Install
+## 🛠️ Configuration & Runtimes
 
-### Claude Code (global)
+MindForge adapts to your existing engineering environment via runtime flags:
 
-```bash
-npx mindforge-cc@latest --claude --global
-```
+| Runtime | Global Command | Local Setup |
+| :--- | :--- | :--- |
+| **Claude Code** | `mindforge-cc --claude --global` | `mindforge-cc --claude --local` |
+| **Antigravity** | `mindforge-cc --antigravity --global` | `mindforge-cc --antigravity --local` |
+| **Cursor** | `mindforge-cc --cursor --global` | `mindforge-cc --cursor --local` |
+| **GitHub Copilot** | `mindforge-cc --copilot --global` | `mindforge-cc --copilot --local` |
+| **Gemini CLI** | `mindforge-cc --gemini --global` | `mindforge-cc --gemini --local` |
 
-
-### Claude Code (local)
-
-```bash
-npx mindforge-cc@latest --claude --local
-```
-
-### Quick Start
-
-```bash
-# Install the latest stable version
-npm install -g mindforge-cc
-
-# Or try the v2.0.0-alpha (latest features)
-npm install -g mindforge-cc@alpha
-
-# Or try the V3 Release (latest features)
-npm install -g mindforge-cc@latest
-```
-
-
-### Antigravity
-
-```bash
-npx mindforge-cc@latest --antigravity --global
-```
-
-Local installs use `agents/` by default. Legacy `.agent/` is supported for existing projects.
-
-Optional: add bin utilities on local install
-```bash
-npx mindforge-cc@latest --claude --local --with-utils
-```
-
-Optional: minimal project scaffolding
-```bash
-npx mindforge-cc@latest --claude --local --minimal
-```
-
-
-### Cursor
-
-```bash
-npx mindforge-cc@latest --cursor --local
-```
-
-
-### Gemini CLI
-
-```bash
-npx mindforge-cc@latest --gemini --global
-```
-
-
-### GitHub Copilot
-
-```bash
-npx mindforge-cc@latest --copilot --local
-```
-
-
-### OpenCode
-
-```bash
-npx mindforge-cc@latest --opencode --global
-```
-
-
-### Specific Runtime (Universal)
-
-```bash
-npx mindforge-cc@latest --runtime <name>
-```
-
-
-### Multiple runtimes
-
-```bash
-npx mindforge-cc@latest --runtime claude,cursor --local
-```
+### Advanced Setup Options
+- **Combined Runtimes**: `mindforge-cc --runtime claude,cursor --local`
+- **With Utilities**: `mindforge-cc --local --with-utils` (Installs specialized bin scripts)
+- **Minimalist**: `mindforge-cc --local --minimal` (Only basic protocols, no persona library)
 
 ---
 
