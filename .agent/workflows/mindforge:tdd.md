@@ -8,7 +8,7 @@ Execute a strict Test-Driven Development (TDD) loop using the Red-Green-Refactor
 </instruction>
 
 <context>
-Follow the specialized MindForge TDD standards defined in [.agent/skills/mindforge-tdd/SKILL.md](.agent/skills/mindforge-tdd/SKILL.md).
+Follow the specialized MindForge TDD standards defined in [.agent/skills/mindforge-tdd_extended/SKILL.md](.agent/skills/mindforge-tdd_extended/SKILL.md).
 </context>
 
 <rules>

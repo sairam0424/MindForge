@@ -3,6 +3,11 @@ description: Plan a project phase. Usage: /mindforge:plan-phase [N]
 ---
 Plan a project phase. Usage: /mindforge:plan-phase [N]
 
+## Step 0 — Protocol Activation
+
+**MANDATORY**: Invoke the `mindforge-plan-phase_extended` skill.
+This ensures the planning phase involves multi-step requirement decomposition, dependency graphing, and architectural alignment checks.
+
 ## Pre-check
 If N is not given, read STATE.md for the current phase number and increment by 1.
 Read PROJECT.md, REQUIREMENTS.md, ARCHITECTURE.md, and STATE.md before proceeding.
