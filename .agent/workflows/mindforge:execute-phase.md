@@ -115,6 +115,12 @@ After all tasks in wave complete:
 
 ## Step 4 — Phase-level verification
 
+## Step 0 — Protocol Activation
+
+**MANDATORY**: Invoke the `mindforge-execute-phase_extended` skill.
+For parallel tasks, also activate `mindforge-parallel-mesh_extended` and `mindforge-swarm-execution`.
+This ensures the implementation uses wave-based parallelization and review-inbound checkpoints.
+
 After all waves complete, run the verification pipeline:
 
 1. Read every v1 requirement from REQUIREMENTS.md for this phase

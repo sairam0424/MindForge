@@ -3,10 +3,16 @@ description: Plan a project phase. Usage: /mindforge:plan-phase [N]
 ---
 Plan a project phase. Usage: /mindforge:plan-phase [N]
 
+<purpose>
+Create a detailed execution plan (PLAN.md) from requirements, including technical strategy and wave-based task decomposition.
+</purpose>
+
 ## Step 0 — Protocol Activation
 
 **MANDATORY**: Invoke the `mindforge-plan-phase_extended` skill.
-This ensures the planning phase involves multi-step requirement decomposition, dependency graphing, and architectural alignment checks.
+This ensures the planning process uses atomic task decomposition, risk assessment, and peer-review ready documentation.
+
+<process>
 
 ## Pre-check
 If N is not given, read STATE.md for the current phase number and increment by 1.

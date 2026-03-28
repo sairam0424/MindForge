@@ -4,6 +4,11 @@ Validate built features through conversational testing with persistent state. Cr
 User tests, the agent records. One test at a time. Plain text responses.
 </purpose>
 
+## Step 0 — Protocol Activation
+
+**MANDATORY**: Invoke the `mindforge-verify-work_extended` skill.
+This ensures the verification process uses rigorous multi-dimensional UAT, automated smoke tests, and parallel diagnosis for any issues found.
+
 <philosophy>
 **Show expected, ask if reality matches.**
 
