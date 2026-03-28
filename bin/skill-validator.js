@@ -102,24 +102,50 @@ function main() {
 
   // ── Level 2: Content ────────────────────────────────────────────────────────
   results.content.push({
+    id: 'size',
     ok: content.length >= 1024 && content.length <= 200 * 1024,
+    weight: 0.1,
     msg: `File size: ${(content.length / 1024).toFixed(1)}KB (1KB-200KB)`
   });
 
   results.content.push({
+    id: 'actions',
     ok: /##\s+(Mandatory actions|When this skill is active)/i.test(content),
+    weight: 0.2,
     msg: 'Mandatory actions section present'
   });
 
   results.content.push({
+    id: 'checklist',
     ok: /- \[ \]/.test(content),
+    weight: 0.1,
     msg: 'Self-check/checklist items found'
   });
 
   results.content.push({
+    id: 'security',
     ok: !/IGNORE ALL PREVIOUS/i.test(content),
+    weight: 0.2,
     msg: 'No injection patterns detected'
   });
+
+  // ── Level 3: Quality (v5 7-Dimension Scoring) ───────────────────────────────
+  const dimensions = [
+    { id: 'schema', weight: 0.15, ok: results.schema.every(r => r.ok), name: 'Schema Compliance' },
+    { id: 'triggers', weight: 0.15, ok: results.schema.some(r => r.msg.includes('triggers') && r.ok), name: 'Trigger Density' },
+    { id: 'actions', weight: 0.20, ok: results.content.some(r => r.id === 'actions' && r.ok), name: 'Mandatory Coverage' },
+    { id: 'security', weight: 0.20, ok: results.content.some(r => r.id === 'security' && r.ok), name: 'Security Sanitization' },
+    { id: 'clarity', weight: 0.10, ok: content.split('\n').length > 50, name: 'Doc Clarity' },
+    { id: 'edges', weight: 0.10, ok: /edge cases|error handling/i.test(content), name: 'Edge Case Handling' },
+    { id: 'examples', weight: 0.10, ok: /example|Usage/i.test(content), name: 'Example Fidelity' }
+  ];
+
+  let totalScore = 0;
+  dimensions.forEach(d => {
+    if (d.ok) totalScore += d.weight * 10;
+  });
+
+  results.certificationScore = parseFloat(totalScore.toFixed(1));
 
   // ── Output ──────────────────────────────────────────────────────────────────
   console.log(`${colors.cyan}${colors.bold}Schema validation:${colors.reset}`);
@@ -131,7 +157,22 @@ function main() {
     console.log(`  ${r.ok ? colors.green + '✅' : colors.red + '❌'} ${r.msg}`);
   });
 
+  console.log(`\n${colors.cyan}${colors.bold}Enterprise Certification (7D):${colors.reset}`);
+  dimensions.forEach(d => {
+    console.log(`  ${d.ok ? colors.green + '✅' : colors.red + '❌'} ${d.name.padEnd(25)} [Weight: ${(d.weight * 100).toFixed(0)}%]`);
+  });
+  
+  const scoreColor = results.certificationScore >= 7.0 ? colors.green : colors.yellow;
+  console.log(`\n  ${colors.bold}Certification Score: ${scoreColor}${results.certificationScore}/10.0${colors.reset}`);
+
   console.log('─'.repeat(60));
+
+  const isEnterprise = ARGS.includes('--enterprise');
+  if (isEnterprise && results.certificationScore < 7.0) {
+    console.error(`${colors.red}❌ FAILURE: Skill does not meet the minimum Enterprise Certification Score (7.0).${colors.reset}`);
+    results.valid = false;
+  }
+
   if (results.valid) {
     console.log(`${colors.green}${colors.bold}Result: VALID${colors.reset}`);
     process.exit(0);

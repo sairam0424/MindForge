@@ -18,6 +18,14 @@ class NexusTracer {
     this.activeSpans = new Map();
     this.did = config.did || null; // Active Agent DID
     this.enableZtai = config.enableZtai !== false;
+
+    // v5 Pillar IV: Agentic SBOM
+    this.sbom = {
+      manifest_version: '1.0.0',
+      models: new Set(),
+      skills: new Set(),
+      startTime: new Date().toISOString()
+    };
   }
 
   /**
@@ -49,6 +57,10 @@ class NexusTracer {
     };
 
     this.activeSpans.set(spanId, span);
+
+    // Track model and skill in SBOM if provided in attributes
+    if (attributes.model_id) this.sbom.models.add(attributes.model_id);
+    if (attributes.skill) this.sbom.skills.add(attributes.skill);
 
     // Record span start in AUDIT.jsonl
     this._recordEvent('span_started', { 
@@ -144,6 +156,32 @@ class NexusTracer {
       span_id: spanId,
       ...report
     });
+  }
+
+  /**
+   * Finalize and export the Agentic SBOM (Pillar IV).
+   */
+  exportSBOM(outputPath = null) {
+    const finalPath = outputPath || path.join(process.cwd(), '.planning', 'MANIFEST.sbom.json');
+    const manifest = {
+      ...this.sbom,
+      models: Array.from(this.sbom.models),
+      skills: Array.from(this.sbom.skills),
+      endTime: new Date().toISOString()
+    };
+
+    try {
+      if (!fs.existsSync(path.dirname(finalPath))) {
+        fs.mkdirSync(path.dirname(finalPath), { recursive: true });
+      }
+      fs.writeFileSync(finalPath, JSON.stringify(manifest, null, 2));
+      
+      this._recordEvent('sbom_exported', { path: finalPath });
+      return finalPath;
+    } catch (err) {
+      console.error(`[NexusTracer] Failed to export SBOM: ${err.message}`);
+      return null;
+    }
   }
 }
 
