@@ -1,32 +1,47 @@
-# MindForge Governance Guide (v4.2.5)
+# MindForge Governance Guide (v5.0.0)
+Absolute Control through Policy-as-Code (PaC)
 
-## Goal
-Explain how change classification, approvals, compliance gates, and trust-based identity enforcement work in the MindForge ecosystem.
+## 1. Goal
+MindForge v5.0.0 introduces a non-bypassable, intent-level governance layer. This guide explains how **Agentic Policy Orchestration (APO)** and **Zero-Trust Agentic Identity (ZTAI)** work together to secure the enterprise development lifecycle.
 
-## Trust Tier Architecture (ZTAI)
-MindForge enforces a 4-tier trust model to govern agentic actions and code modifications.
+## 2. Agentic Policy Orchestrator (APO)
+The APO is a decentralized governance engine that intercepts every autonomous intent before it is executed.
 
-| Tier | Name | Role | Verification Requirement |
+### A. Intent Interception
+Before the `AutoRunner` begins a new execution wave, it extracts the acting agent's **Intent**:
+- **DID**: The unique identity of the agent.
+- **Action**: The operation being attempted (e.g., `process_phase_wave`, `modify_security_config`).
+- **Resource**: The target of the action (e.g., specific directories, files, or API endpoints).
+- **Tier**: The ZTAI Trust Tier assigned to the agent.
+
+### B. Policy Evaluation
+The `PolicyEngine` evaluates this intent against organizational **Policy-as-Code (PaC)** definitions (typically stored in `bin/governance/policies/`).
+- **Permit**: The action is allowed and execution proceeds.
+- **Deny**: The action is blocked, and the violation is logged to `AUDIT.jsonl`.
+- **Escalate**: The action requires a higher-tier DID signature or explicit HITL (Human-in-the-Loop) approval.
+
+## 3. Trust Tier Architecture (ZTAI Hardened)
+V5.0.0 automatically maps ZTAI Trust Tiers to explicit project roles through the `RBACManager`.
+
+| Tier | Role | Scope | Hardening |
 | :--- | :--- | :--- | :--- |
-| **0** | Informational | Research/Query agents. | No signing required. |
-| **1** | Verified | Standard implementation agents. | DID-signed audit entries. |
-| **2** | Specialized | Security, UI, and Data specialists. | Multi-agent peer review + DID signing. |
-| **3** | Principal | Architects and Core Engine agents. | **Secure Enclave (HSM) Signing** + Principal Approval. |
+| **0** | Informational | Research/Query only. | Read-only access to non-sensitive docs. |
+| **1** | Implementation| Standard feature dev. | Write access to `/src`, `/tests`, `/bin/memory`. |
+| **2** | Specialized | Security/DevOps Specialist. | Access to `/security`, `/infra`, and `/bin/governance`. |
+| **3** | Principal | Lead Architect / Core Engine. | **HSM-Enclave Signing Required** for all engine modifications. |
 
-## Governance Flow
-1. **Classify**: Automated classification of intent before planning.
-2. **Tier Mapping**: Assigning a Trust Tier based on persona and scope.
-3. **Cryptographic Signing**:
-    - T1/T2: Standard Ed25519 signing via ZTAIManager.
-    - T3: Hardware-enclave (simulated) signing for critical engine/security paths.
-4. **Compliance Gates**: Enforce non-bypassable gates (Secrets, SQLi, PII) before release.
-5. **Non-Repudiation**: Finalize audit blocks with Merkle-root manifests for integrity verification.
+## 4. Governance Workflow (V5)
+1. **ZTAI Handshake**: Agent proves identity using Ed25519 signatures.
+2. **Intent Pulse**: Agentic intent is broadcast to the policy interceptor.
+3. **APO Evaluation**: Policy engine checks the intent against PaC rules.
+4. **Role binding**: `RBACManager` grants or revokes permissions based on the active trust tier.
+5. **Verified Wave**: Execution proceeds only if all policy gates are clear.
 
-## Key Guarantees
-- **Identity Integrity**: Agents cannot spoof identities; every block in `AUDIT.jsonl` is cryptographically tied to a DID.
-- **Ghost Pattern Mitigation**: Planning is gated by the Global Intelligence Mesh to prevent repeating organizational anti-patterns.
-- **Emergency Override**: Requires explicit `--emergency` flag and authorized DID signing.
+## 5. Enterprise Policies
+MindForge v5 ships with default policies including:
+- **`gate_tier_3_engine`**: Blocks all modifications to `bin/autonomous/` unless signed by a Tier 3 DID.
+- **`protect_security_namespace`**: Limits access to `/security` and `/governance` to Tier 2+ specialists.
+- **`mesh_integrity_lock`**: Ensures only high-confidence agents can push to the **Federated Intelligence Mesh**.
 
-## Team Operation
-- **Handoff Continuity**: Multi-developer sessions coordinate via `HANDOFF.json`.
-- **Global Mesh Sync**: Project memory is automatically bubbled up to the organizational `~/.mindforge` store for cross-repo awareness.
+---
+*Status: V5 "Beast" Mode Governance Implemented & Verified (2026-03-28)*

@@ -15,6 +15,11 @@ const KnowledgeCapture = require('../memory/knowledge-capture');
 const TemporalHub = require('../engine/temporal-hub');
 const crypto = require('crypto');
 
+// MindForge v5 Core Modules
+const PolicyEngine = require('../governance/policy-engine');
+const RBACManager  = require('../governance/rbac-manager');
+const ZTAIManager  = require('../governance/ztai-manager');
+
 class AutoRunner {
   constructor(options = {}) {
     this.phase = options.phase;
@@ -23,6 +28,10 @@ class AutoRunner {
     this.statePath = path.join(process.cwd(), '.planning/auto-state.json');
     this.monitor = new stuckMonitor(this.auditPath);
     this.isPaused = false;
+    
+    // v5 Governance Initialization
+    this.policyEngine = new PolicyEngine();
+    this.rbacManager  = new RBACManager();
   }
 
   async run() {
@@ -38,10 +47,19 @@ class AutoRunner {
     // 2. Main Wave Loop
     while (await this.hasNextWave()) {
       if (this.isPaused) break;
+      
+      // Pillar 2 (APO): Pre-execution Policy Check
+      const permit = await this.evaluateWavePolicy();
+      if (!permit) {
+        console.error('🛑 POLICY VIOLATION: Execution aborted by Agentic Policy Orchestrator.');
+        this.writeAudit({ event: 'auto_mode_denied', reason: 'Policy violation detected' });
+        break;
+      }
+
       await this.executeWave();
     }
 
-    this.complete();
+    await this.complete();
   }
 
   runPreFlight() {
@@ -65,10 +83,19 @@ class AutoRunner {
     this.writeAudit({ event: 'auto_mode_paused', timestamp: new Date().toISOString() });
   }
 
-  complete() {
+  async complete() {
     console.log('✅ Phase complete!');
     const report = progressStream.generateReport(this.auditPath, this.phase);
     fs.writeFileSync(path.join(process.cwd(), `.planning/phases/${this.phase}/AUTONOMOUS-REPORT.md`), report);
+    
+    // v5 Pillar 1: Federated Intelligence Mesh (FIM)
+    try {
+      const { runSync } = require('../memory/federated-sync');
+      console.log('🔄 Finalizing organizational intelligence sync...');
+      await runSync();
+    } catch (err) {
+      console.warn('⚠️ Federated Sync failed at phase end:', err.message);
+    }
     
     // Auto-capture knowledge from completed phase (ADRs, findings)
     try {
@@ -124,6 +151,37 @@ class AutoRunner {
     }
     Object.assign(state, update);
     fs.writeFileSync(this.statePath, JSON.stringify(state, null, 2));
+  }
+
+  /**
+   * Evaluates the policy for the next wave's intent. (v5 APO - HARDENED)
+   */
+  async evaluateWavePolicy() {
+    // [HARDEN] Dynamically derive intent from ZTAI identity and phase context
+    const manager = new ZTAIManager();
+    const identity = await manager.getIdentity();
+    
+    const intent = {
+      did: identity.did,
+      action: 'process_phase_wave',
+      resource: `projects/${process.env.MF_PROJECT_ID || 'MF-ALPHA'}/phases/${this.phase}/*`,
+      tier: identity.tier || 1,
+      metadata: {
+        engine: 'Nimbus-S4',
+        mode: 'autonomous',
+        wave_timestamp: new Date().toISOString()
+      }
+    };
+
+    const result = this.policyEngine.evaluate(intent);
+    
+    if (result.verdict === 'DENY') {
+      console.warn(`[APO-DENY] Intent rejected: ${result.reason} [ReqID: ${result.requestId}]`);
+      return false;
+    }
+
+    console.log(`[APO-PERMIT] Intent approved: ${result.reason} [ReqID: ${result.requestId}]`);
+    return true;
   }
 }
 

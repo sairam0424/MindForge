@@ -1,0 +1,33 @@
+{
+  "id": "policy_enforce_tier_3_security",
+  "version": "1.0.0",
+  "effect": "DENY",
+  "description": "Agents with Tier < 3 cannot modify security or governance files.",
+  "conditions": {
+    "resource": "*/security/*,*/governance/*",
+    "min_tier": 3
+  }
+}
+<!-- slide -->
+{
+  "id": "policy_permit_developer_src",
+  "version": "1.0.0",
+  "effect": "PERMIT",
+  "description": "Developer agents can write to src and tests.",
+  "conditions": {
+    "action": "write_file",
+    "resource": "*/src/*,*/tests/*",
+    "min_tier": 2
+  }
+}
+<!-- slide -->
+{
+  "id": "policy_permit_global_sync_lead",
+  "version": "1.0.0",
+  "effect": "PERMIT",
+  "description": "Lead Architects can push to the Federated Intelligence Mesh.",
+  "conditions": {
+    "action": "federated_sync_push",
+    "min_tier": 3
+  }
+}

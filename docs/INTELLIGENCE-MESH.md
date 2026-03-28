@@ -1,32 +1,35 @@
-# MindForge Global Intelligence Mesh (Memory)
-v4.2.5 — Cross-Repository Knowledge Sharing
+# MindForge Federated Intelligence Mesh (FIM)
+MindForge v5.0.0 — Distributed Intelligence Sharing
 
 ## 1. Overview
-The **Global Intelligence Mesh** elevates MindForge from a repository-local assistant to an organization-wide intelligence asset. It enables multiple projects to share architectural insights, past failure patterns ("Ghost Patterns"), and success-verified designs without manual intervention.
+The **Federated Intelligence Mesh (FIM)** is the enterprise-grade evolution of the Global Intelligence Mesh. It transitions MindForge from machine-local memory to a distributed organizational intelligence network. Using a central **Enterprise Intelligence Service (EIS)**, FIM enables seamless, authenticated knowledge synchronization across all agents and projects in the enterprise.
 
 ## 2. Architecture
-The mesh consists of two primary components residing in `.mindforge/memory/engine/`:
+The V5 mesh is built on three core pillars residing in `bin/memory/`:
 
-### A. The Semantic Hub (`semantic-hub.js`)
-- **Role:** Synchronizes local project memory with a global, repository-agnostic store located at `~/.mindforge/memory/global`.
-- **Deduplication:** Uses cryptographic ID-based matching to ensure only unique observations are moved to the global hub.
-- **Privacy:** Sync is opt-in for sensitive data, but architectural patterns and "failure context" are pushed by default to prevent organizational redundancy.
+### A. EIS Client (`eis-client.js`)
+- **Role**: Secure, authenticated communicator for the central intelligence hub.
+- **Hardening**: Implements **ZTAI-signed authentication headers**. Every request is cryptographically tied to a verified agent identity (DID).
+- **Communication**: REST-based push/pull protocols with integrity-verified payloads.
 
-### B. Ghost Pattern Detector (`ghost-pattern-detector.js`)
-- **Role:** A proactive risk mitigation engine that scans incoming proposals against known "Ghost Patterns" (past failures from other projects).
-- **Triggers:** Automatically invoked during the `plan` phase of any mission-critical task (Tier 2-3).
-- **Risk Levels:**
-    - **CRITICAL:** High similarity with a past p0 security failure or environment leak.
-    - **HIGH:** Similarity with a performance regression or architectural anti-pattern.
+### B. Federated Sync (`federated-sync.js`)
+- **Role**: High-performance synchronization engine between local stores and the organizational mesh.
+- **Delta Sync**: Tracks the `last_sync` timestamp to only pull new organizational insights, significantly reducing latency and compute costs.
+- **Conflict Resolution**: Uses **LWW (Last-Write-Wins)** logic with cryptographic version checks to handle concurrent updates from different agents.
 
-## 3. Workflow Hook
-1. **Capture:** When a task results in a significant learning, `mf-memory` flags it as a `decision` or `pattern`.
-2. **Push:** The `SemanticHub` periodically syncs these to the global store.
-3. **Pull/Scan:** When starting a new project or task, the `GhostPatternDetector` queries the global hub to check if the proposed approach has "ghosts" (failed elsewhere).
+### C. Knowledge Graph Bridge (`knowledge-graph.js`)
+- **Role**: Unified memory interface that resolves both local project nodes and remote federated nodes.
+- **Hybrid Traversal**: BFS/DFS algorithms that seamlessly traverse edges spanning across the local-to-global boundary.
 
-## 4. Usage in Enterprise
-- **Zero-Redundancy Research:** If one team spends 10k tokens researching a specific library integration, the resulting "Knowledge Item" is immediately available to every other project in the mesh.
-- **Organization-Wide Self-Healing:** Security fixes in one repo become proactive warnings in all others.
+## 3. Workflow & Provenance
+1. **Verified Capture**: High-confidence findings (>0.8 score) are automatically prepared for mesh promotion.
+2. **Identity-Locked Push**: The `FederatedSync` pushes these findings to the EIS, signed by the originating agent's ZTAI DID.
+3. **Organizational Delta Pull**: Subagents starting new tasks perform a delta-pull to ingest the latest organizational "Ghost Patterns" and success-verified designs.
+
+## 4. Enterprise Value
+- **Verifiable Intelligence**: All knowledge in the mesh has an immutable audit trail back to the agent that discovered it.
+- **Global Self-Healing**: A security vulnerability found in project A becomes a proactive guardrail in project B within seconds.
+- **Elimination of Redundancy**: Multi-thousand-token research chains are executed once and shared universally across the mesh.
 
 ---
-*Status: Foundation Implemented & Verified (v4.2.5)*
+*Status: V5 "Beast" Mode Implemented & Verified (2026-03-28)*
