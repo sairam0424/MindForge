@@ -1,4 +1,4 @@
-# MindForge User Guide (v5.1.0)
+# MindForge User Guide (v5.10.0)
 
 This guide gets you from install to productive, with the minimum needed to run MindForge in a real project. It assumes Node.js 18+.
 
@@ -169,10 +169,18 @@ Tier 3 (Principal) agents execute reasoning in isolated enclaves to protect sens
 /mindforge:agent --tier 3 # Automatically triggers SRE
 ```
 
-### Dynamic Human-Agent Handover (DHH)
-When autonomous confidence drops or a critical decision is reached, MindForge creates a **Nexus State Bundle** and requests human steering.
+### Dynamic Human-Agent Handover & Temporal Steering (Pillar VII)
+NEXUS enables sub-second state reconstruction and **Hindsight Injection**. When an agent drifts, roll back its logic via the Dashboard's **Temporal Slider** and inject a steering vector to re-orient the wave.
 ```bash
-/mindforge:auto --handover 0.6 # Triggers handover at 60% confidence
+/mindforge:temporal status     # View active reasoning snapshots
+/mindforge:temporal inject [ID] # Manual CLI-based hindsight
+```
+
+### Agentic Revenue Operations (AgRevOps) (Pillar VIII)
+Treat compute as a financial asset. Monitor ROI ($100/hr value mapping) and Security Health directly.
+```bash
+/mindforge:costs --roi         # Detailed financial analysis
+/mindforge:finops status       # View velocity and debt metrics
 ```
 
 ---
@@ -204,11 +212,33 @@ Keep your framework current with the latest personas and library updates:
 
 ---
 
-## 15. Reference & Support
+---
+
+## 16. Mastering the Nexus: Temporal Steering
+
+MindForge v5.10.0 allows you to "time-travel" through your agent's reasoning.
+
+1.  **Launch the Dashboard**: `/mindforge:dashboard --start --open`
+2.  **Navigate to 'Temporal'**: Use the horizontal slider to scrub through reasoning snapshots.
+3.  **Inspect State**: View the exact memory, file diffs, and thought chain at that point in space-time.
+4.  **Inject Hindsight**: If you see a logic error, use the **Hindsight Injector** form to roll back and provide a corrective "Steering Vector."
+
+## 17. AgRevOps: Financial Health & ROI
+
+Monitor your project's economic performance in real-time via the **RevOps Hub**.
+
+- **ROI Pulse**: Tracks net value (Dev hours saved vs. Token cost).
+- **Velocity Gauge**: Real-time forecasting of milestone completion dates.
+- **Security Health Score (SHS)**: A 0-100 score that penalizes policy bypasses and critical findings. Maintain a score > 80 to ensure autonomous stability.
+
+---
+
+## 18. Reference & Support
 
 - **Architecture**: `docs/architecture/V5-ENTERPRISE.md`
 - **Governance**: `docs/governance-guide.md`
+- **Dashboard**: `docs/feature-dashboard.md`
+- **USP & Roadmap**: `docs/usp-features.md`
 - **Commands**: `docs/commands-reference.md`
-- **Personas**: `docs/PERSONAS.md`
 - **Troubleshooting**: `docs/troubleshooting.md`
 - **Discord**: `/mindforge:join-discord`

@@ -1,4 +1,4 @@
-# MindForge Governance Guide (v5.6.0)
+# MindForge Governance Guide (v5.10.0)
 Absolute Control through Policy-as-Code (PaC)
 
 ## 1. Goal
@@ -65,5 +65,30 @@ The **ImpactAnalyzer** calculates a score (0-100) for every intent:
 - **Sensitivity**: 4x multiplier for `.mindforge/`, `bin/`, and `config/` namespaces.
 - **Fail-Safe**: Defaults to Score 100 (CRITICAL) if analysis fails.
 
+## 8. Agentic Financial Governance & AgRevOps (v5.10)
+
+MindForge v5.10.0 introduces the first economic accountability layer for autonomous agents, ensuring that "autonomy" is balanced with "financial integrity."
+
+### A. Security Health Score (SHS)
+The `DebtMonitor` computes a dynamic **Security Health Score (0-100)** for every active session:
+- **Base Score**: 100.
+- **Deductions**:
+    - **Policy Bypass**: -10 per instance (audit logs).
+    - **Critical Finding**: -20 per instance (`security-scan`).
+    - **Tier Escalation Failure**: -15.
+- **Recovery**: Score recovers over time as remediation tasks (refactors/fixes) are verified via the `verify` loop.
+
+### B. Governance Debt
+Any deviation from organizational policy is recorded as "Governance Debt." High debt levels (>30) trigger:
+1.  **Confidence Penalty**: Automatically reduces agent trust-tiers for sensitive operations.
+2.  **Mandatory DHH**: Forces a **Dynamic Human Handover** before any further Tier 2+ actions can be executed.
+3.  **Audit Flagging**: Marks all subsequent `AUDIT.jsonl` entries with a high-debt warning for external auditors.
+
+### C. Agentic ROI
+The `ROIEngine` translates autonomous precision into business value:
+- **Value Mapping**: $100 per verified developer-hour saved (logic density mapping).
+- **Net ROI**: (Total Value Saved) - (Provider Token Costs + Maintenance Toil).
+- **Real-time Visibility**: Exposed via the Dashboard's **RevOps Hub**.
+
 ---
-*Status: V5.3.0 Dynamic Blast Radius Implemented & Verified (2026-03-28)*
+*Status: V5.10.0 Nexus Steering & AgRevOps Implemented & Verified (2026-03-29)*

@@ -61,13 +61,22 @@ SRE provides a "Confidential Computing" environment for the agent's internal tho
 - **Non-Custodial Verification**: New `verifyZKProof` utility allows auditors to cryptographically verify that an agent followed policy within the enclave without ever seeing the raw thoughts.
 - **Thought-Chain Sanitization**: Automated redaction of sensitive patterns (keys, credentials, PII) from reasoning traces before persistent certificate generation.
 
-### Pillar VII: Dynamic Human-Agent Handover (DHH)
+### Pillar VII: Interactive Temporal Steering (NEXUS)
 
-DHH creates a seamless bridge between fully autonomous execution and high-precision human steering.
+NEXUS transforms the `NexusTracer` from a passive observer into an active temporal control plane, enabling sub-second state reconstruction and hindsight injection.
 
-- **Nexus State Bundles**: Automated "Context Freeze" and packaging of memory, diffs, and reasoning traces when agent confidence drops below 60%.
-- **Mid-Wave Steering**: In-flight steering injection into the `AutoRunner` loop, allowing humans to re-orient an active autonomous wave without restarts.
-- **Confidence-to-Human Gating**: Proactive interruption of the autonomous stream for "Human-in-the-Loop" approval on sensitive T3 operations.
+- **Temporal History Slider**: Real-time navigation through the agent's reasoning-space, allowing for high-fidelity state inspection at any point in the execution wave.
+- **Hindsight Injection Protocol**: Allows for the injection of "Steering Vectors" into past reasoning nodes to re-orient the agent's logic without a full session restart.
+- **Rollback-to-State**: Automated state reconstruction that resets the environment and `.planning/` directory to match a specific `auditId` signature.
+- **Dynamic Handover (DHH)**: Integrated confidence-based human escalation when reasoning entropy remains high after steering.
+
+### Pillar VIII: Agentic Revenue Operations (AgRevOps)
+
+AgRevOps treats agentic compute as a first-class financial and governance asset, providing real-time ROI and accountability.
+
+- **ROI Logic Engine**: Maps complex task completions (refactor, test, audit) to developer-hour savings ($100/hr) vs. provider token costs.
+- **Velocity Forecaster**: Predictive analytics that calculate milestone completion ETAs based on historical task-weight throughput and system latency.
+- **Governance Debt Monitoring**: Tracks policy bypasses and high-risk security findings to compute a "Security Health Score" (SHS), ensuring framework liability remains within enterprise bounds.
 
 ---
 
@@ -98,6 +107,9 @@ DHH creates a seamless bridge between fully autonomous execution and high-precis
 | **Recovery Agent** | `bin/engine/temporal-hindsight.js` | Generates steering vectors for proactive recovery. |
 | **Skill Validator** | `bin/skill-validator.js` | JIT Binary Runtime Attestation and 7D scoring. |
 | **SRE Manager** | `bin/engine/sre-manager.js` | Trusted execution enclave management. |
+| **ROI Engine** | `bin/revops/roi-engine.js` | Financial value synthesis and cost/benefit mapping. |
+| **Velocity Forecaster** | `bin/revops/velocity-forecaster.js` | Predictive milestone ETA and throughput analytics. |
+| **Debt Monitor** | `bin/revops/debt-monitor.js` | Security Health Score (SHS) and governance debt tracking. |
 | **Handover Manager** | `bin/engine/handover-manager.js` | Nexus bundle creation and steering logic. |
 | **SBOM Tracer** | `bin/engine/nexus-tracer.js` | SRE-aware audit logging and manifest generation. |
 
