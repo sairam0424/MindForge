@@ -45,7 +45,7 @@ class NexusTracer {
   /**
    * Start a new ART span.
    */
-  startSpan(name, attributes = {}, parentSpanId = null) {
+  async startSpan(name, attributes = {}, parentSpanId = null) {
     const spanId = `sp_${crypto.randomBytes(6).toString('hex')}`;
     const startTime = new Date().toISOString();
 
@@ -59,6 +59,8 @@ class NexusTracer {
       attributes: {
         ...attributes,
         service: 'mindforge-nexus',
+        host: require('os').hostname(),
+        pid: process.pid
       }
     };
 
@@ -81,7 +83,7 @@ class NexusTracer {
     }
 
     // Record span start in AUDIT.jsonl
-    this._recordEvent('span_started', { 
+    await this._recordEvent('span_started', { 
       span_id: spanId, 
       parent_span_id: parentSpanId,
       span_name: name,
@@ -95,7 +97,7 @@ class NexusTracer {
   /**
    * End an active span.
    */
-  endSpan(spanId, status = 'success', metadata = {}) {
+  async endSpan(spanId, status = 'success', metadata = {}) {
     const span = this.activeSpans.get(spanId);
     if (!span) return;
 
@@ -107,7 +109,7 @@ class NexusTracer {
       this.sreManager.terminateEnclave(span.attributes.enclave_id);
     }
 
-    this._recordEvent('span_completed', {
+    await this._recordEvent('span_completed', {
       span_id: spanId,
       status,
       ...metadata
@@ -119,19 +121,31 @@ class NexusTracer {
   /**
    * Record a Reasoning Trace event (ART granularity).
    */
-  recordReasoning(spanId, agent, thought, resolution = 'none') {
+  async recordReasoning(spanId, agent, thought, resolution = 'none') {
     const span = this.activeSpans.get(spanId);
     let sanitizedThought = thought;
 
     if (span && span.attributes.enclave_id) {
-      sanitizedThought = this.sreManager.sanitizeThoughtChain(thought, span.attributes.enclave_id);
+      const result = this.sreManager.sanitizeThoughtChain(thought, span.attributes.enclave_id);
+      
+      if (result.status === 'SRE-ISOLATED') {
+        // Log the ZK proof instead of the raw thought
+        await this._recordEvent('sre_proof_logged', {
+          span_id: spanId,
+          agent,
+          certificate: result,
+          resolution
+        });
+        return; // Skip standard reasoning trace for isolated content
+      }
+      sanitizedThought = result.content || thought;
     }
 
     // v5 Pillar III: PES (Proactive Equilibrium Scoring)
     const entropy = this.calculateEntropy(spanId, sanitizedThought);
     const isStagnant = entropy > this.RES_THRESHOLD;
 
-    this._recordEvent('reasoning_trace', {
+    await this._recordEvent('reasoning_trace', {
       span_id: spanId,
       agent,
       thought: sanitizedThought,
@@ -145,7 +159,7 @@ class NexusTracer {
       const stagnationCount = history.filter(h => h.entropy > this.RES_THRESHOLD).length;
 
       if (stagnationCount >= 3) {
-        this._recordEvent('vulnerability_detected', {
+        await this._recordEvent('vulnerability_detected', {
           span_id: spanId,
           type: 'REASONING_LOOP',
           severity: 'HIGH',
@@ -154,7 +168,7 @@ class NexusTracer {
         });
         
         // Signal proactive recovery
-        this.recordSelfHeal(spanId, {
+        await this.recordSelfHeal(spanId, {
           type: 'PROACTIVE_RCA',
           cause: 'REASONING_STAGNATION',
           suggestion: 'Entropy threshold exceeded. Switch reasoning strategy.'
@@ -200,7 +214,7 @@ class NexusTracer {
   /**
    * Internal AUDIT writer.
    */
-  _recordEvent(event, data) {
+  async _recordEvent(event, data) {
     const entry = {
       id: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
@@ -215,7 +229,7 @@ class NexusTracer {
         entry.did = this.did;
         // Sign the stringified entry WITHOUT the signature field itself
         const payload = JSON.stringify(entry);
-        entry.signature = ztai.signData(this.did, payload);
+        entry.signature = await ztai.signData(this.did, payload);
       } catch (err) {
         console.warn(`[NexusTracer] ZTAI signing failed: ${err.message}`);
       }
@@ -234,8 +248,8 @@ class NexusTracer {
   /**
    * Records a FinOps budget decision (Pillar V).
    */
-  recordFinOps(spanId, decision) {
-    this._recordEvent('finops_decision', {
+  async recordFinOps(spanId, decision) {
+    await this._recordEvent('finops_decision', {
       span_id: spanId,
       ...decision
     });
@@ -244,8 +258,8 @@ class NexusTracer {
   /**
    * Records a Self-Healing trigger event (Pillar VI).
    */
-  recordSelfHeal(spanId, report) {
-    this._recordEvent('self_heal_trigger', {
+  async recordSelfHeal(spanId, report) {
+    await this._recordEvent('self_heal_trigger', {
       span_id: spanId,
       ...report
     });
@@ -254,7 +268,7 @@ class NexusTracer {
   /**
    * Finalize and export the Agentic SBOM (Pillar IV).
    */
-  exportSBOM(outputPath = null) {
+  async exportSBOM(outputPath = null) {
     const finalPath = outputPath || path.join(process.cwd(), '.planning', 'MANIFEST.sbom.json');
     const manifest = {
       ...this.sbom,
@@ -269,7 +283,7 @@ class NexusTracer {
       }
       fs.writeFileSync(finalPath, JSON.stringify(manifest, null, 2));
       
-      this._recordEvent('sbom_exported', { path: finalPath });
+      await this._recordEvent('sbom_exported', { path: finalPath });
       return finalPath;
     } catch (err) {
       console.error(`[NexusTracer] Failed to export SBOM: ${err.message}`);
@@ -278,4 +292,9 @@ class NexusTracer {
   }
 }
 
-module.exports = NexusTracer;
+// Global Singleton Instance for easy mesh-wide access
+const globalTracer = new NexusTracer();
+
+// Export both the class and the global instance
+module.exports = globalTracer;
+module.exports.NexusTracer = NexusTracer;
