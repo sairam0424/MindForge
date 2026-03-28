@@ -17,6 +17,56 @@ class FederatedSync {
     this.client = new EISClient(config);
     this.localStore = Store;
     this.syncHistoryPath = path.join(Store.getPaths().MEMORY_DIR, 'sync-history.jsonl');
+    this.circuitBreakerPath = path.join(Store.getPaths().MEMORY_DIR, 'circuit-breaker.json');
+    this.MAX_FAILURES = 3;
+    this.COOLDOWN_MS = 3600000; // 1 hour
+  }
+
+  /**
+   * [BEAST] Checks if the circuit is open.
+   */
+  isCircuitOpen() {
+    if (!fs.existsSync(this.circuitBreakerPath)) return false;
+    try {
+      const state = JSON.parse(fs.readFileSync(this.circuitBreakerPath, 'utf8'));
+      if (state.status === 'OPEN' && (Date.now() - state.trippedAt < this.COOLDOWN_MS)) {
+        return true;
+      }
+      // Reset if cooldown passed
+      if (state.status === 'OPEN') {
+        this.resetCircuit();
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
+  tripCircuit(reason) {
+    console.warn(`[BEAST] ⚠️ Circuit Breaker TRIPPED: ${reason}. Mesh sync disabled for 1hr.`);
+    const state = { status: 'OPEN', trippedAt: Date.now(), reason };
+    fs.writeFileSync(this.circuitBreakerPath, JSON.stringify(state, null, 2));
+  }
+
+  resetCircuit() {
+    if (fs.existsSync(this.circuitBreakerPath)) {
+      fs.unlinkSync(this.circuitBreakerPath);
+    }
+  }
+
+  handleSyncFailure(err) {
+    const statsPath = path.join(this.localStore.getPaths().MEMORY_DIR, 'sync-stats.json');
+    let stats = { failures: 0 };
+    if (fs.existsSync(statsPath)) {
+      stats = JSON.parse(fs.readFileSync(statsPath, 'utf8'));
+    }
+    stats.failures = (stats.failures || 0) + 1;
+    stats.last_error = err.message;
+    fs.writeFileSync(statsPath, JSON.stringify(stats, null, 2));
+
+    if (stats.failures >= this.MAX_FAILURES) {
+      this.tripCircuit(err.message);
+    }
   }
 
   /**
@@ -24,37 +74,58 @@ class FederatedSync {
    * This pushes local high-confidence entries and pulls new organizational knowledge.
    */
   async fullSync() {
-    console.log('🔄 Initiating Federated Intelligence Sync (Pillar 1)...');
-    
-    // 1. Get promotable entries (Tiers 1-3)
-    const localEntries = this.localStore.readAll(false).filter(e => e.confidence > 0.8 && !e.deprecated);
-    
-    // 2. Filter out already synced entries
-    const unsynced = localEntries.filter(e => !e.global && !this.isRecentlySynced(e.id));
-    
-    // 3. Push to EIS
-    if (unsynced.length > 0) {
-      const auth = await this.client.getAuthHeader('push', 'kb/global');
-      const results = await this.client.push(unsynced, { headers: auth });
-      this.logSyncEvent(results);
+    if (this.isCircuitOpen()) {
+      console.warn('🛑 Federated Intelligence Sync: Circuit is OPEN. Skipping network calls.');
+      return { status: 'CIRCUIT_OPEN' };
     }
-    
-    // 4. [HARDEN] Delta Pull from EIS
-    const lastSync = this.getLastSyncTimestamp();
-    const authPull = await this.client.getAuthHeader('pull', 'kb/global');
-    const remoteEntries = await this.client.pull({ 
-      orgId: this.client.orgId,
-      since: lastSync,
-      headers: authPull 
-    });
 
-    if (remoteEntries.length > 0) {
-      this.mergeRemoteKnowledge(remoteEntries);
-    }
+    console.log('🔄 Initiating Federated Intelligence Sync (v5.4.0 BEAST)...');
     
-    this.updateLastSyncTimestamp();
-    console.log(`✅ Federated Intelligence Mesh: Sync complete. (Delta since ${lastSync})`);
-    return { pushed: unsynced.length, pulled: remoteEntries.length };
+    try {
+      // 1. Get promotable entries (Tiers 1-3)
+      const localEntries = this.localStore.readAll(false).filter(e => e.confidence > 0.8 && !e.deprecated);
+      
+      // 2. Filter out already synced entries
+      const unsynced = localEntries.filter(e => !e.global && !this.isRecentlySynced(e.id));
+      
+      // 3. Push to EIS
+      if (unsynced.length > 0) {
+        const auth = await this.client.getAuthHeader('push', 'kb/global');
+        const results = await this.client.push(unsynced, { headers: auth });
+        this.logSyncEvent(results);
+      }
+      
+      // 4. [HARDEN] Delta Pull from EIS
+      const lastSync = this.getLastSyncTimestamp();
+      const authPull = await this.client.getAuthHeader('pull', 'kb/global');
+      const remoteEntries = await this.client.pull({ 
+        orgId: this.client.orgId,
+        since: lastSync,
+        headers: authPull 
+      });
+
+      if (remoteEntries.length > 0) {
+        this.mergeRemoteKnowledge(remoteEntries);
+      }
+      
+      this.updateLastSyncTimestamp();
+      this.resetFailures(); // Reset on success
+      console.log(`✅ Federated Intelligence Mesh: Sync complete. (Delta since ${lastSync})`);
+      return { pushed: unsynced.length, pulled: remoteEntries.length };
+    } catch (err) {
+      console.error('❌ Federated Intelligence Sync FAILED:', err.message);
+      this.handleSyncFailure(err);
+      throw err;
+    }
+  }
+
+  resetFailures() {
+    const statsPath = path.join(this.localStore.getPaths().MEMORY_DIR, 'sync-stats.json');
+    if (fs.existsSync(statsPath)) {
+      const stats = JSON.parse(fs.readFileSync(statsPath, 'utf8'));
+      stats.failures = 0;
+      fs.writeFileSync(statsPath, JSON.stringify(stats, null, 2));
+    }
   }
 
   getLastSyncTimestamp() {
@@ -133,6 +204,7 @@ class FederatedSync {
     if (similarity > 0.9) {
       if (new Date(remote.timestamp) > new Date(local.timestamp)) {
         this.writeToGlobalKB(remote, globalPath);
+        this.logConflictTelemetry(local.id, 'LWW', similarity);
         console.log(`  └─ [LWW] Auto-resolved via timestamp.`);
       }
       return;
@@ -143,6 +215,7 @@ class FederatedSync {
       console.log(`  └─ [ADS] Triggering Autonomous Knowledge Synthesis...`);
       const merged = await this.triggerADSMerging(local, remote);
       this.writeToGlobalKB(merged, globalPath);
+      this.logConflictTelemetry(local.id, 'ADS_MERGE', similarity);
       return;
     }
 
@@ -150,12 +223,25 @@ class FederatedSync {
     if (similarity > 0.6) {
       console.log(`  └─ [DHH] High disagreement. Triggering Nexus Handover...`);
       this.localStore.markConflict(local.id, remote);
+      this.logConflictTelemetry(local.id, 'DHH_HANDOVER', similarity);
       return;
     }
 
     // 4. Collision Isolation (< 0.6) - Topic Mismatch
     console.log(`  └─ [ISO] Semantic collision (Topic mismatch). Isolating entries.`);
     this.writeToGlobalKB({ ...remote, id: `${remote.id}_collision_${Date.now()}` }, globalPath);
+    this.logConflictTelemetry(local.id, 'COLLISION_ISOLATION', similarity);
+  }
+
+  logConflictTelemetry(id, resolution, similarity) {
+    const telePath = path.join(this.localStore.getPaths().MEMORY_DIR, 'sync-telemetry.jsonl');
+    const entry = JSON.stringify({
+      id,
+      resolution,
+      similarity,
+      timestamp: new Date().toISOString()
+    }) + '\n';
+    fs.appendFileSync(telePath, entry);
   }
 
   async triggerADSMerging(local, remote) {

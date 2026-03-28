@@ -1,5 +1,19 @@
 # Changelog
 
+## [5.4.0] — Beast Mode Hardening — 2026-03-28
+
+🚀 **MindForge v5.4.0 — Enterprise Resilience (Hardened Edition)**
+
+This update elevates the v5.3.0 "Hyper-Enterprise" features to maximum robustness ("Beast Mode"), implementing critical safety systems and advanced observability.
+
+### 🛡️ Beast Mode Hardening (v5.4.0)
+
+- **Circuit Breaker Pattern**: Implemented a stateful `CircuitBreaker` in `federated-sync.js` to prevent network floods. Automatically disables mesh sync for 1 hour after 3 consecutive EIS failures.
+- **Critical-Path Protection**: Automated "Blast Radius" score of 100 in `impact-analyzer.js` for sensitive files (`.env`, `*.pem`, `id_rsa`, `package-lock.json`, etc.).
+- **Recursive Depth Penalty**: Introduced a 1.5x impact multiplier for actions deeper than 5 directory levels, preventing mass-scale silent modifications.
+- **Failure Telemetry**: Added `sync-history.jsonl` and `sync-telemetry.jsonl` for detailed conflict resolution and error auditability.
+- **Resilient Execution**: Raised default scores for `EXECUTE` and `GRANT` actions to increase governance oversight.
+
 ## [5.3.0] — Dynamic Blast Radius — 2026-03-28
 
 🚀 **MindForge v5.3.0 — Pillar II Implementation (APO v2)**

@@ -1,3 +1,15 @@
+# MindForge v5.4.0 — Beast Mode Hardening
+## Top Summary
+The v5.4.0 release elevates the "Hyper-Enterprise" features to maximum robustness ("Beast Mode"), implementing critical safety systems, automated blast-radius protection for sensitive files, and advanced failure telemetry.
+
+## Highlights
+- **Circuit Breaker Pattern**: Stateful resilience in `federated-sync.js` to prevent network floods during outages.
+- **Critical-Path Protection**: Automated "Blast Radius" score of 100 for high-risk files (secrets, locks, audits).
+- **Depth-Aware Governance**: 1.5x impact multiplier for deep directory modifications to prevent mass-scale silent regressions.
+- **Enhanced Observability**: Detailed conflict resolution and sync telemetry logs for enterprise auditing.
+
+---
+
 # MindForge v5.3.0 — Dynamic Blast Radius
 ## Top Summary
 The v5.3.0 release introduces real-time impact analysis and automated risk-based guardrails for agentic actions, preventing architectural regressions and accidental deletions.
