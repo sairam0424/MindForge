@@ -64,8 +64,26 @@ function injectSteering(planContent, guidanceItems) {
   });
 }
 
+/**
+ * Add human steering to the unified queue (v5 Pillar VII).
+ */
+function pushHumanSteering(instruction, bundleId = 'none') {
+  const STEER_PATH = path.join(process.cwd(), '.planning', 'STEER.json');
+  const item = {
+    id: `human-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    bundle_id: bundleId,
+    type: 'HUMAN_OVERRIDE',
+    instruction,
+    priority: 'CRITICAL'
+  };
+  fs.appendFileSync(STEER_PATH, JSON.stringify(item) + '\n');
+  return item.id;
+}
+
 module.exports = {
   pushGuidance,
   popGuidance,
-  injectSteering
+  injectSteering,
+  pushHumanSteering
 };

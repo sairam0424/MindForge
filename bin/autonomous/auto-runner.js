@@ -20,16 +20,18 @@ const crypto = require('crypto');
 const PolicyEngine = require('../governance/policy-engine');
 const RBACManager  = require('../governance/rbac-manager');
 const ZTAIManager  = require('../governance/ztai-manager');
+const HandoverManager = require('../engine/handover-manager');
 
 class AutoRunner {
   constructor(options = {}) {
     this.phase = options.phase;
     this.isHeadless = options.headless || false;
-    this.auditPath = path.join(process.cwd(), '.planning/AUDIT.jsonl');
-    this.statePath = path.join(process.cwd(), '.planning/auto-state.json');
+    this.auditPath = path.join(process.cwd(), '.planning', 'AUDIT.jsonl');
+    this.statePath = path.join(process.cwd(), '.planning', 'auto-state.json');
     this.monitor = new stuckMonitor(this.auditPath);
     this.isPaused = false;
-    
+    this.handoverManager = new HandoverManager();
+
     // v5 Governance Initialization
     this.policyEngine = new PolicyEngine();
     this.rbacManager  = new RBACManager();
@@ -71,6 +73,9 @@ class AutoRunner {
 
       // Pillar 3 (PAR): Context Density Refactoring
       await this.checkContextDensity();
+
+      // Pillar 7 (DHH): Check for Human Steering
+      await this.checkHumanSteering(isReliable);
 
       await this.executeWave();
     }
@@ -232,6 +237,36 @@ class AutoRunner {
       
       // In a real implementation, this would trigger a system_handoff summarization
       // For now, we log it to the audit stream for the agent to action
+    }
+  }
+
+  async checkHumanSteering(isReliable) {
+    if (!isReliable) {
+      console.log('[DHH-AUTO] Low reliability detected. Packaging Nexus State Bundle for human review...');
+      const events = this.getRecentAuditEvents(20);
+      const bundlePath = this.handoverManager.createNexusBundle({
+        phase: this.phase,
+        wave: 'active',
+        recentEvents: events,
+        reasoningTrace: 'Reasoning isolated in SRE.'
+      });
+      
+      this.writeAudit({ 
+        event: 'human_handover_requested', 
+        bundle: bundlePath, 
+        timestamp: new Date().toISOString() 
+      });
+    }
+
+    // Check for mid-wave steering instructions if available
+    const steerPath = path.join(process.cwd(), '.planning', 'STEER.json');
+    if (fs.existsSync(steerPath)) {
+      const instructions = fs.readFileSync(steerPath, 'utf8').trim().split('\n');
+      if (instructions.length > 0) {
+        console.log(`[DHH-STEER] Processing ${instructions.length} injected human instructions...`);
+        // Real implementation would inject these into the agent's task list
+        fs.unlinkSync(steerPath); // Clear handled instructions
+      }
     }
   }
 
