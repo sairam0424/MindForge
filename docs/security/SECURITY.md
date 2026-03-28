@@ -4,9 +4,9 @@
 
 | Version | Security support |
 |---|---|
-| 1.x.x | ✅ Active — patches released for all severity levels |
-| 0.6.x | ⚠️  Limited — critical fixes only, 90 days from v1.0.0 release |
-| < 0.6.0 | ❌ No support |
+| 5.x.x | ✅ Active — patches released for all severity levels |
+| 4.x.x | ⚠️  Limited — critical fixes only |
+| < 4.0.0 | ❌ No support |
 
 ## Reporting a vulnerability
 
@@ -29,12 +29,14 @@
 - Crediting researchers in the security advisory (with their permission)
 - Maintaining confidentiality until a fix is released
 
-## ZTAI Identity Model (v4.2)
+## ZTAI & Enclave Security (v5.0.0)
 
-MindForge enforces **Zero-Trust Agentic Identity (ZTAI)** for all actions. Every agent is assigned a cryptographically unique asymmetric key pair (Ed25519) in the format `did:mf:<key-fingerprint>`.
+MindForge v5.0.0 enforces **Zero-Trust Agentic Identity (ZTAI)** and **Sovereign Reason Enclaves (SRE)** for all sensitive operations. 
 
-- **Asymmetric Signing**: All high-tier (T1-T3) agent actions are cryptographically signed.
-- **Secure Enclave (HSM)**: Tier 3 principal agents utilize simulated hardware-secured enclave signing.
+- **Asymmetric Signing**: All high-tier (T1-T3) agent actions are cryptographically signed using Ed25519.
+- **Sovereign Reason Enclaves (SRE)**: Tier 3 principal agents execute reasoning in isolated TEE-simulated enclaves, ensuring that high-value architectural decisions and sensitive IP never leak to the persistent log.
+- **Trace Sanitization**: In-enclave sanitization automatically redacts credentials and PII from reasoning traces before they reach the local filesystem.
+- **Multi-Cloud Resilience**: The **Cloud Broker** provides automated failover and hedging across Vertex AI, Bedrock, and Azure to mitigate provider-side denial-of-service or outages.
 - **Audit Non-Repudiation**: The `AUDIT.jsonl` log is finalized with **Merkle-root integrity manifests** to prevent tampering.
 - **See also:** [ZTAI Overview](file:///Users/sairamugge/Desktop/MindForge/docs/security/ZTAI-OVERVIEW.md)
 

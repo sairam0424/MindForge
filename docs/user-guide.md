@@ -1,4 +1,4 @@
-# MindForge User Guide (v2.1.1)
+# MindForge User Guide (v5.0.0)
 
 This guide gets you from install to productive, with the minimum needed to run MindForge in a real project. It assumes Node.js 18+.
 
@@ -152,7 +152,31 @@ MindForge v2.1.1 features automated PR creation and commit management.
 
 ---
 
-## 12. Update & Maintenance
+## 12. Enterprise Resilience & Governance (v5.0.0)
+
+MindForge v5 introduces mission-critical resilience and sovereign reasoning for enterprise engineering.
+
+### Multi-Cloud Arbitrage
+MindForge automatically hedges against provider outages and optimizes for cost/latency.
+```bash
+/mindforge:settings --cloud-arbitrage on
+```
+
+### Sovereign Reason Enclaves (SRE)
+Tier 3 (Principal) agents execute reasoning in isolated enclaves to protect sensitive IP.
+```bash
+/mindforge:agent --tier 3 # Automatically triggers SRE
+```
+
+### Dynamic Human-Agent Handover (DHH)
+When autonomous confidence drops or a critical decision is reached, MindForge creates a **Nexus State Bundle** and requests human steering.
+```bash
+/mindforge:auto --handover 0.6 # Triggers handover at 60% confidence
+```
+
+---
+
+## 13. Update & Maintenance
 
 Keep your framework current with the latest personas and library updates:
 
@@ -162,8 +186,10 @@ Keep your framework current with the latest personas and library updates:
 
 ---
 
-## 13. Reference & Support
+## 14. Reference & Support
 
+- **Architecture**: `docs/architecture/V5-ENTERPRISE.md`
+- **Governance**: `docs/governance-guide.md`
 - **Commands**: `docs/commands-reference.md`
 - **Personas**: `docs/PERSONAS.md`
 - **Troubleshooting**: `docs/troubleshooting.md`
