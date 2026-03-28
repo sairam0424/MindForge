@@ -1,5 +1,25 @@
 # Changelog
 
+## [5.0.0-alpha.2] — Predictive Reliability & Supply Chain Trust — 2026-03-28
+
+🚀 **MindForge v5.0.0 — Pillars III & IV Implementation**
+
+This update adds the next two critical architectural pillars to the v5 Enterprise roadmap, focusing on long-term session reliability and a verifiable asset supply chain.
+
+### Pillar III: Predictive Agentic Reliability (PAR)
+
+- **Advanced Loop Detection**: Implemented **S03 (Semantic Mirroring)** and **S04 (Infinite Decomposition)** patterns in the `StuckMonitor`.
+- **Context Density Refactorer**: New proactive utility that triggers context summarization and handoffs when reasoning-to-action density falls below 30%.
+- **C2C Arbitrage**: Integrated **Confidence-to-Cost** threshold gating into the `AutoRunner` to prevent low-value autonomous drift.
+- **Self-Healing Integration**: Automated triggering of "hindsight injection" and state repair when PAR patterns are detected.
+
+### Pillar IV: Supply Chain Trust (ZTS)
+
+- **Agentic SBOM**: Implemented the `NexusTracer` manifest generator, producing real-time `MANIFEST.sbom.json` files for every reasoning chain.
+- **7-Dimension Certification (7D)**: Re-architected the `skill-validator` with a weighted scoring system covering Schema, Triggers, Security, Clarity, and Examples.
+- **Enterprise-Grade Enforcement**: Strict `--enterprise` mode requirement for a minimum **7.0/10.0** certification score.
+- **Model/Skill Telemetry**: Integrated real-time tracking of asset provenance and usage history in the audit stream.
+
 ## [5.0.0-alpha.1] — Federated Intelligence & Policy Orchestration — 2026-03-28
 
 🚀 **MindForge v5.0.0 — The Enterprise "Beast" Release**
