@@ -1,12 +1,12 @@
-# MINDFORGE.md — Parameter Registry (v4.1.0-alpha.nexus)
+# MINDFORGE.md — Parameter Registry (v5.1.0-beast)
 
 ## 1. IDENTITY & VERSIONING
 
 [NAME]    = MindForge
-[VERSION] = 4.2.0-alpha.ztai
-[STABLE]  = false
-[MODE]    = "Zero-Trust Identity"
-[REQUIRED_CORE_VERSION] = 4.2.0
+[VERSION] = 5.1.0
+[STABLE]  = true
+[MODE]    = "Zero-Trust Agentic Hub"
+[REQUIRED_CORE_VERSION] = 5.1.0
 
 ## 2. INTELLIGENCE TOGGLES (V4 UPDATES)
 
@@ -28,7 +28,8 @@
 
 ## 3. MODEL TOPOLOGY
 
-# Persona to Model mapping
+### Persona to Model mapping
+
 [PLANNER]  = claude-opus-4-5
 [EXECUTOR] = claude-sonnet-4-5
 [REVIEWER] = claude-sonnet-4-5
@@ -42,7 +43,8 @@
 
 ## 4. GOVERNANCE & ECONOMICS
 
-# Limits and safety gates
+### Limits and safety gates
+
 [COST_WARN_USD]       = 2.00
 [COST_HARD_LIMIT_USD] = 25.00
 [ADS_DEBATE_ROUNDS]   = 2
@@ -54,7 +56,8 @@
 
 ## 5. RESOURCE GEOMETRY
 
-# Paths and ports
+### Paths and ports
+
 [BROWSER_PORT]    = 7338
 [DASHBOARD_PORT]  = 7339
 [API_URL]         = <http://localhost:3000>
@@ -64,16 +67,21 @@
 
 ## 6. PROJECT CONSTRAINTS
 
-# Static rules for the agent
+### Static rules for the agent
+
 [FORBIDDEN] = """
+
 - No direct DB access from frontend
 - No synchronous I/O in API handlers
 - No console.log in production services
 - No TODO comments in committed code
+
 """
 
 [INSTRUCTIONS] = """
+
 - Check packages/shared before creating utilities.
 - Backend middleware follows Fastify conventions.
 - Date manipulation using date-fns only.
+
 """

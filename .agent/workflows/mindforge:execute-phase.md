@@ -4,6 +4,12 @@ description: 1. Read STATE.md — confirm phase [N] is in "planned" status.
 # MindForge — Execute Phase Command
 # Usage: /mindforge:execute-phase [N]
 
+## Step 0 — Protocol Activation
+
+**MANDATORY**: Invoke the following skills before proceeding:
+1. `mindforge-execute-phase_extended`: For tactical execution depth.
+2. `mindforge-parallel-mesh_extended`: To manage the swarm clusters and parallel waves.
+
 ## Pre-checks (all must pass before execution starts)
 
 1. Read STATE.md — confirm phase [N] is in "planned" status.
@@ -108,6 +114,12 @@ After all tasks in wave complete:
    - Write WAVE-REPORT update
 
 ## Step 4 — Phase-level verification
+
+## Step 0 — Protocol Activation
+
+**MANDATORY**: Invoke the `mindforge-execute-phase_extended` skill.
+For parallel tasks, also activate `mindforge-parallel-mesh_extended` and `mindforge-swarm-execution`.
+This ensures the implementation uses wave-based parallelization and review-inbound checkpoints.
 
 After all waves complete, run the verification pipeline:
 

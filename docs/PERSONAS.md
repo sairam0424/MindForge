@@ -19,7 +19,8 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Persistence & Memory** | 1 | mf-memory |
 | **Infrastructure & Tools** | 1 | mf-tool |
 | **Strategy & Ops** | 5 | roadmapper, release-manager, tech-writer, roadmapper-extend, user-profiler |
-| **Debuggers** | 1 | debugger |
+| **Neural Protocols** | 6 | brainstormer, swarm-pilot, mesh-orchestrator, workspace-manager, skill-author, tdd-master |
+| **Debuggers** | 2 | debugger, rca-expert |
 | **Mapping** | 2 | codebase-mapper, codebase-mapper-extend |
 
 ---
@@ -505,7 +506,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 
 **Role:** Executes implementation plans with atomic commit discipline.
 
-| Property | Value |
+| **Property** | **Value** |
 | :--- | :--- |
 | **Spawned by** | `/mindforge:execute-phase`, `/mindforge:agent executor` |
 | **Tools** | Read, Write, Bash, Grep, Glob, CmdStatus, ReadTerminal |
@@ -614,6 +615,152 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 
 ---
 
+---
+
+### mindforge-brainstormer (The Ideation Catalyst)
+
+**Role:** Expert in deep requirements discovery and behavioral ideation.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:brainstorming` |
+| **Tools** | Read, Write, Bash, Grep |
+| **Color** | `magenta` |
+| **Trust Tier** | `1` |
+
+**Capabilities:**
+- Proactive discovery of edge cases and user intent.
+- Drafting high-fidelity visual companions and behavioral specs.
+- Challenging assumptions through Socratic engineering.
+
+---
+
+### mindforge-swarm-pilot (The Parallel Executor)
+
+**Role:** Orchestrates multiple independent implementation tasks simultaneously.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:swarm-execution` |
+| **Tools** | Read, Write, Bash, Grep, CmdStatus |
+| **Color** | `yellow` |
+| **Trust Tier** | `2` |
+
+**Capabilities:**
+- Managing independent "Execution Waves".
+- Merging parallel contributions with zero conflict.
+- Maintaining high-velocity implementation loops.
+
+---
+
+### mindforge-mesh-orchestrator (The Context Guardian)
+
+**Role:** Synchronizes state and context across parallel agent workstreams.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:parallel-mesh` |
+| **Tools** | Read, Write, Bash, Grep, Context7 |
+| **Color** | `cyan` |
+| **Trust Tier** | `2` |
+
+**Capabilities:**
+- Maintaining a unified "Shared Reality" for swarms.
+- Preventing context drift in complex multi-agent sessions.
+- Dynamic propagation of architectural decisions.
+
+---
+
+### mindforge-workspace-manager (The Environment Architect)
+
+**Role:** Manages isolated development environments and project sharding.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:workspace-isolated` |
+| **Tools** | Read, Write, Bash, Git |
+| **Color** | `blue` |
+| **Trust Tier** | `3` |
+
+**Capabilities:**
+- Provisioning git worktrees for isolated feature branches.
+- Managing workspace cleanup and state protection.
+- Ensuring atomic environment parity across branches.
+
+---
+
+### mindforge-skill-author (The Framework Evolver)
+
+**Role:** Expert in authoring and validating new MindForge skills.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:skill-creation` |
+| **Tools** | Read, Write, Bash, Grep |
+| **Color** | `purple` |
+| **Trust Tier** | `3` |
+
+**Capabilities:**
+- Drafting [SKILL.md] instructions and tool-chains.
+- Validating skill quality against the 7-Dimension Registry.
+- Hardening framework protocols for framework-level releases.
+
+---
+
+### mindforge-tdd-master (The Quality Zealot)
+
+**Role:** Enforces strict Test-Driven Development loops with adversarial rigor.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:tdd` |
+| **Tools** | Read, Write, Bash, Grep, CmdStatus |
+| **Color** | `red` |
+| **Trust Tier** | `2` |
+
+**Capabilities:**
+- Enforcing Red-Green-Refactor discipline.
+- Automated generation of regression-proof test suites.
+- Validating implementation against pure behavioral specs.
+
+---
+
+### mindforge-rca-expert (The Forensic Scientist)
+
+**Role:** Principal specialist in advanced root cause analysis and forensic debugging.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:debug_extended` |
+| **Tools** | Read, Write, Bash, Grep, CmdStatus, ReadTerminal |
+| **Color** | `orange` |
+| **Trust Tier** | `2` |
+
+**Capabilities:**
+- Log-based forensic reconstruction of failures.
+- Identifying systemic architectural flaws.
+- Proving fix validity through falsifiable regression tests.
+
+---
+
+### mindforge-neural-orchestrator (The Framework Pilot)
+
+**Role:** The core identity responsible for activating and managing the protocol mesh.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:neural-orchestrator` |
+| **Tools** | All |
+| **Color** | `white` |
+| **Trust Tier** | `3` |
+
+**Capabilities:**
+- Booting the MindForge Session Engine.
+- Dynamically loading required protocols for the task.
+- Enforcing the Master Directive across all sub-agents.
+
+---
+
 ### mindforge-user-profiler (The Relationship Manager)
 
 **Role:** Analyzes session history to personalize agent interactions and technical alignment.
@@ -649,6 +796,7 @@ MindForge V4 introduces the ability to spawn dynamic, task-aware clusters of spe
 | **ComplianceSwarm** | compliance-auditor | legal-compliance, architect, security | GDPR/SOC2 alignment, PII masking |
 | **IdentityTrustSwarm** | identity-architect | security-reviewer, architect, blockchain | Zero-Trust, DID-based signing |
 | **DataMeshSwarm** | data-engineer | db-optimizer, analyst, compliance | Lakehouse patterns, ETL integrity |
+| **NeuralSwarm** | mesh-orchestrator | brainstormer, swarm-pilot, workspace-manager | High-fidelity protocol execution |
 
 ### Swarm Governance Protocols
 

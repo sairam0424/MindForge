@@ -6,6 +6,10 @@
           {
             "type": "command",
             "command": "node .agent/hooks/mindforge-check-update.js"
+          },
+          {
+            "type": "command",
+            "command": "node .agent/hooks/mindforge-session-init_extended.js"
           }
         ]
       }

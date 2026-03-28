@@ -1,4 +1,4 @@
-# MindForge User Guide (v5.0.0)
+# MindForge User Guide (v5.1.0)
 
 This guide gets you from install to productive, with the minimum needed to run MindForge in a real project. It assumes Node.js 18+.
 
@@ -62,27 +62,27 @@ This analyzes your code, generating `.planning/ARCHITECTURE.md` and inferred dev
 
 ---
 
-## 5. Unified Workflow
+## 5. Unified Workflow (Enabled by Protocol Mesh)
 
-MindForge v2.1.1 uses a unified 4-pillar workflow for predictable delivery:
+MindForge v5.1.0 uses a unified 4-pillar workflow, now hardened by the **Neural Protocol Mesh**. Every core command automatically activates **Protocol Step 0** for maximum tactical rigor.
 
 ```bash
-/mindforge:plan-phase [N]     # discuss → research → plan
-/mindforge:execute-phase [N]  # parallel execution of task plans
-/mindforge:verify-phase [N]   # UAT + automated validation
-/mindforge:ship [N]           # generate changelog + create PR
+/mindforge:plan-phase [N]     # discuss → research → plan (Step 0: brainstorming)
+/mindforge:execute-phase [N]  # parallel execution of task plans (Step 0: swarm-execution)
+/mindforge:verify-phase [N]   # UAT + automated validation (Step 0: verify-work)
+/mindforge:ship [N]           # generate changelog + create PR (Step 0: ship)
 ```
 
 ---
 
 ## 6. High-Performance Personas
 
-MindForge v2.1.1 introduces 32+ specialized personas. Each persona is optimized for a specific stage of the lifecycle.
+MindForge v5.1.0 features 46+ specialized personas. Each persona is optimized for a specific stage of the lifecycle.
 
-- **Planner**: Orchestrates complex multi-file architectural changes.
-- **Executor**: Focused on pixel-perfect implementation and coding standards.
-- **Debugger**: Systematic root-cause analysis and verification.
-- **Researcher**: Deep codebase and dependency analysis via Context7.
+- **Neural Orchestrator**: Activates and manages the advanced protocol layer.
+- **Brainstormer**: Expert in deep requirements discovery and behavioral ideation.
+- **Swarm Pilot**: Orchestrates multiple independent implementation tasks.
+- **TDD Master**: Enforces strict Test-Driven Development loops with adversarial rigor.
 
 To switch personas or see the full list:
 
@@ -131,19 +131,20 @@ MindForge captures architectural decisions and bug patterns across sessions.
 
 ---
 
-## 10. Self-Building Skills
+## 10. Self-Building Skills & Protocol Creation
 
-Extend MindForge by learning from documentation or community sources.
+Extend MindForge by learning from documentation or authoring custom protocols.
 
 ```bash
 /mindforge:learn https://docs.nextjs.org "nextjs-mastery"
+/mindforge:skill-creation # Author a new high-fidelity protocol
 ```
 
 ---
 
 ## 11. Git & PR Integration
 
-MindForge v2.1.1 features automated PR creation and commit management.
+MindForge features automated PR creation and commit management.
 
 ```bash
 /mindforge:pr-branch "feature/auth-refactor"
@@ -152,9 +153,9 @@ MindForge v2.1.1 features automated PR creation and commit management.
 
 ---
 
-## 12. Enterprise Resilience & Governance (v5.0.0)
+## 12. Enterprise Resilience & Governance (v5.1.0)
 
-MindForge v5 introduces mission-critical resilience and sovereign reasoning for enterprise engineering.
+MindForge v5.1.0 introduces mission-critical resilience and sovereign reasoning for enterprise engineering.
 
 ### Multi-Cloud Arbitrage
 MindForge automatically hedges against provider outages and optimizes for cost/latency.
@@ -176,7 +177,24 @@ When autonomous confidence drops or a critical decision is reached, MindForge cr
 
 ---
 
-## 13. Update & Maintenance
+## 13. Neural Protocol Mesh (Beast Addition)
+
+The **Beast Addition** introduces 14 hardened protocols from the Superpowers framework, integrated into the core MindForge engine.
+
+- **Brainstorming**: Deep ideation before planning.
+- **Parallel Mesh**: Orchestrates context across multiple agents.
+- **Swarm Execution**: Parallel implementation for high-velocity waves.
+- **Isolated Workspaces**: Environment protection via git worktrees.
+- **Enhanced TDD/Debug**: Strict loops for zero-defect delivery.
+
+Activate the mesh for any session:
+```bash
+/mindforge:neural-orchestrator
+```
+
+---
+
+## 14. Update & Maintenance
 
 Keep your framework current with the latest personas and library updates:
 
@@ -186,7 +204,7 @@ Keep your framework current with the latest personas and library updates:
 
 ---
 
-## 14. Reference & Support
+## 15. Reference & Support
 
 - **Architecture**: `docs/architecture/V5-ENTERPRISE.md`
 - **Governance**: `docs/governance-guide.md`

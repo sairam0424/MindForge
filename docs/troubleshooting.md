@@ -1,4 +1,4 @@
-# MindForge Troubleshooting (v1.0.0)
+# MindForge Troubleshooting (v5.1.0)
 
 This page lists common issues and fast fixes. If you get stuck, start with
 `/mindforge:health`.
@@ -54,14 +54,14 @@ npx mindforge-cc@latest --claude --local --force
 ```
 Then run:
 ```
-/mindforge:migrate --from v0.6.0 --to v1.0.0
+/mindforge:migrate --from v5.0.0 --to v5.1.0
 ```
 
 ### Schema mismatch warning on startup
 **Fix:**
 ```
 /mindforge:migrate --dry-run
-/mindforge:migrate --from vX.Y.Z --to v1.0.0
+/mindforge:migrate --from vX.Y.Z --to v5.1.0
 ```
 
 ### AUDIT.jsonl parse errors
@@ -113,7 +113,27 @@ rerun migration. See `.mindforge/audit/AUDIT-SCHEMA.md` for expected format.
 
 ---
 
-## 8. Getting help
+## 8. Neural Protocol Mesh Issues (v5.1.0)
+
+### Protocol Step 0 fails to activate
+**Symptom:** Commands proceed without activating `_extended` skills.
+**Fix:** Run `/mindforge:neural-orchestrator --reset`. Ensure all `_extended` skills are present in `.agent/skills/`.
+
+### Context drift in Parallel Mesh
+**Symptom:** Parallel agents making conflicting decisions.
+**Fix:** Run `/mindforge:parallel-mesh --sync`. This forces a global state re-synchronization across all active worker identities.
+
+### Workspace isolation failure
+**Symptom:** Conflicts between feature branches or dirty worktree.
+**Fix:** Run `/mindforge:workspace-isolated --cleanup`. Use `/mindforge:health --repair` if `.git/worktrees/` is corrupt.
+
+---
+
+## 9. Getting help
 If the above doesn’t resolve it:
 - Review `docs/user-guide.md`
 - Check `docs/security/SECURITY.md` for security issues
+- Open a GitHub issue or join the Discord: `/mindforge:join-discord`
+- **Architecture**: `docs/architecture/V5-ENTERPRISE.md`
+- **Commands**: `docs/commands-reference.md`
+- **Personas**: `docs/PERSONAS.md`

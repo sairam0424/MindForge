@@ -1,7 +1,12 @@
 ---
-description: Create a release PR for a verified phase. Usage: /mindforge:ship [N]
+description: Create a pull request from completed phase/milestone work, generate a rich PR body from planning artifacts, optionally run code review, and prepare for merge. Closes the plan → execute → verify → ship loop.
 ---
 Create a release PR for a verified phase. Usage: /mindforge:ship [N]
+
+## Step 0 — Protocol Activation
+
+**MANDATORY**: Invoke the `mindforge-ship_extended` skill.
+This ensures the shipping process uses rigorous quality gates, branch sanitization, and automated PR body generation.
 
 ## Pre-check
 Read UAT.md for phase N. If status is not "All passed ✅": stop.

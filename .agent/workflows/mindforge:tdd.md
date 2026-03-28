@@ -8,15 +8,20 @@ Execute a strict Test-Driven Development (TDD) loop using the Red-Green-Refactor
 </instruction>
 
 <context>
-Follow the specialized MindForge TDD standards defined in [.agent/skills/mindforge-tdd/SKILL.md](.agent/skills/mindforge-tdd/SKILL.md).
+Follow the specialized MindForge TDD standards defined in [.agent/skills/mindforge-tdd_extended/SKILL.md](.agent/skills/mindforge-tdd_extended/SKILL.md).
 </context>
 
 <rules>
 - **No Implementation without Test**: Do not write production code unless it is to make a failing test pass.
 - **Minimalist Green**: Write the absolute minimum code required to satisfy the test.
 - **Refactor Ruthlessly**: Clean up after every green state while keeping tests passing.
-- **Vertical Slicing**: Prioritize end-to-end functionality over horizontal layers.
+- **Vertical Slicing**: Strict Red-Green-Refactor development. Ensure test coverage before implementation logic.
 </rules>
+
+## Step 0 — Protocol Activation
+
+**MANDATORY**: Invoke the `mindforge-tdd_extended` skill.
+This ensures the implementation uses isolated test-first logic and anti-pattern detection.
 
 <process>
 1.  **RED**: Define a single behavioral requirement and write a failing test.

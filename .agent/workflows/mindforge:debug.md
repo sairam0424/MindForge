@@ -8,8 +8,10 @@ Systematic debugging using the Debug Specialist persona with full RCA protocol.
 
 ## Activation
 
-Load `.mindforge/personas/debug-specialist.md` immediately.
-This command runs entirely in that persona for its full duration.
+## Step 0 — Activate Extended Debugging Protocol
+
+**MANDATORY**: Invoke the `mindforge-debug_extended` skill.
+This ensures the full scientific root-cause investigation depth is applied to this session.
 
 ## Step 1 — Intake
 
