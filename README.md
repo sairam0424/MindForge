@@ -1,8 +1,8 @@
-# MindForge — Enterprise Agentic Framework (v4.2.5)
+# MindForge — Enterprise Agentic Framework (v4.3.0)
 
 MindForge turns Claude Code and Antigravity into production-grade engineering
 partners with governance, observability, and a reactive autonomous intelligence engine.
-Release published: v4.1.0-alpha.nexus.
+Release published: v4.3.0-stable.
 
 # Install
 ```bash
@@ -21,10 +21,12 @@ npm install -g mindforge-cc@v4-alpha
 AI coding agents degrade over long sessions. Context fills up. Quality drops.
 Decisions get forgotten. MindForge fixes that with:
 
+- **Autonomous FinOps (v4.3)** — Dynamic **C2C** (Confidence-to-Cost) routing and Agentic ROI tracking (v4.3)
+- **Proactive Equilibrium (v4.3)** — Real-time **Wave Divergence** monitoring and autonomous state recovery (v4.3)
 - **MindForge Nexus (v4.1)** — High-fidelity **ART** (Agentic Reasoning Tracing) for the agentic mesh
 - **Dynamic Swarm Orchestration (v4)** — parallel "Agentic Mesh" with shared state (v4)
-- **Zero-Trust Identity (v4.2)** — DID-signed non-repudiable audit logs with HSM/Enclave support (v4.2.5)
-- **Global Intelligence Mesh (v4.2)** — Cross-repo knowledge sharing and Ghost Pattern Detection (v4.2.5)
+- **Zero-Trust Identity (v4.2)** — DID-signed non-repudiable audit logs with HSM/Enclave support (v4.3)
+- **Global Intelligence Mesh (v4.2)** — Cross-repo knowledge sharing and Ghost Pattern Detection (v4.3)
 - **Context Sharding (v3)** — relevance-dense memory management (40% token savings)
 - **Adversarial Synthesis (v3)** — zero-drift logic through red/blue model debate
 - **Temporal Vision (v3)** — full history scrubbing and hindsight state repair
@@ -345,11 +347,16 @@ See `.mindforge/production/token-optimiser.md`.
 
 ---
 
----
+## What's new in v4.3 (Enterprise Mesh & Equilibrium)
 
----
+MindForge V4.3 matures the framework for enterprise mission-critical environments.
 
-## What's new in v4.2 (Intelligence Mesh)
+- **Autonomous FinOps Hub**: Automated budget enforcement and dynamic model selection based on task complexity (C2C).
+- **Proactive Equilibrium**: Real-time divergence detection (Wave Monitoring) and autonomous repair loops.
+- **Structural Reorganization**: Production-grade `bin/` directory architecture for all core implementation logic.
+- **Enhanced ZTAI**: Asymmetric cryptographic signatures for all and simulated HSM support.
+
+## What's new in v4.2 (Identity & Memory)
 
 MindForge V4.2 focuses on **Identity** and **Memory** within the agentic swarm.
 
