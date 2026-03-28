@@ -1,5 +1,5 @@
 # MindForge Federated Intelligence Mesh (FIM)
-MindForge v5.0.0 — Distributed Intelligence Sharing
+MindForge v5.1.0 — Distributed Intelligence Sharing
 
 ## 1. Overview
 The **Federated Intelligence Mesh (FIM)** is the enterprise-grade evolution of the Global Intelligence Mesh. It transitions MindForge from machine-local memory to a distributed organizational intelligence network. Using a central **Enterprise Intelligence Service (EIS)**, FIM enables seamless, authenticated knowledge synchronization across all agents and projects in the enterprise.
