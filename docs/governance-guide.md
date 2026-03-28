@@ -18,6 +18,7 @@ Before the `AutoRunner` begins a new execution wave, it extracts the acting agen
 The `PolicyEngine` evaluates this intent against organizational **Policy-as-Code (PaC)** definitions (typically stored in `bin/governance/policies/`).
 - **Permit**: The action is allowed and execution proceeds.
 - **Deny**: The action is blocked, and the violation is logged to `AUDIT.jsonl`.
+- **Blast Radius Denial (v5.3.0)**: Action is blocked if the `Impact Score` exceeds the policy `max_impact` threshold.
 - **Escalate**: The action requires a higher-tier DID signature or explicit HITL (Human-in-the-Loop) approval.
 
 ## 3. Trust Tier Architecture (ZTAI Hardened)
@@ -48,6 +49,13 @@ MindForge v5.1.0 ships with default policies including:
 - **`gate_tier_3_engine`**: Blocks all modifications to `bin/autonomous/` unless signed by a Tier 3 DID.
 - **`protect_security_namespace`**: Limits access to `/security` and `/governance` to Tier 2+ specialists.
 - **`mesh_integrity_lock`**: Ensures only high-confidence agents can push to the **Federated Intelligence Mesh**.
+- **`enforce_blast_radius` (v5.3.0)**: Dynamic policy that limits `DELETE` impact to <30 for Tier 1 agents.
+
+## 7. Dynamic Blast Radius (v5.3.0)
+The **ImpactAnalyzer** calculates a score (0-100) for every intent:
+- **Action Type**: `DELETE` (10), `WRITE` (5), `READ` (1).
+- **Sensitivity**: 4x multiplier for `.mindforge/`, `bin/`, and `config/` namespaces.
+- **Fail-Safe**: Defaults to Score 100 (CRITICAL) if analysis fails.
 
 ---
-*Status: V5.1.0 "Beast Addition" Governance Implemented & Verified (2026-03-28)*
+*Status: V5.3.0 Dynamic Blast Radius Implemented & Verified (2026-03-28)*
