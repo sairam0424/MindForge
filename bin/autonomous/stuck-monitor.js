@@ -26,7 +26,50 @@ class StuckMonitor {
     // Check S02: Command Loop (Identical failing commands)
     if (this.detectS02(event)) return { pattern: 'S02', message: 'Stuck in command loop: identical failing commands.' };
 
+    // Check S03: Semantic Mirroring (Reasoning Loop)
+    if (this.detectS03(event)) return { pattern: 'S03', message: 'Stuck in reasoning loop: semantic mirroring detected.' };
+
+    // Check S04: Infinite Decomposition (Planning Paradox)
+    if (this.detectS04(event)) return { pattern: 'S04', message: 'Stuck in planning paradox: infinite decomposition detected.' };
+
     return null;
+  }
+
+  detectS03(event) {
+    if (event.event !== 'reasoning_trace') return false;
+
+    // Compare with the last 5 thoughts in history
+    const reflections = this.history.filter(h => h.event === 'reasoning_trace');
+    if (reflections.length < 3) return false;
+
+    const currentThought = event.thought;
+    const previousThoughts = reflections.slice(-4, -1);
+
+    const isMirroring = previousThoughts.some(p => 
+      this.isContentSimilar(p.thought, currentThought)
+    );
+
+    return isMirroring;
+  }
+
+  detectS04(event) {
+    if (event.event !== 'reasoning_trace') return false;
+
+    const decompositions = this.history.filter(h => 
+      h.event === 'reasoning_trace' && 
+      (h.thought?.toLowerCase().includes('break down') || h.thought?.toLowerCase().includes('sub-task'))
+    );
+
+    // If more than 4 consecutive decompositions without a command or edit
+    const lastActionIndex = this.history.findLastIndex(h => 
+      h.tool === 'run_command' || h.tool === 'replace_file_content' || h.tool === 'multi_replace_file_content'
+    );
+
+    const recentDecomps = decompositions.filter(d => 
+      this.history.indexOf(d) > lastActionIndex
+    );
+
+    return recentDecomps.length >= 4;
   }
 
   detectS01(event) {
