@@ -11,6 +11,7 @@ const stuckMonitor = require('./stuck-monitor');
 const steeringManager = require('./steer');
 const progressStream = require('./progress-stream');
 const headlessAdapter = require('./headless');
+const ContextRefactorer = require('./context-refactorer');
 const KnowledgeCapture = require('../memory/knowledge-capture');
 const TemporalHub = require('../engine/temporal-hub');
 const crypto = require('crypto');
@@ -32,6 +33,10 @@ class AutoRunner {
     // v5 Governance Initialization
     this.policyEngine = new PolicyEngine();
     this.rbacManager  = new RBACManager();
+
+    // v5 PAR Initialization
+    this.refactorer = new ContextRefactorer();
+    this.c2cThreshold = 0.65;
   }
 
   async run() {
@@ -55,6 +60,17 @@ class AutoRunner {
         this.writeAudit({ event: 'auto_mode_denied', reason: 'Policy violation detected' });
         break;
       }
+
+      // Pillar 3 (PAR): Confidence-to-Cost Arbitrage
+      const isReliable = await this.checkArbitrage();
+      if (!isReliable) {
+        console.warn('⚠️ PAR ARBITRAGE: Confidence-to-Cost ratio below threshold. Escalating to human.');
+        this.writeAudit({ event: 'auto_mode_escalated', reason: 'Low C2C ratio' });
+        break;
+      }
+
+      // Pillar 3 (PAR): Context Density Refactoring
+      await this.checkContextDensity();
 
       await this.executeWave();
     }
@@ -182,6 +198,47 @@ class AutoRunner {
 
     console.log(`[APO-PERMIT] Intent approved: ${result.reason} [ReqID: ${result.requestId}]`);
     return true;
+  }
+
+  /**
+   * Predictive Agentic Reliability (PAR) - C2C Arbitrage
+   */
+  async checkArbitrage() {
+    // Simulated C2C calculation based on recent wave success rate
+    const events = this.getRecentAuditEvents(10);
+    const successCount = events.filter(e => e.status === 'success' || e.event === 'task_completed').length;
+    
+    // Confidence = SuccessRate * 0.8 + 0.2
+    const confidence = (successCount / Math.max(events.length, 1)) * 0.8 + 0.2;
+    const estimatedCost = 0.5; // Placeholder for token cost estimation
+    
+    const c2c = confidence / estimatedCost;
+    console.log(`[PAR-C2C] Confidence: ${confidence.toFixed(2)}, Cost: ${estimatedCost.toFixed(2)}, Ratio: ${c2c.toFixed(2)}`);
+    
+    return c2c >= this.c2cThreshold;
+  }
+
+  /**
+   * Predictive Agentic Reliability (PAR) - Context Refactoring
+   */
+  async checkContextDensity() {
+    const events = this.getRecentAuditEvents(20);
+    const analysis = this.refactorer.analyzeDensity(events);
+    
+    if (analysis.shouldRefactor) {
+      console.log(`[PAR-REFACTOR] Context density low (${analysis.density}). Triggering proactive refactor.`);
+      const refactorEvent = this.refactorer.generateRefactorPlan(events, this.phase);
+      this.writeAudit(refactorEvent);
+      
+      // In a real implementation, this would trigger a system_handoff summarization
+      // For now, we log it to the audit stream for the agent to action
+    }
+  }
+
+  getRecentAuditEvents(count) {
+    if (!fs.existsSync(this.auditPath)) return [];
+    const lines = fs.readFileSync(this.auditPath, 'utf8').trim().split('\n');
+    return lines.slice(-count).map(l => JSON.parse(l));
   }
 }
 

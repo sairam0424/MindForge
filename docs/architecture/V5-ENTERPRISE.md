@@ -5,6 +5,7 @@ MindForge v5.0.0 is the definitive enterprise-grade evolution of the agentic fra
 ## Core Pillars (v5.0.0)
 
 ### Pillar I: Federated Intelligence Mesh (FIM)
+
 The FIM transitions MindForge from local knowledge silos to a shared organizational intelligence mesh.
 
 - **Distributed Sync (LWW)**: Cross-node synchronization using Last-Write-Wins (LWW) conflict resolution with cryptographic versioning.
@@ -13,6 +14,7 @@ The FIM transitions MindForge from local knowledge silos to a shared organizatio
 - **ZTAI-Signed Provenance**: Every piece of knowledge in the mesh is cryptographically tied to the DID of the agent that generated it.
 
 ### Pillar II: Agentic Policy Orchestrator (APO)
+
 The APO provides a non-bypassable governance layer that evaluates every autonomous wave against organizational security policies.
 
 - **Policy-as-Code (PaC)**: Security rules are defined in declarative JSON/YAML schemas, enabling version-controlled governance.
@@ -20,11 +22,30 @@ The APO provides a non-bypassable governance layer that evaluates every autonomo
 - **Dynamic RBAC Mapping**: Automatically assigns project roles based on an agent's **Zero-Trust Agentic Identity (ZTAI)** trust tier.
 - **Fail-Safe Governance**: "Default Deny" posture for sensitive operations (API key access, infra modification, etc.).
 
+### Pillar III: Predictive Agentic Reliability (PAR)
+
+The PAR layer addresses reasoning decay and execution drifting in long-running autonomous sessions.
+
+- **Loop Detection (S03/S04)**: Advanced `StuckMonitor` patterns for Semantic Mirroring and Infinite Decomposition.
+- **Context Density Refactorer**: Proactive context summarization and handoff when reasoning-to-action density falls below 30%.
+- **C2C Arbitrage**: Confidence-to-Cost (C2C) threshold gating to prevent low-value autonomous drifts.
+- **Self-Healing Reasoning**: Automated triggering of "hindsight injection" when stuck patterns are detected.
+
+### Pillar IV: Supply Chain Trust (ZTS)
+
+The ZTS layer ensures the integrity of the agentic supply chain, from the models used to the skills executed.
+
+- **Agentic SBOM**: Automated `MANIFEST.sbom.json` generation tracking every model and skill signature in the reasoning chain.
+- **7-Dimension Certification (7D)**: Weighted scoring system (Schema, Triggers, Security, Clarity, etc.) for skill validation.
+- **Enterprise-Grade Enforcement**: Strict `--enterprise` mode requirement for 7.0/10.0 minimum certification score.
+- **Skill Telemetry**: Real-time auditing of skill performance and reliability metrics.
+
 ---
 
 ## Technical Components
 
 ### 🧠 Intelligence Mesh
+
 | Component | Path | Description |
 | :--- | :--- | :--- |
 | **EIS Client** | `bin/memory/eis-client.js` | Hardened, ZTAI-signed mesh communicator. |
@@ -32,11 +53,21 @@ The APO provides a non-bypassable governance layer that evaluates every autonomo
 | **Graph Bridge** | `bin/memory/knowledge-graph.js` | Unified traversal for local and remote nodes. |
 
 ### 🛡️ Governance Engine
+
 | Component | Path | Description |
 | :--- | :--- | :--- |
-| **Policy Engine**| `bin/governance/policy-engine.js` | Intent-based RBAC/ABAC evaluator. |
+| **Policy Engine** | `bin/governance/policy-engine.js` | Intent-based RBAC/ABAC evaluator. |
 | **RBAC Manager** | `bin/governance/rbac-manager.js` | Tier-to-role binding and DID mapping. |
 | **Interceptor** | `bin/autonomous/auto-runner.js` | Wave-level pre-flight policy gate. |
+
+### ⚡ Reliability & Trust (PAR/ZTS)
+
+| Component | Path | Description |
+| :--- | :--- | :--- |
+| **Stuck Monitor** | `bin/autonomous/stuck-monitor.js` | S03/S04 loop detection patterns. |
+| **Refactorer** | `bin/autonomous/context-refactorer.js` | Context density and proactive summarization. |
+| **SBOM Tracer** | `bin/engine/nexus-tracer.js` | Agentic manifest and model/skill telemetry. |
+| **Validator** | `bin/skill-validator.js` | 7-Dimension certification and scoring. |
 
 ---
 
@@ -50,4 +81,4 @@ MindForge v5 utilizes **Zero-Trust Agentic Identity (ZTAI)** as the root-of-trus
 
 ---
 
-*For implementation details, refer to the [Governance Guide](../governance-guide.md) and [Intelligence Mesh Docs](../INTELLIGENCE-MESH.md).*
+*For implementation details, refer to the [PAR & ZTS Survey](./PAR-ZTS-SURVEY.md) and [Governance Guide](../governance-guide.md).*

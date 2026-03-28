@@ -8,12 +8,14 @@ MindForge v5.0.0 is built on a distributed "Agentic OS" architecture, designed f
 
 The framework is focused on six major pillars, with V5 introducing the **Distributed Intelligence** and **Policy Governance** layers:
 
-1.  **Federated Intelligence Mesh (FIM)**: Distributed knowledge sharing with delta-sync and cryptographic provenance. [V5-ENTERPRISE.md](./V5-ENTERPRISE.md)
-2.  **Agentic Policy Orchestrator (APO)**: Non-bypassable policy-as-code governance that intercepts autonomous intents.
-3.  **Zero-Trust Agentic Identity (ZTAI)**: DID-based cryptographic signing for all agentic actions and tiered trust enforcement.
-4.  **Adversarial Decision Synthesis (ADS)**: 3-model synthesis loop ensuring architectural integrity.
-5.  **Semantic Context Sharding**: Tri-tier memory (Hot/Warm/Cold) for high-fidelity context management.
-6.  **Autonomous Execution Engine**: Self-healing wave execution with stuck-detection and repair hierarchies.
+1. **Federated Intelligence Mesh (FIM)**: Distributed knowledge sharing with delta-sync and cryptographic provenance. [V5-ENTERPRISE.md](./V5-ENTERPRISE.md)
+2. **Agentic Policy Orchestrator (APO)**: Non-bypassable policy-as-code governance that intercepts autonomous intents.
+3. **Predictive Agentic Reliability (PAR)**: Self-healing reasoning loops and context refactoring. [PAR-ZTS-SURVEY.md](./PAR-ZTS-SURVEY.md)
+4. **Supply Chain Trust (ZTS)**: Agentic SBOM and 7-dimension skill certification. [PAR-ZTS-SURVEY.md](./PAR-ZTS-SURVEY.md)
+5. **Zero-Trust Agentic Identity (ZTAI)**: DID-based cryptographic signing for all agentic actions and tiered trust enforcement.
+6. **Adversarial Decision Synthesis (ADS)**: 3-model synthesis loop ensuring architectural integrity.
+7. **Semantic Context Sharding**: Tri-tier memory (Hot/Warm/Cold) for high-fidelity context management.
+8. **Autonomous Execution Engine**: Self-healing wave execution with stuck-detection and repair hierarchies.
 
 ---
 
