@@ -1,0 +1,2 @@
+{"timestamp":"2026-03-27T20:44:37.178Z","planId":"test-plan-001","task":"Implement Auth","model":"claude-3-5-sonnet","costTier":"medium","inputTokens":1000,"outputTokens":500,"durationMs":1200,"status":"completed","goalAchieved":1,"estimatedCostUSD":0.010499999999999999}
+{"timestamp":"2026-03-27T20:54:21.126Z","planId":"test-plan-001","task":"Implement Auth","model":"claude-3-5-sonnet","costTier":"medium","inputTokens":1000,"outputTokens":500,"durationMs":1200,"status":"completed","goalAchieved":1,"estimatedCostUSD":0.010499999999999999}

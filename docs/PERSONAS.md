@@ -35,6 +35,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:init-project`, `/mindforge:plan-phase`, `/mindforge:agent analyst` |
 | **Tools** | Read, Write, Bash, Grep |
 | **Color** | `blue` |
+| **Trust Tier** | `1` |
 | **Produces** | `.planning/REQUIREMENTS.md`, `.planning/PROJECT.md` |
 
 **Capabilities:**
@@ -53,6 +54,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent architect` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `purple` |
+| **Trust Tier** | `3` |
 | **Produces** | `.planning/ARCHITECTURE.md`, `.planning/decisions/ADR-*.md` |
 
 **Capabilities:**
@@ -72,6 +74,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:execute-phase`, `/mindforge:agent developer` |
 | **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus, Context7 |
 | **Color** | `green` |
+| **Trust Tier** | `2` |
 | **Produces** | Source code, Unit tests, Implementation Summaries |
 
 **Capabilities:**
@@ -90,6 +93,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:verify-phase`, `/mindforge:agent qa-engineer` |
 | **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
 | **Color** | `yellow` |
+| **Trust Tier** | `2` |
 | **Produces** | `UAT.md`, `BUGS.md` |
 
 **Capabilities:**
@@ -109,6 +113,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:security-scan`, `/mindforge:agent security-reviewer` |
 | **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
 | **Color** | `red` |
+| **Trust Tier** | `3` |
 | **Produces** | `SECURITY-REVIEW.md` |
 
 **Capabilities:**
@@ -181,6 +186,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:research`, `/mindforge:agent research-agent` |
 | **Tools** | Read, Write, Bash, Grep, Glob, Browser, Context7 |
 | **Color** | `cyan` |
+| **Trust Tier** | `1` |
 | **Produces** | `RESEARCH-NOTES-*.md` |
 
 **Capabilities:**
@@ -199,6 +205,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent decision-architect` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `purple` |
+| **Trust Tier** | `3` |
 | **Produces** | `DECISION-*.md` |
 
 **Capabilities:**
@@ -218,6 +225,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:release`, `/mindforge:agent release-manager` |
 | **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
 | **Color** | `blue` |
+| **Trust Tier** | `3` |
 | **Produces** | `CHANGELOG.md`, Git tags, Release Notes |
 
 **Capabilities:**
@@ -236,6 +244,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:ship`, `/mindforge:agent tech-writer` |
 | **Tools** | Read, Write, Bash, Grep, Glob, Context7 |
 | **Color** | `cyan` |
+| **Trust Tier** | `1` |
 | **Produces** | `README.md`, API Reference, Runbooks |
 
 **Capabilities:**
@@ -254,6 +263,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:validate-phase`, `/mindforge:agent coverage-specialist` |
 | **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
 | **Color** | `yellow` |
+| **Trust Tier** | `2` |
 | **Produces** | `COVERAGE-AUDIT.md` |
 
 **Capabilities:**
@@ -272,6 +282,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:research`, `/mindforge:agent advisor-researcher` |
 | **Tools** | Read, Write, Bash, Grep, Glob, Browser, Context7 |
 | **Color** | `cyan` |
+| **Trust Tier** | `1` |
 | **Produces** | Comparison tables, Rationale documents |
 
 **Capabilities:**
@@ -290,6 +301,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:init-project`, `/mindforge:agent project-researcher` |
 | **Tools** | Read, Write, Bash, Grep, Glob, Browser, Context7 |
 | **Color** | `purple` |
+| **Trust Tier** | `1` |
 | **Produces** | `SUMMARY.md`, `STACK.md`, `ARCHITECTURE.md` |
 
 **Capabilities:**
@@ -308,6 +320,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:research`, `/mindforge:agent research-synthesizer` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `purple` |
+| **Trust Tier** | `1` |
 | **Produces** | Integrated `SUMMARY.md` |
 
 **Capabilities:**
@@ -326,6 +339,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent ui-researcher` |
 | **Tools** | Read, Write, Bash, Grep, Glob, Browser, Context7 |
 | **Color** | `#E879F9` |
+| **Trust Tier** | `1` |
 | **Produces** | `UI-SPEC.md` |
 
 **Capabilities:**
@@ -344,6 +358,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent phase-researcher` |
 | **Tools** | Read, Write, Bash, Grep, Glob, Context7 |
 | **Color** | `blue` |
+| **Trust Tier** | `1` |
 | **Produces** | `RESEARCH.md` |
 
 **Capabilities:**
@@ -362,6 +377,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent planner` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `blue` |
+| **Trust Tier** | `1` |
 | **Produces** | `PLAN-*.md` (XML task breakdown)|
 
 **Capabilities:**
@@ -380,6 +396,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:verify-phase`, `/mindforge:agent integration-checker` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `blue` |
+| **Trust Tier** | `1` |
 | **Produces** | `INTEGRATION-REPORT.md` |
 
 **Capabilities:**
@@ -398,6 +415,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:validate-phase`, `/mindforge:agent nyquist-auditor` |
 | **Tools** | Read, Write, Bash, Grep, Glob, CmdStatus, ReadTerminal |
 | **Color** | `#8B5CF6` |
+| **Trust Tier** | `2` |
 | **Produces** | `VALIDATION-REPORT.md` |
 
 **Capabilities:**
@@ -416,6 +434,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent plan-checker` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `yellow` |
+| **Trust Tier** | `1` |
 | **Produces** | `PLAN-VERDICT.md` |
 
 **Capabilities:**
@@ -434,6 +453,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:verify-phase`, `/mindforge:agent ui-auditor` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `#F472B6` |
+| **Trust Tier** | `1` |
 | **Produces** | `UI-REVIEW.md` |
 
 **Capabilities:**
@@ -452,6 +472,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:plan-phase`, `/mindforge:agent ui-checker` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `#22D3EE` |
+| **Trust Tier** | `1` |
 | **Produces** | `UI-SPEC-VERDICT.md` |
 
 **Capabilities:**
@@ -470,6 +491,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:verify-phase`, `/mindforge:agent verifier` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `green` |
+| **Trust Tier** | `1` |
 | **Produces** | `VERIFICATION.md` |
 
 **Capabilities:**
@@ -488,6 +510,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:execute-phase`, `/mindforge:agent executor` |
 | **Tools** | Read, Write, Bash, Grep, Glob, CmdStatus, ReadTerminal |
 | **Color** | `yellow` |
+| **Trust Tier** | `3` |
 | **Produces** | Atomic commits, Execution summaries |
 
 **Capabilities:**
@@ -498,6 +521,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-debugger (The RCA Scientist)
+**Trust Tier:** `1`
 
 **Role:** Specialist in systematic root cause analysis and complex defect resolution.
 
@@ -516,6 +540,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 ---
 
 ### mindforge-assumptions-analyzer-extend (The Reality Checker)
+**Trust Tier:** `1`
 
 **Role:** Reality checker for identifying hidden codebase constraints and risks.
 
@@ -542,6 +567,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:map-codebase`, `/mindforge:agent codebase-mapper` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `cyan` |
+| **Trust Tier** | `1` |
 | **Produces** | `CONVENTIONS.md`, `STRUCTURE.md` |
 
 **Capabilities:**
@@ -560,6 +586,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:map-codebase`, `/mindforge:agent codebase-mapper-extend` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `cyan` |
+| **Trust Tier** | `1` |
 | **Produces** | `STACK.md`, `ARCHITECTURE.md`, `CONVENTIONS.md` |
 
 **Capabilities:**
@@ -596,6 +623,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Spawned by** | `/mindforge:agent user-profiler` |
 | **Tools** | Read, Write, Bash, Grep, Glob |
 | **Color** | `magenta` |
+| **Trust Tier** | `1` |
 | **Produces** | `USER-PROFILE.md` |
 
 **Capabilities:**
@@ -636,34 +664,40 @@ MindForge V4 introduces the ability to spawn dynamic, task-aware clusters of spe
 The MF-Series represents the "Core Essence" of the MindForge agentic framework. These personas provide a standardized, high-value foundation for delegation and multi-agent interaction.
 
 #### mf-planner (The Strategist)
+**Trust Tier:** `1`
 **Role:** High-level goal decomposition and structured planning.
 - **Triggers:** `plan`, `decompose`, `roadmap`.
 - **Produces:** Structured JSON/Markdown execution plans.
 
 #### mf-executor (The Pilot)
+**Trust Tier:** `3`
 **Role:** Precise implementation and high-fidelity plan execution.
 - **Triggers:** `execute`, `implement`, `fix`.
 - **Produces:** Implementation details and completion status.
 
 #### mf-researcher (The Detective)
+**Trust Tier:** `1`
 **Role:** Knowledge gathering and objective approach comparison.
 
 - **Triggers:** `research`, `explore`, `benchmark`.
 - **Produces:** Tradeoff analysis and strategy recommendations.
 
 #### mf-reviewer (The Auditor)
+**Trust Tier:** `1`
 **Role:** Quality assurance and output validation.
 
 - **Triggers:** `review`, `audit`, `validate`.
 - **Produces:** Feedback, issues, and approval status.
 
 #### mf-memory (The Clerk)
+**Trust Tier:** `1`
 **Role:** Persistence management and knowledge graph maintenance.
 
 - **Triggers:** `remember`, `store`, `learning`.
 - **Produces:** Memory updates and linked patterns.
 
 #### mf-tool (The Operator)
+**Trust Tier:** `2`
 **Role:** Safe external system interaction and tool execution.
 - **Triggers:** `tool`, `git`, `api`, `shell`.
 - **Produces:** Action results and safety logs.

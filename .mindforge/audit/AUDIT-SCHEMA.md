@@ -39,8 +39,10 @@ Rotation procedure:
 | `timestamp` | string | ISO-8601 with timezone: `2026-03-20T14:32:10.000Z` |
 | `event` | string | Event type (see Event Types below) |
 | `agent` | string | Which agent wrote this: `mindforge-orchestrator`, `mindforge-subagent-[plan]`, `mindforge-security-reviewer`, etc. |
+| `did` | string | [V4-ZTAI] Agentic Decentralized Identifier (e.g., `did:mindforge:uuid`). |
+| `signature` | string | [V4-ZTAI] Cryptographic signature of the entire payload (Base64). |
 | `phase` | number/null | Phase number, or null if not in a phase |
-| `session_id` | string | Identifies the current agent session (use a short random ID) |
+| `session_id` | string | Identifies the current session |
 | `trace_id` | string/null | [V4-Nexus] ART Trace ID for session-level correlation. |
 | `span_id` | string/null | [V4-Nexus] ART Span ID for task/wave-level correlation. |
 | `parent_span_id` | string/null | [V4-Nexus] ART Parent Span ID for hierarchical tracing. |

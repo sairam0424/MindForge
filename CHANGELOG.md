@@ -1,5 +1,34 @@
 # Changelog
 
+## [4.3.0] — Enterprise Mesh & Proactive Equilibrium — 2026-03-28
+
+🚀 **MindForge v4.3.0 — The Maturity Release**
+
+This major update completes the **MindForge V4 Roadmap**, introducing autonomous financial governance and self-healing reliability engines. It also includes a comprehensive structural reorganization of the framework for enterprise scalability.
+
+### Key Pillars (v4.3.0)
+
+- **Autonomous FinOps Hub (Pillar V)**: Implemented `ModelBroker` for dynamic **C2C (Confidence-to-Cost)** routing and `FinOpsHub` for real-time ROI tracking.
+- **Proactive Equilibrium (Pillar VI)**: Implemented `WaveFeedbackLoop` for divergence detection and `TemporalHindsight` for autonomous state recovery (RCA/Repair).
+- **Structural Reorganization**: Migrated all core engine implementation files from `.mindforge/` logic directories to a standardized `bin/` domain architecture.
+- **Global Memory Sync**: Enhanced `SemanticHub` to support organizational-level knowledge sharing via `~/.mindforge/`.
+- **Hardenened ZTAI Beast Mode**: HSM-simulated signing for Tier 3 principals and automated audit integrity manifests.
+
+🚀 **MindForge v4.2.0 — The Security Revolution**
+
+This update introduces **Zero-Trust Agentic Identity (ZTAI)**, a core pillar of the MindForge enterprise security architecture. It establishes a DID-based identity system with cryptographic signing for all agentic actions, ensuring non-repudiable audit trails and tiered governance.
+
+### Key Pillars (v4.2.0)
+
+- **ZTAI Identity Engine**: Core manager for DID generation (`did:mindforge:<uuid>`) and Ed25519 key pair lifecycle.
+- **Cryptographic Audit Signing**: All reasoning traces and spans are signed by the originating agent, ensuring log integrity.
+- **Trust-Tiered Governance**: 4-tier authorization model (0-3) for granular permission control across the agentic mesh.
+- **Identity-Lock Engine**: Automated security gate in the `WaveExecutor` that blocks unauthorized Tier 3 actions.
+- **Trust Verifier**: Real-time cryptographic validation of the `AUDIT.jsonl` log for cross-session integrity.
+- **Beast Mode Hardening**: session-based key rotation and hardware security module (HSM) hook placeholders.
+
+---
+
 ## [4.1.0] — MindForge Nexus (Observability & Tracing) — 2026-03-27
 
 🚀 **MindForge v4.1.0 — The Observability Revolution**
@@ -440,28 +469,28 @@ partners with full governance, observability, and enterprise integration.
 
 ### What ships in v1.0.0
 
-**36 commands** across 7 workflow categories  
-**10 core skill packs** with three-tier registry (Core/Org/Project)  
-**8 specialised agent personas** covering all engineering roles  
-**Wave-based parallel execution** with dependency graph and automatic compaction  
-**Enterprise integrations**: Jira, Confluence, Slack, GitHub, GitLab  
-**Three-tier governance**: Tier 1 (auto) / Tier 2 (peer review) / Tier 3 (compliance)  
-**Five non-bypassable compliance gates** (secret detection, CRITICAL findings, tests, CVEs, GDPR)  
-**Intelligence layer**: health engine, difficulty scorer, anti-pattern detector, team profiling  
-**Public skills registry**: npm-based `mindforge-skill-*` ecosystem  
-**CI/CD integration**: GitHub Actions, GitLab CI, Jenkins adapters  
-**@mindforge/sdk**: TypeScript SDK with client, event stream, and command builders  
-**Monorepo support**: npm/pnpm/Nx/Turborepo/Lerna workspace detection  
-**AI PR Review**: Claude API-powered code review with context loading  
-**Self-update mechanism**: version check, changelog diff, scope-preserving apply  
-**Version migration engine**: schema migration from v0.1.0 through v1.0.0  
-**Plugin system**: extensible via `mindforge-plugin-*` npm namespace  
-**Token usage optimiser**: profiling and efficiency strategies  
-**50-point production readiness checklist**: fully verified before this release  
+**36 commands** across 7 workflow categories
+**10 core skill packs** with three-tier registry (Core/Org/Project)
+**8 specialised agent personas** covering all engineering roles
+**Wave-based parallel execution** with dependency graph and automatic compaction
+**Enterprise integrations**: Jira, Confluence, Slack, GitHub, GitLab
+**Three-tier governance**: Tier 1 (auto) / Tier 2 (peer review) / Tier 3 (compliance)
+**Five non-bypassable compliance gates** (secret detection, CRITICAL findings, tests, CVEs, GDPR)
+**Intelligence layer**: health engine, difficulty scorer, anti-pattern detector, team profiling
+**Public skills registry**: npm-based `mindforge-skill-*` ecosystem
+**CI/CD integration**: GitHub Actions, GitLab CI, Jenkins adapters
+**@mindforge/sdk**: TypeScript SDK with client, event stream, and command builders
+**Monorepo support**: npm/pnpm/Nx/Turborepo/Lerna workspace detection
+**AI PR Review**: Claude API-powered code review with context loading
+**Self-update mechanism**: version check, changelog diff, scope-preserving apply
+**Version migration engine**: schema migration from v0.1.0 through v1.0.0
+**Plugin system**: extensible via `mindforge-plugin-*` npm namespace
+**Token usage optimiser**: profiling and efficiency strategies
+**50-point production readiness checklist**: fully verified before this release
 
-**20 Architecture Decision Records** documenting every major design choice  
-**15 test suites** with 3× consecutive run requirement  
-**Complete reference documentation**: commands, security, ADR index, threat model  
+**20 Architecture Decision Records** documenting every major design choice
+**15 test suites** with 3× consecutive run requirement
+**Complete reference documentation**: commands, security, ADR index, threat model
 
 ### Stable interface contract
 See ADR-020. All 36 commands, HANDOFF.json schema, AUDIT event types,

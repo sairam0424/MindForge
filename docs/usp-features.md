@@ -1,4 +1,4 @@
-# MindForge v4.1.0 — Unique Selling Points, Features, and Best Practices (v4.1.0)
+# MindForge v4.2.5 — Unique Selling Points, Features, and Best Practices (v4.2.5)
 
 This document summarizes what makes MindForge v4.1.0 distinct, what features
 are included in the official release, and how to use them effectively.
@@ -61,8 +61,14 @@ are included in the official release, and how to use them effectively.
 17. **Dynamic Swarm Orchestration (v4)**
     - Parallel "Agentic Mesh" with shared state (`SWARM-STATE.json`) and leader-led synthesis of specialist outcomes.
 
-18. **Zero-Trust Agentic Identity (v4)**
-    - Non-repudiable audit trails signed by unique Decentralized Identifiers (DIDs) for every swarm action.
+18. **Zero-Trust Agentic Identity "Beast Mode" (v4.2)**
+    - Non-repudiable audit trails signed by unique Decentralized Identifiers (DIDs) for every swarm action. Tier 3 agents use simulated **Secure Enclave (HSM)** signing.
+
+19. **MindForge Nexus: Agentic Reasoning Tracing (v4.1)**
+    - High-fidelity **ART** spans embedded in the execution engine, providing deep visibility into agentic "thought chains" and parallel mesh reasoning.
+
+20. **Global Intelligence Mesh (v4.2)**
+    - Cross-repository knowledge sharing via the **Semantic Hub**. Proactive **Ghost Pattern Detection** identifies and prevents repeating past organizational failures.
 
 19. **MindForge Nexus: Agentic Reasoning Tracing (v4.1)**
     - High-fidelity **ART** spans embedded in the execution engine, providing deep visibility into agentic "thought chains" and parallel mesh reasoning.
@@ -267,18 +273,47 @@ preserving scope (local vs global).
 
 ---
 
-### 22. ZTAI Governance (v4)
-**What it does:** Enforces cryptographic signing and trust-tier validation for all autonomous agent actions.
+### 22. ZTAI Governance & Beast Mode (v4.2)
+**What it does:** Enforces cryptographic signing and trust-tier validation for all autonomous agent actions. Tier 3 agents utilize simulated Secure Enclaves for principal-level non-repudiation.
 
 **How to use:**
 ```bash
 /mindforge:identity verify [AGENT_ID]
 /mindforge:identity sign --did
+/mindforge:identity audit --manifest # Generates Merkle-root integrity proof
 ```
 
 ---
 
-### 23. MindForge Nexus (Observability & Tracing) (v4.1)
+### 23. Global Intelligence Mesh (v4.2)
+**What it does:** Synchronizes local repo memory with a global organizational store. Includes Ghost Pattern Detection to flag architectural anti-patterns from past failures.
+
+**How to use:**
+```bash
+/mindforge:memory sync --global
+/mindforge:memory status --mesh
+/mindforge:plan-phase --detect-ghosts # Automated during planning
+```
+---
+
+### 24. Autonomous FinOps Hub (v4.3)
+**What it does:** Enterprise-grade economics engine that treats compute as a first-class resource. The `ModelBroker` utilizes a **Confidence-to-Cost (C2C)** engine to dynamically route tasks based on complexity and trust tier.
+
+**How to use:**
+```bash
+/mindforge:finops status # View consumption and budget profile
+/mindforge:costs --roi # Detailed Agentic ROI analysis
+/mindforge:finops budget 500 # Set project-level budget ($500)
+```
+
+---
+
+### 25. Proactive Equilibrium (Self-Healing) (v4.3)
+**What it does:** Achieves autonomous reliability via a `WaveFeedbackLoop`. If execution divergence exceeds 20%, the system performs **Temporal Hindsight** analysis and automatically rewrites the plan to recover.
+
+**How to use:**
+- Automated: Triggers during `/mindforge:execute-phase` when divergence is detected.
+- Manual: `/mindforge:temporal analyze` to run RCA on the last wave.
 **What it does:** High-fidelity Agentic Reasoning Tracing (ART) for the agentic mesh. Logs spans, parent-trace IDs, and granular reasoning traces.
 
 **How to use:**
@@ -345,6 +380,4 @@ const report = await client.health();
 ---
 
 ## Summary
-MindForge v2.0.0 combines governance, observability, and autonomous execution rigor into a
-single workflow engine that works across 6 major AI runtimes. Its core
-value is consistent, repeatable quality in long‑running AI development sessions.
+MindForge v4.3.0 combines governance, observability, and autonomous execution rigor with **enterprise-grade economics (FinOps)** and **self-healing reliability**. Its core value is providing a non-repudiable, cost-optimized, and resilient AI development engine for the most demanding software projects.

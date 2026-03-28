@@ -53,7 +53,13 @@ Wave 3: [05]              ← Depends on both Wave 2 tasks — runs after Wave 2
 ### Before starting a wave
 
 1. **Nexus Trace:** Call `NexusTracer.startSpan('wave_[W]')`.
-2. Confirm all plans in previous wave have:
+2. **Identity Verification (ZTAI):** 
+   - Call `TrustVerifier.verifyAuditLog('.planning/AUDIT.jsonl')`.
+   - Ensure all `span_completed` events from the previous wave have a valid cryptographic signature and DID.
+3. **Identity-Lock (Tier 3):**
+   - If any task in the upcoming wave involves Tier 3 actions (e.g., modifying `.mindforge/governance/`), ensure the assigned agent DID has `tier >= 3`.
+   - If verification fails or tier is insufficient: **STOP** the phase and report an `identity_lock_violation`.
+4. Confirm all plans in previous wave have:
    - Status: Completed in SUMMARY file
    - Git commit SHA recorded
    - `<verify>` step passed
