@@ -16,6 +16,7 @@ const path     = require('path');
 const crypto   = require('crypto');
 const Store    = require('./knowledge-store');
 const Embedder = require('./embedding-engine');
+const EISClient = require('./eis-client');
 
 // ── Edge Types ────────────────────────────────────────────────────────────────
 const EDGE_TYPES = Object.freeze({
@@ -209,6 +210,42 @@ function buildAdjacencyIndex(edges) {
   }
 
   return index;
+}
+
+// ── Federation Support (v5.0) ────────────────────────────────────────────────
+
+/**
+ * Resolves a node that might be remote (in the EIS).
+ * @param {string} nodeId 
+ */
+async function resolveNode(nodeId) {
+  // 1. Check local store
+  const local = Store.readAll(true).find(e => e.id === nodeId);
+  if (local) return local;
+
+  // 2. Fallback to EIS
+  const eis = new EISClient();
+  return await eis.resolveRemoteNode(nodeId);
+}
+
+/**
+ * Adds an edge between a local node and a remote organizational node.
+ * @param {object} edge 
+ */
+function addFederatedEdge(edge) {
+  if (!edge.isRemote) {
+    return addEdge(edge);
+  }
+
+  // Federated edges are stored with a 'federated:true' metadata flag
+  return addEdge({
+    ...edge,
+    metadata: {
+      ...edge.metadata,
+      federated: true,
+      remote_host: edge.remoteHost || 'eis.mindforge.enterprise'
+    }
+  });
 }
 
 // ── Graph Traversal ───────────────────────────────────────────────────────────
