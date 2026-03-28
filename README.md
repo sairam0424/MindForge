@@ -1,4 +1,4 @@
-# MindForge v5.1.0 — The Beast AdditionFramework (v5.1.0)
+# MindForge v5.6.0 — Sentinel Execution Framework
 
 MindForge turns AI coding agents into production-grade engineering partners with governance, multi-cloud resilience, and a non-bypassable Sovereign Reason Enclave.
 Release published: v5.1.0-PRO.
@@ -36,6 +36,8 @@ npx mindforge-cc@latest --claude --local
 AI coding agents degrade over long sessions. Context fills up. Quality drops.
 Decisions get forgotten. MindForge fixes that with:
 
+- **Sentinel Execution (v5.6)** — JIT Binary Runtime Attestation and Zero-Trust Skill Enforcement.
+- **Predictive Reliability (v5.5)** — Reasoning Entropy Scoring (RES) and proactive loop breaking via Steering Vectors.
 - **Multi-Cloud Arbitrage (v5.0)** — Dynamic routing and provider hedging with low-latency arbitrage.
 - **Sovereign Reason Enclave (v5.0)** — TEE-simulated reasoning isolation and sanitization for confidential workloads.
 - **Human-Agent Handover (v5.0)** — Nexus State Bundles and mid-wave steering injection.
@@ -291,6 +293,14 @@ See `.mindforge/production/token-optimiser.md`.
 - **Contributing:** `docs/contributing/CONTRIBUTING.md`
 
 ---
+
+## What's new in v5.6 (Sentinel Execution)
+
+MindForge V5.6 completes the "Hyper-Enterprise" roadmap with two critical security and reliability pillars.
+
+- **Binary Runtime Attestation (ZTS)**: Cryptographically sign skills using HSM-secured identities. The `SkillValidator` now performs JIT verification, blocking tampered or unauthorized skills from loading.
+- **Reasoning Entropy Monitoring (PAR)**: The `NexusTracer` now calculates **RES (Reasoning Entropy Scoring)**. If an agent falls into a semantic loop or circular reasoning, the system proactively generates a **Steering Vector** to break the loop and recover the execution wave.
+- **Sentinel Hardening**: Enhanced `NexusTracer` with SRE-aware audit integrity and Merkle-root cumulative hash chains.
 
 ## What's new in v4.3 (Enterprise Mesh & Equilibrium)
 

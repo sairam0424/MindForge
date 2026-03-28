@@ -1,6 +1,6 @@
-# MindForge v4.2.5 — Unique Selling Points, Features, and Best Practices (v4.2.5)
+# MindForge v5.6.0 — Unique Selling Points, Features, and Best Practices (v5.6.0)
 
-This document summarizes what makes MindForge v4.1.0 distinct, what features
+This document summarizes what makes MindForge v5.6.0 distinct, what features
 are included in the official release, and how to use them effectively.
 
 ---
@@ -64,14 +64,11 @@ are included in the official release, and how to use them effectively.
 18. **Zero-Trust Agentic Identity "Beast Mode" (v4.2)**
     - Non-repudiable audit trails signed by unique Decentralized Identifiers (DIDs) for every swarm action. Tier 3 agents use simulated **Secure Enclave (HSM)** signing.
 
-19. **MindForge Nexus: Agentic Reasoning Tracing (v4.1)**
-    - High-fidelity **ART** spans embedded in the execution engine, providing deep visibility into agentic "thought chains" and parallel mesh reasoning.
+19. **MindForge Sentinel: Binary Runtime Attestation (v5.6)**
+    - Cryptographically ensure skill integrity before execution. Every `SKILL.md` is JIT-verified against ZTAI-signed signatures, preventing supply-chain attacks and unauthorized logic injection.
 
-20. **Global Intelligence Mesh (v4.2)**
-    - Cross-repository knowledge sharing via the **Semantic Hub**. Proactive **Ghost Pattern Detection** identifies and prevents repeating past organizational failures.
-
-19. **MindForge Nexus: Agentic Reasoning Tracing (v4.1)**
-    - High-fidelity **ART** spans embedded in the execution engine, providing deep visibility into agentic "thought chains" and parallel mesh reasoning.
+20. **Predictive Agentic Reliability: Reasoning Entropy (v5.5)**
+    - Proactively detect and break agentic reasoning loops. Using RES (Reasoning Entropy Scoring), the system interrupts semantic stagnation and injects Steering Vectors to recover lost autonomy.
 
 ---
 
@@ -308,76 +305,22 @@ preserving scope (local vs global).
 
 ---
 
-### 25. Proactive Equilibrium (Self-Healing) (v4.3)
-**What it does:** Achieves autonomous reliability via a `WaveFeedbackLoop`. If execution divergence exceeds 20%, the system performs **Temporal Hindsight** analysis and automatically rewrites the plan to recover.
+### 26. Sentinel Execution Center (v5.6)
+**What it does:** Centralizes security and reliability policy monitoring. Enforces JIT attestation and reasoning entropy guardrails across the agentic mesh.
 
 **How to use:**
-- Automated: Triggers during `/mindforge:execute-phase` when divergence is detected.
-- Manual: `/mindforge:temporal analyze` to run RCA on the last wave.
-**What it does:** High-fidelity Agentic Reasoning Tracing (ART) for the agentic mesh. Logs spans, parent-trace IDs, and granular reasoning traces.
-
-**How to use:**
-- Automated: Every wave/task execution triggers Nexus Tracer spans.
-- Manual: Query `.planning/AUDIT.jsonl` for `trace_id` and `span_id` chains.
-- Dashboard: Real-time visualization of mesh traces and reasoning heatmaps.
+- Automated: Every skill load and reasoning step is monitored by the Sentinel layer.
+- Manual: `mindforge-cc sign <skill-name>` to authorize a new skill for production use.
 
 ---
 
-### 15. SDK (TypeScript)
-**What it does:** Programmatic access to health, audit log, event stream, and commands.
+## Best Practices for v5.6.0
 
-**How to use:**
-```ts
-import { MindForgeClient } from '@mindforge/sdk';
-const client = new MindForgeClient({ projectRoot: '.' });
-const report = await client.health();
-```
-
----
-
-## Best Practices for v2.0.0
-
-1. **Always run health after install**
-   - `/mindforge:health --repair` fixes drift immediately.
-
-2. **Keep PLAN files lean**
-   - Focus on *what*, not *how* (150–400 words).
-
-3. **Use local installs for repos**
-   - Local installs are safer and prevent cross‑project drift.
-
-4. **Run migrations explicitly**
-   - Don’t rely on auto‑inference when upgrading older state files.
-
-5. **Treat plugins like production dependencies**
-   - Validate plugins and prefer pinned versions.
-
-6. **Use the audit log as ground truth**
-   - Query `.planning/AUDIT.jsonl` for accountability and traceability.
-
-7. **Gate Tier 3 changes through approvals**
-   - CI will block Tier 3 changes without explicit approval.
-
-8. **Keep secrets out of files**
-   - Use environment variables only. MindForge enforces this.
-
----
-
-## Using MindForge for Your Requirements
-
-### If you need strict governance
-- Run full workflow (`plan → execute → verify → ship`)
-- Enable security scans and approvals
-
-### If you need fast iteration
-- Use `/mindforge:quick` for single tasks
-- Keep local install with minimal setup
-
-### If you need team scale
-- Use milestones, approvals, and `/mindforge:profile-team`
-- Enable CI mode for consistent enforcement
+1. **Sign Your Skills**: In Enterprise mode, unsigned skills are blocked. Always run the `sign` command before deploying new logic.
+2. **Monitor RES Heatmaps**: Use the Dashboard to identify which specialists are prone to circular reasoning and refine their `IDENTITY.md` accordingly.
+3. **Always run health after install**: `/mindforge:health --repair` fixes drift immediately.
 
 ---
 
 ## Summary
-MindForge v4.3.0 combines governance, observability, and autonomous execution rigor with **enterprise-grade economics (FinOps)** and **self-healing reliability**. Its core value is providing a non-repudiable, cost-optimized, and resilient AI development engine for the most demanding software projects.
+MindForge v5.6.0 "Sentinel Execution" combines governance, observability, and autonomous execution rigor with **Zero-Trust Skill Integrity** and **Predictive Reliability**. Its core value is providing a non-repudiable, cost-optimized, and resilient AI development engine for the most demanding software projects.

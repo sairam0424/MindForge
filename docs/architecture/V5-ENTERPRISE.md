@@ -23,23 +23,23 @@ MindForge v5.1.0 introduces a non-bypassable, intent-level governance layer that
 - **Dynamic RBAC Mapping**: v5.1.0 automatically maps ZTAI Trust Tiers to project roles based on an agent's **Zero-Trust Agentic Identity (ZTAI)** trust tier.
 - **Fail-Safe Governance**: "Default Deny" posture for sensitive operations (API key access, infra modification, etc.).
 
-### Pillar III: Predictive Agentic Reliability (PAR)
+### Pillar III: Predictive Agentic Reliability (PAR) (v5.5.0)
 
-The PAR layer addresses reasoning decay and execution drifting in long-running autonomous sessions.
+The PAR layer addresses reasoning decay and execution drifting in long-running autonomous sessions by monitoring the "logic-space" of the agent.
 
-- **Loop Detection (S03/S04)**: Advanced `StuckMonitor` patterns for Semantic Mirroring and Infinite Decomposition.
+- **Reasoning Entropy Scoring (RES)**: The `NexusTracer` calculates a semantic similarity score (Jaccard-based) for every reasoning step. A high score indicates thought stagnation or circular logic.
+- **Proactive Loop Detection**: If more than 3 consecutive thoughts fall below the entropy threshold, a `STAGNATION_DETECTED` event is triggered.
+- **Steering Vector Injection**: Upon loop detection, `TemporalHindsight` generates a "Steering Vector" — a high-priority system instruction that forces the agent to pivot its logic or escalate to a human.
 - **Context Density Refactorer**: Proactive context summarization and handoff when reasoning-to-action density falls below 30%.
-- **C2C Arbitrage**: Confidence-to-Cost (C2C) threshold gating to prevent low-value autonomous drifts.
-- **Self-Healing Reasoning**: Automated triggering of "hindsight injection" when stuck patterns are detected.
 
-### Pillar IV: Supply Chain Trust (ZTS)
+### Pillar IV: Supply Chain Trust (ZTS) (v5.6.0)
 
-The ZTS layer ensures the integrity of the agentic supply chain, from the models used to the skills executed.
+The ZTS layer ensures the absolute integrity of the agentic supply chain, cryptographically locking every skill and model in the reasoning path.
 
-- **Agentic SBOM**: Automated `MANIFEST.sbom.json` generation tracking every model and skill signature in the reasoning chain.
+- **Binary Runtime Attestation**: The `SkillValidator` performs Just-In-Time (JIT) attestation. Every `SKILL.md` is hashed and verified against signed signatures before being loaded into the agent's context.
+- **ZTAI-Locked Registry**: Skills are signed using Tier 3 Decentralized Identifiers (DIDs) via HSM-simulated Secure Enclaves. Unauthorized skill modifications result in immediate execution blocking.
 - **7-Dimension Certification (7D)**: Weighted scoring system (Schema, Triggers, Security, Clarity, etc.) for skill validation.
-- **Enterprise-Grade Enforcement**: Strict `--enterprise` mode requirement for 7.0/10.0 minimum certification score.
-- **Skill Telemetry**: Real-time auditing of skill performance and reliability metrics.
+- **Agentic SBOM**: Automated `MANIFEST.sbom.json` generation tracking every model and skill signature in the reasoning chain.
 
 ---
 
@@ -92,8 +92,9 @@ DHH creates a seamless bridge between fully autonomous execution and high-precis
 
 | Component | Path | Description |
 | :--- | :--- | :--- |
-| **Stuck Monitor** | `bin/autonomous/stuck-monitor.js` | S03/S04 loop detection patterns. |
-| **Refactorer** | `bin/autonomous/context-refactorer.js` | Context density and proactive summarization. |
+| **Stuck Monitor** | `bin/engine/nexus-tracer.js` | Integrated RES loop detection and entropy scoring. |
+| **Recovery Agent** | `bin/engine/temporal-hindsight.js` | Generates steering vectors for proactive recovery. |
+| **Skill Validator** | `bin/skill-validator.js` | JIT Binary Runtime Attestation and 7D scoring. |
 | **SRE Manager** | `bin/engine/sre-manager.js` | Trusted execution enclave management. |
 | **Handover Manager** | `bin/engine/handover-manager.js` | Nexus bundle creation and steering logic. |
 | **SBOM Tracer** | `bin/engine/nexus-tracer.js` | SRE-aware audit logging and manifest generation. |
