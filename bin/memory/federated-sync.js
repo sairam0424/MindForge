@@ -9,6 +9,8 @@ const path  = require('node:path');
 const Store = require('./knowledge-store');
 const EISClient = require('./eis-client');
 const crypto = require('node:crypto');
+const EmbeddingEngine = require('./embedding-engine');
+const adsEngine = require('../review/ads-engine');
 
 class FederatedSync {
   constructor(config = {}) {
@@ -92,14 +94,92 @@ class FederatedSync {
     for (const remote of remoteEntries) {
       const local = existingById.get(remote.id);
       
-      // Conflict Resolution: Remote Wins if timestamp is newer
-      if (!local || new Date(remote.timestamp) > new Date(local.timestamp)) {
+      if (!local) {
         fs.appendFileSync(globalPath, JSON.stringify(remote) + '\n');
         mergedCount++;
+        continue;
       }
+
+      // Pillar I (v5.2.0): Hybrid Semantic synthesis
+      let similarity = 0;
+      try {
+        similarity = EmbeddingEngine.cosineSimilarity(
+          EmbeddingEngine.computeTfIdfVector(EmbeddingEngine.tokenize(local.content), {}, 1),
+          EmbeddingEngine.computeTfIdfVector(EmbeddingEngine.tokenize(remote.content), {}, 1)
+        );
+      } catch (err) {
+        console.error(`[FIM-ERR] Semantic analysis failed for ${local.id}. Falling back to LWW.`, err);
+        // Fallback to basic LWW (Last-Write-Wins)
+        if (new Date(remote.timestamp) > new Date(local.timestamp)) {
+          this.writeToGlobalKB(remote, globalPath);
+        }
+        continue;
+      }
+
+      this.triggerHybridSynthesis(local, remote, similarity, globalPath);
+      mergedCount++;
     }
     
     return mergedCount;
+  }
+
+  /**
+   * Hybrid Synthesis Logic (Pillar I v5.2.0)
+   */
+  async triggerHybridSynthesis(local, remote, similarity, globalPath) {
+    console.log(`[FIM-SYNC] Analyzing semantic overlap for ${local.id} (Similarity: ${similarity.toFixed(4)})`);
+
+    // 1. LWW (Similarity > 0.9) - Near identical
+    if (similarity > 0.9) {
+      if (new Date(remote.timestamp) > new Date(local.timestamp)) {
+        this.writeToGlobalKB(remote, globalPath);
+        console.log(`  └─ [LWW] Auto-resolved via timestamp.`);
+      }
+      return;
+    }
+
+    // 2. Autonomous Merge (0.75 - 0.9) - Semantic Overlap
+    if (similarity > 0.75) {
+      console.log(`  └─ [ADS] Triggering Autonomous Knowledge Synthesis...`);
+      const merged = await this.triggerADSMerging(local, remote);
+      this.writeToGlobalKB(merged, globalPath);
+      return;
+    }
+
+    // 3. Human Stewardship (0.6 - 0.75) - Probable Disagreement
+    if (similarity > 0.6) {
+      console.log(`  └─ [DHH] High disagreement. Triggering Nexus Handover...`);
+      this.localStore.markConflict(local.id, remote);
+      return;
+    }
+
+    // 4. Collision Isolation (< 0.6) - Topic Mismatch
+    console.log(`  └─ [ISO] Semantic collision (Topic mismatch). Isolating entries.`);
+    this.writeToGlobalKB({ ...remote, id: `${remote.id}_collision_${Date.now()}` }, globalPath);
+  }
+
+  async triggerADSMerging(local, remote) {
+    const result = await adsEngine.runADSSynthesis({
+      phaseNum: 'SYNC',
+      goal: `Synthesize a unified knowledge entry for topic: ${local.topic || local.id}`,
+      context: `Local Entry: ${local.content}\n\nRemote Entry: ${remote.content}`,
+      sessionId: 'fim-sync-v5.2.0'
+    });
+
+    // Extract the final plan/content from ADS result
+    const mergedContent = fs.readFileSync(path.join(process.cwd(), '.planning', 'PLAN.md'), 'utf8');
+    
+    return {
+      ...remote,
+      content: mergedContent,
+      confidence: 1.0,
+      synthesis_id: result.ads_id,
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  writeToGlobalKB(entry, globalPath) {
+    fs.appendFileSync(globalPath, JSON.stringify(entry) + '\n');
   }
 
   isRecentlySynced(id) {

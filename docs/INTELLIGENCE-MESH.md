@@ -15,7 +15,11 @@ The V5 mesh is built on three core pillars residing in `bin/memory/`:
 ### B. Federated Sync (`federated-sync.js`)
 - **Role**: High-performance synchronization engine between local stores and the organizational mesh.
 - **Delta Sync**: Tracks the `last_sync` timestamp to only pull new organizational insights, significantly reducing latency and compute costs.
-- **Conflict Resolution**: Uses **LWW (Last-Write-Wins)** logic with cryptographic version checks to handle concurrent updates from different agents.
+- **Conflict Resolution**: Uses **Hybrid Semantic Synthesis** (Pillar I v5.2.0). 
+  - **Similarity > 0.9**: Near-identical; auto-resolve via **Last-Write-Wins (LWW)**.
+  - **0.75 - 0.9**: Semantic Overlap; triggers **Autonomous ADS Merging**.
+  - **0.6 - 0.75**: Conflict; triggers **Nexus Handover (DHH)** for human steering.
+  - **< 0.6**: Topic Collision; isolates entries into unique IDs to prevent data loss.
 
 ### C. Knowledge Graph Bridge (`knowledge-graph.js`)
 - **Role**: Unified memory interface that resolves both local project nodes and remote federated nodes.
@@ -32,4 +36,4 @@ The V5 mesh is built on three core pillars residing in `bin/memory/`:
 - **Elimination of Redundancy**: Multi-thousand-token research chains are executed once and shared universally across the mesh.
 
 ---
-*Status: V5 "Beast" Mode Implemented & Verified (2026-03-28)*
+*Status: V5.2.0 Semantic Consensus Implemented & Verified (2026-03-28)*
