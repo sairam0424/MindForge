@@ -1,5 +1,21 @@
 # Changelog
 
+## [5.8.0] - 2026-03-28
+### Added
+- **Pillar VI: Sovereign Reason Enclaves (ZK-Proof Audit Trails)**.
+- Implemented `SRE-ISOLATED` reasoning mode in `SREManager`.
+- Generated **ZK-Proof Compliance Certificates** (signed by System DID) for confidential reasoning cycles.
+- Integrated masked audit logging in `NexusTracer`, replacing raw thought traces with verifiable proofs.
+- Added `verifyZKProof` utility for non-custodial audit verification.
+
+## [5.7.0] - 2026-03-28
+### Added
+- **Pillar V: Multi-Cloud Arbitrage (Task-to-Model Affinity Routing)**.
+- Implemented **Performance-Based Affinity Matrices** in `CloudBroker` for intelligence-first routing.
+- Added `performance-stats.json` persistence to track cross-provider success rates by task taxonomy.
+- Integrated automated result recording in `WaveFeedbackLoop`.
+- Prioritized **Probability of Success** over raw cost/latency in routing scoring.
+
 ## [5.6.0] - 2026-03-28
 ### Added
 - **Pillar IV: Supply Chain Trust (Binary Runtime Attestation)**.

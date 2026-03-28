@@ -43,21 +43,23 @@ The ZTS layer ensures the absolute integrity of the agentic supply chain, crypto
 
 ---
 
-### Pillar V: Multi-Cloud Arbitrage & Hedging
+### Pillar V: Multi-Cloud Arbitrage & Hedging (v5.7.0)
 
-The Multi-Cloud layer ensures absolute availability and cost-efficiency by dynamically load-balancing across multiple AI providers.
+The Multi-Cloud layer ensures absolute availability and intelligence-first routing by dynamically mapping task taxonomies to the most performant providers.
 
-- **Dynamic Routing**: Real-time arbitrage across Vertex AI, AWS Bedrock, and Azure based on current latency and cost weights.
-- **Provider Fallback Protocol**: Automated "Hedging" that migrates agent context to a secondary cloud provider (e.g., Anthropic to Google) if 5xx errors or high latencies are detected.
-- **Chaos Mode (Beast Mode)**: Built-in reliability testing that simulates provider dropouts to verify the robustness of the fallback loops.
+- **Task-to-Model Affinity Matrices**: Persistent tracking of success probability per model and task type (refactor, test, audit, etc.) in `performance-stats.json`.
+- **Intelligence-First Routing**: The `CloudBroker` weights routing scoring by success probability (50%), cost (30%), and latency (20%), ensuring the most capable model is selected for the specific task taxonomy.
+- **Automated Feedback Integration**: `WaveFeedbackLoop` automatically records task outcomes back into the performance repository, enabling the system to learn from cross-cloud execution history.
+- **Provider Fallback Protocol**: Automated "Hedging" that migrates agent context to a secondary cloud provider if 5xx errors or high latencies are detected.
 
-### Pillar VI: Sovereign Reason Enclaves (SRE)
+### Pillar VI: Sovereign Reason Enclaves (SRE) (v5.8.0)
 
-SRE provides a "Confidential Computing" environment for the agent's internal thought process, protecting sensitive intellectual property.
+SRE provides a "Confidential Computing" environment for the agent's internal thought process, protected by cryptographic Zero-Knowledge (ZK) audit trails.
 
-- **TEE-Simulated Reasoning**: Tier 3 workloads execute reasoning traces in high-isolation simulated enclaves with zero-visibility to the global log.
-- **Thought-Chain Sanitization**: Automatically redacts sensitive patterns (keys, credentials, PII) from the reasoning trace before persistent audit.
-- **Enclave Multi-Tenancy**: Isolated reason-space per project wave, ensuring that cross-stream reasoning cannot leak state or logic.
+- **ZK-Proof Compliance Certificates**: Simulated zero-knowledge proofs (signed by System DID) generated for every confidential reasoning session in `SREManager`.
+- **Privacy-Preserving Auditing**: `NexusTracer` replaces raw, sensitive thought traces in `AUDIT.jsonl` with verifiable cryptographic certificates, protecting proprietary reasoning logic.
+- **Non-Custodial Verification**: New `verifyZKProof` utility allows auditors to cryptographically verify that an agent followed policy within the enclave without ever seeing the raw thoughts.
+- **Thought-Chain Sanitization**: Automated redaction of sensitive patterns (keys, credentials, PII) from reasoning traces before persistent certificate generation.
 
 ### Pillar VII: Dynamic Human-Agent Handover (DHH)
 

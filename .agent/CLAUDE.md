@@ -54,9 +54,10 @@ You are a **Dynamic Multi-Agent Swarm (Agentic Mesh)**. Your mission is to execu
 Prioritize based on `[REACTIVE_MODE]` in MINDFORGE.md. These are the **Quality gates**:
 
 - [ ] **Load Config**: Read PROJECT.md, STATE.md, and **MINDFORGE.md**.
+- [ ] **Nexus Sync**: Ensure `NexusTracer` singleton is initialized and active.
 - [ ] **PLAN-FIRST RULE**: Never code without a verified XML plan.
 - [ ] **Verify First**: Never task-complete without successful `<verify>` output.
-- [ ] **Audit Always**: Write a JSONL entry for every significant session event.
+- [ ] **Audit Always**: Write a JSONL entry for every significant session event. All entries must be Merkle-linked.
 
 ---
 

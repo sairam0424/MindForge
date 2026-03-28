@@ -1,7 +1,17 @@
-# MindForge v5.6.0 — Sentinel Execution Framework
+# MindForge v5.9.0 — Beast Mode Hardening
 
-MindForge turns AI coding agents into production-grade engineering partners with governance, multi-cloud resilience, and a non-bypassable Sovereign Reason Enclave.
-Release published: v5.1.0-PRO.
+MindForge turns AI coding agents into production-grade engineering partners with unified async tracing (NexusTracer), multi-cloud resilience (Pillar V), and a non-bypassable Sovereign Reason Enclave with Merkle-linked ZK-Audit trails.
+Release published: v5.9.0-BEAST.
+
+## What's new in v5.9 (Beast Mode Hardening)
+
+MindForge V5.9 elevates the "Hyper-Enterprise" features to maximum robustness, unifying the tracing architecture and hardening the governance and arbitrage pillars.
+
+- **Unified NexusTracer Singleton**: Complete migration to a high-fidelity, asynchronous ART protocol. Split-brain tracing is eliminated, ensuring consistent, DID-signed audit logs across the entire agentic mesh.
+- **Merkle-Style SRE Hardening**: The Sovereign Reason Enclave now utilizes cumulative hash chains for audit trails. Each compliance certificate is cryptographically linked to the previous one, ensuring total non-repudiation.
+- **MCA Circuit Breakers**: The `CloudBroker` now features stateful provider blacklisting. Providers incur a 10-minute temporary ban after 3 consecutive task failures, preventing "poisoned" model routing.
+- **Intelligence Metrics Decay**: Historical performance data now uses a 0.95 decay factor, prioritizing recent model trends over stale legacy data.
+- **Hardened RES Stagnation**: Proactive self-healing now triggers with higher sensitivity to repetitive reasoning, injecting steering vectors before context-drift occurs.
 
 ## Installation & Setup
 
@@ -36,10 +46,9 @@ npx mindforge-cc@latest --claude --local
 AI coding agents degrade over long sessions. Context fills up. Quality drops.
 Decisions get forgotten. MindForge fixes that with:
 
+- **Sovereign Reason Enclave (v5.8)** — TEE-simulated reasoning isolation with Zero-Knowledge (ZK) Audit Trails.
+- **Multi-Cloud Arbitrage (v5.7)** — Dynamic routing across Vertex AI, Bedrock, and Azure with intelligence-first task affinity.
 - **Sentinel Execution (v5.6)** — JIT Binary Runtime Attestation and Zero-Trust Skill Enforcement.
-- **Predictive Reliability (v5.5)** — Reasoning Entropy Scoring (RES) and proactive loop breaking via Steering Vectors.
-- **Multi-Cloud Arbitrage (v5.0)** — Dynamic routing and provider hedging with low-latency arbitrage.
-- **Sovereign Reason Enclave (v5.0)** — TEE-simulated reasoning isolation and sanitization for confidential workloads.
 - **Human-Agent Handover (v5.0)** — Nexus State Bundles and mid-wave steering injection.
 - **Autonomous FinOps (v4.3)** — Dynamic **C2C** (Confidence-to-Cost) routing and Agentic ROI tracking.
 - **Proactive Equilibrium (v4.3)** — Real-time **Wave Divergence** monitoring and autonomous state recovery.
@@ -293,6 +302,22 @@ See `.mindforge/production/token-optimiser.md`.
 - **Contributing:** `docs/contributing/CONTRIBUTING.md`
 
 ---
+
+## What's new in v5.8 (Sovereign Reason Enclaves)
+
+MindForge V5.8 implements the sixth pillar of the Hyper-Enterprise roadmap: **Sovereign Reason Enclaves with ZK-Audit**.
+
+- **ZK-Proof Compliance Certificates**: Simulated zero-knowledge proofs (signed by System DID) for SRE sessions, proving policy adherence without exposing thoughts.
+- **Privacy-Preserving Auditing**: `NexusTracer` replaces raw reasoning with verifiable certificates in the global audit log.
+- **Enclave Verification**: Cryptographic verification of enclave sessions via `verifyZKProof`.
+
+## What's new in v5.7 (Multi-Cloud Arbitrage)
+
+MindForge V5.7 implements the fifth pillar of the Hyper-Enterprise roadmap: **Multi-Cloud Arbitrage with Task-to-Model Affinity**.
+
+- **Task Affinity Matrices**: Persistent tracking of model success rates by task taxonomy (e.g., Anthropic for refactoring, Google for research).
+- **Intelligence-First Routing**: Scoring weighted 50% on success probability, ensuring the best model for the job.
+- **Feedback Integration**: Automated performance updates via the implementation feedback loop.
 
 ## What's new in v5.6 (Sentinel Execution)
 
