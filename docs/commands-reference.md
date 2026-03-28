@@ -1,4 +1,4 @@
-# MindForge v2.4.0 — Commands Reference
+# MindForge v5.1.0 — Commands Reference
 
 MindForge commands are organized into functional pillars to support the entire software development lifecycle (SDLC).
 
@@ -35,6 +35,7 @@ MindForge commands are organized into functional pillars to support the entire s
 | `/mindforge:personas --list` | Displays all 32+ specialized engineering personas. |
 | `/mindforge:personas --set ID` | Switches the current agent to a specific persona (e.g., `architect`, `executor`). |
 | `/mindforge:tokens` | Analyzes and profiles token usage for the current session. |
+| `/mindforge:neural-orchestrator` | Activates the advanced protocol layer for the current session. |
 | `shard-helper --verify` | (CLI Internal) Verifies the integrity and SHA-256 checksums of memory shards. |
 
 ---
@@ -62,3 +63,21 @@ MindForge commands are organized into functional pillars to support the entire s
 | `/mindforge:migrate` | Migrates project metadata between framework versions. |
 | `/mindforge:audit --export` | Generates a human-readable PDF report of the session audit log. |
 | `/mindforge:join-discord` | Join the MindForge developer community for support and collaboration. |
+
+---
+
+## 6. Advanced Neural Protocols (Beast Addition)
+
+These protocols represent specialized, high-fidelity engineering behaviors ported and hardened for the MindForge ecosystem.
+
+| Command | Description |
+| :--- | :--- |
+| `/mindforge:brainstorming` | Deep ideation and requirement exploration before planning. |
+| `/mindforge:swarm-execution` | Swarm-based implementation for independent tasks. |
+| `/mindforge:parallel-mesh` | Orchestrates context across multiple parallel agent waves. |
+| `/mindforge:workspace-isolated` | Manages isolated development environments via git worktrees. |
+| `/mindforge:skill-creation` | Expert protocol for authoring new MindForge skills. |
+| `/mindforge:review-request` | Formalizes peer review requests for completed implementation waves. |
+| `/mindforge:tdd` | Enhanced Test-Driven Development protocol with strict verification. |
+| `/mindforge:debug` | Advanced systematic debugging with persistent state tracking. |
+| `/mindforge:verify-work` | Multi-level truth verification (existence, substance, wiring). |

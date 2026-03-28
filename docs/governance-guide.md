@@ -1,8 +1,8 @@
-# MindForge Governance Guide (v5.0.0)
+# MindForge Governance Guide (v5.1.0)
 Absolute Control through Policy-as-Code (PaC)
 
 ## 1. Goal
-MindForge v5.0.0 introduces a non-bypassable, intent-level governance layer. This guide explains how **Agentic Policy Orchestration (APO)** and **Zero-Trust Agentic Identity (ZTAI)** work together to secure the enterprise development lifecycle.
+MindForge v5.1.0 introduces a non-bypassable, intent-level governance layer. This guide explains how **Agentic Policy Orchestration (APO)** and **Zero-Trust Agentic Identity (ZTAI)** work together to secure the enterprise development lifecycle, now hardened by the **Neural Protocol Mesh**.
 
 ## 2. Agentic Policy Orchestrator (APO)
 The APO is a decentralized governance engine that intercepts every autonomous intent before it is executed.
@@ -21,7 +21,7 @@ The `PolicyEngine` evaluates this intent against organizational **Policy-as-Code
 - **Escalate**: The action requires a higher-tier DID signature or explicit HITL (Human-in-the-Loop) approval.
 
 ## 3. Trust Tier Architecture (ZTAI Hardened)
-V5.0.0 automatically maps ZTAI Trust Tiers to explicit project roles through the `RBACManager`.
+V5.1.0 automatically maps ZTAI Trust Tiers to explicit project roles through the `RBACManager`.
 
 | Tier | Role | Scope | Hardening |
 | :--- | :--- | :--- | :--- |
@@ -30,18 +30,24 @@ V5.0.0 automatically maps ZTAI Trust Tiers to explicit project roles through the
 | **2** | Specialized | Security/DevOps Specialist. | Access to `/security`, `/infra`, and `/bin/governance`. |
 | **3** | Principal | Lead Architect / Core Engine. | **HSM-Enclave Signing Required** for all engine modifications. |
 
-## 4. Governance Workflow (V5)
+## 4. Protocol Mesh Governance (v5.1.0 Enhancement)
+The **Beast Addition** integrates protocol-level governance into the APO engine.
+- **Protocol Enforceability**: Every protocol activation (e.g., `/mindforge:tdd`) is logged as a governance event.
+- **Mesh Integrity**: The **Parallel Mesh** synchronizes governance state across multiple agents, preventing "split-brain" policy execution.
+- **Skill Compliance**: New skills created via `/mindforge:skill-creation` are automatically audited for APO compatibility.
+
+## 5. Governance Workflow (V5.1.0)
 1. **ZTAI Handshake**: Agent proves identity using Ed25519 signatures.
 2. **Intent Pulse**: Agentic intent is broadcast to the policy interceptor.
 3. **APO Evaluation**: Policy engine checks the intent against PaC rules.
 4. **Role binding**: `RBACManager` grants or revokes permissions based on the active trust tier.
 5. **Verified Wave**: Execution proceeds only if all policy gates are clear.
 
-## 5. Enterprise Policies
-MindForge v5 ships with default policies including:
+## 6. Enterprise Policies
+MindForge v5.1.0 ships with default policies including:
 - **`gate_tier_3_engine`**: Blocks all modifications to `bin/autonomous/` unless signed by a Tier 3 DID.
 - **`protect_security_namespace`**: Limits access to `/security` and `/governance` to Tier 2+ specialists.
 - **`mesh_integrity_lock`**: Ensures only high-confidence agents can push to the **Federated Intelligence Mesh**.
 
 ---
-*Status: V5 "Beast" Mode Governance Implemented & Verified (2026-03-28)*
+*Status: V5.1.0 "Beast Addition" Governance Implemented & Verified (2026-03-28)*
