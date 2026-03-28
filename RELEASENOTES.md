@@ -1,19 +1,28 @@
+# MindForge v5.1.0 — The Beast Addition
+## Top Summary
+The v5.1.0 release integrates 14 advanced agentic protocols and high-performance session hooks, sanitizing and hardening them for the MindForge ecosystem.
+
+## Highlights
+- **14 Advanced Protocols**: Ported from the Superpowers framework (Brainstorming, Swarm Execution, Parallel Mesh, etc.).
+- **Native Session Initializer**: replaces legacy bash hooks with high-performance Node.js startup logic.
+- **Workflow Step 0 Participation**: Core commands now mandate protocol activation for maximum tactical rigor.
+- **Full Sanitization**: 100% elimination of external branding across all registries.
+
+---
+
 # MindForge v5.0.0 — Enterprise Pillars V, VI, VII
 ## Top Summary
 The v5.0.0 release completes the MindForge Enterprise architecture with the final three pillars: Multi-Cloud Arbitrage, Sovereign Reason Enclaves (SRE), and Dynamic Human-Agent Handover (DHH).
 
 ## Highlights
-- **Pillar V: Multi-Cloud Arbitrage**: Intelligent routing across Vertex AI, Bedrock, and Azure with low-latency hedging and autonomous Provider Fallback protocols.
-- **Pillar VI: Sovereign Reason Enclaves (SRE)**: Simulated TEE-based reasoning isolation for confidential workloads, ensuring zero-visibility thought-chains and automatic sanitization of reasoning traces in global logs.
-- **Pillar VII: Dynamic Human-Agent Handover (DHH)**: Automated packaging of "Nexus State Bundles" for human review when confidence scores drop, featuring real-time "Human Steering" injection into the autonomous stream.
-- **Hardening: Beast Mode Phase 2**: Built-in Chaos Mode for provider reliability stress-testing and mandatory state hashing for all handover bundles.
+- **Pillar V: Multi-Cloud Arbitrage**: Intelligent routing across Vertex AI, Bedrock, and Azure.
+- **Pillar VI: Sovereign Reason Enclaves (SRE)**: Simulated TEE-based reasoning isolation.
+- **Pillar VII: Dynamic Human-Agent Handover (DHH)**: Automated packaging of "Nexus State Bundles" for human review.
+- **Hardening: Beast Mode Phase 2**: Built-in Chaos Mode for provider reliability stress-testing.
 
 ---
 
 # MindForge v4.3.0 — Enterprise Mesh & Proactive Equilibrium
-
-## Top Summary
-MindForge v4.3.0 introduces the **Enterprise Intelligence Mesh**, finalizing the v4 roadmap with autonomous FinOps and self-healing reliability. This release also implements **ZTAI Beast Mode**, hardens agentic identity with asymmetric cryptographic signing, and introduces simulated Secure Enclaves (HSM) for Tier 3 principal agents.
 
 ## Highlights
 

@@ -1,7 +1,7 @@
-# MindForge — Enterprise Agentic Framework (v5.0.0)
+# MindForge v5.1.0 — The Beast AdditionFramework (v5.1.0)
 
 MindForge turns AI coding agents into production-grade engineering partners with governance, multi-cloud resilience, and a non-bypassable Sovereign Reason Enclave.
-Release published: v5.0.0-PRO.
+Release published: v5.1.0-PRO.
 
 ## Installation & Setup
 
