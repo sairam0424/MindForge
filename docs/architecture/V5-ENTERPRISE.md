@@ -1,8 +1,8 @@
 # MindForge v5 Architecture: The Enterprise Beast
 
-MindForge v5.0.0 is the definitive enterprise-grade evolution of the agentic framework. This major version introduces distributed intelligence and absolute governance via a zero-trust policy-as-code layer.
+MindForge v5.1.0 is built on a distributed "Agentic OS" architecture. This major version introduces distributed intelligence and absolute governance via a zero-trust policy-as-code layer.
 
-## Core Pillars (v5.0.0)
+## 1. Core Architectural Pillars (v5.1.0)
 
 ### Pillar I: Federated Intelligence Mesh (FIM)
 
@@ -10,16 +10,17 @@ The FIM transitions MindForge from local knowledge silos to a shared organizatio
 
 - **Distributed Sync (LWW)**: Cross-node synchronization using Last-Write-Wins (LWW) conflict resolution with cryptographic versioning.
 - **Delta Pull Protocol**: Intelligent synchronization that only retrieves new insights since the last successful sync, minimizing bandwidth and latency.
-- **Enterprise Intelligence Service (EIS)**: A high-availability central hub for sharing high-confidence agentic findings across the entire enterprise.
+- **Enterprise Resilience & Governance (v5.1.0)**: A high-availability central hub for sharing high-confidence agentic findings across the entire enterprise.
 - **ZTAI-Signed Provenance**: Every piece of knowledge in the mesh is cryptographically tied to the DID of the agent that generated it.
 
 ### Pillar II: Agentic Policy Orchestrator (APO)
 
-The APO provides a non-bypassable governance layer that evaluates every autonomous wave against organizational security policies.
+# MindForge Governance Guide (v5.1.0)
+MindForge v5.1.0 introduces a non-bypassable, intent-level governance layer that evaluates every autonomous wave against organizational security policies.
 
 - **Policy-as-Code (PaC)**: Security rules are defined in declarative JSON/YAML schemas, enabling version-controlled governance.
 - **Real-Time Intent Interception**: The `AutoRunner` intercepts swarm intents (Action, Resource, DID, Tier) before execution.
-- **Dynamic RBAC Mapping**: Automatically assigns project roles based on an agent's **Zero-Trust Agentic Identity (ZTAI)** trust tier.
+- **Dynamic RBAC Mapping**: v5.1.0 automatically maps ZTAI Trust Tiers to project roles based on an agent's **Zero-Trust Agentic Identity (ZTAI)** trust tier.
 - **Fail-Safe Governance**: "Default Deny" posture for sensitive operations (API key access, infra modification, etc.).
 
 ### Pillar III: Predictive Agentic Reliability (PAR)
@@ -99,9 +100,9 @@ DHH creates a seamless bridge between fully autonomous execution and high-precis
 
 ---
 
-## Identity & Trust (ZTAI Interlocks)
+## ZTAI & Enclave Security (v5.1.0)
 
-MindForge v5 utilizes **Zero-Trust Agentic Identity (ZTAI)** as the root-of-trust for all enterprise operations.
+MindForge v5.1.0 enforces **Zero-Trust Agentic Identity (ZTAI)** as the root-of-trust for all enterprise operations.
 
 1.  **Identity Verification**: Agents prove their identity using Ed25519 signatures.
 2.  **Tier Escalation**: Tier 0-1 agents are limited to analytical tasks. Tier 2 agents gain implementation roles. Tier 3 agents (signed by HSM-secured identities) execute in **Sovereign Reason Enclaves**.
