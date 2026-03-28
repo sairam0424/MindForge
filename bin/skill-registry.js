@@ -19,7 +19,7 @@ function main() {
   }
 
   // Handle cases where the action might be missing if called incorrectly
-  const validActions = ['install', 'register', 'audit'];
+  const validActions = ['install', 'register', 'audit', 'sign'];
   if (!validActions.includes(ACTION)) {
     console.error(`❌ Invalid or missing action: ${ACTION}`);
     console.error(`   Expected one of: ${validActions.join(', ')}`);
@@ -36,9 +36,74 @@ function main() {
     case 'audit':
       handleAudit();
       break;
+    case 'sign':
+      handleSign();
+      break;
     default:
       console.error(`❌ Unknown action: ${ACTION}`);
       process.exit(1);
+  }
+}
+
+async function handleSign() {
+  const skillName = ARGS[1];
+  const ztai = require('./governance/ztai-manager');
+  const crypto = require('node:crypto');
+
+  if (!skillName) {
+    console.error('❌ Missing skill name to sign');
+    process.exit(1);
+  }
+
+  // Find the skill file
+  const bases = [
+    '.mindforge/skills',
+    '.mindforge/org/skills',
+    '.mindforge/project-skills'
+  ];
+  
+  let targetPath = null;
+  for (const base of bases) {
+    const p = path.join(process.cwd(), base, skillName, 'SKILL.md');
+    if (fs.existsSync(p)) {
+      targetPath = p;
+      break;
+    }
+  }
+
+  if (!targetPath) {
+    console.error(`❌ Skill ${skillName} not found in any registry path.`);
+    process.exit(1);
+  }
+
+  console.log(`🛡️  Signing skill: ${skillName}...`);
+  const content = fs.readFileSync(targetPath, 'utf8');
+  const hash = crypto.createHash('sha256').update(content).digest('hex');
+
+  try {
+    // We use a dedicated System DID for skill signing (Tier 3)
+    const systemDid = await ztai.registerAgent('MindForge-System-Secretary', 3);
+    const signature = await ztai.signData(systemDid, hash);
+
+    const sigPath = path.join(process.cwd(), '.mindforge', 'org', 'skills', 'SIGNATURES.json');
+    let signatures = {};
+    if (fs.existsSync(sigPath)) {
+      signatures = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
+    }
+
+    signatures[skillName] = {
+      hash,
+      signature,
+      did: systemDid,
+      timestamp: new Date().toISOString()
+    };
+
+    fs.writeFileSync(sigPath, JSON.stringify(signatures, null, 2));
+    console.log(`✅ Skill ${skillName} signed and registered in SIGNATURES.json`);
+    process.exit(0);
+  } catch (err) {
+    console.error(`❌ Signing failed: ${err.message}`);
+    process.exit(1);
   }
 }
 

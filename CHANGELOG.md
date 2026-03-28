@@ -1,6 +1,38 @@
 # Changelog
 
+## [5.6.0] - 2026-03-28
+### Added
+- **Pillar IV: Supply Chain Trust (Binary Runtime Attestation)**.
+- Cryptographic skill signing in `SkillRegistry` via ZTAIManager Tier 3 Enclaves.
+- JIT Attestation in `SkillValidator` to verify skill integrity before agent execution.
+- `SIGNATURES.json` tracking for all enterprise-grade skills.
+
+## [5.5.0] - 2026-03-28
+### Added
+- **Pillar III: Predictive Agentic Reliability (Reasoning Entropy Monitoring)**.
+- Reasoning Entropy Scoring (RES) in `NexusTracer` to detect semantic stagnation and loops.
+- Proactive Self-Healing trigger for high-similarity thought sequences.
+- Steering Vector generation in `TemporalHindsight` to break agentic deadlocks.
+
 ## [5.4.0] — Beast Mode Hardening — 2026-03-28
+
+# Release Notes - MindForge v5.6.0 "Sentinel Execution"
+
+MindForge v5.6.0 introduces the final pillars of the Hyper-Enterprise roadmap: Proactive Reliability and Zero-Trust Skill Execution.
+
+## Highlights
+- **Reasoning Entropy Monitoring (PAR)**: Proactively prevents token-burning reasoning loops.
+- **Binary Runtime Attestation (ZTS)**: Cryptographically ensures that skills have not been tampered with before they are loaded by the agent.
+
+---
+
+## [5.6.0] - Sentinel Execution
+- Implemented JIT Attestation for Skill Registry.
+- Added Skill Signing utility in `mindforge-cc sign`.
+
+## [5.5.0] - Predictive Reliability
+- Implemented RES (Reasoning Entropy Scoring) in Nexus Tracer.
+- Added Steering Vector injection for proactive loop breaking.
 
 🚀 **MindForge v5.4.0 — Enterprise Resilience (Hardened Edition)**
 
