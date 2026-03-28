@@ -1,17 +1,19 @@
 # MindForge Architecture Overview
 
-MindForge v2.1.1 is built on a unified "Agentic OS" architecture, designed to provide a consistent execution environment across all major AI IDEs and CLI tools.
+MindForge v5.0.0 is built on a distributed "Agentic OS" architecture, designed for enterprise-scale intelligence sharing and absolute governance.
 
 ---
 
-## 1. Core Architectural Pillars
+## 1. Core Architectural Pillars (v5.0.0)
 
-The framework is organized into four logical pillars that map directly to the development lifecycle:
+The framework is focused on six major pillars, with V5 introducing the **Distributed Intelligence** and **Policy Governance** layers:
 
-1. **PLAN**: Multi-agent task decomposition using the `PLANNER_MODEL`. Resulting in atomic `.planning/` artifacts.
-2. **EXECUTE**: Parallel, wave-based implementation using the `EXECUTOR_MODEL`.
-3. **VERIFY**: Multi-stage validation (Automated Tests + UAT + Integrity Checks) using the `VERIFIER_MODEL`.
-4. **SHIP**: Release orchestration, PR generation, and audit finalization.
+1.  **Federated Intelligence Mesh (FIM)**: Distributed knowledge sharing with delta-sync and cryptographic provenance. [V5-ENTERPRISE.md](./V5-ENTERPRISE.md)
+2.  **Agentic Policy Orchestrator (APO)**: Non-bypassable policy-as-code governance that intercepts autonomous intents.
+3.  **Zero-Trust Agentic Identity (ZTAI)**: DID-based cryptographic signing for all agentic actions and tiered trust enforcement.
+4.  **Adversarial Decision Synthesis (ADS)**: 3-model synthesis loop ensuring architectural integrity.
+5.  **Semantic Context Sharding**: Tri-tier memory (Hot/Warm/Cold) for high-fidelity context management.
+6.  **Autonomous Execution Engine**: Self-healing wave execution with stuck-detection and repair hierarchies.
 
 ---
 
@@ -21,8 +23,9 @@ MindForge uses a "Tiered Configuration" model allowing for global, organizationa
 
 | Directory | Scope | Purpose |
 | :--- | :--- | :--- |
+| **EIS / Mesh** | `bin/memory` | Core FIM implementation (eis-client, federated-sync). |
+| **Governance** | `bin/governance` | Core APO implementation (policy-engine, rbac-manager). |
 | `.mindforge/` | System/Global | Core personas, core skills, and engine protocols. |
-| `.mindforge/org/` | Organizational | Shared company standards and private skill registries. |
 | `.agent/` | Project/Local | Project-specific configuration, hooks, and local skill overrides. |
 | `.planning/` | Session/State | Ephemeral state, task blocks, and session handoffs. |
 
@@ -34,78 +37,40 @@ The `file-manifest.json` file in `.agent/` is the single source of truth for the
 
 ---
 
-## 4. Runtime Execution Flow
+## 4. Runtime Execution Flow (V5 Hardened)
 
-1.  **Context Loading**: Load `MINDFORGE.md` and `file-manifest.json` to configure the environment.
-2.  **Skill Discovery**: Match task intent against the 3-tier skill registry (Core → Org → Project).
-3.  **Persona Spawning**: Instantiate the required persona from the 32-persona ecosystem.
-4.  **Action Loop**: Execute the 4-pillar workflow, persisting state to `.planning/STATE.md` at every step.
-5.  **Audit Persistence**: All non-trivial actions are appended to the encrypted `.planning/AUDIT.jsonl`.
-
----
-
-## 5. Stability & Extension
-
-MindForge provides stable interfaces for extension:
-
-- **Skills**: Domain expertise via `SKILL.md`.
-- **Workflows**: Sequence automation via `WORKFLOW.md`.
-- **Hooks**: Lifecycle interception via `.agent/hooks/`.
-- **SDK**: Programmatic access via `@mindforge/sdk`.
-
-See [ADR-041](../adr/ADR-041-runtime-interfaces.md) for the stabilization contract.
+1.  **Context Loading**: Load `MINDFORGE.md` and `file-manifest.json`.
+2.  **Identity Verification**: Resolve the agent's ZTAI identity and trust tier.
+3.  **Policy Interception**: The `APO` evaluates the task intent. If not **PERMIT**, the session is halted.
+4.  **Skill Discovery**: Match task intent against the 3-tier skill registry.
+5.  **Execution Wave**: Parallel task execution with continuous FIM synchronization.
+6.  **Audit Pulse**: All actions are cryptographically signed and appended to `.planning/AUDIT.jsonl`.
 
 ---
 
-## 6. Semantic Memory Tiering (V3)
+## 5. Decision Records & Stability
 
-MindForge v2.4.0 introduces **Semantic Context Sharding**, a Tri-Tier memory architecture that optimizes context window usage for long-running engineering sessions.
+MindForge provides stable interfaces for extension while documenting every major design shift via ADRs.
+
+- **ADR Index**: See [decision-records-index.md](./decision-records-index.md).
+- **V3 Core**: See [V3-CORE.md](./V3-CORE.md).
+- **V4 Mesh**: See [V4-SWARM-MESH.md](./V4-SWARM-MESH.md).
+- **V5 Enterprise**: See [V5-ENTERPRISE.md](./V5-ENTERPRISE.md).
+
+---
+
+## 6. Semantic Memory Tiering (V3/V4)
 
 | Tier | Storage | Purpose | Retrieval |
 | :--- | :--- | :--- | :--- |
 | **HOT** | `HANDOFF.json` | Immediate task state and core ADRs (SRD > 0.8). | Loaded every session. |
-| **WARM** | `.planning/memories/` | Phase-specific shards and active project context (SRD 0.5-0.8). | Proactive retrieval via keyword matching. |
-| **COLD** | `.mindforge/memory/` | Historical logs and legacy architectural decisions (SRD < 0.5). | On-demand search via `/mindforge:remember`. |
-
-### SRD Scoring Engine
-
-Semantic Relevance Density (SRD) is calculated using a weighted formula:
-`SRD = (Decisiveness * 0.6) + (Frequency * 0.1) + (Impact * 0.3)`
-
-### Integrity & Hardening
-
-All shards are hardened with **SHA-256 Checksums** and **Semantic Tags** to prevent state drift and enable O(1) keyword-based context injection.
+| **WARM** | `.planning/memories/` | Phase-specific shards and active project context (SRD 0.5-0.8). | Proactive retrieval. |
+| **COLD** | `.mindforge/memory` | Global knowledge base and historical logs (SRD < 0.5). | Federated search (FIM). |
 
 ---
 
+## 7. Adversarial Decision Synthesis (ADS)
+
+MindForge v3.0.0 introduces **Adversarial Decision Synthesis (ADS)**, a 3-model synthesis loop that ensures every architectural decision is battle-tested using the **SOUL.md** scoring algorithm.
 
 ---
-
-## 7. Adversarial Decision Synthesis (ADS) (V3)
-
-MindForge v3.0.0 introduces **Adversarial Decision Synthesis (ADS)**, a 3-model synthesis loop that ensures every architectural decision is battle-tested.
-
-### The 3-Model Loop
-
-1.  **Blue Team (Architect)**: Proposes the initial high-performance plan.
-2.  **Red Team (Auditor)**: Hardened via "Jailbreak" protocol to identify at least 3 critical flaws (Maintainability, Complexity, Security).
-3.  **Gold Team (Synthesizer)**: Consolidates findings using the **SOUL.md** scoring algorithm.
-
-### SOUL Decision Scoring
-
-| Metric | Factor | Description |
-| :--- | :--- | :--- |
-| **I** | Impact | Overall system-wide importance of the change. |
-| **L** | Leverage | How much this change unblocks future high-value work. |
-| **R** | Reversibility | How easy it is to undo this change if it fails. |
-| **E** | Effort | Total engineering complexity and time required. |
-| **Ri** | Risk | Probability of breakage or system regression. |
-| **C** | Cost | Token/Compute usage and infrastructure weight. |
-
-**Formula**: `Score = (I * L * R) / (E * Ri * C)`
-
-Decisions with a SOUL Score > 1.0 are considered architecturally sound.
-
----
-
-## 8. Stability & Extension
