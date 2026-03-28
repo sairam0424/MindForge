@@ -1,5 +1,33 @@
 # Changelog
 
+## [5.0.0-alpha.1] — Federated Intelligence & Policy Orchestration — 2026-03-28
+
+🚀 **MindForge v5.0.0 — The Enterprise "Beast" Release**
+
+This landmark release transforms MindForge into a distributed, governable, and cryptographically verified agentic operating system. V5 introduces the first two pillars of the Enterprise Architecture: Federated Intelligence Mesh (FIM) and Agentic Policy Orchestrator (APO).
+
+### Pillar I: Federated Intelligence Mesh (FIM)
+
+- **Enterprise Intelligence Service (EIS)**: Implemented `eis-client.js` for secure, authenticated communication with the organizational knowledge hub.
+- **Delta-Sync Protocol**: Implemented `federated-sync.js` with timestamp-based delta pulls, significantly reducing synchronization latency.
+- **ZTAI-Signed Provenance**: Every knowledge item in the mesh is cryptographically tied to the DID of the originating agent.
+- **Hybrid Knowledge Graph**: Extended `knowledge-graph.js` to seamlessly resolve local nodes and remote federated nodes.
+
+### Pillar II: Agentic Policy Orchestrator (APO)
+
+- **Policy-as-Code (PaC)**: Implemented `policy-engine.js` for intent-based evaluation of agent actions against organizational security rules.
+- **RBAC Manager**: Implemented `rbac-manager.js` for mapping DIDs to project roles and binding permissions to ZTAI Trust Tiers.
+- **Policy Interceptor**: Deep integration into `auto-runner.js`, enforcing a pre-flight governance gate before every autonomous wave.
+- **Default Enterprise Policies**: Shipped with initial security guardrails for engine and infrastructure protection.
+
+### Hardening ("Beast" Mode)
+
+- **ZTAI Interlock**: All mesh and policy operations now utilize the hardware-enclave (simulated) signing engine for Tier 3 principals.
+- **Dynamic Intent Extraction**: Autonomous intents are now derived in real-time from active session identities.
+- **Conflict Resolution (LWW)**: Hardened the federated sync with Last-Write-Wins conflict resolution logic.
+
+---
+
 ## [4.3.0] — Enterprise Mesh & Proactive Equilibrium — 2026-03-28
 
 🚀 **MindForge v4.3.0 — The Maturity Release**
