@@ -332,6 +332,9 @@ function verifyInstall(baseDir, cmdsDir, runtime, scope) {
     path.join(process.cwd(), 'bin/governance/policy-engine.js'),
     path.join(process.cwd(), 'bin/governance/quantum-crypto.js'),
     path.join(process.cwd(), 'bin/autonomous/intent-harvester.js'),
+    path.join(process.cwd(), 'bin/memory/cli.js'),
+    path.join(process.cwd(), 'bin/models/cost-tracker.js'),
+    path.join(process.cwd(), 'bin/research/research-engine.js'),
     path.join(process.cwd(), 'docs/registry/COMMANDS.md'),
     path.join(process.cwd(), 'docs/registry/PERSONAS.md'),
   ];
@@ -610,7 +613,10 @@ async function install(runtime, scope, options = {}) {
     }
 
     // Sovereign Intelligence v6.2.0-alpha: Copy core engines by default
-    const sovereignEngines = ['governance', 'autonomous'];
+    const sovereignEngines = [
+      'governance', 'autonomous', 'memory', 'models', 'research', 
+      'wizard', 'updater', 'dashboard', 'browser', 'skills-builder', 'engine'
+    ];
     sovereignEngines.forEach(engine => {
       const srcDir = src('bin', engine);
       const dstDir = path.join(process.cwd(), 'bin', engine);
@@ -625,15 +631,16 @@ async function install(runtime, scope, options = {}) {
     Theme.printStatus(c.dim('  - Post-Quantum Agentic Security (PQAS) enabled'), 'info');
     Theme.printStatus(c.dim('  - Proactive Semantic Intent Harvesting active'), 'info');
 
-    // bin/ utilities (optional)
+    // bin/ utilities (remaining non-engine scripts)
     if (withUtils) {
       const binDst = path.join(process.cwd(), 'bin');
       const binSrc = src('bin');
-      if (fsu.exists(binSrc) && !fsu.exists(binDst)) {
-        fsu.copyDir(binSrc, binDst, { excludePatterns: SENSITIVE_EXCLUDE });
-        Theme.printResolved(`${c.bold('bin/')} (utilities)`);
-      } else if (fsu.exists(binDst)) {
-        Theme.printPrompt(c.dim('bin/ already exists — preserved'));
+      if (fsu.exists(binSrc)) {
+        fsu.copyDir(binSrc, binDst, { 
+          excludePatterns: [...SENSITIVE_EXCLUDE, ...sovereignEngines],
+          noOverwrite: true 
+        });
+        Theme.printResolved(`${c.bold('bin/')} (auxiliary utilities)`);
       }
     }
 
