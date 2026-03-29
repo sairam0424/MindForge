@@ -1,6 +1,6 @@
 /**
  * MindForge Security & Trust Audit Suite (v6.0.0 Alpha)
- * Verifies ZTS (Binary Attestation) and ZTAI (Identity Beast Mode).
+ * Verifies ZTS (Binary Attestation) and ZTAI (Enterprise Identity Layer).
  */
 
 const fs = require('fs');

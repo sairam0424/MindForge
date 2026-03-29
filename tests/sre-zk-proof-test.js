@@ -15,12 +15,12 @@ async function runTest() {
 
   const tracer = new NexusTracer({
     auditPath: path.join(__dirname, 'test_audit.jsonl'),
-    did: 'did:mindforge:agent:test-beast'
+    did: 'did:mindforge:agent:test-enterprise'
   });
 
   // Seed the ZTAI Registry for the test agent
-  await ztai.providers.enclave.generate('did:mindforge:agent:test-beast');
-  ztai.agentRegistry.set('did:mindforge:agent:test-beast', {
+  await ztai.providers.enclave.generate('did:mindforge:agent:test-enterprise');
+  ztai.agentRegistry.set('did:mindforge:agent:test-enterprise', {
     providerType: 'enclave',
     tier: 3
   });
