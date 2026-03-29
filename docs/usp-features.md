@@ -1,6 +1,6 @@
-# MindForge v5.10.0 — Unique Selling Points, Features, and Best Practices (v5.10.0)
+# MindForge v6.0.0-alpha — Unique Selling Points, Features, and Best Practices (v6.0.0-alpha)
 
-This document summarizes what makes MindForge v5.6.0 distinct, what features
+This document summarizes what makes MindForge v6.0.0 distinct, what features
 are included in the official release, and how to use them effectively.
 
 ---
@@ -68,16 +68,22 @@ are included in the official release, and how to use them effectively.
     - Cryptographically ensure skill integrity before execution. Every `SKILL.md` is JIT-verified against ZTAI-signed signatures, preventing supply-chain attacks and unauthorized logic injection.
 
 20. **Predictive Agentic Reliability: Reasoning Entropy (v5.5)**
-    - Proactively detect and break agentic reasoning loops. Using RES (Reasoning Entropy Scoring), the system interrupts semantic stagnation and injects Steering Vectors to recover lost autonomy.
+   - Non-repudiable audit trails signed by unique Decentralized Identifiers (DIDs) for every swarm action. Tier 3 agents use simulated **Secure Enclave (HSM)** signing.
 
-21. **Interactive Temporal Steering — NEXUS (v5.10)**
-    - Full-fidelity history navigation via a web-based "Temporal Slider." Rewind the agent to any reasoning node and inject "Hindsight Steering" to correct logic drift without restarting the session.
+19. **MindForge Sentinel: Binary Runtime Attestation (v6.0.0-alpha)**
+   - Cryptographically ensure skill integrity before execution. Every `SKILL.md` is JIT-verified against ZTAI-signed signatures, preventing supply-chain attacks and unauthorized logic injection.
 
-22. **AgRevOps: Agentic Financial Governance (v5.10)**
-    - Real-time ROI analysis ($100/hr value mapping) vs. token costs, combined with a **Security Health Score (SHS)** that tracks governance debt and policy bypasses across the mesh.
+20. **Predictive Agentic Reliability: Reasoning Entropy (v6.0.0-alpha)**
+   - Proactively detect and break agentic reasoning loops. Using RES (Reasoning Entropy Scoring), the system interrupts semantic stagnation and injects Steering Vectors to recover lost autonomy.
 
-23. **CADIA: Neural Blast Radius Optimizer (v6.0.0 Alpha)**
-    - Elevated enterprise governance using **Context-Aware Dynamic Impact Analysis**. Real-time scoring based on architectural influence, session entropy (mass-change defense), and goal-path alignment. Includes a reasoning-based bypass for Tier 3 agents.
+21. **Interactive Temporal Steering — NEXUS (v6.0.0-alpha)**
+   - Full-fidelity history navigation via a web-based "Temporal Slider." Rewind the agent to any reasoning node and inject "Hindsight Steering" to correct logic drift without restarting the session.
+
+22. **AgRevOps: Agentic Financial Governance (v6.0.0-alpha)**
+   - Real-time ROI analysis ($100/hr value mapping) vs. token costs, combined with a **Security Health Score (SHS)** that tracks governance debt and policy bypasses across the mesh.
+
+23. **CADIA: Neural Blast Radius Optimizer (v6.0.0-alpha)**
+   - Elevated enterprise governance using **Context-Aware Dynamic Impact Analysis**. Real-time scoring based on architectural influence, session entropy (mass-change defense), and goal-path alignment. Includes a reasoning-based bypass for Tier 3 agents.
 
 ---
 

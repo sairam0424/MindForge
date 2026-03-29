@@ -1,4 +1,4 @@
-# MindForge v5.6.0 — Commands Reference
+# MindForge v6.0.0-alpha — Commands Reference
 
 MindForge commands are organized into functional pillars to support the entire software development lifecycle (SDLC).
 

@@ -2,16 +2,16 @@
 
 ## [5.10.0] - 2026-03-29
 
-### Added (v5.10.0)
+### Added (v6.0.0-alpha)
 
 - **Pillar VIII: AgRevOps ROI Engine (Enterprise Value)**.
-- **MindForge v5.10.0 — AgRevOps ROI Engine (Enterprise Value)**
+- **MindForge v6.0.0-alpha — AgRevOps ROI Engine (Enterprise Value)**
 
-## Top Summary (v5.10.0)
+## Top Summary (v6.0.0-alpha)
 
-The v5.10.0 release introduces the final pillar of the MindForge Enterprise architecture: AgRevOps (Agentic Revenue Operations). This engine provides real-time ROI attribution for autonomous waves, enabling enterprises to quantify the business value of every agentic reasoning cycle.
+The v6.0.0-alpha release introduces the final pillar of the MindForge Enterprise architecture: AgRevOps (Agentic Revenue Operations). This engine provides real-time ROI attribution for autonomous waves, enabling enterprises to quantify the business value of every agentic reasoning cycle.
 
-## Highlights (v5.10.0)
+## Highlights (v6.0.0-alpha)
 
 - **AgRevOps ROI Engine**: Real-time value attribution for autonomous task execution.
 - **ROI Telemetry**: New `roi-telemetry.jsonl` stream for tracking cost efficiency vs. outcome quality.
