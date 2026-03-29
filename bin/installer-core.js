@@ -332,6 +332,8 @@ function verifyInstall(baseDir, cmdsDir, runtime, scope) {
     path.join(process.cwd(), 'bin/governance/policy-engine.js'),
     path.join(process.cwd(), 'bin/governance/quantum-crypto.js'),
     path.join(process.cwd(), 'bin/autonomous/intent-harvester.js'),
+    path.join(process.cwd(), 'docs/registry/COMMANDS.md'),
+    path.join(process.cwd(), 'docs/registry/PERSONAS.md'),
   ];
 
   const missing = required.filter(f => !fsu.exists(f));
@@ -536,7 +538,8 @@ async function install(runtime, scope, options = {}) {
       const standardFrameworkFolders = [
         'engine', 'org', 'governance', 'integrations', 'personas', 'skills', 
         'team', 'intelligence', 'memory', 'metrics', 'models', 'plugins', 
-        'dashboard', 'browser', 'monorepo', 'production', 'distribution'
+        'dashboard', 'browser', 'monorepo', 'production', 'distribution',
+        'docs/registry'
       ];
 
       if (minimal) {
