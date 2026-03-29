@@ -41,9 +41,6 @@ Decisions get forgotten. MindForge fixes that with:
 - **Sentinel Execution (v5.6)** — JIT Binary Runtime Attestation and Zero-Trust Skill Enforcement.
 - **Interactive Temporal Steering (v5.10)** — Full history scrubbing, hindsight state repair, and real-time temporal slider navigation.
 - **AgRevOps Hub (v5.10)** — Dynamic ROI tracking ($100/hr mapping), Milestone Velocity forecasting, and Governance Debt monitoring.
-- **Sovereign Reason Enclave (v5.8)** — TEE-simulated reasoning isolation with Zero-Knowledge (ZK) Audit Trails.
-- **Multi-Cloud Arbitrage (v5.7)** — Dynamic routing across Vertex AI, Bedrock, and Azure with intelligence-first task affinity.
-- **Sentinel Execution (v5.6)** — JIT Binary Runtime Attestation and Zero-Trust Skill Enforcement.
 - **Human-Agent Handover (v5.0)** — Nexus State Bundles and mid-wave steering injection.
 - **Autonomous FinOps (v4.3)** — Dynamic **C2C** (Confidence-to-Cost) routing.
 - **Proactive Equilibrium (v4.3)** — Real-time **Wave Divergence** monitoring and autonomous state recovery.
@@ -331,7 +328,7 @@ MindForge has evolved rapidly from a simple workflow tool into a sovereign intel
 </details>
 
 <details>
-<summary><b>v5.9.x — Beast Mode Hardening</b></summary>
+<summary><b>v5.9.x — Enterprise Level Hardening</b></summary>
 
 - **Unified NexusTracer**: Single, high-fidelity ART protocol singleton with a core asynchronous drive.
 - **Merkle-Style Audit Integrity**: Hardened SRE and ZTAI logs with cumulative Merkle-hash chains.
@@ -346,13 +343,13 @@ MindForge has evolved rapidly from a simple workflow tool into a sovereign intel
 </details>
 
 <details>
-<summary><b>v5.1.x - v5.6.x — The "Beast" Era (Protocols & Trust)</b></summary>
+<summary><b>v5.1.x - v5.6.x — The "Enterprise" Era (Protocols & Trust)</b></summary>
 
 - **Sentinel Execution (v5.6)**: Binary Runtime Attestation and Reasoning Entropy Scoring (RES).
 - **Predictive Agentic Reliability (v5.5)**: Advanced loop detection (Semantic Mirroring) and self-healing triggers.
 - **Dynamic Blast Radius (v5.3/v5.4)**: Real-time impact analysis and circuit-breaker safety in the federated sync.
 - **Semantic Vector Consensus (v5.2)**: FIM v2 with cosine-similarity conflict resolution.
-- **Beast Edition Protocols (v5.1)**: 14 advanced agentic protocols (Brainstorming, Swarm, Parallel Mesh) integrated from Superpowers.
+- **Enterprise Edition Protocols (v5.1)**: 14 advanced agentic protocols (Brainstorming, Swarm, Parallel Mesh) integrated from Superpowers.
 </details>
 
 <details>
