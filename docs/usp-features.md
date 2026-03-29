@@ -1,21 +1,23 @@
-# MindForge: 26 Unique Selling Points & Core Features (v6.1 Alpha)
+# MindForge: 28 Unique Selling Points & Core Features (v6.2 Alpha)
 
-MindForge is the enterprise's **Agentic OS**, built on the **CADIA v6.1 (Cross-Agentic Deterministic Intelligence Architecture)** framework. It provides a self-healing, self-optimizing environment for autonomous agent execution at scale.
+MindForge is the enterprise's **Agentic OS**, built on the **CADIA v6.2 (Cross-Agentic Deterministic Intelligence Architecture)** framework. It provides a self-healing, self-optimizing environment for autonomous agent execution at scale.
 
 ---
 
-## The 10 Pillars of Sovereign Intelligence
+## The 12 Pillars of Sovereign Intelligence
 
-1.  **Pillar I: Semantic Vector Consensus** (FIM v2) - Distributed knowledge merging via cosine similarity.
-2.  **Pillar II: Dynamic Blast Radius** (APO v2) - Real-time risk scoring (CADIA) before any file mutation.
+1.  **Pillar I: Semantic Vector Consensus** (FIM v2) - Distributed knowledge merging.
+2.  **Pillar II: Dynamic Blast Radius** (APO v2) - Real-time risk scoring (CADIA).
 3.  **Pillar III: Predictive Agentic Reliability** (RES) - Heuristics to detect/interrupt reasoning loops.
 4.  **Pillar IV: Supply Chain Trust** (ZTAI) - Cryptographically signed skills and binary attestation.
-5.  **Pillar V: Multi-Cloud Arbitrage** (MCA) - Task-to-model affinity routing across providers.
-6.  **Pillar VII: Hierarchical Intent Orchestration** (Nexus) - Tiered reasoning capture and visualization.
-7.  **Pillar VIII: AgRevOps ROI Engine** (Enterprise) - Quantifying economic value vs. compute cost.
-8.  **Pillar IX: Autonomous Resource Harvesting** (ARH) - Real-time token arbitrage and steering.
-9.  **Pillar X: Neural Drift Remediation** (NDR) - Proactive self-healing for cognitive decay.
-10. **Pillar VI: Sovereign Reason Enclaves** (ZK-Audit) - Privacy-preserving audit trails for sensitive tasks.
+5.  **Pillar V: Multi-Cloud Arbitrage** (MCA) - Task-to-model affinity routing.
+6.  **Pillar VII: Hierarchical Intent Orchestration** (Nexus) - Tiered reasoning capture.
+7.  **Pillar VIII: AgRevOps ROI Engine** (Enterprise) - Quantifying economic value.
+8.  **Pillar IX: Autonomous Resource Harvesting** (ARH) - Real-time token arbitrage.
+9.  **Pillar X: Neural Drift Remediation** (NDR) - Proactive self-healing.
+10. **Pillar VI: Sovereign Reason Enclaves** (ZK-Audit) - Privacy-preserving audit trails.
+11. **Pillar XI: Post-Quantum Agentic Security** (PQAS) - Lattice-based signatures and bypasses.
+12. **Pillar XII: Proactive Semantic Homing** (Homing) - Proactive intent harvesting and mesh healing.
 
 ---
 

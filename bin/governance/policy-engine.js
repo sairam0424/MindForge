@@ -68,14 +68,41 @@ class PolicyEngine {
     for (const policy of policies) {
       if (this.matches(policy, intent)) {
         if (policy.max_impact && impactScore > policy.max_impact) {
-          // [BEAST] Tier 3 Reasoning Proof Bypass
-          if (intent.tier >= 3 && intent.reasoning_proof) {
-             console.log(`[APO-BYPASS] [${requestId}] Tier 3 'Reasoning Proof' detected. Overriding Blast Radius limit.`);
-             // Continue to permit check
+          
+          // [PQAS] v7: Edge-Case Biometric Bypass for Risk > 95
+          if (impactScore > 95) {
+            console.log(`[PQAS-BIOMETRIC] [${requestId}] CRITICAL RISK detected (${impactScore}). Triggering Last-Resort Biometric Challenge...`);
+            if (intent.biometric_approval !== 'APPROVED_BY_EXECUTIVE') {
+              verdict = { 
+                verdict: 'DENY', 
+                reason: `PQAS Biometric Violation: High-impact mutation (${impactScore}) requires manual WebAuthn/Biometric steering.`, 
+                requestId,
+                status: 'WAIT_FOR_BIOMETRIC'
+              };
+              this.logAudit(intent, impactScore, verdict);
+              return verdict;
+            }
+            console.log(`[PQAS-BIOMETRIC] [${requestId}] Biometric signature verified. Proceeding with high-risk mutation.`);
+          }
+
+          // [BEAST] Tier 3 Reasoning/PQ Proof Bypass
+          if (intent.tier >= 3 && (intent.reasoning_proof || intent.pq_proof)) {
+             const quantumCrypto = require('./quantum-crypto');
+             const isProofValid = intent.pq_proof ? 
+                quantumCrypto.verifyZKProof(intent.pq_proof, intent.id) : true;
+
+             if (isProofValid) {
+                console.log(`[APO-BYPASS] [${requestId}] Tier 3 'Sovereign Proof' verified (${intent.pq_proof ? 'ZK-PQ' : 'Standard'}). Overriding Blast Radius limit.`);
+                // Continue to permit check
+             } else {
+                verdict = { verdict: 'DENY', reason: 'Invalid or Malformed ZK-Proof detected.', requestId };
+                this.logAudit(intent, impactScore, verdict);
+                return verdict;
+             }
           } else {
             verdict = { 
               verdict: 'DENY', 
-              reason: `Dynamic Blast Radius Violation: Intent impact (${impactScore}) exceeds policy limit (${policy.max_impact}). ${intent.tier < 3 ? 'Upgrade to Tier 3 for bypass.' : 'Provide reasoning_proof.'}`, 
+              reason: `Dynamic Blast Radius Violation: Intent impact (${impactScore}) exceeds policy limit (${policy.max_impact}). ${intent.tier < 3 ? 'Upgrade to Tier 3 for bypass.' : 'Provide Sovereign Proof.'}`, 
               requestId 
             };
             this.logAudit(intent, impactScore, verdict);
