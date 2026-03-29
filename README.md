@@ -2,37 +2,6 @@
 
 MindForge v6.2.0 Alpha achieves the **Sovereign Intelligence** final stage, introducing post-quantum safe identities and proactive agentic homing through **Post-Quantum Agentic Security (PQAS)** and **Proactive Semantic Homing**.
 
-## What's new in v6.2 Alpha (Sovereign Intelligence)
-
-MindForge V6.2 Alpha completes the "Sovereign" pillars, hardening the mesh against future threats and eliminating reactive latency.
-
-- **Pillar XI: Post-Quantum Agentic Security (PQAS)**: Lattice-based (Dilithium-5) signatures and ZK-Proof bypasses for Tier 4 agent identities.
-- **Pillar XII: Proactive Semantic Homing**: Autonomous "Intent Hunting" where agents proactively claim tasks and peer-heal logic drift (>80) in the mesh.
-- **Edge-Case Biometrics**: Hardware-locked governance requiring manual `APPROVED_BY_EXECUTIVE` steering for catastrophic-risk operations (>95 Blast Radius).
-- **Quantum-Safe Key Provider**: Integrated lattice cryptography in the `ZTAIManager` for verifiable, future-proof identity.
-- **Mesh Self-Healer**: Real-time collaborative reasoning recovery for drifting autonomous nodes.
-
-## What's new in v6.0 Alpha (CADIA Optimizer)
-
-MindForge V6.0 Alpha introduces the **Neural Blast Radius Optimizer**, transforming how the framework evaluates architectural risk in real-time.
-
-- **CADIA Engine (Pillar II Upgrade)**: Dynamic risk scoring (0-100) based on file influence, session history, and goal alignment.
-- **Session Entropy Guardrails**: Prevents "Rogue Wave" mass-corruption by increasing risk scores logarithmically as an agent touches more files.
-- **Goal-Path Alignment**: Cross-references every intent against the "Current Phase" in `STATE.md`, flagging anomalous files outside the active mission.
-- **Tier 3 Reasoning Proof Bypass**: Senior agents can override high-risk blocks (score > 80) by providing a cryptographically signed "Reasoning Proof."
-- **Enterprise RISK-AUDIT**: Persistent, high-fidelity compliance logging of every policy decision to `.planning/RISK-AUDIT.jsonl`.
-
-## What's new in v5.10 (Nexus Steering & AgRevOps)
-
-MindForge V5.10 completes the "Hyper-Enterprise" evolution, transforming the dashboard into a high-fidelity control center for temporal debugging and financial governance.
-
-- **Interactive Temporal Steering (Pillar VII)**: The 'Time-Travel' slider allows real-time navigation of historical snapshots. Inspect reasoning traces at any point in space-time and inject 'Hindsight Steering Vectors' to correct agentic drift.
-- **AgRevOps ROI Engine (Pillar VIII)**: Automated calculation of economic value ($100/hr dev saving vs token costs). Tracks cumulative savings and net agentic ROI for the entire swarm.
-- **Velocity Forecaster**: Statistical ETA prediction for milestones based on live task completion velocity.
-- **Governance Debt Monitor**: Security Health Score tracking that flags policy bypasses and critical findings in the audit trail.
-- **Nexus Dashboard v2.0**: Major UI upgrade with dedicated Temporal and RevOps tabs, featuring real-time gauges and reasoning inspectors.
-
-## What's new in v5.9 (Beast Mode Hardening)
 
 ## Installation & Setup
 
@@ -99,7 +68,6 @@ Decisions get forgotten. MindForge fixes that with:
 - **Audit trail** — append-only history of every action
 
 ---
-
 
 ## 🛠️ Configuration & Runtimes
 
@@ -326,75 +294,101 @@ See `.mindforge/production/token-optimiser.md`.
 - **Architecture:** `docs/architecture/README.md`
 - **Contributing:** `docs/contributing/CONTRIBUTING.md`
 
----
+## 📜 Framework Evolution & Version History
 
-## What's new in v5.8 (Sovereign Reason Enclaves)
+MindForge has evolved rapidly from a simple workflow tool into a sovereign intelligence mesh. Explore the major milestones below.
 
-MindForge V5.8 implements the sixth pillar of the Hyper-Enterprise roadmap: **Sovereign Reason Enclaves with ZK-Audit**.
+<details>
+<summary><b>v6.2.x — Sovereign Intelligence (PQAS & Homing)</b></summary>
 
-- **ZK-Proof Compliance Certificates**: Simulated zero-knowledge proofs (signed by System DID) for SRE sessions, proving policy adherence without exposing thoughts.
-- **Privacy-Preserving Auditing**: `NexusTracer` replaces raw reasoning with verifiable certificates in the global audit log.
-- **Enclave Verification**: Cryptographic verification of enclave sessions via `verifyZKProof`.
+- **Pillar XI: Post-Quantum Agentic Security (PQAS)**: Lattice-based (Dilithium-5) signatures and ZK-Proof bypasses for Tier 4 agent identities.
+- **Pillar XII: Proactive Semantic Homing**: Autonomous "Intent Hunting" where agents proactively claim tasks and peer-heal logic drift (>80) in the mesh.
+- **Edge-Case Biometrics**: Hardware-locked governance requiring manual `APPROVED_BY_EXECUTIVE` steering for catastrophic-risk operations.
+</details>
 
-## What's new in v5.7 (Multi-Cloud Arbitrage)
+<details>
+<summary><b>v6.1.x — Sovereign Intelligence (ARH & NDR)</b></summary>
 
-MindForge V5.7 implements the fifth pillar of the Hyper-Enterprise roadmap: **Multi-Cloud Arbitrage with Task-to-Model Affinity**.
+- **Pillar IX: Autonomous Resource Harvesting (ARH)**: Real-time token arbitrage and dynamic task routing based on MIR (Min-Intelligence-Requirement).
+- **Pillar X: Neural Drift Remediation (NDR)**: Semantic density heuristics and automated reasoning recovery to break logic loops and hallucinations.
+- **ROI Telemetry**: High-fidelity cost-saving tracking integrated into the global audit stream.
+</details>
 
-- **Task Affinity Matrices**: Persistent tracking of model success rates by task taxonomy (e.g., Anthropic for refactoring, Google for research).
-- **Intelligence-First Routing**: Scoring weighted 50% on success probability, ensuring the best model for the job.
-- **Feedback Integration**: Automated performance updates via the implementation feedback loop.
+<details>
+<summary><b>v6.0.x — CADIA Engine & AgRevOps ROI</b></summary>
 
-## What's new in v5.6 (Sentinel Execution)
+- **AgRevOps ROI Engine**: Real-time value attribution ($100/hr dev saving mapping) for every autonomous reasoning cycle.
+- **CADIA Optimizer (Pillar II Upgrade)**: Dynamic risk scoring (0-100) and session entropy guardrails to prevent rogue behaviors.
+- **Goal-Path Alignment**: Cross-referencing intents against `STATE.md` to flag anomalous file access.
+</details>
 
-MindForge V5.6 completes the "Hyper-Enterprise" roadmap with two critical security and reliability pillars.
+<details>
+<summary><b>v5.10.x — Nexus Steering & AgRevOps</b></summary>
 
-- **Binary Runtime Attestation (ZTS)**: Cryptographically sign skills using HSM-secured identities. The `SkillValidator` now performs JIT verification, blocking tampered or unauthorized skills from loading.
-- **Reasoning Entropy Monitoring (PAR)**: The `NexusTracer` now calculates **RES (Reasoning Entropy Scoring)**. If an agent falls into a semantic loop or circular reasoning, the system proactively generates a **Steering Vector** to break the loop and recover the execution wave.
-- **Sentinel Hardening**: Enhanced `NexusTracer` with SRE-aware audit integrity and Merkle-root cumulative hash chains.
+- **Interactive Temporal Steering (Pillar VII)**: Hindsight injection and temporal slider navigation via the Nexus Dashboard.
+- **ROI Engine (Pillar VIII)**: Automated financial governance and cumulative agentic ROI tracking.
+- **Velocity Forecaster**: Statistical ETA prediction for milestones based on live telemetry.
+</details>
 
-## What's new in v4.3 (Enterprise Mesh & Equilibrium)
+<details>
+<summary><b>v5.9.x — Enterprise Level Hardening</b></summary>
 
-MindForge V4.3 matures the framework for enterprise mission-critical environments.
+- **Unified NexusTracer**: Single, high-fidelity ART protocol singleton with a core asynchronous drive.
+- **Merkle-Style Audit Integrity**: Hardened SRE and ZTAI logs with cumulative Merkle-hash chains.
+- **MCA Circuit Breakers**: Stateful provider blacklisting in the `CloudBroker` with automated failure remediation.
+</details>
 
-- **Autonomous FinOps Hub**: Automated budget enforcement and dynamic model selection based on task complexity (C2C).
-- **Proactive Equilibrium**: Real-time divergence detection (Wave Monitoring) and autonomous repair loops.
-- **Structural Reorganization**: Production-grade `bin/` directory architecture for all core implementation logic.
-- **Enhanced ZTAI**: Asymmetric cryptographic signatures for all and simulated HSM support.
+<details>
+<summary><b>v5.7.x - v5.8.x — SRE & MCA Protocols</b></summary>
 
-## What's new in v4.2 (Identity & Memory)
+- **Sovereign Reason Enclaves (v5.8)**: ZK-Proof compliance certificates for confidential reasoning cycles.
+- **Multi-Cloud Arbitrage (v5.7)**: Intelligence-first routing using persistent Task-to-Model success matrices.
+</details>
 
-MindForge V4.2 focuses on **Identity** and **Memory** within the agentic swarm.
+<details>
+<summary><b>v5.1.x - v5.6.x — The "Enterprise" Era (Protocols & Trust)</b></summary>
 
-- **ZTAI Beast Mode**: Every agent action is cryptographically signed using asymmetric keys. Tier 3 agents use a simulated **Secure Enclave (HSM)** for top-level non-repudiation.
-- **Audit Integrity**: High-fidelity audit manifests generated with **Merkle-root** cumulative hash chains.
-- **Semantic Hub**: Synchronization between local repository memory and the global organizational store (`~/.mindforge/`).
-- **Ghost Pattern Detection**: Proactive risk detection that warns agents when a proposed design matches a past organizational failure.
+- **Sentinel Execution (v5.6)**: Binary Runtime Attestation and Reasoning Entropy Scoring (RES).
+- **Predictive Agentic Reliability (v5.5)**: Advanced loop detection (Semantic Mirroring) and self-healing triggers.
+- **Dynamic Blast Radius (v5.3/v5.4)**: Real-time impact analysis and circuit-breaker safety in the federated sync.
+- **Semantic Vector Consensus (v5.2)**: FIM v2 with cosine-similarity conflict resolution.
+- **Enterprise Edition Protocols (v5.1)**: 14 advanced agentic protocols (Brainstorming, Swarm, Parallel Mesh) integrated from Superpowers.
+</details>
 
-## What's new in v4.1 (Nexus)
+<details>
+<summary><b>v4.x — The Mesh & Nexus Revolution</b></summary>
 
-🚀 **The High-Fidelity Observability Era**
+- **Enterprise Mesh (v4.3)**: Autonomous FinOps and Proactive Equilibrium (Wave Monitoring).
+- **Identity & Memory (v4.2)**: Zero-Trust Agentic Identity (ZTAI) with Ed25519 signing.
+- **MindForge Nexus (v4.1)**: Hierarchical ART tracing and trace context propagation.
+- **Mesh Dynamic Swarms (v4.0)**: Parallel, task-aware specialist clusters and micro-persona factory.
+</details>
 
-MindForge V4.1 introduces **Nexus**, the definitive observability layer for autonomous agents.
+<details>
+<summary><b>v3.x — Reactive Autonomous Intelligence</b></summary>
 
-- **Agentic Reasoning Tracing (ART)**: Deep visibility into "thought chains" and parallel mesh reasoning via hierarchical spans.
-- **Trace Context Propagation**: OpenTelemetry-compatible trace IDs across waves, tasks, and swarm clusters.
-- **Reasoning Heatmaps**: Automated visualization of adversarial disagreement and consensus synthesis.
-- **Mesh Visibility**: Live tracing of ephemeral specialist clusters in the agentic mesh.
+- **Context Sharding (SRD)**: 40% reduction in token waste via relevance-dense Hot/Warm/Cold context tiers.
+- **Adversarial Decision Synthesis (ADS)**: Zero-drift architectural logic through Red-Blue model debate.
+- **Temporal Vision**: Full-fidelity history navigation, hindsight injection, and automated state repair.
+- **RAG 2.0 (Auto-Shadowing)**: Background pattern retrieval from the local knowledge graph.
+</details>
 
----
+<details>
+<summary><b>v2.x — The Autonomous Enterprise & Knowledge Graph</b></summary>
 
-## What's new in v4.0.0 (Swarm)
+- **Multi-Runtime Support**: Official adapters for Claude Code, Antigravity, Cursor, Gemini, and Copilot.
+- **RAG 2.0**: Typed-edge Local Knowledge Graph with proactive context shadowing and TF-IDF search.
+- **Temporal Vision**: Full-fidelity history navigation, state snapshotting, and hindsight injection.
+- **Self-Building Skills**: Automated skill capture from documentation and phase outputs via `/mindforge:learn`.
+</details>
 
----
+<details>
+<summary><b>v1.x — Framework Foundation & Core Protocols</b></summary>
 
-## Evolution from v2.x
-
-- **Expanded Persona Ecosystem**: 32+ specialized engineering personas.
-- **Real-time Dashboard**: Web-based observability and governance.
-- **Persistent Knowledge Graph**: Long-term project memory across sessions.
-- **Multi-Model Intelligence**: Dynamic routing, adversarial reviews, and deep research.
-- **Visual QA Engine**: Systematic visual audit and regression test generation.
-- **Autonomous Execution**: Walk-away execution with real-time steerability.
+- **Unified 4-Pillar Workflow**: Standardized `plan` → `execute` → `verify` → `ship` lifecycle.
+- **Specialized Persona Library**: 32+ high-performance engineering agents with defined capability matrices.
+- **Zero-Trust Logic**: Initial protocol enforcement and audit-trail persistence.
+</details>
 
 ---
 

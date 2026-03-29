@@ -149,7 +149,7 @@ class CloudBroker {
    * Hardening: Simulate provider failures to verify Fallback Protocol.
    */
   startChaosMode() {
-    console.log('[BEAST-MODE] CloudBroker Chaos Mode ACTIVE. Simulating jitter and provider dropouts...');
+    console.log('[ENTERPRISE-RESILIENCE] CloudBroker Chaos Mode ACTIVE. Simulating jitter and provider dropouts...');
     setInterval(() => {
       const providers = Object.keys(this.latencyMap);
       const randomProvider = providers[Math.floor(Math.random() * providers.length)];

@@ -59,7 +59,7 @@ Every swarm cluster operates under strict enterprise governance rules:
 
 - **Audit Trails**: Non-repudiable logs signed by each agent's unique **Decentralized Identifier (DID)**.
 
-- **Identity Hardening (Beast Mode)**: High-tier agents (T3) use asymmetric keys anchored in a simulated **Secure Enclave (HSM)**.
+- **Identity Hardening (Enterprise Mode)**: High-tier agents (T3) use asymmetric keys anchored in a simulated **Secure Enclave (HSM)**.
 - **Integrity Proofs**: All audit blocks are finalized with **Merkle-root payloads** signed by the archiver to prevent tampering.
 
 ---

@@ -20,7 +20,7 @@ This registry catalogs every strategic, operational, and governance command avai
 
 | Command | Description | Invocation | Outcome Goal |
 | :--- | :--- | :--- | :--- |
-| `/mindforge:init-project` | Initialize a new project with the framework. | `/mindforge:init-project` | "Beast Mode" workspace. |
+| `/mindforge:init-project` | Initialize a new project with the framework. | `/mindforge:init-project` | "Enterprise-Grade" workspace. |
 | `/mindforge:init-org` | Set up organization-level policy standards. | `/mindforge:init-org` | Standardized enterprise config. |
 | `/mindforge:new-project` | Structured project initialization wizard. | `/mindforge:new-project` | Validated project baseline. |
 | `/mindforge:milestone` | Define and track high-level milestones. | `/mindforge:milestone` | Recorded project roadmap. |

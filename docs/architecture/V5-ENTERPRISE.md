@@ -1,4 +1,4 @@
-# MindForge v5 Architecture: The Enterprise Beast
+# MindForge v5 Architecture: The Enterprise Standard
 
 MindForge v5.1.0 is built on a distributed "Agentic OS" architecture. This major version introduces distributed intelligence and absolute governance via a zero-trust policy-as-code layer.
 

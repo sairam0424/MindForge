@@ -1,86 +1,144 @@
-# MindForge v6.0.0-alpha — Commands Reference
+# MindForge — Universal Commands Reference
 
-MindForge commands are organized into functional pillars to support the entire software development lifecycle (SDLC).
-
----
-
-## 1. Project Management & Setup
-
-| Command | Description |
-| :--- | :--- |
-| `/mindforge:init-project` | Scaffolds the `.agent/` framework and initializes project planning files. |
-| `/mindforge:map-codebase` | Performs deep architectural mapping of an existing codebase. |
-| `/mindforge:health` | Checks the integrity of the MindForge installation and project structure. |
-| `/mindforge:health --repair` | Automatically fixes missing files or broken configurations. |
+MindForge commands are organized into functional pillars to support the entire software development lifecycle (SDLC), from initial architecture to final delivery at scale.
 
 ---
 
-## 2. The Unified Workflow (4 Pillars)
+## 1. Project Management & Initialization
+
+Commands to scaffold, orient, and prepare the framework for a specific repository context.
 
 | Command | Description |
 | :--- | :--- |
-| `/mindforge:plan-phase [N]` | Initiates strategic planning for a milestone: discuss → research → plan. Supports `--ads` for adversarial synthesis. |
-| `/mindforge:execute-phase [N]` | Starts autonomous execution of task plans in parallel waves. |
-| `/mindforge:verify-phase [N]` | Runs Human Acceptance Testing (UAT) and automated validation gates. |
-| `/mindforge:ship [N]` | Finalizes delivery, generates release output, and creates a Pull Request. |
+| `/mindforge:init-project` | Scaffolds the `.agent/` framework and initializes core planning files (`PROJECT.md`, `STATE.md`). |
+| `/mindforge:init-org` | Standardizes MindForge at the organization level with global guardrails and security policies. |
+| `/mindforge:map-codebase` | Performs deep architectural and semantic mapping of an existing codebase with parallel agents. |
+| `/mindforge:new-runtime` | Scaffolds support for a new AI coding runtime (e.g., custom IDE or proprietary CLI). |
 
 ---
 
-## 3. Intelligence & Observability
+## 2. Core SDLC Lifecycle (The 4 Pillars)
+
+The foundational MindForge workflow for predictable, high-quality development cycles.
 
 | Command | Description |
 | :--- | :--- |
-| `/mindforge:dashboard` | Starts or manages the real-time web observability dashboard. |
-| `/mindforge:browse [URL]` | Launches the browser daemon for visual verification or research. |
-| `/mindforge:personas --list` | Displays all 32+ specialized engineering personas. |
-| `/mindforge:personas --set ID` | Switches the current agent to a specific persona (e.g., `architect`, `executor`). |
-| `/mindforge:tokens` | Analyzes and profiles token usage for the current session. |
-| `/mindforge:neural-orchestrator` | Activates the advanced protocol layer for the current session. |
-| `shard-helper --verify` | (CLI Internal) Verifies the integrity and SHA-256 checksums of memory shards. |
-| `/mindforge:entropy-check`| (Sentinel) Manually trigger Reasoning Entropy Analysis on the current context. |
+| `/mindforge:plan-phase [N]` | Initiates strategic planning for a milestone: multi-agent discussion → research → atomic XML planning. |
+| `/mindforge:execute-phase [N]` | Orchestrates the implementation of task plans via wave-based parallel execution with atomic commits. |
+| `/mindforge:verify-phase [N]` | Triggers Human Acceptance Testing (UAT) and runs non-bypassable verification gates. |
+| `/mindforge:ship [N]` | Finalizes delivery, generates a rich Pull Request body from artifacts, and prepares for merge. |
 
 ---
 
-## 4. Knowledge, Skills & Marketplace
+## 3. Specialized Design & Audit Phases
+
+Mid-cycle protocols for ensuring architectural alignment and visual integrity.
 
 | Command | Description |
 | :--- | :--- |
-| `/mindforge:note "TEXT"` | Captures an architectural decision or project preference into memory. |
-| `/mindforge:remember [TERM]` | Searches the MindForge knowledge graph for relevant context. |
-| `/mindforge:learn [URL/PATH]` | Ingests documentation or source code to build a new validated Skill. |
-| `/mindforge:skills --list` | Lists all active and available skills across the 3-tier registry. |
-| `/mindforge:skills validate [PATH]` | Passes a skill through the 7-Dimension Scorer for quality verification. |
-| `/mindforge:marketplace search [Q]`| Searches community skills from the central registry. |
-| `/mindforge:marketplace install ID` | Installs a verified community skill into the project context. |
-| `mindforge-cc sign <SKILL>`| (Sentinel) Cryptographically sign a skill with a Tier 3 DID signature. |
+| `/mindforge:ui-phase [N]` | Generates a declarative UI Design Contract (`UI-SPEC.md`) before implementation begins. |
+| `/mindforge:ui-review [N]` | Performs a retroactive visual audit of implemented UI against the DESIGN_SYSTEM.md and UI-SPEC.md. |
+| `/mindforge:validate-phase [N]` | Audits a completed phase for requirement coverage and Nyquist validation gaps. |
+| `/mindforge:discuss-phase [N]` | Interactive requirements gathering and decision-locking before creating formal plans. |
 
 ---
 
-## 5. Governance & Maintenance
+## 4. Task, Idea & Backlog Management
+
+Capturing and routing engineering intent with zero friction.
 
 | Command | Description |
 | :--- | :--- |
-| `/mindforge:security-scan` | Performs deep vulnerability scanning and compliance checks. |
-| `/mindforge:update` | Checks for and applies framework updates from the central repository. |
-| `/mindforge:migrate` | Migrates project metadata between framework versions. |
-| `/mindforge:audit --export` | Generates a human-readable PDF report of the session audit log. |
-| `/mindforge:join-discord` | Join the MindForge developer community for support and collaboration. |
+| `/mindforge:do <intent>` | Smart natural language dispatcher that routes freeform text to the correct MindForge workflow. |
+| `/mindforge:note <text>` | Captures logic choices, todos, or preferences into session memory with automated promotion to tasks. |
+| `/mindforge:add-backlog <desc>` | Parks speculative ideas in a "parking lot" to keep the active milestone focus lean. |
+| `/mindforge:review-backlog` | Periodically audits and promotes backlog items into the active development roadmap. |
+| `/mindforge:plant-seed <idea>` | Captures forward-looking ideas with triggers that surface automatically at the relevant milestone. |
 
 ---
 
-## 6. Advanced Neural Protocols (Beast Addition)
+## 5. Intelligence, Research & Code Review
 
-These protocols represent specialized, high-fidelity engineering behaviors ported and hardened for the MindForge ecosystem.
+Leveraging multi-model intelligence for deep codebase insights and quality assurance.
 
 | Command | Description |
 | :--- | :--- |
-| `/mindforge:brainstorming` | Deep ideation and requirement exploration before planning. |
-| `/mindforge:swarm-execution` | Swarm-based implementation for independent tasks. |
-| `/mindforge:parallel-mesh` | Orchestrates context across multiple parallel agent waves. |
-| `/mindforge:workspace-isolated` | Manages isolated development environments via git worktrees. |
-| `/mindforge:skill-creation` | Expert protocol for authoring new MindForge skills. |
-| `/mindforge:review-request` | Formalizes peer review requests for completed implementation waves. |
-| `/mindforge:tdd` | Enhanced Test-Driven Development protocol with strict verification. |
-| `/mindforge:debug` | Advanced systematic debugging with persistent state tracking. |
-| `/mindforge:verify-work` | Multi-level truth verification (existence, substance, wiring). |
-| `/mindforge:sentinel-status`| Displays real-time integrity and reliability metrics for the mesh. |
+| `/mindforge:research <topic>` | Deep research using Gemini 1.5 Pro's 1-million-token window on the full codebase context. |
+| `/mindforge:cross-review` | Simultaneous code diff review by multiple AI models with consensus detection and synthesis. |
+| `/mindforge:pr-review` | Targeted AI review of a Pull Request with context loading and logic branch verification. |
+| `/mindforge:benchmark` | Measures real-world skill effectiveness over time using standardized scoring vectors. |
+
+---
+
+## 6. Multi-Agent Workflows & Workstreams
+
+Managing parallel feature tracks and autonomous execution clusters.
+
+| Command | Description |
+| :--- | :--- |
+| `/mindforge:workstreams` | Manages parallel feature tracks with isolated state and independent planning artifacts. |
+| `/mindforge:agent <persona>` | Invokes or spawns a specialized enterprise persona from the MindForge library (e.g., `sre`, `architect`). |
+| `/mindforge:auto --phase [N]` | Starts the Autonomous Execution Engine for 100% hands-free implementation and state recovery. |
+
+---
+
+## 7. Observability, Metrics & FinOps
+
+Real-time governance of the AI agent's behavior, costs, and project velocity.
+
+| Command | Description |
+| :--- | :--- |
+| `/mindforge:dashboard` | Starts the local web dashboard for real-time observability and temporal steering. |
+| `/mindforge:status` | Displays a reach terminal dashboard of project state, pending tasks, and recent audit events. |
+| `/mindforge:metrics` | Analyzes session and phase quality trends with automated early warning signals. |
+| `/mindforge:costs` | Tracks real-time token consumption and financial impact across all AI providers. |
+| `/mindforge:tokens` | Profiles token usage efficiency and provides compaction recommendations. |
+
+---
+
+## 8. Skills, Knowledge & Marketplace
+
+Managing the framework's intelligence capabilities and the global community registry.
+
+| Command | Description |
+| :--- | :--- |
+| `/mindforge:remember <term>` | Retrieval-augmented search through the local knowledge graph and session memory. |
+| `/mindforge:learn <source>` | Converts documentation, source code, or npm packages into validated, reusable MindForge skills. |
+| `/mindforge:skills --list` | Lists all active skill packs with tier-based status (Core/Org/Project). |
+| `/mindforge:marketplace` | Discover, evaluate, and install community-published skills from the npm-based registry. |
+| `/mindforge:publish-skill` | Validates, versions, and publishes local skills to the central registry. |
+| `/mindforge:install-skill` | Fetches and configures a skill from the marketplace into the local project. |
+
+---
+
+## 9. Governance, Integrations & Maintenance
+
+Connecting MindForge to enterprise systems and keeping the framework hardened.
+
+| Command | Description |
+| :--- | :--- |
+| `/mindforge:sync-jira` | Synchronizes MindForge milestones and tasks with Jira tickets and status transitions. |
+| `/mindforge:sync-confluence` | Exports architectural decisions and project documentation to Confluence spaces. |
+| `/mindforge:approve [event]` | Issues a manual Tier 3 cryptographic signature for a sensitive or high-risk operation. |
+| `/mindforge:health` | Runs comprehensive framework diagnostics across 7 categories with auto-repair loops. |
+| `/mindforge:update` | Checks for, diffs, and applies MindForge framework updates in a safe, scope-preserving way. |
+| `/mindforge:migrate` | Executes schema migrations for `.planning/` files across framework versions. |
+| `/mindforge:plugins` | Manages the framework plugin system and installs `mindforge-plugin-*` extensions. |
+
+---
+
+## 10. Advanced Engineering Protocols
+
+High-fidelity behaviors ported from the Superpowers library and hardened for production.
+
+| Command | Description |
+| :--- | :--- |
+| `/mindforge:brainstorming` | Deep exploratory protocol for intent clarification and architectural ideation. |
+| `/mindforge:swarm-execution` | Wave-based implemention for independent, non-conflicting tasks. |
+| `/mindforge:parallel-mesh` | Orchestrates a mesh of agent waves with automated dependency compaction. |
+| `/mindforge:workspace` | Manages isolated development environments via git worktrees with smart safety checks. |
+| `/mindforge:tdd` | Strict Test-Driven Development (Red-Green-Refactor) with automated test generation. |
+| `/mindforge:debug` | Systematic debugging using persistent state tracking and Root Cause Analysis. |
+| `/mindforge:verify-work` | Multi-level truth verification protocol (substance, existence, wiring). |
+| `/mindforge:retrospective` | Facilitates structured team retrospectives with objective telemetry and metrics. |
+

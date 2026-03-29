@@ -46,7 +46,7 @@ Every context item (Decision, Discovery, Task Result) is scored before compactio
 - **Deduplication**: Before appending to a shard, check for identical `topic` or `id` to avoid context cycles.
 - **Pruning**: Warm shards are archived to Cold storage upon Phase Completion.
 
-## 5. Beast Mode — Enterprise Hardening
+## 5. Enterprise-Grade — Hardening Phase
 - **Temporal Integrity**: Every shard entry must contain a `sha256` checksum. `bin/shard-helper.js --verify` ensures zero corruption.
 - **Semantic Indexing**: Shards are tagged automatically during compaction for O(1) keyword retrieval.
 - **Hindsight Injection**: If a "Warm" decision is corrected in a later session, the shard is updated with a `superseded_by` pointer.

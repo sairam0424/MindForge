@@ -1,6 +1,6 @@
 # MindForge v6.2.0-alpha — Capabilities Manifest
 
-This manifest provides a line-item inventory of every engine, protocol, and feature available in the MindForge "Beast Mode" installation.
+This manifest provides a line-item inventory of every engine, protocol, and feature available in the MindForge "Enterprise-Grade" installation.
 
 ## 🛡️ 1. Sovereign Intelligence (Pillars IX-XII)
 The latest advancement in agentic security and proactivity.
@@ -61,4 +61,4 @@ Comprehensive control via `mindforge-cli.js`.
 - **Sovereign**: `harvest`, `self-heal`, `quantum-verify`.
 
 ---
-*MindForge v6.2.0-alpha "Beast Mode" — Empowering the Autonomous Enterprise.*
+*MindForge v6.2.0-alpha "Production-Grade" — Empowering the Autonomous Enterprise.*

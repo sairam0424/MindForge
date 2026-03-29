@@ -85,7 +85,7 @@ class PolicyEngine {
             console.log(`[PQAS-BIOMETRIC] [${requestId}] Biometric signature verified. Proceeding with high-risk mutation.`);
           }
 
-          // [BEAST] Tier 3 Reasoning/PQ Proof Bypass
+          // [ENTERPRISE] Tier 3 Reasoning/PQ Proof Bypass
           if (intent.tier >= 3 && (intent.reasoning_proof || intent.pq_proof)) {
              const quantumCrypto = require('./quantum-crypto');
              const isProofValid = intent.pq_proof ? 

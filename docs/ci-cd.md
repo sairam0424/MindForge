@@ -16,7 +16,7 @@ MindForge v2.0.0 uses a sophisticated Control + Execution Plane architecture for
 
 ## 🔄 PR Workflow Lifecycle
 
-When you open or update a Pull Request, MindForge triggers the following "Beast" sequence:
+When you open or update a Pull Request, MindForge triggers the following "Enterprise" sequence:
 
 1. **🔍 Classify**: Analyzes diffs to assign a **Governance Tier (1, 2, or 3)**.
 2. **⚖️ Govern**:

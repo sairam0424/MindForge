@@ -19,7 +19,7 @@ This audit confirms that the MindForge "Hyper-Enterprise" architecture is fully 
 | **Governance (CADIA)** | `bin/governance/impact-analyzer.js` | `tests/governance/test-cadia-optimizer.js` | ✅ PASSED |
 | **Governance (APO)** | `bin/governance/policy-engine.js` | `tests/governance.test.js` | ✅ PASSED |
 | **Security (ZTS)** | `bin/skill-validator.js` | `tests/security-audit.test.js` | ✅ PASSED |
-| **Identity (ZTAI)** | `bin/governance/ztai-manager.js` | `tests/ztai-beast.test.js` | ✅ PASSED |
+| **Identity (ZTAI)** | `bin/governance/ztai-manager.js` | `tests/ztai-enterprise.test.js` | ✅ PASSED |
 | **SRE (ZK-Proof)** | `bin/engine/sre-manager.js` | `tests/sre-zk-proof-test.js` | ✅ PASSED |
 | **Observability (Nexus)** | `bin/engine/nexus-tracer.js` | `tests/run-nexus-tests.js` | ✅ PASSED |
 | **Memory (FIM/Hub)** | `bin/memory/semantic-hub.js` | `tests/semantic-hub.test.js` | ✅ PASSED |
@@ -59,7 +59,7 @@ This audit confirms that the MindForge "Hyper-Enterprise" architecture is fully 
 
 **VERDICT: CERTIFIED FOR ALPHA RELEASE (v6.1.0)**
 
-### 2. ZTAI: Identity Beast Mode (v4.3)
+### 2. ZTAI: Enterprise Identity Layer (v4.3)
 - **DID-Signing**: Every agent action is cryptographically signed using asymmetric keys.
 - **HSM Enclave**: Simulated Secure Enclave signing for Tier 3 agents confirmed.
 - **Audit Integrity**: Merkle-root cumulative hash chains verified in `.planning/AUDIT.jsonl`.

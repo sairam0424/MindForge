@@ -6,7 +6,7 @@ This document classifies every workflow and action in the MindForge `.github/` d
 
 ## 🏗️ The 5-Layer Plane Architecture (v2.0.0 — Recommended)
 
-These workflows form the modular "Beast" architecture implemented for enterprise-grade autonomy.
+These workflows form the modular "Enterprise" architecture implemented for enterprise-grade autonomy.
 
 ### 1. Control Plane (`control-plane.yml`)
 - **Primary Trigger**: `push` or `pull_request` to `main` or `develop`.

@@ -17,7 +17,7 @@ This registry catalogs the specialized agent essences available for direct inter
 
 | Persona | Identifier | Cognitive Focus | Primary Directive |
 | :--- | :--- | :--- | :--- |
-| **mf-executor** | Lead Developer | "Beast Mode" Logic & UI | "Ship premium-grade code with 100% test coverage." |
+| **mf-executor** | Lead Developer | "Enterprise-Grade" Logic & UI | "Ship premium-grade code with 100% test coverage." |
 | **developer** | Code Smith | Clean Code & Patterns | "Implement features according to the approved plan." |
 | **executor** | Pilot Developer | Atomic Multi-Plan | "Executes implementation plans with high fidelity and atomic commits." |
 | **tech-writer** | Documentation Lead | Clarity & Accuracy | "Transform engineering complexity into readable documentation." |

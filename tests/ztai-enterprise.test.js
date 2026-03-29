@@ -1,5 +1,5 @@
 /**
- * MindForge ZTAI 'Beast Mode' Verification Suite
+ * MindForge ZTAI 'Enterprise Mode' Verification Suite
  * v4.2.5 — Hardened Verification
  */
 
@@ -8,8 +8,8 @@ const ZTAIArchiver = require('../bin/governance/ztai-archiver');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 
-async function verifyBeastMode() {
-  console.log('--- MindForge ZTAI Beast Mode Verification ---');
+async function verifyEnterpriseMode() {
+  console.log('--- MindForge ZTAI Enterprise Mode Verification ---');
 
   try {
     // 1. Tiered Registration & Provider Selection
@@ -91,7 +91,7 @@ async function verifyBeastMode() {
     }
     console.log(' ✅ Success');
 
-    console.log('--- All ZTAI Beast Mode Tests Passed 🚀 ---');
+    console.log('--- All ZTAI Enterprise Mode Tests Passed 🚀 ---');
     process.exit(0);
   } catch (err) {
     console.error(`--- ZTAI Verification Failed ❌ ---`);
@@ -100,4 +100,4 @@ async function verifyBeastMode() {
   }
 }
 
-verifyBeastMode();
+verifyEnterpriseMode();

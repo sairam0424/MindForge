@@ -66,11 +66,11 @@ The v6.0.0-alpha release introduces the final pillar of the MindForge Enterprise
 
 ---
 
-# MindForge v5.9.0 — Beast Mode Hardening (Nexus Unification)
+# MindForge v5.9.0 — Enterprise-Grade Hardening (Nexus Unification)
 
 ## Top Summary (v5.9.0)
 
-The v5.9.0 release elevates the MindForge Enterprise architecture to "Beast Mode" by unifying the tracing infrastructure into a single, high-fidelity asynchronous ART protocol and hardening the governance and arbitrage pillars with advanced cryptographic and resilience patterns.
+The v5.9.0 release elevates the MindForge Enterprise architecture to "Enterprise-Grade" by unifying the tracing infrastructure into a single, high-fidelity asynchronous ART protocol and hardening the governance and arbitrage pillars with advanced cryptographic and resilience patterns.
 
 ## Highlights (v5.9.0)
 
@@ -143,11 +143,11 @@ The v5.8.0 release implements the sixth pillar of the Hyper-Enterprise roadmap: 
 - Proactive Self-Healing trigger for high-similarity thought sequences.
 - Steering Vector generation in `TemporalHindsight` to break agentic deadlocks.
 
-## [5.4.0] — Beast Mode Hardening — 2026-03-28
+## [5.4.0] — Enterprise-Grade Hardening — 2026-03-28
 
 # Release Notes - MindForge v5.4.0 — Enterprise Resilience (Hardened Edition)
 
-This update elevates the v5.3.0 "Hyper-Enterprise" features to maximum robustness ("Beast Mode"), implementing critical safety systems and advanced observability.
+This update elevates the v5.3.0 "Hyper-Enterprise" features to maximum robustness ("Production-Grade"), implementing critical safety systems and advanced observability.
 
 ### Added
 
@@ -159,9 +159,9 @@ This update elevates the v5.3.0 "Hyper-Enterprise" features to maximum robustnes
 
 🚀 **MindForge v5.4.0 — Enterprise Resilience (Hardened Edition)**
 
-This update elevates the v5.3.0 "Hyper-Enterprise" features to maximum robustness ("Beast Mode"), implementing critical safety systems and advanced observability.
+This update elevates the v5.3.0 "Hyper-Enterprise" features to maximum robustness ("Production-Grade"), implementing critical safety systems and advanced observability.
 
-### 🛡️ Beast Mode Hardening (v5.4.0)
+### 🛡️ Enterprise-Grade Hardening (v5.4.0)
 
 - **Circuit Breaker Pattern**: Implemented a stateful `CircuitBreaker` in `federated-sync.js` to prevent network floods. Automatically disables mesh sync for 1 hour after 3 consecutive EIS failures.
 - **Critical-Path Protection**: Automated "Blast Radius" score of 100 in `impact-analyzer.js` for sensitive files (`.env`, `*.pem`, `id_rsa`, `package-lock.json`, etc.).
@@ -197,7 +197,7 @@ This update transcends simple timestamp-based synchronization, moving to a vecto
     - **Topic Isolation (< 0.6)**: Prevention of ID collisions for disparate content.
 - **Resilient Sync Architecture**: Hardened synchronization loop with robust error handling and TF-IDF fallback.
 
-## [5.1.0] — The Beast Addition — 2026-03-28
+## [5.1.0] — The Enterprise Expansion — 2026-03-28
 
 🚀 **MindForge v5.1.0 — Evolution of the Agentic Protocol Mesh**
 
@@ -259,7 +259,7 @@ This update adds the next two critical architectural pillars to the v5 Enterpris
 
 ## [5.0.0-alpha.1] — Federated Intelligence & Policy Orchestration — 2026-03-28
 
-🚀 **MindForge v5.0.0 — The Enterprise "Beast" Release**
+🚀 **MindForge v5.0.0 — The Sovereign Enterprise Release**
 
 This landmark release transforms MindForge into a distributed, governable, and cryptographically verified agentic operating system. V5 introduces the first two pillars of the Enterprise Architecture: Federated Intelligence Mesh (FIM) and Agentic Policy Orchestrator (APO).
 
@@ -278,7 +278,7 @@ This landmark release transforms MindForge into a distributed, governable, and c
 - **Default Enterprise Policies**: Shipped with initial security guardrails for engine and infrastructure protection.
 - **Dynamic Blast Radius (v5.3.0)**: Integrated `ImpactAnalyzer` to calculate and enforce risk-based thresholds for autonomous actions.
 
-### Hardening ("Beast" Mode v5.0.0-alpha.1)
+### Hardening (Enterprise Mode v5.0.0-alpha.1)
 
 - **ZTAI Interlock**: All mesh and policy operations now utilize the hardware-enclave (simulated) signing engine for Tier 3 principals.
 - **Dynamic Intent Extraction**: Autonomous intents are now derived in real-time from active session identities.
@@ -302,7 +302,7 @@ This major update completes the **MindForge V4 Roadmap**, introducing autonomous
 - **Proactive Equilibrium (Pillar VI)**: Implemented `WaveFeedbackLoop` for divergence detection and `TemporalHindsight` for autonomous state recovery (RCA/Repair).
 - **Structural Reorganization**: Migrated all core engine implementation files from `.mindforge/` logic directories to a standardized `bin/` domain architecture.
 - **Global Memory Sync**: Enhanced `SemanticHub` to support organizational-level knowledge sharing via `~/.mindforge/`.
-- **Hardenened ZTAI Beast Mode**: HSM-simulated signing for Tier 3 principals and automated audit integrity manifests.
+- **Hardened ZTAI Enterprise Mode**: HSM-simulated signing for Tier 3 principals and automated audit integrity manifests.
 
 🚀 **MindForge v4.2.0 — The Security Revolution**
 
@@ -315,7 +315,7 @@ This update introduces **Zero-Trust Agentic Identity (ZTAI)**, a core pillar of 
 - **Trust-Tiered Governance**: 4-tier authorization model (0-3) for granular permission control across the agentic mesh.
 - **Identity-Lock Engine**: Automated security gate in the `WaveExecutor` that blocks unauthorized Tier 3 actions.
 - **Trust Verifier**: Real-time cryptographic validation of the `AUDIT.jsonl` log for cross-session integrity.
-- **Beast Mode Hardening**: session-based key rotation and hardware security module (HSM) hook placeholders.
+- **Enterprise-Grade Hardening**: session-based key rotation and hardware security module (HSM) hook placeholders.
 
 ---
 
@@ -432,7 +432,7 @@ This major architectural update introduces a dynamic, SRD-based memory sharding 
 - **Semantic Context Sharding**:
   - **Tri-Tier Memory Controller**: Integrated `shard-controller.md` to manage memory transitions across Hot (`HANDOFF.json`), Warm (`.planning/memories/`), and Cold (`.mindforge/memory/`) tiers.
   - **SRD Scoring Engine**: New weighted Semantic Relevance Density (SRD) scoring for contextual items based on Decisiveness, Frequency, and Impact.
-  - **Beast Mode Hardening**: Implemented SHA-256 integrity verification and automated semantic tagging for all memory shards.
+  - **Enterprise-Grade Hardening**: Implemented SHA-256 integrity verification and automated semantic tagging for all memory shards.
   - **Proactive Warm Retrieval**: Updated the context injector to automatically pull relevant shards based on task sub-context.
 - **Shard Helper Utility**: New `bin/shard-helper.js` for standalone memory analysis and integrity auditing.
 
@@ -509,13 +509,13 @@ This release fixes documentation asset synchronization and repairs logic corrupt
 
 ## [2.1.2]*Status: V5.2.0 Semantic Consensus Implemented & Verified (2026-03-28)*
 
-🚀 **MindForge v2.1.2 — Beast Mode Branding & CI Fix**
+🚀 **MindForge v2.1.2 — Enterprise Branding & CI Fix**
 
-This release transforms the MindForge installation experience with a high-impact "Beast Mode" CLI interface and resolves critical CI/CD integration issues.
+This release transforms the MindForge installation experience with a high-impact "Enterprise-Grade" CLI interface and resolves critical CI/CD integration issues.
 
 ### Added (v2.1.2)
 
-- **Beast Mode CLI Branding**: New ultra-blocky ASCII "MINDFORGE" branding and high-contrast "Digital Architect" design system.
+- **Enterprise CLI Branding**: New ultra-blocky ASCII "MINDFORGE" branding and high-contrast "Digital Architect" design system.
 - **Payload Manifest Summary**: Architectural summary screen displaying dynamic counts of deployed Personas, Skills, and Integrations.
 - **"TRY IT NOW" Utility**: Boxed terminal widget providing immediate post-install command guidance.
 - **Enhanced Status Reporting**: Unified architectural status grid for environment detection.
