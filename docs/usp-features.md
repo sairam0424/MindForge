@@ -76,6 +76,9 @@ are included in the official release, and how to use them effectively.
 22. **AgRevOps: Agentic Financial Governance (v5.10)**
     - Real-time ROI analysis ($100/hr value mapping) vs. token costs, combined with a **Security Health Score (SHS)** that tracks governance debt and policy bypasses across the mesh.
 
+23. **CADIA: Neural Blast Radius Optimizer (v6.0.0 Alpha)**
+    - Elevated enterprise governance using **Context-Aware Dynamic Impact Analysis**. Real-time scoring based on architectural influence, session entropy (mass-change defense), and goal-path alignment. Includes a reasoning-based bypass for Tier 3 agents.
+
 ---
 
 ## Feature Set (v2.0.0)
