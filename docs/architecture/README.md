@@ -1,15 +1,15 @@
 # MindForge Architecture Overview
 
-MindForge v5.0.0 is built on a distributed "Agentic OS" architecture, designed for enterprise-scale intelligence sharing and absolute governance.
+MindForge v6.0.0 is built on a distributed "Agentic OS" architecture, designed for enterprise-scale intelligence sharing and absolute governance.
 
 ---
 
-## 1. Core Architectural Pillars (v5.0.0)
+## 1. Core Architectural Pillars (v6.0.0)
 
-The framework is focused on six major pillars, with V5 introducing the **Distributed Intelligence** and **Policy Governance** layers:
+The framework is focused on eight major pillars, with V6 introducing the **Neural Blast Radius Optimizer (CADIA)**:
 
 1. **Federated Intelligence Mesh (FIM)**: Distributed knowledge sharing with delta-sync and cryptographic provenance. [V5-ENTERPRISE.md](./V5-ENTERPRISE.md)
-2. **Agentic Policy Orchestrator (APO)**: Non-bypassable policy-as-code governance that intercepts autonomous intents.
+2. **CADIA Engine (v6.0.0 Alpha)**: Neural Blast Radius Optimizer that calculates real-time architectural risk based on influence, entropy, and alignment.
 3. **Predictive Agentic Reliability (PAR)**: Self-healing reasoning loops and context refactoring. [PAR-ZTS-SURVEY.md](./PAR-ZTS-SURVEY.md)
 4. **Supply Chain Trust (ZTS)**: Agentic SBOM and 7-dimension skill certification. [PAR-ZTS-SURVEY.md](./PAR-ZTS-SURVEY.md)
 5. **Zero-Trust Agentic Identity (ZTAI)**: DID-based cryptographic signing for all agentic actions and tiered trust enforcement.

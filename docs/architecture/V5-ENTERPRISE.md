@@ -13,15 +13,17 @@ The FIM transitions MindForge from local knowledge silos to a shared organizatio
 - **Enterprise Resilience & Governance (v5.1.0)**: A high-availability central hub for sharing high-confidence agentic findings across the entire enterprise.
 - **ZTAI-Signed Provenance**: Every piece of knowledge in the mesh is cryptographically tied to the DID of the agent that generated it.
 
-### Pillar II: Agentic Policy Orchestrator (APO)
+### Pillar II: Agentic Policy Orchestrator (APO) — CADIA Engine (v6.0.0 Alpha)
 
-# MindForge Governance Guide (v5.1.0)
-MindForge v5.1.0 introduces a non-bypassable, intent-level governance layer that evaluates every autonomous wave against organizational security policies.
+# MindForge Governance Guide (v6.0.0)
+MindForge v6.0.0 introduces **Context-Aware Dynamic Impact Analysis (CADIA)**, a non-bypassable, architectural governance layer that evaluates every autonomous wave against organizational security and risk policies.
 
-- **Policy-as-Code (PaC)**: Security rules are defined in declarative JSON/YAML schemas, enabling version-controlled governance.
-- **Real-Time Intent Interception**: The `AutoRunner` intercepts swarm intents (Action, Resource, DID, Tier) before execution.
-- **Dynamic RBAC Mapping**: v5.1.0 automatically maps ZTAI Trust Tiers to project roles based on an agent's **Zero-Trust Agentic Identity (ZTAI)** trust tier.
-- **Fail-Safe Governance**: "Default Deny" posture for sensitive operations (API key access, infra modification, etc.).
+- **Policy-as-Code (PaC)**: Security rules are defined in declarative JSON schemas, enabling version-controlled governance.
+- **Dynamic Blast Radius Analysis**: Calculates real-time architectural risk based on file influence, session entropy (multi-file modification speed), and goal alignment.
+- **Session Entropy Guardrails**: Risk increases logarithmically as an agent touches more files, preventing "Rogue Wave" mass corruption.
+- **ZTAI-Trust Weighting**: Senior agents (Tier 3) gain "Architectural Credit," while Tier 1-2 agents are kept under strict risk caps.
+- **Reasoning Proof Bypass**: Tier 3 agents can override high-risk blocks by providing a cryptographically signed "Reasoning Proof."
+- **Enterprise Audit Log**: All evaluations are logged to `.planning/RISK-AUDIT.jsonl` for compliance reporting.
 
 ### Pillar III: Predictive Agentic Reliability (PAR) (v5.5.0)
 
