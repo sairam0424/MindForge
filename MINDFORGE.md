@@ -1,12 +1,12 @@
-# MINDFORGE.md — Parameter Registry (v5.10.0-nexus)
+# MINDFORGE.md — Parameter Registry (v6.0.0-alpha)
 
 ## 1. IDENTITY & VERSIONING
 
 [NAME]    = MindForge
-[VERSION] = 5.10.0
-[STABLE]  = true
+[VERSION] = 6.0.0-alpha
+[STABLE]  = false
 [MODE]    = "Zero-Trust Agentic Hub"
-[REQUIRED_CORE_VERSION] = 5.10.0
+[REQUIRED_CORE_VERSION] = 6.0.0
 
 ## 2. INTELLIGENCE TOGGLES (V4 UPDATES)
 
@@ -23,6 +23,7 @@
 [ENABLE_ZTAI] = true
 [ZTAI_KEY_TYPE] = "Ed25519"
 [NEXUS_TRACE_RETENTION_DAYS] = 30
+[CADIA_CORE] = true
 
 ---
 

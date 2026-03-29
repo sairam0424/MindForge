@@ -1,7 +1,16 @@
-# MindForge v5.10.0 — Nexus Steering & AgRevOps
+# MindForge v6.0.0 Alpha — Neural Blast Radius Optimizer (CADIA)
 
-MindForge turns AI coding agents into production-grade engineering partners with **Interactive Temporal Steering (Pillar VII)**, **AgRevOps ROI Analytics (Pillar VIII)**, and a non-bypassable Sovereign Reason Enclave with Merkle-linked ZK-Audit trails.
-Release published: v5.10.0-NEXUS.
+MindForge v6.0.0 Alpha elevates autonomous governance to an enterprise-grade architectural risk engine with **Context-Aware Dynamic Impact Analysis (CADIA)**, **Session Entropy Guardrails**, and **Reasoning Proof Bypasses**.
+
+## What's new in v6.0 Alpha (CADIA Optimizer)
+
+MindForge V6.0 Alpha introduces the **Neural Blast Radius Optimizer**, transforming how the framework evaluates architectural risk in real-time.
+
+- **CADIA Engine (Pillar II Upgrade)**: Dynamic risk scoring (0-100) based on file influence, session history, and goal alignment.
+- **Session Entropy Guardrails**: Prevents "Rogue Wave" mass-corruption by increasing risk scores logarithmically as an agent touches more files.
+- **Goal-Path Alignment**: Cross-references every intent against the "Current Phase" in `STATE.md`, flagging anomalous files outside the active mission.
+- **Tier 3 Reasoning Proof Bypass**: Senior agents can override high-risk blocks (score > 80) by providing a cryptographically signed "Reasoning Proof."
+- **Enterprise RISK-AUDIT**: Persistent, high-fidelity compliance logging of every policy decision to `.planning/RISK-AUDIT.jsonl`.
 
 ## What's new in v5.10 (Nexus Steering & AgRevOps)
 
