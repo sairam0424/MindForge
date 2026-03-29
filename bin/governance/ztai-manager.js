@@ -101,12 +101,48 @@ class SecureEnclaveProvider extends KeyProvider {
   }
 }
 
+/**
+ * Simulated Quantum-Safe Key Provider (Tier 4+)
+ * Post-Quantum signatures for Sovereign Intelligence.
+ */
+class QuantumSafeKeyProvider extends KeyProvider {
+  constructor() {
+    super();
+    this.quantumCrypto = require('./quantum-crypto');
+    this.keyStore = new Map(); // DID -> { privateKey, publicKey, algorithm }
+  }
+
+  async generate(did) {
+    console.log(`[PQAS-DILITHIUM] Provisioning post-quantum lattice identity for ${did}...`);
+    const pair = await this.quantumCrypto.generateLatticeKeyPair();
+    this.keyStore.set(did, pair);
+    return pair.publicKey;
+  }
+
+  async sign(did, data) {
+    const record = this.keyStore.get(did);
+    if (!record) throw new Error(`PQ record not found for ${did}`);
+    
+    console.log(`[PQAS-DILITHIUM] Delegating signature to lattice enclave [DID: ${did}]`);
+    return await this.quantumCrypto.signPQ(data, record.privateKey);
+  }
+
+  async rotate(did) {
+    return this.generate(did);
+  }
+
+  delete(did) {
+    this.keyStore.delete(did);
+  }
+}
+
 class ZTAIManager {
   constructor() {
     this.agentRegistry = new Map(); // DID -> { publicKey, persona, tier, providerType }
     this.providers = {
       local: new LocalKeyProvider(),
-      enclave: new SecureEnclaveProvider()
+      enclave: new SecureEnclaveProvider(),
+      quantum: new QuantumSafeKeyProvider()
     };
   }
 
