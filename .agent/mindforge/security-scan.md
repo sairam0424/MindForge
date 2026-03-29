@@ -18,7 +18,12 @@ description: - Default: OWASP Top 10 review on the changed files or specified pa
 Load `security-reviewer.md` persona immediately and completely.
 This command runs entirely in security mode. Do not switch personas.
 
-## Step 2 — Build scan scope
+## Step 1.5 — Sovereign Integrity Check (v6.2.0-alpha)
+
+Before scanning user code, verify the integrity of the MindForge Sovereign Engine:
+1.  **Quantum Signature Verification**: Run `node bin/governance/quantum-crypto.js --verify .mindforge/engine/`.
+2.  **Policy Integrity**: Ensure `bin/governance/policy-engine.js` has not been tampered with (check for illegal bypass additions).
+3.  **Result**: If integrity check fails, mark the entire scan as **FAILED (CRITICAL)** and alert the user of a potential framework compromise.
 
 ```bash
 # Default: staged + unstaged changes

@@ -15,6 +15,8 @@ const Theme = {
     dim: (s) => (TTY ? `\x1b[2m${s}\x1b[0m` : s),
     bold: (s) => (TTY ? `\x1b[1m${s}\x1b[0m` : s),
     italic: (s) => (TTY ? `\x1b[3m${s}\x1b[0m` : s),
+    magenta: (s) => (TTY ? `\x1b[35m${s}\x1b[0m` : s), // Quantum Security
+    orange: (s) => (TTY ? `\x1b[38;5;208m${s}\x1b[0m` : s), // Semantic Homing
   },
 
   chars: {
@@ -59,11 +61,13 @@ const Theme = {
    */
   printBrandManifest() {
     console.log(`  ${this.colors.dim('│')}`);
-    console.log(`  ${this.colors.dim('│')}  ${this.colors.green('🎉 V2.3.0 IS HERE!')} Welcome to MindForge V2!`);
+    console.log(`  ${this.colors.dim('│')}  ${this.colors.magenta('🛡️  SOVEREIGN INTELLIGENCE v6.2.0-alpha')} — PQAS & Proactive Homing Enabled`);
     console.log(`  ${this.colors.dim('│')}`);
     console.log(`  ${this.colors.dim('│')}  ${this.colors.bold('THE PLATFORM VISION:')}`);
     console.log(`  ${this.colors.dim('│')}    - Unified Enterprise Agentic Ecosystem`);
     console.log(`  ${this.colors.dim('│')}    - Modular Skills & Persona Architecture`);
+    // Added Sovereign Intelligence as a core pillar
+    console.log(`  ${this.colors.dim('│')}    - ${this.colors.magenta('Sovereign Intelligence')}: PQ-Safe & Proactive Swarms`);
     console.log(`  ${this.colors.dim('│')}    - Autonomous Governance & Self-Healing`);
     console.log(`  ${this.colors.dim('│')}`);
     console.log(`  ${this.colors.dim('│')}  ${this.colors.yellow('🌟 100% FREE & OPEN SOURCE')}`);
