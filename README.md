@@ -41,6 +41,9 @@ Decisions get forgotten. MindForge fixes that with:
 - **Sentinel Execution (v5.6)** — JIT Binary Runtime Attestation and Zero-Trust Skill Enforcement.
 - **Interactive Temporal Steering (v5.10)** — Full history scrubbing, hindsight state repair, and real-time temporal slider navigation.
 - **AgRevOps Hub (v5.10)** — Dynamic ROI tracking ($100/hr mapping), Milestone Velocity forecasting, and Governance Debt monitoring.
+- **Sovereign Reason Enclave (v5.8)** — TEE-simulated reasoning isolation with Zero-Knowledge (ZK) Audit Trails.
+- **Multi-Cloud Arbitrage (v5.7)** — Dynamic routing across Vertex AI, Bedrock, and Azure with intelligence-first task affinity.
+- **Sentinel Execution (v5.6)** — JIT Binary Runtime Attestation and Zero-Trust Skill Enforcement.
 - **Human-Agent Handover (v5.0)** — Nexus State Bundles and mid-wave steering injection.
 - **Autonomous FinOps (v4.3)** — Dynamic **C2C** (Confidence-to-Cost) routing.
 - **Proactive Equilibrium (v4.3)** — Real-time **Wave Divergence** monitoring and autonomous state recovery.
