@@ -1,0 +1,10 @@
+{
+  "id": "policy_max_impact_tier_2",
+  "effect": "PERMIT",
+  "conditions": {
+    "action": "WRITE",
+    "resource": "*",
+    "min_tier": 2
+  },
+  "max_impact": 60
+}

@@ -1,16 +1,18 @@
 /**
- * MindForge v5 — Agentic Policy Orchestrator (APO) Engine
- * Evaluates agent intents against organizational security policies.
+ * MindForge v6.0.0 — Agentic Policy Orchestrator (APO) Engine
+ * Evaluates agent intents against organizational security policies with CADIA integration.
  */
 'use strict';
 
-const fs   = require('node:fs');
+const fs = require('node:fs');
 const path = require('node:path');
 const ImpactAnalyzer = require('./impact-analyzer');
 
 class PolicyEngine {
   constructor(config = {}) {
     this.policiesDir = config.policiesDir || path.join(__dirname, 'policies');
+    this.planningDir = config.planningDir || path.join(process.cwd(), '.planning');
+    this.auditLogPath = path.join(this.planningDir, 'RISK-AUDIT.jsonl');
     this.ensurePoliciesDir();
   }
 
@@ -21,27 +23,28 @@ class PolicyEngine {
   }
 
   /**
-   * Evaluates an agent's intent against all active policies.
-   * @param {Object} intent - The intent to evaluate.
-   * @param {string} intent.did - Source agent DID.
-   * @param {string} intent.action - Action type (e.g. 'write_file', 'delete_file').
-   * @param {string} intent.resource - Target resource (e.g. file path).
-   * @param {number} intent.tier - Agent trust tier.
-   * @returns {Object} - { verdict: 'PERMIT' | 'DENY', reason: string, requestId: string }
+   * Evaluates an agent's intent against all active policies using CADIA.
    */
   evaluate(intent) {
     const requestId = `pol_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const sessionId = intent.sessionId || 'default_session';
+    const currentGoal = this.getCurrentGoal();
+    
     console.log(`[APO-EVAL] [${requestId}] Evaluating intent: ${intent.action} on ${intent.resource} by ${intent.did}`);
 
-    // Pillar II (v5.3.0): Dynamic Impact Scoring
-    let impactScore = 100; // Default to CRITICAL impact if analysis fails (Fail-Safe)
+    // Pillar II (v6.0.0): CADIA Dynamic Impact Scoring
+    let impactScore = 100;
     let riskTier = 'UNKNOWN';
 
     try {
       impactScore = ImpactAnalyzer.analyze({
         action: intent.action,
         target: intent.resource,
-        namespace: intent.namespace // Optional namespace context
+        namespace: intent.namespace
+      }, {
+        sessionId,
+        trustTier: intent.tier || 0,
+        currentGoal
       });
       riskTier = ImpactAnalyzer.getRiskTier(impactScore);
       console.log(`[APO-BLAST] [${requestId}] Calculated Blast Radius: ${impactScore}/100 [Tier: ${riskTier}]`);
@@ -50,29 +53,34 @@ class PolicyEngine {
     }
 
     const policies = this.loadPolicies();
-    
-    // Default Deny if no policies found
-    if (policies.length === 0) {
-      return { verdict: 'DENY', reason: 'No organizational policies defined (Default Deny)', requestId };
-    }
+    let verdict = { verdict: 'DENY', reason: 'No matching PERMIT policy found (Implicit Deny)', requestId };
 
-    // 1. Check for explicit DENY rules first
+    // 1. Check for explicit DENY rules (High-Priority)
     for (const policy of policies) {
       if (policy.effect === 'DENY' && this.matches(policy, intent)) {
-        return { verdict: 'DENY', reason: `Violation: ${policy.description || policy.id}`, requestId };
+        verdict = { verdict: 'DENY', reason: `Violation: ${policy.description || policy.id}`, requestId };
+        this.logAudit(intent, impactScore, verdict);
+        return verdict;
       }
     }
 
-    // 2. Pillar II (v5.3.0): Dynamic Blast Radius Enforcement
-    // Check if the current intent impact exceeds the policy's max_impact or agent's trust tier
+    // 2. Pillar II (v6.0.0): Dynamic Blast Radius Enforcement with Tier 3 Bypass
     for (const policy of policies) {
       if (this.matches(policy, intent)) {
         if (policy.max_impact && impactScore > policy.max_impact) {
-          return { 
-            verdict: 'DENY', 
-            reason: `Dynamic Blast Radius Violation: Intent impact (${impactScore}) exceeds policy limit (${policy.max_impact})`, 
-            requestId 
-          };
+          // [BEAST] Tier 3 Reasoning Proof Bypass
+          if (intent.tier >= 3 && intent.reasoning_proof) {
+             console.log(`[APO-BYPASS] [${requestId}] Tier 3 'Reasoning Proof' detected. Overriding Blast Radius limit.`);
+             // Continue to permit check
+          } else {
+            verdict = { 
+              verdict: 'DENY', 
+              reason: `Dynamic Blast Radius Violation: Intent impact (${impactScore}) exceeds policy limit (${policy.max_impact}). ${intent.tier < 3 ? 'Upgrade to Tier 3 for bypass.' : 'Provide reasoning_proof.'}`, 
+              requestId 
+            };
+            this.logAudit(intent, impactScore, verdict);
+            return verdict;
+          }
         }
       }
     }
@@ -80,11 +88,42 @@ class PolicyEngine {
     // 3. Check for explicit PERMIT rules
     for (const policy of policies) {
       if (policy.effect === 'PERMIT' && this.matches(policy, intent)) {
-        return { verdict: 'PERMIT', reason: `Authorized by ${policy.id}`, requestId };
+        verdict = { verdict: 'PERMIT', reason: `Authorized by ${policy.id}`, requestId };
+        this.logAudit(intent, impactScore, verdict);
+        return verdict;
       }
     }
 
-    return { verdict: 'DENY', reason: 'No matching PERMIT policy found (Implicit Deny)', requestId };
+    this.logAudit(intent, impactScore, verdict);
+    return verdict;
+  }
+
+  getCurrentGoal() {
+    const statePath = path.join(this.planningDir, 'STATE.md');
+    if (!fs.existsSync(statePath)) return '';
+    try {
+      const content = fs.readFileSync(statePath, 'utf8');
+      const match = content.match(/## Current phase\n(.*?)\n/);
+      return match ? match[1].trim() : '';
+    } catch {
+      return '';
+    }
+  }
+
+  logAudit(intent, impactScore, verdict) {
+    const entry = JSON.stringify({
+      timestamp: new Date().toISOString(),
+      requestId: verdict.requestId,
+      did: intent.did,
+      tier: intent.tier,
+      action: intent.action,
+      resource: intent.resource,
+      impactScore,
+      verdict: verdict.verdict,
+      reason: verdict.reason
+    }) + '\n';
+    
+    fs.appendFileSync(this.auditLogPath, entry); 
   }
 
   loadPolicies() {
@@ -104,29 +143,20 @@ class PolicyEngine {
       .filter(Boolean);
   }
 
-  /**
-   * Simple rule matcher (simulated OPA/Rego logic).
-   */
   matches(policy, intent) {
     const { conditions } = policy;
     if (!conditions) return true;
 
-    // Check DID match (supports wildcards)
     if (conditions.did && !this.globMatch(conditions.did, intent.did)) return false;
-
-    // Check Action match
     if (conditions.action && !this.globMatch(conditions.action, intent.action)) return false;
-
-    // Check Resource match
     if (conditions.resource && !this.globMatch(conditions.resource, intent.resource)) return false;
-
-    // Check Tier match
-    if (conditions.min_tier && intent.tier < conditions.min_tier) return false;
+    if (conditions.min_tier && (intent.tier || 0) < conditions.min_tier) return false;
 
     return true;
   }
 
   globMatch(pattern, text) {
+    if (!text) return false;
     if (pattern === '*') return true;
     if (pattern === text) return true;
     const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
@@ -135,3 +165,4 @@ class PolicyEngine {
 }
 
 module.exports = PolicyEngine;
+
