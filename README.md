@@ -294,109 +294,100 @@ See `.mindforge/production/token-optimiser.md`.
 - **Architecture:** `docs/architecture/README.md`
 - **Contributing:** `docs/contributing/CONTRIBUTING.md`
 
----
-
 ## 📜 Framework Evolution & Version History
 
 MindForge has evolved rapidly from a simple workflow tool into a sovereign intelligence mesh. Explore the major milestones below.
 
 <details>
-  <summary><b>v6.2.x — Sovereign Intelligence (PQAS & Homing)</b></summary>
+<summary><b>v6.2.x — Sovereign Intelligence (PQAS & Homing)</b></summary>
 
-  - **Pillar XI: Post-Quantum Agentic Security (PQAS)**: Lattice-based (Dilithium-5) signatures and ZK-Proof bypasses for Tier 4 agent identities.
-  - **Pillar XII: Proactive Semantic Homing**: Autonomous "Intent Hunting" where agents proactively claim tasks and peer-heal logic drift (>80) in the mesh.
-  - **Edge-Case Biometrics**: Hardware-locked governance requiring manual `APPROVED_BY_EXECUTIVE` steering for catastrophic-risk operations.
+- **Pillar XI: Post-Quantum Agentic Security (PQAS)**: Lattice-based (Dilithium-5) signatures and ZK-Proof bypasses for Tier 4 agent identities.
+- **Pillar XII: Proactive Semantic Homing**: Autonomous "Intent Hunting" where agents proactively claim tasks and peer-heal logic drift (>80) in the mesh.
+- **Edge-Case Biometrics**: Hardware-locked governance requiring manual `APPROVED_BY_EXECUTIVE` steering for catastrophic-risk operations.
 </details>
 
 <details>
-  <summary><b>v6.1.x — Sovereign Intelligence (ARH & NDR)</b></summary>
+<summary><b>v6.1.x — Sovereign Intelligence (ARH & NDR)</b></summary>
 
-  - **Pillar IX: Autonomous Resource Harvesting (ARH)**: Real-time token arbitrage and dynamic task routing based on MIR (Min-Intelligence-Requirement).
-  - **Pillar X: Neural Drift Remediation (NDR)**: Semantic density heuristics and automated reasoning recovery to break logic loops and hallucinations.
-  - **ROI Telemetry**: High-fidelity cost-saving tracking integrated into the global audit stream.
+- **Pillar IX: Autonomous Resource Harvesting (ARH)**: Real-time token arbitrage and dynamic task routing based on MIR (Min-Intelligence-Requirement).
+- **Pillar X: Neural Drift Remediation (NDR)**: Semantic density heuristics and automated reasoning recovery to break logic loops and hallucinations.
+- **ROI Telemetry**: High-fidelity cost-saving tracking integrated into the global audit stream.
 </details>
 
 <details>
-  <summary><b>v6.0.x — CADIA Engine & AgRevOps ROI</b></summary>
+<summary><b>v6.0.x — CADIA Engine & AgRevOps ROI</b></summary>
 
-  - **AgRevOps ROI Engine**: Real-time value attribution ($100/hr dev saving mapping) for every autonomous reasoning cycle.
-  - **CADIA Optimizer (Pillar II Upgrade)**: Dynamic risk scoring (0-100) and session entropy guardrails to prevent rogue behaviors.
-  - **Goal-Path Alignment**: Cross-referencing intents against `STATE.md` to flag anomalous file access.
+- **AgRevOps ROI Engine**: Real-time value attribution ($100/hr dev saving mapping) for every autonomous reasoning cycle.
+- **CADIA Optimizer (Pillar II Upgrade)**: Dynamic risk scoring (0-100) and session entropy guardrails to prevent rogue behaviors.
+- **Goal-Path Alignment**: Cross-referencing intents against `STATE.md` to flag anomalous file access.
 </details>
 
 <details>
-  <summary><b>v5.10.x — Nexus Steering & AgRevOps</b></summary>
+<summary><b>v5.10.x — Nexus Steering & AgRevOps</b></summary>
 
-  - **Interactive Temporal Steering (Pillar VII)**: Hindsight injection and temporal slider navigation via the Nexus Dashboard.
-  - **ROI Engine (Pillar VIII)**: Automated financial governance and cumulative agentic ROI tracking.
-  - **Velocity Forecaster**: Statistical ETA prediction for milestones based on live telemetry.
+- **Interactive Temporal Steering (Pillar VII)**: Hindsight injection and temporal slider navigation via the Nexus Dashboard.
+- **ROI Engine (Pillar VIII)**: Automated financial governance and cumulative agentic ROI tracking.
+- **Velocity Forecaster**: Statistical ETA prediction for milestones based on live telemetry.
 </details>
 
 <details>
-  <summary><b>v5.9.x — Beast Mode Hardening</b></summary>
+<summary><b>v5.9.x — Beast Mode Hardening</b></summary>
 
-  - **Unified NexusTracer**: Single, high-fidelity ART protocol singleton with a core asynchronous drive.
-  - **Merkle-Style Audit Integrity**: Hardened SRE and ZTAI logs with cumulative Merkle-hash chains.
-  - **MCA Circuit Breakers**: Stateful provider blacklisting in the `CloudBroker` with automated failure remediation.
+- **Unified NexusTracer**: Single, high-fidelity ART protocol singleton with a core asynchronous drive.
+- **Merkle-Style Audit Integrity**: Hardened SRE and ZTAI logs with cumulative Merkle-hash chains.
+- **MCA Circuit Breakers**: Stateful provider blacklisting in the `CloudBroker` with automated failure remediation.
 </details>
 
 <details>
-  <summary><b>v5.8.x — Sovereign Reason Enclaves (SRE)</b></summary>
+<summary><b>v5.7.x - v5.8.x — SRE & MCA Protocols</b></summary>
 
-  - **ZK-Proof Compliance (Pillar VI)**: Simulated zero-knowledge proofs for policy adherence without content exposure.
-  - **Privacy-Preserving Auditing**: Verifiable reasoning certificates replace raw thought traces in global logs.
-  - **Isolated Reasoning Mode**: Non-custodial audit integrity checks for confidential agent operations.
+- **Sovereign Reason Enclaves (v5.8)**: ZK-Proof compliance certificates for confidential reasoning cycles.
+- **Multi-Cloud Arbitrage (v5.7)**: Intelligence-first routing using persistent Task-to-Model success matrices.
 </details>
 
 <details>
-  <summary><b>v5.7.x — Multi-Cloud Arbitrage (MCA)</b></summary>
+<summary><b>v5.1.x - v5.6.x — The "Beast" Era (Protocols & Trust)</b></summary>
 
-  - **Pillar V: Affinity Routing**: Intelligence-first routing using persistent Task-to-Model success matrices.
-  - **Performance-Stats Persistence**: Real-time tracking of provider success rates across diverse engineering taxonomies.
+- **Sentinel Execution (v5.6)**: Binary Runtime Attestation and Reasoning Entropy Scoring (RES).
+- **Predictive Agentic Reliability (v5.5)**: Advanced loop detection (Semantic Mirroring) and self-healing triggers.
+- **Dynamic Blast Radius (v5.3/v5.4)**: Real-time impact analysis and circuit-breaker safety in the federated sync.
+- **Semantic Vector Consensus (v5.2)**: FIM v2 with cosine-similarity conflict resolution.
+- **Beast Edition Protocols (v5.1)**: 14 advanced agentic protocols (Brainstorming, Swarm, Parallel Mesh) integrated from Superpowers.
 </details>
 
 <details>
-  <summary><b>v5.1.x - v5.6.x — The "Beast" Era (Protocols & Trust)</b></summary>
+<summary><b>v4.x — The Mesh & Nexus Revolution</b></summary>
 
-  - **Sentinel Execution (v5.6)**: Binary Runtime Attestation and Reasoning Entropy Scoring (RES).
-  - **Predictive Agentic Reliability (v5.5)**: Advanced loop detection (Semantic Mirroring) and self-healing triggers.
-  - **Dynamic Blast Radius (v5.3/v5.4)**: Real-time impact analysis and circuit-breaker safety in the federated sync.
-  - **Semantic Vector Consensus (v5.2)**: FIM v2 with cosine-similarity conflict resolution.
-  - **Beast Edition Protocols (v5.1)**: 14 advanced agentic protocols (Brainstorming, Swarm, Parallel Mesh) integrated from Superpowers.
+- **Enterprise Mesh (v4.3)**: Autonomous FinOps and Proactive Equilibrium (Wave Monitoring).
+- **Identity & Memory (v4.2)**: Zero-Trust Agentic Identity (ZTAI) with Ed25519 signing.
+- **MindForge Nexus (v4.1)**: Hierarchical ART tracing and trace context propagation.
+- **Mesh Dynamic Swarms (v4.0)**: Parallel, task-aware specialist clusters and micro-persona factory.
 </details>
 
 <details>
-  <summary><b>v4.x — The Mesh & Nexus Revolution</b></summary>
+<summary><b>v3.x — Reactive Autonomous Intelligence</b></summary>
 
-  - **Enterprise Mesh (v4.3)**: Autonomous FinOps and Proactive Equilibrium (Wave Monitoring).
-  - **Identity & Memory (v4.2)**: Zero-Trust Agentic Identity (ZTAI) with Ed25519 signing.
-  - **MindForge Nexus (v4.1)**: Hierarchical ART tracing and trace context propagation.
-  - **Mesh Dynamic Swarms (v4.0)**: Parallel, task-aware specialist clusters and micro-persona factory.
+- **Context Sharding (SRD)**: 40% reduction in token waste via relevance-dense Hot/Warm/Cold context tiers.
+- **Adversarial Decision Synthesis (ADS)**: Zero-drift architectural logic through Red-Blue model debate.
+- **Temporal Vision**: Full-fidelity history navigation, hindsight injection, and automated state repair.
+- **RAG 2.0 (Auto-Shadowing)**: Background pattern retrieval from the local knowledge graph.
 </details>
 
 <details>
-  <summary><b>v3.x — Reactive Autonomous Intelligence</b></summary>
+<summary><b>v2.x — The Autonomous Enterprise & Knowledge Graph</b></summary>
 
-  - **Context Sharding (SRD)**: 40% reduction in token waste via relevance-dense Hot/Warm/Cold context tiers.
-  - **Adversarial Decision Synthesis (ADS)**: Zero-drift architectural logic through Red/Blue model debate.
-  - **RAG 2.0**: Background pattern retrieval from the local knowledge graph (Auto-Shadowing).
+- **Multi-Runtime Support**: Official adapters for Claude Code, Antigravity, Cursor, Gemini, and Copilot.
+- **RAG 2.0**: Typed-edge Local Knowledge Graph with proactive context shadowing and TF-IDF search.
+- **Temporal Vision**: Full-fidelity history navigation, state snapshotting, and hindsight injection.
+- **Self-Building Skills**: Automated skill capture from documentation and phase outputs via `/mindforge:learn`.
 </details>
 
 <details>
-  <summary><b>v2.x — The Specialized Expansion</b></summary>
+<summary><b>v1.x — Framework Foundation & Core Protocols</b></summary>
 
-  - **32-Persona Ecosystem**: Integration of advanced specialists (Researcher, UI Auditor, etc.).
-  - **Observability Dashboard (v2)**: Real-time Express + SSE bridge for agentic Activity/Metrics.
-  - **Autonomous Execution Engine**: Walk-away phase execution with real-time steerability.
-  - **Multi-Model Layer**: Unified intelligence routing across Anthropic, OpenAI, and Gemini.
-</details>
-
-<details>
-  <summary><b>v1.x — The Foundation</b></summary>
-
-  - **Universal Orchestration**: Support for Claude Code, Antigravity, and Gemini.
-  - **Minimalist Lifecycle**: Standard plan, execute, verify, ship loops.
-  - **Core Integration**: Path alignment and baseline persona architecture for AI-native engineering.
+- **Unified 4-Pillar Workflow**: Standardized `plan` → `execute` → `verify` → `ship` lifecycle.
+- **Specialized Persona Library**: 32+ high-performance engineering agents with defined capability matrices.
+- **Zero-Trust Logic**: Initial protocol enforcement and audit-trail persistence.
 </details>
 
 ---
