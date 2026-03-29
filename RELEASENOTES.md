@@ -1,8 +1,26 @@
-# MindForge v5.9.0 — Beast Mode Hardening (Nexus Unification)
+# MindForge v5.10.0 — AgRevOps ROI Engine (Enterprise Value)
+
 ## Top Summary
+
+The v5.10.0 release introduces the final pillar of the MindForge Enterprise architecture: AgRevOps (Agentic Revenue Operations). This engine provides real-time ROI attribution for autonomous waves, enabling enterprises to quantify the business value of every agentic reasoning cycle.
+
+## Highlights (v5.10.0)
+
+- **AgRevOps ROI Engine**: Real-time value attribution for autonomous task execution.
+- **ROI Telemetry**: New `roi-telemetry.jsonl` stream for tracking cost efficiency vs. outcome quality.
+- **Nexus Steering Sync**: Final synchronization of the `NexusTracer` and `NexusSteering` protocols into the core execution loop.
+- **Protocol Automation**: Automated activation of `_extended` mindforge skills via the Neural Orchestrator.
+
+---
+
+# MindForge v5.9.0 — Beast Mode Hardening (Nexus Unification)
+
+## Top Summary
+
 The v5.9.0 release elevates the MindForge Enterprise architecture to "Beast Mode" by unifying the tracing infrastructure into a single, high-fidelity asynchronous ART protocol and hardening the governance and arbitrage pillars with advanced cryptographic and resilience patterns.
 
-## Highlights
+## Highlights (v5.9.0)
+
 - **Unified NexusTracer Singleton**: Migration of all tracing and reasoning capture to `bin/engine/nexus-tracer.js`. Standardized as a singleton with mandatory `async` methods to support ZTAI cryptographic signing.
 - **Merkle-Style Audit Integrity**: Hardened SRE and ZTAI logs with Merkle-root cumulative hash chains, ensuring every audit entry is cryptographically linked to the entire session history.
 - **MCA Circuit Breakers**: Stateful provider blacklisting in `CloudBroker` that automatically disables failing models for 10 minutes after 3 consecutive errors.
