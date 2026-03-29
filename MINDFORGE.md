@@ -1,12 +1,12 @@
-# MINDFORGE.md — Parameter Registry (v6.0.0-alpha)
+# MINDFORGE.md — Parameter Registry (v6.1.0-alpha)
 
 ## 1. IDENTITY & VERSIONING
 
 [NAME]    = MindForge
-[VERSION] = 6.0.0-alpha
+[VERSION] = 6.1.0-alpha
 [STABLE]  = false
 [MODE]    = "Zero-Trust Agentic Hub"
-[REQUIRED_CORE_VERSION] = 6.0.0
+[REQUIRED_CORE_VERSION] = 6.1.0
 
 ## 2. INTELLIGENCE TOGGLES (V4 UPDATES)
 

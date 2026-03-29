@@ -10,6 +10,8 @@ const path = require('path');
 const crypto = require('crypto');
 const ztai = require('../governance/ztai-manager');
 const SREManager = require('./sre-manager');
+const driftDetector = require('./logic-drift-detector'); // v6.1 Pillar X
+const remediationEngine = require('./remediation-engine'); // v6.1 Pillar X
 
 class NexusTracer {
   constructor(config = {}) {
@@ -21,9 +23,12 @@ class NexusTracer {
     this.enableZtai = config.enableZtai !== false;
     this.sreManager = new SREManager();
 
-    // v5 Pillar III: Reasoning Entropy Monitoring (RES)
-    this.RES_THRESHOLD = 0.8; // Similarity threshold for stagnation
-    this.entropyCache = new Map(); // spanId -> [thoughtHistories]
+    // v5/v6: Reasoning Entropy Monitoring (RES)
+    this.RES_THRESHOLD = 0.8; 
+    this.entropyCache = new Map(); 
+
+    // v6.1: Neural Drift Remediation (NDR)
+    this.DRIFT_SAMPLE_RATE = 1.0; 
 
     // v5 Pillar IV: Agentic SBOM
     this.sbom = {
@@ -141,6 +146,20 @@ class NexusTracer {
       sanitizedThought = result.content || thought;
     }
 
+    // v6.1 Pillar X: Neural Drift Remediation (NDR)
+    const driftReport = driftDetector.analyze(spanId, sanitizedThought);
+    if (driftReport.status === 'DRIFT_DETECTED') {
+      const remediation = await remediationEngine.trigger(spanId, driftReport);
+      
+      await this._recordEvent('drift_remediation_event', {
+        span_id: spanId,
+        score: driftReport.drift_score,
+        strategy: remediation.strategy,
+        remediation_id: remediation.remediation_id,
+        markers: driftReport.markers
+      });
+    }
+
     // v5 Pillar III: PES (Proactive Equilibrium Scoring)
     const entropy = this.calculateEntropy(spanId, sanitizedThought);
     const isStagnant = entropy > this.RES_THRESHOLD;
@@ -151,7 +170,8 @@ class NexusTracer {
       thought: sanitizedThought,
       resolution,
       entropy: parseFloat(entropy.toFixed(4)),
-      is_stagnant: isStagnant
+      is_stagnant: isStagnant,
+      drift_score: driftReport.drift_score // Inclusion for consolidated audit
     });
 
     if (isStagnant) {

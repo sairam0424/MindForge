@@ -1,6 +1,16 @@
-# MindForge v6.0.0 Alpha — Neural Blast Radius Optimizer (CADIA)
+# MindForge v6.1.0 Alpha — Sovereign Intelligence (ARH & NDR)
 
-MindForge v6.0.0 Alpha elevates autonomous governance to an enterprise-grade architectural risk engine with **Context-Aware Dynamic Impact Analysis (CADIA)**, **Session Entropy Guardrails**, and **Reasoning Proof Bypasses**.
+MindForge v6.1.0 Alpha elevates the framework to **Sovereign Intelligence**, introducing self-optimizing financial arbitrage and self-healing reasoning loops through **Autonomous Resource Harvesting (ARH)** and **Neural Drift Remediation (NDR)**.
+
+## What's new in v6.1 Alpha (Sovereign Intelligence)
+
+MindForge V6.1 Alpha completes the "Sovereign" phase, transforming the framework into a self-healing, self-optimizing agentic operating system.
+
+- **Pillar IX: Autonomous Resource Harvesting (ARH)**: Real-time token arbitrage and dynamic task-to-model steering based on MIR (Min-Intelligence-Requirement) benchmarks.
+- **Pillar X: Neural Drift Remediation (NDR)**: Proactive logic-drift sensing in the `NexusTracer`, with automated remediation (RESTART → INJECT → HALT) for reasoning decay.
+- **Market Evaluator Engine**: Live tracking of cross-provider cost efficiency vs. outcome quality.
+- **ROI Telemetry v2**: Professional-grade financial reporting for cumulative agentic value creation.
+- **Hardened Logic Sensing**: 95th-percentile accuracy in detecting semantic stagnation and circular reasoning loops.
 
 ## What's new in v6.0 Alpha (CADIA Optimizer)
 
