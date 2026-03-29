@@ -1,6 +1,6 @@
 {
   "name": "mindforge",
-  "version": "6.2.0-alpha",
+  "version": "6.0.0-alpha",
   "description": "MindForge — Sovereign Agentic Intelligence Framework. (CADIA v6.2 & PQAS Enabled)",
   "bin": {
     "mindforge-cc": "bin/install.js"
