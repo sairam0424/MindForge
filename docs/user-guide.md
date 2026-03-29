@@ -185,9 +185,9 @@ Treat compute as a financial asset. Monitor ROI ($100/hr value mapping) and Secu
 
 ---
 
-## 13. Neural Protocol Mesh (Beast Addition)
+## 13. Neural Protocol Mesh (Enterprise Expansion)
 
-The **Beast Addition** introduces 14 hardened protocols from the Superpowers framework, integrated into the core MindForge engine.
+The **Enterprise Expansion** introduces 14 hardened protocols from the Superpowers framework, integrated into the core MindForge engine.
 
 - **Brainstorming**: Deep ideation before planning.
 - **Parallel Mesh**: Orchestrates context across multiple agents.

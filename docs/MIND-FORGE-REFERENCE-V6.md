@@ -1,6 +1,6 @@
 # MindForge v6.2.0-alpha — Comprehensive Reference Guide
 
-This is the definitive "Beast Mode" manual for the MindForge ecosystem. It details every command, persona, skill, workflow, and automation hook available in the v6.2.0-alpha distribution.
+This is the definitive "Enterprise-Grade" manual for the MindForge ecosystem. It details every command, persona, skill, workflow, and automation hook available in the v6.2.0-alpha distribution.
 
 ---
 
@@ -32,7 +32,7 @@ Personas are located in `.mindforge/personas/` and are loaded via the `mf-identi
 
 ### 🧠 Core Reason Enclaves
 - **mf-planner**: Strategic architect. Focuses on minimal complexity and high-fidelity roadmapping.
-- **mf-executor**: Implementation pilot. Expert in "Beast Mode" styling and robust logic.
+- **mf-executor**: Implementation pilot. Expert in "Enterprise-Grade" styling and robust logic.
 - **mf-reviewer**: Quality auditor. Enforces OWASP, performance, and clean code standards.
 - **security-reviewer**: Focused on PQAS integrity and threat modeling.
 - **debug-specialist**: RCA (Root Cause Analysis) expert with persistent state tracking.
@@ -93,4 +93,4 @@ The peak of MindForge architectural pillars (IX-XII).
 - **Test**: `node bin/autonomous/intent-harvester.js --status`.
 
 ---
-*MindForge v6.2.0-alpha "Beast Mode" — Absolute Sovereignty. Absolute Performance.*
+*MindForge v6.2.0-alpha "Production-Grade" — Absolute Sovereignty. Absolute Performance.*

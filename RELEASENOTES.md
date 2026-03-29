@@ -13,11 +13,11 @@ The v6.0.0-alpha release introduces the final pillar of the MindForge Enterprise
 
 ---
 
-# MindForge v5.9.0 — Beast Mode Hardening (Nexus Unification)
+# MindForge v5.9.0 — Enterprise-Grade Hardening (Nexus Unification)
 
 ## Top Summary
 
-The v5.9.0 release elevates the MindForge Enterprise architecture to "Beast Mode" by unifying the tracing infrastructure into a single, high-fidelity asynchronous ART protocol and hardening the governance and arbitrage pillars with advanced cryptographic and resilience patterns.
+The v5.9.0 release elevates the MindForge Enterprise architecture to "Production-Grade" by unifying the tracing infrastructure into a single, high-fidelity asynchronous ART protocol and hardening the governance and arbitrage pillars with advanced cryptographic and resilience patterns.
 
 ## Highlights (v5.9.0)
 
@@ -53,7 +53,7 @@ The v5.7.0 release implements the fifth pillar of the Hyper-Enterprise roadmap: 
 
 # MindForge v5.6.0 — Sentinel Execution
 ## Top Summary
-The v5.4.0 release elevates the "Hyper-Enterprise" features to maximum robustness ("Beast Mode"), implementing critical safety systems, automated blast-radius protection for sensitive files, and advanced failure telemetry.
+The v5.4.0 release elevates the "Hyper-Enterprise" features to maximum robustness ("Enterprise Level"), implementing critical safety systems, automated blast-radius protection for sensitive files, and advanced failure telemetry.
 
 ## Highlights
 - **Circuit Breaker Pattern**: Stateful resilience in `federated-sync.js` to prevent network floods during outages.
@@ -85,7 +85,7 @@ The v5.2.0 release upgrades the Federated Intelligence Mesh (FIM) from simple LW
 
 ---
 
-# MindForge v5.1.0 — The Beast Addition
+# MindForge v5.1.0 — The Enterprise Expansion
 ## Top Summary
 The v5.1.0 release integrates 14 advanced agentic protocols and high-performance session hooks, sanitizing and hardening them for the MindForge ecosystem.
 
@@ -105,7 +105,7 @@ The v5.0.0 release completes the MindForge Enterprise architecture with the fina
 - **Pillar V: Multi-Cloud Arbitrage**: Intelligent routing across Vertex AI, Bedrock, and Azure.
 - **Pillar VI: Sovereign Reason Enclaves (SRE)**: Simulated TEE-based reasoning isolation.
 - **Pillar VII: Dynamic Human-Agent Handover (DHH)**: Automated packaging of "Nexus State Bundles" for human review.
-- **Hardening: Beast Mode Phase 2**: Built-in Chaos Mode for provider reliability stress-testing.
+- **Hardening: Enterprise Phase 2**: Built-in Chaos Mode for provider reliability stress-testing.
 
 ---
 
@@ -117,7 +117,7 @@ The v5.0.0 release completes the MindForge Enterprise architecture with the fina
 - **Pillar VI: Proactive Equilibrium**: Real-time **Wave Divergence** monitoring and autonomous **Temporal Hindsight** repair loops.
 - **Global Intelligence Mesh**: Synchronizes local project memory with a repository-agnostic organizational store (`~/.mindforge/`).
 - **Ghost Pattern Detection**: Proactive risk detection that warns agents when a proposed design matches a past organizational failure.
-- **ZTAI Beast Mode**: Every agent action in the mesh is now cryptographically signed using Ed25519 asymmetric keys.
+- **ZTAI Enterprise Mode**: Every agent action in the mesh is now cryptographically signed using Ed25519 asymmetric keys.
 - **Secure Enclave (HSM) Simulation**: Tier 3 agents (Principal/Architect) now use simulated hardware-secured enclaves for signing.
 - **Audit Integrity Manifests**: Automated generation of Merkle-root based manifests for the `AUDIT.jsonl` log.
 - **Tiered Governance**: Full integration of Trust Tiers [0-3] across the 32-persona library.
