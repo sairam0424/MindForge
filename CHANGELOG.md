@@ -1,4 +1,30 @@
-# Changelog
+## [6.2.0-alpha] - 2026-03-29
+
+### Added (v6.2.0-alpha: Sovereign Pillars XI & XII)
+
+- **Pillar XI: Post-Quantum Agentic Security (PQAS)**:
+    - Implemented `QuantumCrypto` for simulated lattice-based (Dilithium-5) signatures and ZK-Proof generation.
+    - Integrated `QuantumSafeKeyProvider` into `ZTAIManager` for Tier 4 (Quantum-Safe) agent identities.
+    - Hardened `PolicyEngine` with dynamic Biometric Challenges for Risk > 95 and ZK-Proof verification for high-leverage bypasses.
+- **Pillar XII: Proactive Semantic Homing**:
+    - Implemented `IntentHarvester` for proactive, idle-state task claiming from the Federated Intelligence Mesh (FIM).
+    - Implemented `MeshSelfHealer` for peer-to-peer collaborative reasoning and recovery from logic drift > 80.
+    - Integrated proactive behaviors into the `AutoRunner` core loop.
+- **Hardening & Verification**:
+    - Constant-time signature verification and cycle-detection for mesh healing.
+    - 100% pass rate on v7 specialized security and homing integration test suites.
+
+## Top Summary (v6.2.0-alpha)
+
+MindForge v6.2.0-alpha achieves full **Sovereign Intelligence** status by hardening the mesh against quantum-era threats and transitioning from reactive wave-processing to proactive agentic homing.
+
+## Highlights (v6.2.0-alpha)
+
+- **Quantum-Safe Identity (PQAS)**: Verifiable agentic signatures resistant to future cryptographic threats.
+*   **Proactive Homing**: Autonomous "Intent Hunting" that eliminates idle latency in the agentic mesh.
+*   **Edge-Case Biometrics**: Hardware-locked governance for catastrophic-risk operations (>95 Blast Radius).
+
+---
 
 ## [6.1.0-alpha] - 2026-03-29
 

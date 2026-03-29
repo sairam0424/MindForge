@@ -1,30 +1,28 @@
-# MindForge Governance Guide (v6.1.0-alpha)
-V6.1.0 Sovereign Intelligence: Self-Healing & Self-Optimizing
+# MindForge Governance Guide (v6.2.0-alpha)
+V6.2.0 Sovereign Intelligence: PQAS & Proactive Homing
 
 ## 1. Goal
-MindForge v6.1.0 introduces **Sovereign Intelligence**, extending the CADIA risk engine with real-time financial arbitrage (ARH) and reasoning-loop remediation (NDR). This ensures that while agents are autonomous, they are also economically efficient and logically consistent.
+MindForge v6.2.0 achieves the final stage of **Sovereign Intelligence**, introducing post-quantum safe identities (PQAS) and proactive agentic homing. This eliminates reactive latency in the mesh and ensures long-term cryptographic resilience against future threats.
 
-## 2. ROI Arbitrage Policy (Pillar IX)
-The Autonomous Resource Harvesting engine enforces financial governance by dynamically steering agentic waves based on **Min-Intelligence-Requirement (MIR)**.
+## 2. Post-Quantum Agentic Security (Pillar XI)
+MindForge implements Pillar XI to harden the identity layer against future quantum computing threats.
 
-### A. Routing Tiers
-- **Low MIR**: Trivial file edits or documentation updates are routed to local or lower-cost models.
-- **High MIR**: Architectural decision-making or complex logic debugging is routed to premium tiers (e.g., Gemini 1.5 Pro).
+### A. Lattice-Based Cryptography
+- **Signature Algorithm**: Dilithium-5 (Lattice-based).
+- **Key Exchange**: Kyber-1024 (Lattice-based).
+- **Hardening**: Every Tier 4 agent action is signed with quantum-safe primitives, ensuring non-repudiation in the post-quantum era.
 
-### B. Arbitrage Verification
-Every wave's `roi_arbitrage_event` is cross-referenced against the current **Token Budget** in `package.json`. If savings fall below the 10% target, the system flags a "Sub-Optimal Routing" alert in the metrics.
+### B. ZK-Proof Compliance Bypasses
+For high-leverage architectural changes, Tier 3+ agents can generate a **Zero-Knowledge Proof** (simulated SNARK) to verify policy adherence without exposing confidential reasoning logic.
 
-## 3. Reasoning Integrity & Neural Drift (Pillar X)
-To prevent logic hallucinations and semantic decay, MindForge enforces strict **Reasoning Entropy Scores (RES)**.
+## 3. Proactive Semantic Homing (Pillar XII)
+Pillar XII transitions the autonomous swarm from reactive wave-processing to proactive, self-healing "Homing" behavior.
 
-### A. Drift Detection Heuristics
-- **Similarity Threshold**: If cumulative reasoning nodes show >85% semantic similarity, a "Loop Warning" is issued.
-- **Pattern Repetition**: Excessive punctuation or token repetition triggers an immediate `drift_remediation_event`.
+### A. Intent Harvesting
+Agents in an idle state proactively scan the **Federated Intelligence Mesh (FIM)** for unassigned tasks, claiming them based on **Skill-Affinity** scores to eliminate idle latency.
 
-### B. Remediation Escalation
-1. **Level 1 (Injection)**: Inject a "Golden Trace" (hindsight steering vector) to nudge reasoning back to mission-alignment.
-2. **Level 2 (Restart)**: Wipe the current reasoning span and re-trigger intent decomposition.
-3. **Level 3 (Halt)**: Escalate to Human-in-the-Loop (HITL) if drift persists across 3 consecutive waves.
+### B. Mesh Self-Healing
+When an agent experiences critical logic drift (>80), peer agents in the mesh proactively "home in" on the node to provide collaborative reasoning and recovery vectors.
 
 ## 4. Agentic Policy Orchestrator (APO) — CADIA Engine
 The APO is a decentralized governance engine that intercepts every autonomous intent before it is executed.

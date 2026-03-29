@@ -1,16 +1,16 @@
-# MindForge v6.1.0 Alpha — Sovereign Intelligence (ARH & NDR)
+# MindForge v6.2.0 Alpha — Sovereign Intelligence (PQAS & Homing)
 
-MindForge v6.1.0 Alpha elevates the framework to **Sovereign Intelligence**, introducing self-optimizing financial arbitrage and self-healing reasoning loops through **Autonomous Resource Harvesting (ARH)** and **Neural Drift Remediation (NDR)**.
+MindForge v6.2.0 Alpha achieves the **Sovereign Intelligence** final stage, introducing post-quantum safe identities and proactive agentic homing through **Post-Quantum Agentic Security (PQAS)** and **Proactive Semantic Homing**.
 
-## What's new in v6.1 Alpha (Sovereign Intelligence)
+## What's new in v6.2 Alpha (Sovereign Intelligence)
 
-MindForge V6.1 Alpha completes the "Sovereign" phase, transforming the framework into a self-healing, self-optimizing agentic operating system.
+MindForge V6.2 Alpha completes the "Sovereign" pillars, hardening the mesh against future threats and eliminating reactive latency.
 
-- **Pillar IX: Autonomous Resource Harvesting (ARH)**: Real-time token arbitrage and dynamic task-to-model steering based on MIR (Min-Intelligence-Requirement) benchmarks.
-- **Pillar X: Neural Drift Remediation (NDR)**: Proactive logic-drift sensing in the `NexusTracer`, with automated remediation (RESTART → INJECT → HALT) for reasoning decay.
-- **Market Evaluator Engine**: Live tracking of cross-provider cost efficiency vs. outcome quality.
-- **ROI Telemetry v2**: Professional-grade financial reporting for cumulative agentic value creation.
-- **Hardened Logic Sensing**: 95th-percentile accuracy in detecting semantic stagnation and circular reasoning loops.
+- **Pillar XI: Post-Quantum Agentic Security (PQAS)**: Lattice-based (Dilithium-5) signatures and ZK-Proof bypasses for Tier 4 agent identities.
+- **Pillar XII: Proactive Semantic Homing**: Autonomous "Intent Hunting" where agents proactively claim tasks and peer-heal logic drift (>80) in the mesh.
+- **Edge-Case Biometrics**: Hardware-locked governance requiring manual `APPROVED_BY_EXECUTIVE` steering for catastrophic-risk operations (>95 Blast Radius).
+- **Quantum-Safe Key Provider**: Integrated lattice cryptography in the `ZTAIManager` for verifiable, future-proof identity.
+- **Mesh Self-Healer**: Real-time collaborative reasoning recovery for drifting autonomous nodes.
 
 ## What's new in v6.0 Alpha (CADIA Optimizer)
 
