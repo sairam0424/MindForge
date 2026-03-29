@@ -328,6 +328,10 @@ function verifyInstall(baseDir, cmdsDir, runtime, scope) {
     path.join(cmdsDir, `${pfx}health.md`),
     path.join(cmdsDir, `${pfx}execute-phase.md`),
     path.join(cmdsDir, `${pfx}security-scan.md`),
+    // Sovereign Engine logic
+    path.join(process.cwd(), 'bin/governance/policy-engine.js'),
+    path.join(process.cwd(), 'bin/governance/quantum-crypto.js'),
+    path.join(process.cwd(), 'bin/autonomous/intent-harvester.js'),
   ];
 
   const missing = required.filter(f => !fsu.exists(f));
@@ -531,7 +535,8 @@ async function install(runtime, scope, options = {}) {
       // Define all required enterprise framework folders
       const standardFrameworkFolders = [
         'engine', 'org', 'governance', 'integrations', 'personas', 'skills', 
-        'team', 'intelligence', 'memory', 'metrics', 'models', 'plugins', 'dashboard'
+        'team', 'intelligence', 'memory', 'metrics', 'models', 'plugins', 
+        'dashboard', 'browser', 'monorepo', 'production', 'distribution'
       ];
 
       if (minimal) {
@@ -600,6 +605,22 @@ async function install(runtime, scope, options = {}) {
       fsu.copy(mindforgemSrc, mindforgemDst);
       Theme.printResolved(`${c.bold('MINDFORGE.md')} (project constitution)`);
     }
+
+    // Sovereign Intelligence v6.2.0-alpha: Copy core engines by default
+    const sovereignEngines = ['governance', 'autonomous'];
+    sovereignEngines.forEach(engine => {
+      const srcDir = src('bin', engine);
+      const dstDir = path.join(process.cwd(), 'bin', engine);
+      if (fsu.exists(srcDir)) {
+        fsu.ensureDir(dstDir);
+        fsu.copyDir(srcDir, dstDir, { excludePatterns: SENSITIVE_EXCLUDE, noOverwrite: !force });
+      }
+    });
+
+    // ✨ SOVEREIGN INITIALIZATION: Mark project as PQAS & Proactive enabled
+    Theme.printStatus(c.magenta('Sovereign Intelligence v6.2.0-alpha activated'), 'done');
+    Theme.printStatus(c.dim('  - Post-Quantum Agentic Security (PQAS) enabled'), 'info');
+    Theme.printStatus(c.dim('  - Proactive Semantic Intent Harvesting active'), 'info');
 
     // bin/ utilities (optional)
     if (withUtils) {

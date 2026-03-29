@@ -84,13 +84,18 @@ Open Issues
   ✅ No open issues
 ```
 
-### Section 6 — Next action
+### Section 7 — Sovereign Intelligence
 ```
-Next Action
+Sovereign Intelligence (v6.2.0-alpha)
 ───────────────────────────────────────────────────────
-  [What STATE.md says the next action is]
-  Run: /mindforge:next
-     to auto-execute the next step.
+  🛡️  PQAS Security : [ACTIVE | PASSIVE] (Dilithium-5)
+  🎯  Proactive Homing: [ENABLED | DISABLED]
+  🧠  Drift Recovery : [N] remediation events
+  🧬  Biometric Gate : [LOCKED | BYPASSED]
+```
+- PQAS Status: Check if `bin/governance/quantum-crypto.js` exists and if `PolicyEngine.js` has `highRiskBypass` enabled.
+- Proactive Homing: Check if `bin/autonomous/intent-harvester.js` is active in `AutoRunner.js`.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 

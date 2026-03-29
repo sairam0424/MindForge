@@ -99,6 +99,36 @@ const COMMANDS = {
     script: 'bin/engine/temporal-cli.js',
     description: 'Inject a fix into a past point and regenerate state',
     defaultArgs: ['inject']
+  },
+  'harvest': {
+    script: 'bin/autonomous/intent-harvester.js',
+    description: 'Proactively harvest semantic intent from the intelligence mesh'
+  },
+  'self-heal': {
+    script: 'bin/autonomous/mesh-self-healer.js',
+    description: 'Auto-detect and repair reasoning drifts in the active swarm'
+  },
+  'quantum-verify': {
+    script: 'bin/governance/quantum-crypto.js',
+    description: 'Verify framework integrity using post-quantum signatures',
+    defaultArgs: ['--verify', '.mindforge/engine/']
+  },
+  'sync-jira': {
+    script: 'bin/integrations/jira-sync.js',
+    description: 'Synchronize project state with Jira issues and milestones'
+  },
+  'sync-confluence': {
+    script: 'bin/integrations/confluence-sync.js',
+    description: 'Export architecture and roadmap to Confluence pages'
+  },
+  'metrics': {
+    script: 'bin/dashboard/metrics-aggregator.js',
+    description: 'Display real-time velocity and quality metrics'
+  },
+  'tokens': {
+    script: 'bin/models/cost-tracker.js',
+    description: 'Analyze token consumption and cost efficiency',
+    defaultArgs: ['--report']
   }
 };
 
