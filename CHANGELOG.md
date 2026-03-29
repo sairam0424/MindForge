@@ -1,13 +1,33 @@
 # Changelog
 
-## [5.10.0] - 2026-03-29
+## [6.1.0-alpha] - 2026-03-29
 
-### Added (v6.0.0-alpha)
+### Added (v6.1.0-alpha: Sovereign Intelligence)
 
-- **Pillar VIII: AgRevOps ROI Engine (Enterprise Value)**.
-- **MindForge v6.0.0-alpha — AgRevOps ROI Engine (Enterprise Value)**
+- **Pillar IX: Autonomous Resource Harvesting (ARH)**: 
+    - Implemented `MarketEvaluator` for real-time token arbitrage.
+    - Dynamic task-to-model steering based on MIR (Min-Intelligence-Requirement).
+    - ROI Telemetry integration for tracking agentic cost-savings.
+- **Pillar X: Neural Drift Remediation (NDR)**:
+    - Implemented `LogicDriftDetector` with semantic density and repetition heuristics.
+    - Integrated `RemediationEngine` for automated reasoning recovery (Injection/Restart).
+    - Hardened `NexusTracer` hooks for real-time drift sensing.
+- **Hardened Sovereign Heuristics**: Improved repetitive logic detection using punctuation-aware token analysis.
+- **ROI Arbitrage Ledger**: New audit event `roi_arbitrage_event` in `AUDIT.jsonl`.
 
-## Top Summary (v6.0.0-alpha)
+## Top Summary (v6.1.0-alpha)
+
+MindForge v6.1.0-alpha completes the **Sovereign Intelligence** phase. The framework now possesses the ability to quantify its own economic value through resource harvesting and self-heal from cognitive decay through neural drift remediation.
+
+## Highlights (v6.1.0-alpha)
+
+- **Autonomous FinOps (ARH)**: Real-time steering between tiered models based on task MIR.
+- **Self-Healing Reasoning (NDR)**: Proactive interruption of logic loops and hallucinations.
+- **Unified Integration**: Seamless integration of NDR/ARH into the core `NexusTracer` loop.
+
+---
+
+## [6.0.0-alpha] - 2026-03-29
 
 The v6.0.0-alpha release introduces the final pillar of the MindForge Enterprise architecture: AgRevOps (Agentic Revenue Operations). This engine provides real-time ROI attribution for autonomous waves, enabling enterprises to quantify the business value of every agentic reasoning cycle.
 

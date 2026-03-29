@@ -1,341 +1,92 @@
-# MindForge v6.0.0-alpha — Unique Selling Points, Features, and Best Practices (v6.0.0-alpha)
+# MindForge: 26 Unique Selling Points & Core Features (v6.1 Alpha)
 
-This document summarizes what makes MindForge v6.0.0 distinct, what features
-are included in the official release, and how to use them effectively.
-
----
-
-## Unique Selling Points (USPs)
-
-1. **File‑driven governance, not magic**
-   - MindForge defines behavior through Markdown and JSON schemas, so teams can
-     audit, review, and version everything like normal code.
-
-2. **Wave‑based parallel execution**
-   - Plans run in dependency‑ordered “waves,” delivering speed without chaos.
-
-3. **Non‑bypassable compliance gates**
-   - Security, secrets, and test gates are enforced by design, not optional.
-
-4. **Session compaction with continuity**
-   - When context fills, MindForge writes machine‑readable handoffs that preserve
-     state, decisions, and next steps.
-
-5. **Production‑ready installer + updater**
-   - Full install/update/uninstall support for both Claude Code and Antigravity,
-     plus scoped updates and schema migrations.
-
-6. **Built‑in audit trail**
-   - `AUDIT.jsonl` provides a complete, append‑only history of actions and results.
-
-7. **Extensible with plugins and skills**
-   - Plugins add commands and skills without changing core files, keeping upgrades safe.
-
-8. **Autonomous “Walk-Away” Execution (v2)**
-   - `/mindforge:auto` allows for full phase/milestone completion with intelligent stuck detection and node repair (RETRY → DECOMPOSE → ESCALATE).
-
-9. **Persistent Visual QA (v2)**
-   - Headful/headless browser runtime with named session persistence and systematic visual diff verification.
-
-10. **Multi-Model Intelligence Layer (v2)**
-    - Dynamic routing between Anthropic, OpenAI, and Gemini based on task persona and security tier. Adversarial code reviews ensure maximum coverage.
-
-11. **Persistent Knowledge Graph (RAG 2.0)**
-    - Captures and ranks engineering context (decisions, bug patterns, preferences) with **Automatic Semantic Shadowing** — background pattern retrieval without manual prompts.
-
-12. **Real-time Observability Dashboard (v3)**
-    - High-fidelity web interface for live audit streams, metrics visualization, and **Temporal History Scrubbing** with zero performance overhead.
-
-13. **Self-Building Skills Platform (v3)**
-    - Automatically capture and score engineering patterns from docs, npm, or session history into high-quality `SKILL.md` files with non-bypassable quality gates.
-
-14. **Context Sharding (v3)**
-    - 40% reduction in token waste via **Semantic Relevance Density (SRD)** management of Hot/Warm/Cold context tiers.
-
-15. **Adversarial Decision Synthesis (v3)**
-    - Zero architectural drift through Red-Team/Blue-Team debate loops and automated synthesis scoring.
-
-16. **Temporal Vision (v3)**
-    - Full-fidelity history navigation, hindsight injection, and automated state repair across the execution wave.
-
-17. **Dynamic Swarm Orchestration (v4)**
-    - Parallel "Agentic Mesh" with shared state (`SWARM-STATE.json`) and leader-led synthesis of specialist outcomes.
-
-18. **Zero-Trust Agentic Identity "Beast Mode" (v4.2)**
-    - Non-repudiable audit trails signed by unique Decentralized Identifiers (DIDs) for every swarm action. Tier 3 agents use simulated **Secure Enclave (HSM)** signing.
-
-19. **MindForge Sentinel: Binary Runtime Attestation (v5.6)**
-    - Cryptographically ensure skill integrity before execution. Every `SKILL.md` is JIT-verified against ZTAI-signed signatures, preventing supply-chain attacks and unauthorized logic injection.
-
-20. **Predictive Agentic Reliability: Reasoning Entropy (v5.5)**
-   - Non-repudiable audit trails signed by unique Decentralized Identifiers (DIDs) for every swarm action. Tier 3 agents use simulated **Secure Enclave (HSM)** signing.
-
-19. **MindForge Sentinel: Binary Runtime Attestation (v6.0.0-alpha)**
-   - Cryptographically ensure skill integrity before execution. Every `SKILL.md` is JIT-verified against ZTAI-signed signatures, preventing supply-chain attacks and unauthorized logic injection.
-
-20. **Predictive Agentic Reliability: Reasoning Entropy (v6.0.0-alpha)**
-   - Proactively detect and break agentic reasoning loops. Using RES (Reasoning Entropy Scoring), the system interrupts semantic stagnation and injects Steering Vectors to recover lost autonomy.
-
-21. **Interactive Temporal Steering — NEXUS (v6.0.0-alpha)**
-   - Full-fidelity history navigation via a web-based "Temporal Slider." Rewind the agent to any reasoning node and inject "Hindsight Steering" to correct logic drift without restarting the session.
-
-22. **AgRevOps: Agentic Financial Governance (v6.0.0-alpha)**
-   - Real-time ROI analysis ($100/hr value mapping) vs. token costs, combined with a **Security Health Score (SHS)** that tracks governance debt and policy bypasses across the mesh.
-
-23. **CADIA: Neural Blast Radius Optimizer (v6.0.0-alpha)**
-   - Elevated enterprise governance using **Context-Aware Dynamic Impact Analysis**. Real-time scoring based on architectural influence, session entropy (mass-change defense), and goal-path alignment. Includes a reasoning-based bypass for Tier 3 agents.
+MindForge is the enterprise's **Agentic OS**, built on the **CADIA v6.1 (Cross-Agentic Deterministic Intelligence Architecture)** framework. It provides a self-healing, self-optimizing environment for autonomous agent execution at scale.
 
 ---
 
-## Feature Set (v2.0.0)
+## The 10 Pillars of Sovereign Intelligence
 
-### 1. Installation & Distribution
-**What it does:** Production‑grade installer with update, uninstall, and CI support.
+1.  **Pillar I: Semantic Vector Consensus** (FIM v2) - Distributed knowledge merging via cosine similarity.
+2.  **Pillar II: Dynamic Blast Radius** (APO v2) - Real-time risk scoring (CADIA) before any file mutation.
+3.  **Pillar III: Predictive Agentic Reliability** (RES) - Heuristics to detect/interrupt reasoning loops.
+4.  **Pillar IV: Supply Chain Trust** (ZTAI) - Cryptographically signed skills and binary attestation.
+5.  **Pillar V: Multi-Cloud Arbitrage** (MCA) - Task-to-model affinity routing across providers.
+6.  **Pillar VII: Hierarchical Intent Orchestration** (Nexus) - Tiered reasoning capture and visualization.
+7.  **Pillar VIII: AgRevOps ROI Engine** (Enterprise) - Quantifying economic value vs. compute cost.
+8.  **Pillar IX: Autonomous Resource Harvesting** (ARH) - Real-time token arbitrage and steering.
+9.  **Pillar X: Neural Drift Remediation** (NDR) - Proactive self-healing for cognitive decay.
+10. **Pillar VI: Sovereign Reason Enclaves** (ZK-Audit) - Privacy-preserving audit trails for sensitive tasks.
 
-**How to use:**
+---
+
+## 26 Elite Unique Selling Points (USPs)
+
+1.  **File-Driven Governance**: Behavior defined by Markdown/JSON, auditable like code.
+2.  **Wave-Based Parallel Execution**: Dependency-ordered clusters for speed without chaos.
+3.  **Non-Bypassable Compliance Gates**: 5 mandatory safety checks (Secrets, CVEs, Tests, etc.).
+4.  **Session Compaction & Continuity**: Machine-readable handoffs to preserve state across context turns.
+5.  **Production-Grade Installer**: Built-in update/uninstall and schema migration suite.
+6.  **Immutable Audit Trail**: Append-only `AUDIT.jsonl` for total transparency.
+7.  **Modular Skill Registry**: Extend capabilities without altering core engine files.
+8.  **Autonomous "Walk-Away" (v2)**: Intelligence repair (RETRY → DECOMPOSE) for independent work.
+9.  **Persistent Visual QA**: Browser runtime with visual diff verification.
+10. **Adversarial Multi-Model Review**: Cross-model validation (Gemini/Claude) for critical paths.
+11. **Automatic Semantic Shadowing**: RAG 2.0 with background pattern retrieval.
+12. **Temporal History Scrubbing**: "Time-Travel" dashboard to inspect and steer past states.
+13. **Self-Building Skills Platform**: Capture patterns from docs/npm into validated `SKILL.md` files.
+14. **Semantic Relevance Density (SRD)**: 40% reduction in token waste via tiered context sharding.
+15. **Red-Team Decision Synthesis**: Zero architectural drift through debate loops.
+16. **Hindsight Injection**: Correct logic errors on-the-fly via the Nexus temporal injector.
+17. **Dynamic Swarm Mesh**: Orchestrated specialist sub-agents with shared `SWARM-STATE`.
+18. **DID-Signed Identity (ZTAI)**: Non-repudiable logs backed by Decentralized Identifiers.
+19. **Sentinel Runtime Attestation**: Cryptographic integrity checks for every logic module.
+20. **Reasoning Entropy Scoring (RES)**: Proactive interruption of semantic deadlocks.
+21. **Nexus Temporal Slider**: High-fidelity dashboard for reasoning navigation.
+22. **AgRevOps Financial Governance**: Real-time dollar-value mapping per agentic cycle.
+23. **CADIA Blast Radius Optimizer**: Real-time architectural risk assessment (0-100).
+24. **Sovereign ROI Arbitrage**: Automated steering to lowest-cost/highest-value model tiers.
+25. **Ghost Pattern Detection**: Automated planning-phase detection of past architectural failures.
+26. **Sentinel Execution Center**: Centralized JIT attestation and reasoning guardrail enforcement.
+
+---
+
+## Sovereign Core Feature Set
+
+### 1. Unified Intelligence Layer
+Unified API for Anthropic, OpenAI, and Gemini with persona-based routing and budget enforcement.
+
+### 2. Autonomous Workflow Engine
+End-to-end lifecycle management: `/plan` → `/execute` → `/verify` → `/ship`.
+
+### 3. Agentic Observability
+Real-time web dashboard for audit streams, reasoning heatmaps, and financial metrics.
+
+### 4. Zero-Trust Security
+Mandatory DID signatures, JIT skill attestation, and "Default Deny" posture for sensitive files.
+
+### 5. Multi-Project Memory (Global Mesh)
+Organizational-level knowledge sharing via the Global Intelligence Mesh.
+
+---
+
+## Execution Guide (v6.1 Alpha)
+
 ```bash
-npx mindforge-cc@latest --claude --global
-npx mindforge-cc@latest --claude --local
-npx mindforge-cc@latest --antigravity --global
-```
-
----
-
-### 2. Core Workflow Engine
-**What it does:** End‑to‑end lifecycle for planning, execution, verification, and shipping.
-
-**How to use:**
-```
+# Core Cycle
 /mindforge:init-project
 /mindforge:plan-phase 1
 /mindforge:execute-phase 1
 /mindforge:verify-phase 1
 /mindforge:ship 1
+
+# Sovereign Commands
+/mindforge:auto --phase 1    # Autonomous Walk-Away
+/mindforge:costs --roi       # Detailed ROI analysis
+/mindforge:cross-review      # Adversarial review
+/mindforge:memory sync       # Global Mesh sync
 ```
-
----
-
-### 3. Wave Execution
-**What it does:** Runs independent plans in parallel waves based on dependencies.
-
-**How to use:**
-- Create a phase plan with dependencies
-- Run `/mindforge:execute-phase N`
-- MindForge groups tasks into waves automatically
-
----
-
-### 4. Governance & Compliance Gates
-**What it does:** Enforces secret scanning, CRITICAL security findings, tests,
-CVE checks, and GDPR retention.
-
-**How to use:**
-```
-/mindforge:security-scan --deep --secrets --deps
-/mindforge:verify-phase 1
-```
-
----
-
-### 5. Intelligence Layer
-**What it does:** Health checks, difficulty scoring, anti‑pattern detection,
-team profiling, and metrics.
-
-**How to use:**
-```
-/mindforge:health
-/mindforge:metrics
-/mindforge:profile-team
-```
-
----
-
-### 6. Skills Platform
-**What it does:** Loads skill packs on keyword triggers (Core/Org/Project tiers).
-
-**How to use:**
-```
-/mindforge:skills list
-/mindforge:skills validate
-```
-
----
-
-### 7. Plugin System
-**What it does:** Extends MindForge with new commands, skills, personas, and hooks.
-
-**How to use:**
-```
-/mindforge:plugins list
-/mindforge:plugins install mindforge-plugin-<name>
-/mindforge:plugins validate
-```
-
----
-
-### 8. Migration Engine
-**What it does:** Safely upgrades `.planning/` schemas across versions with backups.
-
-**How to use:**
-```
-/mindforge:migrate --from v0.6.0 --to v1.0.0
-```
-
----
-
-### 9. Self‑Update System
-**What it does:** Checks for updates, shows changelog diff, applies updates while
-preserving scope (local vs global).
-
-**How to use:**
-```
-/mindforge:update
-/mindforge:update --apply
-```
-
----
-
-### 11. Autonomous Execution (v2)
-**What it does:** Enables handoff-free execution of complex phases and milestones.
-
-**How to use:**
-```bash
-/mindforge:auto --phase 1
-/mindforge:steer "Focus on security hardening next"
-```
-
----
-
-### 12. Browser Runtime & Visual QA (v2)
-**What it does:** Playwright-powered browser control with session persistence and automated UI bug detection.
-
-**How to use:**
-```bash
-/mindforge:browse --navigate https://example.com
-/mindforge:qa --diff
-```
-
----
-
-### 13. Multi-Model Intelligence (v2)
-**What it does:** Unified API client for Anthropic, OpenAI, and Gemini with persona-based routing and automated cost tracking.
-
-**How to use:**
-```bash
-/mindforge:cross-review # Adversarial multi-model review
-/mindforge:research "Deep search query" # 1M context research
-/mindforge:costs # Usage and budget summary
-```
-
----
-
-### 14. Persistent Knowledge Graph (v2)
-**What it does:** Long-term memory system that ensures architectural decisions and bug patterns are never forgotten. Supports TF-IDF search, confidence scoring, and global promotion.
-
-**How to use:**
-```bash
-/mindforge:remember --add "insight" # Manual capture
-/mindforge:remember --search "query" # Manual retrieval
-/mindforge:remember --promote [ID] # Promote to machine-wide global store
-/mindforge:remember --stats # View memory health
-```
-
----
-
-### 18. Adversarial Decision Synthesis (v3)
-**What it does:** Ensures architectural integrity by debating every major decision through competing model personas.
-
-**How to use:**
-```bash
-/mindforge:cross-review --ads # Triggers heavy synthesis mode
-```
-
----
-
-### 19. Temporal Vision & Hindsight (v3)
-**What it does:** Provides the "Temporal Slider" for the Dashboard and the `hindsight-injector` for automated state repair.
-
-**How to use:**
-```bash
-/mindforge:temporal status
-/mindforge:temporal inject [AUDIT_ID]
-```
-
----
-
-### 20. Context Sharding Manager (v3)
-**What it does:** Dramatically improves session longevity by sharding context based on sematic relevance.
-
-**How to use:**
-```bash
-/mindforge:memory shard
-/mindforge:memory status --srd
-```
-
----
-
-### 21. Dynamic Swarm Mesh (v4)
-**What it does:** Orchestrates parallel specialist clusters (e.g., Security, UI, Data) with automated state coordination.
-
-**How to use:**
-```bash
-/mindforge:swarm spawn --template [NAME]
-/mindforge:swarm status --mesh
-```
-
----
-
-### 22. ZTAI Governance & Beast Mode (v4.2)
-**What it does:** Enforces cryptographic signing and trust-tier validation for all autonomous agent actions. Tier 3 agents utilize simulated Secure Enclaves for principal-level non-repudiation.
-
-**How to use:**
-```bash
-/mindforge:identity verify [AGENT_ID]
-/mindforge:identity sign --did
-/mindforge:identity audit --manifest # Generates Merkle-root integrity proof
-```
-
----
-
-### 23. Global Intelligence Mesh (v4.2)
-**What it does:** Synchronizes local repo memory with a global organizational store. Includes Ghost Pattern Detection to flag architectural anti-patterns from past failures.
-
-**How to use:**
-```bash
-/mindforge:memory sync --global
-/mindforge:memory status --mesh
-/mindforge:plan-phase --detect-ghosts # Automated during planning
-```
----
-
-### 24. Autonomous FinOps Hub (v4.3)
-**What it does:** Enterprise-grade economics engine that treats compute as a first-class resource. The `ModelBroker` utilizes a **Confidence-to-Cost (C2C)** engine to dynamically route tasks based on complexity and trust tier.
-
-**How to use:**
-```bash
-/mindforge:finops status # View consumption and budget profile
-/mindforge:costs --roi # Detailed Agentic ROI analysis
-/mindforge:finops budget 500 # Set project-level budget ($500)
-```
-
----
-
-### 26. Sentinel Execution Center (v5.6)
-**What it does:** Centralizes security and reliability policy monitoring. Enforces JIT attestation and reasoning entropy guardrails across the agentic mesh.
-
-**How to use:**
-- Automated: Every skill load and reasoning step is monitored by the Sentinel layer.
-- Manual: `mindforge-cc sign <skill-name>` to authorize a new skill for production use.
-
----
-
-## Best Practices for v5.6.0
-
-1. **Sign Your Skills**: In Enterprise mode, unsigned skills are blocked. Always run the `sign` command before deploying new logic.
-2. **Monitor RES Heatmaps**: Use the Dashboard to identify which specialists are prone to circular reasoning and refine their `IDENTITY.md` accordingly.
-3. **Always run health after install**: `/mindforge:health --repair` fixes drift immediately.
 
 ---
 
 ## Summary
-MindForge v5.10.0 "Nexus Steering" represents the pinnacle of the Hyper-Enterprise evolution. By combining **Interactive Temporal Steering** and **AgRevOps Financial Governance** with the core Sentinel security layer, it provides the first "Agentic OS" capable of self-correcting drift and quantifying its own economic value in real-time.
+MindForge v6.1.0-alpha **Sovereign Intelligence** represents the pinnacle of the Agentic OS evolution. By combining **Interactive Temporal Steering** and **AgRevOps Financial Governance** with the core Sentinel security layer, it provides the first framework capable of self-correcting logic drift and quantifying its own economic value in real-time.

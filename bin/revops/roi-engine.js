@@ -10,6 +10,7 @@ const path = require('path');
 class ROIEngine {
   constructor() {
     this.hourlyRate = 100; // Average Enterprise Dev Hourly Rate (USD)
+    this.totalArbitrageSavings = 0; // v6.1 Pillar IX
     this.taskValues = {
       'refactor': 1.5, // 1.5 hours saved
       'test': 0.75,   // 0.75 hours saved
@@ -25,6 +26,9 @@ class ROIEngine {
   calculate(metrics) {
     const tokenCost = metrics.costs?.reduce((sum, c) => sum + (c.cost || 0), 0) || 0;
     
+    // v6.1: Track cumulative arbitrage savings
+    this.totalArbitrageSavings = metrics.arbitrageSavings || 0;
+
     // map successful tasks to dev hours
     const tasks = metrics.auditEntries?.filter(e => e.event === 'task_completed') || [];
     let hoursSaved = 0;
@@ -40,6 +44,7 @@ class ROIEngine {
 
     return {
       token_cost: parseFloat(tokenCost.toFixed(4)),
+      arbitrage_savings: parseFloat(this.totalArbitrageSavings.toFixed(4)),
       hours_saved: parseFloat(hoursSaved.toFixed(2)),
       gross_value: parseFloat(grossValue.toFixed(2)),
       net_value: parseFloat(netValue.toFixed(2)),

@@ -1,10 +1,32 @@
-# MindForge Governance Guide (v6.0.0 Alpha)
-Absolute Architectural Control via CADIA
+# MindForge Governance Guide (v6.1.0-alpha)
+V6.1.0 Sovereign Intelligence: Self-Healing & Self-Optimizing
 
 ## 1. Goal
-MindForge v6.0.0 introduces **Context-Aware Dynamic Impact Analysis (CADIA)**. This non-bypassable governance layer elevates the framework from simple intent-checking to a deep architectural risk engine, ensuring that autonomous waves remain within mission-aligned guardrails even as complexity scales.
+MindForge v6.1.0 introduces **Sovereign Intelligence**, extending the CADIA risk engine with real-time financial arbitrage (ARH) and reasoning-loop remediation (NDR). This ensures that while agents are autonomous, they are also economically efficient and logically consistent.
 
-## 2. Agentic Policy Orchestrator (APO) — CADIA Engine
+## 2. ROI Arbitrage Policy (Pillar IX)
+The Autonomous Resource Harvesting engine enforces financial governance by dynamically steering agentic waves based on **Min-Intelligence-Requirement (MIR)**.
+
+### A. Routing Tiers
+- **Low MIR**: Trivial file edits or documentation updates are routed to local or lower-cost models.
+- **High MIR**: Architectural decision-making or complex logic debugging is routed to premium tiers (e.g., Gemini 1.5 Pro).
+
+### B. Arbitrage Verification
+Every wave's `roi_arbitrage_event` is cross-referenced against the current **Token Budget** in `package.json`. If savings fall below the 10% target, the system flags a "Sub-Optimal Routing" alert in the metrics.
+
+## 3. Reasoning Integrity & Neural Drift (Pillar X)
+To prevent logic hallucinations and semantic decay, MindForge enforces strict **Reasoning Entropy Scores (RES)**.
+
+### A. Drift Detection Heuristics
+- **Similarity Threshold**: If cumulative reasoning nodes show >85% semantic similarity, a "Loop Warning" is issued.
+- **Pattern Repetition**: Excessive punctuation or token repetition triggers an immediate `drift_remediation_event`.
+
+### B. Remediation Escalation
+1. **Level 1 (Injection)**: Inject a "Golden Trace" (hindsight steering vector) to nudge reasoning back to mission-alignment.
+2. **Level 2 (Restart)**: Wipe the current reasoning span and re-trigger intent decomposition.
+3. **Level 3 (Halt)**: Escalate to Human-in-the-Loop (HITL) if drift persists across 3 consecutive waves.
+
+## 4. Agentic Policy Orchestrator (APO) — CADIA Engine
 The APO is a decentralized governance engine that intercepts every autonomous intent before it is executed.
 
 ### A. Intent Interception

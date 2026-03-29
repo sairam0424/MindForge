@@ -1,7 +1,7 @@
 {
-  "name": "mindforge-cc",
-  "version": "6.0.0-alpha",
-  "description": "MindForge - Enterprise Agentic Framework for Claude Code and Antigravity",
+  "name": "mindforge",
+  "version": "6.1.0-alpha",
+  "description": "MindForge — Sovereign Agentic Intelligence Framework. (CADIA v6.1 Enabled)",
   "bin": {
     "mindforge-cc": "bin/install.js"
   },
