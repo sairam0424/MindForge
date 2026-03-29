@@ -6,7 +6,7 @@ This registry catalogs the high-fidelity SkillStacks available to the MindForge 
 
 | Skill | Primary Domain | Primary Capability |
 | :--- | :--- | :--- |
-| **agency-senior-developer** | Implementation | "Beast Mode" styling and robust logic. |
+| **agency-senior-developer** | Implementation | "Enterprise-Grade" styling and robust logic. |
 | **agency-software-architect** | System Design | Architectural pattern selection and complexity control. |
 | **agency-backend-architect** | Core Logic | Database schema design and high-performance API logic. |
 | **agency-frontend-developer** | Web Interface | Fluid components and interactive design systems. |

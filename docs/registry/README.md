@@ -13,7 +13,7 @@ Welcome to the central high-fidelity registry for the MindForge framework. This 
 | **[HOOKS.md](./HOOKS.md)** | 10+ Framework Guards | Security, visibility, and automation triggers. |
 | **[AGENTS.md](./AGENTS.md)** | 20+ Digital Identities | Invocable personas and internal swarms. |
 
-## 🚀 "Beast Mode" Ready
+## 🚀 "Enterprise-Grade" Ready
 
 These registries are synchronized automatically during every `mindforge init` or `update` cycle. They ensure that every framework capability is discoverable, verifiable, and enforceable by both human developers and AI agents.
 
