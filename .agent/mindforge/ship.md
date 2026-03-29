@@ -49,6 +49,12 @@ npm audit --audit-level=high
 
 If any gate fails: stop. Report the failures. Do not proceed to PR creation.
 
+## Step 2.1 — Final Intelligence Audit
+1. Read `AGENTS_LEARNING.md` for this project.
+2. Verify if any new architectural patterns, anti-patterns, or mistakes from this phase were recorded.
+3. If not: Run `/mindforge:record-learning` now to capture them before shipping.
+4. Commit `AGENTS_LEARNING.md` if updated.
+
 ## Step 3 — Create PR description
 Generate a complete PR description:
 
@@ -78,6 +84,7 @@ Generate a complete PR description:
 
 ### Checklist
 - [x] CHANGELOG.md updated
+- [x] AGENTS_LEARNING.md updated with phase-specific insights
 - [x] All tests pass
 - [x] No linter errors
 - [x] UAT signed off

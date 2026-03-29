@@ -612,6 +612,14 @@ async function install(runtime, scope, options = {}) {
       Theme.printResolved(`${c.bold('MINDFORGE.md')} (project constitution)`);
     }
 
+    // AGENTS_LEARNING.md — create only if it doesn't already exist
+    const learningDst = path.join(process.cwd(), 'AGENTS_LEARNING.md');
+    const learningSrc = src('docs', 'templates', 'Project', 'AGENTS_LEARNING.md');
+    if (!fsu.exists(learningDst) && fsu.exists(learningSrc)) {
+      fsu.copy(learningSrc, learningDst);
+      Theme.printResolved(`${c.bold('AGENTS_LEARNING.md')} (agentic memory)`);
+    }
+
     // Sovereign Intelligence v6.2.0-alpha: Copy core engines by default
     const sovereignEngines = [
       'governance', 'autonomous', 'memory', 'models', 'research', 

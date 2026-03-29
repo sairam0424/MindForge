@@ -11,11 +11,12 @@ Read PROJECT.md, REQUIREMENTS.md, ARCHITECTURE.md, and STATE.md before proceedin
 ## Pre-read (before any questions or planning)
 
 Read these files in order:
-1. `.planning/PROJECT.md`
-2. `.planning/REQUIREMENTS.md`
-3. `.planning/ARCHITECTURE.md`
-4. `.planning/STATE.md`
-5. `.planning/phases/phase-[N]/CONTEXT.md` (if it exists)
+1. `AGENTS_LEARNING.md` (MUST READ to avoid repeating past mistakes)
+2. `.planning/PROJECT.md`
+3. `.planning/REQUIREMENTS.md`
+4. `.planning/ARCHITECTURE.md`
+5. `.planning/STATE.md`
+6. `.planning/phases/phase-[N]/CONTEXT.md` (if it exists)
 
 ### If CONTEXT.md exists for phase [N]:
 This means `/mindforge:discuss-phase [N]` was already run.
@@ -62,8 +63,9 @@ Spawn a research subagent with this context only:
 Instruct it to investigate:
 1. Best available libraries for this phase's requirements (with version numbers)
 2. Common pitfalls and anti-patterns for this tech domain
-3. Relevant architectural patterns (with tradeoffs)
-4. Any known security considerations specific to this domain
+3. Project-specific anti-patterns from `AGENTS_LEARNING.md`
+4. Relevant architectural patterns (with tradeoffs)
+5. Any known security considerations specific to this domain
 
 Write findings to `.planning/phases/phase-[N]/RESEARCH.md`.
 

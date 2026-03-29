@@ -303,6 +303,7 @@ MindForge has evolved rapidly from a simple workflow tool into a sovereign intel
 
 - **Pillar XI: Post-Quantum Agentic Security (PQAS)**: Lattice-based (Dilithium-5) signatures and ZK-Proof bypasses for Tier 4 agent identities.
 - **Pillar XII: Proactive Semantic Homing**: Autonomous "Intent Hunting" where agents proactively claim tasks and peer-heal logic drift (>80) in the mesh.
+- **Agentic Learning Loop (Double-Hook Memory)**: Mandatory "Read Before, Record After" protocol for all agentic actions, ensuring a persistent, self-improving engineering memory.
 - **Edge-Case Biometrics**: Hardware-locked governance requiring manual `APPROVED_BY_EXECUTIVE` steering for catastrophic-risk operations.
 </details>
 
