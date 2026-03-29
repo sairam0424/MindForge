@@ -1,7 +1,19 @@
-# MindForge v5.6.0 — Sentinel Execution Framework
+# MindForge v5.10.0 — Nexus Steering & AgRevOps
 
-MindForge turns AI coding agents into production-grade engineering partners with governance, multi-cloud resilience, and a non-bypassable Sovereign Reason Enclave.
-Release published: v5.1.0-PRO.
+MindForge turns AI coding agents into production-grade engineering partners with **Interactive Temporal Steering (Pillar VII)**, **AgRevOps ROI Analytics (Pillar VIII)**, and a non-bypassable Sovereign Reason Enclave with Merkle-linked ZK-Audit trails.
+Release published: v5.10.0-NEXUS.
+
+## What's new in v5.10 (Nexus Steering & AgRevOps)
+
+MindForge V5.10 completes the "Hyper-Enterprise" evolution, transforming the dashboard into a high-fidelity control center for temporal debugging and financial governance.
+
+- **Interactive Temporal Steering (Pillar VII)**: The 'Time-Travel' slider allows real-time navigation of historical snapshots. Inspect reasoning traces at any point in space-time and inject 'Hindsight Steering Vectors' to correct agentic drift.
+- **AgRevOps ROI Engine (Pillar VIII)**: Automated calculation of economic value ($100/hr dev saving vs token costs). Tracks cumulative savings and net agentic ROI for the entire swarm.
+- **Velocity Forecaster**: Statistical ETA prediction for milestones based on live task completion velocity.
+- **Governance Debt Monitor**: Security Health Score tracking that flags policy bypasses and critical findings in the audit trail.
+- **Nexus Dashboard v2.0**: Major UI upgrade with dedicated Temporal and RevOps tabs, featuring real-time gauges and reasoning inspectors.
+
+## What's new in v5.9 (Beast Mode Hardening)
 
 ## Installation & Setup
 
@@ -36,19 +48,22 @@ npx mindforge-cc@latest --claude --local
 AI coding agents degrade over long sessions. Context fills up. Quality drops.
 Decisions get forgotten. MindForge fixes that with:
 
+- **Sovereign Reason Enclave (v5.8)** — TEE-simulated reasoning isolation with Zero-Knowledge (ZK) Audit Trails.
+- **Multi-Cloud Arbitrage (v5.7)** — Dynamic routing across Vertex AI, Bedrock, and Azure with intelligence-first task affinity.
 - **Sentinel Execution (v5.6)** — JIT Binary Runtime Attestation and Zero-Trust Skill Enforcement.
-- **Predictive Reliability (v5.5)** — Reasoning Entropy Scoring (RES) and proactive loop breaking via Steering Vectors.
-- **Multi-Cloud Arbitrage (v5.0)** — Dynamic routing and provider hedging with low-latency arbitrage.
-- **Sovereign Reason Enclave (v5.0)** — TEE-simulated reasoning isolation and sanitization for confidential workloads.
+- **Interactive Temporal Steering (v5.10)** — Full history scrubbing, hindsight state repair, and real-time temporal slider navigation.
+- **AgRevOps Hub (v5.10)** — Dynamic ROI tracking ($100/hr mapping), Milestone Velocity forecasting, and Governance Debt monitoring.
+- **Sovereign Reason Enclave (v5.8)** — TEE-simulated reasoning isolation with Zero-Knowledge (ZK) Audit Trails.
+- **Multi-Cloud Arbitrage (v5.7)** — Dynamic routing across Vertex AI, Bedrock, and Azure with intelligence-first task affinity.
+- **Sentinel Execution (v5.6)** — JIT Binary Runtime Attestation and Zero-Trust Skill Enforcement.
 - **Human-Agent Handover (v5.0)** — Nexus State Bundles and mid-wave steering injection.
-- **Autonomous FinOps (v4.3)** — Dynamic **C2C** (Confidence-to-Cost) routing and Agentic ROI tracking.
+- **Autonomous FinOps (v4.3)** — Dynamic **C2C** (Confidence-to-Cost) routing.
 - **Proactive Equilibrium (v4.3)** — Real-time **Wave Divergence** monitoring and autonomous state recovery.
 - **MindForge Nexus (v4.1)** — High-fidelity **ART** (Agentic Reasoning Tracing).
 - **Zero-Trust Identity (v4.2)** — DID-signed non-repudiable audit logs with HSM/Enclave support.
 - **Global Intelligence Mesh (v4.2)** — Cross-repo knowledge sharing and Ghost Pattern Detection.
 - **Context Sharding (v3)** — relevance-dense memory management (40% token savings)
 - **Adversarial Synthesis (v3)** — zero-drift logic through red/blue model debate
-- **Temporal Vision (v3)** — full history scrubbing and hindsight state repair
 - **RAG 2.0 (v3)** — automatic semantic shadowing for background pattern retrieval
 - **Role personas** — specialised agent modes for each task type
 - **Specialized Identities** — custom `/agents/` workspace with enriched `IDENTITY.md` protocols
@@ -293,6 +308,22 @@ See `.mindforge/production/token-optimiser.md`.
 - **Contributing:** `docs/contributing/CONTRIBUTING.md`
 
 ---
+
+## What's new in v5.8 (Sovereign Reason Enclaves)
+
+MindForge V5.8 implements the sixth pillar of the Hyper-Enterprise roadmap: **Sovereign Reason Enclaves with ZK-Audit**.
+
+- **ZK-Proof Compliance Certificates**: Simulated zero-knowledge proofs (signed by System DID) for SRE sessions, proving policy adherence without exposing thoughts.
+- **Privacy-Preserving Auditing**: `NexusTracer` replaces raw reasoning with verifiable certificates in the global audit log.
+- **Enclave Verification**: Cryptographic verification of enclave sessions via `verifyZKProof`.
+
+## What's new in v5.7 (Multi-Cloud Arbitrage)
+
+MindForge V5.7 implements the fifth pillar of the Hyper-Enterprise roadmap: **Multi-Cloud Arbitrage with Task-to-Model Affinity**.
+
+- **Task Affinity Matrices**: Persistent tracking of model success rates by task taxonomy (e.g., Anthropic for refactoring, Google for research).
+- **Intelligence-First Routing**: Scoring weighted 50% on success probability, ensuring the best model for the job.
+- **Feedback Integration**: Automated performance updates via the implementation feedback loop.
 
 ## What's new in v5.6 (Sentinel Execution)
 

@@ -12,37 +12,38 @@ describe('Nexus Tracer & ART Protocol', () => {
     }
   });
 
-  test('should initialize a valid trace and spans', () => {
-    const span = NexusTracer.startSpan('test_wave_01');
+  test('should initialize a valid trace and spans', async () => {
+    const span = await NexusTracer.startSpan('test_wave_01');
     expect(span.trace_id).toBeDefined();
-    expect(span.span_id).toBeDefined();
+    expect(span.id).toBeDefined(); // Use span.id instead of span_id
     expect(span.name).toBe('test_wave_01');
   });
 
-  test('should support hierarchical spans', () => {
-    const parent = NexusTracer.startSpan('parent');
-    const child = NexusTracer.startSpan('child', { parent_span_id: parent.span_id });
+  test('should support hierarchical spans', async () => {
+    const parentId = await NexusTracer.startSpan('parent');
+    const childId = await NexusTracer.startSpan('child', {}, parentId);
     
-    expect(child.trace_id).toBe(parent.trace_id);
-    expect(child.parent_span_id).toBe(parent.span_id);
+    const child = NexusTracer.activeSpans.get(childId);
+    expect(child.trace_id).toBe(NexusTracer.currentTraceId);
+    expect(child.parent_id).toBe(parentId);
   });
 
-  test('should record reasoning trace to AUDIT.jsonl', () => {
-    const span = NexusTracer.startSpan('reasoning_task');
-    NexusTracer.recordReasoning('Considering memory safety in Rust vs C++');
+  test('should record reasoning trace to AUDIT.jsonl', async () => {
+    const spanId = await NexusTracer.startSpan('reasoning_task');
+    await NexusTracer.recordReasoning(spanId, 'test-agent', 'Considering memory safety in Rust vs C++');
     
     const logs = fs.readFileSync(auditPath, 'utf8').split('\n').filter(Boolean);
     const lastEntry = JSON.parse(logs[logs.length - 1]);
     
     expect(lastEntry.event).toBe('reasoning_trace');
     expect(lastEntry.thought).toContain('memory safety');
-    expect(lastEntry.trace_id).toBe(span.trace_id);
+    expect(lastEntry.trace_id).toBe(NexusTracer.currentTraceId);
   });
 
-  test('should close spans and update state', () => {
-    const span = NexusTracer.startSpan('closing_task');
-    NexusTracer.endSpan(span.span_id);
+  test('should close spans and update state', async () => {
+    const spanId = await NexusTracer.startSpan('closing_task');
+    await NexusTracer.endSpan(spanId);
     
-    expect(NexusTracer.activeSpans.has(span.span_id)).toBe(false);
+    expect(NexusTracer.activeSpans.has(spanId)).toBe(false);
   });
 });

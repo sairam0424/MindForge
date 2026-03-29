@@ -1,4 +1,4 @@
-# MindForge v5.6.0 — Unique Selling Points, Features, and Best Practices (v5.6.0)
+# MindForge v5.10.0 — Unique Selling Points, Features, and Best Practices (v5.10.0)
 
 This document summarizes what makes MindForge v5.6.0 distinct, what features
 are included in the official release, and how to use them effectively.
@@ -69,6 +69,12 @@ are included in the official release, and how to use them effectively.
 
 20. **Predictive Agentic Reliability: Reasoning Entropy (v5.5)**
     - Proactively detect and break agentic reasoning loops. Using RES (Reasoning Entropy Scoring), the system interrupts semantic stagnation and injects Steering Vectors to recover lost autonomy.
+
+21. **Interactive Temporal Steering — NEXUS (v5.10)**
+    - Full-fidelity history navigation via a web-based "Temporal Slider." Rewind the agent to any reasoning node and inject "Hindsight Steering" to correct logic drift without restarting the session.
+
+22. **AgRevOps: Agentic Financial Governance (v5.10)**
+    - Real-time ROI analysis ($100/hr value mapping) vs. token costs, combined with a **Security Health Score (SHS)** that tracks governance debt and policy bypasses across the mesh.
 
 ---
 
@@ -323,4 +329,4 @@ preserving scope (local vs global).
 ---
 
 ## Summary
-MindForge v5.6.0 "Sentinel Execution" combines governance, observability, and autonomous execution rigor with **Zero-Trust Skill Integrity** and **Predictive Reliability**. Its core value is providing a non-repudiable, cost-optimized, and resilient AI development engine for the most demanding software projects.
+MindForge v5.10.0 "Nexus Steering" represents the pinnacle of the Hyper-Enterprise evolution. By combining **Interactive Temporal Steering** and **AgRevOps Financial Governance** with the core Sentinel security layer, it provides the first "Agentic OS" capable of self-correcting drift and quantifying its own economic value in real-time.

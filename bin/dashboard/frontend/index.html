@@ -161,6 +161,8 @@
     <button class="tab active" onclick="showPage('activity')">Activity</button>
     <button class="tab" onclick="showPage('metrics')">Metrics</button>
     <button class="tab" onclick="showPage('approvals')">Approvals</button>
+    <button class="tab" onclick="showPage('temporal')">Temporal</button>
+    <button class="tab" onclick="showPage('revops')">RevOps</button>
     <button class="tab" onclick="showPage('memory')">Memory</button>
     <button class="tab" onclick="showPage('team')">Team</button>
   </nav>
@@ -209,6 +211,116 @@
         <div class="card-header"><div class="card-title">Pending Governance Decisions</div></div>
         <div id="approval-list" class="card-body">
           <div style="text-align:center; padding: 40px; color:var(--muted)">No pending approvals</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: TEMPORAL -->
+    <div id="temporal" class="page">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Temporal Steering Timeline</div>
+          <div id="timeline-count" class="badge">0 Snapshots</div>
+        </div>
+        <div class="card-body">
+          <div style="margin-bottom: 24px;">
+            <input type="range" id="temporal-slider" style="width:100%; height:8px; accent-color:var(--accent);" min="0" max="0" step="1" oninput="onSliderChange(this.value)">
+            <div style="display:flex; justify-content:space-between; margin-top:8px; font-family:var(--font-mono); font-size:10px; color:var(--muted)">
+              <span id="slider-start">Past</span>
+              <span id="slider-current">Select Snapshot</span>
+              <span id="slider-end">Present</span>
+            </div>
+          </div>
+          
+          <div class="grid-2">
+            <div class="card" style="height:400px; border-style:dashed;">
+              <div class="card-header"><div class="card-title">Reasoning Snapshot Inspector</div></div>
+              <div id="snapshot-viewer" class="card-body" style="font-family:var(--font-mono); font-size:11px; overflow-y:auto; background:#000; color:#eee;">
+                Select a point in space-time to inspect agentic state...
+              </div>
+            </div>
+            <div class="card" style="height:400px;">
+              <div class="card-header"><div class="card-title">Hindsight Steering Vector</div></div>
+              <div class="card-body">
+                <p style="color:var(--muted); margin-bottom:16px;">Injecting a steering vector will rollback the system state to the selected snapshot and re-trigger the optimization loop with the new constraints.</p>
+                <div style="margin-bottom:20px;">
+                  <label style="display:block; font-size:11px; margin-bottom:8px; color:var(--muted); text-transform:uppercase;">Steering Instruction:</label>
+                  <textarea id="steering-input" class="confirm-input" style="height:120px; resize:none;" placeholder="e.g. 'Rewind to step 2 and ignore the legacy auth module...'"></textarea>
+                </div>
+                <button id="inject-btn" class="btn btn-approve" style="width:100%; justify-content:center;" onclick="injectHindsight()" disabled>Rewind & Inject Fix</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: REVOPS -->
+    <div id="revops" class="page">
+      <div class="grid-4">
+        <div class="card">
+          <div class="card-body">
+            <div class="stat-label">Agentic ROI</div>
+            <div id="rev-roi" class="stat-value">0%</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="stat-label">Net Value Synthesis</div>
+            <div id="rev-net" class="stat-value">$0.00</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="stat-label">Project Velocity</div>
+            <div id="rev-velocity" class="stat-value">0 <span class="stat-unit">tasks/hr</span></div>
+            <div id="rev-eta" style="font-size:10px; margin-top:4px; color:var(--muted)">ETA: N/A</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="stat-label">Security Health</div>
+            <div id="rev-health" class="stat-value">100</div>
+            <div id="rev-health-status" class="badge" style="margin-top:4px">STATUS: EXCELLENT</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Financial Flow (ROI Mapping)</div></div>
+          <div class="card-body">
+            <div id="roi-breakdown" style="font-family:var(--font-mono); font-size:12px;">
+              <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border)">
+                <span>Developer Hours Saved:</span> <span id="roi-hours" style="color:var(--green)">0.00h</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border)">
+                <span>Gross Value Produced:</span> <span id="roi-gross" style="color:var(--green)">$0.00</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border)">
+                <span>Total Token Burn:</span> <span id="roi-burn" style="color:var(--red)">$0.00</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; padding:12px 0; font-weight:700; font-size:14px;">
+                <span>NET AGENTIC ROI:</span> <span id="roi-total-pct" style="color:var(--accent)">0%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Governance Debt Analysis</div></div>
+          <div class="card-body">
+            <div id="debt-breakdown" style="font-family:var(--font-mono); font-size:12px;">
+              <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border)">
+                <span>Critical Security Findings:</span> <span id="debt-critical">0</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border)">
+                <span>Tier 3 Policy Bypasses:</span> <span id="debt-tier3">0</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border)">
+                <span>Active Risk Level:</span> <span id="debt-risk" class="badge">MINIMAL</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -321,7 +433,31 @@
         refreshApprovals();
         refreshMemory();
         refreshTeam();
+        refreshRevOps();
+        if (document.getElementById('temporal').classList.contains('active')) {
+            refreshTemporal();
+        }
       } catch(e) { console.error('Refresh fail', e); }
+    }
+
+    async function refreshRevOps() {
+      try {
+        const res = await fetch('/api/revops/overview');
+        const data = await res.json();
+        if (data.success) {
+            updateRevOpsUI(data);
+        }
+      } catch(e) {}
+    }
+
+    let temporalHistory = [];
+    async function refreshTemporal() {
+      try {
+        const res = await fetch('/api/temporal/history');
+        const data = await res.json();
+        temporalHistory = data;
+        renderTemporalTimeline();
+      } catch(e) {}
     }
 
     async function refreshApprovals() {
@@ -503,8 +639,112 @@
       ctx.fill();
     }
 
+    // ── Temporal Steering Logic ────────────────────────────────────────────────
+    function renderTemporalTimeline() {
+      const slider = document.getElementById('temporal-slider');
+      const count = document.getElementById('timeline-count');
+      
+      if (temporalHistory.length === 0) {
+        slider.max = 0;
+        count.textContent = '0 Snapshots';
+        return;
+      }
+
+      slider.max = temporalHistory.length - 1;
+      count.textContent = `${temporalHistory.length} Snapshots`;
+      
+      // Default to latest if not touching
+      if (slider.value == 0 && temporalHistory.length > 0) {
+          onSliderChange(temporalHistory.length - 1);
+          slider.value = temporalHistory.length - 1;
+      }
+    }
+
+    let selectedSnapshot = null;
+    async function onSliderChange(index) {
+      const snap = temporalHistory[temporalHistory.length - 1 - index]; // reversed for chronological range
+      if (!snap) return;
+
+      selectedSnapshot = snap;
+      document.getElementById('slider-current').textContent = `Point: ${snap.id.slice(0, 8)} (${new Date(snap.timestamp).toLocaleTimeString()})`;
+      document.getElementById('inject-btn').disabled = false;
+
+      // Fetch sample audit file for this snapshot
+      try {
+        const res = await fetch(`/api/temporal/snapshot/${snap.id}/AUDIT.jsonl`);
+        const content = await res.text();
+        document.getElementById('snapshot-viewer').textContent = content || 'No audit log available for this point.';
+      } catch(e) {
+        document.getElementById('snapshot-viewer').textContent = 'Failed to load snapshot details.';
+      }
+    }
+
+    async function injectHindsight() {
+      if (!selectedSnapshot) return;
+      const instruction = document.getElementById('steering-input').value;
+      if (!instruction) {
+          alert('Please provide a steering instruction for the hindsight injection.');
+          return;
+      }
+
+      const btn = document.getElementById('inject-btn');
+      btn.disabled = true;
+      btn.textContent = 'Injecting Steering Vector...';
+
+      try {
+        const res = await fetch('/api/temporal/inject', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            auditId: selectedSnapshot.id,
+            fixDescription: instruction
+          })
+        });
+        const result = await res.json();
+        if (result.success) {
+            alert('Hindsight Injection Successful. Agent state rolled back and awaiting re-optimization.');
+            showPage('activity');
+        } else {
+            alert('Injection failed: ' + result.error);
+        }
+      } catch(e) {
+          alert('Failed to connect to temporal engine.');
+      } finally {
+          btn.disabled = false;
+          btn.textContent = 'Rewind & Inject Fix';
+      }
+    }
+
+    // ── RevOps Logic ─────────────────────────────────────────────────────────
+    function updateRevOpsUI(data) {
+        const { roi, velocity, debt } = data;
+        
+        document.getElementById('rev-roi').textContent = `${roi.roi_percentage}%`;
+        document.getElementById('rev-net').textContent = `$${roi.net_value}`;
+        document.getElementById('rev-velocity').innerHTML = `${velocity.avg_seconds_per_task} <span class="stat-unit">sec/task</span>`;
+        document.getElementById('rev-eta').textContent = `ETA: ${velocity.eta}`;
+        document.getElementById('rev-health').textContent = debt.security_health_score;
+        
+        const healthStatus = document.getElementById('rev-health-status');
+        healthStatus.textContent = `STATUS: ${debt.governance_status.toUpperCase()}`;
+        healthStatus.style.background = debt.security_health_score > 80 ? 'rgba(63, 185, 80, 0.15)' : 'rgba(248, 81, 73, 0.15)';
+        healthStatus.style.color = debt.security_health_score > 80 ? 'var(--green)' : 'var(--red)';
+
+        document.getElementById('roi-hours').textContent = `${roi.hours_saved}h`;
+        document.getElementById('roi-gross').textContent = `$${roi.gross_value}`;
+        document.getElementById('roi-burn').textContent = `$${roi.token_cost}`;
+        document.getElementById('roi-total-pct').textContent = `${roi.roi_percentage}%`;
+
+        document.getElementById('debt-critical').textContent = debt.critical_findings;
+        document.getElementById('debt-tier3').textContent = debt.tier3_approvals;
+        const riskBadge = document.getElementById('debt-risk');
+        riskBadge.textContent = debt.debt_level.toUpperCase();
+        riskBadge.className = `badge ${debt.debt_level === 'Minimal' ? 'badge-live' : ''}`;
+        if (debt.debt_level !== 'Minimal') riskBadge.style.color = 'var(--yellow)';
+    }
+
     window.onresize = drawCharts;
-    setInterval(refreshData, 30000); // Periodic full refresh
+    setInterval(refreshData, 10000); // More frequent refresh for live dashboard
     showPage('activity');
   </script>
 </body>

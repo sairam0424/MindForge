@@ -1,4 +1,4 @@
-# Feature: Real-time Dashboard (v4.1.0)
+# Feature: Real-time Dashboard (v5.10.0)
 
 The MindForge Real-time Dashboard provides a high-fidelity, web-based control center for your agentic workflows. It leverages **Server-Sent Events (SSE)** to push live updates from your codebase directly to your browser with zero performance overhead.
 
@@ -33,10 +33,16 @@ Default access: `http://localhost:7339` (Strictly bound to `127.0.0.1` for secur
 - **Persona Context**: See which agent personas are currently active.
 - **Steerage Feed**: View steering instructions as they are applied.
 
-### 5. MindForge Nexus (v4.1+)
+### 5. MindForge Nexus (v5.10+)
 - **ART Trace Explorer**: Drill down into hierarchical reasoning spans and thought chains.
-- **Mesh Topology**: Visual graph of the active agentic mesh and specialist clusters.
+- **Temporal Control Center**: Dynamic slider-based navigation of reasoning history.
+- **Hindsight Injection**: Rollback project state to any previous `auditId` and inject steering instructions to correct drift.
 - **Reasoning Heatmaps**: Identifying areas of adversarial disagreement and drift in real-time.
+
+### 6. AgRevOps Financial Hub (v5.10+)
+- **ROI Hub**: Real-time tracking of developer-hour value ($100/hr) vs. token expenditure.
+- **Velocity Forecaster**: Predictive analytics for milestone completion ETAs based on live task throughput.
+- **Security Health Score (SHS)**: Dynamic 0-100 score reflecting governance debt and policy compliance.
 
 ## 🛡 Hardened Security
 - **Localhost Binding**: The server refuses connections from external IPs.

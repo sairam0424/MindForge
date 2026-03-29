@@ -1,0 +1,22 @@
+{
+  "anthropic": {
+    "refactor": { "success": 45, "failure": 2 },
+    "test": { "success": 30, "failure": 1 },
+    "architect": { "success": 12, "failure": 0 }
+  },
+  "google": {
+    "refactor": { "success": 25, "failure": 8 },
+    "test": { "success": 50, "failure": 2 },
+    "architect": { "success": 8, "failure": 4 }
+  },
+  "aws": {
+    "refactor": { "success": 20, "failure": 5 },
+    "test": { "success": 15, "failure": 5 },
+    "architect": { "success": 5, "failure": 2 }
+  },
+  "azure": {
+    "refactor": { "success": 10, "failure": 10 },
+    "test": { "success": 20, "failure": 5 },
+    "architect": { "success": 3, "failure": 5 }
+  }
+}

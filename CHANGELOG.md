@@ -1,14 +1,97 @@
 # Changelog
 
+## [5.10.0] - 2026-03-29
+
+### Added (v5.10.0)
+
+- **Pillar VIII: AgRevOps ROI Engine (Enterprise Value)**.
+- **MindForge v5.10.0 — AgRevOps ROI Engine (Enterprise Value)**
+
+## Top Summary (v5.10.0)
+
+The v5.10.0 release introduces the final pillar of the MindForge Enterprise architecture: AgRevOps (Agentic Revenue Operations). This engine provides real-time ROI attribution for autonomous waves, enabling enterprises to quantify the business value of every agentic reasoning cycle.
+
+## Highlights (v5.10.0)
+
+- **AgRevOps ROI Engine**: Real-time value attribution for autonomous task execution.
+- **ROI Telemetry**: New `roi-telemetry.jsonl` stream for tracking cost efficiency vs. outcome quality.
+- **Nexus Steering Sync**: Final synchronization of the `NexusTracer` and `NexusSteering` protocols into the core execution loop.
+- **Protocol Automation**: Automated activation of `_extended` mindforge skills via the Neural Orchestrator.
+
+---
+
+# MindForge v5.9.0 — Beast Mode Hardening (Nexus Unification)
+
+## Top Summary (v5.9.0)
+
+The v5.9.0 release elevates the MindForge Enterprise architecture to "Beast Mode" by unifying the tracing infrastructure into a single, high-fidelity asynchronous ART protocol and hardening the governance and arbitrage pillars with advanced cryptographic and resilience patterns.
+
+## Highlights (v5.9.0)
+
+- **Unified NexusTracer Singleton**: Migration of all tracing and reasoning capture to `bin/engine/nexus-tracer.js`. Standardized as a singleton with mandatory `async` methods to support ZTAI cryptographic signing.
+- **Merkle-Style Audit Integrity**: Hardened SRE and ZTAI logs with Merkle-root cumulative hash chains, ensuring every audit entry is cryptographically linked to the entire session history.
+- **MCA Circuit Breakers**: Stateful provider blacklisting in `CloudBroker` that automatically disables failing models for 10 minutes after 3 consecutive errors.
+- **Intelligence Metrics Decay**: Historical performance data now favors recent trends via a 0.95 decay factor, ensuring routing adaptivity.
+- **Async Test Suite**: 100% restoration of the core test suite (Nexus, SRE, RES) for the new asynchronous execution model.
+
+---
+
+# MindForge v5.8.0 — Sovereign Reason Enclaves (ZK-Audit)
+
+## Top Summary (v5.8.0)
+
+The v5.8.0 release implements the sixth pillar of the Hyper-Enterprise roadmap: Sovereign Reason Enclaves with Zero-Knowledge (ZK) Audit Trails. This enables agents to provide cryptographic proof of policy adherence for confidential reasoning without exposing proprietary content to global logs.
+
+## Highlights (v5.8.0)
+
+- **ZK-Proof Compliance Certificates**: Simulated zero-knowledge proofs (DID-signed) for SRE sessions.
+- **Privacy-Preserving Auditing**: `NexusTracer` replaces raw thought traces with verifiable certificates for isolated tasks.
+- **Enclave Verification**: New `verifyZKProof` utility for non-custodial audit integrity checks.
+- Synchronized `mindforge-cc` documentation suite for Pillar VII & VIII.
+- Updated `CLAUDE.md` with standard `_extended` protocol awareness.
+
+## [5.9.0] - 2026-03-28
+
+### Added (v5.9.0)
+
+- **Pillar VII: Nexus Steering (Hierarchical Intent Orchestration)**.
+- Implemented `NexusTracer` for multi-layered reasoning visualization.
+- Added `NexusSteering` protocol for cross-session intent persistence.
+- Hardened `SwarmController` with `context7-depth` logic for high-complexity tasks.
+
+## [5.8.0] - 2026-03-28
+
+### Added (v5.8.0)
+
+- **Pillar VI: Sovereign Reason Enclaves (ZK-Proof Audit Trails)**.
+- Implemented `SRE-ISOLATED` reasoning mode in `SREManager`.
+- Generated **ZK-Proof Compliance Certificates** (signed by System DID) for confidential reasoning cycles.
+- Integrated masked audit logging in `NexusTracer`, replacing raw thought traces with verifiable proofs.
+- Added `verifyZKProof` utility for non-custodial audit verification.
+
+## [5.7.0] - 2026-03-28
+
+### Added (v5.7.0)
+
+- **Pillar V: Multi-Cloud Arbitrage (Task-to-Model Affinity Routing)**.
+- Implemented **Performance-Based Affinity Matrices** in `CloudBroker` for intelligence-first routing.
+- Added `performance-stats.json` persistence to track cross-provider success rates by task taxonomy.
+- Integrated automated result recording in `WaveFeedbackLoop`.
+- Prioritized **Probability of Success** over raw cost/latency in routing scoring.
+
 ## [5.6.0] - 2026-03-28
-### Added
+
+### Added (v5.6.0)
+
 - **Pillar IV: Supply Chain Trust (Binary Runtime Attestation)**.
 - Cryptographic skill signing in `SkillRegistry` via ZTAIManager Tier 3 Enclaves.
 - JIT Attestation in `SkillValidator` to verify skill integrity before agent execution.
 - `SIGNATURES.json` tracking for all enterprise-grade skills.
 
 ## [5.5.0] - 2026-03-28
-### Added
+
+### Added (v5.5.0)
+
 - **Pillar III: Predictive Agentic Reliability (Reasoning Entropy Monitoring)**.
 - Reasoning Entropy Scoring (RES) in `NexusTracer` to detect semantic stagnation and loops.
 - Proactive Self-Healing trigger for high-similarity thought sequences.
@@ -16,23 +99,17 @@
 
 ## [5.4.0] — Beast Mode Hardening — 2026-03-28
 
-# Release Notes - MindForge v5.6.0 "Sentinel Execution"
+# Release Notes - MindForge v5.4.0 — Enterprise Resilience (Hardened Edition)
 
-MindForge v5.6.0 introduces the final pillars of the Hyper-Enterprise roadmap: Proactive Reliability and Zero-Trust Skill Execution.
+This update elevates the v5.3.0 "Hyper-Enterprise" features to maximum robustness ("Beast Mode"), implementing critical safety systems and advanced observability.
 
-## Highlights
-- **Reasoning Entropy Monitoring (PAR)**: Proactively prevents token-burning reasoning loops.
-- **Binary Runtime Attestation (ZTS)**: Cryptographically ensures that skills have not been tampered with before they are loaded by the agent.
+### Added
 
----
-
-## [5.6.0] - Sentinel Execution
-- Implemented JIT Attestation for Skill Registry.
-- Added Skill Signing utility in `mindforge-cc sign`.
-
-## [5.5.0] - Predictive Reliability
-- Implemented RES (Reasoning Entropy Scoring) in Nexus Tracer.
-- Added Steering Vector injection for proactive loop breaking.
+- **Circuit Breaker Pattern**: Implemented a stateful `CircuitBreaker` in `federated-sync.js` to prevent network floods. Automatically disables mesh sync for 1 hour after 3 consecutive EIS failures.
+- **Critical-Path Protection**: Automated "Blast Radius" score of 100 in `impact-analyzer.js` for sensitive files (`.env`, `*.pem`, `id_rsa`, `package-lock.json`, etc.).
+- **Recursive Depth Penalty**: Introduced a 1.5x impact multiplier for actions deeper than 5 directory levels, preventing mass-scale silent modifications.
+- **Failure Telemetry**: Added `sync-history.jsonl` and `sync-telemetry.jsonl` for detailed conflict resolution and error auditability.
+- **Resilient Execution**: Raised default scores for `EXECUTE` and `GRANT` actions to increase governance oversight.
 
 🚀 **MindForge v5.4.0 — Enterprise Resilience (Hardened Edition)**
 

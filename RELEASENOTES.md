@@ -1,4 +1,57 @@
-# MindForge v5.4.0 — Beast Mode Hardening
+# MindForge v5.10.0 — AgRevOps ROI Engine (Enterprise Value)
+
+## Top Summary
+
+The v5.10.0 release introduces the final pillar of the MindForge Enterprise architecture: AgRevOps (Agentic Revenue Operations). This engine provides real-time ROI attribution for autonomous waves, enabling enterprises to quantify the business value of every agentic reasoning cycle.
+
+## Highlights (v5.10.0)
+
+- **AgRevOps ROI Engine**: Real-time value attribution for autonomous task execution.
+- **ROI Telemetry**: New `roi-telemetry.jsonl` stream for tracking cost efficiency vs. outcome quality.
+- **Nexus Steering Sync**: Final synchronization of the `NexusTracer` and `NexusSteering` protocols into the core execution loop.
+- **Protocol Automation**: Automated activation of `_extended` mindforge skills via the Neural Orchestrator.
+
+---
+
+# MindForge v5.9.0 — Beast Mode Hardening (Nexus Unification)
+
+## Top Summary
+
+The v5.9.0 release elevates the MindForge Enterprise architecture to "Beast Mode" by unifying the tracing infrastructure into a single, high-fidelity asynchronous ART protocol and hardening the governance and arbitrage pillars with advanced cryptographic and resilience patterns.
+
+## Highlights (v5.9.0)
+
+- **Unified NexusTracer Singleton**: Migration of all tracing and reasoning capture to `bin/engine/nexus-tracer.js`. Standardized as a singleton with mandatory `async` methods to support ZTAI cryptographic signing.
+- **Merkle-Style Audit Integrity**: Hardened SRE and ZTAI logs with Merkle-root cumulative hash chains, ensuring every audit entry is cryptographically linked to the entire session history.
+- **MCA Circuit Breakers**: Stateful provider blacklisting in `CloudBroker` that automatically disables failing models for 10 minutes after 3 consecutive errors.
+- **Intelligence Metrics Decay**: Historical performance data now favors recent trends via a 0.95 decay factor, ensuring routing adaptivity.
+- **Async Test Suite**: 100% restoration of the core test suite (Nexus, SRE, RES) for the new asynchronous execution model.
+
+---
+
+# MindForge v5.8.0 — Sovereign Reason Enclaves (ZK-Audit)
+## Top Summary
+The v5.8.0 release implements the sixth pillar of the Hyper-Enterprise roadmap: Sovereign Reason Enclaves with Zero-Knowledge (ZK) Audit Trails. This enables agents to provide cryptographic proof of policy adherence for confidential reasoning without exposing proprietary content to global logs.
+
+## Highlights
+- **ZK-Proof Compliance Certificates**: Simulated zero-knowledge proofs (DID-signed) for SRE sessions.
+- **Privacy-Preserving Auditing**: `NexusTracer` replaces raw thought traces with verifiable certificates for isolated tasks.
+- **Enclave Verification**: New `verifyZKProof` utility for non-custodial audit integrity checks.
+
+---
+
+# MindForge v5.7.0 — Multi-Cloud Arbitrage (Affinity Routing)
+## Top Summary
+The v5.7.0 release implements the fifth pillar of the Hyper-Enterprise roadmap: Multi-Cloud Arbitrage with Task-to-Model Affinity Routing. Routing is now intelligence-first, mapping task taxonomies to providers with the highest historical success rates.
+
+## Highlights
+- **Task-to-Model Affinity Matrices**: Persistent tracking of success probability per model and task type (refactor, test, audit, etc.).
+- **Intelligence-First Routing**: `CloudBroker` weights routing scoring by success probability (50% weight) alongside cost (30%) and latency (20%).
+- **Feedback Loop Integration**: Automated updates to performance metrics via `WaveFeedbackLoop` completions.
+
+---
+
+# MindForge v5.6.0 — Sentinel Execution
 ## Top Summary
 The v5.4.0 release elevates the "Hyper-Enterprise" features to maximum robustness ("Beast Mode"), implementing critical safety systems, automated blast-radius protection for sensitive files, and advanced failure telemetry.
 

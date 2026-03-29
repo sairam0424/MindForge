@@ -1,12 +1,12 @@
-# MINDFORGE.md — Parameter Registry (v5.1.0-beast)
+# MINDFORGE.md — Parameter Registry (v5.10.0-nexus)
 
 ## 1. IDENTITY & VERSIONING
 
 [NAME]    = MindForge
-[VERSION] = 5.1.0
+[VERSION] = 5.10.0
 [STABLE]  = true
 [MODE]    = "Zero-Trust Agentic Hub"
-[REQUIRED_CORE_VERSION] = 5.1.0
+[REQUIRED_CORE_VERSION] = 5.10.0
 
 ## 2. INTELLIGENCE TOGGLES (V4 UPDATES)
 
