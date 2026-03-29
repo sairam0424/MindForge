@@ -14,6 +14,8 @@ const headlessAdapter = require('./headless');
 const ContextRefactorer = require('./context-refactorer');
 const KnowledgeCapture = require('../memory/knowledge-capture');
 const TemporalHub = require('../engine/temporal-hub');
+const IntentHarvester = require('./intent-harvester');
+const MeshSelfHealer = require('./mesh-self-healer');
 const crypto = require('crypto');
 
 // MindForge v5 Core Modules
@@ -161,6 +163,18 @@ class AutoRunner {
 
   handleStuck(result) {
     console.error(`🛑 STUCK PATTERN DETECTED: ${result.pattern} - ${result.message}`);
+    
+    // v7: Mesh Self-Healing (Pillar XII)
+    if (result.driftScore > 80) {
+      console.log(`[HOMING-REPAIR] Stuck pattern with high drift detected. Invoking Mesh Self-Healer...`);
+      const repairPlan = MeshSelfHealer.homeIn(result.did || 'auto-runner', result.driftScore);
+      if (repairPlan) {
+        this.writeAudit({ event: 'mesh_healing_active', plan: repairPlan });
+        // In a real system, this would modify the execution DAG to include the repair wave
+        return; 
+      }
+    }
+
     this.writeAudit({ event: 'auto_mode_escalated', reason: result.message });
     process.exit(10);
   }
