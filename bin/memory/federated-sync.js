@@ -23,7 +23,7 @@ class FederatedSync {
   }
 
   /**
-   * [BEAST] Checks if the circuit is open.
+   * [ENTERPRISE] Checks if the circuit is open.
    */
   isCircuitOpen() {
     if (!fs.existsSync(this.circuitBreakerPath)) return false;
@@ -43,7 +43,7 @@ class FederatedSync {
   }
 
   tripCircuit(reason) {
-    console.warn(`[BEAST] ⚠️ Circuit Breaker TRIPPED: ${reason}. Mesh sync disabled for 1hr.`);
+    console.warn(`[CIRCUIT-BREAKER] ⚠️ Circuit Breaker TRIPPED: ${reason}. Mesh sync disabled for 1hr.`);
     const state = { status: 'OPEN', trippedAt: Date.now(), reason };
     fs.writeFileSync(this.circuitBreakerPath, JSON.stringify(state, null, 2));
   }
@@ -79,7 +79,7 @@ class FederatedSync {
       return { status: 'CIRCUIT_OPEN' };
     }
 
-    console.log('🔄 Initiating Federated Intelligence Sync (v5.4.0 BEAST)...');
+    console.log('🔄 Initiating Federated Intelligence Sync (v5.4.0 ENTERPRISE)...');
     
     try {
       // 1. Get promotable entries (Tiers 1-3)

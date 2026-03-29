@@ -8,7 +8,7 @@ const crypto = require('crypto');
 
 // Simulated System DID for Enclave Proofs (Tier 3)
 const ENCLAVE_PRIVATE_KEY = 'tier3-enclave-secret-key-sim'; // In production, this would be a TEE-bound private key
-const SYSTEM_DID = 'did:mindforge:enclave:0xbeast';
+const SYSTEM_DID = 'did:mindforge:enclave:0xenterprise';
 
 class SREManager {
   constructor() {

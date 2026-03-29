@@ -1,6 +1,6 @@
 /**
  * MindForge ZTAI (Zero-Trust Agentic Identity) Manager
- * v4.2.5 — Beast Mode Hardening
+ * v4.2.5 — Enterprise-Grade Hardening
  */
 
 const crypto = require('node:crypto');
