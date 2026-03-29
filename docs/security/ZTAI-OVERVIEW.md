@@ -1,6 +1,6 @@
 # Zero-Trust Agentic Identity (ZTAI) Overview
 
-MindForge v4.2 introduces **ZTAI Beast Mode**, an enterprise-grade identity layer that ensures every agent action is cryptographically signed and non-repudiable.
+MindForge v4.2 introduces **ZTAI Enterprise Mode**, an enterprise-grade identity layer that ensures every agent action is cryptographically signed and non-repudiable.
 
 ## 1. Asymmetric Identity Model
 Every MindForge persona in the 32+ agent library is assigned a unique asymmetric key pair (Ed25519) upon project initialization or agent spawning.
