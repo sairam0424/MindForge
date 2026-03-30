@@ -12,6 +12,9 @@ Systematic debugging using the Debug Specialist persona with full RCA protocol.
 Load `.mindforge/personas/debug-specialist.md` immediately.
 This command runs entirely in that persona for its full duration.
 
+## Step 0 — Initial Intelligence Check
+Read `AGENTS_LEARNING.md` before intake. Check the "Mistakes Observed" and "Anti-Patterns" sections to see if this issue matches a known historical failure.
+
 ## Step 1 — Intake
 
 Ask the user:

@@ -129,6 +129,15 @@ const COMMANDS = {
     script: 'bin/models/cost-tracker.js',
     description: 'Analyze token consumption and cost efficiency',
     defaultArgs: ['--report']
+  },
+  'learning': {
+    script: 'bin/engine/learning-manager.js',
+    description: 'Consult or initialize the project agentic learning memory'
+  },
+  'record-learning': {
+    script: 'bin/engine/learning-manager.js',
+    description: 'Append a new Learning Entry to the Evolution Log',
+    defaultArgs: ['record']
   }
 };
 

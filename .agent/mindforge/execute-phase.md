@@ -106,6 +106,7 @@ After all tasks in wave complete:
    - Stop. Ask user how to proceed.
 3. If tests pass:
    - Report: "Wave [W] complete. All [X] tasks passed. Tests passing. ✅"
+   - Run `/mindforge:record-learning` if any architectural "Aha!" moments or significant anti-patterns were discovered during this wave.
    - Write WAVE-REPORT update
 
 ## Step 4 — Phase-level verification
@@ -138,6 +139,11 @@ Run /mindforge:verify-phase [N] for human acceptance testing.
 ```
 
 Update HANDOFF.json with completed phase info.
+
+## Step 5.1 — Final Intelligence Sync
+1. Read `AGENTS_LEARNING.md` one last time.
+2. Run `/mindforge:record-learning` to capture the final phase-level learnings (Mistakes discovered during UAT, architectural refinements).
+3. Commit `AGENTS_LEARNING.md` if updated.
 
 Write final AUDIT entry:
 ```json

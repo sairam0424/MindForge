@@ -13,6 +13,7 @@ Facilitate a structured retrospective with objective metrics + qualitative insig
 3. Write retrospective artifact in `.planning/phases/...` or `.planning/milestones/...`.
 4. Create follow-up tasks/tickets for action items.
 5. Update metrics with retrospective-completed event.
+6. Run `/mindforge:record-learning` to sync any new architectural "Aha!" moments or significant anti-patterns discovered during this phase/milestone.
 
 ## Step 5 — Apply learnings to MINDFORGE.md
 Ask explicitly:
