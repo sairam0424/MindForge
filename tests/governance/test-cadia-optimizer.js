@@ -17,24 +17,24 @@ async function runTests() {
   if (!fs.existsSync(testPoliciesDir)) fs.mkdirSync(testPoliciesDir, { recursive: true });
 
   const policy1 = {
-    "id": "policy_enforce_tier_3_security",
-    "effect": "DENY",
-    "description": "Restricted tier agents cannot modify security/governance.",
-    "conditions": {
-      "resource": "*/security/*,*/governance/*",
-      "min_tier": 3
+    'id': 'policy_enforce_tier_3_security',
+    'effect': 'DENY',
+    'description': 'Restricted tier agents cannot modify security/governance.',
+    'conditions': {
+      'resource': '*/security/*,*/governance/*',
+      'min_tier': 3
     }
   };
 
   const policy2 = {
-    "id": "policy_max_impact_tier_2",
-    "effect": "PERMIT",
-    "conditions": {
-      "action": "WRITE",
-      "resource": "*",
-      "min_tier": 2
+    'id': 'policy_max_impact_tier_2',
+    'effect': 'PERMIT',
+    'conditions': {
+      'action': 'WRITE',
+      'resource': '*',
+      'min_tier': 2
     },
-    "max_impact": 60
+    'max_impact': 60
   };
 
   fs.writeFileSync(path.join(testPoliciesDir, 'deny-security.json'), JSON.stringify(policy1, null, 2));

@@ -92,10 +92,10 @@ class TemporalHindsight {
     console.log(`[TemporalHindsight] Proactive Recovery triggered for trace ${traceId} (Entropy: ${entropyScore})`);
     
     const steeringVectors = [
-      "CRITICAL: Stagnation detected. You have repeated similar reasoning steps 3 times. STOP your current approach and decompose the problem into smaller, independent sub-tasks.",
-      "STATIONARY LOOP: Your recent thoughts show high similarity. Change your technical layer—if you were editing code, try running a diagnostic command instead.",
-      "REASONING DEADLOCK: Entropy too low. Request human intervention or switch to the 'Architect' persona to re-evaluate the plan.",
-      "DIVERGENCE ALERT: Proactive reset. Clear your context window of the last 3 reasoning steps and start fresh from the last successful checkpoint."
+      'CRITICAL: Stagnation detected. You have repeated similar reasoning steps 3 times. STOP your current approach and decompose the problem into smaller, independent sub-tasks.',
+      'STATIONARY LOOP: Your recent thoughts show high similarity. Change your technical layer—if you were editing code, try running a diagnostic command instead.',
+      'REASONING DEADLOCK: Entropy too low. Request human intervention or switch to the \'Architect\' persona to re-evaluate the plan.',
+      'DIVERGENCE ALERT: Proactive reset. Clear your context window of the last 3 reasoning steps and start fresh from the last successful checkpoint.'
     ];
 
     // Pick a vector based on entropy severity

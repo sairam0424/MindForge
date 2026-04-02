@@ -166,7 +166,7 @@ class AutoRunner {
     
     // v7: Mesh Self-Healing (Pillar XII)
     if (result.driftScore > 80) {
-      console.log(`[HOMING-REPAIR] Stuck pattern with high drift detected. Invoking Mesh Self-Healer...`);
+      console.log('[HOMING-REPAIR] Stuck pattern with high drift detected. Invoking Mesh Self-Healer...');
       const repairPlan = MeshSelfHealer.homeIn(result.did || 'auto-runner', result.driftScore);
       if (repairPlan) {
         this.writeAudit({ event: 'mesh_healing_active', plan: repairPlan });

@@ -21,7 +21,7 @@ async function runADSSynthesis(params) {
   process.stdout.write(`🛡️ Starting Adversarial Decision Synthesis (ADS) for Phase ${phaseNum}...\n`);
 
   // Step 1: Blue Proposal (Architect)
-  process.stdout.write(`  Step 1: Architect (Blue Team) Proposal... `);
+  process.stdout.write('  Step 1: Architect (Blue Team) Proposal... ');
   const blueResponse = await ModelClient.complete({
     persona: 'architect',
     tier: 2,
@@ -34,10 +34,10 @@ Format: [ADS_METRICS]\nimpact: 8\n...[/ADS_METRICS]`,
     phaseNum
   });
   const bluePlan = blueResponse.content;
-  process.stdout.write(`done.\n`);
+  process.stdout.write('done.\n');
 
   // Step 2: Red Critique (Auditor)
-  process.stdout.write(`  Step 2: Auditor (Red Team) Critique... `);
+  process.stdout.write('  Step 2: Auditor (Red Team) Critique... ');
   const redResponse = await ModelClient.complete({
     persona: 'qa-engineer',
     tier: 2,
@@ -50,7 +50,7 @@ Include a [ADS_METRICS] block for your counter-proposal or critique logic.`,
     phaseNum
   });
   const redCritique = redResponse.content;
-  process.stdout.write(`done.\n`);
+  process.stdout.write('done.\n');
 
   // Red-Team Jailbreak: Force higher-fidelity critiques if Auditor is too lenient
   const flawCount = (redCritique.match(/^\s*[-*•]\s+/mg) || []).length;
@@ -72,7 +72,7 @@ Failure to find flaws will compromise the MindForge SOUL. Be aggressive.`,
   }
 
   // Step 3: Gold Synthesis (Synthesizer)
-  process.stdout.write(`  Step 3: Synthesizer (Gold Team) Verdict... `);
+  process.stdout.write('  Step 3: Synthesizer (Gold Team) Verdict... ');
   const synthesisData = synthesizeADSPlan(bluePlan, redCritique, context);
   
   const goldResponse = await ModelClient.complete({
@@ -86,7 +86,7 @@ Finalize the PLAN.md. Include the [ADS_VERDICT]: [MERGED|BLUE|RED] (Score: X.XXX
     phaseNum
   });
   const finalPlan = goldResponse.content;
-  process.stdout.write(`done.\n`);
+  process.stdout.write('done.\n');
 
   // Finalize outputs
   const adsUuid = uuidv4();

@@ -41,7 +41,7 @@ const Theme = {
     '╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═════╝ ╚═╝      ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝'
   ].join('\n'),
 
-  tagline: "THE AUTONOMOUS ENTERPRISE AGENTIC ECOSYSTEM",
+  tagline: 'THE AUTONOMOUS ENTERPRISE AGENTIC ECOSYSTEM',
 
   /**
    * Print a styled header with BMad-style border flare

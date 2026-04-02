@@ -161,7 +161,7 @@ function start() {
 
   // Keepalive ping every 15 seconds
   _pingInterval = setInterval(() => {
-    broadcastRaw(`: ping\n\n`);
+    broadcastRaw(': ping\n\n');
   }, 15_000);
 
   _pollInterval.unref();

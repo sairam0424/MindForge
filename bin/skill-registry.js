@@ -142,11 +142,11 @@ function handleInstall() {
     const localSrc = path.join(process.cwd(), 'SKILL.md');
     if (fs.existsSync(localSrc)) {
        fs.copyFileSync(localSrc, targetFile);
-       console.log(`  ✅ Copied from local SKILL.md`);
+       console.log('  ✅ Copied from local SKILL.md');
     } else {
        // Just create a placeholder for testing if nothing else
        fs.writeFileSync(targetFile, `---\nname: ${skillName}\nversion: 1.0.0\nstatus: alpha\ntriggers: test, mock, placeholder\n---\n# ${skillName}\nPlaceholder for ${skillName} skill.\n`);
-       console.log(`  ⚠️  Created mock SKILL.md (no source found)`);
+       console.log('  ⚠️  Created mock SKILL.md (no source found)');
     }
   }
 
@@ -216,11 +216,11 @@ function handleAudit() {
 
   const entry = {
     timestamp: new Date().toISOString(),
-    event: "skill_installed",
+    event: 'skill_installed',
     skill_name: skillName,
     skill_version: version,
     tier: parseInt(tier, 10),
-    source: "cli-system",
+    source: 'cli-system',
     validation_passed: true
   };
 

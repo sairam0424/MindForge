@@ -154,7 +154,7 @@ async function install(skillName, tier = 'project') {
 function formatSearchResults(results, query) {
   if (results.length === 0) {
     return `🔍 No marketplace skills found for "${query}"\n\n` +
-      `Try broader terms, or create your own with:\n  /mindforge:learn [url|path]`;
+      'Try broader terms, or create your own with:\n  /mindforge:learn [url|path]';
   }
 
   const lines = [`🏪 Marketplace results for "${query}" (${results.length} found)\n`];
@@ -165,7 +165,7 @@ function formatSearchResults(results, query) {
     if (r.download_count) lines.push(`     ${r.download_count} downloads/week`);
     lines.push('');
   });
-  lines.push(`Install: /mindforge:marketplace install [name] [--tier project|org]`);
+  lines.push('Install: /mindforge:marketplace install [name] [--tier project|org]');
   return lines.join('\n');
 }
 

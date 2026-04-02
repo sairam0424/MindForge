@@ -50,7 +50,7 @@ function parseSkill(content) {
   const frontmatter      = frontmatterMatch?.[1] || '';
 
   // Extract triggers from frontmatter
-  const triggersSection = frontmatter.match(/^triggers:\n((?:  - .+\n?)*)/m);
+  const triggersSection = frontmatter.match(/^triggers:\n((?: {2}- .+\n?)*)/m);
   const triggers        = (triggersSection?.[1] || '')
     .split('\n')
     .map(l => l.replace(/^\s*- /, '').trim())

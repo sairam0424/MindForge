@@ -98,12 +98,12 @@ server.listen(PORT, '127.0.0.1', () => {
   fs.mkdirSync(path.dirname(PID_FILE), { recursive: true });
   fs.writeFileSync(PID_FILE, String(process.pid));
 
-  console.log(`\n⚡  MindForge Dashboard`);
+  console.log('\n⚡  MindForge Dashboard');
   console.log(`    URL:     http://localhost:${PORT}`);
   console.log(`    Status:  http://localhost:${PORT}/api/status`);
   console.log(`    Events:  http://localhost:${PORT}/events`);
   console.log(`    PID:     ${process.pid}`);
-  console.log(`\n    Press CTRL+C to stop\n`);
+  console.log('\n    Press CTRL+C to stop\n');
 
   if (OPEN_BROWSER) {
     const open = process.platform === 'darwin' ? 'open'
@@ -117,8 +117,8 @@ server.listen(PORT, '127.0.0.1', () => {
 server.on('error', err => {
   if (err.code === 'EADDRINUSE') {
     console.error(`[dashboard] Port ${PORT} already in use.`);
-    console.error(`[dashboard] Stop it: /mindforge:dashboard --stop`);
-    console.error(`[dashboard] Or use a different port: /mindforge:dashboard --port 7340`);
+    console.error('[dashboard] Stop it: /mindforge:dashboard --stop');
+    console.error('[dashboard] Or use a different port: /mindforge:dashboard --port 7340');
   }
   process.exit(1);
 });

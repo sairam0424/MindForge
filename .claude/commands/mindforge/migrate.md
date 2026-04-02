@@ -1,33 +1,44 @@
 ---
-name: mindforge:migrate
-description: Run explicit schema migrations for planning artifacts
-argument-hint: [--from X.Y.Z] [--to X.Y.Z] [--dry-run] [--force]
-allowed-tools:
-  - run_command
-  - list_dir
-  - view_file
-  - write_to_file
+description: Run explicit schema migrations for .planning/ files.
 ---
 
-<objective>
-Ensures consistency and compatibility of planning files (.planning/*.md, handoff.json) across different versions of MindForge by executing structured schema migrations.
-</objective>
+# MindForge — Migrate Command
+# Usage: /mindforge:migrate [--from X.Y.Z] [--to X.Y.Z] [--dry-run] [--force]
 
-<execution_context>
-.claude/commands/mindforge/migrate.md
-</execution_context>
+## Purpose
+Run explicit schema migrations for .planning/ files.
+Normally triggered automatically by /mindforge:update.
+Use this command manually when: auto-migration failed, manual version jump, recovery.
 
-<context>
-Detection: Compares `schema_version` in HANDOFF.json with current framework version.
-Safety: Mandatory backup before mutation.
-Engine: bin/migrations/migrate.js
-</context>
+## Flow
 
-<process>
-1. **Detect Path**: Determine the migration range based on HANDOFF.json vs package.json.
-2. **Backup**: Create a timestamped backup of the `.planning/` directory.
-3. **Dry-run**: Show the user which files will be modified and describe any breaking schema changes.
-4. **Execute**: Run the migration scripts sequentially across the target files.
-5. **Verify**: Run `/mindforge:health` to ensure the post-migration state is valid.
-6. **Audit**: Log success or failure of the migration process.
-</process>
+### Auto-detect migration need
+Read `schema_version` from HANDOFF.json.
+Compare against current `package.json` version.
+Determine migration path.
+
+### Dry-run mode (--dry-run)
+Show: which migrations would run, what each changes.
+Show: breaking changes for the migration path.
+Make NO changes to any file.
+
+### Backup first
+Before any changes: create `.planning/migration-backup-[timestamp]/`
+Verify backup integrity (file count, non-empty).
+If backup fails: ABORT. Explain disk space issue.
+
+### Execute migrations
+Run `node bin/migrations/migrate.js`.
+Show progress for each migration.
+If any migration fails: auto-restore from backup.
+
+### Verify
+Run /mindforge:health after migration.
+If health errors: report with specific fix instructions.
+Preserve backup until user is satisfied — they must delete it manually.
+
+## Manual version override
+`/mindforge:migrate --from 0.1.0 --to 1.0.0` — forces migration between specified versions.
+Use with care: intended for recovery scenarios where HANDOFF.json schema_version is wrong.
+
+## AUDIT entry

@@ -19,7 +19,7 @@ async function verifyEnterpriseMode() {
     const architectInfo = ztai.getAgent(architectDid);
     const analystInfo = ztai.getAgent(analystDid);
 
-    console.log(`[Test 1] Tiered Registration:`);
+    console.log('[Test 1] Tiered Registration:');
     console.log(` - Architect DID: ${architectDid} (Provider: ${architectInfo.providerType}, Tier: ${architectInfo.tier})`);
     console.log(` - Analyst DID: ${analystDid} (Provider: ${analystInfo.providerType}, Tier: ${analystInfo.tier})`);
 
@@ -29,11 +29,11 @@ async function verifyEnterpriseMode() {
     console.log(' ✅ Success');
 
     // 2. Cross-Provider Signing
-    const data = "Mission-critical architectural change: ADR-001";
+    const data = 'Mission-critical architectural change: ADR-001';
     const archSignature = await ztai.signData(architectDid, data);
     const analystSignature = await ztai.signData(analystDid, data);
 
-    console.log(`[Test 2] Cross-Provider Signing:`);
+    console.log('[Test 2] Cross-Provider Signing:');
     console.log(` - Architect Signature (Enclave): ${archSignature.substring(0, 16)}...`);
     console.log(` - Analyst Signature (Local): ${analystSignature.substring(0, 16)}...`);
 
@@ -61,7 +61,7 @@ async function verifyEnterpriseMode() {
     const archiver = new ZTAIArchiver(auditPath);
     const manifest = await archiver.archiveAuditLog(architectDid);
 
-    console.log(`[Test 3] Audit Archiver:`);
+    console.log('[Test 3] Audit Archiver:');
     console.log(` - Manifest Block: ${manifest.blockStart} to ${manifest.blockEnd}`);
     console.log(` - Merkle Root: ${manifest.merkleRoot}`);
     console.log(` - Manifest Signed by Architect: ${manifest.signature.substring(0, 16)}...`);
@@ -74,7 +74,7 @@ async function verifyEnterpriseMode() {
     console.log(' ✅ Success');
 
     // 4. Key Rotation (Enclave)
-    console.log(`[Test 4] Key Rotation (Enclave):`);
+    console.log('[Test 4] Key Rotation (Enclave):');
     const oldKey = architectInfo.publicKey;
     await ztai.rotateKeys(architectDid);
     const newKey = ztai.getAgent(architectDid).publicKey;
@@ -84,7 +84,7 @@ async function verifyEnterpriseMode() {
     }
     
     // Sign with new rotated key
-    const newData = "Post-rotation action";
+    const newData = 'Post-rotation action';
     const newSig = await ztai.signData(architectDid, newData);
     if (!ztai.verifySignature(architectDid, newData, newSig)) {
        throw new Error('FAILED: Signature verification failed after rotation');
@@ -94,7 +94,7 @@ async function verifyEnterpriseMode() {
     console.log('--- All ZTAI Enterprise Mode Tests Passed 🚀 ---');
     process.exit(0);
   } catch (err) {
-    console.error(`--- ZTAI Verification Failed ❌ ---`);
+    console.error('--- ZTAI Verification Failed ❌ ---');
     console.error(err.message);
     process.exit(1);
   }

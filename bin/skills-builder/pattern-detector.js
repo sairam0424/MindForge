@@ -65,7 +65,7 @@ async function detectPatterns(phaseNum, options = {}) {
       const handoff  = JSON.parse(fs.readFileSync(handoffPath, 'utf8'));
       const implicit = (handoff.implicit_knowledge || []).filter(i => (i.confidence || 0) >= 0.7);
       if (implicit.length > 0) {
-        combinedContent += `## Implicit Knowledge (from compaction)\n`;
+        combinedContent += '## Implicit Knowledge (from compaction)\n';
         implicit.forEach(i => { combinedContent += `- ${i.topic || ''}: ${i.content || i.text || ''}\n`; });
       }
     } catch { /* ignore */ }
@@ -126,7 +126,7 @@ function formatForPresentation(detectionResult) {
 
   patterns.forEach((p, i) => {
     const stars  = p.generality === 'high' ? '★★★' : p.generality === 'medium' ? '★★' : '★';
-    const freq   = p.frequency > 1 ? `appeared in ${p.frequency} tasks` : `1 task (high difficulty)`;
+    const freq   = p.frequency > 1 ? `appeared in ${p.frequency} tasks` : '1 task (high difficulty)';
     lines.push(`  ${i + 1}. ${p.display_name || p.pattern_name} (${stars} ${p.generality} generality)`);
     lines.push(`     ${freq}`);
     lines.push(`     "${p.summary?.slice(0, 120) || ''}"`);

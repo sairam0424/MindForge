@@ -11,14 +11,14 @@ const SHARD_HELPER = 'node bin/shard-helper.js';
 
 // Setup Mock Data
 const mockHandoff = {
-  schema_version: "2.1.0",
+  schema_version: '2.1.0',
   hot_context: {
     active_decisions: [
-      { id: "ADR-001", topic: "Use Kafka", content: "Architecture decision to use Kafka for messaging." },
-      { id: "DESC-002", topic: "Typo in README", content: "Minor fix for a typo." }
+      { id: 'ADR-001', topic: 'Use Kafka', content: 'Architecture decision to use Kafka for messaging.' },
+      { id: 'DESC-002', topic: 'Typo in README', content: 'Minor fix for a typo.' }
     ],
     recent_discoveries: [
-      { id: "DISC-001", topic: "Auth latency", content: "Auth service is slow due to DB indexing." }
+      { id: 'DISC-001', topic: 'Auth latency', content: 'Auth service is slow due to DB indexing.' }
     ]
   }
 };
@@ -26,7 +26,7 @@ const mockHandoff = {
 const mockShardDir = '.planning/memories/';
 if (!fs.existsSync(mockShardDir)) fs.mkdirSync(mockShardDir, { recursive: true });
 
-const mockShardLine = JSON.stringify({ id: "WARM-001", topic: "Database Schema", content: "The user table has been updated with a new email field." });
+const mockShardLine = JSON.stringify({ id: 'WARM-001', topic: 'Database Schema', content: 'The user table has been updated with a new email field.' });
 fs.writeFileSync(path.join(mockShardDir, 'WARM-SHARD-TEST.jsonl'), mockShardLine + '\n');
 
 // ── Tests ─────────────────────────────────────────────────────────────────────

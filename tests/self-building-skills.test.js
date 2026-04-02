@@ -282,4 +282,4 @@ test('formatForPresentation: shows patterns when found', () => {
 console.log(`\n${'─'.repeat(55)}`);
 console.log(`Results: ${passed} passed, ${failed} failed`);
 if (failed > 0) { console.error(`\n❌  ${failed} test(s) failed.\n`); process.exit(1); }
-else { console.log(`\n✅  All self-building skills tests passed.\n`); }
+else { console.log('\n✅  All self-building skills tests passed.\n'); }

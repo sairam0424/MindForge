@@ -1,34 +1,34 @@
 ---
-name: mindforge:audit
-description: Query the .planning/AUDIT.jsonl log by phase, event, date, or severity
-argument-hint: [filters]
-allowed-tools:
-  - run_command
-  - view_file
-  - list_dir
+description: Query .planning/AUDIT.jsonl by phase, event, date, severity, integration, or
 ---
 
-<objective>
-Provide a structured interface to query and validate the project's audit logs, ensuring accountability and traceability of all agent actions and system events.
-</objective>
+Query `.planning/AUDIT.jsonl` by phase, event, date, severity, integration, or
+ agent. Usage: `/mindforge:audit [filters]`
 
-<execution_context>
-.claude/commands/mindforge/audit.md
-</execution_context>
+## Supported options
+- `--phase N`
+- `--event NAME`
+- `--agent NAME`
+- `--severity LEVEL`
+- `--date YYYY-MM-DD`
+- `--summary`
+- `--verify`
+- `--export PATH`
 
-<context>
-Storage: .planning/AUDIT.jsonl
-Archive: .planning/audit-archive/
-Filters: --phase, --event, --agent, --severity, --date, --summary, --verify, --export
-</context>
+## Summary mode
+Summarise counts by event, severity, integration, and phase.
+Entries with `"phase": null` are reported as `project-level`, not dropped.
 
-<process>
-1. **Parse Filters**: Identify the search criteria (phase, event, severity, etc.).
-2. **Execute Query**:
-    - Use `grep` or `jq` (if available via bash) to filter the JSONL file.
-    - If `--summary`: Aggregate counts by event and severity.
-    - If `--verify`: Check for JSON validity and chronological integrity.
-3. **Handle Large Logs**: If the log exceeds 10,000 lines, rotate it to the archive directory.
-4. **Export (Optional)**: If `--export` is used, write filtered results to the target path (ensuring project boundary safety).
-5. **Display**: Present the filtered log or summary to the user.
-</process>
+## Verify mode
+Validate JSONL shape and chronological ordering.
+Timestamp comparison may use string comparison because ISO-8601 UTC timestamps
+ with a `Z` suffix sort lexicographically.
+
+## Archive rotation
+If the active audit log exceeds 10,000 lines, rotate it into
+ `.planning/audit-archive/` before continuing heavy writes. Rotation must never
+ delete history; it archives then resets the active file.
+
+## Export safety
+Validate export paths stay inside the project directory. If a path traversal or
+ unsafe destination is requested, export into `.planning/` instead.

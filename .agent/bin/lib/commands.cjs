@@ -547,8 +547,8 @@ function cmdProgressRender(cwd, format, raw) {
     const bar = '\u2588'.repeat(filled) + '\u2591'.repeat(barWidth - filled);
     let out = `# ${milestone.version} ${milestone.name}\n\n`;
     out += `**Progress:** [${bar}] ${totalSummaries}/${totalPlans} plans (${percent}%)\n\n`;
-    out += `| Phase | Name | Plans | Status |\n`;
-    out += `|-------|------|-------|--------|\n`;
+    out += '| Phase | Name | Plans | Status |\n';
+    out += '|-------|------|-------|--------|\n';
     for (const p of phases) {
       out += `| ${p.number} | ${p.name} | ${p.summaries}/${p.plans} | ${p.status} |\n`;
     }
@@ -923,8 +923,8 @@ function cmdStats(cwd, format, raw) {
       out += `**Requirements:** ${requirementsComplete}/${requirementsTotal} complete\n`;
     }
     out += '\n';
-    out += `| Phase | Name | Plans | Completed | Status |\n`;
-    out += `|-------|------|-------|-----------|--------|\n`;
+    out += '| Phase | Name | Plans | Completed | Status |\n';
+    out += '|-------|------|-------|-----------|--------|\n';
     for (const p of phases) {
       out += `| ${p.number} | ${p.name} | ${p.plans} | ${p.summaries} | ${p.status} |\n`;
     }

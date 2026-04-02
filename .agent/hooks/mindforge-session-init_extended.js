@@ -16,16 +16,16 @@ function run() {
     
     // Check for MindForge registry for additional info if needed
     const registryPath = path.join(projectRoot, 'MINDFORGE.md');
-    let registryWarning = "";
+    let registryWarning = '';
     if (!fs.existsSync(registryPath)) {
-        registryWarning = "\n\n[WARNING]: MINDFORGE.md Parameter Registry not found. Architectural integrity may be degraded.";
+        registryWarning = '\n\n[WARNING]: MINDFORGE.md Parameter Registry not found. Architectural integrity may be degraded.';
     }
 
-    const sessionContext = "<EXTREMELY_IMPORTANT>\nYou have MindForge Swarm Intelligence.\n\n**Below is the full content of your 'mindforge-neural-orchestrator' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n" + skillContent + registryWarning + "\n</EXTREMELY_IMPORTANT>";
+    const sessionContext = '<EXTREMELY_IMPORTANT>\nYou have MindForge Swarm Intelligence.\n\n**Below is the full content of your \'mindforge-neural-orchestrator\' skill - your introduction to using skills. For all other skills, use the \'Skill\' tool:**\n\n' + skillContent + registryWarning + '\n</EXTREMELY_IMPORTANT>';
 
     const output = {
       hookSpecificOutput: {
-        hookEventName: "SessionStart",
+        hookEventName: 'SessionStart',
         additionalContext: sessionContext
       },
       // Fallback for other platforms

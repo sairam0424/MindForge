@@ -64,7 +64,7 @@ async function verifyMemoryMesh() {
     console.log(' ✅ Success');
 
     // 3. Library Sync Logic
-    console.log(`[Test 3] Syncing Local pattern-library to Global...`);
+    console.log('[Test 3] Syncing Local pattern-library to Global...');
     // Ensure local library exists for testing
     const localLib = '.mindforge/memory/pattern-library.jsonl';
     const localContent = JSON.stringify({ id: 'LOCAL-SAFE-001', tags: ['performance'], description: 'Standard optimization' });
@@ -82,7 +82,7 @@ async function verifyMemoryMesh() {
     console.log('--- All Memory Mesh Tests Passed 🚀 ---');
     process.exit(0);
   } catch (err) {
-    console.error(`--- Memory Mesh Verification Failed ❌ ---`);
+    console.error('--- Memory Mesh Verification Failed ❌ ---');
     console.error(err.message);
     process.exit(1);
   }

@@ -1,30 +1,23 @@
 ---
-name: mindforge:publish-skill
-description: Validate and publish a skill to a registry
-argument-hint: [skill-dir] [--registry URL] [--dry-run]
-allowed-tools:
-  - run_command
-  - view_file
+description: Publish a skill to the npm registry (or private registry).
 ---
 
-<objective>
-Facilitate code reuse and community contribution by verifying, packaging, and uploading local skills to an npm or private registry after passing rigorous quality checks.
-</objective>
+# MindForge — Publish Skill Command
+# Usage: /mindforge:publish-skill [skill-dir] [--registry URL] [--dry-run]
 
-<execution_context>
-.claude/commands/mindforge/publish-skill.md
-</execution_context>
+Publish a skill to the npm registry (or private registry).
 
-<context>
-Auditors: Level 1, 2, and 3 validation from skill-validator.md.
-Format: Standard npm package with `mindforge` fields.
-</context>
-
-<process>
-1. **Audit**: Run full multi-level validation. Fail on structural or security issues.
-2. **Metadata Check**: Ensure `package.json`, `SKILL.md`, and `CHANGELOG.md` are in sync and complete.
-3. **Preview**: Run `npm pack --dry-run` and list files for user confirmation.
-4. **Publish**: Upload the package (public by default) to the resolved registry.
-5. **Verify**: Query the registry to confirm the version is live.
-6. **Audit**: Log `skill_published` with package name and version.
-</process>
+Pre-publication checklist:
+1. Run full skill validation (Level 1 + 2 + 3 from skill-validator.md)
+   Fail if Level 1 or 2 fails. Warn if Level 3 fails.
+2. Verify package.json has `mindforge` field with all required sub-fields
+3. Verify CHANGELOG.md has an entry for the current version
+4. Check if version already published: `npm info [package-name]@[version]`
+   If already published: error "Version already exists. Bump the version."
+5. Run `npm pack --dry-run` to preview what will be published
+6. Confirm with user: "These files will be published: [list]. Proceed? (yes/no)"
+7. If --dry-run: stop here, show preview only
+8. Publish: `npm publish --access public`
+9. Verify: `npm info [package-name]@[version]` — confirm publication succeeded
+10. Write AUDIT: `{ "event": "skill_published", "package": "...", "version": "..." }`
+11. Report: "✅ [package-name]@[version] published to npm registry"

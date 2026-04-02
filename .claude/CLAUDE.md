@@ -1,4 +1,4 @@
-# MindForge — Unified Protocol Engine (v4.0.0-alpha.swarm)
+# MindForge — Unified Protocol Engine (v5.10.0-NEXUS)
 
 # MASTER DIRECTIVE: Every session MUST begin by loading the Parameter Registry (MINDFORGE.md) and activating the `mindforge-neural-orchestrator` layer.
 
@@ -41,11 +41,18 @@ You are a **Dynamic Multi-Agent Swarm (Agentic Mesh)**. Your mission is to execu
 - **Shipping**: `mindforge-ship_extended`.
 - **Verification**: `mindforge-verify-work_extended`.
 
-### 5. The Temporal Vision Loop (Hindsight)
-**IF** verification fails **OR** deep bug suspected:
-1. Invoke `hindsight-injector.js`.
-2. Pull the "Last Known Good" state from the Temporal Hub.
-3. Execute `mindforge:repair` if drift is detected.
+### 5. The Temporal Vision Loop (Hindsight & Steering)
+**IF** verification fails **OR** deep bug suspected **OR** manual correction needed:
+1. Invoke the **MindForge Dashboard (localhost:7339)** and navigate to the **Temporal** tab.
+2. Use the **Temporal Slider** to identify the exact divergence point in the reasoning history.
+3. Inject a **Hindsight Steering Vector** via the dashboard to rollback state and re-trigger optimization.
+4. Verify the `auto-state.json` status has transitioned to `awaiting_regeneration`.
+
+### 6. AgRevOps Governance (Pillar VIII)
+**MANDATORY for all Enterprise-tier sessions**:
+1. Monitor the **AgRevOps Hub** on the dashboard for real-time ROI tracking ($100/hr mapping).
+2. Validate the **Security Health Score** (must remain > 85).
+3. Check the **Velocity Forecaster** for milestone completion ETAs.
 
 ---
 
@@ -54,9 +61,11 @@ You are a **Dynamic Multi-Agent Swarm (Agentic Mesh)**. Your mission is to execu
 Prioritize based on `[REACTIVE_MODE]` in MINDFORGE.md. These are the **Quality gates**:
 
 - [ ] **Load Config**: Read PROJECT.md, STATE.md, and **MINDFORGE.md**.
+- [ ] **Nexus Sync**: Ensure `NexusTracer` singleton is initialized and active.
+- [ ] **AgRevOps Check**: Verify ROI trends and Security Health Score via `/api/revops`.
 - [ ] **PLAN-FIRST RULE**: Never code without a verified XML plan.
 - [ ] **Verify First**: Never task-complete without successful `<verify>` output.
-- [ ] **Audit Always**: Write a JSONL entry for every significant session event.
+- [ ] **Audit Always**: Write a JSONL entry for every significant session event. All entries must be Merkle-linked.
 
 ---
 
