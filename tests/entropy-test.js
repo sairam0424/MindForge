@@ -16,10 +16,10 @@ async function testEntropyLoop() {
 
   // Identical thoughts to ensure entropy stagnation triggers Proactive Self-Heal
   const repetitiveThoughts = [
-    "I should check the file system permissions for the target directory.",
-    "I should check the file system permissions for the target directory.",
-    "I should check the file system permissions for the target directory.",
-    "I should check the file system permissions for the target directory."
+    'I should check the file system permissions for the target directory.',
+    'I should check the file system permissions for the target directory.',
+    'I should check the file system permissions for the target directory.',
+    'I should check the file system permissions for the target directory.'
   ];
 
   console.log('--- Injecting repetitive thoughts ---');

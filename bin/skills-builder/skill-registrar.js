@@ -74,10 +74,10 @@ function register(params) {
     // Create minimal MANIFEST.md
     fs.mkdirSync(path.dirname(MANIFEST_PATH), { recursive: true });
     fs.writeFileSync(MANIFEST_PATH,
-      `# MindForge Skills Manifest\n\n` +
-      `## Project Skills\n\n` +
-      `| Skill | Tier | Path | Quality | Version |\n` +
-      `|---|---|---|---|---|\n` +
+      '# MindForge Skills Manifest\n\n' +
+      '## Project Skills\n\n' +
+      '| Skill | Tier | Path | Quality | Version |\n' +
+      '|---|---|---|---|---|\n' +
       `| ${skillName} | ${TIER_LABELS[tier] || 'T3 Project'} | ${relativePath} | ${qualityScore}/100 | v1.0.0 |\n`
     );
   }

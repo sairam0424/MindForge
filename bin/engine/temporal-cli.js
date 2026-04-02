@@ -14,7 +14,7 @@ async function main() {
   switch (SUBCOMMAND) {
     case 'status':
       const history = TemporalHub.getHistory();
-      console.log(`\n⏳  MindForge Temporal Status`);
+      console.log('\n⏳  MindForge Temporal Status');
       console.log(`    Snapshots:  ${history.length}`);
       if (history.length > 0) {
         console.log(`    Latest:     ${history[0].id} (${history[0].timestamp})`);

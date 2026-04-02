@@ -100,7 +100,7 @@ function htmlToText(html) {
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
+    .replace(/&#39;/g, '\'')
     .replace(/\s{3,}/g, '\n\n')                   // Collapse excessive whitespace
     .trim();
 }
@@ -214,7 +214,7 @@ function loadSession(phaseNum = null) {
       const handoff = JSON.parse(fs.readFileSync(handoffPath, 'utf8'));
       const implicit = handoff.implicit_knowledge || [];
       if (implicit.length > 0) {
-        content += `## Implicit Knowledge (from HANDOFF.json)\n`;
+        content += '## Implicit Knowledge (from HANDOFF.json)\n';
         implicit
           .filter(i => (i.confidence || 0) >= 0.65)
           .forEach(i => { content += `- ${i.topic || i.text}: ${i.content || i.text}\n`; });

@@ -1,33 +1,124 @@
 ---
-name: mindforge:marketplace
-description: Discover, evaluate, and install community-published skills
-argument-hint: [search|featured|trending|install|publish]
-allowed-tools:
-  - run_command
-  - list_dir
-  - view_file
+description: Discover, evaluate, and install community-published MindForge skills from the
 ---
 
-<objective>
-Provide a central hub for sharing and consuming battle-tested MindForge skills, allowing developers to extend their agent's capabilities without manual documentation research.
-</objective>
+# MindForge v2 — Marketplace Command
+# Usage: /mindforge:marketplace [search|featured|trending|install|publish]
+# Version: v2.0.0-alpha.6
 
-<execution_context>
-.claude/commands/mindforge/marketplace.md
-</execution_context>
+## Purpose
+Discover, evaluate, and install community-published MindForge skills from the
+marketplace — a curated layer on top of the npm registry.
 
-<context>
-Platform: Curated layer over npm.
-Subcommands: search, featured, trending, install, publish.
-Quality: Enforces quality scores and session quality lift metrics.
-</context>
+The marketplace is the shortcut: instead of learning from documentation yourself,
+install skills that the community has already created, validated, and battle-tested.
 
-<process>
-1. **Query Subcommand**:
-    - `search`: Find relevant skills based on tech stack or domain keywords.
-    - `featured/trending`: Display curated or popular skill lists.
-2. **Install Flow**: Delegate to `/mindforge:install-skill` while surfacing quality scores and expected quality lift.
-3. **Publish Flow**: Validate skill directory for quality (score >= 80), injection safety, and complete history before pushing.
-4. **Render Format**: Display skills with detailed metrics (installs, lifters, triggers).
-5. **Audit**: Log `marketplace_action` including query/skill name and quality scores.
-</process>
+## Sub-commands
+
+### search [query]
+Find skills relevant to your tech stack or domain.
+```
+/mindforge:marketplace search "prisma"
+/mindforge:marketplace search "stripe payment processing"
+/mindforge:marketplace search "HIPAA compliance"
+/mindforge:marketplace search "graphql api"
+```
+
+Output:
+```
+🔍 Marketplace search: "prisma" (6 results)
+
+  1. prisma-advanced (v1.2.3)
+     Advanced Prisma patterns: relations, migrations, performance, cursor pagination
+     847 installs this week
+
+  2. prisma-schema (v1.0.1)
+     Prisma schema design: models, relations, enums, cascade rules
+     234 installs this week
+
+  3. prisma-testing (v1.0.0)
+     Testing Prisma with Jest: database seeding, teardown, transaction rollback
+     156 installs this week
+
+Install: /mindforge:marketplace install prisma-advanced
+```
+
+### featured
+Show curated featured skills by category.
+```
+/mindforge:marketplace featured
+```
+
+Output:
+```
+🏪 MindForge Community Skills — Featured
+
+  Database:
+    db-postgres-advanced v2.1.0  — Advanced PostgreSQL patterns, indexes, partitioning
+    db-prisma-advanced   v1.2.0  — Prisma relations, migrations, query optimisation
+    db-drizzle           v1.0.0  — Drizzle ORM type-safe patterns
+
+  API:
+    api-graphql v1.4.0  — GraphQL schema, resolvers, N+1 prevention
+    api-rest    v2.0.0  — REST API design, versioning, error schemas
+
+  Compliance:
+    fintech-pci-compliance  v1.1.0 — PCI DSS Level 1 safeguards
+    healthtech-hipaa        v1.0.1 — HIPAA Security Rule for PHI
+    [more...]
+```
+
+### trending
+Show most-installed skills this month.
+```
+/mindforge:marketplace trending
+```
+
+### install [name] [--tier project|org]
+Install a marketplace skill.
+```
+/mindforge:marketplace install prisma-advanced
+/mindforge:marketplace install mindforge-skill-api-graphql --tier org
+/mindforge:marketplace install fintech-pci-compliance --tier project
+```
+
+Short names work (without `mindforge-skill-` prefix).
+Delegates to `/mindforge:install-skill` for actual installation.
+Shows quality score and session_quality_lift before installing.
+
+### publish [skill-dir]
+Publish a skill to the community marketplace.
+```
+/mindforge:marketplace publish .mindforge/skills/my-skill/
+```
+
+Requirements:
+- Quality score ≥ 80/100
+- No injection patterns
+- Has complete version history
+- Has author contact (GitHub issues URL)
+
+## Skill quality display format
+
+```
+📊 Skill: prisma-advanced v1.2.3
+   Quality score: 94/100 (Excellent)
+   ★★★★★ Session quality lift: +8.2 points (over 1,247 sessions)
+   847 installs/week | Published by: @prisma-community
+
+   Top trigger keywords: "prisma schema", "@relation", "prisma migrate",
+                          "prisma generate", "onDelete", "cursor pagination"
+
+   [Install] [Preview SKILL.md] [View on npm]
+```
+
+## AUDIT entry
+```json
+{
+  "event": "marketplace_action",
+  "action": "search|install|publish",
+  "query": "[search query if search]",
+  "skill_name": "[name if install/publish]",
+  "quality_score": 94
+}
+```

@@ -47,11 +47,11 @@ async function approve() {
 
   fs.writeFileSync(filePath, JSON.stringify(record, null, 2));
   
-  console.log(`\n✅ Governance approval generated!\n`);
+  console.log('\n✅ Governance approval generated!\n');
   console.log(`ID:       ${id}`);
   console.log(`Reason:   ${REASON}`);
   console.log(`File:     .planning/approvals/${filename}`);
-  console.log(`\nCommit this file to unblock Tier 3 gates in CI.\n`);
+  console.log('\nCommit this file to unblock Tier 3 gates in CI.\n');
 }
 
 approve().catch(err => {

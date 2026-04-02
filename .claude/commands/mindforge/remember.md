@@ -1,29 +1,30 @@
 ---
-name: mindforge:remember
-description: Manage long-term memory and knowledge graph entries
-argument-hint: [--add "content"] [--search "query"] [--promote "id"]
-allowed-tools:
-  - view_file
-  - write_to_file
-  - run_command
+description: Manage the MindForge long-term memory (knowledge graph).
 ---
 
-<objective>
-Provide a manual interface for steering the agent's long-term memory, allowing users to add specific project knowledge, search the existing graph, and promote local learnings to global availability.
-</objective>
+# /mindforge:remember
 
-<execution_context>
-.claude/commands/mindforge/remember.md
-</execution_context>
+Manage the MindForge long-term memory (knowledge graph).
 
-<context>
-Storage: MindForge Knowledge Graph.
-Visibility: Project-local vs. Global memory.
-</context>
+## Usage
 
-<process>
-1. **Add**: Capture one-off decisions or constraints manually into the memory store.
-2. **Search**: Query the knowledge base across sessions to retrieve previously captured patterns.
-3. **Promote**: Elevate a specific project-level finding to "Global" status for use in future repositories.
-4. **Analyze**: Provide stats on memory usage and activation frequency.
-</process>
+- Add an entry:
+  ```bash
+  node bin/mindforge-cli.js remember --add "Your knowledge" --topic "Title"
+  ```
+- Search memories:
+  ```bash
+  node bin/mindforge-cli.js remember --search "query" --global
+  ```
+- View statistics:
+  ```bash
+  node bin/mindforge-cli.js remember --stats
+  ```
+- Promote to global:
+  ```bash
+  node bin/mindforge-cli.js remember --promote "id"
+  ```
+
+## Description
+
+MindForge capture, stores, and retrieves knowledge (architectural decisions, code patterns, team preferences) across all sessions and projects. This command allows for manual management and querying of this data.

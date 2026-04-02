@@ -1,28 +1,30 @@
 ---
-name: mindforge:browse
-description: Control the persistent MindForge browser daemon for visual verification
-argument-hint: <url | action>
-allowed-tools:
-  - open_browser_url
-  - run_command
+description: @mindforge browse <url | action>
 ---
 
-<objective>
-Enable the agent to interact with web interfaces, maintain persistent sessions, and perform visual audits of UI changes using an automated browser daemon.
-</objective>
+# /mindforge:browse
 
-<execution_context>
-.claude/commands/mindforge/browse.md
-</execution_context>
+## Usage
+`@mindforge browse <url | action>`
 
-<context>
-Security: Daemon binds to 127.0.0.1. Sessions are gitignored.
-State: Supports cookie/localStorage persistence via named sessions.
-</context>
+## Description
+Controls the persistent MindForge browser daemon. 
+Maintains session state (cookies/localStorage) for the AI.
 
-<process>
-1. **Control Daemon**: Start, stop, or query the health/active sessions of the browser daemon.
-2. **Session Management**: Switch between browser contexts or import sessions from the host (Chrome/Arc).
-3. **Navigate & Interact**: Load URLs, click selectors, and type text into input fields.
-4. **Verify**: Capture screenshots of the current viewport for visual confirmation.
-</process>
+## Actions
+| Action | Description |
+|---|---|
+| `--start` | Initialize browser daemon |
+| `--stop` | Kill browser daemon |
+| `--status` | Show daemon health and active sessions |
+| `--session <name>` | Switch browser context |
+| `--import-session <name> --from <browser>` | Import cookies from host browser (chrome, arc, etc) |
+| `<url>` | Navigate the current page to URL |
+| `click <selector>` | Trigger click event |
+| `type <sel> <text>` | Fill input field |
+| `screenshot` | Capture current viewport |
+
+## Security
+- Daemon binds to `127.0.0.1` only.
+- Session files are gitignored.
+- Use only for debugging and visual verification.

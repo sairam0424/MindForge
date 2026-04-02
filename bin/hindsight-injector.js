@@ -50,7 +50,7 @@ class HindsightInjector {
 
       return { success: true, event: hindsightEvent };
     } catch (err) {
-      console.error(`[hindsight] Injection failed:`, err.message);
+      console.error('[hindsight] Injection failed:', err.message);
       return { success: false, error: err.message };
     }
   }

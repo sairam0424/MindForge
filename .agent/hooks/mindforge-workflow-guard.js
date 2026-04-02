@@ -77,7 +77,7 @@ process.stdin.on('end', () => {
     // not in a subagent context. Inject advisory warning.
     const output = {
       hookSpecificOutput: {
-        hookEventName: "PreToolUse",
+        hookEventName: 'PreToolUse',
         additionalContext: `⚠️ WORKFLOW ADVISORY: You're editing ${path.basename(filePath)} directly without a MindForge command. ` +
           'This edit will not be tracked in STATE.md or produce a SUMMARY.md. ' +
           'Consider using /mindforge:fast for trivial fixes or /mindforge:quick for larger changes ' +

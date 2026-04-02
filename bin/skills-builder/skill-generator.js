@@ -79,7 +79,7 @@ Output ONLY the complete SKILL.md content. Start with the frontmatter. No preamb
 // ── Pattern extraction ────────────────────────────────────────────────────────
 async function extractPatterns(content, model, sessionId) {
   const truncated = content.length > 400_000
-    ? content.slice(0, 400_000) + `\n\n[Content truncated at 400K chars for processing]`
+    ? content.slice(0, 400_000) + '\n\n[Content truncated at 400K chars for processing]'
     : content;
 
   const result = await ModelClient.complete({

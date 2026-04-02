@@ -205,14 +205,14 @@ class FederatedSync {
       if (new Date(remote.timestamp) > new Date(local.timestamp)) {
         this.writeToGlobalKB(remote, globalPath);
         this.logConflictTelemetry(local.id, 'LWW', similarity);
-        console.log(`  └─ [LWW] Auto-resolved via timestamp.`);
+        console.log('  └─ [LWW] Auto-resolved via timestamp.');
       }
       return;
     }
 
     // 2. Autonomous Merge (0.75 - 0.9) - Semantic Overlap
     if (similarity > 0.75) {
-      console.log(`  └─ [ADS] Triggering Autonomous Knowledge Synthesis...`);
+      console.log('  └─ [ADS] Triggering Autonomous Knowledge Synthesis...');
       const merged = await this.triggerADSMerging(local, remote);
       this.writeToGlobalKB(merged, globalPath);
       this.logConflictTelemetry(local.id, 'ADS_MERGE', similarity);
@@ -221,14 +221,14 @@ class FederatedSync {
 
     // 3. Human Stewardship (0.6 - 0.75) - Probable Disagreement
     if (similarity > 0.6) {
-      console.log(`  └─ [DHH] High disagreement. Triggering Nexus Handover...`);
+      console.log('  └─ [DHH] High disagreement. Triggering Nexus Handover...');
       this.localStore.markConflict(local.id, remote);
       this.logConflictTelemetry(local.id, 'DHH_HANDOVER', similarity);
       return;
     }
 
     // 4. Collision Isolation (< 0.6) - Topic Mismatch
-    console.log(`  └─ [ISO] Semantic collision (Topic mismatch). Isolating entries.`);
+    console.log('  └─ [ISO] Semantic collision (Topic mismatch). Isolating entries.');
     this.writeToGlobalKB({ ...remote, id: `${remote.id}_collision_${Date.now()}` }, globalPath);
     this.logConflictTelemetry(local.id, 'COLLISION_ISOLATION', similarity);
   }

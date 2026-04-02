@@ -77,7 +77,7 @@ function classify() {
     console.error(`❌ Classification failed: ${err.message}`);
     // Default to Tier 3 for safety if classification fails
     if (process.env.GITHUB_OUTPUT) {
-      fs.appendFileSync(process.env.GITHUB_OUTPUT, `tier=3\n`);
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, 'tier=3\n');
     }
     process.exit(0); // Don't fail the pipeline yet, let the gate handle it
   }

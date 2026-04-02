@@ -532,7 +532,7 @@ async function runCommand(command, args, cwd, raw) {
       break;
     }
 
-    case "config-set-model-profile": {
+    case 'config-set-model-profile': {
       config.cmdConfigSetModelProfile(cwd, args[1], raw);
       break;
     }

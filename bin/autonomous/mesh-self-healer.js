@@ -46,7 +46,7 @@ class MeshSelfHealer {
     return {
       provider: peer.did,
       target: target,
-      reasoning: `Recommended steering for drift recovery based on Mesh-State: Re-syncing with Sovereign-Reason-Enclave.`,
+      reasoning: 'Recommended steering for drift recovery based on Mesh-State: Re-syncing with Sovereign-Reason-Enclave.',
       confidence: 94
     };
   }
@@ -54,7 +54,7 @@ class MeshSelfHealer {
   reconcileReasoning(nodes) {
     // Merge peer reasoning nodes into a single corrective steering vector
     const consensus = nodes[0].reasoning; // Mock consensus
-    console.log(`[HOMING-HEAL] Collective reasoning consensus acheived: 100% agreement on recovery vector.`);
+    console.log('[HOMING-HEAL] Collective reasoning consensus acheived: 100% agreement on recovery vector.');
     
     return {
       type: 'collective_repair',
