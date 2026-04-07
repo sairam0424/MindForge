@@ -11,6 +11,7 @@ class LogicDriftDetector {
   constructor() {
     this.sessionDriftHistory = new Map(); // spanId -> [scores]
     this.DRIFT_THRESHOLD = 0.75;
+    this.CRITICAL_DRIFT_THRESHOLD = 0.50; // v6.3.0: Recalibrated for IDC intervention readiness
   }
 
   /**
