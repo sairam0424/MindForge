@@ -96,6 +96,16 @@ class ReasonSourceAligner {
     
     return intersection.size / tokensA.size; // Weighted by thought coverage
   }
+
+  /**
+   * Retrieves the full details of a specific requirement by ID.
+   * Useful for v6.6.0 SCS self-healing synthesis.
+   * @param {string} reqId 
+   */
+  getRequirementDetails(reqId) {
+    if (!this.initialized) return null;
+    return this.registry.find(req => req.id === reqId) || null;
+  }
 }
 
 module.exports = new ReasonSourceAligner();
