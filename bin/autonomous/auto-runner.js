@@ -204,8 +204,11 @@ class AutoRunner {
     // Auto-capture knowledge from completed phase (ADRs, findings)
     try {
       const captured = KnowledgeCapture.captureFromPhaseCompletion(this.phase);
-      if (captured.length > 0) {
-        console.log(`🧠 Knowledge Graph: Captured ${captured.length} new insights from phase completion.`);
+      const stability = KnowledgeCapture.captureArchitecturalStability(this.phase);
+      
+      const total = captured.length + stability.length;
+      if (total > 0) {
+        console.log(`🧠 Knowledge Graph: Captured ${total} new insights (Patterns: ${stability.length}) from phase completion.`);
       }
     } catch (err) {
       console.error('⚠️ Knowledge Capture failed:', err.message);
