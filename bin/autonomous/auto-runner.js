@@ -19,6 +19,7 @@ const MeshSelfHealer = require('./mesh-self-healer');
 const crypto = require('crypto');
 const IntelligenceInterlock = require('../engine/intelligence-interlock');
 const ReasonSourceAligner = require('../engine/reason-source-aligner');
+const SelfCorrectiveSynthesizer = require('../engine/self-corrective-synthesizer');
 
 // MindForge v5 Core Modules
 const PolicyEngine = require('../governance/policy-engine');
@@ -49,6 +50,9 @@ class AutoRunner {
 
     // v6.5 RSA: Reason-Source Alignment
     this.aligner = ReasonSourceAligner;
+
+    // v6.6 SCS: Self-Corrective Synthesis
+    this.synthesizer = SelfCorrectiveSynthesizer;
   }
 
   async run() {
@@ -157,7 +161,20 @@ class AutoRunner {
         console.log(`[RSA-ALIGN] Thought aligns with Requirement: ${alignment.best_match_id} (Confidence: ${alignment.confidence})`);
         // In a real execution, we would update the event in the audit. 
         // For simulation, we log it and could trigger actions if confidence is too low.
-        if (alignment.confidence < this.aligner.ALIGNMENT_THRESHOLD) {
+        if (alignment.confidence < 0.50) {
+          console.warn(`[RSA-CRITICAL] Mission fidelity below threshold (${alignment.confidence}). Triggering SCS...`);
+          const correction = await this.synthesizer.synthesizeCorrection(this.getRecentAuditEvents(10), { phase: this.phase });
+          
+          this.writeAudit({
+            event: 'scs_homing_injected',
+            instruction: correction.instruction,
+            req_id: correction.req_id,
+            confidence: correction.confidence
+          });
+
+          // In a real execution, we would append this instruction to the next prompt's system message
+          console.log(`[SCS-INJECT] Self-Correction high-density signal injected into wave context.`);
+        } else if (alignment.confidence < this.aligner.ALIGNMENT_THRESHOLD) {
           console.warn(`[RSA-WARNING] Mission fidelity dropping: ${alignment.confidence}`);
         }
       }
@@ -187,8 +204,11 @@ class AutoRunner {
     // Auto-capture knowledge from completed phase (ADRs, findings)
     try {
       const captured = KnowledgeCapture.captureFromPhaseCompletion(this.phase);
-      if (captured.length > 0) {
-        console.log(`🧠 Knowledge Graph: Captured ${captured.length} new insights from phase completion.`);
+      const stability = KnowledgeCapture.captureArchitecturalStability(this.phase);
+      
+      const total = captured.length + stability.length;
+      if (total > 0) {
+        console.log(`🧠 Knowledge Graph: Captured ${total} new insights (Patterns: ${stability.length}) from phase completion.`);
       }
     } catch (err) {
       console.error('⚠️ Knowledge Capture failed:', err.message);

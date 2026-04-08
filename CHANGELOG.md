@@ -1,3 +1,23 @@
+## [6.7.0] - 2026-04-09
+
+### Added (v6.7.0: Federated Intelligence Mesh - FIM Expansion)
+
+- **Architectural Health Tracking**: Aggregates RSA and IDC scores into collective project health metrics via `PillarHealthTracker`.
+- **Stability Pattern Extraction**: Captures high-efficacy SCS homing instructions as durable, sharable knowledge entries (`stability_pattern`).
+- **AutoRunner Lifecycle Hooks**: Automated capture at phase completion for organizational sync.
+
+---
+
+## [6.6.0] - 2026-04-08
+
+### Added (v6.6.0: Self-Corrective Synthesis - SCS)
+
+- **Autonomous Self-Healing**: Integrated `SelfCorrectiveSynthesizer` into the `AutoRunner` wave loop.
+- **Reasoning Drift Recovery**: Triggered when Mission Fidelity (RSA) drops below 0.50, synthesizing a "Homing Instruction" anchored to specific requirements.
+- **Homing Signal Injection**: Automatically injects high-density refocus signals into the wave context to recover mission fidelity.
+
+---
+
 ## [6.5.0] - 2026-04-08
 
 ### Added (v6.5.0: Reason-Source Alignment - RSA)

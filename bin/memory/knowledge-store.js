@@ -129,6 +129,12 @@ function add(entry) {
     ...(entry.strength     && { strength:     entry.strength }),
     ...(entry.domain       && { domain:       entry.domain }),
     ...(entry.tech_stack   && { tech_stack:   entry.tech_stack }),
+    // MindForge v6: Architectural Health & Stability
+    ...(entry.req_id       && { req_id:       entry.req_id }),
+    ...(entry.efficacy_score && { efficacy_score: entry.efficacy_score }),
+    ...(entry.rsa_avg      && { rsa_avg:      entry.rsa_avg }),
+    ...(entry.idc_avg      && { idc_avg:      entry.idc_avg }),
+    ...(entry.ceg_avg      && { ceg_avg:      entry.ceg_avg }),
   };
 
   const filePath = getFilePath(entry.type);

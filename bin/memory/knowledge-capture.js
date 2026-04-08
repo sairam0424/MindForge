@@ -11,6 +11,7 @@ const Store    = require('./knowledge-store');
 const Indexer  = require('./knowledge-indexer');
 const Graph    = require('./knowledge-graph');
 const Embedder = require('./embedding-engine');
+const PillarHealth = require('./pillar-health-tracker');
 
 const PLANNING_DIR = path.join(process.cwd(), '.planning');
 const DECISIONS_DIR = path.join(PLANNING_DIR, 'decisions');
@@ -383,12 +384,58 @@ function inferBugCategory(text) {
   return 'general';
 }
 
+/**
+ * Capture architectural stability from audit traces.
+ */
+function captureArchitecturalStability(phaseNum) {
+  const auditPath = path.join(PLANNING_DIR, 'AUDIT.jsonl');
+  if (!fs.existsSync(auditPath)) return [];
+
+  const summary = PillarHealth.summarizePhase(auditPath);
+  if (!summary) return [];
+
+  const project = getProjectName();
+  const captured = [];
+
+  // 1. Capture overall health
+  const healthResult = deduplicateOrAdd({
+    type: 'pillar_health',
+    topic: `Phase ${phaseNum} Architectural Health`,
+    content: `RSA Alignment: ${summary.avgRsa}\nIDC Upgrades: ${summary.idcCount}`,
+    source: `PillarHealth Analysis (Phase ${phaseNum})`,
+    project,
+    confidence: 1.0,
+    rsa_avg: summary.avgRsa,
+    idc_avg: summary.idcCount,
+  });
+  captured.push(healthResult);
+
+  // 2. Capture stability patterns (Homing signals)
+  const templates = PillarHealth.getHighEfficacyTemplates(summary.stabilityPatterns);
+  for (const t of templates) {
+    const res = deduplicateOrAdd({
+      type: 'stability_pattern',
+      topic: `${t.req_id} Alignment Recovery`,
+      content: `Synthesized refocus instruction: ${t.instruction}`,
+      source: `SCS Synthesis (Phase ${phaseNum})`,
+      project,
+      confidence: t.efficacy,
+      req_id: t.req_id,
+      efficacy_score: t.efficacy,
+    });
+    captured.push(res);
+  }
+
+  return captured;
+}
+
 module.exports = {
   captureFromPhaseCompletion,
   captureFromCompaction,
   captureFromDebugReport,
   captureFromRetrospective,
   captureFromCrossReview,
+  captureArchitecturalStability,
   deduplicateOrAdd,
   inferTagsFromText,
   inferBugCategory,
