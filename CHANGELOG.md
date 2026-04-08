@@ -1,3 +1,15 @@
+## [6.3.0] - 2026-04-08
+
+### Added (v6.3.0: Intelligence-Drift Coupling - IDC)
+
+- **Dynamic Model Upgrading (IDC)**:
+  - Implemented `intelligence-interlock.js` to bridge NDR (Neural Drift Remediation) and ARH (Resource Arbitrage).
+  - Added "Critical Drift" alert thresholds to `LogicDriftDetector`.
+  - Integrated IDC signals into `AutoRunner`, allowing for proactive model tier upgrades when reasoning decay is detected.
+  - Hardened `RouterSteering` to respect mid-wave MIR overrides.
+
+---
+
 ## [6.2.0] - 2026-04-02
 
 ### Added (v6.2.0: Sovereign Enterprise Stable)

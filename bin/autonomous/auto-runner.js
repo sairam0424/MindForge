@@ -17,6 +17,7 @@ const TemporalHub = require('../engine/temporal-hub');
 const IntentHarvester = require('./intent-harvester');
 const MeshSelfHealer = require('./mesh-self-healer');
 const crypto = require('crypto');
+const IntelligenceInterlock = require('../engine/intelligence-interlock');
 
 // MindForge v5 Core Modules
 const PolicyEngine = require('../governance/policy-engine');
@@ -41,6 +42,9 @@ class AutoRunner {
     // v5 PAR Initialization
     this.refactorer = new ContextRefactorer();
     this.c2cThreshold = 0.65;
+
+    // v6.3 Intelligence Interlock
+    this.interlock = IntelligenceInterlock;
   }
 
   async run() {
@@ -79,7 +83,10 @@ class AutoRunner {
       // Pillar 7 (DHH): Check for Human Steering
       await this.checkHumanSteering(isReliable);
 
-      await this.executeWave();
+      // v6.3 IDC: Check for Intelligence Drift & Upgrade Signal
+      const idcStatus = await this.checkIntelligenceDrift();
+      
+      await this.executeWave(idcStatus);
     }
 
     await this.complete();
@@ -96,8 +103,34 @@ class AutoRunner {
     return false; // Placeholder for now
   }
 
-  async executeWave() {
+  async executeWave(idcStatus = {}) {
     // Parallel task execution logic...
+    if (idcStatus.action === 'UPGRADE_MIR') {
+      console.log(`[IDC-ACTIVE] Wave executing with MIR Override: ${idcStatus.new_mir}`);
+    }
+  }
+
+  /**
+   * v6.3 IDC: Intelligence-Drift Coupling
+   * Detects if the internal reasoning of previous tasks suggests intelligence decay.
+   */
+  async checkIntelligenceDrift() {
+    // Get the most recent high-density reasoning thought from audit
+    const events = this.getRecentAuditEvents(5);
+    const lastThought = events.reverse().find(e => e.thought || e.reasoning);
+    
+    if (lastThought) {
+      const result = this.interlock.evaluate(lastThought.span_id || 'wave-context', lastThought.thought || lastThought.reasoning);
+      if (result.action === 'UPGRADE_MIR') {
+        this.writeAudit({ 
+          event: 'intelligence_upgrade_signalled', 
+          new_mir: result.new_mir, 
+          reason: result.reason 
+        });
+        return result;
+      }
+    }
+    return { action: 'CONTINUE' };
   }
 
   async pause() {

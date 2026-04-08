@@ -21,7 +21,7 @@ class RouterSteering {
    * @param {Object} preferences - Manual overrides (optional)
    */
   async steer(spanId, taskDescription, preferences = {}) {
-    const mir = this._calculateMIR(taskDescription);
+    const mir = preferences.mir || this._calculateMIR(taskDescription);
     const recommendation = marketEvaluator.getBestProvider(mir);
 
     const selection = {
