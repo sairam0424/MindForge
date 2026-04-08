@@ -1,3 +1,14 @@
+## [6.4.0] - 2026-04-08
+
+### Added (v6.4.0: Context Entropy Guard - CEG)
+
+- **Context Entropy Guard (CEG)**:
+  - Implemented `context-entropy-guard.js` for active noise suppression and context pruning.
+  - Added semantic compression to `HandoverManager`, automatically summarizing stagnant reasoning loops into digests.
+  - Hardened Nexus Bundles against "Reasoning Entropy" (similarity-based token bloat).
+
+---
+
 ## [6.3.0] - 2026-04-08
 
 ### Added (v6.3.0: Intelligence-Drift Coupling - IDC)

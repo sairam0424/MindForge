@@ -7,6 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const ceg = require('./context-entropy-guard');
 
 class HandoverManager {
   constructor(config = {}) {
@@ -34,7 +35,8 @@ class HandoverManager {
         last_events: state.recentEvents,
         memory_shards: state.memoryShards || []
       },
-      reasoning_snapshot: state.reasoningTrace,
+      // v6.4.0: Context Entropy Guard applied for active noise suppression
+      reasoning_snapshot: (Array.isArray(state.reasoningTrace)) ? ceg.compress(state.reasoningTrace) : state.reasoningTrace,
       steering_requirements: state.blocks || []
     };
 
