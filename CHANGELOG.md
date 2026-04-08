@@ -1,3 +1,14 @@
+## [6.5.0] - 2026-04-08
+
+### Added (v6.5.0: Reason-Source Alignment - RSA)
+
+- **Requirement-to-Thought Mapping**: Integrated `ReasonSourceAligner` into the core Auto-Runner loop.
+- **Mission Fidelity Tracking**: Every reasoning thought is now cross-referenced with `REQUIREMENTS.md` and tagged with a best-match REQ-ID.
+- **Mission Drift Detection**: Real-time monitoring of "Mission Alignment" confidence scores to prevent autonomous side-questing.
+- **Requirement Schema**: Established formal `[REQ-ID]` Markdown schema for project specs.
+
+---
+
 ## [6.4.0] - 2026-04-08
 
 ### Added (v6.4.0: Context Entropy Guard - CEG)

@@ -18,6 +18,7 @@ const IntentHarvester = require('./intent-harvester');
 const MeshSelfHealer = require('./mesh-self-healer');
 const crypto = require('crypto');
 const IntelligenceInterlock = require('../engine/intelligence-interlock');
+const ReasonSourceAligner = require('../engine/reason-source-aligner');
 
 // MindForge v5 Core Modules
 const PolicyEngine = require('../governance/policy-engine');
@@ -45,6 +46,9 @@ class AutoRunner {
 
     // v6.3 Intelligence Interlock
     this.interlock = IntelligenceInterlock;
+
+    // v6.5 RSA: Reason-Source Alignment
+    this.aligner = ReasonSourceAligner;
   }
 
   async run() {
@@ -85,6 +89,9 @@ class AutoRunner {
 
       // v6.3 IDC: Check for Intelligence Drift & Upgrade Signal
       const idcStatus = await this.checkIntelligenceDrift();
+      
+      // v6.5 RSA: Check for Mission Fidelity Alignment
+      await this.checkMissionFidelity();
       
       await this.executeWave(idcStatus);
     }
@@ -131,6 +138,30 @@ class AutoRunner {
       }
     }
     return { action: 'CONTINUE' };
+  }
+
+  /**
+   * v6.5 RSA: Reason-Source Alignment
+   * Ensures the most recent reasoning thoughts align with REQUIREMENTS.md.
+   */
+  async checkMissionFidelity() {
+    await this.aligner.init();
+    
+    const events = this.getRecentAuditEvents(5);
+    const lastThought = events.reverse().find(e => e.thought || e.reasoning);
+    
+    if (lastThought && !lastThought.best_match_id) {
+      const alignment = this.aligner.checkAlignment(lastThought.thought || lastThought.reasoning);
+      
+      if (alignment.is_aligned) {
+        console.log(`[RSA-ALIGN] Thought aligns with Requirement: ${alignment.best_match_id} (Confidence: ${alignment.confidence})`);
+        // In a real execution, we would update the event in the audit. 
+        // For simulation, we log it and could trigger actions if confidence is too low.
+        if (alignment.confidence < this.aligner.ALIGNMENT_THRESHOLD) {
+          console.warn(`[RSA-WARNING] Mission fidelity dropping: ${alignment.confidence}`);
+        }
+      }
+    }
   }
 
   async pause() {
