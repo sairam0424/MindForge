@@ -7,11 +7,13 @@
  */
 'use strict';
 
+const configManager = require('../governance/config-manager');
+
 class LogicDriftDetector {
   constructor() {
     this.sessionDriftHistory = new Map(); // spanId -> [scores]
-    this.DRIFT_THRESHOLD = 0.75;
-    this.CRITICAL_DRIFT_THRESHOLD = 0.50; // v6.3.0: Recalibrated for IDC intervention readiness
+    this.DRIFT_THRESHOLD = configManager.get('governance.drift_threshold', 0.75);
+    this.CRITICAL_DRIFT_THRESHOLD = configManager.get('governance.critical_drift_threshold', 0.50);
   }
 
   /**

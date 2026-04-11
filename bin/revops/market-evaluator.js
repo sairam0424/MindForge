@@ -7,17 +7,11 @@
  */
 'use strict';
 
+const configManager = require('../governance/config-manager');
+
 class MarketEvaluator {
   constructor() {
-    // Simulated live market data (Values based on avg market tiers)
-    this.marketRegistry = {
-      'gemini-1.5-pro': { cost_input: 0.0035, cost_output: 0.0105, benchmark: 98, provider: 'Google' },
-      'claude-3-5-sonnet': { cost_input: 0.0030, cost_output: 0.0150, benchmark: 99, provider: 'Anthropic' },
-      'gpt-4o': { cost_input: 0.0050, cost_output: 0.0150, benchmark: 97, provider: 'OpenAI' },
-      'llama-3-70b-local': { cost_input: 0.0001, cost_output: 0.0001, benchmark: 92, provider: 'Sovereign' },
-      'gemini-1.5-flash': { cost_input: 0.0003, cost_output: 0.0003, benchmark: 85, provider: 'Google' },
-      'haiku-3': { cost_input: 0.0002, cost_output: 0.0004, benchmark: 82, provider: 'Anthropic' }
-    };
+    this.marketRegistry = configManager.get('revops.market_registry', {});
   }
 
   /**

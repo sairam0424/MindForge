@@ -85,16 +85,21 @@ class SemanticHub {
   }
 
   /**
-   * Retrieves all 'ghost_pattern' types from the global hub.
+   * Retrieves all 'golden_trace' types from the global hub.
    */
-  async getGhostPatterns() {
+  async getGoldenTraces(skillFilter = null) {
     const patternFile = path.join(this.globalPath, 'pattern-library.jsonl');
     try {
       const data = await fs.readFile(patternFile, 'utf8');
-      return data.split('\n')
+      const traces = data.split('\n')
         .filter(Boolean)
         .map(JSON.parse)
-        .filter(p => p.type === 'ghost-pattern' || p.tags?.includes('failure'));
+        .filter(p => p.type === 'golden-trace' || p.tags?.includes('success'));
+      
+      if (skillFilter) {
+        return traces.filter(t => t.skill === skillFilter || t.tags?.includes(skillFilter));
+      }
+      return traces;
     } catch (e) {
       return [];
     }

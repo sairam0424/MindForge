@@ -1,0 +1,26 @@
+{
+  "version": "7.0.0",
+  "environment": "development",
+  "governance": {
+    "drift_threshold": 0.75,
+    "critical_drift_threshold": 0.50,
+    "res_threshold": 0.80
+  },
+  "revops": {
+    "market_registry": {
+      "gemini-1.5-pro": { "cost_input": 0.0035, "cost_output": 0.0105, "benchmark": 98, "provider": "Google" },
+      "claude-3-5-sonnet": { "cost_input": 0.0030, "cost_output": 0.0150, "benchmark": 99, "provider": "Anthropic" },
+      "gpt-4o": { "cost_input": 0.0050, "cost_output": 0.0150, "benchmark": 97, "provider": "OpenAI" },
+      "llama-3-70b-local": { "cost_input": 0.0001, "cost_output": 0.0001, "benchmark": 92, "provider": "Sovereign" },
+      "gemini-1.5-flash": { "cost_input": 0.0003, "cost_output": 0.0003, "benchmark": 85, "provider": "Google" },
+      "haiku-3": { "cost_input": 0.0002, "cost_output": 0.0004, "benchmark": 82, "provider": "Anthropic" }
+    },
+    "default_baseline_model": "gpt-4o",
+    "premium_fallback_model": "claude-3-5-sonnet"
+  },
+  "security": {
+    "pqas_enabled": true,
+    "enclave_tier": 2,
+    "provider": "simulated-lattice"
+  }
+}

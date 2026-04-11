@@ -7,6 +7,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const ImpactAnalyzer = require('./impact-analyzer');
+const policyGate = require('./policy-gate-hardened');
 
 class PolicyEngine {
   constructor(config = {}) {
@@ -25,7 +26,7 @@ class PolicyEngine {
   /**
    * Evaluates an agent's intent against all active policies using CADIA.
    */
-  evaluate(intent) {
+  async evaluate(intent) {
     const requestId = `pol_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
     const sessionId = intent.sessionId || 'default_session';
     const currentGoal = this.getCurrentGoal();
@@ -67,22 +68,26 @@ class PolicyEngine {
     // 2. Pillar II (v6.0.0): Dynamic Blast Radius Enforcement with Tier 3 Bypass
     for (const policy of policies) {
       if (this.matches(policy, intent)) {
-        if (policy.max_impact && impactScore > policy.max_impact) {
+        if (policy.max_impact && impactScore >= policy.max_impact) {
           
-          // [PQAS] v7: Edge-Case Biometric Bypass for Risk > 95
+          // [PQAS] v7: Hardened Biometric Bypass for Risk > 95
           if (impactScore > 95) {
-            console.log(`[PQAS-BIOMETRIC] [${requestId}] CRITICAL RISK detected (${impactScore}). Triggering Last-Resort Biometric Challenge...`);
-            if (intent.biometric_approval !== 'APPROVED_BY_EXECUTIVE') {
+            const gateResult = await policyGate.evaluateBypass(intent, impactScore);
+            if (gateResult.status === 'WAIT_FOR_BIOMETRIC') {
               verdict = { 
                 verdict: 'DENY', 
-                reason: `PQAS Biometric Violation: High-impact mutation (${impactScore}) requires manual WebAuthn/Biometric steering.`, 
+                reason: gateResult.reason, 
                 requestId,
-                status: 'WAIT_FOR_BIOMETRIC'
+                status: 'WAIT_FOR_BIOMETRIC',
+                challenge_id: gateResult.challenge_id
               };
               this.logAudit(intent, impactScore, verdict);
               return verdict;
             }
-            console.log(`[PQAS-BIOMETRIC] [${requestId}] Biometric signature verified. Proceeding with high-risk mutation.`);
+            console.log(`[PQAS-GATE] [${requestId}] Biometric signature verified. Proceeding with high-risk mutation.`);
+            verdict = { verdict: 'PERMIT', reason: `Authorized via Biometric Bypass [${gateResult.signature || 'WEB-AUTHN-DEX'}]`, requestId };
+            this.logAudit(intent, impactScore, verdict);
+            return verdict;
           }
 
           // [ENTERPRISE] Tier 3 Reasoning/PQ Proof Bypass
@@ -183,28 +188,21 @@ class PolicyEngine {
   }
 
   /**
-   * Sovereign Intelligence (v6.2.0-alpha) status reporting.
-   * Used by /mindforge:status dashboard.
+   * Simple glob matching for policy conditions.
+   * Supports '*' (any string) and '?' (any character).
    */
-  getSovereignStatus() {
-    return {
-      pqas: {
-        active: true,
-        mode: 'Lattice-Based Sig/Encryption',
-        biometric_gating: 'ENABLED (>95 impact)',
-        last_integrity_check: new Date().toISOString()
-      },
-      proactive_homing: {
-        status: 'MANIFESTED',
-        auto_healing: 'ACTIVE',
-        drift_threshold: '15%'
-      },
-      policy_engine: {
-        version: '6.2.0-alpha',
-        sovereign_enforcement: 'STRICT',
-        total_policies: this.loadPolicies().length
-      }
-    };
+  globMatch(pattern, text) {
+    if (!pattern || !text) return false;
+    if (pattern === '*') return true;
+    
+    // Escape regex characters but keep * and ?
+    const regexStr = pattern
+      .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+      .replace(/\*/g, '.*')
+      .replace(/\?/g, '.');
+      
+    const regex = new RegExp(`^${regexStr}$`, 'i');
+    return regex.test(text);
   }
 }
 
