@@ -1,7 +1,7 @@
 {
   "name": "mindforge-cc",
-  "version": "8.0.0",
-  "description": "MindForge — Sovereign Agentic Intelligence Framework. (Celestial Orchestration v8 & FMS Enabled)",
+  "version": "8.1.0",
+  "description": "MindForge — Sovereign Agentic Intelligence Framework. (Pillar XIX Sovereign Identity Enabled)",
   "bin": {
     "mindforge-cc": "bin/install.js"
   },

@@ -31,6 +31,7 @@ npx mindforge-cc@latest --claude --local
 
 ---
 
+- **Sovereign Identity Synthesis (v8.1)** — Autonomous `SOUL.md` generation derived from reasoning traces and interaction sentiment (Pillar XIX).
 - **Unified Persistence Layer (v8.0)** — Centralized SQLite/FTS5 engine for sub-millisecond reasoning audits and semantic reasoning (Pillar XV).
 - **Federated Mesh Synthesis (v8.0)** — Signed knowledge handoffs via MindForge Bundles (`.mfb`) and federated intelligence synchronization (Pillar XVI).
 - **Autonomous Skill Evolution (v8.0)** — Self-generating persistent skills from reasoning traces with logic-drift mining (Pillar XVII).
@@ -299,7 +300,12 @@ See `.mindforge/production/token-optimiser.md`.
 
 ## 📜 Framework Evolution & Version History
 
-MindForge has evolved rapidly from a simple workflow tool into a sovereign intelligence mesh. Explore the major milestones below.
+<summary><b>v8.1.x — Sovereign Identity (Pillar XIX)</b></summary>
+
+- **Pillar XIX: Sovereign Identity Synthesis**: Autonomous creation and evolution of `SOUL.md` from execution traces.
+- **Soul Mirroring**: Agent personality and decision-heuristics that self-adapt based on persistent user interaction sentiment.
+- **Identity Enforcement**: Mandatory alignment of subagents with the instance's unique Sovereign Identity.
+</details>
 
 <details>
 <summary><b>v8.0.x — Celestial Orchestration (SQLite & FMS)</b></summary>

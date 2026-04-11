@@ -1,3 +1,17 @@
+# Release Notes — v8.1.0 (The "Identity" Release)
+
+## Pillar XIX: Sovereign Identity Synthesis
+*   **SOUL.md Behavioral OS**: The framework now generates a persistent, evolving identity file that captures user-specific interaction patterns and preferences.
+*   **Instruction Hierarchy Hegemony**: `SOUL.md` now sits at the absolute top of the Source of Truth, ensuring personalized directives override framework defaults.
+*   **Pillar Evolution**: Integrated v8.1 "Intelligence Mirroring" heuristics to adapt agent personality based on historical execution sentiment.
+
+## Release Metadata
+*   **Release Date**: 2026-04-12
+*   **Status**: STABLE (Sovereign Enabled)
+*   **Tag**: `v8.1.0-IDENTITY`
+
+---
+
 # MindForge v8.0.0 — Celestial Orchestration (SQLite & FMS)
 
 ## Top Summary
