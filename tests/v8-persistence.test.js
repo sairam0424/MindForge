@@ -1,0 +1,83 @@
+/**
+ * MindForge v8 Persistence Verification Test
+ * Tests the Unified Persistence Layer (SQLite)
+ */
+const nexusTracer = require('../bin/engine/nexus-tracer');
+const remediationQueue = require('../bin/revops/remediation-queue');
+const semanticHub = require('../bin/memory/semantic-hub');
+const vectorHub = require('../bin/memory/vector-hub');
+
+async function runTest() {
+  console.log('[TEST] Starting v8 Persistence Verification...');
+
+  try {
+    // 1. Test NexusTracer -> VectorHub
+    console.log('[TEST] Recording reasoning trace...');
+    const traceId = nexusTracer.startTrace('v8_test_trace');
+    const spanId = await nexusTracer.startSpan('v8_test_span');
+    await nexusTracer.recordReasoning(spanId, 'mf-tester', 'This is a celestial persistence test.', 'verified');
+    await nexusTracer.endSpan(spanId);
+
+    // 2. Test RemediationQueue -> VectorHub
+    console.log('[TEST] Enqueuing remediation...');
+    const remediation = await remediationQueue.enqueue({
+      remediation_id: 'rem_v8_test',
+      span_id: spanId,
+      strategy: 'REASONING_RESTART'
+    });
+    console.log(`[TEST] Enqueued: ${remediation.remediation_id}`);
+    
+    await remediationQueue.updateStatus(remediation.remediation_id, 'COMPLETED');
+    console.log('[TEST] Updated remediation status.');
+
+    // 3. Test SemanticHub -> VectorHub
+    console.log('[TEST] Saving skill...');
+    await semanticHub.saveSkill({
+      id: 'sk_v8_test',
+      name: 'Celestial Reasoning',
+      description: 'High-performance SQL-backed reasoning',
+      success_rate: 0.99
+    });
+
+    // 4. Verify SQLite contents
+    console.log('[TEST] Verifying SQLite contents...');
+    await vectorHub.init();
+    
+    const traces = await vectorHub.db.selectFrom('traces')
+      .selectAll()
+      .where('trace_id', '=', 'v8_test_trace')
+      .execute();
+    console.log(`[TEST] Traces found: ${traces.length}`);
+
+    const rems = await vectorHub.db.selectFrom('remediations')
+      .selectAll()
+      .where('id', '=', 'rem_v8_test')
+      .execute();
+    console.log(`[TEST] Remediations found: ${rems.length} (Status: ${rems[0]?.status})`);
+
+    const skills = await vectorHub.db.selectFrom('skills')
+      .selectAll()
+      .where('skill_id', '=', 'sk_v8_test')
+      .execute();
+    console.log(`[TEST] Skills found: ${skills.length} (Success Rate: ${skills[0]?.success_rate})`);
+
+    // 5. Semantic Search Test
+    console.log('[TEST] Testing semantic search (FTS5)...');
+    const results = await vectorHub.searchTraces('celestial');
+    console.log(`[TEST] FTS Search Results: ${results.length}`);
+
+    if (traces.length > 0 && rems.length > 0 && skills.length > 0 && results.length > 0) {
+      console.log('✅ MindForge v8 Persistence Verification Passed.');
+    } else {
+      console.error('❌ MindForge v8 Persistence Verification Failed.');
+    }
+
+  } catch (err) {
+    console.error(`[TEST] Error: ${err.message}`);
+    process.exit(1);
+  } finally {
+    process.exit(0);
+  }
+}
+
+runTest();

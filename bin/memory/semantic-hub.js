@@ -6,12 +6,21 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const os = require('node:os');
+const vectorHub = require('./vector-hub'); // v8 Pillar XV
 
 class SemanticHub {
   constructor() {
     this.localPath = '.mindforge/memory';
     this.globalPath = path.join(os.homedir(), '.mindforge/memory/global');
     this.syncManifest = path.join(this.localPath, 'sync-manifest.json');
+    this.vhInitialized = false;
+  }
+
+  async ensureInit() {
+    if (!this.vhInitialized) {
+      await vectorHub.init();
+      this.vhInitialized = true;
+    }
   }
 
   /**
@@ -85,23 +94,74 @@ class SemanticHub {
   }
 
   /**
-   * Retrieves all 'golden_trace' types from the global hub.
+   * Retrieves all 'golden_trace' types from the global hub and local SQLite.
    */
   async getGoldenTraces(skillFilter = null) {
+    await this.ensureInit();
+    
+    // v8: Prioritize SQLite search for high-speed retrieval
+    let sqliteTraces = [];
+    try {
+      if (skillFilter) {
+        sqliteTraces = await vectorHub.searchTraces(skillFilter);
+      } else {
+        sqliteTraces = await vectorHub.db.selectFrom('traces')
+          .selectAll()
+          .where('event', '=', 'reasoning_trace')
+          .limit(20)
+          .execute();
+      }
+    } catch (err) {
+      console.warn(`[SEMANTIC-HUB] SQLite trace lookup failed: ${err.message}`);
+    }
+
+    // Legacy file-based fallback/global sync
     const patternFile = path.join(this.globalPath, 'pattern-library.jsonl');
+    let fileTraces = [];
     try {
       const data = await fs.readFile(patternFile, 'utf8');
-      const traces = data.split('\n')
+      fileTraces = data.split('\n')
         .filter(Boolean)
         .map(JSON.parse)
         .filter(p => p.type === 'golden-trace' || p.tags?.includes('success'));
       
       if (skillFilter) {
-        return traces.filter(t => t.skill === skillFilter || t.tags?.includes(skillFilter));
+        fileTraces = fileTraces.filter(t => t.skill === skillFilter || t.tags?.includes(skillFilter));
       }
-      return traces;
     } catch (e) {
-      return [];
+      // Fallback is silent
+    }
+
+    // Merge and deduplicate
+    const allTraces = [...sqliteTraces, ...fileTraces];
+    const uniqueTraces = Array.from(new Map(allTraces.map(t => [t.id || t.trace_id, t])).values());
+    
+    return uniqueTraces;
+  }
+
+  /**
+   * Saves a discovered skill to SQLite.
+   */
+  async saveSkill(skill) {
+    await this.ensureInit();
+    await vectorHub.db.insertInto('skills')
+      .values({
+        skill_id: skill.id || `sk_${Math.random().toString(36).substr(2, 6)}`,
+        name: skill.name,
+        description: skill.description || '',
+        path: skill.path || '',
+        success_rate: skill.success_rate || 0.0,
+        last_verified: new Date().toISOString()
+      })
+      .onConflict(oc => oc.column('skill_id').doUpdateSet({
+        success_rate: skill.success_rate,
+        last_verified: new Date().toISOString()
+      }))
+      .execute();
+    
+    // v8 Pillar XVII: Metadata provenance for evolved skills
+    if (skill.is_autonomous) {
+      console.log(`[SEMANTIC-HUB] Persistence acknowledged for ASE evolved skill: ${skill.name}`);
     }
   }
 }

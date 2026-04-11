@@ -1,77 +1,58 @@
 /**
- * MindForge v7 — Post-Quantum Agentic Security (PQAS)
- * Component: Hardened Policy Gate
+ * MindForge v8 — Orbital Governance (Pillar XVIII)
+ * Component: Hardened Policy Gate (Final Evolution)
  * 
- * Enforces strict biometric/executive bypasses for high-impact mutations.
+ * Enforces hardware-attested bypasses for high-impact system mutations.
  */
 'use strict';
 
-const fs = require('node:fs');
-const path = require('node:path');
+const orbitalGuardian = require('../engine/orbital-guardian');
+const configManager = require('../governance/config-manager');
 
 class PolicyGateHardened {
   constructor() {
-    this.bypassStore = path.join(process.cwd(), '.mindforge', 'bypasses.json');
+    // bypasses.json deprecated in favor of orbital.attestations table (v8)
+    this.criticalThreshold = configManager.get('governance.critical_drift_threshold', 95); 
   }
 
   /**
-   * Evaluates if an intent requires a biometric bypass.
-   * @param {Object} intent 
-   * @param {number} impactScore 
+   * Evaluates if an intent requires hardware-bound attestation.
    */
   async evaluateBypass(intent, impactScore) {
-    if (impactScore <= 95) {
+    if (impactScore <= this.criticalThreshold) {
       return { status: 'ALLOWED', reason: 'Impact within standard threshold' };
     }
 
-    console.log(`[PQAS-GATE] Impact Score ${impactScore} exceeds Critical Threshold (95)`);
-    
-    // Check if a pre-existing bypass exists for this request
-    const bypasses = this._loadBypasses();
-    const existing = bypasses.find(b => b.requestId === intent.requestId && b.status === 'APPROVED');
+    console.log(`[ORBITAL-GATE] Impact Score ${impactScore} requires Hardware Attestation`);
 
-    if (existing) {
-      return { status: 'ALLOWED', reason: 'Biometric Bypass Verified via WebAuthn/DEX', signature: existing.signature };
+    // 1. Check SQLite via OrbitalGuardian (Unified v8 persistence)
+    const attestation = await orbitalGuardian.verify(intent.requestId);
+    
+    if (attestation.verified) {
+      return { 
+        status: 'ALLOWED', 
+        reason: 'Hardware Attestation Verified via Enclave', 
+        attestation_id: attestation.id,
+        timestamp: attestation.timestamp
+      };
     }
 
-    // Trigger a new challenge
+    // 2. Trigger Orbital Challenge
     return { 
-      status: 'WAIT_FOR_BIOMETRIC', 
-      reason: 'Biometric steering required for high-impact mutation',
-      challenge_id: `ch_${Math.random().toString(36).substr(2, 6)}`,
-      threshold: 95
+      status: 'WAIT_FOR_ORBITAL', 
+      reason: 'Hardware/Biometric attestation required for orbital-tier mutation',
+      challenge_id: `orb_${Math.random().toString(36).substr(2, 6)}`,
+      impact: impactScore
     };
   }
 
   /**
-   * Records a manual bypass approval (Simulated).
+   * Records a hardware-attested approval.
    */
-  async recordBypass(requestId, signature) {
-    const bypasses = this._loadBypasses();
-    bypasses.push({
-      requestId,
-      signature,
-      status: 'APPROVED',
-      timestamp: new Date().toISOString()
-    });
-    this._saveBypasses(bypasses);
-    console.log(`[PQAS-GATE] Recorded Biometric Approval for Request: ${requestId}`);
-  }
-
-  _loadBypasses() {
-    try {
-      if (fs.existsSync(this.bypassStore)) {
-        return JSON.parse(fs.readFileSync(this.bypassStore, 'utf8'));
-      }
-    } catch (err) {}
-    return [];
-  }
-
-  _saveBypasses(data) {
-    if (!fs.existsSync(path.dirname(this.bypassStore))) {
-      fs.mkdirSync(path.dirname(this.bypassStore), { recursive: true });
-    }
-    fs.writeFileSync(this.bypassStore, JSON.stringify(data, null, 2));
+  async recordBypass(requestId, did, signature_blob = 'MOCK_HARDWARE_SIGN_v8') {
+    const report = await orbitalGuardian.attest(requestId, did, signature_blob);
+    console.log(`[ORBITAL-GATE] Recorded Hardware Approval for Request: ${requestId}`);
+    return report;
   }
 }
 

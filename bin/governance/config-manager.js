@@ -46,6 +46,32 @@ class ConfigManager {
     return value;
   }
 
+  set(key, value) {
+    const keys = key.split('.');
+    let target = this.config;
+
+    for (let i = 0; i < keys.length - 1; i++) {
+      const k = keys[i];
+      if (!target[k]) target[k] = {};
+      target = target[k];
+    }
+    target[keys[keys.length - 1]] = value;
+    
+    this._save();
+    return value;
+  }
+
+  _save() {
+    try {
+      if (!fs.existsSync(path.dirname(this.configPath))) {
+        fs.mkdirSync(path.dirname(this.configPath), { recursive: true });
+      }
+      fs.writeFileSync(this.configPath, JSON.stringify(this.config, null, 2));
+    } catch (err) {
+      console.error(`[ConfigManager] Failed to save config: ${err.message}`);
+    }
+  }
+
   getAll() {
     return this.config;
   }

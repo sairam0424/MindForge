@@ -1,19 +1,50 @@
 {
-  "version": "7.0.0",
+  "version": "8.0.0",
   "environment": "development",
   "governance": {
     "drift_threshold": 0.75,
-    "critical_drift_threshold": 0.50,
-    "res_threshold": 0.80
+    "critical_drift_threshold": 0.5,
+    "res_threshold": 0.8,
+    "active_did": "did:mindforge:183e757f-2bae-4ca7-be56-dbceae15c092"
   },
   "revops": {
     "market_registry": {
-      "gemini-1.5-pro": { "cost_input": 0.0035, "cost_output": 0.0105, "benchmark": 98, "provider": "Google" },
-      "claude-3-5-sonnet": { "cost_input": 0.0030, "cost_output": 0.0150, "benchmark": 99, "provider": "Anthropic" },
-      "gpt-4o": { "cost_input": 0.0050, "cost_output": 0.0150, "benchmark": 97, "provider": "OpenAI" },
-      "llama-3-70b-local": { "cost_input": 0.0001, "cost_output": 0.0001, "benchmark": 92, "provider": "Sovereign" },
-      "gemini-1.5-flash": { "cost_input": 0.0003, "cost_output": 0.0003, "benchmark": 85, "provider": "Google" },
-      "haiku-3": { "cost_input": 0.0002, "cost_output": 0.0004, "benchmark": 82, "provider": "Anthropic" }
+      "gemini-1.5-pro": {
+        "cost_input": 0.0035,
+        "cost_output": 0.0105,
+        "benchmark": 98,
+        "provider": "Google"
+      },
+      "claude-3-5-sonnet": {
+        "cost_input": 0.003,
+        "cost_output": 0.015,
+        "benchmark": 99,
+        "provider": "Anthropic"
+      },
+      "gpt-4o": {
+        "cost_input": 0.005,
+        "cost_output": 0.015,
+        "benchmark": 97,
+        "provider": "OpenAI"
+      },
+      "llama-3-70b-local": {
+        "cost_input": 0.0001,
+        "cost_output": 0.0001,
+        "benchmark": 92,
+        "provider": "Sovereign"
+      },
+      "gemini-1.5-flash": {
+        "cost_input": 0.0003,
+        "cost_output": 0.0003,
+        "benchmark": 85,
+        "provider": "Google"
+      },
+      "haiku-3": {
+        "cost_input": 0.0002,
+        "cost_output": 0.0004,
+        "benchmark": 82,
+        "provider": "Anthropic"
+      }
     },
     "default_baseline_model": "gpt-4o",
     "premium_fallback_model": "claude-3-5-sonnet"
@@ -22,5 +53,14 @@
     "pqas_enabled": true,
     "enclave_tier": 2,
     "provider": "simulated-lattice"
+  },
+  "mesh": {
+    "node_id": "beta-node",
+    "peers": []
+  },
+  "ase": {
+    "min_success_count": 3,
+    "max_drift_threshold": 0.1,
+    "auto_verify": false
   }
 }

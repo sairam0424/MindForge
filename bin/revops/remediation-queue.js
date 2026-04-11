@@ -9,10 +9,18 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
+const vectorHub = require('../memory/vector-hub');
+
 class RemediationQueue {
   constructor() {
-    this.queuePath = path.join(process.cwd(), '.mindforge', 'remediation-queue.json');
-    this.queue = this._loadQueue();
+    this.initialized = false;
+  }
+
+  async ensureInit() {
+    if (!this.initialized) {
+      await vectorHub.init();
+      this.initialized = true;
+    }
   }
 
   /**
@@ -34,49 +42,65 @@ class RemediationQueue {
    * Adds a new task to the remediation queue.
    */
   async enqueue(task) {
+    await this.ensureInit();
     const entry = {
       ...task,
       enqueued_at: new Date().toISOString(),
       status: 'PENDING'
     };
     
-    this.queue.push(entry);
-    this._persist();
+    await vectorHub.db.insertInto('remediations')
+      .values({
+        id: entry.remediation_id,
+        trace_id: entry.span_id || 'unknown',
+        strategy: entry.strategy,
+        status: entry.status,
+        timestamp: entry.enqueued_at
+      })
+      .execute();
+
     return entry;
   }
 
   /**
    * Updates the status of a specific remediation task.
    */
-  updateStatus(remediationId, status) {
-    const task = this.queue.find(t => t.remediation_id === remediationId);
-    if (task) {
-      task.status = status;
-      task.updated_at = new Date().toISOString();
-      this._persist();
-    }
+  async updateStatus(remediationId, status) {
+    await this.ensureInit();
+    await vectorHub.db.updateTable('remediations')
+      .set({ 
+        status, 
+        outcome: `Updated at ${new Date().toISOString()}` 
+      })
+      .where('id', '=', remediationId)
+      .execute();
   }
 
   /**
-   * Internal persistence helper.
+   * Legacy persistence removed in v8 (SQLite transition).
    */
   _persist() {
-    try {
-      if (!fs.existsSync(path.dirname(this.queuePath))) {
-        fs.mkdirSync(path.dirname(this.queuePath), { recursive: true });
-      }
-      fs.writeFileSync(this.queuePath, JSON.stringify(this.queue, null, 2));
-    } catch (err) {
-      console.error(`[RemediationQueue] Failed to persist queue: ${err.message}`);
-    }
+     // No-op for v8
   }
 
-  getPending() {
-    return this.queue.filter(t => t.status === 'PENDING');
+  _loadQueue() {
+     // No-op for v8
+     return [];
   }
 
-  getAll() {
-    return this.queue;
+  async getPending() {
+    await this.ensureInit();
+    return await vectorHub.db.selectFrom('remediations')
+      .selectAll()
+      .where('status', '=', 'PENDING')
+      .execute();
+  }
+
+  async getAll() {
+    await this.ensureInit();
+    return await vectorHub.db.selectFrom('remediations')
+      .selectAll()
+      .execute();
   }
 }
 

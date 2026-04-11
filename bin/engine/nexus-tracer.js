@@ -14,6 +14,7 @@ const configManager = require('../governance/config-manager');
 const driftDetector = require('./logic-drift-detector'); // v6.1 Pillar X
 const remediationEngine = require('./remediation-engine'); // v6.1 Pillar X
 const logicValidator = require('./logic-validator'); // v7 Pillar X
+const vectorHub = require('../memory/vector-hub'); // v8 Pillar XV
 
 class NexusTracer {
   constructor(config = {}) {
@@ -24,6 +25,7 @@ class NexusTracer {
     this.did = config.did || null; // Active Agent DID
     this.enableZtai = config.enableZtai !== false;
     this.sreManager = new SREManager();
+    this.vhInitialized = false;
 
     // v7: Centralized Thresholds
     this.RES_THRESHOLD = configManager.get('governance.res_threshold', 0.8); 
@@ -261,12 +263,32 @@ class NexusTracer {
     if (this.enableZtai && this.did) {
       try {
         entry.did = this.did;
-        // Sign the stringified entry WITHOUT the signature field itself
         const payload = JSON.stringify(entry);
         entry.signature = await ztai.signData(this.did, payload);
       } catch (err) {
         console.warn(`[NexusTracer] ZTAI signing failed: ${err.message}`);
       }
+    }
+
+    // v8: SQLite Persistence (VectorHub)
+    try {
+      if (!this.vhInitialized) {
+        await vectorHub.init();
+        this.vhInitialized = true;
+      }
+      await vectorHub.recordTrace({
+        id: entry.id,
+        trace_id: entry.trace_id,
+        span_id: data.span_id || null,
+        event: event,
+        timestamp: entry.timestamp,
+        agent: data.agent || null,
+        content: data.thought || data.span_name || data.strategy || null,
+        metadata: entry,
+        drift_score: data.drift_score || 0
+      });
+    } catch (err) {
+      console.warn(`[NexusTracer] VectorHub persist failed: ${err.message}`);
     }
 
     try {
