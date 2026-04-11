@@ -43,3 +43,4 @@ ROADMAP_V7.md
 .mindforge/*.db
 .mindforge/memory/sync-manifest.json
 *.mfb
+.npm-cache/
