@@ -132,7 +132,14 @@ class VectorHub {
       mesh_node_id: data.mesh_node_id || null
     };
 
-    await this.db.insertInto('traces').values(entry).execute();
+    await this.db.insertInto('traces')
+      .values(entry)
+      .onConflict(oc => oc.column('id').doUpdateSet({
+        metadata: entry.metadata,
+        mesh_node_id: entry.mesh_node_id,
+        drift_score: entry.drift_score
+      }))
+      .execute();
     
     // Update FTS5 index if content exists
     if (entry.content) {

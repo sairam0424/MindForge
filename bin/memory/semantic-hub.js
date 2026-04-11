@@ -140,6 +140,48 @@ class SemanticHub {
   }
 
   /**
+   * Retrieves all 'ghost_pattern' types for proactive risk detection.
+   */
+  async getGhostPatterns() {
+    await this.ensureInit();
+
+    // 1. Fetch from legacy file-based global hub
+    const patternFile = path.join(this.globalPath, 'pattern-library.jsonl');
+    let ghostPatterns = [];
+    try {
+      const data = await fs.readFile(patternFile, 'utf8');
+      ghostPatterns = data.split('\n')
+        .filter(Boolean)
+        .map(JSON.parse)
+        .filter(p => p.type === 'ghost-pattern' || p.tags?.includes('failure'));
+    } catch (e) {
+      // Missing library is handled gracefully
+    }
+
+    // 2. Fetch from SQLite high-drift traces (v8 specific ghosting)
+    try {
+      const v8Ghosts = await vectorHub.db.selectFrom('traces')
+        .selectAll()
+        .where('drift_score', '>', 0.5)
+        .limit(20)
+        .execute();
+      
+      const v8Mapped = v8Ghosts.map(g => ({
+        id: g.id,
+        tags: ['v8-drift-risk', 'failure'],
+        failureContext: g.content,
+        mitigationStrategy: 'Review logic drift in v8 trace logs.'
+      }));
+
+      ghostPatterns = [...ghostPatterns, ...v8Mapped];
+    } catch (err) {
+      console.warn(`[SEMANTIC-HUB] SQLite ghost lookup failed: ${err.message}`);
+    }
+
+    return ghostPatterns;
+  }
+
+  /**
    * Saves a discovered skill to SQLite.
    */
   async saveSkill(skill) {
