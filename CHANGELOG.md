@@ -1,3 +1,26 @@
+## [8.0.0] - 2026-04-12
+
+### Added (v8.0.0: Celestial Orchestration - SQLite & FMS)
+
+- **Pillar XV: Unified Persistence Layer**: Transitioned from file-based JSONL state to a high-performance **SQLite** engine (`celestial.db`) with **FTS5** semantic reasoning support.
+- **Pillar XVI: Federated Mesh Synthesis (FMS)**: Inter-project knowledge sharing via signed **MindForge Bundles (`.mfb`)** using ZTAI-signed identities.
+- **Pillar XVII: Autonomous Skill Evolution (ASE)**: Implemented `SkillEvolver` to mine "Golden Traces" and synthesize reusable agentic skills.
+- **Pillar XVIII: Orbital Governance**: Hardware-bound (HSM/Biometric) attestation for catastrophic-risk mutations (>95).
+- **Core Vector Expansion**: Upgraded `VectorHub` with `better-sqlite3` and `Kysely` for type-safe, sub-millisecond persistence.
+
+---
+
+## [7.0.0] - 2026-04-11
+
+### Added (v7.0.0: Sovereign Intelligence - Post-Quantum & Homing)
+
+- **Pillar IX: Autonomous Resource Harvesting (ARH)**: Real-time token arbitrage and dynamic task-to-model steering based on MIR.
+- **Pillar X: Neural Drift Remediation (NDR)**: Logic-drift detection and automated reasoning recovery via semantic density heuristics.
+- **Pillar XI: Post-Quantum Agentic Security (PQAS)**: Lattice-based (Dilithium-5) signatures and ZK-Proof bypasses for future-proof identity.
+- **Pillar XII: Proactive Semantic Homing**: Autonomous "Intent Hunting" where agents proactively claim tasks from the Federated Intelligence Mesh (FIM).
+
+---
+
 ## [6.7.0] - 2026-04-09
 
 ### Added (v6.7.0: Federated Intelligence Mesh - FIM Expansion)
