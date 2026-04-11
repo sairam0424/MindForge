@@ -1,6 +1,6 @@
-# MindForge v6.2.0 Alpha — Sovereign Intelligence (PQAS & Homing)
+# MindForge v8.0.0 — Celestial Orchestration (SQLite & FMS Enabled)
 
-MindForge v6.2.0 Alpha achieves the **Sovereign Intelligence** final stage, introducing post-quantum safe identities and proactive agentic homing through **Post-Quantum Agentic Security (PQAS)** and **Proactive Semantic Homing**.
+MindForge v8.0.0 achieved the **Celestial Orchestration** final stage, transitioning to a federated, hardware-attested intelligence mesh powered by **Unified Persistence (SQLite/FTS5)** and **Federated Mesh Synthesis (FMS)**.
 
 
 ## Installation & Setup
@@ -31,14 +31,10 @@ npx mindforge-cc@latest --claude --local
 
 ---
 
-## Why MindForge
-
-AI coding agents degrade over long sessions. Context fills up. Quality drops.
-Decisions get forgotten. MindForge fixes that with:
-
-- **Sovereign Reason Enclave (v5.8)** — TEE-simulated reasoning isolation with Zero-Knowledge (ZK) Audit Trails.
-- **Multi-Cloud Arbitrage (v5.7)** — Dynamic routing across Vertex AI, Bedrock, and Azure with intelligence-first task affinity.
-- **Sentinel Execution (v5.6)** — JIT Binary Runtime Attestation and Zero-Trust Skill Enforcement.
+- **Unified Persistence Layer (v8.0)** — Centralized SQLite/FTS5 engine for sub-millisecond reasoning audits and semantic reasoning.
+- **Federated Mesh Synthesis (v8.0)** — Signed knowledge handoffs via MindForge Bundles (`.mfb`) and federated intelligence synchronization.
+- **Autonomous Skill Evolution (v8.0)** — Self-generating persistent skills from reasoning traces with logic-drift mining.
+- **Orbital Governance (v8.0)** — Hardware-bound (HSM/Biometric) attestation for high-blast-radius security gates.
 - **Interactive Temporal Steering (v5.10)** — Full history scrubbing, hindsight state repair, and real-time temporal slider navigation.
 - **AgRevOps Hub (v5.10)** — Dynamic ROI tracking ($100/hr mapping), Milestone Velocity forecasting, and Governance Debt monitoring.
 - **Sovereign Reason Enclave (v5.8)** — TEE-simulated reasoning isolation with Zero-Knowledge (ZK) Audit Trails.
@@ -297,6 +293,15 @@ See `.mindforge/production/token-optimiser.md`.
 ## 📜 Framework Evolution & Version History
 
 MindForge has evolved rapidly from a simple workflow tool into a sovereign intelligence mesh. Explore the major milestones below.
+
+<details>
+<summary><b>v8.0.x — Celestial Orchestration (SQLite & FMS)</b></summary>
+
+- **Pillar XV: Unified Persistence Layer**: Transition from file-based JSONL state to a high-performance SQLite engine with FTS5 semantic search.
+- **Pillar XVI: Federated Mesh Synthesis (FMS)**: Inter-project knowledge sharing via cryptographically signed `.mfb` (MindForge Bundles).
+- **Pillar XVII: Autonomous Skill Evolution (ASE)**: Automated mining of "Golden Traces" to synthesize reusable `.skill.md` artifacts.
+- **Pillar XVIII: Orbital Governance**: Hardware-locked security gates requiring HSM/Biometric attestation for high-impact mutations (>95).
+</details>
 
 <details>
 <summary><b>v6.2.x — Sovereign Intelligence (PQAS & Homing)</b></summary>

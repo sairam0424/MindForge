@@ -1,5 +1,5 @@
-# MindForge Federated Intelligence Mesh (FIM) (v6.2.0-alpha)
-MindForge v6.2.0-alpha — Sovereign & Proactive Distributed Intelligence
+# MindForge Federated Intelligence Mesh (FIM) (v8.0.0 Celestial)
+MindForge v8.0.0 — Unified, Federated & Hardware-Attested Distributed Intelligence
 
 ## 1. Overview
 The **Federated Intelligence Mesh (FIM)** is the enterprise-grade evolution of the Global Intelligence Mesh. It transitions MindForge from machine-local memory to a distributed organizational intelligence network. In v6.2.0, FIM evolves from a reactive knowledge store to a **Proactive Homing** mesh where agents actively hunt for intents and collaboratively heal reasoning drift.
@@ -7,20 +7,20 @@ The **Federated Intelligence Mesh (FIM)** is the enterprise-grade evolution of t
 ## 2. Architecture
 The V6 mesh is built on four core pillars:
 
-### A. EIS Client (`eis-client.js`)
-- **Role**: Secure, authenticated communicator for the central intelligence hub.
-- **Hardening**: Implements **ZTAI-signed authentication headers** with **Post-Quantum (PQAS)** signature support for Tier 4.
+### A. Mesh Syncer (`mesh-syncer.js`) [Pillar XVI]
+- **Role**: Secure, signed knowledge exchange between MindForge nodes.
+- **MindForge Bundles (.mfb)**: Encapsulated, compressed reasoning traces and skills with ZTAI-signed integrity proofs.
+- **Federated Synthesis**: Merges external knowledge into the local Unified Persistence layer with automatic provenance tracking.
 
 ### B. Federated Sync (`federated-sync.js`)
-- **Role**: High-performance synchronization engine.
-- **Proactive Homing (v6.2.0)**: Idle agents now use the `IntentHarvester` to proactively pull unassigned tasks from the mesh, reducing orchestrator overhead and latency.
+- **Role**: Peer-to-peer task handoff and state synchronization.
+- **Hardware Attestation (v8.0.0)**: High-impact mesh operations now require Tier 3 Hardware Enclave (HSM) attestation before propagation.
 
-### C. Mesh Self-Healer (`mesh-self-healer.js`)
-- **Role**: Peer-to-peer collaborative recovery.
-- **Collaborative Reasoning**: When a mesh node detects a reasoning drift score > 80, peer agents automatically "home in" on the node via the mesh to provide adversarial synthesis and recovery vectors.
+### C. Unified Persistence Bridge (`vector-hub.js`) [Pillar XV]
+- **Role**: High-speed SQL source of truth for the mesh, replacing slow JSONL file-watching with sub-millisecond reasoning retrieval.
 
-### D. Knowledge Graph Bridge (`knowledge-graph.js`)
-- **Role**: Unified memory interface that resolves both local project nodes and remote federated nodes.
+### D. Skill Evolver (`skill-evolver.js`) [Pillar XVII]
+- **Role**: Cross-mesh pattern recognition where peer traces are automatically mined for evolved local skills.
 
 ## 3. Workflow & Provenance
 1. **Intent Harvesting**: The `IntentHarvester` proactively claims tasks from the FIM based on skill-affinity.
@@ -34,4 +34,4 @@ The V6 mesh is built on four core pillars:
 - **Distributed Resilience**: The mesh is a self-healing engine where every agent monitors the health of the whole.
 
 ---
-*Status: V6.2.0 Sovereign Pillars XI & XII Implemented & Verified (2026-03-29)*
+*Status: V8.0.0 Celestial Pillars XV-XVIII Implemented & Verified (2026-04-11)*
