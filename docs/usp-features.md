@@ -1,10 +1,10 @@
-# MindForge: 28 Unique Selling Points & Core Features (v6.2 Alpha)
+# MindForge: 32 Unique Selling Points & Core Features (v8.0.0 Celestial)
 
 MindForge is the enterprise's **Agentic OS**, built on the **CADIA v6.2 (Cross-Agentic Deterministic Intelligence Architecture)** framework. It provides a self-healing, self-optimizing environment for autonomous agent execution at scale.
 
 ---
 
-## The 12 Pillars of Sovereign Intelligence
+## The 16 Pillars of Celestial Intelligence
 
 1.  **Pillar I: Semantic Vector Consensus** (FIM v2) - Distributed knowledge merging.
 2.  **Pillar II: Dynamic Blast Radius** (APO v2) - Real-time risk scoring (CADIA).
@@ -18,10 +18,14 @@ MindForge is the enterprise's **Agentic OS**, built on the **CADIA v6.2 (Cross-A
 10. **Pillar VI: Sovereign Reason Enclaves** (ZK-Audit) - Privacy-preserving audit trails.
 11. **Pillar XI: Post-Quantum Agentic Security** (PQAS) - Lattice-based signatures and bypasses.
 12. **Pillar XII: Proactive Semantic Homing** (Homing) - Proactive intent harvesting and mesh healing.
+13. **Pillar XV: Unified Persistence Layer** (v8) - Sub-millisecond SQL reasoning audits.
+14. **Pillar XVI: Federated Mesh Synthesis** (v8) - Cryptographically signed knowledge handoffs.
+15. **Pillar XVII: Autonomous Skill Evolution** (v8) - Self-generating skills from reasoning traces.
+16. **Pillar XVIII: Orbital Governance** (v8) - Hardware-attested safety gates (HSM).
 
 ---
 
-## 26 Elite Unique Selling Points (USPs)
+## 30 Elite Unique Selling Points (USPs)
 
 1.  **File-Driven Governance**: Behavior defined by Markdown/JSON, auditable like code.
 2.  **Wave-Based Parallel Execution**: Dependency-ordered clusters for speed without chaos.
@@ -49,6 +53,10 @@ MindForge is the enterprise's **Agentic OS**, built on the **CADIA v6.2 (Cross-A
 24. **Sovereign ROI Arbitrage**: Automated steering to lowest-cost/highest-value model tiers.
 25. **Ghost Pattern Detection**: Automated planning-phase detection of past architectural failures.
 26. **Sentinel Execution Center**: Centralized JIT attestation and reasoning guardrail enforcement.
+27. **Unified Persistence (Celestial DB)**: High-performance SQL engine for sub-millisecond reasoning audits.
+28. **Federated Mesh Synthesis**: Secure, signed knowledge exchange via MindForge Bundles (.mfb).
+29. **Autonomous Skill Evolution**: Trace-to-Skill mining loop for self-improving reasoning patterns.
+30. **Hardware-Bound Attestation**: HSM/Biometric security gates for critical architectural mutations.
 
 ---
 
@@ -91,4 +99,4 @@ Organizational-level knowledge sharing via the Global Intelligence Mesh.
 ---
 
 ## Summary
-MindForge v6.1.0-alpha **Sovereign Intelligence** represents the pinnacle of the Agentic OS evolution. By combining **Interactive Temporal Steering** and **AgRevOps Financial Governance** with the core Sentinel security layer, it provides the first framework capable of self-correcting logic drift and quantifying its own economic value in real-time.
+MindForge v8.0.0 **Celestial Orchestration** represents the pinnacle of the Agentic OS evolution. By combining **Unified SQL Persistence** and **Federated Mesh Synthesis** with the core Sentinel security layer, it provides the first framework capable of local reasoning speed at a global federated scale with hardware-attested governance.

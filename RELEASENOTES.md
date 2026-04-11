@@ -1,3 +1,34 @@
+# MindForge v8.0.0 — Celestial Orchestration (SQLite & FMS)
+
+## Top Summary
+
+MindForge v8.0.0, codenamed **"Celestial Orchestration,"** marks the framework's transition to a high-performance, federated, and hardware-attested intelligence system. By migrating all project state to a centralized SQLite persistence layer and enabling federated knowledge sharing via signed bundles, v8.0.0 establishes the foundation for global-scale agentic engineering.
+
+## Highlights (v8.0.0)
+
+- **Unified Persistence Layer (Pillar XV)**: Sub-millisecond state queries and semantic reasoning audits via **SQLite/FTS5**.
+- **Federated Mesh Synthesis (Pillar XVI)**: Secure, signed exchange of `.mfb` knowledge bundles across isolated project environments.
+- **Autonomous Skill Evolution (Pillar XVII)**: Automated mining of execution "Golden Traces" to evolve system capabilities without manual intervention.
+- **Orbital Governance (Pillar XVIII)**: Native HSM and Biometric attestation for high-blast-radius operations.
+- **Performance Hardening**: Type-safe database interactions via Kysely and better-sqlite3.
+
+---
+
+# MindForge v7.0.0 — Sovereign Intelligence (Post-Quantum & Homing)
+
+## Top Summary
+
+The v7.0.0 release, **"Sovereign Intelligence,"** transitions MindForge from reactive wave-processing to proactive agentic homing and future-proofs the framework's identity layer against quantum-era threats.
+
+## Highlights (v7.0.0)
+
+- **Post-Quantum Agentic Security (Pillar XI)**: Lattice-based (Dilithium-5) cryptography for all ZTAI signatures.
+- **Proactive Semantic Homing (Pillar XII)**: Agents autonomously "hunt" for tasks within the mesh during idle periods.
+- **Autonomous Resource Harvesting (Pillar IX)**: Real-time token arbitrage and model-tier steering.
+- **Neural Drift Remediation (Pillar X)**: Automated self-correction of reasoning hallucinations.
+
+---
+
 # MindForge v6.0.0-alpha — AgRevOps ROI Engine (Enterprise Value)
 
 ## Top Summary

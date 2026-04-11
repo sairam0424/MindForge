@@ -1,6 +1,6 @@
-# MindForge v6.2.0 Alpha — Sovereign Intelligence (PQAS & Homing)
+# MindForge v8.0.0 — Celestial Orchestration (SQLite & FMS Enabled)
 
-MindForge v6.2.0 Alpha achieves the **Sovereign Intelligence** final stage, introducing post-quantum safe identities and proactive agentic homing through **Post-Quantum Agentic Security (PQAS)** and **Proactive Semantic Homing**.
+MindForge v8.0.0 achieved the **Celestial Orchestration** final stage, transitioning to a federated, hardware-attested intelligence mesh powered by **Unified Persistence (SQLite/FTS5)** and **Federated Mesh Synthesis (FMS)**.
 
 
 ## Installation & Setup
@@ -31,19 +31,22 @@ npx mindforge-cc@latest --claude --local
 
 ---
 
-## Why MindForge
-
-AI coding agents degrade over long sessions. Context fills up. Quality drops.
-Decisions get forgotten. MindForge fixes that with:
-
-- **Sovereign Reason Enclave (v5.8)** — TEE-simulated reasoning isolation with Zero-Knowledge (ZK) Audit Trails.
-- **Multi-Cloud Arbitrage (v5.7)** — Dynamic routing across Vertex AI, Bedrock, and Azure with intelligence-first task affinity.
-- **Sentinel Execution (v5.6)** — JIT Binary Runtime Attestation and Zero-Trust Skill Enforcement.
-- **Interactive Temporal Steering (v5.10)** — Full history scrubbing, hindsight state repair, and real-time temporal slider navigation.
-- **AgRevOps Hub (v5.10)** — Dynamic ROI tracking ($100/hr mapping), Milestone Velocity forecasting, and Governance Debt monitoring.
-- **Sovereign Reason Enclave (v5.8)** — TEE-simulated reasoning isolation with Zero-Knowledge (ZK) Audit Trails.
-- **Multi-Cloud Arbitrage (v5.7)** — Dynamic routing across Vertex AI, Bedrock, and Azure with intelligence-first task affinity.
-- **Sentinel Execution (v5.6)** — JIT Binary Runtime Attestation and Zero-Trust Skill Enforcement.
+- **Unified Persistence Layer (v8.0)** — Centralized SQLite/FTS5 engine for sub-millisecond reasoning audits and semantic reasoning (Pillar XV).
+- **Federated Mesh Synthesis (v8.0)** — Signed knowledge handoffs via MindForge Bundles (`.mfb`) and federated intelligence synchronization (Pillar XVI).
+- **Autonomous Skill Evolution (v8.0)** — Self-generating persistent skills from reasoning traces with logic-drift mining (Pillar XVII).
+- **Orbital Governance (v8.0)** — Hardware-bound (HSM/Biometric) attestation for high-blast-radius security gates (Pillar XVIII).
+- **Post-Quantum Agentic Security (v7.0)** — Lattice-based (Dilithium-5) signatures and ZK-Proof bypasses (Pillar XI).
+- **Proactive Semantic Homing (v7.0)** — Autonomous "Intent Hunting" and peer-healing mesh behavior (Pillar XII).
+- **Autonomous Resource Harvesting (v7.0)** — Real-time token arbitrage and dynamic task routing (Pillar IX).
+- **Neural Drift Remediation (v7.0)** — Semantic density heuristics and automated reasoning recovery (Pillar X).
+- **Interactive Temporal Steering (v5.10)** — Full history scrubbing, hindsight state repair, and real-time temporal slider navigation (Pillar VII).
+- **AgRevOps Hub (v6.0)** — Dynamic ROI tracking ($100/hr mapping), Milestone Velocity forecasting, and Governance Debt monitoring (Pillar VIII).
+- **Sovereign Reason Enclave (v5.8)** — TEE-simulated reasoning isolation with Zero-Knowledge (ZK) Audit Trails (Pillar VI).
+- **Multi-Cloud Arbitrage (v5.7)** — Dynamic routing across Vertex AI, Bedrock, and Azure with intelligence-first task affinity (Pillar V).
+- **Sentinel Execution (v5.6)** — JIT Binary Runtime Attestation and Zero-Trust Skill Enforcement (Pillar IV).
+- **Predictive Agentic Reliability (v5.5)** — Advanced loop detection and self-healing resonance (Pillar III).
+- **Dynamic Blast Radius (v5.3)** — Real-time impact analysis and circuit-breaker safety in the federated sync (Pillar II).
+- **Semantic Vector Consensus (v5.2)** — FIM v2 with cosine-similarity conflict resolution (Pillar I).
 - **Human-Agent Handover (v5.0)** — Nexus State Bundles and mid-wave steering injection.
 - **Autonomous FinOps (v4.3)** — Dynamic **C2C** (Confidence-to-Cost) routing.
 - **Proactive Equilibrium (v4.3)** — Real-time **Wave Divergence** monitoring and autonomous state recovery.
@@ -299,28 +302,31 @@ See `.mindforge/production/token-optimiser.md`.
 MindForge has evolved rapidly from a simple workflow tool into a sovereign intelligence mesh. Explore the major milestones below.
 
 <details>
-<summary><b>v6.2.x — Sovereign Intelligence (PQAS & Homing)</b></summary>
+<summary><b>v8.0.x — Celestial Orchestration (SQLite & FMS)</b></summary>
+
+- **Pillar XV: Unified Persistence Layer**: Transition from file-based JSONL state to a high-performance SQLite engine with FTS5 semantic search.
+- **Pillar XVI: Federated Mesh Synthesis (FMS)**: Inter-project knowledge sharing via cryptographically signed `.mfb` (MindForge Bundles).
+- **Pillar XVII: Autonomous Skill Evolution (ASE)**: Automated mining of "Golden Traces" to synthesize reusable `.skill.md` artifacts.
+- **Pillar XVIII: Orbital Governance**: Hardware-locked security gates requiring HSM/Biometric attestation for high-impact mutations (>95).
+</details>
+
+<details>
+<summary><b>v7.x — Sovereign Intelligence (PQAS & Homing)</b></summary>
 
 - **Pillar XI: Post-Quantum Agentic Security (PQAS)**: Lattice-based (Dilithium-5) signatures and ZK-Proof bypasses for Tier 4 agent identities.
 - **Pillar XII: Proactive Semantic Homing**: Autonomous "Intent Hunting" where agents proactively claim tasks and peer-heal logic drift (>80) in the mesh.
-- **Agentic Learning Loop (Double-Hook Memory)**: Mandatory "Read Before, Record After" protocol for all agentic actions, ensuring a persistent, self-improving engineering memory.
-- **Edge-Case Biometrics**: Hardware-locked governance requiring manual `APPROVED_BY_EXECUTIVE` steering for catastrophic-risk operations.
-</details>
-
-<details>
-<summary><b>v6.1.x — Sovereign Intelligence (ARH & NDR)</b></summary>
-
 - **Pillar IX: Autonomous Resource Harvesting (ARH)**: Real-time token arbitrage and dynamic task routing based on MIR (Min-Intelligence-Requirement).
 - **Pillar X: Neural Drift Remediation (NDR)**: Semantic density heuristics and automated reasoning recovery to break logic loops and hallucinations.
-- **ROI Telemetry**: High-fidelity cost-saving tracking integrated into the global audit stream.
+- **Agentic Learning Loop**: Mandatory "Read Before, Record After" protocol for all agentic actions, ensuring a persistent, self-improving engineering memory.
 </details>
 
 <details>
-<summary><b>v6.0.x — CADIA Engine & AgRevOps ROI</b></summary>
+<summary><b>v6.x — AgRevOps & Stability Patterns</b></summary>
 
-- **AgRevOps ROI Engine**: Real-time value attribution ($100/hr dev saving mapping) for every autonomous reasoning cycle.
+- **AgRevOps ROI Engine (Pillar VIII)**: Real-time value attribution ($100/hr dev saving mapping) for every autonomous reasoning cycle.
+- **FIM Expansion**: Aggregation of collective project health metrics via `PillarHealthTracker`.
 - **CADIA Optimizer (Pillar II Upgrade)**: Dynamic risk scoring (0-100) and session entropy guardrails to prevent rogue behaviors.
-- **Goal-Path Alignment**: Cross-referencing intents against `STATE.md` to flag anomalous file access.
+- **Homing Signal Injection**: Automated capture of high-efficacy SCS homing instructions as durable, sharable knowledge.
 </details>
 
 <details>
@@ -400,5 +406,5 @@ MindForge never stores credentials in files. Review:
 
 ---
 
-## License
-MIT
+## ⚖️ License
+MIT © 2026 MindForge Team
