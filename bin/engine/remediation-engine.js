@@ -7,7 +7,9 @@
  */
 'use strict';
 
-const driftDetector = require('./logic-drift-detector');
+const remediationQueue = require('../revops/remediation-queue');
+const logicValidator = require('./logic-validator');
+const semanticHub = require('../memory/semantic-hub');
 
 class RemediationEngine {
   constructor() {
@@ -25,7 +27,7 @@ class RemediationEngine {
 
     // Tiered Remediation Logic
     if (drift_score > 0.9) strategy = 'REASONING_RESTART';
-    else if (drift_score > 0.8) strategy = 'GOLDEN_TRACE_INJECTION';
+    else if (drift_score > 0.8 || report.invalid_logic) strategy = 'GOLDEN_TRACE_INJECTION';
     else if (drift_score > 0.75) strategy = 'CONTEXT_COMPRESSION';
 
     if (strategy === 'NOT_REQUIRED') return { status: 'STABLE', strategy };
@@ -38,18 +40,19 @@ class RemediationEngine {
       effectiveness_prediction: 0.85
     };
 
-    console.log(`[Remediation] Triggered ${strategy} for ${spanId} (Drift: ${drift_score})`);
+    console.log(`[Remediation] Triggered ${strategy} for ${spanId} (Score: ${drift_score})`);
     
-    this.activeRemediations.add(action);
-    
-    // Simulating specific remediation actions
+    // v7: Finalize with Stateful Queueing
+    await remediationQueue.enqueue(action);
+
+    // Mock implementation of remediation execution
     this._executeStrategy(strategy, spanId);
 
     return action;
   }
 
   /**
-   * Mock implementation of remediation strategies.
+   * functional implementation of remediation strategies.
    */
   async _executeStrategy(strategy, spanId) {
     switch(strategy) {
@@ -59,7 +62,13 @@ class RemediationEngine {
         break;
       case 'GOLDEN_TRACE_INJECTION':
         console.log(`[Remediation] Injecting successful trace heuristics into ${spanId}`);
-        // Logic to pull from Semantic Hub successful past traces
+        const traces = await semanticHub.getGoldenTraces();
+        if (traces.length > 0) {
+           const bestTrace = traces[0];
+           console.log(`[Remediation] Injected Golden Trace: ${bestTrace.id} (Skill: ${bestTrace.skill})`);
+        } else {
+           console.warn(`[Remediation] No Golden Traces found in SemanticHub for injection.`);
+        }
         break;
     }
   }

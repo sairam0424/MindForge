@@ -10,8 +10,11 @@ const path = require('path');
 const crypto = require('crypto');
 const ztai = require('../governance/ztai-manager');
 const SREManager = require('./sre-manager');
+const configManager = require('../governance/config-manager');
 const driftDetector = require('./logic-drift-detector'); // v6.1 Pillar X
 const remediationEngine = require('./remediation-engine'); // v6.1 Pillar X
+const logicValidator = require('./logic-validator'); // v7 Pillar X
+const vectorHub = require('../memory/vector-hub'); // v8 Pillar XV
 
 class NexusTracer {
   constructor(config = {}) {
@@ -22,19 +25,21 @@ class NexusTracer {
     this.did = config.did || null; // Active Agent DID
     this.enableZtai = config.enableZtai !== false;
     this.sreManager = new SREManager();
+    this.vhInitialized = false;
 
-    // v5/v6: Reasoning Entropy Monitoring (RES)
-    this.RES_THRESHOLD = 0.8; 
+    // v7: Centralized Thresholds
+    this.RES_THRESHOLD = configManager.get('governance.res_threshold', 0.8); 
     this.entropyCache = new Map(); 
 
     // v6.1: Neural Drift Remediation (NDR)
     this.DRIFT_SAMPLE_RATE = 1.0; 
 
-    // v5 Pillar IV: Agentic SBOM
+    // v7: Agentic SBOM with Arbitrage
     this.sbom = {
-      manifest_version: '1.0.0',
+      manifest_version: '1.1.0',
       models: new Set(),
       skills: new Set(),
+      arbitrage_total: 0,
       startTime: new Date().toISOString()
     };
   }
@@ -148,15 +153,26 @@ class NexusTracer {
 
     // v6.1 Pillar X: Neural Drift Remediation (NDR)
     const driftReport = driftDetector.analyze(spanId, sanitizedThought);
-    if (driftReport.status === 'DRIFT_DETECTED') {
-      const remediation = await remediationEngine.trigger(spanId, driftReport);
+
+    // v7 Pillar X: Semantic Logic Validation
+    const validationResult = await logicValidator.validate(sanitizedThought, { span_id: spanId });
+    
+    if (driftReport.status === 'DRIFT_DETECTED' || !validationResult.is_valid) {
+      const remediation = await remediationEngine.trigger(spanId, {
+        ...driftReport,
+        invalid_logic: !validationResult.is_valid
+      });
       
       await this._recordEvent('drift_remediation_event', {
         span_id: spanId,
         score: driftReport.drift_score,
         strategy: remediation.strategy,
         remediation_id: remediation.remediation_id,
-        markers: driftReport.markers
+        markers: driftReport.markers,
+        validation: {
+          is_valid: validationResult.is_valid,
+          critique: validationResult.critique
+        }
       });
     }
 
@@ -247,12 +263,32 @@ class NexusTracer {
     if (this.enableZtai && this.did) {
       try {
         entry.did = this.did;
-        // Sign the stringified entry WITHOUT the signature field itself
         const payload = JSON.stringify(entry);
         entry.signature = await ztai.signData(this.did, payload);
       } catch (err) {
         console.warn(`[NexusTracer] ZTAI signing failed: ${err.message}`);
       }
+    }
+
+    // v8: SQLite Persistence (VectorHub)
+    try {
+      if (!this.vhInitialized) {
+        await vectorHub.init();
+        this.vhInitialized = true;
+      }
+      await vectorHub.recordTrace({
+        id: entry.id,
+        trace_id: entry.trace_id,
+        span_id: data.span_id || null,
+        event: event,
+        timestamp: entry.timestamp,
+        agent: data.agent || null,
+        content: data.thought || data.span_name || data.strategy || null,
+        metadata: entry,
+        drift_score: data.drift_score || 0
+      });
+    } catch (err) {
+      console.warn(`[NexusTracer] VectorHub persist failed: ${err.message}`);
     }
 
     try {

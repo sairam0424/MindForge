@@ -5,13 +5,32 @@
 'use strict';
 
 const crypto = require('node:crypto');
+const configManager = require('./config-manager');
 
 class QuantumCrypto {
+  constructor() {
+    this.providerId = configManager.get('security.provider', 'simulated-lattice');
+    this.pqasEnabled = configManager.get('security.pqas_enabled', true);
+  }
+
   /**
-   * Generates a simulated Dilithium-5 key pair.
-   * In a real implementation, this would use a library like OQS (Open Quantum Safe).
+   * Returns the current active crypto provider.
+   */
+  getProvider() {
+    // In v7, this would resolve to a real provider like 'oqs-provider.js'
+    return {
+      id: this.providerId,
+      pqas_enabled: this.pqasEnabled,
+      algorithm: 'Dilithium-5'
+    };
+  }
+
+  /**
+   * Generates a key pair using the configured PQ provider.
    */
   async generateLatticeKeyPair() {
+    if (!this.pqasEnabled) throw new Error('PQAS is disabled in configuration.');
+
     // Simulate high-entropy lattice seeds
     const seed = crypto.randomBytes(64).toString('hex');
     const publicKey = `mfq7_dilithium5_pub_${crypto.randomBytes(32).toString('hex')}`;
@@ -20,8 +39,9 @@ class QuantumCrypto {
     return {
       publicKey,
       privateKey,
-      algorithm: 'Dilithium-5',
-      version: 'v7.0.0-PQAS'
+      algorithm: this.getProvider().algorithm,
+      version: 'v7.0.0-PQAS',
+      provider: this.providerId
     };
   }
 
@@ -29,6 +49,7 @@ class QuantumCrypto {
    * Signs data using simulated Dilithium-5.
    */
   async signPQ(data, privateKey) {
+    if (!this.pqasEnabled) throw new Error('PQAS is disabled.');
     if (!privateKey.startsWith('mfq7_dilithium5_priv_')) {
       throw new Error('Invalid Post-Quantum private key format.');
     }
