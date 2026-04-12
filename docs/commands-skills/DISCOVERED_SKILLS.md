@@ -1,6 +1,6 @@
 # 🎯 Discovered Skills Registry
 
-*Generated at: 11/04/2026, 19:26:55*
+*Generated at: 12/04/2026, 17:03:52*
 
 This document is automatically updated when AAVA refreshes its command engine. It lists all skills discovered across the workspace and system.
 

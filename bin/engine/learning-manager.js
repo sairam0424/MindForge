@@ -1,6 +1,6 @@
 /**
  * MindForge Learning Manager — v1.0.0
- * Part of the Sovereign Intelligence Engine (v6.2.0-alpha)
+ * Part of the Sovereign Intelligence Engine (v8.1.0)
  * Manages the lifecycle of AGENTS_LEARNING.md and its integration with the distributed mesh.
  */
 'use strict';

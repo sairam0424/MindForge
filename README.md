@@ -10,7 +10,11 @@ MindForge v8.0.0 achieved the **Celestial Orchestration** final stage, transitio
 Run MindForge immediately for a specific runtime without a permanent installation:
 
 ```bash
+# For Claude Code
 npx mindforge-cc@latest --claude --global
+
+# For Antigravity
+npx mindforge-cc@latest --antigravity --global
 ```
 
 ### 🌍 Global Installation
@@ -26,7 +30,11 @@ npm install -g mindforge-cc@latest
 Initialize MindForge in an existing repository with specialized agent identities:
 
 ```bash
+# For Claude Code
 npx mindforge-cc@latest --claude --local
+
+# For Antigravity
+npx mindforge-cc@latest --antigravity --local
 ```
 
 ---
