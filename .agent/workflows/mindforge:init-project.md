@@ -1,7 +1,11 @@
 ---
 description: Initialise a new project under the MindForge framework.
 ---
-Initialise a new project under the MindForge framework.
+<workflow name="MindForge Project Initialization">
+  <metadata>
+    <version>8.1.0-IDENTITY</version>
+    <objective>Standardized project scaffolding with Sovereign Identity bootstrapping.</objective>
+  </metadata>
 
 ## Pre-check
 Read `.planning/PROJECT.md`. If it already exists and contains content,
@@ -156,14 +160,26 @@ Write `.planning/HANDOFF.json`:
 }
 ```
 
-## Step 3 — Confirm and guide
+<step id="3" name="Sovereign Identity Bootstrapping (Pillar XIX)">
+    <instructions>
+      Invoke the IdentitySynthesizer to manifest the SOUL.md in the project root based on v8.1.0-IDENTITY Grand Blueprint.
+    </instructions>
+    <command>
+      /opt/homebrew/bin/node -e "require('./bin/memory/identity-synthesizer').bootstrap({ user: '[From Q2]', goal: '[From Q1]' })"
+    </command>
+</step>
+
+## Step 4 — Confirm and guide
 Tell the user:
-"✅ MindForge project initialised.
+"✅ MindForge project initialised with v8.1.0 Sovereign Identity (SOUL.md).
 
 Files created:
   .planning/PROJECT.md
   .planning/REQUIREMENTS.md
   .planning/STATE.md
   .planning/HANDOFF.json
+  SOUL.md
 
 Next step: Run /mindforge:plan-phase 1 to plan your first phase."
+
+</workflow>

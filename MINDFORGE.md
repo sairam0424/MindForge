@@ -1,12 +1,13 @@
-# MINDFORGE.md — Parameter Registry (v6.2.0-alpha)
+# MINDFORGE.md — Parameter Registry (v8.1.1)
 
 ## 1. IDENTITY & VERSIONING
 
 [NAME]    = MindForge
-[VERSION] = 6.2.0-alpha
-[STABLE]  = false
-[MODE]    = "Zero-Trust Agentic Hub"
-[REQUIRED_CORE_VERSION] = 6.2.0
+[VERSION] = 8.1.0-IDENTITY
+[STABLE]  = true
+[MODE]    = "Sovereign Intelligence Mesh"
+[REQUIRED_CORE_VERSION] = 8.1.0
+[SOVEREIGN_IDENTITY] = true
 
 ## 2. INTELLIGENCE TOGGLES (V4 UPDATES)
 

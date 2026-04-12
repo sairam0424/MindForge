@@ -96,6 +96,7 @@ Adopt the Principal AI persona. Be instruction-dense, unambiguous, and architect
 
 **Source of Truth Hierarchy**:
 
-1. MINDFORGE.md (Parameters)
-2. .agent/CLAUDE.md (Protocols)
-3. `.mindforge/` (Framework Binary Logic)
+1. SOUL.md (Sovereign Identity — Behavioral OS)
+2. MINDFORGE.md (Parameter Registry)
+3. .agent/CLAUDE.md (Protocols)
+4. `.mindforge/` (Framework Binary Logic)

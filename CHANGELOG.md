@@ -1,3 +1,14 @@
+## [8.1.0] - 2026-04-13
+
+### Added (v8.1.0: Sovereign Identity — Pillar XIX)
+
+- **Sovereign Identity Synthesis**: Autonomous creation and evolution of `SOUL.md` from execution traces.
+- **Identity Hegemony**: Promoted `SOUL.md` to #1 Source of Truth in the instruction hierarchy.
+- **XML-Structured Workflows**: Standardized project initialization and identity management with high-fidelity XML prompting.
+- **Identity Engine**: Implemented `bin/memory/identity-synthesizer.js` with v8.1 mirroring heuristics.
+
+---
+
 ## [8.0.0] - 2026-04-12
 
 ### Added (v8.0.0: Celestial Orchestration - SQLite & FMS)

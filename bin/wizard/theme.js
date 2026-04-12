@@ -61,7 +61,7 @@ const Theme = {
    */
   printBrandManifest() {
     console.log(`  ${this.colors.dim('│')}`);
-    console.log(`  ${this.colors.dim('│')}  ${this.colors.magenta('🛡️  SOVEREIGN INTELLIGENCE v6.2.0-alpha')} — PQAS & Proactive Homing Enabled`);
+    console.log(`  ${this.colors.dim('│')}  ${this.colors.magenta('🛡️  SOVEREIGN INTELLIGENCE v8.1.1')} — PQAS & Proactive Homing Enabled`);
     console.log(`  ${this.colors.dim('│')}`);
     console.log(`  ${this.colors.dim('│')}  ${this.colors.bold('THE PLATFORM VISION:')}`);
     console.log(`  ${this.colors.dim('│')}    - Unified Enterprise Agentic Ecosystem`);
