@@ -1,4 +1,4 @@
-# MINDFORGE.md — Parameter Registry (v8.1.0)
+# MINDFORGE.md — Parameter Registry (v8.1.1)
 
 ## 1. IDENTITY & VERSIONING
 

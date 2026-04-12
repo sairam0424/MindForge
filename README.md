@@ -1,6 +1,6 @@
-# MindForge v8.0.0 — Celestial Orchestration (SQLite & FMS Enabled)
+# MindForge v8.1.1 — Sovereign Identity (Pillar XIX Enabled)
 
-MindForge v8.0.0 achieved the **Celestial Orchestration** final stage, transitioning to a federated, hardware-attested intelligence mesh powered by **Unified Persistence (SQLite/FTS5)** and **Federated Mesh Synthesis (FMS)**.
+MindForge v8.1.1 achieved the **Sovereign Identity** synthesis stage, enabling autonomous `SOUL.md` generation derived from reasoning traces and interaction sentiment (Pillar XIX).
 
 
 ## Installation & Setup
@@ -39,7 +39,7 @@ npx mindforge-cc@latest --antigravity --local
 
 ---
 
-- **Sovereign Identity Synthesis (v8.1)** — Autonomous `SOUL.md` generation derived from reasoning traces and interaction sentiment (Pillar XIX).
+- **Sovereign Identity Synthesis (v8.1.1)** — Autonomous `SOUL.md` generation derived from reasoning traces and interaction sentiment (Pillar XIX).
 - **Unified Persistence Layer (v8.0)** — Centralized SQLite/FTS5 engine for sub-millisecond reasoning audits and semantic reasoning (Pillar XV).
 - **Federated Mesh Synthesis (v8.0)** — Signed knowledge handoffs via MindForge Bundles (`.mfb`) and federated intelligence synchronization (Pillar XVI).
 - **Autonomous Skill Evolution (v8.0)** — Self-generating persistent skills from reasoning traces with logic-drift mining (Pillar XVII).

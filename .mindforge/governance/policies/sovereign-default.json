@@ -1,7 +1,7 @@
 {
   "id": "SOV-001",
   "name": "Sovereign Default Policy",
-  "description": "Enables Sovereign Intelligence v8.1.0 features by default.",
+  "description": "Enables Sovereign Intelligence v8.1.1 features by default.",
   "effect": "PERMIT",
   "max_impact": 100,
   "conditions": {

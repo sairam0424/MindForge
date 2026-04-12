@@ -620,7 +620,7 @@ async function install(runtime, scope, options = {}) {
       Theme.printResolved(`${c.bold('AGENTS_LEARNING.md')} (agentic memory)`);
     }
 
-    // Sovereign Intelligence v8.1.0: Copy core engines by default
+    // Sovereign Intelligence v8.1.1: Copy core engines by default
     const sovereignEngines = [
       'governance', 'autonomous', 'memory', 'models', 'research', 
       'wizard', 'updater', 'dashboard', 'browser', 'skills-builder', 'engine'
@@ -635,7 +635,7 @@ async function install(runtime, scope, options = {}) {
     });
 
     // ✨ SOVEREIGN INITIALIZATION: Mark project as PQAS & Proactive enabled
-    Theme.printStatus(c.magenta('Sovereign Intelligence v8.1.0 activated'), 'done');
+    Theme.printStatus(c.magenta('Sovereign Intelligence v8.1.1 activated'), 'done');
     Theme.printStatus(c.dim('  - Post-Quantum Agentic Security (PQAS) enabled'), 'info');
     Theme.printStatus(c.dim('  - Proactive Semantic Intent Harvesting active'), 'info');
 
