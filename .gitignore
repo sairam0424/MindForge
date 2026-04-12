@@ -44,3 +44,5 @@ ROADMAP_V7.md
 .mindforge/memory/sync-manifest.json
 *.mfb
 .npm-cache/
+
+.npmrc
