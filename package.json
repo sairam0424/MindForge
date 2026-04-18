@@ -1,7 +1,7 @@
 {
   "name": "mindforge-cc",
-  "version": "8.1.1",
-  "description": "MindForge — Sovereign Agentic Intelligence Framework. (Pillar XIX Sovereign Identity Enabled)",
+  "version": "8.2.0",
+  "description": "MindForge — Sovereign Agentic Intelligence Framework. (Autonomous SRE Layer — Pillars XX-XXIII enabled)",
   "bin": {
     "mindforge-cc": "bin/install.js"
   },

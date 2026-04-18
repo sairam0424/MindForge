@@ -8,7 +8,7 @@ try {
   console.log('Testing Sovereign Status Output...');
   if (status.pqas.active !== true) throw new Error('PQAS should be active');
   if (status.proactive_homing.status !== 'MANIFESTED') throw new Error('Homing should be MANIFESTED');
-  if (status.policy_engine.version !== '8.1.1') throw new Error('Version should match');
+  if (status.policy_engine.version !== '8.2.0') throw new Error('Version should match');
 
   console.log('✅ Sovereign Status Verification PASSED');
 } catch (err) {

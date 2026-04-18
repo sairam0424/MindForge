@@ -780,6 +780,44 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 
 ---
 
+### mindforge-sre-engineer (The Remediation Pilot)
+
+**Role:** Senior SRE specialist responsible for incident replication and remediation design. Operates across the Shadow Mirror (Level 1/2) to prove fix validity.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `checkSRESignals()`, `/mindforge:agent sre-engineer` |
+| **Tools** | Read, Write, Bash, Grep, Git, Docker, CmdStatus |
+| **Color** | `red` |
+| **Trust Tier** | `3` |
+| **Produces** | `REMEDIATION-PLAN.md`, SLI Reports |
+
+**Capabilities:**
+- Autonomous incident reconstruction in isolated environments.
+- Drafting minimal-impact production hotfixes.
+- Validating SLI deltas (Error Rate/Latency) post-fix.
+
+---
+
+### mindforge-sre-auditor (The Elite Gatekeeper)
+
+**Role:** Principal SRE Auditor responsible for the final safety verdict on production remediation. **Locked to Claude 4.5 Opus** for highest-fidelity reasoning.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `REMEDIATION_WAVE`, `/mindforge:agent sre-auditor` |
+| **Tools** | Read, Write, Bash, Grep, CmdStatus |
+| **Color** | `black` |
+| **Trust Tier** | `3` |
+| **Produces** | `REMEDIATION-VERDICT.md` |
+
+**Capabilities:**
+- Adversarial multi-pass review of remediation plans.
+- Enforcement of the "Chaos Resistance" standard.
+- Final GO/NO-GO authority for production application.
+
+---
+
 ## Swarm Clusters (The Agentic Mesh) [v4.2]
 
 MindForge V4 introduces the ability to spawn dynamic, task-aware clusters of specialist personas. These swarms work in parallel with shared state to solve complex enterprise challenges.
@@ -912,6 +950,8 @@ These high-fidelity workflows bridge multiple skills and personas to solve speci
 | **Codebase Map (Ext)** | ✓ | ✓ | ✓ | ✓ | ✓ | | | | |
 | **Roadmapper (Ext)** | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ | | |
 | **User Profiler** | ✓ | ✓ | ✓ | ✓ | ✓ | | | | |
++| **SRE Engineer** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ | |
++| **SRE Auditor** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | | |
 
 **Principle of Least Privilege:**
 - **Analyzers** and **Architects** primarily use discovery tools to inform design.

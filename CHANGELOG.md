@@ -1,3 +1,17 @@
+# Changelog
+
+## [8.2.0] - 2026-04-18
+
+### Added (v8.2.0: Autonomous SRE Layer — Pillars XX-XXIII)
+
+- **Sentinel Engine**: Implemented `bin/sre/sentinel.js` for continuous observability and anomaly detection in the audit stream.
+- **Shadow Mirror Isolation**: Hybrid replication system supporting Level 1 (Git) and Level 2 (Docker) deterministic isolation.
+- **Adversarial SRE Debate**: Three-way consensus protocol for high-fidelity remediation auditing.
+- **SLI-Gating Protocol**: Metric-driven verification loops to prevent performance regressions during self-healing.
+- **Persona Hardening**: Registered `sre-engineer` and `sre-auditor`, with the Auditor locked to **Claude 4.5 Opus**.
+
+---
+
 ## [8.1.0] - 2026-04-13
 
 ### Added (v8.1.0: Sovereign Identity — Pillar XIX)

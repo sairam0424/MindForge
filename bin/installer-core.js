@@ -620,7 +620,23 @@ async function install(runtime, scope, options = {}) {
       Theme.printResolved(`${c.bold('AGENTS_LEARNING.md')} (agentic memory)`);
     }
 
-    // Sovereign Intelligence v8.1.1: Copy core engines by default
+    // WALKTHROUGH.md — update if exists
+    const walkDst = path.join(process.cwd(), 'WALKTHROUGH.md');
+    const walkSrc = src('docs', 'templates', 'Project', 'WALKTHROUGH.md');
+    if (fsu.exists(walkSrc)) {
+      fsu.copy(walkSrc, walkDst);
+      Theme.printResolved(`${c.bold('WALKTHROUGH.md')} (updated)`);
+    }
+
+    // Sovereign Intelligence v8.2.0: Copy core engines by default
+    const coreEngines = [
+      'bin/engine/nexus-tracer.js',
+      'bin/engine/learning-manager.js',
+      'bin/sre/sentinel.js',
+      'bin/sre/shadow-mirror.js',
+      'bin/sre/adversarial-sre.js',
+      'bin/sre/sli-verifier.js'
+    ];
     const sovereignEngines = [
       'governance', 'autonomous', 'memory', 'models', 'research', 
       'wizard', 'updater', 'dashboard', 'browser', 'skills-builder', 'engine'
@@ -635,7 +651,7 @@ async function install(runtime, scope, options = {}) {
     });
 
     // ✨ SOVEREIGN INITIALIZATION: Mark project as PQAS & Proactive enabled
-    Theme.printStatus(c.magenta('Sovereign Intelligence v8.1.1 activated'), 'done');
+    Theme.printStatus(c.magenta('Sovereign Intelligence v8.2.0 activated'), 'done');
     Theme.printStatus(c.dim('  - Post-Quantum Agentic Security (PQAS) enabled'), 'info');
     Theme.printStatus(c.dim('  - Proactive Semantic Intent Harvesting active'), 'info');
 

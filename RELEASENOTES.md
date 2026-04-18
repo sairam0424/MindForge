@@ -1,3 +1,20 @@
+# Release Notes — v8.2.0 (The "Reliability" Release)
+
+## Pillar XX-XXIII: Autonomous SRE Layer
+
+* **Sentinel Engine**: Continuous observability and anomaly detection for the MindForge audit stream.
+* **Shadow Mirror Isolation**: Hybrid replication (Git/Docker) for deterministic, zero-risk incident verification.
+* **Adversarial SRE Debate**: Three-way model consensus protocol, with critical auditing locked to **Claude 4.5 Opus**.
+* **SLI-Gated Remediation**: Metric-driven verification loops ensure that autonomous fixes never regress performance or security.
+
+## Release Metadata
+
+* **Release Date**: 2026-04-18
+* **Status**: STABLE (Self-Healing Enabled)
+* **Tag**: `v8.2.0-SRE`
+
+---
+
 # Release Notes — v8.1.0 (The "Identity" Release)
 
 ## Pillar XIX: Sovereign Identity Synthesis

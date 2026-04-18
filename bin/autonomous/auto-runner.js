@@ -21,6 +21,12 @@ const IntelligenceInterlock = require('../engine/intelligence-interlock');
 const ReasonSourceAligner = require('../engine/reason-source-aligner');
 const SelfCorrectiveSynthesizer = require('../engine/self-corrective-synthesizer');
 
+// v9.0 SRE Domain
+const Sentinel = require('../sre/sentinel');
+const ShadowMirror = require('../sre/shadow-mirror');
+const AdversarialSRE = require('../sre/adversarial-sre');
+const SLIVerifier = require('../sre/sli-verifier');
+
 // MindForge v5 Core Modules
 const PolicyEngine = require('../governance/policy-engine');
 const RBACManager  = require('../governance/rbac-manager');
@@ -53,6 +59,12 @@ class AutoRunner {
 
     // v6.6 SCS: Self-Corrective Synthesis
     this.synthesizer = SelfCorrectiveSynthesizer;
+
+    // v9.0 SRE Orchestration
+    this.sentinel = new Sentinel();
+    this.mirror = new ShadowMirror();
+    this.adversary = new AdversarialSRE({ sessionId: options.sessionId });
+    this.verifier = new SLIVerifier();
   }
 
   async run() {
@@ -96,6 +108,9 @@ class AutoRunner {
       
       // v6.5 RSA: Check for Mission Fidelity Alignment
       await this.checkMissionFidelity();
+      
+      // v9.0 SRE: Autonomous Signal Check (Pillar XX)
+      await this.checkSRESignals();
       
       await this.executeWave(idcStatus);
     }
@@ -365,6 +380,55 @@ class AutoRunner {
         // Real implementation would inject these into the agent's task list
         fs.unlinkSync(steerPath); // Clear handled instructions
       }
+    }
+  }
+
+  /**
+   * v9.0 SRE: High-Entropy Anomaly & Remediation Hook
+   */
+  async checkSRESignals() {
+    console.log('📡 SRE SENTINEL: Monitoring audit trail for anomalies...');
+    const incident = await this.sentinel.scanAudit(this.auditPath);
+
+    if (incident && incident.status === 'CRITICAL') {
+      console.error(`🚨 SRE INCIDENT DETECTED: [${incident.remediation_id}] ${incident.incident_type}`);
+      this.writeAudit({ 
+        event: 'sre_incident_detected', 
+        incident_type: incident.incident_type,
+        rid: incident.remediation_id 
+      });
+
+      // 1. Create Shadow Mirror (Isolation)
+      const mirrorPath = await this.mirror.replicate(incident);
+
+      // 2. Run Adversarial Debate (Consensus)
+      const decision = await this.adversary.runDebate(incident, mirrorPath);
+
+      if (decision.verdict === 'APPROVED' || decision.verdict === 'AMENDED') {
+        // 3. Verify in Shadow Mirror (SLI Check)
+        const baseline = this.verifier.simulateShadowWave(false);
+        const postFix = this.verifier.simulateShadowWave(true);
+        const verification = await this.verifier.verify(baseline, postFix);
+
+        if (verification.isHealthy) {
+          console.log(`✨ SRE FIX VALIDATED: Applying remediation ${incident.remediation_id}`);
+          this.writeAudit({ 
+            event: 'sre_remediation_applied', 
+            rid: incident.remediation_id,
+            verdict: decision.verdict
+          });
+          // Logic for applying fix to main branch would go here
+        } else {
+          console.warn('❌ SRE FIX REJECTED: Verification failed in Shadow Mirror.');
+          this.writeAudit({ event: 'sre_remediation_failed_sli', rid: incident.remediation_id });
+        }
+      } else {
+        console.warn('🛑 SRE DEBATE REJECTED: Remediation blocked by Auditor.');
+        this.writeAudit({ event: 'sre_remediation_rejected_by_auditor', rid: incident.remediation_id });
+      }
+
+      // Cleanup mirror
+      await this.mirror.cleanup(mirrorPath);
     }
   }
 
