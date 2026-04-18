@@ -1,6 +1,6 @@
-# MindForge v8.1.1 — Sovereign Identity (Pillar XIX Enabled)
+# MindForge v8.2.0 — Autonomous SRE (Pillars XX-XXIII Enabled)
 
-MindForge v8.1.1 achieved the **Sovereign Identity** synthesis stage, enabling autonomous `SOUL.md` generation derived from reasoning traces and interaction sentiment (Pillar XIX).
+MindForge v8.2.0 introduces the **Autonomous SRE Layer**, enabling self-healing intelligence for production environments. This follows the **Sovereign Identity** synthesis stage (v8.1.1), adding proactive observability (Sentinel) and adversarial remediation auditing (Pillars XX-XXIII).
 
 
 ## Installation & Setup
@@ -40,6 +40,7 @@ npx mindforge-cc@latest --antigravity --local
 ---
 
 - **Sovereign Identity Synthesis (v8.1.1)** — Autonomous `SOUL.md` generation derived from reasoning traces and interaction sentiment (Pillar XIX).
+- **Autonomous SRE Layer (v8.2.0)** — Self-healing production reliability engine with reactive sentinel observability and adversarial remediation auditing (Pillars XX-XXIII).
 - **Unified Persistence Layer (v8.0)** — Centralized SQLite/FTS5 engine for sub-millisecond reasoning audits and semantic reasoning (Pillar XV).
 - **Federated Mesh Synthesis (v8.0)** — Signed knowledge handoffs via MindForge Bundles (`.mfb`) and federated intelligence synchronization (Pillar XVI).
 - **Autonomous Skill Evolution (v8.0)** — Self-generating persistent skills from reasoning traces with logic-drift mining (Pillar XVII).

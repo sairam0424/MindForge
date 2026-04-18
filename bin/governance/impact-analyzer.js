@@ -23,7 +23,8 @@ class ImpactAnalyzer {
     'bin/',
     'config/',
     '.agent/',
-    'security/'
+    'security/',
+    'bin/sre/'
   ];
 
   static ACTION_SCORES = {
@@ -31,7 +32,8 @@ class ImpactAnalyzer {
     'WRITE': 5,
     'DELETE': 10,
     'EXECUTE': 15,
-    'GRANT': 20
+    'GRANT': 20,
+    'REMEDIATION': 12
   };
 
   // Cache for session-based entropy tracking

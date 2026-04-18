@@ -10,7 +10,7 @@
 **Tagline:** Enterprise Agentic Framework — the best agentic framework
 **Repository:** `github.com/mindforge-dev/mindforge` (conceptual)
 **npm package:** `npx mindforge-cc@latest`
-**Current version:** v1.0.0 (first stable public release, tagged at completion)
+**Current version:** v8.2.0 (Autonomous SRE Era)
 **Runtimes supported:** Claude Code (`.claude/`) and Antigravity (`.agent/`)
 **License:** MIT
 
@@ -286,6 +286,26 @@ Made MindForge production-ready and shipped v1.0.0:
 - **3 new test suites:** `tests/production.test.js` (installer, updater, migration engine, plugin system, all 36 commands), `tests/migration.test.js` (full chain v0.1.0→v1.0.0, HANDOFF migration, AUDIT backfill, MINDFORGE.md conversion, migration chain filter logic), `tests/e2e.test.js` (complete greenfield workflow in temp dir, brownfield map-codebase path, security gate scenarios, all AUDIT.jsonl entries validated)
 
 **Key ADRs:** ADR-018 (self-install detection), ADR-019 (update scope preservation), ADR-020 (v1.0.0 stable interface contract — 36 commands, HANDOFF schema, AUDIT events, SDK types, plugin.json format are all stable in 1.x.x)
+
+---
+
+### — Autonomous SRE Layer (`feat/mindforge-sre` → v8.2.0)
+
+**Branch:** `feat/mindforge-sre`
+**Pillars:** XX, XXI, XXII, XXIII
+
+Built the framework's self-healing and production reliability layer:
+
+- **`bin/sre/`** — 4 core SRE engines:
+  - `sentinel.js` — Observability engine for audit-stream anomaly detection.
+  - `shadow-mirror.js` — Hybrid isolation (Level 1: Git, Level 2: Docker) for deterministic replication.
+  - `adversarial-debate.js` — Three-way consensus protocol (Proposer, Chaos Hunter, Auditor).
+  - `sli-verifier.js` — Metric-gated verification loop for remediation waves.
+- **Model Hardening** — Locked SRE-Auditor persona strictly to **Claude 4.5 Opus** to ensure 100% reasoning fidelity in production-healing decisions.
+- **Framework Synchronization** — Updated `package.json`, `installer-core.js`, `learning-manager.js`, and `theme.js` to align with the v1.x → v8.x paradigm shift.
+- **Integrated Observability** — Injected `checkSRESignals()` into the core `AutoRunner` loop.
+
+**Key ADRs:** ADR-021 (Autonomous SRE Sovereignty), ADR-022 (Hybrid Replication Isolation), ADR-023 (Adversarial Consensus Gating)
 
 ---
 
@@ -691,4 +711,4 @@ All prompt files are in `/mnt/user-data/outputs/`:
 
 ---
 
-*State file generated at completion. MindForge v1.0.0 — 36 commands · 10 skills · 32 personas · 20 ADRs · 15 test suites.*
+*State file generated at completion. MindForge v8.2.0 — 36 commands · 10 skills · 34 personas · 23 ADRs · 16 test suites.*

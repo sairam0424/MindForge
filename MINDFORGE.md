@@ -1,13 +1,14 @@
-# MINDFORGE.md — Parameter Registry (v8.1.1)
+# MINDFORGE.md — Parameter Registry (v8.2.0)
 
 ## 1. IDENTITY & VERSIONING
 
 [NAME]    = MindForge
-[VERSION] = 8.1.0-IDENTITY
+[VERSION] = 8.2.0-SRE
 [STABLE]  = true
-[MODE]    = "Sovereign Intelligence Mesh"
-[REQUIRED_CORE_VERSION] = 8.1.0
+[MODE]    = \"Autonomous SRE Mesh\"
+[REQUIRED_CORE_VERSION] = 8.2.0
 [SOVEREIGN_IDENTITY] = true
+[SRE_LAYER_ENABLED]  = true
 
 ## 2. INTELLIGENCE TOGGLES (V4 UPDATES)
 

@@ -1,6 +1,6 @@
 /**
  * MindForge Learning Manager — v1.0.0
- * Part of the Sovereign Intelligence Engine (v8.1.1)
+ * Part of the Sovereign Intelligence Engine (v8.2.0)
  * Manages the lifecycle of AGENTS_LEARNING.md and its integration with the distributed mesh.
  */
 'use strict';
@@ -169,7 +169,9 @@ if (require.main === module) {
           context: 'CLI Manual Test',
           category: 'Architecture'
         });
-        console.log('✅ Recorded manual learning entry.');
+        console.log(`  ${this.colors.dim('│')}  ${this.colors.magenta('🛡️  SOVEREIGN INTELLIGENCE v8.2.0')} — PQAS & Proactive Homing Enabled`);
+        const status = await manager.getStatus();
+        console.log('📊 Learning System Status:', status);
       } else {
         const status = await manager.getStatus();
         console.log('📊 Learning System Status:', status);

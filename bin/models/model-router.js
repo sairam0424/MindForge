@@ -9,7 +9,7 @@ const path = require('path');
 
 // Default model assignments
 const DEFAULTS = {
-  PLANNER_MODEL:          'claude-3-opus-20240229',
+  PLANNER_MODEL:          'claude-4-5-opus-preview',
   EXECUTOR_MODEL:         'claude-3-5-sonnet-20240620',
   REVIEWER_MODEL:         'gpt-4o',
   SECURITY_MODEL:         'claude-3-opus-20240229',
@@ -31,6 +31,8 @@ const PERSONA_MAP = {
   'research-agent':    'RESEARCH_MODEL',
   'debug-specialist':  'DEBUG_MODEL',
   'decision-architect': 'PLANNER_MODEL',
+  'sre-engineer':     'EXECUTOR_MODEL',
+  'sre-auditor':      'PLANNER_MODEL',
 };
 
 let _settingsCache = null;
