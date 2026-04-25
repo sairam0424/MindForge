@@ -1,3 +1,19 @@
+# Release Notes — v8.2.1 (The "Stability" Release)
+
+## Maintenance & Optimization
+
+* **Payload Pruning**: Removed development-only test scripts and internal debugging utilities from the distribution payload.
+* **State Sanitization**: Automated removal of local persistence state (SQLite, JSONL) to ensure a clean installation experience.
+* **NPM Optimization**: Reduced package weight by ~15% through improved asset exclusion rules.
+
+## Release Metadata
+
+* **Release Date**: 2026-04-25
+* **Status**: STABLE (Production Ready)
+* **Tag**: `v8.2.1`
+
+---
+
 # Release Notes — v8.2.0 (The "Reliability" Release)
 
 ## Pillar XX-XXIII: Autonomous SRE Layer

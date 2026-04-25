@@ -3,10 +3,10 @@
 ## 1. IDENTITY & VERSIONING
 
 [NAME]    = MindForge
-[VERSION] = 8.2.0-SRE
+[VERSION] = 8.2.1-SRE
 [STABLE]  = true
 [MODE]    = \"Autonomous SRE Mesh\"
-[REQUIRED_CORE_VERSION] = 8.2.0
+[REQUIRED_CORE_VERSION] = 8.2.1
 [SOVEREIGN_IDENTITY] = true
 [SRE_LAYER_ENABLED]  = true
 

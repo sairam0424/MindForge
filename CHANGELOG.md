@@ -1,5 +1,14 @@
 # Changelog
 
+## [8.2.1] - 2026-04-25
+
+### Fixed (v8.2.1: Stability & Cleanup)
+
+- **Payload Pruning**: Removed development-only test scripts from `bin/engine` and `bin/governance`.
+- **State Sanitization**: Cleaned up local persistence files (`celestial.db`, `memory/*.jsonl`) and session-specific planning artifacts.
+- **Structural Hardening**: Restored clean templates for `.planning/HANDOFF.json` and other core descriptors.
+- **NPM Optimization**: Reduced package size by excluding unneeded build-time caches and logs.
+
 ## [8.2.0] - 2026-04-18
 
 ### Added (v8.2.0: Autonomous SRE Layer — Pillars XX-XXIII)
@@ -9,8 +18,6 @@
 - **Adversarial SRE Debate**: Three-way consensus protocol for high-fidelity remediation auditing.
 - **SLI-Gating Protocol**: Metric-driven verification loops to prevent performance regressions during self-healing.
 - **Persona Hardening**: Registered `sre-engineer` and `sre-auditor`, with the Auditor locked to **Claude 4.5 Opus**.
-
----
 
 ## [8.1.0] - 2026-04-13
 
