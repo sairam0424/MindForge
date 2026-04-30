@@ -14,8 +14,16 @@ const description = 'Unified Memory: migrate JSONL knowledge stores into SQLite'
 
 async function run() {
   await vectorHub.init();
+
+  const applied = await vectorHub.getAppliedMigrations();
+  if (applied.includes('v9-unified-memory')) {
+    console.log('[v9-MIGRATION] Already applied — skipping.');
+    return;
+  }
+
   let knowledgeMigrated = 0;
   let edgesMigrated = 0;
+  let skippedLines = 0;
 
   // 1. Migrate knowledge-base.jsonl → knowledge table
   const kbPaths = [
@@ -36,14 +44,14 @@ async function run() {
           type: entry.type || 'insight',
           content: entry.content || entry.insight || '',
           tags: entry.tags || [],
-          source: entry.source || kbPath.includes('global') ? 'global' : 'project',
+          source: entry.source || (kbPath.includes('global') ? 'global' : 'project'),
           confidence: entry.confidence ?? 1.0,
           created_at: entry.timestamp || entry.created_at,
           metadata: entry,
         });
         knowledgeMigrated++;
       } catch (e) {
-        // Skip malformed lines
+        skippedLines++;
       }
     }
   }
@@ -66,7 +74,7 @@ async function run() {
         });
         edgesMigrated++;
       } catch (e) {
-        // Skip malformed lines
+        skippedLines++;
       }
     }
   }
@@ -76,6 +84,9 @@ async function run() {
 
   console.log(`[v9-MIGRATION] Knowledge entries migrated: ${knowledgeMigrated}`);
   console.log(`[v9-MIGRATION] Graph edges migrated: ${edgesMigrated}`);
+  if (skippedLines > 0) {
+    console.warn(`[v9-MIGRATION] WARNING: ${skippedLines} malformed lines skipped`);
+  }
 }
 
 if (require.main === module) {

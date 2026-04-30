@@ -1,5 +1,6 @@
 const Database = require('better-sqlite3');
 const { Kysely, SqliteDialect, sql } = require('kysely');
+const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
 
@@ -154,7 +155,7 @@ class VectorHub {
    */
   async recordTrace(data) {
     const entry = {
-      id: data.id || Math.random().toString(36).substr(2, 9),
+      id: data.id || crypto.randomBytes(8).toString('hex'),
       trace_id: data.trace_id,
       span_id: data.span_id || null,
       event: data.event,
@@ -203,7 +204,7 @@ class VectorHub {
   async saveKnowledge(entry) {
     const now = new Date().toISOString();
     const record = {
-      id: entry.id || `k_${Math.random().toString(36).substr(2, 9)}`,
+      id: entry.id || `k_${crypto.randomBytes(8).toString('hex')}`,
       type: entry.type || 'insight',
       content: entry.content,
       tags: Array.isArray(entry.tags) ? entry.tags.join(',') : (entry.tags || ''),
@@ -225,7 +226,8 @@ class VectorHub {
       }))
       .execute();
 
-    await sql`INSERT OR REPLACE INTO knowledge_search (id, content, tags) VALUES (${record.id}, ${record.content}, ${record.tags})`
+    await sql`DELETE FROM knowledge_search WHERE id = ${record.id}`.execute(this.db);
+    await sql`INSERT INTO knowledge_search (id, content, tags) VALUES (${record.id}, ${record.content}, ${record.tags})`
       .execute(this.db);
 
     return record.id;
@@ -245,7 +247,7 @@ class VectorHub {
 
   async saveEdge(edge) {
     const record = {
-      id: edge.id || `e_${Math.random().toString(36).substr(2, 9)}`,
+      id: edge.id || `e_${crypto.randomBytes(8).toString('hex')}`,
       source_id: edge.source_id,
       target_id: edge.target_id,
       edge_type: edge.edge_type,

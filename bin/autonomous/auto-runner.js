@@ -35,7 +35,10 @@ const HandoverManager = require('../engine/handover-manager');
 
 class AutoRunner {
   constructor(options = {}) {
-    this.phase = options.phase;
+    if (options.phase != null && !/^[a-zA-Z0-9_-]+$/.test(String(options.phase))) {
+      throw new Error('Invalid phase identifier — must be alphanumeric, hyphens, or underscores');
+    }
+    this.phase = String(options.phase ?? 0);
     this.isHeadless = options.headless || false;
     this.auditPath = path.join(process.cwd(), '.planning', 'AUDIT.jsonl');
     this.statePath = path.join(process.cwd(), '.planning', 'auto-state.json');
@@ -132,7 +135,12 @@ class AutoRunner {
       throw new Error('HANDOFF.json not found — run /mindforge:plan-phase first');
     }
 
-    const handoff = JSON.parse(fs.readFileSync(this.handoffPath, 'utf8'));
+    let handoff;
+    try {
+      handoff = JSON.parse(fs.readFileSync(this.handoffPath, 'utf8'));
+    } catch (e) {
+      throw new Error(`HANDOFF.json is malformed: ${e.message}`);
+    }
     if (!handoff.handoffs || !Array.isArray(handoff.handoffs)) {
       throw new Error('HANDOFF.json has no handoffs array');
     }
@@ -216,9 +224,9 @@ class AutoRunner {
           task_name: task.name || task.id,
         });
 
-        // Mark complete — the host agent (Claude Code) performs the actual work.
+        // Host agent (Claude Code) performs actual work.
         // AutoRunner tracks progress and enforces governance gates.
-        this.completedTasks.add(task.id);
+        // Task marked complete only after successful dispatch.
 
         this.writeAudit({
           event: 'task_completed',
@@ -229,8 +237,10 @@ class AutoRunner {
           duration_ms: Date.now() - taskStart,
         });
 
+        this.completedTasks.add(task.id);
+
       } catch (err) {
-        console.error(`  ❌ Task failed: ${task.id} — ${err.message}`);
+        console.error(`  Task failed: ${task.id} — ${err.message}`);
         this.writeAudit({
           event: 'task_failed',
           phase: this.phase,
@@ -240,12 +250,20 @@ class AutoRunner {
           duration_ms: Date.now() - taskStart,
         });
 
-        const repair = repairOperator.evaluate(task, err);
-        if (repair.action === 'RETRY') {
-          console.log(`  🔄 Repair: retrying ${task.id}`);
+        const strategy = repairOperator.determineRepairStrategy({
+          planId: task.plan || task.id,
+          phase: this.phase,
+          attemptNumber: 1,
+          errorOutput: err.message,
+          isTier3Change: false,
+          isOnCriticalPath: (task.depends_on || []).length > 0,
+        });
+
+        if (strategy === 'RETRY') {
+          console.log(`  Repair: retrying ${task.id}`);
           continue;
-        } else if (repair.action === 'ESCALATE') {
-          console.warn(`  🛑 Repair: escalating ${task.id}`);
+        } else if (strategy === 'ESCALATE') {
+          console.warn(`  Repair: escalating ${task.id}`);
           this.writeAudit({ event: 'auto_mode_escalated', reason: `Task ${task.id} unrecoverable` });
           this.isPaused = true;
           return;
@@ -393,7 +411,7 @@ class AutoRunner {
 
     this.updateState({ status: 'completed', completedAt: new Date().toISOString() });
 
-    const phasesDir = path.join(process.cwd(), `.planning/phases/${this.phase}`);
+    const phasesDir = path.join(process.cwd(), '.planning', 'phases', this.phase);
     if (!fs.existsSync(phasesDir)) {
       fs.mkdirSync(phasesDir, { recursive: true });
     }
@@ -468,7 +486,7 @@ class AutoRunner {
     }
 
     this.writeAudit({ event: 'auto_mode_escalated', reason: result.message });
-    process.exit(10);
+    this.isPaused = true;
   }
 
   updateState(update) {
