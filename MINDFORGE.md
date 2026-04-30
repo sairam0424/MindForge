@@ -1,12 +1,12 @@
-# MINDFORGE.md — Parameter Registry (v8.2.0)
+# MINDFORGE.md — Parameter Registry (v9.0.0)
 
 ## 1. IDENTITY & VERSIONING
 
 [NAME]    = MindForge
-[VERSION] = 8.2.1-SRE
+[VERSION] = 9.0.0-BEDROCK
 [STABLE]  = true
-[MODE]    = \"Autonomous SRE Mesh\"
-[REQUIRED_CORE_VERSION] = 8.2.1
+[MODE]    = \"Bedrock Meridian\"
+[REQUIRED_CORE_VERSION] = 9.0.0
 [SOVEREIGN_IDENTITY] = true
 [SRE_LAYER_ENABLED]  = true
 
@@ -33,16 +33,16 @@
 
 ## 3. MODEL TOPOLOGY
 
-### Persona to Model mapping
+### Persona to Model mapping (v9: Claude 4.x aligned)
 
-[PLANNER]  = claude-opus-4-5
-[EXECUTOR] = claude-sonnet-4-5
-[REVIEWER] = claude-sonnet-4-5
-[VERIFIER] = claude-sonnet-4-5
-[SECURITY] = claude-opus-4-5
-[DEBUG]    = claude-opus-4-5
-[RESEARCH] = gemini-1.5-pro
-[QA]       = claude-4-5-sonnet
+[PLANNER]  = claude-opus-4-7
+[EXECUTOR] = claude-sonnet-4-6
+[REVIEWER] = claude-sonnet-4-6
+[VERIFIER] = claude-sonnet-4-6
+[SECURITY] = claude-opus-4-7
+[DEBUG]    = claude-opus-4-7
+[RESEARCH] = gemini-2.5-pro
+[QA]       = claude-sonnet-4-6
 
 ---
 

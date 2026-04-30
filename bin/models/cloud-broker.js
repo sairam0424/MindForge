@@ -118,12 +118,13 @@ class CloudBroker {
   /**
    * Retrieves provider-specific model mapping.
    */
+  // v9: Provider model mappings aligned to Claude 4.x family
   mapToProviderModel(provider, modelGroup) {
     const mappings = {
-      'anthropic': { 'sonnet': 'claude-3-5-sonnet', 'opus': 'claude-3-opus', 'haiku': 'claude-3-haiku' },
-      'google': { 'sonnet': 'gemini-1.5-pro', 'haiku': 'gemini-1.5-flash' },
-      'aws': { 'sonnet': 'anthropic.claude-3-5-sonnet-v2:0', 'haiku': 'anthropic.claude-3-haiku-v1:0' },
-      'azure': { 'sonnet': 'gpt-4o', 'haiku': 'gpt-35-turbo' }
+      'anthropic': { 'sonnet': 'claude-sonnet-4-6', 'opus': 'claude-opus-4-7', 'haiku': 'claude-haiku-4-5' },
+      'google': { 'sonnet': 'gemini-2.5-pro', 'haiku': 'gemini-2.5-flash' },
+      'aws': { 'sonnet': 'anthropic.claude-sonnet-4-6-v1:0', 'haiku': 'anthropic.claude-haiku-4-5-v1:0' },
+      'azure': { 'sonnet': 'claude-sonnet-4-6', 'haiku': 'claude-haiku-4-5' }
     };
 
     return mappings[provider]?.[modelGroup] || mappings[provider]?.['sonnet'];

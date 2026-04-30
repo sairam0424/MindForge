@@ -127,7 +127,26 @@ export class MindForgeClient extends EventEmitter {
     if (!fs.existsSync(configPath)) {
       return { valid: true, errors: [], warnings: ['MINDFORGE.md not found — using defaults'] };
     }
-    // Full validation via bin/validate-config.js
     return { valid: true, errors: [], warnings: [] };
+  }
+
+  // ── v9 Pillar XXIV: Wave execution status ─────────────────────────────────
+  readAutoState(): Record<string, unknown> | null {
+    const statePath = path.join(this.projectRoot, '.planning', 'auto-state.json');
+    if (!fs.existsSync(statePath)) return null;
+    try {
+      return JSON.parse(fs.readFileSync(statePath, 'utf8'));
+    } catch {
+      return null;
+    }
+  }
+
+  // ── v9 Pillar XXVI: Knowledge query ───────────────────────────────────────
+  getDbPath(): string {
+    return path.join(this.projectRoot, '.mindforge', 'celestial.db');
+  }
+
+  isDatabaseInitialized(): boolean {
+    return fs.existsSync(this.getDbPath());
   }
 }

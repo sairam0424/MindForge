@@ -10,10 +10,11 @@ const AnthropicProvider = require('./anthropic-provider');
 const OpenAIProvider = require('./openai-provider');
 const GeminiProvider = require('./gemini-provider');
 
+// v9: Fallback chains aligned to Claude 4.x family
 const FALLBACK_CHAINS = {
-  'claude-3-opus-20240229': ['gpt-4o', 'claude-3-5-sonnet-20240620'],
-  'gpt-4o': ['claude-3-5-sonnet-20240620'],
-  'gemini-1.5-pro': ['claude-3-5-sonnet-20240620'],
+  'claude-opus-4-7': ['claude-sonnet-4-6', 'gemini-2.5-pro'],
+  'claude-sonnet-4-6': ['claude-haiku-4-5', 'gemini-2.5-pro'],
+  'gemini-2.5-pro': ['claude-sonnet-4-6'],
 };
 
 class ModelClient {

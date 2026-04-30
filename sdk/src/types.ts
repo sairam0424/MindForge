@@ -85,3 +85,23 @@ export interface AuditLogEntry {
   phase?: number;
   [key: string]: unknown;
 }
+
+/** v9 Pillar XXIV: Result from a wave execution cycle */
+export interface WaveExecutionResult {
+  phase: number;
+  waveIndex: number;
+  tasksCompleted: number;
+  tasksTotal: number;
+  tasksFailed: string[];
+  durationMs: number;
+  status: 'completed' | 'partial' | 'failed' | 'escalated';
+}
+
+/** v9 Pillar XXVII: Result from a schema migration run */
+export interface MigrationResult {
+  status: 'migrated' | 'no-migration-needed' | 'no-planning-dir' | 'no-files' | 'no-migrations';
+  from?: string;
+  to?: string;
+  migrationsApplied?: string[];
+  backupDir?: string;
+}

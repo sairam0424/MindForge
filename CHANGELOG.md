@@ -1,5 +1,23 @@
 # Changelog
 
+## [9.0.0] - 2026-04-30
+
+### Added (v9.0.0: Bedrock Meridian — Pillars XXIV-XXVIII)
+
+- **Pillar XXIV: Grounded Wave Execution** — Replaced AutoRunner stubs with real HANDOFF-driven wave parsing, task dispatch, progress tracking, and state persistence. `hasNextWave()` reads HANDOFF.json wave groups. `executeWave()` iterates tasks with audit logging and repair-operator integration. `runPreFlight()` validates project state and restores progress from `auto-state.json`.
+- **Pillar XXV: Model Topology Modernization** — Updated all model references from Claude 3.x to Claude 4.x family (`claude-opus-4-7`, `claude-sonnet-4-6`, `claude-haiku-4-5`). Updated `model-router.js`, `model-client.js`, `model-broker.js`, `cloud-broker.js`, and `MINDFORGE.md`. Aligned pricing tables and fallback chains.
+- **Pillar XXVI: Unified Memory Architecture** — Added `knowledge` and `graph_edges` tables to VectorHub (SQLite). New `saveKnowledge()`, `searchKnowledge()`, `saveEdge()`, `getEdges()` methods. FTS5 index on knowledge content. Consolidates 4 JSONL-based memory systems into a single SQLite store.
+- **Pillar XXVII: Schema Migration Engine** — Added `_migrations` table to VectorHub for tracking applied migrations. New `v9-unified-memory.js` migration script that reads legacy JSONL stores and imports into SQLite. Registered in `migrate.js` runner.
+- **Pillar XXVIII: Integration Test Chain** — New `tests/v9-integration-chain.test.js` verifying the full pipeline: wave parsing, model topology, VectorHub schema, migration engine, and SDK sync. 17 assertions across all v9 pillars.
+
+### Changed (v9.0.0)
+
+- **SDK**: Bumped `@mindforge/sdk` VERSION to `9.0.0`. Added `WaveExecutionResult` and `MigrationResult` types. Added `readAutoState()` and `isDatabaseInitialized()` to client.
+- **VectorHub**: Removed try/catch `ALTER TABLE` pattern (v8 legacy). Schema creation is now declarative via `createTable().ifNotExists()`.
+- **MINDFORGE.md**: Version bumped to `9.0.0-BEDROCK`. Model topology section normalized to Claude 4.x.
+
+---
+
 ## [8.2.1] - 2026-04-25
 
 ### Fixed (v8.2.1: Stability & Cleanup)

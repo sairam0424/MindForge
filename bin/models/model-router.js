@@ -7,18 +7,18 @@
 const fs = require('fs');
 const path = require('path');
 
-// Default model assignments
+// v9: Model topology aligned to Claude 4.x family (2026-04)
 const DEFAULTS = {
-  PLANNER_MODEL:          'claude-4-5-opus-preview',
-  EXECUTOR_MODEL:         'claude-3-5-sonnet-20240620',
-  REVIEWER_MODEL:         'gpt-4o',
-  SECURITY_MODEL:         'claude-3-opus-20240229',
-  RESEARCH_MODEL:         'gemini-1.5-pro',
-  QA_MODEL:               'claude-3-5-sonnet-20240620',
-  DEBUG_MODEL:            'claude-3-opus-20240229',
-  QUICK_MODEL:            'claude-3-5-haiku-20241022',
-  CROSS_REVIEW_SECONDARY: 'gpt-4o',
-  CROSS_REVIEW_TERTIARY:  'gemini-1.5-pro',
+  PLANNER_MODEL:          'claude-opus-4-7',
+  EXECUTOR_MODEL:         'claude-sonnet-4-6',
+  REVIEWER_MODEL:         'claude-sonnet-4-6',
+  SECURITY_MODEL:         'claude-opus-4-7',
+  RESEARCH_MODEL:         'gemini-2.5-pro',
+  QA_MODEL:               'claude-sonnet-4-6',
+  DEBUG_MODEL:            'claude-opus-4-7',
+  QUICK_MODEL:            'claude-haiku-4-5',
+  CROSS_REVIEW_SECONDARY: 'claude-sonnet-4-6',
+  CROSS_REVIEW_TERTIARY:  'gemini-2.5-pro',
 };
 
 // Persona to setting key mapping

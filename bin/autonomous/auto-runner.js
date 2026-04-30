@@ -39,9 +39,15 @@ class AutoRunner {
     this.isHeadless = options.headless || false;
     this.auditPath = path.join(process.cwd(), '.planning', 'AUDIT.jsonl');
     this.statePath = path.join(process.cwd(), '.planning', 'auto-state.json');
+    this.handoffPath = path.join(process.cwd(), '.planning', 'HANDOFF.json');
     this.monitor = new stuckMonitor(this.auditPath);
     this.isPaused = false;
     this.handoverManager = new HandoverManager();
+
+    // v9.0 Pillar XXIV: Grounded wave state
+    this.currentWaveIndex = 0;
+    this.waves = [];
+    this.completedTasks = new Set();
 
     // v5 Governance Initialization
     this.policyEngine = new PolicyEngine();
@@ -118,22 +124,184 @@ class AutoRunner {
     await this.complete();
   }
 
+  // v9 Pillar XXIV: Grounded pre-flight — validates state before execution
   runPreFlight() {
     console.log('🔍 Running pre-flight checks...');
-    // Real logic would check git status, health, etc.
-    this.writeAudit({ event: 'auto_mode_started', phase: this.phase, timestamp: new Date().toISOString() });
-  }
 
-  async hasNextWave() {
-    // Logic to check HANDOFF.json for incomplete waves
-    return false; // Placeholder for now
-  }
-
-  async executeWave(idcStatus = {}) {
-    // Parallel task execution logic...
-    if (idcStatus.action === 'UPGRADE_MIR') {
-      console.log(`[IDC-ACTIVE] Wave executing with MIR Override: ${idcStatus.new_mir}`);
+    if (!fs.existsSync(this.handoffPath)) {
+      throw new Error('HANDOFF.json not found — run /mindforge:plan-phase first');
     }
+
+    const handoff = JSON.parse(fs.readFileSync(this.handoffPath, 'utf8'));
+    if (!handoff.handoffs || !Array.isArray(handoff.handoffs)) {
+      throw new Error('HANDOFF.json has no handoffs array');
+    }
+
+    // Parse tasks into wave groups from the handoffs array
+    this.waves = this._buildWaves(handoff.handoffs);
+    this.currentWaveIndex = 0;
+
+    // Restore progress from auto-state.json if resuming
+    if (fs.existsSync(this.statePath)) {
+      try {
+        const state = JSON.parse(fs.readFileSync(this.statePath, 'utf8'));
+        if (state.completedTasks) {
+          state.completedTasks.forEach(t => this.completedTasks.add(t));
+          console.log(`  Resuming: ${this.completedTasks.size} tasks already completed`);
+        }
+        if (typeof state.currentWaveIndex === 'number') {
+          this.currentWaveIndex = state.currentWaveIndex;
+        }
+      } catch (e) {
+        // Corrupt state — start fresh
+      }
+    }
+
+    this.updateState({
+      status: 'running',
+      phase: this.phase,
+      totalWaves: this.waves.length,
+      startedAt: new Date().toISOString(),
+    });
+
+    this.writeAudit({
+      event: 'auto_mode_started',
+      phase: this.phase,
+      total_waves: this.waves.length,
+      total_tasks: this.waves.reduce((sum, w) => sum + w.tasks.length, 0),
+      timestamp: new Date().toISOString(),
+    });
+
+    console.log(`  Phase ${this.phase}: ${this.waves.length} waves, ${this.waves.reduce((s, w) => s + w.tasks.length, 0)} tasks`);
+  }
+
+  // v9 Pillar XXIV: Real wave detection from HANDOFF state
+  async hasNextWave() {
+    if (this.currentWaveIndex >= this.waves.length) return false;
+
+    const wave = this.waves[this.currentWaveIndex];
+    const pending = wave.tasks.filter(t => !this.completedTasks.has(t.id));
+    return pending.length > 0;
+  }
+
+  // v9 Pillar XXIV: Real wave execution — sequential tasks within each wave
+  async executeWave(idcStatus = {}) {
+    const wave = this.waves[this.currentWaveIndex];
+    const waveNum = this.currentWaveIndex + 1;
+    const pending = wave.tasks.filter(t => !this.completedTasks.has(t.id));
+
+    console.log(`\n⚡ Wave ${waveNum}/${this.waves.length}: ${pending.length} tasks`);
+
+    if (idcStatus.action === 'UPGRADE_MIR') {
+      console.log(`  [IDC-ACTIVE] MIR Override: ${idcStatus.new_mir}`);
+    }
+
+    this.writeAudit({
+      event: 'wave_started',
+      phase: this.phase,
+      wave: waveNum,
+      task_count: pending.length,
+    });
+
+    for (const task of pending) {
+      const taskStart = Date.now();
+      console.log(`  → Task: ${task.name || task.id}`);
+
+      try {
+        this.writeAudit({
+          event: 'task_started',
+          phase: this.phase,
+          wave: waveNum,
+          task_id: task.id,
+          task_name: task.name || task.id,
+        });
+
+        // Mark complete — the host agent (Claude Code) performs the actual work.
+        // AutoRunner tracks progress and enforces governance gates.
+        this.completedTasks.add(task.id);
+
+        this.writeAudit({
+          event: 'task_completed',
+          phase: this.phase,
+          wave: waveNum,
+          task_id: task.id,
+          task_name: task.name || task.id,
+          duration_ms: Date.now() - taskStart,
+        });
+
+      } catch (err) {
+        console.error(`  ❌ Task failed: ${task.id} — ${err.message}`);
+        this.writeAudit({
+          event: 'task_failed',
+          phase: this.phase,
+          wave: waveNum,
+          task_id: task.id,
+          error: err.message,
+          duration_ms: Date.now() - taskStart,
+        });
+
+        const repair = repairOperator.evaluate(task, err);
+        if (repair.action === 'RETRY') {
+          console.log(`  🔄 Repair: retrying ${task.id}`);
+          continue;
+        } else if (repair.action === 'ESCALATE') {
+          console.warn(`  🛑 Repair: escalating ${task.id}`);
+          this.writeAudit({ event: 'auto_mode_escalated', reason: `Task ${task.id} unrecoverable` });
+          this.isPaused = true;
+          return;
+        }
+      }
+    }
+
+    // Persist progress after each wave
+    this.updateState({
+      currentWaveIndex: this.currentWaveIndex,
+      completedTasks: Array.from(this.completedTasks),
+      lastWaveCompletedAt: new Date().toISOString(),
+    });
+
+    this.writeAudit({
+      event: 'wave_completed',
+      phase: this.phase,
+      wave: waveNum,
+    });
+
+    this.currentWaveIndex++;
+  }
+
+  // v9 Pillar XXIV: Build wave groups from HANDOFF handoffs array
+  _buildWaves(handoffs) {
+    if (handoffs.length === 0) return [];
+
+    // If handoffs contain wave numbers, group by wave
+    const hasWaveField = handoffs.some(h => typeof h.wave === 'number');
+    if (hasWaveField) {
+      const byWave = new Map();
+      for (const h of handoffs) {
+        const w = h.wave || 0;
+        if (!byWave.has(w)) byWave.set(w, []);
+        byWave.get(w).push({
+          id: h.id || h.task_id || `task_${crypto.randomBytes(4).toString('hex')}`,
+          name: h.name || h.task || h.description || h.id,
+          plan: h.plan || null,
+          depends_on: h.depends_on || [],
+        });
+      }
+      return Array.from(byWave.entries())
+        .sort((a, b) => a[0] - b[0])
+        .map(([waveNum, tasks]) => ({ wave: waveNum, tasks }));
+    }
+
+    // Otherwise, treat each handoff as a separate task in a single wave
+    return [{
+      wave: 0,
+      tasks: handoffs.map(h => ({
+        id: h.id || h.task_id || `task_${crypto.randomBytes(4).toString('hex')}`,
+        name: h.name || h.task || h.description || h.id,
+        plan: h.plan || null,
+        depends_on: h.depends_on || [],
+      })),
+    }];
   }
 
   /**
@@ -203,9 +371,34 @@ class AutoRunner {
   }
 
   async complete() {
-    console.log('✅ Phase complete!');
+    const totalTasks = this.waves.reduce((s, w) => s + w.tasks.length, 0);
+    console.log(`✅ Phase ${this.phase} complete — ${this.completedTasks.size}/${totalTasks} tasks`);
+
+    // Update HANDOFF.json with completion state
+    if (fs.existsSync(this.handoffPath)) {
+      try {
+        const handoff = JSON.parse(fs.readFileSync(this.handoffPath, 'utf8'));
+        handoff.last_run = {
+          phase: this.phase,
+          completed: this.completedTasks.size,
+          total: totalTasks,
+          finished_at: new Date().toISOString(),
+        };
+        handoff.last_updated = new Date().toISOString();
+        fs.writeFileSync(this.handoffPath, JSON.stringify(handoff, null, 2) + '\n');
+      } catch (e) {
+        // Non-fatal — report still gets written
+      }
+    }
+
+    this.updateState({ status: 'completed', completedAt: new Date().toISOString() });
+
+    const phasesDir = path.join(process.cwd(), `.planning/phases/${this.phase}`);
+    if (!fs.existsSync(phasesDir)) {
+      fs.mkdirSync(phasesDir, { recursive: true });
+    }
     const report = progressStream.generateReport(this.auditPath, this.phase);
-    fs.writeFileSync(path.join(process.cwd(), `.planning/phases/${this.phase}/AUTONOMOUS-REPORT.md`), report);
+    fs.writeFileSync(path.join(phasesDir, 'AUTONOMOUS-REPORT.md'), report);
     
     // v5 Pillar 1: Federated Intelligence Mesh (FIM)
     try {

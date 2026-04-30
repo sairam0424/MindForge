@@ -44,6 +44,7 @@ async function runMigrations(fromVersion, toVersion) {
     require('./0.1.0-to-0.5.0'),
     require('./0.5.0-to-0.6.0'),
     require('./0.6.0-to-1.0.0'),
+    require('./v9-unified-memory'),
   ];
 
   // A migration should run if its DESTINATION VERSION falls within the range:
