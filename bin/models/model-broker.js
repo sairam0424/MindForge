@@ -114,14 +114,15 @@ class ModelBroker {
   }
 
   estimateCost(modelId, input, output) {
-    // Mock cost estimation logic per 1M tokens
+    // v9: Pricing aligned to Claude 4.x family (per 1M tokens)
     const rates = {
-      'claude-3-opus': { in: 15, out: 75 },
-      'claude-3-5-sonnet': { in: 3, out: 15 },
-      'claude-3-haiku': { in: 0.25, out: 1.25 },
+      'claude-opus-4-7':   { in: 15, out: 75 },
+      'claude-sonnet-4-6': { in: 3, out: 15 },
+      'claude-haiku-4-5':  { in: 0.80, out: 4.0 },
+      'gemini-2.5-pro':    { in: 1.25, out: 10 },
     };
 
-    const rate = rates[modelId] || rates['claude-3-5-sonnet'];
+    const rate = rates[modelId] || rates['claude-sonnet-4-6'];
     return (input / 1_000_000) * rate.in + (output / 1_000_000) * rate.out;
   }
 }

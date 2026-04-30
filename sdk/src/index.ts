@@ -18,6 +18,8 @@ export type {
   HealthIssue,
   MindForgeEvent,
   AuditLogEntry,
+  WaveExecutionResult,
+  MigrationResult,
 } from './types';
 
-export const VERSION = '1.0.0';
+export const VERSION = '9.0.0';

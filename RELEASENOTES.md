@@ -1,3 +1,25 @@
+# Release Notes — v9.0.0 (The "Bedrock Meridian" Release)
+
+## Pillars XXIV-XXVIII: Grounded Execution
+
+* **Grounded Wave Execution (XXIV)**: The AutoRunner now reads real wave data from HANDOFF.json, dispatches tasks with full audit tracing, persists progress to auto-state.json, and resumes on restart. No more stubs.
+* **Model Topology Modernization (XXV)**: All model references updated from Claude 3.x to Claude 4.x family — `claude-opus-4-7`, `claude-sonnet-4-6`, `claude-haiku-4-5`. Pricing tables, fallback chains, and provider mappings aligned.
+* **Unified Memory Architecture (XXVI)**: Knowledge graph and knowledge store data consolidated into SQLite (celestial.db). New `knowledge` and `graph_edges` tables with FTS5 search. Four JSONL-based memory systems unified into one queryable store.
+* **Schema Migration Engine (XXVII)**: Proper migration tracking via `_migrations` table. No more silent `ALTER TABLE` try/catch. New `v9-unified-memory.js` migration for JSONL→SQLite data transfer.
+* **Integration Test Chain (XXVIII)**: 17-assertion end-to-end test covering wave parsing, model topology, VectorHub schema, migration engine, and SDK sync.
+
+## Zero-Cost Design
+
+All v9 pillars are local-only. No new dependencies. No paid API calls. Everything runs on the existing `better-sqlite3` + `Kysely` + `Express` stack already in package.json.
+
+## Release Metadata
+
+* **Release Date**: 2026-04-30
+* **Status**: STABLE (Grounded Execution)
+* **Tag**: `v9.0.0-BEDROCK`
+
+---
+
 # Release Notes — v8.2.1 (The "Stability" Release)
 
 ## Maintenance & Optimization

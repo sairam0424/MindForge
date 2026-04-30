@@ -1,7 +1,7 @@
 {
   "name": "mindforge-cc",
-  "version": "8.2.1",
-  "description": "MindForge — Sovereign Agentic Intelligence Framework. (Autonomous SRE Layer — Pillars XX-XXIII enabled)",
+  "version": "9.0.0",
+  "description": "MindForge — Sovereign Agentic Intelligence Framework. Bedrock Meridian: Grounded Execution (Pillars XXIV-XXVIII)",
   "bin": {
     "mindforge-cc": "bin/install.js"
   },
