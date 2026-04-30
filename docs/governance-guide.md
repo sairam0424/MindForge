@@ -1,10 +1,10 @@
-# MindForge Governance Guide (v8.2.0)
+# MindForge Governance Guide (v9.0.0)
 
 Autonomous Site Reliability & Self-Healing Governance
 
 ## 1. Goal
 
-MindForge v8.2.0 introduces the **Autonomous SRE Layer**, enabling the framework to transition from a proactive coding assistant to a self-healing production reliability engine. This release hardens the governance framework to handle autonomous production remediation with deterministic safety, adversarial auditing, and SLI-based verification.
+MindForge v9.0.0 builds on the **Autonomous SRE Layer** introduced in v8.2.0, adding grounded execution semantics and model topology updates across the governance stack. The framework continues its transition from a proactive coding assistant to a self-healing production reliability engine, now with hardened input validation, updated trust primitives, and tighter integration between the CADIA engine and the new execution model. This release hardens the governance framework to handle autonomous production remediation with deterministic safety, adversarial auditing, and SLI-based verification.
 
 ## 2. Post-Quantum Agentic Security (Pillar XI)
 
@@ -41,7 +41,7 @@ Before the `AutoRunner` begins a new execution wave, it extracts the acting agen
 - **SessionId**: The unique identifier for the current autonomous session.
 - **Reasoning Proof**: (Tier 3 Only) A justification for high-risk architectural actions.
 
-### B. Policy Evaluation (v8.2.0)
+### B. Policy Evaluation (v9.0.0)
 The upgraded `PolicyEngine` evaluates the intent using the CADIA scoring model:
 1.  **Blast Radius Calculation**: The `ImpactAnalyzer` computes a risk score (0-100) based on architectural influence, session history, and goal alignment.
 2.  **Tier-Based Enforcement**: 
@@ -78,7 +78,7 @@ Trust Tiers (0-3) provide a risk "overhead" buffer:
 
 ## 6. Trust Tier Architecture (ZTAI Hardened)
 
-V8.2.0 maps ZTAI Trust Tiers to explicit project roles through the `RBACManager`.
+V9.0.0 maps ZTAI Trust Tiers to explicit project roles through the `RBACManager`.
 
 | Tier | Role | Scope | Hardening |
 | :--- | :--- | :--- | :--- |
@@ -87,7 +87,7 @@ V8.2.0 maps ZTAI Trust Tiers to explicit project roles through the `RBACManager`
 | **2** | Specialized | Security/Ops Specialist. | Access to `/security`, `/infra`. Higher risk cap (60). |
 | **3** | Principal | Lead Architect / CEO / SRE Auditor. | **Full CADIA Bypass** (with Reasoning Proof). |
 
-## 7. Autonomous SRE Sovereignty (v8.2.0)
+## 7. Autonomous SRE Sovereignty (v9.0.0)
 
 Specialized governance for self-healing remediation waves.
 
@@ -113,13 +113,22 @@ Every governance evaluation is persistently recorded in `.planning/RISK-AUDIT.js
 
 ## 10. Enterprise Policies
 
-MindForge v8.2.0 ships with default policies including:
+MindForge v9.0.0 ships with default policies including:
 - **`gate_tier_3_engine`**: Blocks all modifications to `bin/autonomous/` unless signed by a Tier 3 DID.
 - **`protect_sre_namespace`**: Limits access to `/bin/sre` to the `sre-auditor` and `sre-engineer` roles.
-- **`enforce_blast_radius` (v8.2.0)**: Dynamic policy that enforces a strict 65-point cap for non-Sovereign agents.
+- **`enforce_blast_radius` (v9.0.0)**: Dynamic policy that enforces a strict 65-point cap for non-Sovereign agents.
 - **`require_sli_verification`**: Prevents the release of `REMEDIATION_WAVES` unless the `SLIVerifier` returns a `CONFIRMED_PASS` status.
+
+## 11. Security Hardening (v9.0.0)
+
+V9.0.0 introduces four targeted security hardening measures across the governance and execution layers:
+
+- **Phase Input Validation**: All phase transition inputs are now schema-validated before reaching the CADIA engine. Malformed or unexpected payloads are rejected at the boundary, preventing state corruption from ill-formed autonomous intents.
+- **Prototype Pollution Protection**: Object construction paths in the policy engine, config loaders, and shard controller sanitize incoming keys to block `__proto__`, `constructor`, and `prototype` injection vectors.
+- **API Key Redaction**: All audit log writers, event stream emitters, and diagnostic outputs now pass through a redaction layer that strips API keys, tokens, and credential fragments before they reach any persisted or transmitted surface.
+- **FTS5 Query Sanitization**: Full-text search queries against the MindForge SQLite knowledge store are parameterized and escaped to prevent FTS5 syntax injection, eliminating a class of search-based data exfiltration risks.
 
 ---
 
-*Status: V8.2.0 Autonomous SRE Governance Implemented & Verified (2026-04-18)*
+*Status: V9.0.0 Autonomous SRE Governance Implemented & Verified (2026-04-30)*
 

@@ -10,7 +10,7 @@
 **Tagline:** Enterprise Agentic Framework — the best agentic framework
 **Repository:** `github.com/mindforge-dev/mindforge` (conceptual)
 **npm package:** `npx mindforge-cc@latest`
-**Current version:** v8.2.0 (Autonomous SRE Era)
+**Current version:** v9.0.0 (Bedrock Meridian Era)
 **Runtimes supported:** Claude Code (`.claude/`) and Antigravity (`.agent/`)
 **License:** MIT
 
@@ -306,6 +306,23 @@ Built the framework's self-healing and production reliability layer:
 - **Integrated Observability** — Injected `checkSRESignals()` into the core `AutoRunner` loop.
 
 **Key ADRs:** ADR-021 (Autonomous SRE Sovereignty), ADR-022 (Hybrid Replication Isolation), ADR-023 (Adversarial Consensus Gating)
+
+---
+
+### — Bedrock Meridian (`feat/mindforge-bedrock-meridian` → v9.0.0)
+
+**Branch:** `feat/mindforge-bedrock-meridian`
+**Pillars:** XXIV, XXV, XXVI, XXVII, XXVIII
+
+Grounded the framework on modern model topologies, unified persistence, and verified execution chains:
+
+- **Pillar XXIV: Grounded Wave Execution** — The AutoRunner now parses `HANDOFF.json` wave groups and dispatches tasks with full audit trail persistence. Resume from `auto-state.json` restores completed task state, eliminating re-execution of already-verified waves.
+- **Pillar XXV: Model Topology Modernization (Claude 4.x)** — All model references updated to current-generation identifiers (`claude-sonnet-4-6`, `claude-opus-4-7`, `claude-haiku-4-5`). Provider routing switched from substring matching to prefix matching to prevent false-positive model resolution.
+- **Pillar XXVI: Unified Memory Architecture (SQLite consolidation)** — All knowledge and graph data consolidated into a single SQLite database with FTS5 search indexes, replacing the previous multi-file JSONL approach for queryable persistence.
+- **Pillar XXVII: Schema Migration Engine** — Automated migration pipeline for `.planning/` schema evolution. Supports forward-only migrations with backup-and-restore safety, dry-run mode, and CI integration.
+- **Pillar XXVIII: Integration Test Chain (27 assertions)** — End-to-end verification suite covering the full autonomous loop: init → plan → execute → verify → ship. 27 discrete assertions validate state transitions, audit entries, and artifact integrity across the complete lifecycle.
+
+**Key ADRs:** ADR-024 (Grounded Wave Execution), ADR-025 (Model Topology Currency), ADR-026 (Unified SQLite Persistence)
 
 ---
 
@@ -711,4 +728,4 @@ All prompt files are in `/mnt/user-data/outputs/`:
 
 ---
 
-*State file generated at completion. MindForge v8.2.0 — 36 commands · 10 skills · 34 personas · 23 ADRs · 16 test suites.*
+*State file generated at completion. MindForge v9.0.0 — 36 commands · 10 skills · 34 personas · 23 ADRs · 17 test suites.*

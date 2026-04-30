@@ -64,6 +64,39 @@ if (!valid) console.error(errors);
 - The SDK operates on local files and provides no network authentication. Do not expose SDK
   endpoints to the public internet.
 
+## New in v9.0.0
+
+### Additional exports
+
+```typescript
+import {
+  MindForgeClient,
+  MindForgeEventStream,
+  VERSION,              // '9.0.0'
+} from '@mindforge/sdk';
+
+import type {
+  WaveExecutionResult,  // Result type returned by wave execution operations
+  MigrationResult,      // Result type returned by schema migration operations
+} from '@mindforge/sdk';
+```
+
+### New `MindForgeClient` methods
+
+```typescript
+const client = new MindForgeClient({ projectRoot: '/path/to/project' });
+
+// Read the current auto-state from auto-state.json
+const state = client.readAutoState();
+console.log(state.status); // 'idle' | 'running' | 'awaiting_regeneration'
+
+// Check whether the local MindForge database has been initialized
+const ready = client.isDatabaseInitialized();
+if (!ready) {
+  console.warn('Run mindforge:init-project first');
+}
+```
+
 ## TypeScript support
 
 Full type definitions included. No `@types/` package needed.

@@ -1,6 +1,6 @@
-# MindForge v8.2.0 — Autonomous SRE (Pillars XX-XXIII Enabled)
+# MindForge v9.0.0 — Bedrock Meridian (Grounded Execution)
 
-MindForge v8.2.0 introduces the **Autonomous SRE Layer**, enabling self-healing intelligence for production environments. This follows the **Sovereign Identity** synthesis stage (v8.1.1), adding proactive observability (Sentinel) and adversarial remediation auditing (Pillars XX-XXIII).
+MindForge v9.0.0 "Bedrock Meridian" grounds previously-stub implementations into real, auditable execution. This release introduces grounded wave dispatch via HANDOFF.json, consolidates all memory stores into a single SQLite database, modernizes the model topology to the Claude 4.x family, and adds a 27-assertion integration test chain — completing the transition from framework scaffolding to production-verified infrastructure (Pillars XXIV-XXVIII).
 
 
 ## Installation & Setup
@@ -39,6 +39,11 @@ npx mindforge-cc@latest --antigravity --local
 
 ---
 
+- **Grounded Wave Execution (v9.0.0)** — AutoRunner reads HANDOFF.json wave groups, dispatches tasks with audit tracing, persists progress, and resumes on restart (Pillar XXIV).
+- **Model Topology Modernization (v9.0.0)** — All model references updated to the Claude 4.x family: claude-opus-4-7, claude-sonnet-4-6, claude-haiku-4-5 (Pillar XXV).
+- **Unified Memory Architecture (v9.0.0)** — Knowledge and graph edges consolidated into SQLite (celestial.db) with FTS5 search. Four JSONL stores replaced by one queryable store (Pillar XXVI).
+- **Schema Migration Engine (v9.0.0)** — `_migrations` table with versioned migration tracking and transaction-wrapped bulk imports (Pillar XXVII).
+- **Integration Test Chain (v9.0.0)** — 27-assertion end-to-end test suite validating the full execution pipeline (Pillar XXVIII).
 - **Sovereign Identity Synthesis (v8.1.1)** — Autonomous `SOUL.md` generation derived from reasoning traces and interaction sentiment (Pillar XIX).
 - **Autonomous SRE Layer (v8.2.0)** — Self-healing production reliability engine with reactive sentinel observability and adversarial remediation auditing (Pillars XX-XXIII).
 - **Unified Persistence Layer (v8.0)** — Centralized SQLite/FTS5 engine for sub-millisecond reasoning audits and semantic reasoning (Pillar XV).
@@ -423,3 +428,4 @@ MindForge never stores credentials in files. Review:
 
 ## ⚖️ License
 MIT © 2026 MindForge Team
+eam
