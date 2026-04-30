@@ -161,7 +161,7 @@ class AutoRunner {
           this.currentWaveIndex = state.currentWaveIndex;
         }
       } catch (e) {
-        // Corrupt state — start fresh
+        console.warn(`  auto-state.json is corrupt — starting fresh: ${e.message}`);
       }
     }
 
@@ -296,7 +296,7 @@ class AutoRunner {
     if (hasWaveField) {
       const byWave = new Map();
       for (const h of handoffs) {
-        const w = h.wave || 0;
+        const w = h.wave ?? 0;
         if (!byWave.has(w)) byWave.set(w, []);
         byWave.get(w).push({
           id: h.id || h.task_id || `task_${crypto.randomBytes(4).toString('hex')}`,
@@ -490,9 +490,17 @@ class AutoRunner {
   }
 
   updateState(update) {
-    let state = {};
+    let state = Object.create(null);
     if (fs.existsSync(this.statePath)) {
-      state = JSON.parse(fs.readFileSync(this.statePath, 'utf8'));
+      try {
+        const parsed = JSON.parse(fs.readFileSync(this.statePath, 'utf8'));
+        for (const key of Object.keys(parsed)) {
+          if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
+          state[key] = parsed[key];
+        }
+      } catch (e) {
+        // Corrupt state file — start fresh
+      }
     }
     Object.assign(state, update);
     fs.writeFileSync(this.statePath, JSON.stringify(state, null, 2));
@@ -645,8 +653,18 @@ class AutoRunner {
 
   getRecentAuditEvents(count) {
     if (!fs.existsSync(this.auditPath)) return [];
-    const lines = fs.readFileSync(this.auditPath, 'utf8').trim().split('\n');
-    return lines.slice(-count).map(l => JSON.parse(l));
+    const CHUNK = 4096 * count;
+    const stat = fs.statSync(this.auditPath);
+    if (stat.size === 0) return [];
+
+    const fd = fs.openSync(this.auditPath, 'r');
+    const readStart = Math.max(0, stat.size - CHUNK);
+    const buf = Buffer.alloc(stat.size - readStart);
+    fs.readSync(fd, buf, 0, buf.length, readStart);
+    fs.closeSync(fd);
+
+    const lines = buf.toString('utf8').trim().split('\n');
+    return lines.slice(-count).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
   }
 }
 

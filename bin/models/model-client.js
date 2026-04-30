@@ -71,24 +71,27 @@ class ModelClient {
         return result;
 
       } catch (err) {
-        process.stderr.write(`[model-client] ${currentModel} failed: ${err.message}\n`);
+        const safeMsg = (err.message || '').replace(/sk-[a-zA-Z0-9_-]+/g, 'sk-***').replace(/key-[a-zA-Z0-9_-]+/g, 'key-***');
+        process.stderr.write(`[model-client] ${currentModel} failed: ${safeMsg}\n`);
         if (attempts.indexOf(currentModel) === attempts.length - 1) {
-          throw err;
+          const safeErr = new Error(safeMsg);
+          safeErr.code = err.code;
+          throw safeErr;
         }
       }
     }
   }
 
   static _getProvider(modelId) {
-    if (modelId.includes('claude')) {
+    if (modelId.startsWith('claude') || modelId.startsWith('anthropic.claude')) {
       if (!process.env.ANTHROPIC_API_KEY) return null;
       return new AnthropicProvider(process.env.ANTHROPIC_API_KEY);
     }
-    if (modelId.includes('gpt')) {
+    if (modelId.startsWith('gpt') || modelId.startsWith('o1') || modelId.startsWith('o3')) {
       if (!process.env.OPENAI_API_KEY) return null;
       return new OpenAIProvider(process.env.OPENAI_API_KEY);
     }
-    if (modelId.includes('gemini')) {
+    if (modelId.startsWith('gemini')) {
       if (!process.env.GOOGLE_API_KEY) return null;
       return new GeminiProvider(process.env.GOOGLE_API_KEY);
     }

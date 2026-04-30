@@ -152,9 +152,9 @@ class CloudBroker {
   startChaosMode() {
     console.log('[ENTERPRISE-RESILIENCE] CloudBroker Chaos Mode ACTIVE. Simulating jitter and provider dropouts...');
     setInterval(() => {
-      const providers = Object.keys(this.latencyMap);
+      const providers = Object.keys(this.state);
       const randomProvider = providers[Math.floor(Math.random() * providers.length)];
-      this.latencyMap[randomProvider] = Math.random() > 0.7 ? 5000 : 100; // Spike latency
+      this.state[randomProvider].latency = Math.random() > 0.7 ? 5000 : 100;
     }, 10000);
   }
 }

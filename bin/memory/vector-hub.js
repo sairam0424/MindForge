@@ -142,6 +142,14 @@ class VectorHub {
       USING fts5(id, content, tags, tokenize='porter');
     `.execute(this.db);
 
+    // v9: Secondary indexes for common query patterns
+    await sql`CREATE INDEX IF NOT EXISTS idx_traces_trace_id ON traces(trace_id)`.execute(this.db);
+    await sql`CREATE INDEX IF NOT EXISTS idx_traces_timestamp ON traces(timestamp)`.execute(this.db);
+    await sql`CREATE INDEX IF NOT EXISTS idx_knowledge_type ON knowledge(type)`.execute(this.db);
+    await sql`CREATE INDEX IF NOT EXISTS idx_graph_edges_source ON graph_edges(source_id)`.execute(this.db);
+    await sql`CREATE INDEX IF NOT EXISTS idx_graph_edges_target ON graph_edges(target_id)`.execute(this.db);
+    await sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_migrations_name ON _migrations(name)`.execute(this.db);
+
     this.initialized = true;
     console.log(`[VectorHub] Initialized SQLite persistence at ${this.dbPath}`);
   }
@@ -178,6 +186,7 @@ class VectorHub {
     
     // Update FTS5 index if content exists
     if (entry.content) {
+      await sql`DELETE FROM traces_search WHERE trace_id = ${entry.trace_id}`.execute(this.db);
       await sql`INSERT INTO traces_search (trace_id, content, agent) VALUES (${entry.trace_id}, ${entry.content}, ${entry.agent})`
         .execute(this.db);
     }
@@ -188,9 +197,10 @@ class VectorHub {
   /**
    * Semantic search for previous traces.
    */
-  async searchTraces(query) {
+  async searchTraces(rawQuery) {
+    const query = '"' + rawQuery.replace(/"/g, '""') + '"';
     const results = await sql`
-        SELECT t.*, ts.rank 
+        SELECT t.*, ts.rank
         FROM traces t
         JOIN traces_search ts ON t.trace_id = ts.trace_id
         WHERE traces_search MATCH ${query}
@@ -233,7 +243,8 @@ class VectorHub {
     return record.id;
   }
 
-  async searchKnowledge(query, limit = 10) {
+  async searchKnowledge(rawQuery, limit = 10) {
+    const query = '"' + rawQuery.replace(/"/g, '""') + '"';
     const results = await sql`
       SELECT k.*, ks.rank
       FROM knowledge k
@@ -282,9 +293,8 @@ class VectorHub {
   }
 
   async recordMigration(name) {
-    await this.db.insertInto('_migrations')
-      .values({ name, applied_at: new Date().toISOString() })
-      .execute();
+    await sql`INSERT OR IGNORE INTO _migrations (name, applied_at) VALUES (${name}, ${new Date().toISOString()})`
+      .execute(this.db);
   }
 }
 
