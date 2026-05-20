@@ -8,12 +8,14 @@ const fs = require('node:fs');
 const path = require('node:path');
 const ImpactAnalyzer = require('./impact-analyzer');
 const policyGate = require('./policy-gate-hardened');
+const { AuditWriter } = require('../utils/file-io');
 
 class PolicyEngine {
   constructor(config = {}) {
     this.policiesDir = config.policiesDir || path.join(__dirname, 'policies');
     this.planningDir = config.planningDir || path.join(process.cwd(), '.planning');
     this.auditLogPath = path.join(this.planningDir, 'RISK-AUDIT.jsonl');
+    this._auditWriter = new AuditWriter(this.auditLogPath);
     this.ensurePoliciesDir();
   }
 
@@ -73,7 +75,7 @@ class PolicyEngine {
           // [PQAS] v7: Hardened Biometric Bypass for Risk > 95
           if (impactScore > 95) {
             const gateResult = await policyGate.evaluateBypass(intent, impactScore);
-            if (gateResult.status === 'WAIT_FOR_BIOMETRIC') {
+            if (gateResult.status === 'WAIT_FOR_BIOMETRIC' || gateResult.status === 'WAIT_FOR_ORBITAL') {
               verdict = { 
                 verdict: 'DENY', 
                 reason: gateResult.reason, 
@@ -143,7 +145,7 @@ class PolicyEngine {
   }
 
   logAudit(intent, impactScore, verdict) {
-    const entry = JSON.stringify({
+    this._auditWriter.write({
       timestamp: new Date().toISOString(),
       requestId: verdict.requestId,
       did: intent.did,
@@ -153,9 +155,7 @@ class PolicyEngine {
       impactScore,
       verdict: verdict.verdict,
       reason: verdict.reason
-    }) + '\n';
-    
-    fs.appendFileSync(this.auditLogPath, entry); 
+    });
   }
 
   loadPolicies() {
