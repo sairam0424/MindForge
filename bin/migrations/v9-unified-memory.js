@@ -25,7 +25,7 @@ async function run() {
   let edgesMigrated = 0;
   let skippedLines = 0;
 
-  await vectorHub.db.transaction().execute(async (trx) => {
+  await vectorHub.transaction(async ({ run: txRun }) => {
     // 1. Migrate knowledge-base.jsonl → knowledge table
     const kbPaths = [
       path.join(process.cwd(), '.mindforge', 'memory', 'knowledge-base.jsonl'),

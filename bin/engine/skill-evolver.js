@@ -1,7 +1,7 @@
 /**
  * MindForge v8 — Autonomous Skill Evolution (ASE)
  * Component: Skill Evolver (Pillar XVII)
- * 
+ *
  * Mines successful reasoning patterns to synthesize new reusable skills.
  */
 'use strict';
@@ -32,12 +32,11 @@ class SkillEvolver {
     await this.ensureInit();
     console.log('[ASE] Starting skill evolution cycle...');
 
-    // 1. Mine Golden Traces (Drift < 0.1)
-    const goldenTraces = await vectorHub.db.selectFrom('traces')
-      .selectAll()
-      .where('drift_score', '<', this.threshold)
-      .where('event', '=', 'reasoning_trace')
-      .execute();
+    // 1. Mine Golden Traces (Drift < threshold)
+    const goldenTraces = vectorHub.query(
+      'SELECT * FROM traces WHERE drift_score < ? AND event = ?',
+      [this.threshold, 'reasoning_trace']
+    );
 
     if (goldenTraces.length < this.minCount) {
       console.log(`[ASE] Only ${goldenTraces.length} golden traces found. Threshold is ${this.minCount}. Evolution deferred.`);
@@ -67,12 +66,12 @@ class SkillEvolver {
     const clusters = new Map();
 
     for (const t of traces) {
-      const metadata = JSON.parse(t.metadata || '{}');
       // Group by agent and the first 20 chars of thought as a simple proxy for 'intent'
-      const key = `${t.agent || 'unknown'}:${t.content.substring(0, 20)}`;
-      
+      const content = t.content || '';
+      const key = `${t.agent || 'unknown'}:${content.substring(0, 20)}`;
+
       if (!clusters.has(key)) {
-        clusters.set(key, { traces: [], agent: t.agent, intent: t.content.substring(0, 50) });
+        clusters.set(key, { traces: [], agent: t.agent, intent: content.substring(0, 50) });
       }
       clusters.get(key).traces.push(t);
     }
@@ -85,11 +84,10 @@ class SkillEvolver {
    */
   async _synthesize(cluster) {
     const id = `ev_${crypto.randomBytes(4).toString('hex')}`;
-    const timestamp = new Date().toISOString();
-    
+
     // Abstract the strategy from the trace content
     const summary = cluster.traces.map(t => `- ${t.content}`).join('\n');
-    
+
     return {
       id,
       name: `Synthesized Skill (${cluster.agent}) - ${id}`,

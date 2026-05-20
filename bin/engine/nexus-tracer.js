@@ -15,6 +15,7 @@ const driftDetector = require('./logic-drift-detector'); // v6.1 Pillar X
 const remediationEngine = require('./remediation-engine'); // v6.1 Pillar X
 const logicValidator = require('./logic-validator'); // v7 Pillar X
 const vectorHub = require('../memory/vector-hub'); // v8 Pillar XV
+const { AuditWriter } = require('../utils/file-io');
 
 class NexusTracer {
   constructor(config = {}) {
@@ -31,8 +32,11 @@ class NexusTracer {
     this.RES_THRESHOLD = configManager.get('governance.res_threshold', 0.8); 
     this.entropyCache = new Map(); 
 
+    // v9: Async Audit Writer (replaces sync appendFileSync)
+    this._auditWriter = new AuditWriter(this.auditPath);
+
     // v6.1: Neural Drift Remediation (NDR)
-    this.DRIFT_SAMPLE_RATE = 1.0; 
+    this.DRIFT_SAMPLE_RATE = 1.0;
 
     // v7: Agentic SBOM with Arbitrage
     this.sbom = {
@@ -292,10 +296,7 @@ class NexusTracer {
     }
 
     try {
-      if (!fs.existsSync(path.dirname(this.auditPath))) {
-        fs.mkdirSync(path.dirname(this.auditPath), { recursive: true });
-      }
-      fs.appendFileSync(this.auditPath, JSON.stringify(entry) + '\n');
+      await this._auditWriter.write(entry);
     } catch (err) {
       console.error(`[NexusTracer] Failed to write audit entry: ${err.message}`);
     }
