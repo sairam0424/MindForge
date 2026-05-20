@@ -6,7 +6,7 @@
 
 'use strict';
 
-const { execSync } = require('child_process');
+const { execSync, execFileSync } = require('child_process');
 const fs = require('fs');
 
 const SENSITIVE_PATHS = [
@@ -33,7 +33,7 @@ function classify() {
   try {
     // Get list of changed files compared to origin/main or HEAD~1
     const base = process.env.GITHUB_BASE_REF ? `origin/${process.env.GITHUB_BASE_REF}` : 'HEAD~1';
-    const diffFiles = execSync(`git diff --name-only ${base}..HEAD`, { encoding: 'utf8' }).split('\n').filter(Boolean);
+    const diffFiles = execFileSync('git', ['diff', '--name-only', `${base}..HEAD`], { encoding: 'utf8' }).split('\n').filter(Boolean);
     
     let tier = 1;
     let reasons = [];
@@ -47,7 +47,7 @@ function classify() {
 
     // 2. Pattern-based detection in diff (Tier 3)
     if (tier < 3) {
-      const diffContent = execSync(`git diff ${base}..HEAD`, { encoding: 'utf8' });
+      const diffContent = execFileSync('git', ['diff', `${base}..HEAD`], { encoding: 'utf8' });
       for (const pattern of SENSITIVE_PATTERNS) {
         if (pattern.test(diffContent)) {
           tier = 3;

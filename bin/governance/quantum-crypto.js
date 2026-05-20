@@ -103,8 +103,16 @@ class QuantumCrypto {
 
   verifyZKProof(proof, intentId) {
     if (!proof.startsWith('zkp_v1_')) return false;
-    // Real verification would check the Merkle root of the execution trace
-    return true; // Simulated success
+    // SECURITY: Real ZK verification is not yet implemented.
+    // Governance gate MUST block by default — fail-closed.
+    console.warn(
+      `[SECURITY][quantum-crypto] verifyZKProof is a STUB — real ZK verification not yet implemented. ` +
+      `Blocking proof for intent="${intentId}". All governance checks will fail until a real verifier is integrated.`
+    );
+    throw new Error(
+      'ZK proof verification is not implemented. Governance gate denies by default. ' +
+      'Integrate a real ZK verifier (e.g., snarkjs/circom) before enabling this path.'
+    );
   }
 }
 

@@ -8,13 +8,15 @@
  *   /mindforge:dashboard [--port 7339] [--open] [--stop]
  *
  * Security: binds to 127.0.0.1 only (ADR-017 policy).
- * No authentication — localhost-only access is the security model.
+ * Bearer token auth on all mutating endpoints (POST/PUT/DELETE).
+ * Token printed to console at startup and written to .mindforge/.dashboard-token.
  */
 'use strict';
 
 const http   = require('http');
 const path   = require('path');
 const fs     = require('fs');
+const crypto = require('crypto');
 const ARGS   = process.argv.slice(2);
 
 const PORT     = parseInt(ARGS.find((_, i, a) => a[i-1] === '--port') || '7339', 10);
@@ -39,6 +41,39 @@ const RevOpsAPI   = require('./revops-api');
 // ── Express app ───────────────────────────────────────────────────────────────
 const app = express();
 
+// ── Bearer token authentication ──────────────────────────────────────────────
+const DASHBOARD_TOKEN = crypto.randomBytes(32).toString('hex');
+const TOKEN_FILE = path.join(process.cwd(), '.mindforge', '.dashboard-token');
+
+// Write token to file with restrictive permissions (owner-only read/write)
+fs.mkdirSync(path.dirname(TOKEN_FILE), { recursive: true });
+fs.writeFileSync(TOKEN_FILE, DASHBOARD_TOKEN, { mode: 0o600 });
+
+/**
+ * requireAuth — Validates Bearer token on mutating requests (POST/PUT/DELETE).
+ * GET requests pass through unguarded for the dashboard UI.
+ */
+function requireAuth(req, res, next) {
+  if (req.method === 'GET' || req.method === 'OPTIONS') return next();
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({
+      error: 'Authentication required. Use the token printed at dashboard startup.'
+    });
+  }
+
+  const provided = authHeader.slice(7);
+  // Constant-time comparison to prevent timing attacks
+  if (!crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(DASHBOARD_TOKEN))) {
+    return res.status(401).json({
+      error: 'Authentication required. Use the token printed at dashboard startup.'
+    });
+  }
+
+  next();
+}
+
 // Security middleware
 app.use((req, res, next) => {
   const addr = req.socket.remoteAddress;
@@ -49,19 +84,18 @@ app.use((req, res, next) => {
   next();
 });
 
-// CORS — only allow requests from localhost origins
+// CORS — restrict to dashboard's own origin only (prevent cross-origin attacks)
+const DASHBOARD_ORIGIN = `http://127.0.0.1:${PORT}`;
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
-  if (origin && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
-    // Explicit localhost origin — set CORS headers
-    res.setHeader('Access-Control-Allow-Origin', origin);
+  if (origin === DASHBOARD_ORIGIN) {
+    res.setHeader('Access-Control-Allow-Origin', DASHBOARD_ORIGIN);
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    res.setHeader('Vary', 'Origin'); // Important: vary by origin for caching
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Vary', 'Origin');
   }
-  // No origin header (same-origin/curl/postman): don't set CORS headers
-  // This is correct — same-origin requests don't need CORS headers
+  // Reject cross-origin requests from other localhost ports/origins
   if (req.method === 'OPTIONS') return res.status(204).end();
   next();
 });
@@ -71,10 +105,16 @@ app.use(express.json({ limit: '64kb' })); // Limit request body size
 // Security headers
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Cache-Control', 'no-store'); // Never cache dashboard responses
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'");
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   next();
 });
+
+// ── Apply requireAuth to mutating API routes ─────────────────────────────────
+app.use('/api', requireAuth);
 
 // ── Static frontend ───────────────────────────────────────────────────────────
 app.get('/', (req, res) => {
@@ -103,6 +143,8 @@ server.listen(PORT, '127.0.0.1', () => {
   console.log(`    Status:  http://localhost:${PORT}/api/status`);
   console.log(`    Events:  http://localhost:${PORT}/events`);
   console.log(`    PID:     ${process.pid}`);
+  console.log(`[Dashboard] Auth token: ${DASHBOARD_TOKEN}`);
+  console.log(`    Token file: ${TOKEN_FILE}`);
   console.log('\n    Press CTRL+C to stop\n');
 
   if (OPEN_BROWSER) {
@@ -127,6 +169,8 @@ server.on('error', err => {
 function shutdown(signal) {
   console.log(`\n[dashboard] ${signal} received — shutting down`);
   SSE.stop();
+  // Remove sensitive token file on shutdown
+  if (fs.existsSync(TOKEN_FILE)) fs.unlinkSync(TOKEN_FILE);
   server.close(() => {
     if (fs.existsSync(PID_FILE)) fs.unlinkSync(PID_FILE);
     process.exit(0);

@@ -42,6 +42,9 @@ ROADMAP_V7.md
 
 .mindforge/*.db
 .mindforge/memory/sync-manifest.json
+# Runtime auth tokens (generated at server startup, never commit)
+.mindforge/.dashboard-token
+.mindforge/.browser-daemon-token
 *.mfb
 .npm-cache/
 
