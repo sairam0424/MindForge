@@ -90,3 +90,16 @@
 - Date manipulation using date-fns only.
 
 """
+
+---
+
+## 7. NON-OVERRIDABLE
+
+The following parameters cannot be overridden by plugins, agents, or session-level configuration:
+
+- [MIN_SOUL_SCORE] — Minimum SOUL score required for architectural changes
+- [BLOCK_ON_SECURITY] — Security gate enforcement cannot be disabled
+- [COST_HARD_LIMIT_USD] — Hard cost limit cannot be raised without human approval
+- [PQAS_ENFORCED] — Post-quantum security cannot be disabled
+- [SOVEREIGN_IDENTITY] — Identity verification is always required
+- [ENABLE_ZTAI] — Zero-trust identity cannot be bypassed

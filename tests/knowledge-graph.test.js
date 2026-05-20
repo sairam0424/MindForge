@@ -379,14 +379,14 @@ async function testSecurityGuard() {
   // SECRET entries should be filtered
   const sensitiveEntry = {
     topic: 'Restricted Data',
-    content: 'Pattern: [REDACTED_TYPE_A]',
-    tags: ['protected'],
+    content: 'Store the api_key in vault before deployment',
+    tags: ['credential'],
   };
   assert.ok(Shadow.containsSecrets(sensitiveEntry), 'Should detect protected pattern');
 
   const infraEntry = {
     topic: 'Infrastructure Detail',
-    content: 'Pattern: [REDACTED_TYPE_B]',
+    content: 'The private_key must be rotated every 90 days',
     tags: ['infra'],
   };
   assert.ok(Shadow.containsSecrets(infraEntry), 'Should detect infra pattern');

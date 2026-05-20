@@ -49,10 +49,10 @@ async function runTest() {
         const newSkill = evolved[0];
         console.log(`[TEST] Verifying unique skill synthesis: ${newSkill.name}`);
         
-        const skillsInDb = await vectorHub.db.selectFrom('skills')
-            .selectAll()
-            .where('skill_id', '=', newSkill.id)
-            .execute();
+        const skillsInDb = vectorHub.query(
+            'SELECT * FROM skills WHERE skill_id = ?',
+            [newSkill.id]
+        );
         
         if (skillsInDb.length > 0) {
             console.log('✅ MindForge v8 Autonomous Skill Evolution Passed.');

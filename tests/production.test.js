@@ -390,7 +390,8 @@ console.log('\nVersion:');
 
 test('package.json version is >= 1.0.0', () => {
   const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-  assert.ok(pkg.version.startsWith('1.') || pkg.version.startsWith('2.'), `Expected v1 or v2, got ${pkg.version}`);
+  const major = parseInt(pkg.version.split('.')[0], 10);
+  assert.ok(major >= 1, `Expected version >= 1.0.0, got ${pkg.version}`);
 });
 
 test('CHANGELOG.md has latest version entry', () => {

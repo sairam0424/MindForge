@@ -62,7 +62,7 @@ This document captures the cumulative technical intelligence of AI agents operat
 
 ## Evolution Log
 
-### [Learning Entry - YYYY-MM-DDTHH:MM:SSZ]
+### [Example Entry Template - YYYY-MM-DDTHH:MM:SSZ]
 
 **Context:**
 <What task was being performed>

@@ -1,5 +1,20 @@
 # Changelog
 
+## [10.0.0] - 2026-05-21
+
+### Added (v10.0.0)
+
+- **Test Suite Stabilization** — Fixed pre-existing test failures across 12 test files, improved test isolation, and updated stale assertions to match current architecture.
+- **NON-OVERRIDABLE governance** — Added non-overridable parameter section to MINDFORGE.md for security-critical settings.
+- **HANDOFF schema alignment** — Unified HANDOFF.json to v1.0.0 schema with all required fields.
+
+### Changed (v10.0.0)
+
+- **Model topology assertions** — Updated test expectations to match Claude 4.x and Gemini 2.5 model family.
+- **Skills MANIFEST** — Updated manifest to register all 10 core skills with proper paths and schema version.
+
+---
+
 ## [9.0.0] - 2026-04-30
 
 ### Added (v9.0.0: Bedrock Meridian — Pillars XXIV-XXVIII)
