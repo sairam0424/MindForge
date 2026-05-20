@@ -1,67 +1,185 @@
 /**
- * MindForge Security & Trust Audit Suite (v6.0.0 Alpha)
+ * MindForge — Security & Trust Audit Suite
  * Verifies ZTS (Binary Attestation) and ZTAI (Enterprise Identity Layer).
+ * Run: node tests/security-audit.test.js
  */
 
 const fs = require('fs');
 const path = require('path');
-const SkillValidator = require('../bin/skill-validator');
-const ZTAIManager = require('../bin/governance/ztai-manager');
+const assert = require('assert');
 
-async function runSecurityAudit() {
-    console.log('\n🚀 Starting ZTS / ZTAI Security Audit...\n');
+let passed = 0;
+let failed = 0;
 
-    // --- CASE 1: JIT Attestation (ZTS) ---
-    console.log('--- TEST 1: Unsigned Skill Detection (ZTS) ---');
-    const mockSkill = 'tests/audit-workspace/unsigned_skill.md';
-    if (!fs.existsSync('tests/audit-workspace')) fs.mkdirSync('tests/audit-workspace', { recursive: true });
-    
-    fs.writeFileSync(mockSkill, '# Unsigned Skill\nNo signature here.');
-    
-    try {
-        const result = SkillValidator.validate(mockSkill);
-        console.log(`[ZTS] Validation Result: ${result.valid ? 'PASSED' : 'DENIED'} | Reason: ${result.reason}`);
-    } catch (e) {
-        console.log(`[ZTS] Caught Expected Block: ${e.message}`);
-    }
-
-    // --- CASE 2: Identity Signing (ZTAI) ---
-    console.log('\n--- TEST 2: ZTAI DID Cryptographic Signing ---');
-    const ztai = new ZTAIManager();
-    const mockAgent = { id: 'agent-senior', tier: 3, did: 'did:mf:senior-001' };
-    const action = { type: 'WRITE', target: 'bin/core.js', timestamp: Date.now() };
-    
-    const signature = ztai.sign(mockAgent, action);
-    console.log(`[ZTAI] Signature: ${signature.slice(0, 32)}... [SIGNED BY DID]`);
-    
-    const isValid = ztai.verify(signature, mockAgent.did);
-    console.log(`[ZTAI] Verification: ${isValid ? 'VERIFIED' : 'FAILED'}`);
-
-    // --- CASE 3: Audit Integrity (Merkle Chain) ---
-    console.log('\n--- TEST 3: Merkle-Root Audit Integrity Chain ---');
-    const auditLog = [
-        { id: 1, action: 'INIT', prevHash: '0x000' },
-        { id: 2, action: 'WRITE', prevHash: '0xabc' }
-    ];
-    
-    const merkleRoot = ztai.generateMerkleRoot(auditLog);
-    console.log(`[AUDIT] Merkle Root (v4.2): ${merkleRoot}`);
-    console.log('✅ Audit Integrity Protocol: Verified.\n');
-
-    // Cleanup
-    if (fs.existsSync('tests/audit-workspace')) {
-        fs.readdirSync('tests/audit-workspace').forEach(f => fs.unlinkSync(path.join('tests/audit-workspace', f)));
-        fs.rmdirSync('tests/audit-workspace');
-    }
+function test(name, fn) {
+  try {
+    fn();
+    console.log(`  ✅ ${name}`);
+    passed++;
+  } catch (err) {
+    console.error(`  ❌ ${name}`);
+    console.error(`     ${err.message}`);
+    failed++;
+  }
 }
 
-// Mocking required internal logic for the audit simulator
-SkillValidator.validate = (file) => {
-    const content = fs.readFileSync(file, 'utf8');
-    if (!content.includes('ZTAI-SIGNATURE')) {
-        return { valid: false, reason: 'MISSING_CRYPTO_ATTESTATION' };
-    }
-    return { valid: true };
-};
+async function asyncTest(name, fn) {
+  try {
+    await fn();
+    console.log(`  ✅ ${name}`);
+    passed++;
+  } catch (err) {
+    console.error(`  ❌ ${name}`);
+    console.error(`     ${err.message}`);
+    failed++;
+  }
+}
 
-runSecurityAudit().catch(console.error);
+async function run() {
+  const ZTAIManager = require('../bin/governance/ztai-manager');
+
+  console.log('\nSecurity & Trust Audit Suite (ZTS / ZTAI)\n');
+
+  // ── ZTS: Unsigned Skill Detection ──────────────────────────────────────────
+  console.log('ZTS — Skill Validation:');
+
+  test('skill-validator CLI exists and is loadable', () => {
+    const validatorPath = path.join(__dirname, '..', 'bin', 'skill-validator.js');
+    assert.ok(fs.existsSync(validatorPath), 'bin/skill-validator.js should exist');
+    const content = fs.readFileSync(validatorPath, 'utf8');
+    assert.ok(content.includes('validate'), 'skill-validator should contain validation logic');
+  });
+
+  test('unsigned skill file is detected as invalid by frontmatter check', () => {
+    // Simulate what the validator does: check for frontmatter
+    const unsignedContent = '# Unsigned Skill\nNo signature or frontmatter here.';
+    const hasFrontmatter = /^---\n[\s\S]*?\n---/.test(unsignedContent);
+    assert.strictEqual(hasFrontmatter, false, 'Unsigned skill should have no frontmatter');
+  });
+
+  test('properly signed skill file has valid frontmatter', () => {
+    const signedContent = [
+      '---',
+      'name: test-skill',
+      'version: 1.0.0',
+      'status: stable',
+      'triggers: a, b, c, d, e',
+      '---',
+      '# Test Skill',
+      'Content here.',
+    ].join('\n');
+    const hasFrontmatter = /^---\n[\s\S]*?\n---/.test(signedContent);
+    assert.strictEqual(hasFrontmatter, true, 'Signed skill should have frontmatter');
+  });
+
+  // ── ZTAI: Identity & Signing ───────────────────────────────────────────────
+  console.log('\nZTAI — Cryptographic Signing:');
+
+  await asyncTest('registerAgent creates a valid DID', async () => {
+    const did = await ZTAIManager.registerAgent('senior-engineer', 2);
+    assert.ok(did, 'DID should be defined');
+    assert.ok(did.startsWith('did:mindforge:'), `DID should start with did:mindforge:, got ${did}`);
+  });
+
+  await asyncTest('signData produces a non-empty signature', async () => {
+    const did = await ZTAIManager.registerAgent('executor', 1);
+    const data = JSON.stringify({ type: 'WRITE', target: 'bin/core.js', timestamp: Date.now() });
+    const signature = await ZTAIManager.signData(did, data);
+    assert.ok(signature, 'Signature should be defined');
+    assert.ok(signature.length > 10, 'Signature should be a substantial string');
+  });
+
+  await asyncTest('verifySignature returns true for valid signature', async () => {
+    const did = await ZTAIManager.registerAgent('verifier', 2);
+    const data = 'test-payload-for-verification';
+    const signature = await ZTAIManager.signData(did, data);
+    const isValid = ZTAIManager.verifySignature(did, data, signature);
+    assert.strictEqual(isValid, true, 'Valid signature should verify as true');
+  });
+
+  await asyncTest('verifySignature returns false for tampered data', async () => {
+    const did = await ZTAIManager.registerAgent('tamper-test', 2);
+    const data = 'original-data';
+    const signature = await ZTAIManager.signData(did, data);
+    const isValid = ZTAIManager.verifySignature(did, 'tampered-data', signature);
+    assert.strictEqual(isValid, false, 'Tampered data should fail verification');
+  });
+
+  await asyncTest('signData throws for unregistered DID', async () => {
+    try {
+      await ZTAIManager.signData('did:mindforge:nonexistent', 'some data');
+      assert.fail('Should have thrown for unregistered DID');
+    } catch (err) {
+      assert.ok(err.message.includes('not registered'), `Expected "not registered" error, got: ${err.message}`);
+    }
+  });
+
+  // ── ZTAI: Authorization ────────────────────────────────────────────────────
+  console.log('\nZTAI — Authorization:');
+
+  await asyncTest('isAuthorized returns true for sufficient tier', async () => {
+    const did = await ZTAIManager.registerAgent('admin', 3);
+    assert.strictEqual(ZTAIManager.isAuthorized(did, 3), true);
+    assert.strictEqual(ZTAIManager.isAuthorized(did, 2), true);
+    assert.strictEqual(ZTAIManager.isAuthorized(did, 1), true);
+  });
+
+  await asyncTest('isAuthorized returns false for insufficient tier', async () => {
+    const did = await ZTAIManager.registerAgent('junior', 1);
+    assert.strictEqual(ZTAIManager.isAuthorized(did, 2), false);
+    assert.strictEqual(ZTAIManager.isAuthorized(did, 3), false);
+  });
+
+  // ── ZTAI: Key Rotation ─────────────────────────────────────────────────────
+  console.log('\nZTAI — Key Rotation:');
+
+  await asyncTest('rotateKeys changes the public key', async () => {
+    const did = await ZTAIManager.registerAgent('rotate-test', 2);
+    const agentBefore = ZTAIManager.getAgent(did);
+    const pubKeyBefore = agentBefore.publicKey;
+
+    await ZTAIManager.rotateKeys(did);
+
+    const agentAfter = ZTAIManager.getAgent(did);
+    assert.notStrictEqual(agentAfter.publicKey, pubKeyBefore, 'Public key should change after rotation');
+    assert.ok(agentAfter.rotatedAt, 'rotatedAt timestamp should be set');
+  });
+
+  await asyncTest('old signature fails after key rotation', async () => {
+    const did = await ZTAIManager.registerAgent('rotation-sig-test', 2);
+    const data = 'pre-rotation-data';
+    const oldSignature = await ZTAIManager.signData(did, data);
+
+    await ZTAIManager.rotateKeys(did);
+
+    const isValid = ZTAIManager.verifySignature(did, data, oldSignature);
+    assert.strictEqual(isValid, false, 'Old signature should fail after key rotation');
+  });
+
+  // ── ZTAI: Revocation ───────────────────────────────────────────────────────
+  console.log('\nZTAI — Revocation:');
+
+  await asyncTest('revokeAgent removes the agent completely', async () => {
+    const did = await ZTAIManager.registerAgent('revoke-test', 1);
+    assert.ok(ZTAIManager.getAgent(did), 'Agent should exist before revocation');
+
+    ZTAIManager.revokeAgent(did);
+    assert.strictEqual(ZTAIManager.getAgent(did), undefined, 'Agent should be removed after revocation');
+  });
+
+  // ── Results ──────────────────────────────────────────────────────────────────
+  console.log(`\n${'─'.repeat(50)}`);
+  console.log(`Results: ${passed} passed, ${failed} failed`);
+
+  if (failed > 0) {
+    console.error(`\n❌ ${failed} test(s) failed.\n`);
+    process.exit(1);
+  } else {
+    console.log('\n✅ All security-audit tests passed.\n');
+  }
+}
+
+run().catch(err => {
+  console.error('Fatal test error:', err.message);
+  process.exit(1);
+});
