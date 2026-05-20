@@ -44,7 +44,11 @@
     "agentic-framework",
     "context-engineering",
     "enterprise",
-    "mindforge"
+    "mindforge",
+    "wasm-sqlite",
+    "zero-native-deps",
+    "agent-orchestration",
+    "sovereign-ai"
   ],
   "author": "sairamugge",
   "license": "MIT",

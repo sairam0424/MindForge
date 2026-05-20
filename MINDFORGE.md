@@ -1,12 +1,12 @@
-# MINDFORGE.md — Parameter Registry (v9.0.0)
+# MINDFORGE.md — Parameter Registry (v10.0.0)
 
 ## 1. IDENTITY & VERSIONING
 
 [NAME]    = MindForge
-[VERSION] = 9.0.0-BEDROCK
+[VERSION] = 10.0.0-BEDROCK
 [STABLE]  = true
-[MODE]    = \"Bedrock Meridian\"
-[REQUIRED_CORE_VERSION] = 9.0.0
+[MODE]    = \"Bedrock Fortified\"
+[REQUIRED_CORE_VERSION] = 10.0.0
 [SOVEREIGN_IDENTITY] = true
 [SRE_LAYER_ENABLED]  = true
 
@@ -33,7 +33,7 @@
 
 ## 3. MODEL TOPOLOGY
 
-### Persona to Model mapping (v9: Claude 4.x aligned)
+### Persona to Model mapping (v10: Claude 4.x aligned)
 
 [PLANNER]  = claude-opus-4-7
 [EXECUTOR] = claude-sonnet-4-6

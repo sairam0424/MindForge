@@ -1,17 +1,71 @@
 # Changelog
 
-## [10.0.0] - 2026-05-21
+## [10.0.0] - 2026-05-21 — "Bedrock Fortified"
 
 ### Added (v10.0.0)
 
-- **Test Suite Stabilization** — Fixed pre-existing test failures across 12 test files, improved test isolation, and updated stale assertions to match current architecture.
+- **Bearer token authentication** — All dashboard mutating endpoints now require `Authorization: Bearer <token>` header. Protects SSE, steering, and approval routes.
+- **Auth on browser daemon** — The `/evaluate` endpoint on the Playwright browser daemon now requires authentication, closing a remote code execution vector.
+- **Unified test runner** — `tests/run-all.js` discovers and executes all 43 test files with pass/fail summary and exit code propagation.
+- **Shared utilities layer** — `bin/utils/paths.js`, `file-io.js`, and `errors.js` provide consistent path resolution, safe file I/O, and typed error classes across the codebase.
+- **AuditWriter module** — Buffered async writes with Merkle hash chaining, replacing direct synchronous file append calls in the auto-runner.
+- **State manager module** — Extracted from auto-runner for clean separation of execution state persistence.
+- **Task dispatcher module** — Extracted from auto-runner for isolated task routing and repair-operator logic.
+- **Wave executor module** — Extracted from auto-runner for wave-level orchestration and progress tracking.
+- **Dependabot configuration** — Weekly npm dependency updates and monthly GitHub Actions version bumps.
+- **CODEOWNERS file** — Defines review ownership for security-sensitive paths (`bin/governance/`, `bin/engine/`, SDK).
+- **npm provenance** — Release workflow now publishes with `--provenance` for SLSA Build Level 2 supply chain attestation.
+- **CLI "Did you mean?" suggestions** — Levenshtein distance matching for mistyped commands (e.g., `mindforge statsus` suggests `status`).
+- **CLI --verbose flag** — Enables detailed execution tracing for debugging framework behavior.
+- **CLI mindforge bin entry** — Post-install accessible binary for direct invocation without `npx`.
+- **Structured action allowlist** — Replaces the regex-based prompt injection blocklist with an explicit allowlist of permitted autonomous actions.
+- **.npmignore** — Excludes runtime artifacts, test fixtures, planning state, and intelligence logs from the published package.
+- **Knowledge store O(1) index** — Hash-map index for stores exceeding 100 entries, eliminating linear scans.
+- **SSE idle detection** — Dashboard polling pauses when no clients are connected, reducing CPU and I/O overhead.
+- **Metrics TTL cache** — 5-second time-to-live cache prevents redundant metrics recomputation on rapid dashboard refreshes.
+- **Smart mtime-based polling** — File watchers skip re-reads when mtime has not changed since last poll cycle.
 - **NON-OVERRIDABLE governance** — Added non-overridable parameter section to MINDFORGE.md for security-critical settings.
 - **HANDOFF schema alignment** — Unified HANDOFF.json to v1.0.0 schema with all required fields.
 
 ### Changed (v10.0.0)
 
+- **VectorHub: sql.js (WASM) replaces better-sqlite3 (native C++)** — Eliminates native compilation, node-gyp, and platform-specific build failures. Zero native dependencies.
+- **VectorHub: lazy Proxy + factory pattern** — Database connection is deferred until first query. Callers use `createVectorHub()` factory instead of direct constructor.
+- **VectorHub: WAL mode + FTS4** — Write-Ahead Logging for concurrent reads; FTS4 replaces FTS5 for sql.js compatibility.
+- **VectorHub: parameterized queries throughout** — All user-influenced values use bound parameters, closing SQL injection vectors.
+- **Auto-runner decomposition** — Reduced from 672 lines to 367 lines by extracting 4 focused modules (task-dispatcher, wave-executor, state-manager, audit-writer).
+- **NexusTracer async migration** — Moved from synchronous file appends to non-blocking writes with back-pressure handling.
+- **PolicyEngine async migration** — Governance evaluation no longer blocks the event loop during high-throughput wave execution.
+- **SDK memory.ts rewrite** — Now self-contained with no imports from `../../bin/`. Independently publishable.
+- **SDK exports field** — Package.json `exports` map enables tree-shaking and prevents deep import of internal modules.
+- **SDK files field** — Only ships compiled output and type declarations; source maps excluded from production.
+- **Real validateConfig() implementation** — Validates 5 required fields with type checking and schema enforcement (replaces no-op stub).
+- **Lazy module loading in auto-runner** — 12 heavy `require()` calls deferred to first-use, cutting cold-start time.
+- **Package size reduction** — From 3.9 MB / 866 files to 1.1 MB / 245 files (72% smaller).
+- **CI workflow** — Node 18/20/22 matrix, `npm ci`, npm caching, c8 coverage at 30% threshold.
 - **Model topology assertions** — Updated test expectations to match Claude 4.x and Gemini 2.5 model family.
 - **Skills MANIFEST** — Updated manifest to register all 10 core skills with proper paths and schema version.
+- **README rewritten** — Clear value proposition, quick-start, and architecture overview at the top.
+- **All docs version-stamped** — References updated to v10.0.0 throughout.
+- **SDK reference documentation** — Expanded from 28 lines to 230+ lines with full API surface coverage.
+
+### Fixed (v10.0.0)
+
+- **CRITICAL: Hardcoded npm token removed** — `NPM_TOKEN` was embedded in CI config; now sourced exclusively from environment variables with startup validation.
+- **CRITICAL: ZK-proof governance bypass closed** — `verifyZKProof()` previously returned `true` unconditionally; now throws `GovernanceViolationError` with fail-closed semantics.
+- **CRITICAL: Path traversal in temporal API** — `auditId` parameter accepted `../` sequences; now validated with regex allowlist and directory containment check.
+- **CRITICAL: Command injection in change-classifier** — Shell-interpreted user input replaced with argument-array invocation, eliminating shell interpretation.
+- **Runtime crash in learning-manager.js** — Null reference on empty knowledge store; added defensive initialization.
+- **4 broken test files** — Fixed `nexus-tracing.test.js`, `model-broker.test.js`, `feedback-loop.test.js`, and `security-audit.test.js` (stale mocks, missing fixtures, async race conditions).
+- **Observability workflow trigger** — Workflow `name:` field now matches the `workflow_run.workflows` reference in dependent jobs.
+- **Duplicate release-plane.yml** — Removed conflicting workflow file that caused CI confusion.
+
+### Removed (v10.0.0)
+
+- **better-sqlite3 dependency** — Native C++ addon removed in favor of sql.js (pure WASM). Eliminates `node-gyp`, Python, and platform-specific build toolchains.
+- **Dead CLI routes** — `sync-jira` and `sync-confluence` commands removed (integration stubs with no implementation).
+- **Duplicate release workflow** — `release-plane.yml` deleted; single `release.yml` is the canonical publish pipeline.
+- **Regex-based prompt injection blocklist** — Replaced by structured action allowlist (fewer false positives, auditable).
 
 ---
 
