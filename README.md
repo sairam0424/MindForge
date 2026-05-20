@@ -1,4 +1,10 @@
-# MindForge v9.0.0 — Bedrock Meridian (Grounded Execution)
+# MindForge
+
+**An agentic intelligence framework for Claude Code** — orchestrates multi-agent workflows with governance, memory, and autonomous execution. Install once, get structured AI-driven development with built-in quality gates.
+
+---
+
+## v9.0.0 — Bedrock Meridian (Grounded Execution)
 
 MindForge v9.0.0 "Bedrock Meridian" grounds previously-stub implementations into real, auditable execution. This release introduces grounded wave dispatch via HANDOFF.json, consolidates all memory stores into a single SQLite database, modernizes the model topology to the Claude 4.x family, and adds a 27-assertion integration test chain — completing the transition from framework scaffolding to production-verified infrastructure (Pillars XXIV-XXVIII).
 

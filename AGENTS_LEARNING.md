@@ -86,3 +86,28 @@ This document captures the cumulative technical intelligence of AI agents operat
 **Document Status:** Initialized
 **Root Identity:** `did:mindforge:enclave:0xenterprise`
 **Last Verified:** 2026-04-25
+
+### [Learning Entry - 2026-05-20T18:07:41.531Z]
+
+**Context:**
+CLI Manual Test
+
+**Mistake:**
+None (Best Practice Discovery)
+
+**Root Cause:**
+N/A
+
+**Fix:**
+N/A
+
+**Prevention Rule:**
+No specific rule defined.
+
+**Category:**
+- Architecture
+
+---
+**Document Status:** Updated
+**Root Identity:** `did:mindforge:enclave:0xenterprise`
+**Last Verified:** 2026-05-20

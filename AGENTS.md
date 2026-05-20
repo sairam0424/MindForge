@@ -11,7 +11,7 @@ Key directories:
 - `agents/` — Specialist agent personas (reviewer, planner, executor, researcher, memory, tool), each with identity protocols.
 - `.mindforge/` — Framework internals: intelligence mesh, skills, personas, governance, dashboard, audit, engine configs.
 - `.planning/` — Project state management (STATE.md, phase plans, audit trails).
-- `.agent/` — Claude Code hooks and session settings. Hooks run on SessionStart, BeforeTool (Write/Edit), and AfterTool.
+- `.agent/` — Agent orchestration layer: hooks (SessionStart, BeforeTool, AfterTool), workflows, skills, forge tools, and session settings.
 
 ## Build, Test, and Development Commands
 
