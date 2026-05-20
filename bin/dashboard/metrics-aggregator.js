@@ -8,6 +8,24 @@
 const fs   = require('fs');
 const path = require('path');
 
+// ── TTL Cache (5-second window) ──────────────────────────────────────────────
+const _cache = new Map();
+const CACHE_TTL_MS = 5000;
+
+function cacheGet(key) {
+  const entry = _cache.get(key);
+  if (!entry) return undefined;
+  if (Date.now() - entry.timestamp >= CACHE_TTL_MS) {
+    _cache.delete(key);
+    return undefined;
+  }
+  return entry.data;
+}
+
+function cacheSet(key, data) {
+  _cache.set(key, { data, timestamp: Date.now() });
+}
+
 // Paths are resolved lazily to support testing in temp directories
 const getPaths = () => ({
   quality:   path.join(process.cwd(), '.mindforge', 'metrics', 'session-quality.jsonl'),
@@ -70,6 +88,10 @@ function getStatus() {
 
 // ── Audit ─────────────────────────────────────────────────────────────────────
 function getAuditEntries(limit = 50, offset = 0, eventFilter = null) {
+  const cacheKey = `audit:${limit}:${offset}:${eventFilter || ''}`;
+  const cached = cacheGet(cacheKey);
+  if (cached !== undefined) return cached;
+
   const paths = getPaths();
   const all   = readJSONL(paths.audit, 1000);
   const reversed = all.reverse(); // Newest first
@@ -78,16 +100,22 @@ function getAuditEntries(limit = 50, offset = 0, eventFilter = null) {
     ? reversed.filter(e => e.event === eventFilter)
     : reversed;
 
-  return {
+  const result = {
     entries: filtered.slice(offset, offset + limit),
     total:   filtered.length,
     limit,
     offset,
   };
+
+  cacheSet(cacheKey, result);
+  return result;
 }
 
 // ── Metrics ───────────────────────────────────────────────────────────────────
 function getMetrics() {
+  const cached = cacheGet('metrics');
+  if (cached !== undefined) return cached;
+
   const paths          = getPaths();
   const qualityEntries = readJSONL(paths.quality, 20);
   const usageEntries   = readJSONL(paths.usage, 200);
@@ -123,7 +151,7 @@ function getMetrics() {
   const node_repair_rate = taskEvents.length
     ? repairEvents.length / taskEvents.length : 0;
 
-  return {
+  const result = {
     sessions,
     avg_quality:        Math.round(avg_quality * 100) / 100,
     avg_cost_usd:       Math.round(avg_cost_usd * 10000) / 10000,
@@ -131,6 +159,9 @@ function getMetrics() {
     node_repair_rate:   Math.round(node_repair_rate * 100) / 100,
     total_tasks:        taskEvents.filter(e => e.event === 'task_completed').length,
   };
+
+  cacheSet('metrics', result);
+  return result;
 }
 
 // ── Approvals ─────────────────────────────────────────────────────────────────
@@ -168,6 +199,9 @@ function getApprovals() {
 
 // ── Team activity ─────────────────────────────────────────────────────────────
 function getTeamActivity() {
+  const cached = cacheGet('teamActivity');
+  if (cached !== undefined) return cached;
+
   const paths        = getPaths();
   const auditEntries = readJSONL(paths.audit, 200);
 
@@ -197,7 +231,9 @@ function getTeamActivity() {
   // Conflict detection — two authors recently touching same file
   const conflicts = detectFileConflicts(auditEntries);
 
-  return { active, conflicts };
+  const result = { active, conflicts };
+  cacheSet('teamActivity', result);
+  return result;
 }
 
 function detectFileConflicts(auditEntries) {
@@ -249,6 +285,10 @@ function getMemory(query = '', limit = 20) {
 
 // ── Costs ─────────────────────────────────────────────────────────────────────
 function getCosts(windowDays = 7) {
+  const cacheKey = `costs:${windowDays}`;
+  const cached = cacheGet(cacheKey);
+  if (cached !== undefined) return cached;
+
   const paths      = getPaths();
   const entries    = readJSONL(paths.usage, 1000);
   const cutoff     = new Date(Date.now() - windowDays * 86_400_000).toISOString().slice(0, 10);
@@ -282,6 +322,7 @@ function getCosts(windowDays = 7) {
     stats.by_model[m] = Math.round(stats.by_model[m] * 100) / 100;
   }
 
+  cacheSet(cacheKey, stats);
   return stats;
 }
 
