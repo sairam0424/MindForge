@@ -123,11 +123,66 @@ export class MindForgeClient extends EventEmitter {
 
   // ── Config validation ──────────────────────────────────────────────────────
   validateConfig(): { valid: boolean; errors: string[]; warnings: string[] } {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
     const configPath = path.join(this.projectRoot, 'MINDFORGE.md');
     if (!fs.existsSync(configPath)) {
-      return { valid: true, errors: [], warnings: ['MINDFORGE.md not found — using defaults'] };
+      return { valid: false, errors: ['MINDFORGE.md not found at project root'], warnings: [] };
     }
-    return { valid: true, errors: [], warnings: [] };
+
+    const content = fs.readFileSync(configPath, 'utf8');
+
+    // Required fields that must be present in a valid MINDFORGE.md
+    const requiredFields = [
+      { key: 'VERSION', pattern: /\[VERSION\]\s*=\s*.+/ },
+      { key: 'REACTIVE_MODE', pattern: /\[REACTIVE_MODE\]\s*=\s*.+/ },
+      { key: 'PLANNER', pattern: /\[PLANNER\]\s*=\s*.+/ },
+      { key: 'EXECUTOR', pattern: /\[EXECUTOR\]\s*=\s*.+/ },
+      { key: 'MIN_SOUL_SCORE', pattern: /\[MIN_SOUL_SCORE\]\s*=\s*.+/ },
+    ];
+
+    for (const field of requiredFields) {
+      if (!field.pattern.test(content)) {
+        errors.push(`Missing required field: [${field.key}]`);
+      }
+    }
+
+    // Recommended fields — warn if missing
+    const recommendedFields = [
+      { key: 'COST_WARN_USD', pattern: /\[COST_WARN_USD\]\s*=\s*.+/ },
+      { key: 'COST_HARD_LIMIT_USD', pattern: /\[COST_HARD_LIMIT_USD\]\s*=\s*.+/ },
+      { key: 'BLOCK_ON_SECURITY', pattern: /\[BLOCK_ON_SECURITY\]\s*=\s*.+/ },
+    ];
+
+    for (const field of recommendedFields) {
+      if (!field.pattern.test(content)) {
+        warnings.push(`Recommended field missing: [${field.key}]`);
+      }
+    }
+
+    // Schema-based validation if schema file exists
+    const schemaPath = path.join(this.projectRoot, '.mindforge', 'MINDFORGE-SCHEMA.json');
+    if (fs.existsSync(schemaPath)) {
+      try {
+        const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
+        const nonOverridableKeys = Object.entries(schema.properties ?? {})
+          .filter(([, def]: [string, unknown]) => (def as Record<string, unknown>).nonOverridable === true)
+          .map(([key]) => key);
+
+        for (const key of nonOverridableKeys) {
+          // Non-overridable fields must not be set to false
+          const disabledPattern = new RegExp(`\\[${key}\\]\\s*=\\s*false`, 'i');
+          if (disabledPattern.test(content)) {
+            errors.push(`Non-overridable field [${key}] cannot be disabled`);
+          }
+        }
+      } catch {
+        warnings.push('MINDFORGE-SCHEMA.json exists but could not be parsed');
+      }
+    }
+
+    return { valid: errors.length === 0, errors, warnings };
   }
 
   // ── v9 Pillar XXIV: Wave execution status ─────────────────────────────────
