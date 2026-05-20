@@ -318,8 +318,8 @@ class VectorHub {
       params.push(opts.since);
     }
 
-    sqlText += ' ORDER BY timestamp DESC';
-    sqlText += ` LIMIT ${opts.limit || 100}`;
+    sqlText += ' ORDER BY timestamp DESC LIMIT ?';
+    params.push(Math.min(Math.max(parseInt(opts.limit) || 100, 1), 1000));
 
     return this.query(sqlText, params);
   }
@@ -468,10 +468,19 @@ async function createVectorHub(dbPath) {
   return hub;
 }
 
-// ── Singleton Export (backward compatible) ──────────────────────────────────
+// Lazy singleton — not instantiated until first method call
+let _instance = null;
+const lazyHub = new Proxy({}, {
+  get(_, prop) {
+    if (prop === 'VectorHub') return VectorHub;
+    if (prop === 'createVectorHub') return createVectorHub;
+    if (!_instance) _instance = new VectorHub();
+    return typeof _instance[prop] === 'function'
+      ? _instance[prop].bind(_instance)
+      : _instance[prop];
+  }
+});
 
-const singleton = new VectorHub();
-
-module.exports = singleton;
+module.exports = lazyHub;
 module.exports.VectorHub = VectorHub;
 module.exports.createVectorHub = createVectorHub;

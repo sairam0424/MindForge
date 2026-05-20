@@ -14,7 +14,7 @@ import {
 } from '@mindforge/sdk';
 ```
 
-Current SDK version: `9.0.0`
+Current SDK version: `10.0.0`
 
 ---
 
