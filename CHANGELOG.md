@@ -1,5 +1,18 @@
 # Changelog
 
+## [10.0.1] - 2026-05-24 — "Persona Expansion"
+
+### Added (v10.0.1)
+
+- **47 new specialist personas** — Security & Compliance (6), Architecture & System Design (8), Frontend & UX (10), Performance & Reliability (5), Data & ML (4), DevOps & Infrastructure (6), Language Specialists (5), DX & Operations (8), Strategy & Review (9), Specialized Engineering (10).
+- **6 new swarm templates** — ArchitectureSwarm, PerformanceSwarm, InfrastructureSwarm, AccessibilitySwarm, ReviewSwarm, MigrationSwarm.
+- **Updated existing swarms** — UISwarm, BackendSwarm, SecuritySwarm, DeveloperExperienceSwarm, DataMeshSwarm, IncidentResponseSwarm, ComplianceSwarm, QualityAssuranceSwarm now include relevant new specialist personas.
+- **Swarm templates v5.0.0** — Bump from 4.2.0 with expanded member rosters and new specialist orchestration patterns.
+- **Persona registry documentation** — 10 new category tables in `docs/registry/PERSONAS.md`.
+- **Persona reference guide** — Updated `docs/PERSONAS.md` with all 47 entries (total: 79 personas).
+
+---
+
 ## [10.0.0] - 2026-05-21 — "Bedrock Fortified"
 
 ### Added (v10.0.0)

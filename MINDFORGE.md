@@ -1,12 +1,12 @@
-# MINDFORGE.md — Parameter Registry (v10.0.0)
+# MINDFORGE.md — Parameter Registry (v10.0.1)
 
 ## 1. IDENTITY & VERSIONING
 
 [NAME]    = MindForge
-[VERSION] = 10.0.0-BEDROCK
+[VERSION] = 10.0.1-BEDROCK
 [STABLE]  = true
 [MODE]    = \"Bedrock Fortified\"
-[REQUIRED_CORE_VERSION] = 10.0.0
+[REQUIRED_CORE_VERSION] = 10.0.1
 [SOVEREIGN_IDENTITY] = true
 [SRE_LAYER_ENABLED]  = true
 
