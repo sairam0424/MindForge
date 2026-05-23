@@ -44,7 +44,7 @@ We follow responsible disclosure practices. We will credit reporters in the rele
 
 ---
 
-## Security Features (v10.0.0)
+## Security Features (v10.0.1)
 
 ### Authentication & Authorization
 
