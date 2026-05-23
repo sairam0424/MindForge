@@ -9,7 +9,7 @@
 - **Updated existing swarms** — UISwarm, BackendSwarm, SecuritySwarm, DeveloperExperienceSwarm, DataMeshSwarm, IncidentResponseSwarm, ComplianceSwarm, QualityAssuranceSwarm now include relevant new specialist personas.
 - **Swarm templates v5.0.0** — Bump from 4.2.0 with expanded member rosters and new specialist orchestration patterns.
 - **Persona registry documentation** — 10 new category tables in `docs/registry/PERSONAS.md`.
-- **Persona reference guide** — Updated `docs/PERSONAS.md` with all 47 entries (total: 79 personas).
+- **Persona reference guide** — Updated `docs/PERSONAS.md` with all 47 entries (total: 108 personas).
 
 ---
 

@@ -1,6 +1,6 @@
 # MindForge 5-Layer Plane Architecture (CI/CD)
 
-MindForge v10.0.0 uses a sophisticated Control + Execution Plane architecture for its GitHub Actions, ensuring enterprise-grade governance and autonomous execution capabilities.
+MindForge v10.0.1 uses a sophisticated Control + Execution Plane architecture for its GitHub Actions, ensuring enterprise-grade governance and autonomous execution capabilities.
 
 ## 🏗️ The 5 Planes
 
@@ -70,8 +70,8 @@ If a PR touches sensitive components (Auth, Payments, Security):
 Releases are triggered by pushing a semver tag:
 
 ```bash
-git tag v10.0.0
-git push origin v10.0.0
+git tag v10.0.1
+git push origin v10.0.1
 ```
 
 This will automatically:

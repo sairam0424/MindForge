@@ -1,4 +1,4 @@
-# MindForge Troubleshooting (v10.0.0)
+# MindForge Troubleshooting (v10.0.1)
 
 This page lists common issues and fast fixes. If you get stuck, start with
 `/mindforge:health`.
@@ -54,14 +54,14 @@ npx mindforge-cc@latest --claude --local --force
 ```
 Then run:
 ```
-/mindforge:migrate --from v9.0.0 --to v10.0.0
+/mindforge:migrate --from v9.0.0 --to v10.0.1
 ```
 
 ### Schema mismatch warning on startup
 **Fix:**
 ```
 /mindforge:migrate --dry-run
-/mindforge:migrate --from vX.Y.Z --to v10.0.0
+/mindforge:migrate --from vX.Y.Z --to v10.0.1
 ```
 
 ### AUDIT.jsonl parse errors

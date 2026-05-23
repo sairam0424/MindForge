@@ -1,4 +1,4 @@
-# MindForge User Guide (v10.0.0)
+# MindForge User Guide (v10.0.1)
 
 This guide gets you from install to productive, with the minimum needed to run MindForge in a real project.
 
@@ -95,7 +95,7 @@ MindForge uses a unified 4-pillar workflow, hardened by the **Neural Protocol Me
 
 ## 6. High-Performance Personas
 
-MindForge features 46+ specialized personas. Each persona is optimized for a specific stage of the lifecycle.
+MindForge features 108 specialized personas. Each persona is optimized for a specific stage of the lifecycle.
 
 - **Neural Orchestrator**: Activates and manages the advanced protocol layer.
 - **Brainstormer**: Expert in deep requirements discovery and behavioral ideation.
@@ -136,7 +136,7 @@ Observe your agent waves, token spend, and milestone progress in real-time.
 
 The dashboard provides a premium web interface at `http://localhost:7339`.
 
-> **Authentication (v10.0.0+):** The dashboard now requires a bearer token for access. The token is printed to the console at startup. Pass it in the `Authorization` header or use the login prompt in the browser UI.
+> **Authentication (v10.0.1+):** The dashboard now requires a bearer token for access. The token is printed to the console at startup. Pass it in the `Authorization` header or use the login prompt in the browser UI.
 
 ---
 
