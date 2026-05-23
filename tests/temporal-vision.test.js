@@ -25,7 +25,7 @@ async function runTests() {
     console.log('✅ Created test file in .planning');
 
     // 2. Capture state
-    const auditId = 'test-audit-001';
+    const auditId = 'a0b1c2d3-e4f5-6789-abcd-ef0123456789';
     const snapshotDir = TemporalHub.captureState(auditId, { task: 'Verification Test' });
     assert(fs.existsSync(snapshotDir), 'Snapshot directory should exist');
     assert(fs.existsSync(path.join(snapshotDir, 'TEMPORAL-TEST.md')), 'Snapshot file should exist');

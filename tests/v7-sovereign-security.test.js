@@ -36,7 +36,7 @@ async function testPQAS() {
   pe.matches = () => true;
   pe.loadPolicies = () => [{ id: 'test_policy', effect: 'PERMIT', max_impact: 80 }];
   
-  const verdict = pe.evaluate(intent);
+  const verdict = await pe.evaluate(intent);
   console.log(`✅ Policy Evaluation returned: ${verdict.verdict} (${verdict.reason})`);
   assert.strictEqual(verdict.verdict, 'PERMIT', 'ZK-Proof bypass should result in PERMIT if verified');
 
@@ -47,7 +47,7 @@ async function testPQAS() {
   ImpactAnalyzer.analyze = () => 98; // Force critical risk
   
   const highRiskIntent = { id: 'intent_v7_002', tier: 3, action: 'CRITICAL_MUTATION' };
-  const biometricVerdict = pe.evaluate(highRiskIntent);
+  const biometricVerdict = await pe.evaluate(highRiskIntent);
   
   assert.strictEqual(biometricVerdict.status, 'WAIT_FOR_BIOMETRIC', 'Biometric challenge did not trigger for risk > 95');
   console.log('✅ Biometric challenge successfully triggered for Risk=98.');

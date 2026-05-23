@@ -117,8 +117,6 @@ Connecting MindForge to enterprise systems and keeping the framework hardened.
 
 | Command | Description |
 | :--- | :--- |
-| `/mindforge:sync-jira` | Synchronizes MindForge milestones and tasks with Jira tickets and status transitions. |
-| `/mindforge:sync-confluence` | Exports architectural decisions and project documentation to Confluence spaces. |
 | `/mindforge:approve [event]` | Issues a manual Tier 3 cryptographic signature for a sensitive or high-risk operation. |
 | `/mindforge:health` | Runs comprehensive framework diagnostics across 7 categories with auto-repair loops. |
 | `/mindforge:update` | Checks for, diffs, and applies MindForge framework updates in a safe, scope-preserving way. |
@@ -141,4 +139,42 @@ High-fidelity behaviors ported from the Superpowers library and hardened for pro
 | `/mindforge:debug` | Systematic debugging using persistent state tracking and Root Cause Analysis. |
 | `/mindforge:verify-work` | Multi-level truth verification protocol (substance, existence, wiring). |
 | `/mindforge:retrospective` | Facilitates structured team retrospectives with objective telemetry and metrics. |
+
+---
+
+## 11. CLI Commands (`mindforge` binary)
+
+After installation, the `mindforge` binary provides direct access to runtime operations. Use `--verbose` (`-v`) on any command for detailed output.
+
+```bash
+mindforge <command> [options]
+```
+
+| Command | Description |
+| :--- | :--- |
+| `security-scan` | Validate configuration and run security checks |
+| `health` | Verify project health and installation integrity |
+| `headless` | Run MindForge agent in headless (non-interactive) mode |
+| `pr-review` | Run standard PR review logic |
+| `cross-review` | Run advanced cross-model architecture review |
+| `classify` | Classify changes into governance tiers |
+| `approve` | Generate a governance approval signature to unblock Tier 3 gates |
+| `validate-skill` | Run Level 1 & 2 validation on a SKILL.md file |
+| `install-skill` | Install a skill to the correct tier folder |
+| `register-skill` | Register a skill in MANIFEST.md |
+| `audit-skill` | Record skill life cycle events in audit log |
+| `remember` | Manage the long-term memory (knowledge graph) |
+| `learn-skill` | Ingest source and generate a validated SKILL.md |
+| `marketplace` | Search and install community skills |
+| `spawn` | Spawn a persona essence (e.g., mf-planner) |
+| `identity` | Invoke a specialized identity from /agents/ |
+| `temporal` | Manage time-travel debugging and state history |
+| `hindsight` | Inject a fix into a past point and regenerate state |
+| `harvest` | Proactively harvest semantic intent from the intelligence mesh |
+| `self-heal` | Auto-detect and repair reasoning drifts in the active swarm |
+| `quantum-verify` | Verify framework integrity using post-quantum signatures |
+| `metrics` | Display real-time velocity and quality metrics |
+| `tokens` | Analyze token consumption and cost efficiency |
+| `learning` | Consult or initialize the project agentic learning memory |
+| `record-learning` | Append a new Learning Entry to the Evolution Log |
 

@@ -8,7 +8,7 @@ const vectorHub = require('../memory/vector-hub');
  */
 async function runMigration() {
   console.log('[MIGRATION] Starting MindForge v8 (Celestial) SQLite migration...');
-  
+
   await vectorHub.init();
 
   // 1. Migrate Remediation Queue
@@ -18,17 +18,18 @@ async function runMigration() {
       const data = JSON.parse(fs.readFileSync(remPath, 'utf8'));
       console.log(`[MIGRATION] Migrating ${data.length} remediations...`);
       for (const rem of data) {
-        await vectorHub.db.insertInto('remediations')
-          .values({
-            id: rem.remediation_id,
-            trace_id: rem.span_id, // Mapping span_id to trace_id for legacy compatibility
-            strategy: rem.strategy,
-            status: rem.status,
-            timestamp: rem.timestamp || new Date().toISOString(),
-            outcome: rem.status === 'SUCCESS' ? 'Legacy Success' : null
-          })
-          .onConflict(oc => oc.column('id').doNothing())
-          .execute();
+        vectorHub.run(
+          `INSERT OR IGNORE INTO remediations (id, trace_id, strategy, status, timestamp, outcome)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [
+            rem.remediation_id,
+            rem.span_id,
+            rem.strategy,
+            rem.status,
+            rem.timestamp || new Date().toISOString(),
+            rem.status === 'SUCCESS' ? 'Legacy Success' : null
+          ]
+        );
       }
     } catch (err) {
       console.warn(`[MIGRATION] Failed to migrate remediations: ${err.message}`);
@@ -41,7 +42,7 @@ async function runMigration() {
     try {
       const lines = fs.readFileSync(auditPath, 'utf8').split('\n').filter(Boolean);
       console.log(`[MIGRATION] Migrating ${lines.length} audit trace lines...`);
-      
+
       for (const line of lines) {
         const entry = JSON.parse(line);
         if (entry.event === 'reasoning_trace' || entry.event === 'drift_remediation_event') {
@@ -64,15 +65,15 @@ async function runMigration() {
   }
 
   // 3. Set Mesh Node Identity
-  await vectorHub.db.insertInto('mesh_config')
-    .values({ key: 'mesh_node_id', value: `mindforge-node-${Math.random().toString(36).substr(2, 6)}` })
-    .onConflict(oc => oc.column('key').doNothing())
-    .execute();
+  vectorHub.run(
+    'INSERT OR IGNORE INTO mesh_config (key, value) VALUES (?, ?)',
+    ['mesh_node_id', `mindforge-node-${Math.random().toString(36).substr(2, 6)}`]
+  );
 
-  await vectorHub.db.insertInto('mesh_config')
-    .values({ key: 'v8_migration_complete', value: new Date().toISOString() })
-    .onConflict(oc => oc.column('key').doNothing())
-    .execute();
+  vectorHub.run(
+    'INSERT OR IGNORE INTO mesh_config (key, value) VALUES (?, ?)',
+    ['v8_migration_complete', new Date().toISOString()]
+  );
 
   console.log('[MIGRATION] MindForge v8 Migration Successful.');
   await vectorHub.close();

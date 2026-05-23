@@ -1,13 +1,25 @@
 {
   "name": "@mindforge/sdk",
-  "version": "9.0.0",
+  "version": "10.0.0",
   "description": "MindForge SDK \u2014 Programmatic API for embedding MindForge in tools",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": ["dist/", "README.md"],
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "build": "tsc",
     "test": "node tests/sdk.test.js",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "prepublishOnly": "npm run build && npm test"
   },
   "keywords": [
     "mindforge",

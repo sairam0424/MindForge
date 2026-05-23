@@ -1,32 +1,50 @@
-# MindForge User Guide (v5.10.0)
+# MindForge User Guide (v10.0.0)
 
-This guide gets you from install to productive, with the minimum needed to run MindForge in a real project. It assumes Node.js 18+.
+This guide gets you from install to productive, with the minimum needed to run MindForge in a real project.
+
+## Prerequisites
+
+- **Node.js 18+** (LTS recommended)
+- No native build tools or compilation toolchain required (sql.js uses pure WASM)
 
 ## 1. Install
 
 ### Claude Code (global)
 
 ```bash
-npx mindforge-cc@latest --claude --global
+npx mindforge-cc --claude --global
 ```
 
 ### Claude Code (local, per project)
 
 ```bash
-npx mindforge-cc@latest --claude --local
+npx mindforge-cc --claude --local
 ```
 
 ### Antigravity
 
 ```bash
-npx mindforge-cc@latest --antigravity --local
+npx mindforge-cc --antigravity --local
 ```
 
 ### Specific Runtime (Universal)
 
 ```bash
-npx mindforge-cc@latest --runtime <name>
+npx mindforge-cc --runtime <name>
 ```
+
+### Post-Install: The `mindforge` CLI
+
+After installation, the `mindforge` binary is available for runtime commands:
+
+```bash
+mindforge health          # Verify project integrity
+mindforge security-scan   # Run security checks
+mindforge headless        # Run agent in non-interactive mode
+mindforge --verbose ...   # Enable verbose output for debugging
+```
+
+Use `--verbose` (or `-v`) on any command for detailed diagnostic output.
 
 ---
 
@@ -64,7 +82,7 @@ This analyzes your code, generating `.planning/ARCHITECTURE.md` and inferred dev
 
 ## 5. Unified Workflow (Enabled by Protocol Mesh)
 
-MindForge v5.1.0 uses a unified 4-pillar workflow, now hardened by the **Neural Protocol Mesh**. Every core command automatically activates **Protocol Step 0** for maximum tactical rigor.
+MindForge uses a unified 4-pillar workflow, hardened by the **Neural Protocol Mesh**. Every core command automatically activates **Protocol Step 0** for maximum tactical rigor.
 
 ```bash
 /mindforge:plan-phase [N]     # discuss → research → plan (Step 0: brainstorming)
@@ -77,7 +95,7 @@ MindForge v5.1.0 uses a unified 4-pillar workflow, now hardened by the **Neural 
 
 ## 6. High-Performance Personas
 
-MindForge v5.1.0 features 46+ specialized personas. Each persona is optimized for a specific stage of the lifecycle.
+MindForge features 46+ specialized personas. Each persona is optimized for a specific stage of the lifecycle.
 
 - **Neural Orchestrator**: Activates and manages the advanced protocol layer.
 - **Brainstormer**: Expert in deep requirements discovery and behavioral ideation.
@@ -118,6 +136,8 @@ Observe your agent waves, token spend, and milestone progress in real-time.
 
 The dashboard provides a premium web interface at `http://localhost:7339`.
 
+> **Authentication (v10.0.0+):** The dashboard now requires a bearer token for access. The token is printed to the console at startup. Pass it in the `Authorization` header or use the login prompt in the browser UI.
+
 ---
 
 ## 9. Persistent Knowledge & Memory
@@ -153,9 +173,9 @@ MindForge features automated PR creation and commit management.
 
 ---
 
-## 12. Enterprise Resilience & Governance (v5.1.0)
+## 12. Enterprise Resilience & Governance
 
-MindForge v5.1.0 introduces mission-critical resilience and sovereign reasoning for enterprise engineering.
+MindForge provides mission-critical resilience and sovereign reasoning for enterprise engineering.
 
 ### Multi-Cloud Arbitrage
 MindForge automatically hedges against provider outages and optimizes for cost/latency.
@@ -216,7 +236,7 @@ Keep your framework current with the latest personas and library updates:
 
 ## 16. Mastering the Nexus: Temporal Steering
 
-MindForge v5.10.0 allows you to "time-travel" through your agent's reasoning.
+MindForge allows you to "time-travel" through your agent's reasoning.
 
 1.  **Launch the Dashboard**: `/mindforge:dashboard --start --open`
 2.  **Navigate to 'Temporal'**: Use the horizontal slider to scrub through reasoning snapshots.

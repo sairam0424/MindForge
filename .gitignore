@@ -42,7 +42,21 @@ ROADMAP_V7.md
 
 .mindforge/*.db
 .mindforge/memory/sync-manifest.json
+# Runtime auth tokens (generated at server startup, never commit)
+.mindforge/.dashboard-token
+.mindforge/.browser-daemon-token
 *.mfb
 .npm-cache/
 
 .npmrc
+
+# Runtime-generated artifacts (produced by tests and execution)
+.planning/AUDIT.jsonl
+.planning/ROI.jsonl
+.planning/TEST_AUDIT.jsonl
+.planning/decisions/SRE-*.md
+.planning/decisions/ADR-*.md
+.planning/memories/
+.mindforge/audit/AUDIT.jsonl
+.mindforge/audit/manifests/
+.mindforge/metrics/token-usage.jsonl

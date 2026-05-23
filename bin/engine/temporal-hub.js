@@ -23,9 +23,15 @@ class TemporalHub {
    * @param {object} metadata - Optional context (task_name, session_id)
    */
   static captureState(auditId, metadata = {}) {
+    if (!/^[a-f0-9-]{8,40}$/.test(auditId)) {
+      throw new Error('Invalid audit ID format');
+    }
     if (!fs.existsSync(PLANNING_DIR)) return null;
-    
+
     const snapshotDir = path.join(HISTORY_DIR, auditId);
+    if (!path.resolve(snapshotDir).startsWith(path.resolve(HISTORY_DIR))) {
+      throw new Error('Path traversal detected in audit ID');
+    }
     if (!fs.existsSync(snapshotDir)) {
       fs.mkdirSync(snapshotDir, { recursive: true });
     }
@@ -69,7 +75,13 @@ class TemporalHub {
    * @param {string} auditId 
    */
   static rollbackTo(auditId) {
+    if (!/^[a-f0-9-]{8,40}$/.test(auditId)) {
+      throw new Error('Invalid audit ID format');
+    }
     const snapshotDir = path.join(HISTORY_DIR, auditId);
+    if (!path.resolve(snapshotDir).startsWith(path.resolve(HISTORY_DIR))) {
+      throw new Error('Path traversal detected in audit ID');
+    }
     if (!fs.existsSync(snapshotDir)) {
       throw new Error(`Snapshot ${auditId} not found in history.`);
     }
@@ -116,7 +128,13 @@ class TemporalHub {
    * Read a file from a specific historical snapshot.
    */
   static getSnapshotFile(auditId, filePath) {
+    if (!/^[a-f0-9-]{8,40}$/.test(auditId)) {
+      throw new Error('Invalid audit ID format');
+    }
     const snapPath = path.join(HISTORY_DIR, auditId, path.basename(filePath));
+    if (!path.resolve(snapPath).startsWith(path.resolve(HISTORY_DIR))) {
+      throw new Error('Path traversal detected in audit ID');
+    }
     if (fs.existsSync(snapPath)) {
       return fs.readFileSync(snapPath, 'utf8');
     }
@@ -127,7 +145,13 @@ class TemporalHub {
    * Capture terminal output for a command and associate with audit point.
    */
   static captureTerminal(auditId, stdout, stderr) {
+    if (!/^[a-f0-9-]{8,40}$/.test(auditId)) {
+      throw new Error('Invalid audit ID format');
+    }
     const logDir = path.join(HISTORY_DIR, auditId, 'logs');
+    if (!path.resolve(logDir).startsWith(path.resolve(HISTORY_DIR))) {
+      throw new Error('Path traversal detected in audit ID');
+    }
     if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
     
     if (stdout) fs.writeFileSync(path.join(logDir, 'stdout.log'), stdout);

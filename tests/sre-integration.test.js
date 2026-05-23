@@ -1,5 +1,6 @@
+// @skip: requires git worktree support and clean working tree
 /**
- * MindForge v9.0.0 — SRE Integration Test
+ * MindForge v10.0.0 — SRE Integration Test
  * Simulates a production breakdown and verifies autonomous self-healing.
  */
 'use strict';

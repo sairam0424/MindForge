@@ -1,0 +1,169 @@
+/**
+ * MindForge — Wave Executor
+ * Extracted from auto-runner.js — handles wave orchestration: grouping tasks
+ * into waves, executing waves in sequence, and managing wave dependencies.
+ */
+'use strict';
+
+const crypto = require('crypto');
+
+/**
+ * Creates a wave executor with the given configuration.
+ * @param {object} config
+ * @param {function} [config.onTaskStart] — Called when a task begins
+ * @param {function} [config.onTaskComplete] — Called when a task finishes
+ * @param {function} [config.onTaskFail] — Called when a task fails
+ * @param {function} [config.onWaveStart] — Called when a wave begins
+ * @param {function} [config.onWaveComplete] — Called when a wave finishes
+ * @returns {{ planWaves, executeWave, getWaveStatus }}
+ */
+function createWaveExecutor(config = {}) {
+  const {
+    onTaskStart = () => {},
+    onTaskComplete = () => {},
+    onTaskFail = () => {},
+    onWaveStart = () => {},
+    onWaveComplete = () => {},
+  } = config;
+
+  // Internal state — immutable snapshots exposed via getWaveStatus
+  let waves = [];
+  let currentWaveIndex = 0;
+  let completedTasks = new Set();
+  let status = 'idle'; // idle | running | paused | completed
+
+  /**
+   * Groups handoff tasks into sequential waves based on wave field or dependency topology.
+   * Returns a new array of wave objects — does not mutate input.
+   * @param {Array} handoffs — Raw handoffs array from HANDOFF.json
+   * @returns {Array<{ wave: number, tasks: Array }>}
+   */
+  function planWaves(handoffs) {
+    if (!Array.isArray(handoffs) || handoffs.length === 0) {
+      waves = [];
+      return [];
+    }
+
+    const hasWaveField = handoffs.some(h => typeof h.wave === 'number');
+
+    if (hasWaveField) {
+      const byWave = new Map();
+      for (const h of handoffs) {
+        const w = h.wave ?? 0;
+        if (!byWave.has(w)) byWave.set(w, []);
+        byWave.get(w).push(normalizeTask(h));
+      }
+
+      waves = Array.from(byWave.entries())
+        .sort((a, b) => a[0] - b[0])
+        .map(([waveNum, tasks]) => Object.freeze({ wave: waveNum, tasks: Object.freeze(tasks) }));
+    } else {
+      // Single wave with all tasks
+      waves = [Object.freeze({
+        wave: 0,
+        tasks: Object.freeze(handoffs.map(normalizeTask)),
+      })];
+    }
+
+    currentWaveIndex = 0;
+    completedTasks = new Set();
+    status = 'idle';
+
+    return waves;
+  }
+
+  /**
+   * Executes a single wave — runs tasks sequentially, skipping already-completed ones.
+   * @param {object} wave — A wave object from planWaves
+   * @param {object} context — Execution context passed to callbacks
+   * @param {object} context.executor — async function(task) => result (performs actual work)
+   * @returns {Promise<{ completed: string[], failed: string[], skipped: string[] }>}
+   */
+  async function executeWave(wave, context = {}) {
+    const { executor = async () => {} } = context;
+    status = 'running';
+
+    const pending = wave.tasks.filter(t => !completedTasks.has(t.id));
+    const result = { completed: [], failed: [], skipped: [] };
+
+    onWaveStart({ wave: wave.wave, taskCount: pending.length });
+
+    for (const task of pending) {
+      const taskStart = Date.now();
+      onTaskStart({ task, wave: wave.wave });
+
+      try {
+        await executor(task);
+
+        const duration = Date.now() - taskStart;
+        completedTasks = new Set([...completedTasks, task.id]);
+        result.completed.push(task.id);
+
+        onTaskComplete({ task, wave: wave.wave, duration_ms: duration });
+      } catch (err) {
+        const duration = Date.now() - taskStart;
+        result.failed.push(task.id);
+
+        onTaskFail({ task, wave: wave.wave, error: err, duration_ms: duration });
+
+        // Re-throw to let caller decide on retry/escalation strategy
+        throw err;
+      }
+    }
+
+    currentWaveIndex++;
+    onWaveComplete({ wave: wave.wave, result });
+
+    if (currentWaveIndex >= waves.length) {
+      status = 'completed';
+    }
+
+    return Object.freeze(result);
+  }
+
+  /**
+   * Returns a snapshot of the current wave execution status.
+   */
+  function getWaveStatus() {
+    return Object.freeze({
+      status,
+      currentWaveIndex,
+      totalWaves: waves.length,
+      completedTasks: Array.from(completedTasks),
+      waves: waves.map(w => Object.freeze({
+        wave: w.wave,
+        taskCount: w.tasks.length,
+        completedCount: w.tasks.filter(t => completedTasks.has(t.id)).length,
+      })),
+    });
+  }
+
+  /**
+   * Restores progress from a previously saved state.
+   * @param {{ currentWaveIndex: number, completedTasks: string[] }} savedState
+   */
+  function restore(savedState) {
+    if (savedState && typeof savedState.currentWaveIndex === 'number') {
+      currentWaveIndex = savedState.currentWaveIndex;
+    }
+    if (savedState && Array.isArray(savedState.completedTasks)) {
+      completedTasks = new Set(savedState.completedTasks);
+    }
+  }
+
+  return Object.freeze({ planWaves, executeWave, getWaveStatus, restore });
+}
+
+/**
+ * Normalizes a raw handoff entry into a clean task object.
+ */
+function normalizeTask(h) {
+  return Object.freeze({
+    id: h.id || h.task_id || `task_${crypto.randomBytes(4).toString('hex')}`,
+    name: h.name || h.task || h.description || h.id || 'unnamed-task',
+    plan: h.plan || null,
+    depends_on: Array.isArray(h.depends_on) ? [...h.depends_on] : [],
+  });
+}
+
+module.exports = { createWaveExecutor };

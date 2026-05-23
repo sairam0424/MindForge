@@ -38,8 +38,8 @@ class PolicyGateHardened {
     }
 
     // 2. Trigger Orbital Challenge
-    return { 
-      status: 'WAIT_FOR_ORBITAL', 
+    return {
+      status: 'WAIT_FOR_ORBITAL',
       reason: 'Hardware/Biometric attestation required for orbital-tier mutation',
       challenge_id: `orb_${Math.random().toString(36).substr(2, 6)}`,
       impact: impactScore

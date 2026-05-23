@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const CloudBroker = require('./cloud-broker');
 
 class ModelBroker {

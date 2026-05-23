@@ -2,24 +2,26 @@
 
 ## Project Structure & Module Organization
 
-MindForge is an agentic intelligence framework distributed as the `mindforge-cc` npm package. It has two package roots:
+MindForge v10.0.0 ("Bedrock Fortified") is an agentic intelligence framework distributed as the `mindforge-cc` npm package. It has two package roots:
 
-- **Root (`/`)** — The CLI + framework. Entry point: `bin/install.js`. Runtime scripts live under `bin/` (CLI, sharding, governance, autonomous engine, SRE, dashboard, etc.).
-- **`sdk/`** — A TypeScript SDK (`@mindforge/sdk`) with its own `tsconfig.json` and build step. Compiled output goes to `sdk/dist/`.
+- **Root (`/`)** — The CLI + framework. Two bin entries: `mindforge-cc` (installer via `bin/install.js`) and `mindforge` (CLI via `bin/mindforge-cli.js`). Runtime scripts live under `bin/` (CLI, sharding, governance, autonomous engine, SRE, dashboard, etc.).
+- **`sdk/`** — A TypeScript SDK (`@mindforge/sdk`) with its own `tsconfig.json` and build step. Compiled output goes to `sdk/dist/`. Has its own test suite (`cd sdk && npm test`).
 
 Key directories:
 - `agents/` — Specialist agent personas (reviewer, planner, executor, researcher, memory, tool), each with identity protocols.
+- `bin/utils/` — Shared utilities layer (errors, file-io, paths) used across all bin scripts.
 - `.mindforge/` — Framework internals: intelligence mesh, skills, personas, governance, dashboard, audit, engine configs.
 - `.planning/` — Project state management (STATE.md, phase plans, audit trails).
-- `.agent/` — Claude Code hooks and session settings. Hooks run on SessionStart, BeforeTool (Write/Edit), and AfterTool.
+- `.agent/` — Agent orchestration layer: hooks (SessionStart, BeforeTool, AfterTool), workflows, skills, forge tools, and session settings.
 
 ## Build, Test, and Development Commands
 
 ```bash
 # Root package
 npm install          # Install dependencies (Node >= 18 required)
-npm test             # Run core install/structural tests (pre-commit hook)
+npm test             # Unified test runner (tests/run-all.js) — pre-commit hook
 npm run lint         # ESLint across root
+npm run coverage     # c8 coverage via unified runner
 
 # SDK (run from sdk/)
 cd sdk && npm install
@@ -33,7 +35,12 @@ Run a single test file directly:
 node tests/install.test.js        # Core tests
 node tests/sharding.test.js       # Specific subsystem
 node tests/sdk.test.js            # SDK tests
+node tests/run-all.js             # Full unified runner
 ```
+
+### Database Layer
+
+The project uses **sql.js** (WebAssembly SQLite) for persistence — zero native dependencies, no compilation required. This replaced `better-sqlite3` in v10 for cross-platform portability.
 
 ## Coding Style & Naming Conventions
 

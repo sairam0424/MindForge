@@ -1,18 +1,28 @@
-# MindForge — Getting Started
+# MindForge — Getting Started (v10.0.0)
 
 This guide gets you from zero to a working MindForge project in under five minutes.
 
+## Prerequisites
+
+- **Node.js 18+** (LTS recommended)
+- No native build tools required — MindForge uses sql.js (pure WASM) for all database operations
+
 ## Install
 
-MindForge is typically installed as a project-local dependency to ensure environment isolation.
+MindForge is installed via `npx` for zero-config setup:
 
 ```bash
-# Antigravity (recommended for local development)
-npx mindforge-cc@latest --antigravity --local
+# Recommended (auto-detects your runtime)
+npx mindforge-cc
 
-# Claude Code (alternative)
-npx mindforge-cc@latest --claude --local
+# Antigravity (local development)
+npx mindforge-cc --antigravity --local
+
+# Claude Code (local, per project)
+npx mindforge-cc --claude --local
 ```
+
+After installation, the `mindforge` CLI command is available for runtime operations (health checks, security scans, headless execution, etc.).
 
 ## Initialise Your Project
 

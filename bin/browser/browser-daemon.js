@@ -6,6 +6,7 @@
 'use strict';
 
 const http      = require('http');
+const crypto    = require('crypto');
 const playwright = require('playwright-core');
 const fs        = require('fs');
 const path      = require('path');
@@ -13,6 +14,26 @@ const path      = require('path');
 const PORT      = process.env.BROWSER_PORT || 7338;
 const HEADLESS  = process.env.BROWSER_HEADLESS !== 'false';
 const TIMEOUT   = (parseInt(process.env.BROWSER_IDLE_TIMEOUT_MINUTES) || 30) * 60 * 1000;
+
+// ── Bearer token authentication ──────────────────────────────────────────────
+const DAEMON_TOKEN = crypto.randomBytes(32).toString('hex');
+const DAEMON_TOKEN_FILE = path.join(process.cwd(), '.mindforge', '.browser-daemon-token');
+
+// Write token to file with restrictive permissions (owner-only read/write)
+fs.mkdirSync(path.dirname(DAEMON_TOKEN_FILE), { recursive: true });
+fs.writeFileSync(DAEMON_TOKEN_FILE, DAEMON_TOKEN, { mode: 0o600 });
+
+/**
+ * Validate bearer token from Authorization header.
+ * Returns true if valid, false otherwise.
+ */
+function isAuthValid(req) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return false;
+  const provided = authHeader.slice(7);
+  if (provided.length !== DAEMON_TOKEN.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(DAEMON_TOKEN));
+}
 
 let browser, lastActionAt = Date.now(), isLaunching = false;
 const sessions = new Map(); // name -> { context, page }
@@ -98,6 +119,9 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (req.url === '/evaluate' && req.method === 'POST') {
+        if (!isAuthValid(req)) {
+          return send({ error: 'Authentication required. Use the token printed at daemon startup.' }, 401);
+        }
         const result = await page.evaluate(script);
         return send({ success: true, result });
       }
@@ -123,7 +147,11 @@ const server = http.createServer(async (req, res) => {
 });
 
 init().then(() => {
-  server.listen(PORT, '127.0.0.1', () => console.log(`[daemon] Browser daemon listening on port ${PORT}`));
+  server.listen(PORT, '127.0.0.1', () => {
+    console.log(`[BrowserDaemon] Listening on port ${PORT}`);
+    console.log(`[BrowserDaemon] Auth token: ${DAEMON_TOKEN}`);
+    console.log(`[BrowserDaemon] Token file: ${DAEMON_TOKEN_FILE}`);
+  });
 }).catch(err => {
   console.error('[daemon] Initialization failed:', err);
   process.exit(1);
@@ -131,6 +159,8 @@ init().then(() => {
 
 async function shutdown() {
   console.log('[daemon] Shutting down gracefully...');
+  // Remove sensitive token file on shutdown
+  if (fs.existsSync(DAEMON_TOKEN_FILE)) fs.unlinkSync(DAEMON_TOKEN_FILE);
   if (browser) await browser.close();
   process.exit(0);
 }

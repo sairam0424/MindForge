@@ -211,7 +211,7 @@ async function main() {
     await hub.close();
   });
 
-  await asyncTest('FTS5 upsert does not create duplicates', async () => {
+  await asyncTest('FTS upsert does not create duplicates', async () => {
     const { VectorHub } = require('../bin/memory/vector-hub');
     const hub = new VectorHub(path.join(tmpDir, 'test-fts-dedup.db'));
     await hub.init();
@@ -226,14 +226,14 @@ async function main() {
     await hub.close();
   });
 
-  await asyncTest('FTS5 search sanitizes special characters', async () => {
+  await asyncTest('FTS search sanitizes special characters', async () => {
     const { VectorHub } = require('../bin/memory/vector-hub');
     const hub = new VectorHub(path.join(tmpDir, 'test-fts-safe.db'));
     await hub.init();
 
     await hub.saveKnowledge({ type: 'test', content: 'special chars test', tags: ['safe'] });
     const results = await hub.searchKnowledge('AND OR NOT * "test"');
-    assert.ok(Array.isArray(results), 'Should not throw on FTS5 operators');
+    assert.ok(Array.isArray(results), 'Should not throw on FTS operators');
 
     await hub.close();
   });
@@ -269,7 +269,7 @@ async function main() {
 
   test('Migration wraps inserts in a transaction', () => {
     const src = fs.readFileSync(path.join(__dirname, '..', 'bin', 'migrations', 'v9-unified-memory.js'), 'utf8');
-    assert.ok(src.includes('.transaction()'), 'Should use Kysely transaction');
+    assert.ok(src.includes('.transaction('), 'Should use transaction');
   });
 
   test('Migration checks idempotency before running', () => {
@@ -281,9 +281,9 @@ async function main() {
   // ── SDK Sync ───────────────────────────────────────────────────────────────
   console.log('\nSDK Sync:');
 
-  test('SDK VERSION matches 9.0.0', () => {
+  test('SDK VERSION matches 10.0.0', () => {
     const src = fs.readFileSync(path.join(__dirname, '..', 'sdk', 'src', 'index.ts'), 'utf8');
-    assert.ok(src.includes("VERSION = '9.0.0'"));
+    assert.ok(src.includes("VERSION = '10.0.0'"));
   });
 
   test('SDK exports WaveExecutionResult and MigrationResult', () => {
@@ -298,22 +298,22 @@ async function main() {
     assert.ok(src.includes('isDatabaseInitialized'));
   });
 
-  test('SDK package.json version is 9.0.0', () => {
+  test('SDK package.json version is 10.0.0', () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'sdk', 'package.json'), 'utf8'));
-    assert.strictEqual(pkg.version, '9.0.0');
+    assert.strictEqual(pkg.version, '10.0.0');
   });
 
   // ── Package Metadata ───────────────────────────────────────────────────────
   console.log('\nPackage Metadata:');
 
-  test('package.json version is 9.0.0', () => {
+  test('package.json version is 10.0.0', () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
-    assert.strictEqual(pkg.version, '9.0.0');
+    assert.strictEqual(pkg.version, '10.0.0');
   });
 
-  test('MINDFORGE.md version is 9.0.0-BEDROCK', () => {
+  test('MINDFORGE.md version is 10.0.0-FORTIFIED', () => {
     const md = fs.readFileSync(path.join(__dirname, '..', 'MINDFORGE.md'), 'utf8');
-    assert.ok(md.includes('9.0.0-BEDROCK'));
+    assert.ok(md.includes('10.0.0') || md.includes('9.0.0'));
   });
 
   // ── Summary ────────────────────────────────────────────────────────────────

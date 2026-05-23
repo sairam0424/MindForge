@@ -25,12 +25,19 @@ let _auditInode     = 0; // Track file inode for rotation detection
 let _lastAutoState  = '';
 let _lastApprovals  = '';
 
+// ── Smart polling: mtime tracking ────────────────────────────────────────────
+const _lastMtimes = Object.create(null);
+
 // ── Client management ─────────────────────────────────────────────────────────
 
 function addClient(res) {
+  const wasEmpty = clients.size === 0;
   clients.add(res);
+  if (wasEmpty) startPolling();
+
   res.on('close', () => {
     clients.delete(res);
+    if (clients.size === 0) stopPolling();
   });
 }
 
@@ -106,6 +113,10 @@ function pollAutoState() {
   if (!fs.existsSync(AUTO_STATE_PATH)) return;
 
   try {
+    const mtime = fs.statSync(AUTO_STATE_PATH).mtimeMs;
+    if (mtime === _lastMtimes[AUTO_STATE_PATH]) return; // unchanged
+    _lastMtimes[AUTO_STATE_PATH] = mtime;
+
     const raw = fs.readFileSync(AUTO_STATE_PATH, 'utf8');
     if (raw === _lastAutoState) return;
     _lastAutoState = raw;
@@ -120,6 +131,10 @@ function pollApprovals() {
   if (!fs.existsSync(APPROVAL_DIR)) return;
 
   try {
+    const mtime = fs.statSync(APPROVAL_DIR).mtimeMs;
+    if (mtime === _lastMtimes[APPROVAL_DIR]) return; // unchanged
+    _lastMtimes[APPROVAL_DIR] = mtime;
+
     const files  = fs.readdirSync(APPROVAL_DIR)
       .filter(f => f.startsWith('APPROVAL-') && f.endsWith('.json'))
       .sort();
@@ -139,17 +154,25 @@ function pollApprovals() {
   } catch { /* ignore */ }
 }
 
-// ── Keepalive ─────────────────────────────────────────────────────────────────
+// ── Polling lifecycle (idle-aware) ────────────────────────────────────────────
 
 let _pollInterval  = null;
 let _pingInterval  = null;
+let _initialized   = false;
 
-function start() {
-  // Initialize AUDIT position
-  if (fs.existsSync(AUDIT_PATH)) {
+/**
+ * Start polling only when at least one client is connected.
+ * Idempotent — calling when already polling is a no-op.
+ */
+function startPolling() {
+  if (_pollInterval) return; // Already polling
+
+  // Initialize AUDIT position on first start
+  if (!_initialized && fs.existsSync(AUDIT_PATH)) {
     const stat = fs.statSync(AUDIT_PATH);
     _lastAuditSize = stat.size;
     _auditInode    = stat.ino;
+    _initialized   = true;
   }
 
   // Poll every 2 seconds
@@ -168,9 +191,32 @@ function start() {
   _pingInterval.unref();
 }
 
-function stop() {
+/**
+ * Stop polling when zero clients are connected.
+ * Idempotent — calling when already stopped is a no-op.
+ */
+function stopPolling() {
   if (_pollInterval) { clearInterval(_pollInterval); _pollInterval = null; }
   if (_pingInterval) { clearInterval(_pingInterval); _pingInterval = null; }
+}
+
+/**
+ * Public start — initializes the bridge (legacy compat).
+ * Actual polling begins only when the first client connects.
+ */
+function start() {
+  // Pre-initialize AUDIT position so first client gets instant data
+  if (!_initialized && fs.existsSync(AUDIT_PATH)) {
+    const stat = fs.statSync(AUDIT_PATH);
+    _lastAuditSize = stat.size;
+    _auditInode    = stat.ino;
+    _initialized   = true;
+  }
+  // Polling starts lazily when addClient() is called
+}
+
+function stop() {
+  stopPolling();
 }
 
 function getClientCount() { return clients.size; }

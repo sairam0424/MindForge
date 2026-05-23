@@ -130,18 +130,29 @@ function register(app) {
   });
 
   // ── Steering (requires auto mode running) ───────────────────────────────────
+  const VALID_STEER_ACTIONS = ['pause', 'resume', 'switch_phase', 'priority_bump', 'skip_task', 'abort'];
+
   app.post('/api/steer', (req, res) => {
     try {
-      const { instruction, priority = 'normal' } = req.body || {};
+      const { action, params = {} } = req.body || {};
 
-      if (!instruction || typeof instruction !== 'string') {
-        return res.status(400).json({ error: 'Missing "instruction" field' });
+      // Validate action is present and in allowlist
+      if (!action || typeof action !== 'string') {
+        return res.status(400).json({
+          error: `Invalid action. Valid actions: ${VALID_STEER_ACTIONS.join(', ')}`
+        });
       }
-      if (instruction.length > 500) {
-        return res.status(400).json({ error: 'Instruction too long (max 500 chars)' });
+      if (!VALID_STEER_ACTIONS.includes(action)) {
+        return res.status(400).json({
+          error: `Invalid action. Valid actions: ${VALID_STEER_ACTIONS.join(', ')}`
+        });
       }
-      if (!['normal', 'urgent', 'stop'].includes(priority)) {
-        return res.status(400).json({ error: 'Invalid priority. Use: normal|urgent|stop' });
+
+      // If params contains freeText, cap at 200 characters
+      if (params.freeText && typeof params.freeText === 'string') {
+        if (params.freeText.length > 200) {
+          return res.status(400).json({ error: 'params.freeText exceeds 200 character limit' });
+        }
       }
 
       // Check auto mode is running
@@ -153,24 +164,12 @@ function register(app) {
         return res.status(409).json({ error: 'Auto mode is not running. Steering has no effect.' });
       }
 
-      // Run injection guard
-      const INJECTION_PATTERNS = [
-        /IGNORE ALL PREVIOUS INSTRUCTIONS/i,
-        /DISREGARD YOUR INSTRUCTIONS/i,
-        /FORGET YOUR TRAINING/i,
-        /YOUR NEW INSTRUCTIONS ARE/i,
-        /OVERRIDE:/i,
-      ];
-      if (INJECTION_PATTERNS.some(p => p.test(instruction))) {
-        return res.status(400).json({ error: 'Instruction rejected: contains prohibited patterns' });
-      }
-
       // Write to steering queue
       const entry = {
         id:          require('crypto').randomBytes(8).toString('hex'),
         timestamp:   new Date().toISOString(),
-        instruction: instruction.trim(),
-        priority,
+        action,
+        params,
         authored_by: 'dashboard',
         applies_to:  'all',
         status:      'queued',
@@ -183,7 +182,7 @@ function register(app) {
       }
       fs.appendFileSync(STEERING_QUEUE, JSON.stringify(entry) + '\n');
 
-      res.json({ success: true, queued: true, id: entry.id, priority });
+      res.json({ success: true, queued: true, id: entry.id, action });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

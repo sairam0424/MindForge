@@ -1,7 +1,7 @@
 /**
  * MindForge v8 — Orbital Governance
  * Component: Orbital Guardian (Pillar XVIII)
- * 
+ *
  * Manages hardware-bound/biometric attestations for high-blast-radius actions.
  */
 'use strict';
@@ -51,9 +51,11 @@ class OrbitalGuardian {
     };
 
     // 2. Persist to SQLite (Source of truth for v8 Governance Dashboard)
-    await vectorHub.db.insertInto('attestations')
-      .values(attestation)
-      .execute();
+    vectorHub.run(
+      `INSERT INTO attestations (id, request_id, status, attestation_payload, timestamp)
+       VALUES (?, ?, ?, ?, ?)`,
+      [attestation.id, attestation.request_id, attestation.status, attestation.attestation_payload, attestation.timestamp]
+    );
 
     console.log(`[ORBITAL-GUARDIAN] Attestation SUCCESS: ${attestation.id}`);
     return attestation;
@@ -63,14 +65,15 @@ class OrbitalGuardian {
    * Verifies if a request has a valid hardware bypass.
    */
   async verify(requestId) {
+    if (!requestId) return { verified: false };
     await this.ensureInit();
-    
-    const record = await vectorHub.db.selectFrom('attestations')
-      .selectAll()
-      .where('request_id', '=', requestId)
-      .where('status', '=', 'APPROVED')
-      .executeTakeFirst();
 
+    const results = vectorHub.query(
+      'SELECT * FROM attestations WHERE request_id = ? AND status = ? LIMIT 1',
+      [requestId, 'APPROVED']
+    );
+
+    const record = results[0];
     if (!record) return { verified: false };
 
     return {

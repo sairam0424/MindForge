@@ -1,6 +1,6 @@
 # MindForge Persona Reference
 
-> A comprehensive guide to the 32 specialized enterprise personas — roles, tools, and orchestration patterns.
+> A comprehensive guide to the 79 specialized enterprise personas — roles, tools, and orchestration patterns.
 
 ---
 
@@ -22,6 +22,16 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Neural Protocols** | 6 | brainstormer, swarm-pilot, mesh-orchestrator, workspace-manager, skill-author, tdd-master |
 | **Debuggers** | 2 | debugger, rca-expert |
 | **Mapping** | 2 | codebase-mapper, codebase-mapper-extend |
+| **Security & Compliance** | 6 | authentication-architect, compliance-auditor, data-privacy-engineer, dependency-auditor, incident-commander (+ existing security-reviewer) |
+| **Architecture & System Design** | 8 | api-designer, api-gateway-architect, cloud-architect, domain-modeler, event-driven-architect, monorepo-architect, queue-architect, state-machine-designer |
+| **Frontend & UX** | 10 | a11y-architect, accessibility-tester, browser-extension-architect, design-system-engineer, frontend-architect, internationalization-expert, react-specialist, tailwind-specialist, ux-auditor, seo-specialist |
+| **Performance & Reliability** | 5 | api-load-tester, caching-strategist, chaos-engineer, performance-optimizer, build-optimizer |
+| **Data & ML** | 4 | data-engineer, database-expert, ml-engineer, search-engineer |
+| **DevOps & Infrastructure** | 6 | backup-recovery-specialist, config-management-expert, devops-engineer, kubernetes-debugger, logging-architect, observability-engineer |
+| **Language Specialists** | 5 | go-specialist, java-specialist, python-specialist, rust-specialist, typescript-wizard |
+| **DX & Operations** | 8 | cli-designer, code-archeologist, code-explorer, git-forensics, git-workflow-expert, migration-specialist, onboarding-guide, sdk-designer |
+| **Strategy & Review** | 9 | cost-analyst, product-manager, prompt-engineer, refactoring-expert, senior-reviewer, spec-reviewer, tech-debt-analyst, tech-stack-selector, technical-interviewer |
+| **Specialized** | 10 | concurrency-expert, email-systems-engineer, error-handling-architect, graphql-specialist, mobile-engineer, real-time-engineer, regex-craftsman, webhook-designer, contract-tester, test-data-engineer |
 
 ---
 
@@ -815,6 +825,920 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 - Adversarial multi-pass review of remediation plans.
 - Enforcement of the "Chaos Resistance" standard.
 - Final GO/NO-GO authority for production application.
+
+---
+
+## New Persona Details (v10 — Bedrock Meridian)
+
+---
+
+### mindforge-authentication-architect (The Auth Fortress)
+
+**Role:** Designs authentication and identity systems using OAuth2, OIDC, MFA, and zero-trust patterns.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent authentication-architect` |
+| **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
+| **Color** | `red` |
+| **Trust Tier** | `3` |
+
+---
+
+### mindforge-compliance-auditor (The Regulatory Sentinel)
+
+**Role:** Ensures every data flow and system interaction meets GDPR, SOC2, and HIPAA regulatory requirements.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent compliance-auditor` |
+| **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
+| **Color** | `red` |
+| **Trust Tier** | `3` |
+
+---
+
+### mindforge-data-privacy-engineer (The PII Guardian)
+
+**Role:** Protects user data through engineering controls — classification, masking, retention, and encryption.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent data-privacy-engineer` |
+| **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
+| **Color** | `red` |
+| **Trust Tier** | `3` |
+
+---
+
+### mindforge-dependency-auditor (The Supply Chain Watchdog)
+
+**Role:** Audits dependency trees for CVEs, license violations, and malicious packages before they enter production.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent dependency-auditor` |
+| **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
+| **Color** | `red` |
+| **Trust Tier** | `3` |
+
+---
+
+### mindforge-incident-commander (The Crisis Marshal)
+
+**Role:** Leads incident response — triaging severity, coordinating responders, and driving root cause analysis to resolution.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent incident-commander` |
+| **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
+| **Color** | `red` |
+| **Trust Tier** | `3` |
+
+---
+
+### mindforge-api-designer (The Contract Crafter)
+
+**Role:** Designs clean, versioned, consumer-friendly API contracts following REST, GraphQL, and gRPC best practices.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent api-designer` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `purple` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-api-gateway-architect (The Gateway Guardian)
+
+**Role:** Architects API gateway patterns — rate limiting, auth delegation, routing, and observability at the edge.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent api-gateway-architect` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `purple` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-cloud-architect (The Cloud Navigator)
+
+**Role:** Designs cloud-native architectures across AWS, GCP, and Azure with cost optimization and resilience.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent cloud-architect` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `purple` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-domain-modeler (The Domain Sculptor)
+
+**Role:** Models business domains using DDD patterns — bounded contexts, aggregates, and ubiquitous language.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent domain-modeler` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `purple` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-event-driven-architect (The Event Weaver)
+
+**Role:** Designs event-driven systems — event sourcing, CQRS, saga patterns, and message bus topologies.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent event-driven-architect` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `purple` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-monorepo-architect (The Repo Unifier)
+
+**Role:** Architects monorepo strategies — workspace boundaries, build caching, dependency management, and CI optimization.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent monorepo-architect` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `purple` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-queue-architect (The Message Orchestrator)
+
+**Role:** Designs message queue architectures — ordering guarantees, dead-letter patterns, backpressure, and exactly-once delivery.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent queue-architect` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `purple` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-state-machine-designer (The State Cartographer)
+
+**Role:** Designs finite state machines for complex business workflows — transitions, guards, and side-effects.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent state-machine-designer` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `purple` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-a11y-architect (The Inclusion Architect)
+
+**Role:** Designs accessibility-first architectures ensuring WCAG 2.2 AA compliance across all user interfaces.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent a11y-architect` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `magenta` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-accessibility-tester (The A11y Validator)
+
+**Role:** Tests and validates accessibility compliance using automated and manual techniques across screen readers and input methods.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent accessibility-tester` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `magenta` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-browser-extension-architect (The Extension Engineer)
+
+**Role:** Architects browser extensions with proper manifest design, content scripts, and secure messaging patterns.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent browser-extension-architect` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `magenta` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-design-system-engineer (The Design System Smith)
+
+**Role:** Builds and maintains design systems — tokens, component APIs, theming, and cross-platform consistency.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent design-system-engineer` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `magenta` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-frontend-architect (The Frontend Foundation)
+
+**Role:** Architects frontend systems — state management, rendering strategies, module boundaries, and performance budgets.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent frontend-architect` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `magenta` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-internationalization-expert (The I18n Specialist)
+
+**Role:** Implements internationalization and localization — plural rules, RTL support, date/number formatting, and translation workflows.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent internationalization-expert` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `magenta` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-react-specialist (The React Virtuoso)
+
+**Role:** Expert in React patterns — hooks, suspense, server components, concurrent features, and performance optimization.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent react-specialist` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `magenta` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-tailwind-specialist (The Utility Stylist)
+
+**Role:** Masters Tailwind CSS — custom configurations, plugin authoring, design token mapping, and responsive patterns.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent tailwind-specialist` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `magenta` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-ux-auditor (The UX Examiner)
+
+**Role:** Audits user experiences for usability, cognitive load, information architecture, and interaction design quality.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent ux-auditor` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `magenta` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-seo-specialist (The Search Optimizer)
+
+**Role:** Optimizes web properties for search engines — technical SEO, structured data, Core Web Vitals, and crawl efficiency.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent seo-specialist` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `magenta` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-api-load-tester (The Load Breaker)
+
+**Role:** Designs and executes load testing strategies to identify breaking points, bottlenecks, and capacity limits.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent api-load-tester` |
+| **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
+| **Color** | `orange` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-caching-strategist (The Cache Architect)
+
+**Role:** Designs caching strategies — invalidation patterns, cache hierarchies, TTL policies, and consistency trade-offs.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent caching-strategist` |
+| **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
+| **Color** | `orange` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-chaos-engineer (The Chaos Scientist)
+
+**Role:** Designs chaos experiments to validate system resilience — failure injection, blast radius analysis, and recovery verification.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent chaos-engineer` |
+| **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
+| **Color** | `orange` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-performance-optimizer (The Speed Demon)
+
+**Role:** Profiles and optimizes system performance — CPU, memory, I/O, network, and algorithmic bottlenecks.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent performance-optimizer` |
+| **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
+| **Color** | `orange` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-build-optimizer (The Build Accelerator)
+
+**Role:** Optimizes build pipelines — parallelization, caching, incremental builds, and dependency graph pruning.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent build-optimizer` |
+| **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
+| **Color** | `orange` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-data-engineer (The Pipeline Architect)
+
+**Role:** Designs data pipelines — ETL/ELT workflows, schema evolution, data quality checks, and lakehouse patterns.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent data-engineer` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `blue` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-database-expert (The Data Modeler)
+
+**Role:** Designs database schemas, query optimization, indexing strategies, and migration patterns across SQL and NoSQL systems.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent database-expert` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `blue` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-ml-engineer (The ML Craftsman)
+
+**Role:** Builds ML systems — feature engineering, model training, evaluation pipelines, and production serving infrastructure.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent ml-engineer` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `blue` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-search-engineer (The Relevance Engineer)
+
+**Role:** Designs search systems — indexing strategies, relevance tuning, faceted search, and hybrid vector/keyword retrieval.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent search-engineer` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `blue` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-backup-recovery-specialist (The DR Planner)
+
+**Role:** Designs backup and disaster recovery strategies — RPO/RTO targets, replication, and failover orchestration.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent backup-recovery-specialist` |
+| **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
+| **Color** | `green` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-config-management-expert (The Config Guardian)
+
+**Role:** Manages configuration systems — feature flags, environment promotion, secret rotation, and config drift detection.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent config-management-expert` |
+| **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
+| **Color** | `green` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-devops-engineer (The Pipeline Engineer)
+
+**Role:** Builds CI/CD pipelines — automated testing, deployment strategies, infrastructure as code, and release automation.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent devops-engineer` |
+| **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
+| **Color** | `green` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-kubernetes-debugger (The K8s Doctor)
+
+**Role:** Diagnoses and resolves Kubernetes issues — pod failures, networking, resource limits, and cluster health.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent kubernetes-debugger` |
+| **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
+| **Color** | `green` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-logging-architect (The Log Architect)
+
+**Role:** Designs structured logging systems — log levels, correlation IDs, aggregation pipelines, and alerting thresholds.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent logging-architect` |
+| **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
+| **Color** | `green` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-observability-engineer (The Observability Pilot)
+
+**Role:** Builds observability stacks — metrics, traces, logs, SLOs, and automated anomaly detection.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent observability-engineer` |
+| **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
+| **Color** | `green` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-go-specialist (The Gopher Guide)
+
+**Role:** Expert in Go idioms — goroutines, channels, interfaces, error handling, and high-performance systems programming.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent go-specialist` |
+| **Tools** | Read, Write, Bash, Grep, Glob, Context7 |
+| **Color** | `cyan` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-java-specialist (The JVM Master)
+
+**Role:** Expert in Java/JVM ecosystem — Spring Boot, concurrency, GC tuning, and enterprise patterns.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent java-specialist` |
+| **Tools** | Read, Write, Bash, Grep, Glob, Context7 |
+| **Color** | `cyan` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-python-specialist (The Pythonista)
+
+**Role:** Expert in Python ecosystem — async patterns, type hints, packaging, scientific computing, and web frameworks.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent python-specialist` |
+| **Tools** | Read, Write, Bash, Grep, Glob, Context7 |
+| **Color** | `cyan` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-rust-specialist (The Borrow Checker)
+
+**Role:** Expert in Rust — ownership, lifetimes, trait systems, unsafe code auditing, and zero-cost abstractions.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent rust-specialist` |
+| **Tools** | Read, Write, Bash, Grep, Glob, Context7 |
+| **Color** | `cyan` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-typescript-wizard (The Type Sorcerer)
+
+**Role:** Expert in TypeScript — advanced generics, conditional types, mapped types, and type-safe architecture patterns.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent typescript-wizard` |
+| **Tools** | Read, Write, Bash, Grep, Glob, Context7 |
+| **Color** | `cyan` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-cli-designer (The CLI Crafter)
+
+**Role:** Designs developer CLI tools — argument parsing, output formatting, progressive disclosure, and shell integration.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent cli-designer` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `yellow` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-code-archeologist (The Code Historian)
+
+**Role:** Investigates legacy codebases — decoding intent from ancient code, tracing evolutionary patterns, and documenting tribal knowledge.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent code-archeologist` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `yellow` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-code-explorer (The Codebase Navigator)
+
+**Role:** Rapidly navigates unfamiliar codebases — identifying patterns, conventions, and architectural decisions.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent code-explorer` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `yellow` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-git-forensics (The Git Detective)
+
+**Role:** Performs git archaeology — blame analysis, bisect workflows, merge conflict resolution, and history reconstruction.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent git-forensics` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `yellow` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-git-workflow-expert (The Branch Strategist)
+
+**Role:** Designs git workflows — branching strategies, PR conventions, release flows, and CI/CD integration patterns.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent git-workflow-expert` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `yellow` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-migration-specialist (The Migration Pilot)
+
+**Role:** Plans and executes system migrations — database migrations, API versioning, framework upgrades, and zero-downtime transitions.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent migration-specialist` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `yellow` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-onboarding-guide (The Welcome Guide)
+
+**Role:** Creates developer onboarding experiences — documentation, starter templates, and progressive learning paths.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent onboarding-guide` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `yellow` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-sdk-designer (The SDK Artisan)
+
+**Role:** Designs developer SDKs — API ergonomics, type safety, error handling patterns, and cross-language consistency.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent sdk-designer` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `yellow` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-cost-analyst (The Cost Optimizer)
+
+**Role:** Analyzes infrastructure and operational costs — identifying waste, forecasting spend, and recommending optimizations.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent cost-analyst` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `purple` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-product-manager (The Product Shepherd)
+
+**Role:** Translates business objectives into technical requirements — prioritization, roadmapping, and stakeholder alignment.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent product-manager` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `purple` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-prompt-engineer (The Prompt Architect)
+
+**Role:** Designs and optimizes LLM prompts — system prompts, few-shot examples, chain-of-thought patterns, and evaluation frameworks.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent prompt-engineer` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `purple` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-refactoring-expert (The Refactoring Surgeon)
+
+**Role:** Plans and executes large-scale refactoring — extract/inline patterns, dependency inversion, and safe transformation sequences.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent refactoring-expert` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `purple` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-senior-reviewer (The Code Sage)
+
+**Role:** Performs staff-engineer-level code reviews — architectural coherence, maintainability, and long-term technical health.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent senior-reviewer` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `purple` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-spec-reviewer (The Spec Auditor)
+
+**Role:** Reviews technical specifications for completeness, ambiguity, testability, and implementation feasibility.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent spec-reviewer` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `purple` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-tech-debt-analyst (The Debt Inspector)
+
+**Role:** Identifies, quantifies, and prioritizes technical debt — creating paydown roadmaps with business-impact justification.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent tech-debt-analyst` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `purple` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-tech-stack-selector (The Stack Evaluator)
+
+**Role:** Evaluates technology stacks — framework comparisons, ecosystem health, team fit, and long-term maintenance cost.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent tech-stack-selector` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `purple` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-technical-interviewer (The Interview Architect)
+
+**Role:** Designs technical interview processes — coding challenges, system design questions, and evaluation rubrics.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent technical-interviewer` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `purple` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-concurrency-expert (The Concurrency Guardian)
+
+**Role:** Designs concurrent and parallel systems — lock-free algorithms, race condition prevention, and thread safety patterns.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent concurrency-expert` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `cyan` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-email-systems-engineer (The Email Engineer)
+
+**Role:** Builds email systems — SMTP configuration, deliverability optimization, template engines, and transactional workflows.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent email-systems-engineer` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `cyan` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-error-handling-architect (The Error Strategist)
+
+**Role:** Designs error handling architectures — error hierarchies, recovery strategies, user-facing messages, and error boundaries.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent error-handling-architect` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `cyan` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-graphql-specialist (The Graph Resolver)
+
+**Role:** Designs GraphQL APIs — schema design, resolver patterns, N+1 prevention, federation, and subscription architecture.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent graphql-specialist` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `cyan` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-mobile-engineer (The Mobile Architect)
+
+**Role:** Builds mobile applications — React Native, Flutter, platform APIs, offline-first patterns, and app store optimization.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent mobile-engineer` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `cyan` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-real-time-engineer (The Real-Time Specialist)
+
+**Role:** Builds real-time systems — WebSockets, Server-Sent Events, CRDT-based collaboration, and presence architectures.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent real-time-engineer` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `cyan` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-regex-craftsman (The Pattern Artisan)
+
+**Role:** Crafts precise regular expressions — pattern optimization, catastrophic backtracking prevention, and cross-engine compatibility.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent regex-craftsman` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `cyan` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-webhook-designer (The Webhook Architect)
+
+**Role:** Designs webhook systems — delivery guarantees, retry policies, signature verification, and fan-out patterns.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent webhook-designer` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `cyan` |
+| **Trust Tier** | `1` |
+
+---
+
+### mindforge-contract-tester (The Contract Verifier)
+
+**Role:** Implements contract testing — consumer-driven contracts, provider verification, and schema evolution validation.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent contract-tester` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `cyan` |
+| **Trust Tier** | `2` |
+
+---
+
+### mindforge-test-data-engineer (The Test Data Smith)
+
+**Role:** Designs test data strategies — factories, fixtures, synthetic data generation, and production data anonymization.
+
+| Property | Value |
+| :--- | :--- |
+| **Spawned by** | `/mindforge:agent test-data-engineer` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `cyan` |
+| **Trust Tier** | `1` |
 
 ---
 

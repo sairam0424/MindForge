@@ -1,4 +1,4 @@
-# MindForge Troubleshooting (v5.1.0)
+# MindForge Troubleshooting (v10.0.0)
 
 This page lists common issues and fast fixes. If you get stuck, start with
 `/mindforge:health`.
@@ -54,14 +54,14 @@ npx mindforge-cc@latest --claude --local --force
 ```
 Then run:
 ```
-/mindforge:migrate --from v5.0.0 --to v5.1.0
+/mindforge:migrate --from v9.0.0 --to v10.0.0
 ```
 
 ### Schema mismatch warning on startup
 **Fix:**
 ```
 /mindforge:migrate --dry-run
-/mindforge:migrate --from vX.Y.Z --to v5.1.0
+/mindforge:migrate --from vX.Y.Z --to v10.0.0
 ```
 
 ### AUDIT.jsonl parse errors
@@ -113,7 +113,7 @@ rerun migration. See `.mindforge/audit/AUDIT-SCHEMA.md` for expected format.
 
 ---
 
-## 8. Neural Protocol Mesh Issues (v5.1.0)
+## 8. Neural Protocol Mesh Issues
 
 ### Protocol Step 0 fails to activate
 **Symptom:** Commands proceed without activating `_extended` skills.

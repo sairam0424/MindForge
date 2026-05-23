@@ -1,7 +1,7 @@
 /**
  * MindForge v8 — Federated Mesh Synthesis (FMS)
  * Component: Mesh Syncer (Pillar XVI)
- * 
+ *
  * Facilitates secure, signed knowledge handoffs between MindForge nodes.
  */
 'use strict';
@@ -15,8 +15,11 @@ const configManager = require('../governance/config-manager');
 
 class MeshSyncer {
   constructor() {
-    this.nodeId = configManager.get('mesh.node_id', 'unknown-node');
     this.vhInitialized = false;
+  }
+
+  get nodeId() {
+    return configManager.get('mesh.node_id', 'unknown-node');
   }
 
   async ensureInit() {
@@ -36,14 +39,18 @@ class MeshSyncer {
     console.log(`[MeshSyncer] Exporting bundle from ${this.nodeId}...`);
 
     // 1. Fetch Traces (Golden ones or since date)
-    let traceQuery = vectorHub.db.selectFrom('traces').selectAll();
+    let traces;
     if (options.since) {
-      traceQuery = traceQuery.where('timestamp', '>', options.since);
+      traces = vectorHub.query(
+        'SELECT * FROM traces WHERE timestamp > ? LIMIT 100',
+        [options.since]
+      );
+    } else {
+      traces = vectorHub.query('SELECT * FROM traces LIMIT 100');
     }
-    const traces = await traceQuery.limit(100).execute();
 
     // 2. Fetch Skills
-    const skills = await vectorHub.db.selectFrom('skills').selectAll().execute();
+    const skills = vectorHub.query('SELECT * FROM skills');
 
     const payload = {
       version: '1.0.0',
@@ -53,14 +60,13 @@ class MeshSyncer {
     };
 
     // 3. Sign the bundle using ZTAI
-    // Note: In v8, we sign the entire payload string to ensure integrity.
     const did = configManager.get('governance.active_did');
     if (!did) {
       throw new Error('[MeshSyncer] No active DID found for signing. Secure identity required.');
     }
 
     const signature = await ztaiManager.signData(did, JSON.stringify(payload));
-    
+
     const bundle = {
       payload,
       signature,
@@ -105,20 +111,18 @@ class MeshSyncer {
     // 3. Merge Skills
     const skills = payload.data.skills || [];
     for (const skill of skills) {
-      await vectorHub.db.insertInto('skills')
-        .values({
-          skill_id: skill.skill_id,
-          name: skill.name,
-          description: skill.description,
-          path: skill.path,
-          success_rate: skill.success_rate,
-          last_verified: new Date().toISOString()
-        })
-        .onConflict(oc => oc.column('skill_id').doUpdateSet({
-            success_rate: Math.max(skill.success_rate || 0, 0.5), // Optimistic merge
-            last_verified: new Date().toISOString()
-        }))
-        .execute();
+      vectorHub.run(
+        `INSERT OR REPLACE INTO skills (skill_id, name, description, path, success_rate, last_verified)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          skill.skill_id,
+          skill.name,
+          skill.description,
+          skill.path,
+          Math.max(skill.success_rate || 0, 0.5),
+          new Date().toISOString()
+        ]
+      );
     }
 
     console.log(`[MeshSyncer] Successfully imported ${traces.length} external traces and ${skills.length} skills.`);

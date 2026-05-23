@@ -1,12 +1,12 @@
-# MINDFORGE.md — Parameter Registry (v9.0.0)
+# MINDFORGE.md — Parameter Registry (v10.0.0)
 
 ## 1. IDENTITY & VERSIONING
 
 [NAME]    = MindForge
-[VERSION] = 9.0.0-BEDROCK
+[VERSION] = 10.0.0-BEDROCK
 [STABLE]  = true
-[MODE]    = \"Bedrock Meridian\"
-[REQUIRED_CORE_VERSION] = 9.0.0
+[MODE]    = \"Bedrock Fortified\"
+[REQUIRED_CORE_VERSION] = 10.0.0
 [SOVEREIGN_IDENTITY] = true
 [SRE_LAYER_ENABLED]  = true
 
@@ -33,7 +33,7 @@
 
 ## 3. MODEL TOPOLOGY
 
-### Persona to Model mapping (v9: Claude 4.x aligned)
+### Persona to Model mapping (v10: Claude 4.x aligned)
 
 [PLANNER]  = claude-opus-4-7
 [EXECUTOR] = claude-sonnet-4-6
@@ -90,3 +90,16 @@
 - Date manipulation using date-fns only.
 
 """
+
+---
+
+## 7. NON-OVERRIDABLE
+
+The following parameters cannot be overridden by plugins, agents, or session-level configuration:
+
+- [MIN_SOUL_SCORE] — Minimum SOUL score required for architectural changes
+- [BLOCK_ON_SECURITY] — Security gate enforcement cannot be disabled
+- [COST_HARD_LIMIT_USD] — Hard cost limit cannot be raised without human approval
+- [PQAS_ENFORCED] — Post-quantum security cannot be disabled
+- [SOVEREIGN_IDENTITY] — Identity verification is always required
+- [ENABLE_ZTAI] — Zero-trust identity cannot be bypassed

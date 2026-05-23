@@ -49,10 +49,10 @@ async function runTest() {
     await meshSyncer.importBundle(bundlePath);
 
     // 6. Verification of Cross-Node Intelligence
-    const results = await vectorHub.db.selectFrom('traces')
-        .selectAll()
-        .where('mesh_node_id', '=', 'alpha-node')
-        .execute();
+    const results = vectorHub.query(
+        'SELECT * FROM traces WHERE mesh_node_id = ?',
+        ['alpha-node']
+    );
 
     if (results.length > 0) {
         process.stdout.write('✅ MindForge v8 Federated Mesh Synthesis Passed.\n');
