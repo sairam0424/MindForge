@@ -1,8 +1,8 @@
 # Changelog
 
-## [10.0.1] - 2026-05-24 — "Persona Expansion"
+## [10.0.2] - 2026-05-24 — "Persona Expansion"
 
-### Added (v10.0.1)
+### Added (v10.0.2)
 
 - **47 new specialist personas** — Security & Compliance (6), Architecture & System Design (8), Frontend & UX (10), Performance & Reliability (5), Data & ML (4), DevOps & Infrastructure (6), Language Specialists (5), DX & Operations (8), Strategy & Review (9), Specialized Engineering (10).
 - **6 new swarm templates** — ArchitectureSwarm, PerformanceSwarm, InfrastructureSwarm, AccessibilitySwarm, ReviewSwarm, MigrationSwarm.
