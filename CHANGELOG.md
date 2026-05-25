@@ -1,5 +1,18 @@
 # Changelog
 
+## [10.0.6] - 2026-05-26 — "Complete Arsenal"
+
+### Added (v10.0.6)
+
+- **17 new core skills** — microservices-patterns, cqrs-event-sourcing, system-design, business-analyst, product-manager, market-researcher, typescript-advanced, python-performance, react-performance, k8s-deployment, writing-plans, writing-skills, using-git-worktrees, code-tour, autonomous-agent-harness, mcp-server-patterns, proofreader.
+- **10 new commands** — `/mindforge:microservices`, `/mindforge:system-design`, `/mindforge:brd`, `/mindforge:product-spec`, `/mindforge:market-research`, `/mindforge:code-tour`, `/mindforge:mcp-server`, `/mindforge:proofread`, `/mindforge:worktrees`, `/mindforge:plan-write`.
+- **8 new personas** — business-analyst, product-owner, market-analyst, mcp-designer, proofreader, system-designer, worktree-manager, code-narrator.
+- **3 new swarm templates** — ArchDesignSwarm (HITL system design), ProductSwarm (HITL product strategy), DocumentationSwarm (autonomous content quality).
+- **Swarm templates v9.0.0** — Bump from v8.0.0 with 3 new templates (total: 29 swarm templates).
+- **50 core skills milestone** — Framework now covers architecture, business, languages, workflow, infrastructure, and documentation domains.
+
+---
+
 ## [10.0.5] - 2026-05-26 — "Forge Master"
 
 ### Added (v10.0.5)
