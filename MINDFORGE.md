@@ -1,12 +1,12 @@
-# MINDFORGE.md — Parameter Registry (v10.0.3)
+# MINDFORGE.md — Parameter Registry (v10.0.4)
 
 ## 1. IDENTITY & VERSIONING
 
 [NAME]    = MindForge
-[VERSION] = 10.0.3-COUNCIL
+[VERSION] = 10.0.4-SANTA
 [STABLE]  = true
-[MODE]    = \"Council Awakens\"
-[REQUIRED_CORE_VERSION] = 10.0.3
+[MODE]    = \"Santa's Eval\"
+[REQUIRED_CORE_VERSION] = 10.0.4
 [SOVEREIGN_IDENTITY] = true
 [SRE_LAYER_ENABLED]  = true
 

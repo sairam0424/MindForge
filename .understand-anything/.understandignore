@@ -1,0 +1,58 @@
+# .understandignore — patterns for files/dirs to exclude from analysis
+# Syntax: same as .gitignore (globs, # comments, ! negation, trailing / for dirs)
+# Lines below are suggestions — uncomment to activate.
+# Use ! prefix to force-include something excluded by defaults.
+#
+# Built-in defaults (always excluded unless negated):
+#   node_modules/, .git/, dist/, build/, obj/, *.lock, *.min.js, etc.
+#
+# --- From .gitignore (uncomment to exclude) ---
+
+# .env
+# .env.*
+# .DS_Store
+# Thumbs.db
+# .nyc_output/
+# *.local
+# *.key
+# *.pem
+# .mindforge/memory/*.jsonl
+# temp-test-install/
+# tests/tmp-graph/
+# .husky/_
+# .agents/
+# .claude/
+# .planning/history/
+# .planning/TEMPORAL-TEST.md
+# MIND-FORGE-V6-ENTERPRISE-PROPOSAL.md
+# .planning/RISK-AUDIT.jsonl
+# ROADMAP_V7.md
+# .mindforge/*.db
+# .mindforge/memory/sync-manifest.json
+# .mindforge/.dashboard-token
+# .mindforge/.browser-daemon-token
+# *.mfb
+# .npm-cache/
+# .npmrc
+# .planning/AUDIT.jsonl
+# .planning/ROI.jsonl
+# .planning/TEST_AUDIT.jsonl
+# .planning/decisions/SRE-*.md
+# .planning/decisions/ADR-*.md
+# .planning/memories/
+# .mindforge/audit/AUDIT.jsonl
+# .mindforge/audit/manifests/
+# .mindforge/metrics/token-usage.jsonl
+
+# --- Detected directories (uncomment to exclude) ---
+
+# test/
+# tests/
+# docs/
+# examples/
+
+# --- Test file patterns (uncomment to exclude) ---
+
+# *.test.*
+# *.spec.*
+# *.snap

@@ -142,7 +142,24 @@ High-fidelity behaviors ported from the Superpowers library and hardened for pro
 
 ---
 
-## 11. CLI Commands (`mindforge` binary)
+## 11. Council, Verification & Intelligence (v10.0.3)
+
+New commands introduced in the "Council Awakens" release for multi-voice decision-making, verification rigor, and self-evolving agent behavior.
+
+| Command | Description |
+| :--- | :--- |
+| `/mindforge:council` | Invoke 4-voice decision council for architectural and strategic deliberation. |
+| `/mindforge:consult` | Multi-LLM second opinion — routes a question to parallel models and synthesizes consensus. |
+| `/mindforge:verify-loop` | Run 6-phase verification gates (substance, existence, wiring, integration, regression, acceptance). |
+| `/mindforge:introspect` | Debug agent behavior and diagnose reasoning failures with structured trace analysis. |
+| `/mindforge:cost-report` | Token usage analytics with per-provider breakdown and budget tracking. |
+| `/mindforge:threat-model` | STRIDE/DREAD threat modeling with automated attack surface enumeration. |
+| `/mindforge:learn-instinct` | Capture learned behavior patterns as instincts for future session priming. |
+| `/mindforge:evolve-skills` | Promote validated instincts into full reusable skills with quality scoring. |
+
+---
+
+## 12. CLI Commands (`mindforge` binary)
 
 After installation, the `mindforge` binary provides direct access to runtime operations. Use `--verbose` (`-v`) on any command for detailed output.
 

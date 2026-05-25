@@ -1,5 +1,19 @@
 # Changelog
 
+## [10.0.4] - 2026-05-26 — "Santa's Eval"
+
+### Added (v10.0.4)
+
+- **8 new core skills** — santa-method, eval-harness, quality-audit, testing-anti-patterns, defense-in-depth, codebase-onboarding, rfc-pipeline, de-sloppify.
+- **6 new commands** — `/mindforge:santa`, `/mindforge:eval`, `/mindforge:quality-audit`, `/mindforge:rfc`, `/mindforge:onboard`, `/mindforge:de-slop`.
+- **6 new personas** — eval-judge, rfc-architect, anti-pattern-hunter, onboarding-navigator, de-sloppifier, quality-scorer.
+- **3 new swarm templates** — EvalSwarm (autonomous eval gate), OnboardingSwarm (autonomous codebase discovery), RFCSwarm (HITL spec decomposition).
+- **Proactive Skill Suggestion Engine** — Signal-based skill detection (file/error/task patterns) with confidence threshold (0.7), cooldown tracking, and debounce logic.
+- **Eval storage** — `.mindforge/evals/` directory for persisting eval configs, rubrics, and results.
+- **Swarm templates v7.0.0** — Bump from v6.0.0 with 3 new templates (total: 24 swarm templates).
+
+---
+
 ## [10.0.3] - 2026-05-25 — "Council Awakens"
 
 ### Added (v10.0.3)

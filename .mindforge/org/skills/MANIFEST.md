@@ -28,6 +28,14 @@ This file tracks all active, validated, and legacy skills within the MindForge e
 | agent-introspection-debugging | .mindforge/skills/agent-introspection-debugging/SKILL.md | stable |
 | cost-aware-routing | .mindforge/skills/cost-aware-routing/SKILL.md | stable |
 | doc-health-audit | .mindforge/skills/doc-health-audit/SKILL.md | stable |
+| santa-method | .mindforge/skills/santa-method/SKILL.md | stable |
+| eval-harness | .mindforge/skills/eval-harness/SKILL.md | stable |
+| quality-audit | .mindforge/skills/quality-audit/SKILL.md | stable |
+| testing-anti-patterns | .mindforge/skills/testing-anti-patterns/SKILL.md | stable |
+| defense-in-depth | .mindforge/skills/defense-in-depth/SKILL.md | stable |
+| codebase-onboarding | .mindforge/skills/codebase-onboarding/SKILL.md | stable |
+| rfc-pipeline | .mindforge/skills/rfc-pipeline/SKILL.md | stable |
+| de-sloppify | .mindforge/skills/de-sloppify/SKILL.md | stable |
 
 ## Multi-Agent Skills
 

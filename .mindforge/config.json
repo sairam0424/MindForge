@@ -1,11 +1,11 @@
 {
-  "version": "10.0.3",
+  "version": "10.0.4",
   "environment": "development",
   "governance": {
     "drift_threshold": 0.75,
     "critical_drift_threshold": 0.5,
     "res_threshold": 0.8,
-    "active_did": "did:mindforge:aa440c6e-ecc7-422d-85e4-f21bd0b7316d"
+    "active_did": "did:mindforge:d7f8187d-e671-46c0-95a2-60f2fa470673"
   },
   "revops": {
     "market_registry": {
@@ -110,5 +110,28 @@
       "project_weekly_hard_limit_usd": 200
     },
     "ledger_path": ".mindforge/metrics/token-ledger.jsonl"
+  },
+  "proactive_suggestions": {
+    "enabled": true,
+    "confidence_threshold": 0.7,
+    "cooldown_seconds": 300,
+    "debounce_seconds": 30,
+    "max_recent": 50,
+    "store_path": ".mindforge/engine/proactive/recent-suggestions.json"
+  },
+  "eval": {
+    "default_k": 5,
+    "evals_path": ".mindforge/evals/",
+    "default_grader": "code"
+  },
+  "quality_audit": {
+    "passing_threshold": 3,
+    "accuracy_blocking_gate": 3,
+    "weights": {
+      "clarity": 0.25,
+      "completeness": 0.25,
+      "accuracy": 0.3,
+      "usefulness": 0.2
+    }
   }
 }

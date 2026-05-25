@@ -94,7 +94,7 @@ const Theme = {
    * Success Banner (  V2 Architectural Style)
    */
   printSuccessV2(runtime, scope, stats = {}) {
-    const { personas = 108, skills = 12, governance = 4, integrations = 7 } = stats;
+    const { personas = 117, skills = 20, governance = 4, integrations = 7 } = stats;
     const boxWidth = 72;
 
     console.log(`\n  ${this.colors.green('MINDFORGE is ready! ')} ${this.colors.dim('─'.repeat(boxWidth - 20))}╮`);
@@ -125,7 +125,7 @@ const Theme = {
    * Print Manifest (Hardened for V2)
    */
   printManifest(stats = {}) {
-    const { personas = 108, skills = 12, governance = 4, integrations = 7, actions = 60, docs = 12, templates = 18 } = stats;
+    const { personas = 117, skills = 20, governance = 4, integrations = 7, actions = 71, docs = 12, templates = 21 } = stats;
     
     console.log(`  ${this.colors.bold('PAYLOAD MANIFEST')}`);
     console.log(`  ${this.colors.dim('┌' + '─'.repeat(74) + '┐')}`);
