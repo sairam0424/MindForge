@@ -1,5 +1,24 @@
 # Changelog
 
+## [10.0.3] - 2026-05-25 — "Council Awakens"
+
+### Added (v10.0.3)
+
+- **10 new core skills** — agent-loops, multi-llm-consult, continuous-learning, council, verification-loop, threat-modeling, autonomous-loops, agent-introspection-debugging, cost-aware-routing, doc-health-audit.
+- **8 new commands** — `/mindforge:council`, `/mindforge:consult`, `/mindforge:verify-loop`, `/mindforge:introspect`, `/mindforge:cost-report`, `/mindforge:threat-model`, `/mindforge:learn-instinct`, `/mindforge:evolve-skills`.
+- **9 new personas** — cost-optimizer, threat-modeler, council-architect, council-skeptic, council-pragmatist, council-critic, instinct-curator, doc-auditor, multi-model-bridge.
+- **3 new swarm templates** — CouncilSwarm (HITL decision gate), VerificationSwarm (autonomous quality gates), LearningSwarm (instinct management).
+- **Skill Composition System** — Skills can now declare dependencies on other skills via `compose:` frontmatter field. Composed skills are injected as summaries (max 2-level depth, cycle detection).
+- **Instinct Engine** — Auto-capture learned behaviors with confidence scoring. Instincts auto-promote to skills at 0.85 confidence after 5+ successful applications. Project-scoped, max 100 per project.
+- **Cost Tracking Module** — Token budgeting, 5-tier model routing (Haiku/Sonnet/Opus/Gemini/GPT-4o), spend analytics via token-ledger.jsonl.
+- **Council Framework** — 4-voice decision harness (Architect, Skeptic, Pragmatist, Critic) with weighted consensus scoring, dissent documentation, and 5 pre-built templates.
+- **Cross-Iteration Bridge** — SHARED_TASK_NOTES.md for semantic context persistence across autonomous mode iterations (complements HANDOFF.json).
+- **Swarm templates v6.0.0** — Bump from v5.0.0 with 3 new templates (total: 21 swarm templates).
+- **claude-opus-4-7** added to market_registry in config.json.
+- **Loader composition step** — New Step 4.1 in skill loader for resolving `compose:` dependencies.
+
+---
+
 ## [10.0.2] - 2026-05-24 — "Persona Expansion"
 
 ### Added (v10.0.2)

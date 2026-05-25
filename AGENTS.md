@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-MindForge v10.0.1 ("Bedrock Fortified") is an agentic intelligence framework distributed as the `mindforge-cc` npm package. It has two package roots:
+MindForge v10.0.3 ("Council Awakens") is an agentic intelligence framework distributed as the `mindforge-cc` npm package. It has two package roots:
 
 - **Root (`/`)** — The CLI + framework. Two bin entries: `mindforge-cc` (installer via `bin/install.js`) and `mindforge` (CLI via `bin/mindforge-cli.js`). Runtime scripts live under `bin/` (CLI, sharding, governance, autonomous engine, SRE, dashboard, etc.).
 - **`sdk/`** — A TypeScript SDK (`@mindforge/sdk`) with its own `tsconfig.json` and build step. Compiled output goes to `sdk/dist/`. Has its own test suite (`cd sdk && npm test`).
@@ -13,6 +13,8 @@ Key directories:
 - `.mindforge/` — Framework internals: intelligence mesh, skills, personas, governance, dashboard, audit, engine configs.
 - `.planning/` — Project state management (STATE.md, phase plans, audit trails).
 - `.agent/` — Agent orchestration layer: hooks (SessionStart, BeforeTool, AfterTool), workflows, skills, forge tools, and session settings.
+- `docs/` — Architecture docs, ADRs, reference guides, security guidelines, and project templates.
+- `examples/` — Starter projects and SDK integration examples for onboarding.
 
 ## Build, Test, and Development Commands
 
@@ -22,6 +24,7 @@ npm install          # Install dependencies (Node >= 18 required)
 npm test             # Unified test runner (tests/run-all.js) — pre-commit hook
 npm run lint         # ESLint across root
 npm run coverage     # c8 coverage via unified runner
+npm run prepare      # Set up Husky git hooks (runs automatically on install)
 
 # SDK (run from sdk/)
 cd sdk && npm install
@@ -65,6 +68,7 @@ feat(scope): add new capability
 fix(scope): correct behavior
 chore(scope): maintenance task
 docs(scope): documentation update
+security: address security concern
 ```
 
 A PR template (`.github/pull_request_template.md`) requires: Goal, Proposed Changes (grouped by component/persona), Verification checklist (`npm test`, manual verification, persona consistency check), and Brain Context links.
