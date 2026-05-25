@@ -1,3 +1,69 @@
+# Release Notes — v10.0.3 "Council Awakens"
+
+**Release Date**: 2026-05-25  
+**Tag**: `v10.0.3`  
+**Status**: STABLE
+
+## Executive Summary
+
+MindForge v10.0.3 "Council Awakens" introduces multi-voice deliberation, self-evolving agent instincts, cost-aware routing, and rigorous verification loops. This release expands the framework's autonomous governance and reasoning capabilities with 10 new skills, 8 new commands, 9 new personas, 3 new swarm templates, and 5 engine subsystems.
+
+---
+
+## Highlights
+
+### Council Framework
+- **4-Voice Decision Council** (`/mindforge:council`) — Spawns Architect, Critic, Pragmatist, and Visionary voices for architectural deliberation with structured consensus synthesis.
+- **Multi-LLM Consult** (`/mindforge:consult`) — Routes questions to parallel models (Claude, Gemini, GPT) and synthesizes agreement/disagreement into actionable recommendations.
+
+### Instinct Engine
+- **Learn Instinct** (`/mindforge:learn-instinct`) — Captures emergent behavioral patterns from session traces as lightweight instinct primitives.
+- **Evolve Skills** (`/mindforge:evolve-skills`) — Promotes validated instincts through quality scoring into full reusable skills with automated testing.
+
+### Cost-Aware Routing
+- **Cost Report** (`/mindforge:cost-report`) — Per-provider token analytics with budget burn rate, daily/weekly trends, and cost-per-task attribution.
+- **Dynamic model selection** based on task complexity vs. budget constraints.
+
+### Verification Loop
+- **6-Phase Verification Gates** (`/mindforge:verify-loop`) — Substance, Existence, Wiring, Integration, Regression, and Acceptance gates executed sequentially with fail-fast semantics.
+
+### Threat Modeling
+- **STRIDE/DREAD Analysis** (`/mindforge:threat-model`) — Automated attack surface enumeration with severity scoring and mitigation recommendations.
+
+### Agent Introspection
+- **Introspect** (`/mindforge:introspect`) — Structured trace analysis for debugging reasoning failures, detecting drift, and identifying optimization opportunities.
+
+---
+
+## Counts Update
+
+| Category | Previous (v10.0.2) | New (v10.0.3) | Delta |
+|----------|-------------------|---------------|-------|
+| Core Skills | 10 | 20 | +10 |
+| Commands | 63 | 71 | +8 |
+| Personas | 108 | 117 | +9 |
+| Swarm Templates | 18 | 21 | +3 |
+| Engine Subsystems | — | +5 | +5 |
+
+---
+
+## What's Next
+
+**v10.1.0** (planned):
+- Coverage target raised to 60% with per-module enforcement
+- OpenTelemetry export for NexusTracer spans (Jaeger/Zipkin compatible)
+- Rate limiting on dashboard API endpoints
+
+---
+
+## Previous Releases
+
+- [v10.0.1 — Bedrock Fortified](https://github.com/sairam0424/MindForge/releases/tag/v10.0.1)
+- [v9.0.0 — Bedrock Meridian](https://github.com/sairam0424/MindForge/releases/tag/v9.0.0)
+
+---
+---
+
 # Release Notes — v10.0.1 "Bedrock Fortified"
 
 **Release Date**: 2026-05-21  

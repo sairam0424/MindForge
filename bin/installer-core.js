@@ -748,7 +748,7 @@ function collectManifestStats() {
     }
   } catch (e) {
     // Fallback to default values if counting fails
-    return { personas: 108, skills: 10, governance: 4, integrations: 6, actions: 60, docs: 12, templates: 18 };
+    return { personas: 117, skills: 20, governance: 4, integrations: 6, actions: 71, docs: 12, templates: 21 };
   }
 
   return stats;

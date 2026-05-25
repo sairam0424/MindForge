@@ -4,9 +4,9 @@
 
 ---
 
-## v10.0.1 — Bedrock Fortified (Production-Grade Architecture)
+## v10.0.3 — Council Awakens
 
-MindForge v9.0.0 "Bedrock Meridian" grounds previously-stub implementations into real, auditable execution. This release introduces grounded wave dispatch via HANDOFF.json, consolidates all memory stores into a single SQLite database, modernizes the model topology to the Claude 4.x family, and adds a 27-assertion integration test chain — completing the transition from framework scaffolding to production-verified infrastructure (Pillars XXIV-XXVIII).
+MindForge v10.0.3 "Council Awakens" introduces the Council decision framework, Instinct Engine, Cost-Aware Routing, 6-phase Verification Loop, and Multi-LLM Consult. This release adds 10 skills (20 core total), 8 commands (71 total), 9 personas (117 total), 3 swarm templates (21 total), and 5 engine subsystems — expanding MindForge's autonomous governance and multi-agent reasoning capabilities.
 
 
 ## Installation & Setup
