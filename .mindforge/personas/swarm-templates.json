@@ -1,5 +1,5 @@
 {
-  "version": "6.0.0",
+  "version": "7.0.0",
   "mesh_protocols": {
     "shared_state": ".planning/phases/[N]/SWARM-STATE-[M].json",
     "consolidation_format": "SWARM-SUMMARY-[N]-[M].md",
@@ -194,6 +194,33 @@
       "decision_gate": "autonomous",
       "resource_budget": "low",
       "required_skills": ["continuous-learning"]
+    },
+    "EvalSwarm": {
+      "leader": "eval-judge",
+      "members": ["mf-reviewer", "qa-engineer", "anti-pattern-hunter"],
+      "focus": "Structured evaluation using rubrics, pass@k metrics, regression detection, and anti-pattern identification.",
+      "trust_tier": 1,
+      "decision_gate": "autonomous",
+      "resource_budget": "medium",
+      "required_skills": ["eval-harness", "quality-audit"]
+    },
+    "OnboardingSwarm": {
+      "leader": "onboarding-navigator",
+      "members": ["codebase-mapper", "advisor-researcher", "doc-auditor"],
+      "focus": "Codebase exploration, knowledge graph construction, entry point identification, and documentation gap analysis.",
+      "trust_tier": 1,
+      "decision_gate": "autonomous",
+      "resource_budget": "low",
+      "required_skills": ["codebase-onboarding"]
+    },
+    "RFCSwarm": {
+      "leader": "rfc-architect",
+      "members": ["architect", "developer", "analyst"],
+      "focus": "Specification decomposition, dependency DAG construction, parallel execution planning, and merge conflict recovery.",
+      "trust_tier": 2,
+      "decision_gate": "hitl",
+      "resource_budget": "high",
+      "required_skills": ["rfc-pipeline"]
     }
   }
 }
