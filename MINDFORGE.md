@@ -1,12 +1,12 @@
-# MINDFORGE.md — Parameter Registry (v10.0.4)
+# MINDFORGE.md — Parameter Registry (v10.0.5)
 
 ## 1. IDENTITY & VERSIONING
 
 [NAME]    = MindForge
-[VERSION] = 10.0.4-SANTA
+[VERSION] = 10.0.5-FORGE
 [STABLE]  = true
-[MODE]    = \"Santa's Eval\"
-[REQUIRED_CORE_VERSION] = 10.0.4
+[MODE]    = \"Forge Master\"
+[REQUIRED_CORE_VERSION] = 10.0.5
 [SOVEREIGN_IDENTITY] = true
 [SRE_LAYER_ENABLED]  = true
 
