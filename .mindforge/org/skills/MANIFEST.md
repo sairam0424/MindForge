@@ -18,6 +18,16 @@ This file tracks all active, validated, and legacy skills within the MindForge e
 | data-privacy | .mindforge/skills/data-privacy/SKILL.md | stable |
 | incident-response | .mindforge/skills/incident-response/SKILL.md | stable |
 | database-patterns | .mindforge/skills/database-patterns/SKILL.md | stable |
+| agent-loops | .mindforge/skills/agent-loops/SKILL.md | stable |
+| multi-llm-consult | .mindforge/skills/multi-llm-consult/SKILL.md | stable |
+| continuous-learning | .mindforge/skills/continuous-learning/SKILL.md | stable |
+| council | .mindforge/skills/council/SKILL.md | stable |
+| verification-loop | .mindforge/skills/verification-loop/SKILL.md | stable |
+| threat-modeling | .mindforge/skills/threat-modeling/SKILL.md | stable |
+| autonomous-loops | .mindforge/skills/autonomous-loops/SKILL.md | stable |
+| agent-introspection-debugging | .mindforge/skills/agent-introspection-debugging/SKILL.md | stable |
+| cost-aware-routing | .mindforge/skills/cost-aware-routing/SKILL.md | stable |
+| doc-health-audit | .mindforge/skills/doc-health-audit/SKILL.md | stable |
 
 ## Multi-Agent Skills
 
