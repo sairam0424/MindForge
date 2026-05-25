@@ -4,7 +4,7 @@
 
 ---
 
-## v10.0.0 — Bedrock Fortified (Production-Grade Architecture)
+## v10.0.1 — Bedrock Fortified (Production-Grade Architecture)
 
 MindForge v9.0.0 "Bedrock Meridian" grounds previously-stub implementations into real, auditable execution. This release introduces grounded wave dispatch via HANDOFF.json, consolidates all memory stores into a single SQLite database, modernizes the model topology to the Claude 4.x family, and adds a 27-assertion integration test chain — completing the transition from framework scaffolding to production-verified infrastructure (Pillars XXIV-XXVIII).
 

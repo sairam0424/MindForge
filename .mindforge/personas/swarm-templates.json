@@ -1,5 +1,5 @@
 {
-  "version": "5.0.0",
+  "version": "6.0.0",
   "mesh_protocols": {
     "shared_state": ".planning/phases/[N]/SWARM-STATE-[M].json",
     "consolidation_format": "SWARM-SUMMARY-[N]-[M].md",
@@ -167,6 +167,33 @@
       "decision_gate": "hitl",
       "resource_budget": "medium",
       "required_skills": ["database-migration"]
+    },
+    "CouncilSwarm": {
+      "leader": "council-architect",
+      "members": ["council-skeptic", "council-pragmatist", "council-critic"],
+      "focus": "Multi-voice architectural decision making with structured debate and verdict synthesis.",
+      "trust_tier": 2,
+      "decision_gate": "hitl",
+      "resource_budget": "medium",
+      "required_skills": ["council"]
+    },
+    "VerificationSwarm": {
+      "leader": "qa-engineer",
+      "members": ["developer", "security-reviewer", "build-optimizer", "coverage-specialist"],
+      "focus": "6-phase quality gate execution with parallel build, type-check, lint, test, security scan, and diff review.",
+      "trust_tier": 1,
+      "decision_gate": "autonomous",
+      "resource_budget": "medium",
+      "required_skills": ["verification-loop"]
+    },
+    "LearningSwarm": {
+      "leader": "instinct-curator",
+      "members": ["analyst", "developer"],
+      "focus": "Session observation, pattern detection, instinct creation and confidence scoring, skill promotion.",
+      "trust_tier": 1,
+      "decision_gate": "autonomous",
+      "resource_budget": "low",
+      "required_skills": ["continuous-learning"]
     }
   }
 }

@@ -1,4 +1,4 @@
-# MindForge v10.0.0 — Full Tutorial (Install → Advanced Usage)
+# MindForge v10.0.1 — Full Tutorial (Install → Advanced Usage)
 
 This tutorial walks a new user from installation to advanced usage. It is written for engineers who want to adopt MindForge in a real codebase.
 
@@ -84,7 +84,7 @@ MindForge uses a 4-pillar iterative cycle:
 
 ## 6. High-Performance Personas
 
-MindForge v10.0.0 provides 40+ specialized personas. Each is a "digital twin" of a senior role.
+MindForge v10.0.1 provides 108 specialized personas. Each is a "digital twin" of a senior role.
 
 - To list all personas: `/mindforge:personas --list`
 - To switch persona: `/mindforge:personas --set executor`

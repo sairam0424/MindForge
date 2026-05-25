@@ -1,7 +1,7 @@
 NAME=ExampleProject
 VERSION=1.0.0
-DESCRIPTION=Starter example for MindForge v10.0.0
-MINDFORGE_VERSION_REQUIRED=10.0.0
+DESCRIPTION=Starter example for MindForge v10.0.1
+MINDFORGE_VERSION_REQUIRED=10.0.1
 
 # Model preferences
 PLANNER_MODEL=claude-sonnet-4-6

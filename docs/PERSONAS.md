@@ -1,6 +1,6 @@
 # MindForge Persona Reference
 
-> A comprehensive guide to the 79 specialized enterprise personas — roles, tools, and orchestration patterns.
+> A comprehensive guide to the 108 specialized enterprise personas — roles, tools, and orchestration patterns.
 
 ---
 
@@ -1742,7 +1742,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 
 ---
 
-## Swarm Clusters (The Agentic Mesh) [v4.2]
+## Swarm Clusters (The Agentic Mesh) [v5.0]
 
 MindForge V4 introduces the ability to spawn dynamic, task-aware clusters of specialist personas. These swarms work in parallel with shared state to solve complex enterprise challenges.
 

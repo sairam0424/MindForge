@@ -1,11 +1,11 @@
 {
-  "version": "9.0.0",
+  "version": "10.0.3",
   "environment": "development",
   "governance": {
     "drift_threshold": 0.75,
     "critical_drift_threshold": 0.5,
     "res_threshold": 0.8,
-    "active_did": "did:mindforge:5da23154-02c6-42d2-8cf9-54e5606aa203"
+    "active_did": "did:mindforge:aa440c6e-ecc7-422d-85e4-f21bd0b7316d"
   },
   "revops": {
     "market_registry": {
@@ -44,6 +44,12 @@
         "cost_output": 0.0004,
         "benchmark": 82,
         "provider": "Anthropic"
+      },
+      "claude-opus-4-7": {
+        "cost_input": 0.015,
+        "cost_output": 0.075,
+        "benchmark": 100,
+        "provider": "Anthropic"
       }
     },
     "default_baseline_model": "claude-sonnet-4-6",
@@ -62,5 +68,47 @@
     "min_success_count": 3,
     "max_drift_threshold": 0.1,
     "auto_verify": false
+  },
+  "instincts": {
+    "mode": "auto-capture",
+    "max_active_per_project": 100,
+    "promotion_confidence_threshold": 0.85,
+    "promotion_min_applications": 5,
+    "prune_below_confidence": 0.2,
+    "prune_after_days_inactive": 30,
+    "max_capture_per_session": 5,
+    "store_path": ".mindforge/engine/instincts/instinct-store.jsonl"
+  },
+  "council": {
+    "voices": [
+      "architect",
+      "skeptic",
+      "pragmatist",
+      "critic"
+    ],
+    "max_rounds": 2,
+    "consensus_threshold": 0.75,
+    "word_limit_per_voice": 200,
+    "output_path": ".planning/decisions/"
+  },
+  "cost_routing": {
+    "enabled": true,
+    "simple_threshold": 3,
+    "standard_threshold": 6,
+    "complex_threshold": 8,
+    "model_tiers": {
+      "simple": "claude-haiku-4-5",
+      "standard": "claude-sonnet-4-6",
+      "complex": "claude-opus-4-7",
+      "research": "gemini-2.5-pro",
+      "consult": "gpt-4o"
+    },
+    "budget": {
+      "session_warn_usd": 5,
+      "session_hard_limit_usd": 20,
+      "project_weekly_warn_usd": 50,
+      "project_weekly_hard_limit_usd": 200
+    },
+    "ledger_path": ".mindforge/metrics/token-ledger.jsonl"
   }
 }

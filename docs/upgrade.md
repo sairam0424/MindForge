@@ -1,4 +1,4 @@
-# MindForge Upgrade Guide (v10.0.0)
+# MindForge Upgrade Guide (v10.0.1)
 
 This guide covers upgrades across all major MindForge versions.
 
@@ -59,14 +59,14 @@ Then re-run `/mindforge:migrate --dry-run`.
 
 ---
 
-## v9.0.0 to v10.0.0
+## v9.0.0 to v10.0.1
 
 ### What changed
 
 | Area | Change | User action |
 | :--- | :--- | :--- |
 | **Database engine** | `better-sqlite3` replaced by `sql.js` (pure WASM) | None — transparent to consumers. Native build tools are no longer required. |
-| **SDK memory module** | Rewritten for sql.js compatibility | If you consume `@mindforge/sdk`, update to v10.0.0 |
+| **SDK memory module** | Rewritten for sql.js compatibility | If you consume `@mindforge/sdk`, update to v10.0.1 |
 | **Dashboard auth** | Now requires a bearer token | Token is printed at startup. Pass it in the `Authorization` header. |
 | **VectorHub API** | Factory function `createVectorHub()` is the preferred entry point | The backward-compatible proxy still works; no immediate action needed. |
 | **Removed commands** | `sync-jira` and `sync-confluence` removed | These were never functional. Remove any references from your scripts. |
@@ -79,7 +79,7 @@ Then re-run `/mindforge:migrate --dry-run`.
 npx mindforge-cc --claude --local --force
 
 # 2. Migrate schema files (additive-only, safe)
-/mindforge:migrate --from v9.0.0 --to v10.0.0
+/mindforge:migrate --from v9.0.0 --to v10.0.1
 
 # 3. Verify
 /mindforge:health
@@ -89,7 +89,7 @@ npx mindforge-cc --claude --local --force
 
 If you use `@mindforge/sdk` directly (e.g., for custom integrations):
 
-- The memory module has been rewritten. Update your SDK dependency to `^10.0.0`.
+- The memory module has been rewritten. Update your SDK dependency to `^10.0.1`.
 - Prefer `createVectorHub()` over direct instantiation. The legacy constructor proxy remains for backward compatibility but may be removed in a future major version.
 
 ### Notes for CI pipelines

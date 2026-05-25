@@ -1,12 +1,12 @@
-# Release Notes — v10.0.0 "Bedrock Fortified"
+# Release Notes — v10.0.1 "Bedrock Fortified"
 
 **Release Date**: 2026-05-21  
-**Tag**: `v10.0.0`  
+**Tag**: `v10.0.1`  
 **Status**: STABLE (Production Hardened)
 
 ## Executive Summary
 
-MindForge v10.0.0 "Bedrock Fortified" is a comprehensive 4-phase rewrite that transforms the framework from a feature-rich prototype into a production-hardened platform. This release closes 4 critical security vulnerabilities, replaces all native C++ dependencies with pure WASM equivalents, decomposes the monolithic auto-runner into focused modules, establishes CI with coverage enforcement, and reduces the published package by 72%. Every test passes. Every endpoint is authenticated. Every query is parameterized.
+MindForge v10.0.1 "Bedrock Fortified" is a comprehensive 4-phase rewrite that transforms the framework from a feature-rich prototype into a production-hardened platform. This release closes 4 critical security vulnerabilities, replaces all native C++ dependencies with pure WASM equivalents, decomposes the monolithic auto-runner into focused modules, establishes CI with coverage enforcement, and reduces the published package by 72%. Every test passes. Every endpoint is authenticated. Every query is parameterized.
 
 ---
 
@@ -78,7 +78,7 @@ You must address these before upgrading from v9.x:
 ### Step 1: Update your dependency
 
 ```bash
-npm install mindforge-cc@10.0.0
+npm install mindforge-cc@10.0.1
 ```
 
 ### Step 2: Set the dashboard token (if using the dashboard)
@@ -120,7 +120,7 @@ If your scripts call `mindforge sync-jira` or `mindforge sync-confluence`, remov
 ### Step 6: Verify
 
 ```bash
-npx mindforge-cc --version   # Should print 10.0.0
+npx mindforge-cc --version   # Should print 10.0.1
 npm test                      # All 41 tests should pass
 ```
 

@@ -81,6 +81,22 @@ For each matched skill (in tier priority order: Project → Org → Core):
 3. Inject the skill content into the agent's context package (per `context-injector.md`)
 4. Log which skills were loaded in the task's `task_started` AUDIT entry
 
+### Step 4.1 — Resolve composed dependencies
+
+After loading matched skills, resolve any composition dependencies:
+
+1. For each loaded skill, check its YAML frontmatter for a `compose:` field
+2. If `compose:` is present, resolve each referenced skill name against MANIFEST.md
+3. Inject composed (child) skills as **summarized content** (not full injection) —
+   use the summarisation format defined in Step 5 below
+4. Maximum composition depth: **2 levels** — a composed skill's own `compose:`
+   dependencies are NOT resolved (no transitive composition beyond that)
+5. **Cycle detection:** if skill A composes B and B composes A, log a WARNING
+   and skip the circular reference — load only the directly-requested skill
+   without its circular dependency
+
+For full composition semantics, see `composition.md`.
+
 ### Step 4.5 — Validate loaded skill content (injection guard)
 
 Before injecting any skill content into an agent context, validate it against

@@ -1,5 +1,37 @@
 # Changelog
 
+## [10.0.3] - 2026-05-25 — "Council Awakens"
+
+### Added (v10.0.3)
+
+- **10 new core skills** — agent-loops, multi-llm-consult, continuous-learning, council, verification-loop, threat-modeling, autonomous-loops, agent-introspection-debugging, cost-aware-routing, doc-health-audit.
+- **8 new commands** — `/mindforge:council`, `/mindforge:consult`, `/mindforge:verify-loop`, `/mindforge:introspect`, `/mindforge:cost-report`, `/mindforge:threat-model`, `/mindforge:learn-instinct`, `/mindforge:evolve-skills`.
+- **9 new personas** — cost-optimizer, threat-modeler, council-architect, council-skeptic, council-pragmatist, council-critic, instinct-curator, doc-auditor, multi-model-bridge.
+- **3 new swarm templates** — CouncilSwarm (HITL decision gate), VerificationSwarm (autonomous quality gates), LearningSwarm (instinct management).
+- **Skill Composition System** — Skills can now declare dependencies on other skills via `compose:` frontmatter field. Composed skills are injected as summaries (max 2-level depth, cycle detection).
+- **Instinct Engine** — Auto-capture learned behaviors with confidence scoring. Instincts auto-promote to skills at 0.85 confidence after 5+ successful applications. Project-scoped, max 100 per project.
+- **Cost Tracking Module** — Token budgeting, 5-tier model routing (Haiku/Sonnet/Opus/Gemini/GPT-4o), spend analytics via token-ledger.jsonl.
+- **Council Framework** — 4-voice decision harness (Architect, Skeptic, Pragmatist, Critic) with weighted consensus scoring, dissent documentation, and 5 pre-built templates.
+- **Cross-Iteration Bridge** — SHARED_TASK_NOTES.md for semantic context persistence across autonomous mode iterations (complements HANDOFF.json).
+- **Swarm templates v6.0.0** — Bump from v5.0.0 with 3 new templates (total: 21 swarm templates).
+- **claude-opus-4-7** added to market_registry in config.json.
+- **Loader composition step** — New Step 4.1 in skill loader for resolving `compose:` dependencies.
+
+---
+
+## [10.0.2] - 2026-05-24 — "Persona Expansion"
+
+### Added (v10.0.2)
+
+- **47 new specialist personas** — Security & Compliance (6), Architecture & System Design (8), Frontend & UX (10), Performance & Reliability (5), Data & ML (4), DevOps & Infrastructure (6), Language Specialists (5), DX & Operations (8), Strategy & Review (9), Specialized Engineering (10).
+- **6 new swarm templates** — ArchitectureSwarm, PerformanceSwarm, InfrastructureSwarm, AccessibilitySwarm, ReviewSwarm, MigrationSwarm.
+- **Updated existing swarms** — UISwarm, BackendSwarm, SecuritySwarm, DeveloperExperienceSwarm, DataMeshSwarm, IncidentResponseSwarm, ComplianceSwarm, QualityAssuranceSwarm now include relevant new specialist personas.
+- **Swarm templates v5.0.0** — Bump from 4.2.0 with expanded member rosters and new specialist orchestration patterns.
+- **Persona registry documentation** — 10 new category tables in `docs/registry/PERSONAS.md`.
+- **Persona reference guide** — Updated `docs/PERSONAS.md` with all 47 entries (total: 108 personas).
+
+---
+
 ## [10.0.0] - 2026-05-21 — "Bedrock Fortified"
 
 ### Added (v10.0.0)

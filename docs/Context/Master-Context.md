@@ -34,7 +34,7 @@ anti-pattern detector, quality metrics, team profiling).
 Built the entire structural foundation:
 
 - **`.claude/CLAUDE.md`** — The agent entry point. Session start protocol, plan-first rule, quality gates, security auto-trigger, state artifact table. Mirrored identically to `.agent/CLAUDE.md` (Antigravity runtime).
-- **32 agent persona files** in `.mindforge/personas/`:
+- **108 agent persona files** in `.mindforge/personas/`:
   - `advisor-researcher.md`, `analyst.md`, `architect.md`, `assumptions-analyzer-extend.md`, `assumptions-analyzer.md`, `codebase-mapper-extend.md`, `codebase-mapper.md`, `coverage-specialist.md`, `debug-specialist.md`, `debugger.md`, `decision-architect.md`, `developer.md`, `executor.md`, `integration-checker.md`, `nyquist-auditor.md`, `phase-researcher.md`, `plan-checker.md`, `planner.md`, `project-researcher.md`, `qa-engineer.md`, `release-manager.md`, `research-agent.md`, `research-synthesizer.md`, `roadmapper-extend.md`, `roadmapper.md`, `security-reviewer.md`, `tech-writer.md`, `ui-auditor.md`, `ui-checker.md`, `ui-researcher.md`, `user-profiler.md`, `verifier.md`
 - **5 initial core skill packs** in `.mindforge/skills/`:
   - `security-review/SKILL.md` — 29 trigger keywords, OWASP A01-A10
@@ -361,7 +361,7 @@ mindforge-cc/                         ← npm package root
 │       └── [36 .md command files]
 │
 ├── .mindforge/
-│   ├── personas/                     ← 32 persona definitions + overrides/
+│   ├── personas/                     ← 108 persona definitions + overrides/
 │   ├── skills/                       ← 10 core skill packs (SKILL.md each)
 │   ├── engine/
 │   │   ├── wave-executor.md          ← Kahn's topological sort, parallel waves
