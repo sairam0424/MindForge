@@ -36,6 +36,11 @@ This file tracks all active, validated, and legacy skills within the MindForge e
 | codebase-onboarding | .mindforge/skills/codebase-onboarding/SKILL.md | stable |
 | rfc-pipeline | .mindforge/skills/rfc-pipeline/SKILL.md | stable |
 | de-sloppify | .mindforge/skills/de-sloppify/SKILL.md | stable |
+| skill-creator-meta | .mindforge/skills/skill-creator-meta/SKILL.md | stable |
+| deployment-workflow | .mindforge/skills/deployment-workflow/SKILL.md | stable |
+| dmux-workflows | .mindforge/skills/dmux-workflows/SKILL.md | stable |
+| vibe-security | .mindforge/skills/vibe-security/SKILL.md | stable |
+| instinct-clustering | .mindforge/skills/instinct-clustering/SKILL.md | stable |
 
 ## Multi-Agent Skills
 
