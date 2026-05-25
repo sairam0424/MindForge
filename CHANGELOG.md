@@ -1,5 +1,32 @@
 # Changelog
 
+## [10.0.6] - 2026-05-26 — "Complete Arsenal"
+
+### Added (v10.0.6)
+
+- **17 new core skills** — microservices-patterns, cqrs-event-sourcing, system-design, business-analyst, product-manager, market-researcher, typescript-advanced, python-performance, react-performance, k8s-deployment, writing-plans, writing-skills, using-git-worktrees, code-tour, autonomous-agent-harness, mcp-server-patterns, proofreader.
+- **10 new commands** — `/mindforge:microservices`, `/mindforge:system-design`, `/mindforge:brd`, `/mindforge:product-spec`, `/mindforge:market-research`, `/mindforge:code-tour`, `/mindforge:mcp-server`, `/mindforge:proofread`, `/mindforge:worktrees`, `/mindforge:plan-write`.
+- **8 new personas** — business-analyst, product-owner, market-analyst, mcp-designer, proofreader, system-designer, worktree-manager, code-narrator.
+- **3 new swarm templates** — ArchDesignSwarm (HITL system design), ProductSwarm (HITL product strategy), DocumentationSwarm (autonomous content quality).
+- **Swarm templates v9.0.0** — Bump from v8.0.0 with 3 new templates (total: 29 swarm templates).
+- **50 core skills milestone** — Framework now covers architecture, business, languages, workflow, infrastructure, and documentation domains.
+
+---
+
+## [10.0.5] - 2026-05-26 — "Forge Master"
+
+### Added (v10.0.5)
+
+- **5 new core skills** — skill-creator-meta, deployment-workflow, dmux-workflows, vibe-security, instinct-clustering.
+- **5 new commands** — `/mindforge:create-skill`, `/mindforge:deploy`, `/mindforge:dmux`, `/mindforge:vibe-check`, `/mindforge:cluster-instincts`.
+- **5 new personas** — skill-smith, deployment-captain, dmux-orchestrator, vibe-checker, saga-orchestrator.
+- **2 new swarm templates** — DeploymentSwarm (HITL staged rollout), ForgeSwarm (autonomous skill creation).
+- **De-slop gate** — Phase 6.5 in verification-loop: informational de-slop scan before shipping (non-blocking).
+- **Cross-model eval spec** — `.mindforge/engine/cross-model-eval.md` for routing same task to 2 models and comparing outputs.
+- **Swarm templates v8.0.0** — Bump from v7.0.0 with 2 new templates (total: 26 swarm templates).
+
+---
+
 ## [10.0.4] - 2026-05-26 — "Santa's Eval"
 
 ### Added (v10.0.4)

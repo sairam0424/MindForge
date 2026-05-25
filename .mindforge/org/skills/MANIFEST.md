@@ -36,6 +36,28 @@ This file tracks all active, validated, and legacy skills within the MindForge e
 | codebase-onboarding | .mindforge/skills/codebase-onboarding/SKILL.md | stable |
 | rfc-pipeline | .mindforge/skills/rfc-pipeline/SKILL.md | stable |
 | de-sloppify | .mindforge/skills/de-sloppify/SKILL.md | stable |
+| skill-creator-meta | .mindforge/skills/skill-creator-meta/SKILL.md | stable |
+| deployment-workflow | .mindforge/skills/deployment-workflow/SKILL.md | stable |
+| dmux-workflows | .mindforge/skills/dmux-workflows/SKILL.md | stable |
+| vibe-security | .mindforge/skills/vibe-security/SKILL.md | stable |
+| instinct-clustering | .mindforge/skills/instinct-clustering/SKILL.md | stable |
+| microservices-patterns | .mindforge/skills/microservices-patterns/SKILL.md | stable |
+| cqrs-event-sourcing | .mindforge/skills/cqrs-event-sourcing/SKILL.md | stable |
+| system-design | .mindforge/skills/system-design/SKILL.md | stable |
+| business-analyst | .mindforge/skills/business-analyst/SKILL.md | stable |
+| product-manager | .mindforge/skills/product-manager/SKILL.md | stable |
+| market-researcher | .mindforge/skills/market-researcher/SKILL.md | stable |
+| typescript-advanced | .mindforge/skills/typescript-advanced/SKILL.md | stable |
+| python-performance | .mindforge/skills/python-performance/SKILL.md | stable |
+| react-performance | .mindforge/skills/react-performance/SKILL.md | stable |
+| k8s-deployment | .mindforge/skills/k8s-deployment/SKILL.md | stable |
+| writing-plans | .mindforge/skills/writing-plans/SKILL.md | stable |
+| writing-skills | .mindforge/skills/writing-skills/SKILL.md | stable |
+| using-git-worktrees | .mindforge/skills/using-git-worktrees/SKILL.md | stable |
+| code-tour | .mindforge/skills/code-tour/SKILL.md | stable |
+| autonomous-agent-harness | .mindforge/skills/autonomous-agent-harness/SKILL.md | stable |
+| mcp-server-patterns | .mindforge/skills/mcp-server-patterns/SKILL.md | stable |
+| proofreader | .mindforge/skills/proofreader/SKILL.md | stable |
 
 ## Multi-Agent Skills
 
