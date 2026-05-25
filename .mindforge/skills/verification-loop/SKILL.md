@@ -68,6 +68,18 @@ git diff --staged  # or git diff main...HEAD
   - Sensitive data exposure
   - Logic errors visible in the diff
 
+**Phase 6.5 — De-Slop Scan (Informational)**
+- Run de-sloppify skill in dry-run scan mode on the current diff
+- Report findings count per category:
+  - Debug code (console.log, debugger, print statements)
+  - Test slop (skipped tests, test-only exports)
+  - Commented code blocks (3+ consecutive commented lines)
+  - Naming inconsistencies (mixed camelCase/snake_case)
+  - TODO hacks (shipped workarounds disguised as TODOs)
+- This phase is **INFORMATIONAL ONLY** — it does NOT block shipping
+- If findings > 0: append summary to verification output as advisory
+- Rationale: awareness of residual slop before shipping, without blocking velocity
+
 ### Execution Rules
 - Phases execute in ORDER (1→2→3→4→5→6)
 - Each phase must PASS before the next begins (fail-fast)
@@ -82,4 +94,4 @@ git diff --staged  # or git diff main...HEAD
 
 ### After verification passes
 - Log verification result in AUDIT with per-phase timing
-- Report: "All 6 verification gates passed. Safe to proceed."
+- Report: "All 6 verification gates passed (+ Phase 6.5 advisory). Safe to proceed."
