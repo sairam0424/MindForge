@@ -1,5 +1,5 @@
 {
-  "version": "7.0.0",
+  "version": "8.0.0",
   "mesh_protocols": {
     "shared_state": ".planning/phases/[N]/SWARM-STATE-[M].json",
     "consolidation_format": "SWARM-SUMMARY-[N]-[M].md",
@@ -221,6 +221,24 @@
       "decision_gate": "hitl",
       "resource_budget": "high",
       "required_skills": ["rfc-pipeline"]
+    },
+    "DeploymentSwarm": {
+      "leader": "deployment-captain",
+      "members": ["developer", "qa-engineer", "security-reviewer"],
+      "focus": "Staged rollout execution, canary monitoring, rollback decisions, and post-deploy verification.",
+      "trust_tier": 2,
+      "decision_gate": "hitl",
+      "resource_budget": "high",
+      "required_skills": ["deployment-workflow"]
+    },
+    "ForgeSwarm": {
+      "leader": "skill-smith",
+      "members": ["eval-judge", "quality-scorer", "developer"],
+      "focus": "Meta-skill creation, evaluation loop optimization, trigger description tuning, and quality scoring.",
+      "trust_tier": 1,
+      "decision_gate": "autonomous",
+      "resource_budget": "medium",
+      "required_skills": ["skill-creator-meta", "eval-harness"]
     }
   }
 }
