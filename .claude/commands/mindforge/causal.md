@@ -1,23 +1,23 @@
 ---
-name: mindforge:stream
-description: "Design stream processing pipeline. Usage: /mindforge:stream [pipeline] [--engine kafka|flink|spark] [--guarantee exactly-once|at-least-once]"
-argument-hint: "[pipeline] [--engine kafka|flink|spark] [--guarantee exactly-once|at-least-once]"
+name: mindforge:causal
+description: "Design causal inference analysis. Usage: /mindforge:causal [experiment] [--method ab|did|iv|rdd] [--outcome metric]"
+argument-hint: "[experiment] [--method ab|did|iv|rdd] [--outcome metric]"
 allowed-tools:
   - list_dir
   - view_file
 ---
 
 <objective>
-Design comprehensive stream system architecture with best practices and production-ready patterns.
+Design comprehensive causal system architecture with best practices and production-ready patterns.
 </objective>
 
 <execution_context>
-@.mindforge/skills/stream-processing/SKILL.md
+@.mindforge/skills/causal-inference/SKILL.md
 </execution_context>
 
 <context>
-Skills Directory: `.mindforge/skills/stream-processing/`
-State: Analyzes requirements, constraints, and scale to generate optimized stream architecture.
+Skills Directory: `.mindforge/skills/causal-inference/`
+State: Analyzes requirements, constraints, and scale to generate optimized causal architecture.
 </context>
 
 <process>

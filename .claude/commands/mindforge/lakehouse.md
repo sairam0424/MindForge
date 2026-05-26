@@ -1,23 +1,23 @@
 ---
-name: mindforge:stream
-description: "Design stream processing pipeline. Usage: /mindforge:stream [pipeline] [--engine kafka|flink|spark] [--guarantee exactly-once|at-least-once]"
-argument-hint: "[pipeline] [--engine kafka|flink|spark] [--guarantee exactly-once|at-least-once]"
+name: mindforge:lakehouse
+description: "Design data lakehouse architecture. Usage: /mindforge:lakehouse [domain] [--format delta|iceberg|hudi] [--layer bronze|silver|gold]"
+argument-hint: "[domain] [--format delta|iceberg|hudi] [--layer bronze|silver|gold]"
 allowed-tools:
   - list_dir
   - view_file
 ---
 
 <objective>
-Design comprehensive stream system architecture with best practices and production-ready patterns.
+Design comprehensive lakehouse system architecture with best practices and production-ready patterns.
 </objective>
 
 <execution_context>
-@.mindforge/skills/stream-processing/SKILL.md
+@.mindforge/skills/data-lakehouse/SKILL.md
 </execution_context>
 
 <context>
-Skills Directory: `.mindforge/skills/stream-processing/`
-State: Analyzes requirements, constraints, and scale to generate optimized stream architecture.
+Skills Directory: `.mindforge/skills/data-lakehouse/`
+State: Analyzes requirements, constraints, and scale to generate optimized lakehouse architecture.
 </context>
 
 <process>

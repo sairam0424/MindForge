@@ -1,23 +1,23 @@
 ---
-name: mindforge:stream
-description: "Design stream processing pipeline. Usage: /mindforge:stream [pipeline] [--engine kafka|flink|spark] [--guarantee exactly-once|at-least-once]"
-argument-hint: "[pipeline] [--engine kafka|flink|spark] [--guarantee exactly-once|at-least-once]"
+name: mindforge:privacy-eng
+description: "Design data privacy engineering system. Usage: /mindforge:privacy-eng [system] [--regulation gdpr|ccpa|hipaa] [--technique anonymization|differential|encryption]"
+argument-hint: "[system] [--regulation gdpr|ccpa|hipaa] [--technique anonymization|differential|encryption]"
 allowed-tools:
   - list_dir
   - view_file
 ---
 
 <objective>
-Design comprehensive stream system architecture with best practices and production-ready patterns.
+Design comprehensive privacy-eng system architecture with best practices and production-ready patterns.
 </objective>
 
 <execution_context>
-@.mindforge/skills/stream-processing/SKILL.md
+@.mindforge/skills/data-privacy-engineering/SKILL.md
 </execution_context>
 
 <context>
-Skills Directory: `.mindforge/skills/stream-processing/`
-State: Analyzes requirements, constraints, and scale to generate optimized stream architecture.
+Skills Directory: `.mindforge/skills/data-privacy-engineering/`
+State: Analyzes requirements, constraints, and scale to generate optimized privacy-eng architecture.
 </context>
 
 <process>

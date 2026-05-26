@@ -1,23 +1,23 @@
 ---
-name: mindforge:stream
-description: "Design stream processing pipeline. Usage: /mindforge:stream [pipeline] [--engine kafka|flink|spark] [--guarantee exactly-once|at-least-once]"
-argument-hint: "[pipeline] [--engine kafka|flink|spark] [--guarantee exactly-once|at-least-once]"
+name: mindforge:realtime-analytics
+description: "Design real-time analytics backend. Usage: /mindforge:realtime-analytics [domain] [--engine clickhouse|druid|pinot] [--latency sub-second|seconds]"
+argument-hint: "[domain] [--engine clickhouse|druid|pinot] [--latency sub-second|seconds]"
 allowed-tools:
   - list_dir
   - view_file
 ---
 
 <objective>
-Design comprehensive stream system architecture with best practices and production-ready patterns.
+Design comprehensive realtime-analytics system architecture with best practices and production-ready patterns.
 </objective>
 
 <execution_context>
-@.mindforge/skills/stream-processing/SKILL.md
+@.mindforge/skills/real-time-analytics/SKILL.md
 </execution_context>
 
 <context>
-Skills Directory: `.mindforge/skills/stream-processing/`
-State: Analyzes requirements, constraints, and scale to generate optimized stream architecture.
+Skills Directory: `.mindforge/skills/real-time-analytics/`
+State: Analyzes requirements, constraints, and scale to generate optimized realtime-analytics architecture.
 </context>
 
 <process>

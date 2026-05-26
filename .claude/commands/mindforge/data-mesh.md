@@ -1,23 +1,23 @@
 ---
-name: mindforge:stream
-description: "Design stream processing pipeline. Usage: /mindforge:stream [pipeline] [--engine kafka|flink|spark] [--guarantee exactly-once|at-least-once]"
-argument-hint: "[pipeline] [--engine kafka|flink|spark] [--guarantee exactly-once|at-least-once]"
+name: mindforge:data-mesh
+description: "Design data mesh architecture. Usage: /mindforge:data-mesh [organization] [--domains number] [--governance federated|centralized]"
+argument-hint: "[organization] [--domains number] [--governance federated|centralized]"
 allowed-tools:
   - list_dir
   - view_file
 ---
 
 <objective>
-Design comprehensive stream system architecture with best practices and production-ready patterns.
+Design comprehensive data-mesh system architecture with best practices and production-ready patterns.
 </objective>
 
 <execution_context>
-@.mindforge/skills/stream-processing/SKILL.md
+@.mindforge/skills/data-mesh/SKILL.md
 </execution_context>
 
 <context>
-Skills Directory: `.mindforge/skills/stream-processing/`
-State: Analyzes requirements, constraints, and scale to generate optimized stream architecture.
+Skills Directory: `.mindforge/skills/data-mesh/`
+State: Analyzes requirements, constraints, and scale to generate optimized data-mesh architecture.
 </context>
 
 <process>
