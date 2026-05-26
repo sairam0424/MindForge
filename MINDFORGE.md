@@ -1,12 +1,12 @@
-# MINDFORGE.md — Parameter Registry (v10.1.0)
+# MINDFORGE.md — Parameter Registry (v10.1.1)
 
 ## 1. IDENTITY & VERSIONING
 
 [NAME]    = MindForge
-[VERSION] = 10.1.0-STRATEGIC
+[VERSION] = 10.1.1-SCALE
 [STABLE]  = true
-[MODE]    = "Strategic Intelligence"
-[REQUIRED_CORE_VERSION] = 10.1.0
+[MODE]    = "Scale & Edge"
+[REQUIRED_CORE_VERSION] = 10.1.1
 [SOVEREIGN_IDENTITY] = true
 [SRE_LAYER_ENABLED]  = true
 

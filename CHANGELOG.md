@@ -1,5 +1,18 @@
 # Changelog
 
+## [10.1.1] - 2026-05-26 — "Scale & Edge"
+
+### Added (v10.1.1)
+
+- **10 new core skills** — edge-computing, serverless-patterns, container-security, zero-trust-architecture, ai-agent-deployment, distributed-consensus, data-pipeline-design, dns-architecture, cdn-optimization, database-sharding-advanced.
+- **6 new commands** — `/mindforge:edge`, `/mindforge:serverless`, `/mindforge:zero-trust`, `/mindforge:agent-deploy`, `/mindforge:data-pipeline`, `/mindforge:cdn`.
+- **6 new personas** — edge-engineer, zero-trust-engineer, agent-ops-engineer, consensus-engineer, data-pipeline-architect, cdn-architect.
+- **2 new swarm templates** — EdgeScaleSwarm (HITL edge + CDN), DistributedSwarm (HITL consensus + pipelines).
+- **140 core skills milestone** — Comprehensive coverage of emerging technology and massive-scale patterns.
+- **Swarm templates v14.0.0** — Bump from v13.0.0 with 2 new templates (total: 43 swarm templates).
+
+---
+
 ## [10.1.0] - 2026-05-26 — "Strategic Intelligence"
 
 ### Added (v10.1.0)

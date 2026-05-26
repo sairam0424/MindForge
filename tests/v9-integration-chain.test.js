@@ -281,9 +281,9 @@ async function main() {
   // ── SDK Sync ───────────────────────────────────────────────────────────────
   console.log('\nSDK Sync:');
 
-  test('SDK VERSION matches 10.1.0', () => {
+  test('SDK VERSION matches 10.1.1', () => {
     const src = fs.readFileSync(path.join(__dirname, '..', 'sdk', 'src', 'index.ts'), 'utf8');
-    assert.ok(src.includes("VERSION = '10.1.0'"));
+    assert.ok(src.includes("VERSION = '10.1.1'"));
   });
 
   test('SDK exports WaveExecutionResult and MigrationResult', () => {
@@ -298,22 +298,22 @@ async function main() {
     assert.ok(src.includes('isDatabaseInitialized'));
   });
 
-  test('SDK package.json version is 10.1.0', () => {
+  test('SDK package.json version is 10.1.1', () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'sdk', 'package.json'), 'utf8'));
-    assert.strictEqual(pkg.version, '10.1.0');
+    assert.strictEqual(pkg.version, '10.1.1');
   });
 
   // ── Package Metadata ───────────────────────────────────────────────────────
   console.log('\nPackage Metadata:');
 
-  test('package.json version is 10.1.0', () => {
+  test('package.json version is 10.1.1', () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
-    assert.strictEqual(pkg.version, '10.1.0');
+    assert.strictEqual(pkg.version, '10.1.1');
   });
 
-  test('MINDFORGE.md version is 10.1.0', () => {
+  test('MINDFORGE.md version is 10.1.1', () => {
     const md = fs.readFileSync(path.join(__dirname, '..', 'MINDFORGE.md'), 'utf8');
-    assert.ok(md.includes('10.1.0') || md.includes('10.0.2'));
+    assert.ok(md.includes('10.1.1') || md.includes('10.0.2'));
   });
 
   // ── Summary ────────────────────────────────────────────────────────────────
