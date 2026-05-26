@@ -1,5 +1,5 @@
 {
-  "version": "9.0.0",
+  "version": "10.0.0",
   "mesh_protocols": {
     "shared_state": ".planning/phases/[N]/SWARM-STATE-[M].json",
     "consolidation_format": "SWARM-SUMMARY-[N]-[M].md",
@@ -266,6 +266,33 @@
       "decision_gate": "autonomous",
       "resource_budget": "low",
       "required_skills": ["proofreader"]
+    },
+    "PromptEngineeringSwarm": {
+      "leader": "prompt-architect",
+      "members": ["agent-orchestrator", "developer", "eval-judge"],
+      "focus": "Prompt design, context engineering, agent orchestration patterns, and eval-driven prompt optimization.",
+      "trust_tier": 2,
+      "decision_gate": "hitl",
+      "resource_budget": "high",
+      "required_skills": ["prompt-engineering", "agent-orchestration-patterns"]
+    },
+    "SRESwarm": {
+      "leader": "sre-lead",
+      "members": ["devops-engineer", "chaos-engineer", "observability-engineer"],
+      "focus": "Site reliability, observability stack design, incident management, chaos engineering, and SLO-driven operations.",
+      "trust_tier": 3,
+      "decision_gate": "hitl",
+      "resource_budget": "high",
+      "required_skills": ["observability-stack", "incident-management", "chaos-engineering"]
+    },
+    "FrontendSwarm": {
+      "leader": "design-system-lead",
+      "members": ["react-specialist", "a11y-architect", "ui-auditor"],
+      "focus": "Design system architecture, responsive patterns, state management, and accessibility compliance.",
+      "trust_tier": 1,
+      "decision_gate": "autonomous",
+      "resource_budget": "medium",
+      "required_skills": ["design-system", "responsive-patterns", "state-management"]
     }
   }
 }

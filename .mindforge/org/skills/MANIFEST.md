@@ -58,6 +58,26 @@ This file tracks all active, validated, and legacy skills within the MindForge e
 | autonomous-agent-harness | .mindforge/skills/autonomous-agent-harness/SKILL.md | stable |
 | mcp-server-patterns | .mindforge/skills/mcp-server-patterns/SKILL.md | stable |
 | proofreader | .mindforge/skills/proofreader/SKILL.md | stable |
+| prompt-engineering | .mindforge/skills/prompt-engineering/SKILL.md | stable |
+| context-engineering | .mindforge/skills/context-engineering/SKILL.md | stable |
+| agent-orchestration-patterns | .mindforge/skills/agent-orchestration-patterns/SKILL.md | stable |
+| tool-design | .mindforge/skills/tool-design/SKILL.md | stable |
+| guardrails-and-safety | .mindforge/skills/guardrails-and-safety/SKILL.md | stable |
+| observability-stack | .mindforge/skills/observability-stack/SKILL.md | stable |
+| ci-cd-pipeline | .mindforge/skills/ci-cd-pipeline/SKILL.md | stable |
+| infrastructure-as-code | .mindforge/skills/infrastructure-as-code/SKILL.md | stable |
+| incident-management | .mindforge/skills/incident-management/SKILL.md | stable |
+| chaos-engineering | .mindforge/skills/chaos-engineering/SKILL.md | stable |
+| data-modeling | .mindforge/skills/data-modeling/SKILL.md | stable |
+| api-versioning | .mindforge/skills/api-versioning/SKILL.md | stable |
+| search-implementation | .mindforge/skills/search-implementation/SKILL.md | stable |
+| design-system | .mindforge/skills/design-system/SKILL.md | stable |
+| state-management | .mindforge/skills/state-management/SKILL.md | stable |
+| responsive-patterns | .mindforge/skills/responsive-patterns/SKILL.md | stable |
+| auth-patterns | .mindforge/skills/auth-patterns/SKILL.md | stable |
+| supply-chain-security | .mindforge/skills/supply-chain-security/SKILL.md | stable |
+| technical-writing | .mindforge/skills/technical-writing/SKILL.md | stable |
+| code-review-methodology | .mindforge/skills/code-review-methodology/SKILL.md | stable |
 
 ## Multi-Agent Skills
 

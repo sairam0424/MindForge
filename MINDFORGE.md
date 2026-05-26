@@ -1,12 +1,12 @@
-# MINDFORGE.md — Parameter Registry (v10.0.6)
+# MINDFORGE.md — Parameter Registry (v10.0.7)
 
 ## 1. IDENTITY & VERSIONING
 
 [NAME]    = MindForge
-[VERSION] = 10.0.6-ARSENAL
+[VERSION] = 10.0.7-META
 [STABLE]  = true
-[MODE]    = "Complete Arsenal"
-[REQUIRED_CORE_VERSION] = 10.0.6
+[MODE]    = "Meta Engineer"
+[REQUIRED_CORE_VERSION] = 10.0.7
 [SOVEREIGN_IDENTITY] = true
 [SRE_LAYER_ENABLED]  = true
 

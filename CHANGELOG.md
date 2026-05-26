@@ -1,5 +1,18 @@
 # Changelog
 
+## [10.0.7] - 2026-05-26 — "Meta Engineer"
+
+### Added (v10.0.7)
+
+- **20 new core skills** — prompt-engineering, context-engineering, agent-orchestration-patterns, tool-design, guardrails-and-safety, observability-stack, ci-cd-pipeline, infrastructure-as-code, incident-management, chaos-engineering, data-modeling, api-versioning, search-implementation, design-system, state-management, responsive-patterns, auth-patterns, supply-chain-security, technical-writing, code-review-methodology.
+- **10 new commands** — `/mindforge:prompt`, `/mindforge:context-budget`, `/mindforge:orchestrate`, `/mindforge:observability`, `/mindforge:pipeline`, `/mindforge:data-model`, `/mindforge:design-tokens`, `/mindforge:auth-flow`, `/mindforge:write-rfc`, `/mindforge:review-guide`.
+- **8 new personas** — prompt-architect, agent-orchestrator, sre-lead, pipeline-engineer, data-architect, design-system-lead, auth-engineer, technical-writer-lead.
+- **3 new swarm templates** — PromptEngineeringSwarm (HITL AI engineering), SRESwarm (HITL reliability), FrontendSwarm (autonomous design system).
+- **70 core skills milestone** — Framework now covers AI engineering, DevOps, reliability, data, frontend, advanced security, and technical communication.
+- **Swarm templates v10.0.0** — Bump from v9.0.0 with 3 new templates (total: 32 swarm templates).
+
+---
+
 ## [10.0.6] - 2026-05-26 — "Complete Arsenal"
 
 ### Added (v10.0.6)
