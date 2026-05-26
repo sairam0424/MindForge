@@ -3,7 +3,7 @@ name: api-versioning
 version: 1.0.0
 min_mindforge_version: 10.0.7
 status: stable
-triggers: api version strategy, api deprecation lifecycle, breaking change detection, consumer driven contract, sunset header strategy, version negotiation, api migration guide, backward compatibility strategy, api evolution pattern, api lifecycle management, api sunset policy, deprecation timeline
+triggers: api version strategy, api deprecation lifecycle, breaking change detection, consumer contract strategy, sunset header strategy, version negotiation, api migration guide, backward compatibility strategy, api evolution pattern, api lifecycle management, api sunset policy, deprecation timeline
 ---
 
 # API Versioning

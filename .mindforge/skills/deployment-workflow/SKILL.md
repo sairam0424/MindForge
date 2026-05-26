@@ -3,7 +3,7 @@ name: deployment-workflow
 version: 1.0.0
 min_mindforge_version: 10.0.5
 status: stable
-triggers: deploy, deployment, staged rollout, canary, feature flag, rollback plan, production release, release pipeline, ship to production, go live, launch pipeline, release workflow
+triggers: deploy, deployment, staged rollout, canary, feature flag rollout, rollback plan, production release, release pipeline, ship to production, go live, launch pipeline, release workflow
 ---
 
 # Skill — Deployment Workflow (Staged Production Release Pipeline)

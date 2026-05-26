@@ -1,12 +1,12 @@
-# MINDFORGE.md — Parameter Registry (v10.0.7)
+# MINDFORGE.md — Parameter Registry (v10.0.8)
 
 ## 1. IDENTITY & VERSIONING
 
 [NAME]    = MindForge
-[VERSION] = 10.0.7-META
+[VERSION] = 10.0.8-DEEP
 [STABLE]  = true
-[MODE]    = "Meta Engineer"
-[REQUIRED_CORE_VERSION] = 10.0.7
+[MODE]    = "Deep Patterns"
+[REQUIRED_CORE_VERSION] = 10.0.8
 [SOVEREIGN_IDENTITY] = true
 [SRE_LAYER_ENABLED]  = true
 
