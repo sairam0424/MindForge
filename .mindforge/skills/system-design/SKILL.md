@@ -3,13 +3,13 @@ name: system-design
 version: 1.0.0
 min_mindforge_version: 10.0.6
 status: stable
-triggers: system design, load balancer, sharding strategy, replication, CAP theorem, horizontal scaling, vertical scaling, message queue, distributed cache, high availability, fault tolerance, capacity planning
+triggers: system design, load balancer, sharding strategy, replication, CAP theorem, horizontal scaling, vertical scaling, message queue, distributed cache, high availability, fault tolerance
 ---
 
 # Skill — System Design
 
 ## When this skill activates
-Any task involving large-scale system architecture, capacity planning, scaling strategy,
+Any task involving large-scale system architecture, scaling strategy,
 distributed infrastructure, or high-availability design.
 
 ## Mandatory actions when this skill is active

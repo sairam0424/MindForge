@@ -4,13 +4,13 @@ version: 1.0.0
 min_mindforge_version: 0.1.0
 status: stable
 compose: api-design
-triggers: api gateway, rate limiting design, request routing, auth offloading, response transformation, backend for frontend, gateway circuit breaker, request aggregation, api composition, gateway caching, gateway throttling, gateway authentication
+triggers: api gateway, gateway rate limiting, request routing, auth offloading, response transformation, backend for frontend, gateway circuit breaker, request aggregation, api composition, gateway caching, gateway throttling, gateway authentication
 ---
 
 # Skill — API Gateway Patterns
 
 ## When this skill activates
-Any task involving API gateway configuration, rate limiting design, request
+Any task involving API gateway configuration, gateway rate limiting, request
 routing, authentication offloading, BFF patterns, or gateway-level caching.
 
 ## Mandatory actions when this skill is active
