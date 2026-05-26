@@ -1,14 +1,81 @@
 {
-  "name": "forge-framework",
-  "version": "0.1.0",
-  "description": "Enterprise Agentic Framework for Claude Code and Antigravity",
+  "name": "mindforge-cc",
+  "version": "10.7.0",
+  "description": "MindForge \u2014 Sovereign Agentic Intelligence Framework. Bedrock Fortified: Production-Grade Architecture (v10)",
   "bin": {
-    "forge": "./bin/install.js"
+    "mindforge-cc": "bin/install.js",
+    "mindforge": "bin/mindforge-cli.js"
   },
+  "files": [
+    ".agent/CLAUDE.md",
+    ".agent/hooks/",
+    ".mindforge/MINDFORGE-SCHEMA.json",
+    ".mindforge/MINDFORGE-V2-SCHEMA.json",
+    ".mindforge/config.json",
+    ".mindforge/personas/",
+    ".mindforge/skills/",
+    ".mindforge/engine/",
+    "bin/",
+    "docs/getting-started.md",
+    "docs/user-guide.md",
+    "docs/sdk-reference.md",
+    "docs/commands-reference.md",
+    "docs/troubleshooting.md",
+    "docs/faq.md",
+    "examples/",
+    "CHANGELOG.md",
+    "LICENSE",
+    "MINDFORGE.md",
+    "README.md",
+    "RELEASENOTES.md",
+    "SECURITY.md"
+  ],
   "scripts": {
-    "test": "node tests/run.js",
-    "lint": "echo 'Add linter here'"
+    "test": "node tests/run-all.js",
+    "test:single": "node",
+    "coverage": "npx c8 node tests/run-all.js",
+    "lint": "eslint .",
+    "commit": "cz",
+    "prepare": "husky"
   },
-  "keywords": ["claude-code", "antigravity", "agentic", "framework", "context-engineering"],
-  "license": "MIT"
+  "keywords": [
+    "claude-code",
+    "antigravity",
+    "agentic-framework",
+    "context-engineering",
+    "enterprise",
+    "mindforge",
+    "wasm-sqlite",
+    "zero-native-deps",
+    "agent-orchestration",
+    "sovereign-ai"
+  ],
+  "author": "sairamugge",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sairam0424/MindForge.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sairam0424/MindForge/issues"
+  },
+  "homepage": "https://github.com/sairam0424/MindForge#readme",
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/node": "^20.0.0",
+    "c8": "^10.0.0",
+    "commitizen": "^4.2.4",
+    "cz-conventional-changelog": "3.3.0",
+    "eslint": "^9.0.0",
+    "globals": "^15.0.0",
+    "husky": "9.1.7",
+    "playwright": "^1.40.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "sql.js": "^1.14.1"
+  }
 }

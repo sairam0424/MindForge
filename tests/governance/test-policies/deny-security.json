@@ -1,0 +1,9 @@
+{
+  "id": "policy_enforce_tier_3_security",
+  "effect": "DENY",
+  "description": "Restricted tier agents cannot modify security/governance.",
+  "conditions": {
+    "resource": "*/security/*,*/governance/*",
+    "min_tier": 3
+  }
+}

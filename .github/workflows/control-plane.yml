@@ -1,0 +1,79 @@
+name: MindForge Control Plane
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+
+jobs:
+  classify:
+    name: 🔍 Change Classification
+    runs-on: ubuntu-latest
+    outputs:
+      tier: ${{ steps.classifier.outputs.tier }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Classifier
+        id: classifier
+        run: node bin/change-classifier.js
+
+      - name: Tier Summary
+        run: |
+          echo "### 🔍 Change Classification Result" >> $GITHUB_STEP_SUMMARY
+          echo "- **Governance Tier:** ${{ steps.classifier.outputs.tier }}" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.classifier.outputs.tier }}" == "3" ]; then
+            echo "- ⚠️ **High Risk Changes Detected** — Tier 3 Governance Gate Enforced." >> $GITHUB_STEP_SUMMARY
+          fi
+
+  governance-gate:
+    name: ⚖️ Governance Enforcement
+    needs: classify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check Tier 3 Compliance
+        if: needs.classify.outputs.tier == '3'
+        run: |
+          APPROVAL_COUNT=$(ls .planning/approvals/*.json 2>/dev/null | wc -l)
+          if [ "$APPROVAL_COUNT" -eq 0 ]; then
+            echo "❌ ERROR: Tier 3 changes detected but no approval signature found in .planning/approvals/"
+            echo "Please run /mindforge:approve and commit the resulting approval file."
+            exit 1
+          fi
+          echo "✅ Tier 3 approval found."
+
+      - name: Security Scan
+        run: node bin/mindforge-cli.js security-scan
+
+  routing:
+    name: 🚀 Pipeline Routing
+    needs: [classify, governance-gate]
+    if: needs.governance-gate.result == 'success'
+    uses: ./.github/workflows/execution-plane.yml
+    secrets: inherit
+
+  ai-review:
+    name: 🤖 AI Intelligence Layer
+    needs: [classify, governance-gate]
+    if: github.event_name == 'pull_request' && needs.governance-gate.result == 'success'
+    uses: ./.github/workflows/ai-intelligence.yml
+    secrets: inherit

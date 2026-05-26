@@ -1,3 +1,7 @@
+---
+description: Plan a phase of the project. Usage: /forge:plan-phase [N]
+---
+
 Plan a phase of the project. Usage: /forge:plan-phase [N]
 
 If N is not provided, check STATE.md for the current phase and use that.

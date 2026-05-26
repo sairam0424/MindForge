@@ -1,0 +1,42 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .agent/hooks/mindforge-check-update.js"
+          },
+          {
+            "type": "command",
+            "command": "node .agent/hooks/mindforge-session-init_extended.js"
+          }
+        ]
+      }
+    ],
+    "AfterTool": [
+      {
+        "matcher": "Bash|Edit|Write|MultiEdit|Agent|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .agent/hooks/mindforge-context-monitor.js",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "BeforeTool": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .agent/hooks/mindforge-prompt-guard.js",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

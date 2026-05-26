@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MindForge v2 Autonomous Engine Schema",
+  "description": "Schema for HANDOFF.json and auto-state.json in v2.0.0-alpha.1",
+  "type": "object",
+  "properties": {
+    "schema_version": { "type": "string", "const": "2.0.0" },
+    "auto_mode_active": { "type": "boolean" },
+    "phase": { "type": "integer" },
+    "wave_current": { "type": "integer" },
+    "tasks_completed": { "type": "integer" },
+    "PLANNER_MODEL": { "type": "string" },
+    "EXECUTOR_MODEL": { "type": "string" },
+    "REVIEWER_MODEL": { "type": "string" },
+    "SECURITY_MODEL": { "type": "string" },
+    "RESEARCH_MODEL": { "type": "string" },
+    "QA_MODEL": { "type": "string" },
+    "DEBUG_MODEL": { "type": "string" },
+    "QUICK_MODEL": { "type": "string" },
+    "MODEL_COST_WARN_USD": { "type": "number" },
+    "MODEL_COST_HARD_LIMIT_USD": { "type": "number" },
+    "MODEL_PREFER_CHEAP_BELOW_DIFFICULTY": { "type": "number" },
+    "REQUIRE_CROSS_REVIEW": { "type": "boolean" },
+    "status": {
+      "type": "string",
+      "enum": ["idle", "running", "paused", "completed", "escalated", "timeout"]
+    },
+    "governance": {
+      "type": "object",
+      "properties": {
+        "tier1_auto_approve": { "type": "boolean" },
+        "tier2_auto_approve": { "type": "boolean" },
+        "tier3_require_human": { "type": "boolean", "const": true }
+      }
+    },
+    "browser": {
+      "type": "object",
+      "properties": {
+        "port": { "type": "integer", "default": 7338 },
+        "headless": { "type": "boolean", "default": true },
+        "dev_server_url": { "type": "string" },
+        "auto_qa": { "type": "boolean", "default": true }
+      }
+    }
+  },
+  "required": ["schema_version", "auto_mode_active", "status"]
+}

@@ -1,0 +1,14 @@
+# Default owner
+* @sairam0424
+
+# Security-sensitive paths require explicit review
+bin/governance/ @sairam0424
+bin/sre/ @sairam0424
+bin/dashboard/server.js @sairam0424
+.npmrc @sairam0424
+
+# SDK changes
+sdk/ @sairam0424
+
+# CI/CD changes
+.github/ @sairam0424

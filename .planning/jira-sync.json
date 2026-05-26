@@ -1,0 +1,7 @@
+{
+  "_warning": "DO NOT store credentials or tokens in this file. Use environment variables.",
+  "schema_version": "1.0.0",
+  "project_key": "",
+  "sync_enabled": false,
+  "last_sync": null
+}

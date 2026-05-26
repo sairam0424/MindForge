@@ -1,0 +1,16 @@
+{
+  "id": "SOV-001",
+  "name": "Sovereign Default Policy",
+  "description": "Enables Sovereign Intelligence v8.1.1 features by default.",
+  "effect": "PERMIT",
+  "max_impact": 100,
+  "conditions": {
+    "did": "agent:*",
+    "min_tier": 1
+  },
+  "sovereign_config": {
+    "pqas": "ENABLED",
+    "proactive_homing": "ENABLED",
+    "biometric_threshold": 95
+  }
+}

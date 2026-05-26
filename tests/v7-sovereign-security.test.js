@@ -1,0 +1,64 @@
+/**
+ * MindForge v7 — Pillar XI (PQAS) Verification
+ */
+'use strict';
+
+const assert = require('node:assert');
+const quantumCrypto = require('../bin/governance/quantum-crypto');
+const policyEngine = require('../bin/governance/policy-engine');
+
+async function testPQAS() {
+  console.log('--- Testing Post-Quantum Agentic Security (Pillar XI) ---');
+
+  // 1. Test Lattice Key Generation & Signing
+  console.log('Step 1: Testing Dilithium-5 Signature Flow...');
+  const keyPair = await quantumCrypto.generateLatticeKeyPair();
+  const data = 'Sovereign mutation: update core/kernel';
+  const signature = await quantumCrypto.signPQ(data, keyPair.privateKey);
+  
+  const isValid = quantumCrypto.verifyPQ(data, signature, keyPair.publicKey);
+  assert.strictEqual(isValid, true, 'Lattice signature verification failed');
+  console.log('✅ Lattice signature verified.');
+
+  // 2. Test ZK-Proof Policy Bypass
+  console.log('\nStep 2: Testing ZK-Proof Policy Bypass...');
+  const PolicyEngine = require('../bin/governance/policy-engine');
+  const pe = new PolicyEngine();
+  
+  const intent = {
+    id: 'intent_v7_001',
+    tier: 3,
+    pq_proof: quantumCrypto.generateZKProof({ id: 'intent_v7_001' }, { verdict: 'ALLOW' })
+  };
+  
+  // Simulated high impact
+  // Mocking matches and policies for testing
+  pe.matches = () => true;
+  pe.loadPolicies = () => [{ id: 'test_policy', effect: 'PERMIT', max_impact: 80 }];
+  
+  const verdict = await pe.evaluate(intent);
+  console.log(`✅ Policy Evaluation returned: ${verdict.verdict} (${verdict.reason})`);
+  assert.strictEqual(verdict.verdict, 'PERMIT', 'ZK-Proof bypass should result in PERMIT if verified');
+
+  // 3. Test Biometric Challenge (Risk > 95)
+  console.log('\nStep 3: Testing Biometric Challenge (Edge Case)...');
+  const ImpactAnalyzer = require('../bin/governance/impact-analyzer');
+  const originalAnalyze = ImpactAnalyzer.analyze;
+  ImpactAnalyzer.analyze = () => 98; // Force critical risk
+  
+  const highRiskIntent = { id: 'intent_v7_002', tier: 3, action: 'CRITICAL_MUTATION' };
+  const biometricVerdict = await pe.evaluate(highRiskIntent);
+  
+  assert.strictEqual(biometricVerdict.status, 'WAIT_FOR_BIOMETRIC', 'Biometric challenge did not trigger for risk > 95');
+  console.log('✅ Biometric challenge successfully triggered for Risk=98.');
+  
+  // Restore mock
+  ImpactAnalyzer.analyze = originalAnalyze;
+
+  console.log('\n--- PQAS Verification Complete ---');
+}
+
+testPQAS().catch(err => {
+  console.error('❌ PQAS Test Failed:', err);
+  process.exit(1);
+});
