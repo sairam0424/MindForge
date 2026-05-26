@@ -118,6 +118,26 @@ This file tracks all active, validated, and legacy skills within the MindForge e
 | bundle-optimization | .mindforge/skills/bundle-optimization/SKILL.md | stable |
 | graphql-patterns | .mindforge/skills/graphql-patterns/SKILL.md | stable |
 | pagination-patterns | .mindforge/skills/pagination-patterns/SKILL.md | stable |
+| build-vs-buy | .mindforge/skills/build-vs-buy/SKILL.md | stable |
+| technology-radar | .mindforge/skills/technology-radar/SKILL.md | stable |
+| architecture-tradeoff-analysis | .mindforge/skills/architecture-tradeoff-analysis/SKILL.md | stable |
+| technical-interview-design | .mindforge/skills/technical-interview-design/SKILL.md | stable |
+| post-incident-learning | .mindforge/skills/post-incident-learning/SKILL.md | stable |
+| team-topology-design | .mindforge/skills/team-topology-design/SKILL.md | stable |
+| sprint-retrospective-facilitation | .mindforge/skills/sprint-retrospective-facilitation/SKILL.md | stable |
+| knowledge-sharing-systems | .mindforge/skills/knowledge-sharing-systems/SKILL.md | stable |
+| estimation-techniques | .mindforge/skills/estimation-techniques/SKILL.md | stable |
+| on-call-design | .mindforge/skills/on-call-design/SKILL.md | stable |
+| experiment-design | .mindforge/skills/experiment-design/SKILL.md | stable |
+| analytics-instrumentation | .mindforge/skills/analytics-instrumentation/SKILL.md | stable |
+| notification-system-design | .mindforge/skills/notification-system-design/SKILL.md | stable |
+| payment-integration | .mindforge/skills/payment-integration/SKILL.md | stable |
+| email-deliverability | .mindforge/skills/email-deliverability/SKILL.md | stable |
+| agent-memory-design | .mindforge/skills/agent-memory-design/SKILL.md | stable |
+| agent-evaluation-framework | .mindforge/skills/agent-evaluation-framework/SKILL.md | stable |
+| multi-turn-conversation-design | .mindforge/skills/multi-turn-conversation-design/SKILL.md | stable |
+| agent-tool-selection | .mindforge/skills/agent-tool-selection/SKILL.md | stable |
+| human-in-the-loop-design | .mindforge/skills/human-in-the-loop-design/SKILL.md | stable |
 
 ## Multi-Agent Skills
 

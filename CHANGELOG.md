@@ -1,5 +1,19 @@
 # Changelog
 
+## [10.1.0] - 2026-05-26 — "Strategic Intelligence"
+
+### Added (v10.1.0)
+
+- **20 new core skills** — build-vs-buy, technology-radar, architecture-tradeoff-analysis, technical-interview-design, post-incident-learning, team-topology-design, sprint-retrospective-facilitation, knowledge-sharing-systems, estimation-techniques, on-call-design, experiment-design, analytics-instrumentation, notification-system-design, payment-integration, email-deliverability, agent-memory-design, agent-evaluation-framework, multi-turn-conversation-design, agent-tool-selection, human-in-the-loop-design.
+- **10 new commands** — `/mindforge:build-vs-buy`, `/mindforge:tech-radar`, `/mindforge:team-topology`, `/mindforge:retro`, `/mindforge:experiment`, `/mindforge:analytics`, `/mindforge:payments`, `/mindforge:agent-memory`, `/mindforge:agent-eval`, `/mindforge:hitl`.
+- **8 new personas** — decision-architect, team-coach, knowledge-curator, experiment-designer, payments-engineer, agent-memory-designer, agent-evaluator, hitl-architect.
+- **3 new swarm templates** — DecisionSwarm (HITL decision quality), TeamDesignSwarm (HITL team topology), AgentMetaSwarm (autonomous self-improvement).
+- **130 core skills milestone** — Category expansion into decision science, team engineering, product patterns, and agent meta-intelligence.
+- **Minor version bump (10.1.0)** — Represents category expansion beyond pure engineering into strategy and meta-intelligence.
+- **Swarm templates v13.0.0** — Bump from v12.0.0 with 3 new templates (total: 41 swarm templates).
+
+---
+
 ## [10.0.9] - 2026-05-26 — "Full Spectrum"
 
 ### Added (v10.0.9)

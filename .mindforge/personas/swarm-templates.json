@@ -1,5 +1,5 @@
 {
-  "version": "12.0.0",
+  "version": "13.0.0",
   "mesh_protocols": {
     "shared_state": ".planning/phases/[N]/SWARM-STATE-[M].json",
     "consolidation_format": "SWARM-SUMMARY-[N]-[M].md",
@@ -347,6 +347,33 @@
       "decision_gate": "hitl",
       "resource_budget": "high",
       "required_skills": ["multi-tenancy-patterns", "audit-logging", "compliance-as-code"]
+    },
+    "DecisionSwarm": {
+      "leader": "decision-architect",
+      "members": ["council-architect", "council-skeptic", "council-pragmatist"],
+      "focus": "Engineering decision quality: build-vs-buy, technology radar, architecture tradeoff analysis, and quantified decision-making.",
+      "trust_tier": 2,
+      "decision_gate": "hitl",
+      "resource_budget": "medium",
+      "required_skills": ["build-vs-buy", "technology-radar", "architecture-tradeoff-analysis"]
+    },
+    "TeamDesignSwarm": {
+      "leader": "team-coach",
+      "members": ["product-owner", "dx-engineer", "technical-writer-lead"],
+      "focus": "Team topology design, sprint retrospectives, knowledge sharing systems, estimation techniques, and on-call rotation.",
+      "trust_tier": 1,
+      "decision_gate": "hitl",
+      "resource_budget": "medium",
+      "required_skills": ["team-topology-design", "sprint-retrospective-facilitation"]
+    },
+    "AgentMetaSwarm": {
+      "leader": "agent-evaluator",
+      "members": ["prompt-architect", "agent-orchestrator", "eval-judge"],
+      "focus": "Agent self-improvement: memory architecture, evaluation frameworks, tool selection optimization, and human-in-the-loop calibration.",
+      "trust_tier": 1,
+      "decision_gate": "autonomous",
+      "resource_budget": "high",
+      "required_skills": ["agent-memory-design", "agent-evaluation-framework", "human-in-the-loop-design"]
     }
   }
 }
