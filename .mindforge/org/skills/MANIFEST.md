@@ -138,6 +138,16 @@ This file tracks all active, validated, and legacy skills within the MindForge e
 | multi-turn-conversation-design | .mindforge/skills/multi-turn-conversation-design/SKILL.md | stable |
 | agent-tool-selection | .mindforge/skills/agent-tool-selection/SKILL.md | stable |
 | human-in-the-loop-design | .mindforge/skills/human-in-the-loop-design/SKILL.md | stable |
+| edge-computing | .mindforge/skills/edge-computing/SKILL.md | stable |
+| serverless-patterns | .mindforge/skills/serverless-patterns/SKILL.md | stable |
+| container-security | .mindforge/skills/container-security/SKILL.md | stable |
+| zero-trust-architecture | .mindforge/skills/zero-trust-architecture/SKILL.md | stable |
+| ai-agent-deployment | .mindforge/skills/ai-agent-deployment/SKILL.md | stable |
+| distributed-consensus | .mindforge/skills/distributed-consensus/SKILL.md | stable |
+| data-pipeline-design | .mindforge/skills/data-pipeline-design/SKILL.md | stable |
+| dns-architecture | .mindforge/skills/dns-architecture/SKILL.md | stable |
+| cdn-optimization | .mindforge/skills/cdn-optimization/SKILL.md | stable |
+| database-sharding-advanced | .mindforge/skills/database-sharding-advanced/SKILL.md | stable |
 
 ## Multi-Agent Skills
 

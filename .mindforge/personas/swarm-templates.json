@@ -1,5 +1,5 @@
 {
-  "version": "13.0.0",
+  "version": "14.0.0",
   "mesh_protocols": {
     "shared_state": ".planning/phases/[N]/SWARM-STATE-[M].json",
     "consolidation_format": "SWARM-SUMMARY-[N]-[M].md",
@@ -374,6 +374,24 @@
       "decision_gate": "autonomous",
       "resource_budget": "high",
       "required_skills": ["agent-memory-design", "agent-evaluation-framework", "human-in-the-loop-design"]
+    },
+    "EdgeScaleSwarm": {
+      "leader": "edge-engineer",
+      "members": ["cdn-architect", "performance-optimizer", "streaming-engineer"],
+      "focus": "Edge computing architecture, CDN optimization, serverless patterns, and latency-critical system design.",
+      "trust_tier": 2,
+      "decision_gate": "hitl",
+      "resource_budget": "high",
+      "required_skills": ["edge-computing", "cdn-optimization", "serverless-patterns"]
+    },
+    "DistributedSwarm": {
+      "leader": "consensus-engineer",
+      "members": ["data-pipeline-architect", "sre-lead", "resilience-engineer"],
+      "focus": "Distributed consensus, data pipeline architecture, DNS-based routing, database sharding, and strong consistency patterns.",
+      "trust_tier": 2,
+      "decision_gate": "hitl",
+      "resource_budget": "high",
+      "required_skills": ["distributed-consensus", "data-pipeline-design", "database-sharding-advanced"]
     }
   }
 }
