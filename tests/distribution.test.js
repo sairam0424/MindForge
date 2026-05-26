@@ -133,7 +133,7 @@ test('sdk directory structure exists', () => {
 
 test('sdk package.json has correct name', () => {
   const pkg = JSON.parse(fs.readFileSync('sdk/package.json', 'utf8'));
-  assert.strictEqual(pkg.name, '@mindforge/sdk');
+  assert.strictEqual(pkg.name, 'mindforge-sdk');
 });
 
 test('sdk index.ts exports MindForgeClient', () => {

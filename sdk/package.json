@@ -1,5 +1,5 @@
 {
-  "name": "@mindforge/sdk",
+  "name": "mindforge-sdk",
   "version": "10.7.0",
   "description": "MindForge SDK \u2014 Programmatic API for embedding MindForge in tools",
   "main": "dist/index.js",
@@ -31,6 +31,9 @@
     "sdk"
   ],
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
     "typescript": ">=5.0.0"
   },
