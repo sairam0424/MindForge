@@ -1,7 +1,7 @@
 {
   "name": "mindforge-cc",
-  "version": "10.1.1",
-  "description": "MindForge — Sovereign Agentic Intelligence Framework. Bedrock Fortified: Production-Grade Architecture (v10)",
+  "version": "10.7.0",
+  "description": "MindForge \u2014 Sovereign Agentic Intelligence Framework. Bedrock Fortified: Production-Grade Architecture (v10)",
   "bin": {
     "mindforge-cc": "bin/install.js",
     "mindforge": "bin/mindforge-cli.js"

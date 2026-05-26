@@ -163,3 +163,93 @@ This file tracks all active, validated, and legacy skills within the MindForge e
 ## Knowledge Base
 
 - [ ] project-specific-knowledge
+
+## v10.2.0 — Industry Forge
+
+| Skill | Path | Status |
+|-------|------|--------|
+| healthcare-systems | .mindforge/skills/healthcare-systems/SKILL.md | stable |
+| fintech-patterns | .mindforge/skills/fintech-patterns/SKILL.md | stable |
+| ecommerce-architecture | .mindforge/skills/ecommerce-architecture/SKILL.md | stable |
+| gaming-backend | .mindforge/skills/gaming-backend/SKILL.md | stable |
+| edtech-platform | .mindforge/skills/edtech-platform/SKILL.md | stable |
+| saas-multi-tenant | .mindforge/skills/saas-multi-tenant/SKILL.md | stable |
+| media-streaming | .mindforge/skills/media-streaming/SKILL.md | stable |
+| iot-platform | .mindforge/skills/iot-platform/SKILL.md | stable |
+| marketplace-trust | .mindforge/skills/marketplace-trust/SKILL.md | stable |
+| logistics-optimization | .mindforge/skills/logistics-optimization/SKILL.md | stable |
+
+## v10.3.0 — Leader's Edge
+
+| Skill | Path | Status |
+|-------|------|--------|
+| technical-leadership | .mindforge/skills/technical-leadership/SKILL.md | stable |
+| mentoring-patterns | .mindforge/skills/mentoring-patterns/SKILL.md | stable |
+| stakeholder-communication | .mindforge/skills/stakeholder-communication/SKILL.md | stable |
+| conflict-resolution | .mindforge/skills/conflict-resolution/SKILL.md | stable |
+| incident-communication | .mindforge/skills/incident-communication/SKILL.md | stable |
+| hiring-engineering | .mindforge/skills/hiring-engineering/SKILL.md | stable |
+| delegation-patterns | .mindforge/skills/delegation-patterns/SKILL.md | stable |
+| meeting-architecture | .mindforge/skills/meeting-architecture/SKILL.md | stable |
+| performance-reviews | .mindforge/skills/performance-reviews/SKILL.md | stable |
+| change-management | .mindforge/skills/change-management/SKILL.md | stable |
+
+## v10.4.0 — Cross-Platform
+
+| Skill | Path | Status |
+|-------|------|--------|
+| react-native-patterns | .mindforge/skills/react-native-patterns/SKILL.md | stable |
+| flutter-architecture | .mindforge/skills/flutter-architecture/SKILL.md | stable |
+| offline-first-design | .mindforge/skills/offline-first-design/SKILL.md | stable |
+| progressive-web-app | .mindforge/skills/progressive-web-app/SKILL.md | stable |
+| mobile-performance | .mindforge/skills/mobile-performance/SKILL.md | stable |
+| cross-platform-testing | .mindforge/skills/cross-platform-testing/SKILL.md | stable |
+| app-store-deployment | .mindforge/skills/app-store-deployment/SKILL.md | stable |
+| mobile-security | .mindforge/skills/mobile-security/SKILL.md | stable |
+| responsive-native | .mindforge/skills/responsive-native/SKILL.md | stable |
+| push-notification-architecture | .mindforge/skills/push-notification-architecture/SKILL.md | stable |
+
+## v10.5.0 — AI Frontier
+
+| Skill | Path | Status |
+|-------|------|--------|
+| multimodal-ai | .mindforge/skills/multimodal-ai/SKILL.md | stable |
+| ai-safety-alignment | .mindforge/skills/ai-safety-alignment/SKILL.md | stable |
+| synthetic-data-generation | .mindforge/skills/synthetic-data-generation/SKILL.md | stable |
+| model-evaluation | .mindforge/skills/model-evaluation/SKILL.md | stable |
+| embedding-systems | .mindforge/skills/embedding-systems/SKILL.md | stable |
+| llm-orchestration | .mindforge/skills/llm-orchestration/SKILL.md | stable |
+| knowledge-graphs | .mindforge/skills/knowledge-graphs/SKILL.md | stable |
+| ml-feature-store | .mindforge/skills/ml-feature-store/SKILL.md | stable |
+| ai-cost-management | .mindforge/skills/ai-cost-management/SKILL.md | stable |
+| autonomous-agents | .mindforge/skills/autonomous-agents/SKILL.md | stable |
+
+## v10.6.0 — Data Alchemy
+
+| Skill | Path | Status |
+|-------|------|--------|
+| causal-inference | .mindforge/skills/causal-inference/SKILL.md | stable |
+| feature-engineering | .mindforge/skills/feature-engineering/SKILL.md | stable |
+| ml-monitoring | .mindforge/skills/ml-monitoring/SKILL.md | stable |
+| data-governance | .mindforge/skills/data-governance/SKILL.md | stable |
+| stream-processing | .mindforge/skills/stream-processing/SKILL.md | stable |
+| data-lakehouse | .mindforge/skills/data-lakehouse/SKILL.md | stable |
+| experiment-platform | .mindforge/skills/experiment-platform/SKILL.md | stable |
+| data-mesh | .mindforge/skills/data-mesh/SKILL.md | stable |
+| real-time-analytics | .mindforge/skills/real-time-analytics/SKILL.md | stable |
+| data-privacy-engineering | .mindforge/skills/data-privacy-engineering/SKILL.md | stable |
+
+## v10.7.0 — Platform Sovereign
+
+| Skill | Path | Status |
+|-------|------|--------|
+| internal-developer-platform | .mindforge/skills/internal-developer-platform/SKILL.md | stable |
+| self-serve-infrastructure | .mindforge/skills/self-serve-infrastructure/SKILL.md | stable |
+| platform-reliability | .mindforge/skills/platform-reliability/SKILL.md | stable |
+| developer-productivity-metrics | .mindforge/skills/developer-productivity-metrics/SKILL.md | stable |
+| api-marketplace | .mindforge/skills/api-marketplace/SKILL.md | stable |
+| build-system-optimization | .mindforge/skills/build-system-optimization/SKILL.md | stable |
+| secrets-platform | .mindforge/skills/secrets-platform/SKILL.md | stable |
+| environment-management | .mindforge/skills/environment-management/SKILL.md | stable |
+| platform-observability | .mindforge/skills/platform-observability/SKILL.md | stable |
+| migration-platform | .mindforge/skills/migration-platform/SKILL.md | stable |

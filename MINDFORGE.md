@@ -1,12 +1,12 @@
-# MINDFORGE.md — Parameter Registry (v10.1.1)
+# MINDFORGE.md — Parameter Registry (v10.7.0)
 
 ## 1. IDENTITY & VERSIONING
 
 [NAME]    = MindForge
-[VERSION] = 10.1.1-SCALE
+[VERSION] = 10.7.0-SOVEREIGN
 [STABLE]  = true
-[MODE]    = "Scale & Edge"
-[REQUIRED_CORE_VERSION] = 10.1.1
+[MODE]    = "Platform Sovereign"
+[REQUIRED_CORE_VERSION] = 10.7.0
 [SOVEREIGN_IDENTITY] = true
 [SRE_LAYER_ENABLED]  = true
 
