@@ -1,5 +1,32 @@
 # Changelog
 
+## [10.1.0] - 2026-05-26 — "Strategic Intelligence"
+
+### Added (v10.1.0)
+
+- **20 new core skills** — build-vs-buy, technology-radar, architecture-tradeoff-analysis, technical-interview-design, post-incident-learning, team-topology-design, sprint-retrospective-facilitation, knowledge-sharing-systems, estimation-techniques, on-call-design, experiment-design, analytics-instrumentation, notification-system-design, payment-integration, email-deliverability, agent-memory-design, agent-evaluation-framework, multi-turn-conversation-design, agent-tool-selection, human-in-the-loop-design.
+- **10 new commands** — `/mindforge:build-vs-buy`, `/mindforge:tech-radar`, `/mindforge:team-topology`, `/mindforge:retro`, `/mindforge:experiment`, `/mindforge:analytics`, `/mindforge:payments`, `/mindforge:agent-memory`, `/mindforge:agent-eval`, `/mindforge:hitl`.
+- **8 new personas** — decision-architect, team-coach, knowledge-curator, experiment-designer, payments-engineer, agent-memory-designer, agent-evaluator, hitl-architect.
+- **3 new swarm templates** — DecisionSwarm (HITL decision quality), TeamDesignSwarm (HITL team topology), AgentMetaSwarm (autonomous self-improvement).
+- **130 core skills milestone** — Category expansion into decision science, team engineering, product patterns, and agent meta-intelligence.
+- **Minor version bump (10.1.0)** — Represents category expansion beyond pure engineering into strategy and meta-intelligence.
+- **Swarm templates v13.0.0** — Bump from v12.0.0 with 3 new templates (total: 41 swarm templates).
+
+---
+
+## [10.0.9] - 2026-05-26 — "Full Spectrum"
+
+### Added (v10.0.9)
+
+- **20 new core skills** — streaming-architecture, queue-design, real-time-sync, cost-estimation, technical-debt-management, capacity-planning, graceful-degradation, idempotency-patterns, rate-limiting-design, code-generation-patterns, dependency-management, git-workflow-design, i18n-architecture, a11y-testing, multi-tenancy-patterns, audit-logging, database-performance, bundle-optimization, graphql-patterns, pagination-patterns.
+- **10 new commands** — `/mindforge:stream`, `/mindforge:queue`, `/mindforge:finops`, `/mindforge:tech-debt`, `/mindforge:degrade`, `/mindforge:idempotent`, `/mindforge:rate-limit`, `/mindforge:i18n`, `/mindforge:multi-tenant`, `/mindforge:graphql`.
+- **8 new personas** — streaming-engineer, finops-analyst, debt-manager, resilience-engineer, codegen-specialist, i18n-architect, multi-tenancy-architect, graphql-designer.
+- **3 new swarm templates** — StreamingSwarm (HITL real-time), ResilienceSwarm (autonomous failure engineering), GovernanceSwarm (HITL data governance).
+- **110 core skills milestone** — Comprehensive coverage across all major software engineering domains achieved.
+- **Swarm templates v12.0.0** — Bump from v11.0.0 with 3 new templates (total: 38 swarm templates).
+
+---
+
 ## [10.0.8] - 2026-05-26 — "Deep Patterns"
 
 ### Added (v10.0.8)

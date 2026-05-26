@@ -3,7 +3,7 @@ name: websocket-patterns
 version: 1.0.0
 min_mindforge_version: 0.1.0
 status: stable
-triggers: websocket pattern, connection lifecycle, heartbeat mechanism, reconnection strategy, websocket rooms, channel subscription, websocket scaling, redis pub sub scaling, backpressure handling, websocket authentication, message ordering, binary protocol
+triggers: websocket pattern, websocket connection lifecycle, heartbeat mechanism, reconnection strategy, websocket rooms, channel subscription, websocket scaling, redis pub sub scaling, backpressure handling, websocket authentication, message ordering, binary protocol
 ---
 
 # Skill — WebSocket Patterns
@@ -16,7 +16,7 @@ or WebSocket scaling across multiple server instances.
 ## Mandatory actions when this skill is active
 
 ### Before writing any code
-1. Define the connection lifecycle (upgrade, auth, message flow, close).
+1. Define the websocket connection lifecycle (upgrade, auth, message flow, close).
 2. Choose heartbeat interval and reconnection strategy.
 3. Determine scaling approach (Redis pub/sub, sticky sessions, etc.).
 
