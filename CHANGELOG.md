@@ -1,5 +1,74 @@
 # Changelog
 
+## [10.7.0] - 2026-05-27 — "Platform Sovereign"
+
+### Added (v10.7.0)
+
+- **10 new core skills** — internal-developer-platform, self-serve-infrastructure, platform-reliability, developer-productivity-metrics, api-marketplace, build-system-optimization, secrets-platform, environment-management, platform-observability, migration-platform.
+- **6 new commands** — `/mindforge:platform`, `/mindforge:build-opt`, `/mindforge:secrets-mgmt`, `/mindforge:environments`, `/mindforge:observability-platform`, `/mindforge:migration-mgmt`.
+- **6 new personas** — platform-lead, build-engineer, environment-engineer, productivity-analyst, secrets-engineer, migration-architect.
+- **1 new swarm template** — PlatformSwarmV2 (HITL platform engineering + migration).
+- **200 core skills milestone** — Full coverage across 12 domains.
+- **Swarm templates v15.0.0** — 49 total templates.
+
+---
+
+## [10.6.0] - 2026-05-27 — "Data Alchemy"
+
+### Added (v10.6.0)
+
+- **10 new core skills** — causal-inference, feature-engineering, ml-monitoring, data-governance, stream-processing, data-lakehouse, experiment-platform, data-mesh, real-time-analytics, data-privacy-engineering.
+- **6 new commands** — `/mindforge:causal`, `/mindforge:lakehouse`, `/mindforge:data-mesh`, `/mindforge:stream`, `/mindforge:privacy-eng`, `/mindforge:realtime-analytics`.
+- **6 new personas** — causal-scientist, data-mesh-architect, stream-engineer, lakehouse-architect, privacy-engineer, analytics-engineer.
+- **1 new swarm template** — DataAlchemySwarm (HITL data architecture + privacy).
+
+---
+
+## [10.5.0] - 2026-05-27 — "AI Frontier"
+
+### Added (v10.5.0)
+
+- **10 new core skills** — multimodal-ai, ai-safety-alignment, synthetic-data-generation, model-evaluation, embedding-systems, llm-orchestration, knowledge-graphs, ml-feature-store, ai-cost-management, autonomous-agents.
+- **8 new commands** — `/mindforge:multimodal`, `/mindforge:ai-safety`, `/mindforge:embeddings`, `/mindforge:llm-route`, `/mindforge:knowledge-graph`, `/mindforge:feature-store`, `/mindforge:ai-cost`, `/mindforge:agent-design`.
+- **8 new personas** — multimodal-engineer, ai-safety-engineer, embedding-architect, llm-orchestrator, knowledge-engineer, feature-store-engineer, ai-economist, agent-architect.
+- **1 new swarm template** — AIFrontierSwarm (HITL AI system architecture + safety).
+
+---
+
+## [10.4.0] - 2026-05-27 — "Cross-Platform"
+
+### Added (v10.4.0)
+
+- **10 new core skills** — react-native-patterns, flutter-architecture, offline-first-design, progressive-web-app, mobile-performance, cross-platform-testing, app-store-deployment, mobile-security, responsive-native, push-notification-architecture.
+- **6 new commands** — `/mindforge:mobile`, `/mindforge:react-native`, `/mindforge:flutter`, `/mindforge:offline`, `/mindforge:pwa`, `/mindforge:push-notify`.
+- **6 new personas** — mobile-architect, react-native-engineer, flutter-engineer, offline-specialist, mobile-security-engineer, pwa-architect.
+- **1 new swarm template** — MobileSwarm (HITL cross-platform architecture).
+
+---
+
+## [10.3.0] - 2026-05-27 — "Leader's Edge"
+
+### Added (v10.3.0)
+
+- **10 new core skills** — technical-leadership, mentoring-patterns, stakeholder-communication, conflict-resolution, incident-communication, hiring-engineering, delegation-patterns, meeting-architecture, performance-reviews, change-management.
+- **6 new commands** — `/mindforge:lead`, `/mindforge:communicate`, `/mindforge:hire`, `/mindforge:delegate`, `/mindforge:meeting-design`, `/mindforge:change`.
+- **6 new personas** — tech-lead-coach, communication-architect, hiring-strategist, change-agent, meeting-designer, mentorship-lead.
+- **1 new swarm template** — LeadershipSwarm (HITL engineering leadership).
+
+---
+
+## [10.2.0] - 2026-05-27 — "Industry Forge"
+
+### Added (v10.2.0)
+
+- **10 new core skills** — healthcare-systems, fintech-patterns, ecommerce-architecture, gaming-backend, edtech-platform, saas-multi-tenant, media-streaming, iot-platform, marketplace-trust, logistics-optimization.
+- **8 new commands** — `/mindforge:healthcare`, `/mindforge:fintech`, `/mindforge:ecommerce`, `/mindforge:gaming`, `/mindforge:edtech`, `/mindforge:iot`, `/mindforge:marketplace`, `/mindforge:logistics`.
+- **8 new personas** — healthcare-engineer, fintech-architect, ecommerce-engineer, gaming-engineer, edtech-architect, iot-architect, marketplace-engineer, logistics-architect.
+- **1 new swarm template** — IndustryVerticalSwarm (HITL domain-specific architecture).
+- **150 core skills milestone** — Industry vertical coverage added.
+
+---
+
 ## [10.1.1] - 2026-05-26 — "Scale & Edge"
 
 ### Added (v10.1.1)

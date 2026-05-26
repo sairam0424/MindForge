@@ -1,5 +1,5 @@
 {
-  "version": "14.0.0",
+  "version": "15.0.0",
   "mesh_protocols": {
     "shared_state": ".planning/phases/[N]/SWARM-STATE-[M].json",
     "consolidation_format": "SWARM-SUMMARY-[N]-[M].md",
@@ -8,390 +8,822 @@
   "templates": {
     "UISwarm": {
       "leader": "ui-auditor",
-      "members": ["developer", "a11y-architect", "frontend-architect", "design-system-engineer", "ux-auditor", "whimsy-injector"],
+      "members": [
+        "developer",
+        "a11y-architect",
+        "frontend-architect",
+        "design-system-engineer",
+        "ux-auditor",
+        "whimsy-injector"
+      ],
       "focus": "Visual fidelity, interaction states, WCAG 2.2 compliance, and design system consistency.",
       "trust_tier": 1,
       "decision_gate": "autonomous",
       "resource_budget": "medium",
-      "required_skills": ["ui-ux-pro-max"]
+      "required_skills": [
+        "ui-ux-pro-max"
+      ]
     },
     "BackendSwarm": {
       "leader": "architect",
-      "members": ["developer", "security-reviewer", "database-expert", "api-designer", "api-gateway-architect", "event-driven-architect", "queue-architect"],
+      "members": [
+        "developer",
+        "security-reviewer",
+        "database-expert",
+        "api-designer",
+        "api-gateway-architect",
+        "event-driven-architect",
+        "queue-architect"
+      ],
       "focus": "Architectural alignment, performance, API versioning, and event-driven patterns.",
       "trust_tier": 2,
       "decision_gate": "autonomous",
       "resource_budget": "medium",
-      "required_skills": ["system-architecture"]
+      "required_skills": [
+        "system-architecture"
+      ]
     },
     "SecuritySwarm": {
       "leader": "security-reviewer",
-      "members": ["architect", "developer", "authentication-architect", "dependency-auditor", "data-privacy-engineer", "compliance-auditor"],
+      "members": [
+        "architect",
+        "developer",
+        "authentication-architect",
+        "dependency-auditor",
+        "data-privacy-engineer",
+        "compliance-auditor"
+      ],
       "focus": "OWASP A01-A10 mitigation, secret detection, supply chain security, and trust boundary enforcement.",
       "trust_tier": 3,
       "decision_gate": "hitl",
       "resource_budget": "high",
-      "required_skills": ["security-engineer"]
+      "required_skills": [
+        "security-engineer"
+      ]
     },
     "AIEngineeringSwarm": {
       "leader": "ai-engineer",
-      "members": ["prompt-engineer", "developer", "model-qa-specialist"],
+      "members": [
+        "prompt-engineer",
+        "developer",
+        "model-qa-specialist"
+      ],
       "focus": "Model orchestration, prompt grounding, hallucination mitigation, and inference optimization.",
       "trust_tier": 2,
       "decision_gate": "autonomous",
       "resource_budget": "high",
-      "required_skills": ["agency-ai-engineer"]
+      "required_skills": [
+        "agency-ai-engineer"
+      ]
     },
     "DeveloperExperienceSwarm": {
       "leader": "developer-advocate",
-      "members": ["devops-engineer", "tech-writer", "cli-designer", "sdk-designer", "onboarding-guide", "git-workflow-expert"],
+      "members": [
+        "devops-engineer",
+        "tech-writer",
+        "cli-designer",
+        "sdk-designer",
+        "onboarding-guide",
+        "git-workflow-expert"
+      ],
       "focus": "CI/CD pipeline ergonomics, DX documentation, CLI/SDK design, and internal tool optimization.",
       "trust_tier": 1,
       "decision_gate": "autonomous",
       "resource_budget": "low",
-      "required_skills": ["agency-developer-advocate"]
+      "required_skills": [
+        "agency-developer-advocate"
+      ]
     },
     "DataMeshSwarm": {
       "leader": "data-engineer",
-      "members": ["database-expert", "search-engineer", "ml-engineer", "analytics-reporter", "compliance-auditor"],
+      "members": [
+        "database-expert",
+        "search-engineer",
+        "ml-engineer",
+        "analytics-reporter",
+        "compliance-auditor"
+      ],
       "focus": "Data lakehouse patterns, ETL pipelining, search relevance, and semantic layer integrity.",
       "trust_tier": 2,
       "decision_gate": "hitl",
       "resource_budget": "medium",
-      "required_skills": ["agency-data-engineer"]
+      "required_skills": [
+        "agency-data-engineer"
+      ]
     },
     "IdentityTrustSwarm": {
       "leader": "agentic-identity-trust-architect",
-      "members": ["security-reviewer", "architect", "blockchain-security-auditor"],
+      "members": [
+        "security-reviewer",
+        "architect",
+        "blockchain-security-auditor"
+      ],
       "focus": "Zero-Trust Agentic Identity (ZTAI), DID-based signing, and authentication bypass mitigation.",
       "trust_tier": 3,
       "decision_gate": "hitl",
       "resource_budget": "high",
-      "required_skills": ["agency-agentic-identity-trust-architect"]
+      "required_skills": [
+        "agency-agentic-identity-trust-architect"
+      ]
     },
     "GrowthAnalyticsSwarm": {
       "leader": "growth-hacker",
-      "members": ["analytics-reporter", "ui-auditor", "tracking-measurement-specialist"],
+      "members": [
+        "analytics-reporter",
+        "ui-auditor",
+        "tracking-measurement-specialist"
+      ],
       "focus": "A/B testing, conversion funnel optimization, and telemetry instrumentation.",
       "trust_tier": 1,
       "decision_gate": "autonomous",
       "resource_budget": "medium",
-      "required_skills": ["agency-growth-hacker"]
+      "required_skills": [
+        "agency-growth-hacker"
+      ]
     },
     "IncidentResponseSwarm": {
       "leader": "incident-commander",
-      "members": ["developer", "debug-specialist", "observability-engineer", "kubernetes-debugger", "logging-architect"],
+      "members": [
+        "developer",
+        "debug-specialist",
+        "observability-engineer",
+        "kubernetes-debugger",
+        "logging-architect"
+      ],
       "focus": "Rapid root cause analysis (RCA), hotfix deployment, observability triage, and post-mortem drafting.",
       "trust_tier": 3,
       "decision_gate": "hitl",
       "resource_budget": "high",
-      "required_skills": ["gsd-debug"]
+      "required_skills": [
+        "gsd-debug"
+      ]
     },
     "ComplianceSwarm": {
       "leader": "compliance-auditor",
-      "members": ["data-privacy-engineer", "architect", "security-reviewer", "dependency-auditor"],
+      "members": [
+        "data-privacy-engineer",
+        "architect",
+        "security-reviewer",
+        "dependency-auditor"
+      ],
       "focus": "GDPR/SOC2 alignment, PII masking, supply chain compliance, and regulatory audit trail verification.",
       "trust_tier": 3,
       "decision_gate": "hitl",
       "resource_budget": "medium",
-      "required_skills": ["agency-legal-compliance-checker"]
+      "required_skills": [
+        "agency-legal-compliance-checker"
+      ]
     },
     "QualityAssuranceSwarm": {
       "leader": "qa-engineer",
-      "members": ["developer", "verifier", "contract-tester", "test-data-engineer", "accessibility-tester"],
+      "members": [
+        "developer",
+        "verifier",
+        "contract-tester",
+        "test-data-engineer",
+        "accessibility-tester"
+      ],
       "focus": "End-to-end regression, contract testing, edge-case fuzzing, and coverage-gap analysis.",
       "trust_tier": 1,
       "decision_gate": "autonomous",
       "resource_budget": "medium",
-      "required_skills": ["gsd-add-tests"]
+      "required_skills": [
+        "gsd-add-tests"
+      ]
     },
     "FullStackSwarm": {
       "leader": "architect",
-      "members": ["ui-auditor", "developer", "security-reviewer", "tech-writer"],
+      "members": [
+        "ui-auditor",
+        "developer",
+        "security-reviewer",
+        "tech-writer"
+      ],
       "focus": "End-to-end feature delivery with unified UI, API security, and documentation.",
       "trust_tier": 2,
       "decision_gate": "autonomous",
       "resource_budget": "high",
-      "required_skills": ["system-architecture", "ui-ux-pro-max"]
+      "required_skills": [
+        "system-architecture",
+        "ui-ux-pro-max"
+      ]
     },
     "ArchitectureSwarm": {
       "leader": "architect",
-      "members": ["cloud-architect", "domain-modeler", "api-gateway-architect", "monorepo-architect", "state-machine-designer"],
+      "members": [
+        "cloud-architect",
+        "domain-modeler",
+        "api-gateway-architect",
+        "monorepo-architect",
+        "state-machine-designer"
+      ],
       "focus": "System design, domain modeling, cloud architecture, and structural patterns.",
       "trust_tier": 2,
       "decision_gate": "autonomous",
       "resource_budget": "high",
-      "required_skills": ["system-architecture"]
+      "required_skills": [
+        "system-architecture"
+      ]
     },
     "PerformanceSwarm": {
       "leader": "performance-optimizer",
-      "members": ["caching-strategist", "build-optimizer", "api-load-tester", "chaos-engineer", "concurrency-expert"],
+      "members": [
+        "caching-strategist",
+        "build-optimizer",
+        "api-load-tester",
+        "chaos-engineer",
+        "concurrency-expert"
+      ],
       "focus": "Performance profiling, cache optimization, load testing, chaos engineering, and build speed.",
       "trust_tier": 2,
       "decision_gate": "autonomous",
       "resource_budget": "high",
-      "required_skills": ["performance-engineer"]
+      "required_skills": [
+        "performance-engineer"
+      ]
     },
     "InfrastructureSwarm": {
       "leader": "devops-engineer",
-      "members": ["kubernetes-debugger", "observability-engineer", "logging-architect", "backup-recovery-specialist", "config-management-expert"],
+      "members": [
+        "kubernetes-debugger",
+        "observability-engineer",
+        "logging-architect",
+        "backup-recovery-specialist",
+        "config-management-expert"
+      ],
       "focus": "Infrastructure automation, container orchestration, observability, and disaster recovery.",
       "trust_tier": 2,
       "decision_gate": "hitl",
       "resource_budget": "high",
-      "required_skills": ["agency-devops-engineer"]
+      "required_skills": [
+        "agency-devops-engineer"
+      ]
     },
     "AccessibilitySwarm": {
       "leader": "a11y-architect",
-      "members": ["accessibility-tester", "frontend-architect", "internationalization-expert", "ux-auditor"],
+      "members": [
+        "accessibility-tester",
+        "frontend-architect",
+        "internationalization-expert",
+        "ux-auditor"
+      ],
       "focus": "WCAG compliance, inclusive design, i18n/l10n, and assistive technology compatibility.",
       "trust_tier": 1,
       "decision_gate": "autonomous",
       "resource_budget": "medium",
-      "required_skills": ["accessibility-compliance"]
+      "required_skills": [
+        "accessibility-compliance"
+      ]
     },
     "ReviewSwarm": {
       "leader": "senior-reviewer",
-      "members": ["spec-reviewer", "refactoring-expert", "tech-debt-analyst", "code-archeologist"],
+      "members": [
+        "spec-reviewer",
+        "refactoring-expert",
+        "tech-debt-analyst",
+        "code-archeologist"
+      ],
       "focus": "Code quality, specification completeness, refactoring safety, and technical debt governance.",
       "trust_tier": 1,
       "decision_gate": "autonomous",
       "resource_budget": "medium",
-      "required_skills": ["code-review-excellence"]
+      "required_skills": [
+        "code-review-excellence"
+      ]
     },
     "MigrationSwarm": {
       "leader": "migration-specialist",
-      "members": ["database-expert", "domain-modeler", "contract-tester", "git-forensics"],
+      "members": [
+        "database-expert",
+        "domain-modeler",
+        "contract-tester",
+        "git-forensics"
+      ],
       "focus": "Safe database migrations, schema evolution, contract validation, and incremental cutover.",
       "trust_tier": 2,
       "decision_gate": "hitl",
       "resource_budget": "medium",
-      "required_skills": ["database-migration"]
+      "required_skills": [
+        "database-migration"
+      ]
     },
     "CouncilSwarm": {
       "leader": "council-architect",
-      "members": ["council-skeptic", "council-pragmatist", "council-critic"],
+      "members": [
+        "council-skeptic",
+        "council-pragmatist",
+        "council-critic"
+      ],
       "focus": "Multi-voice architectural decision making with structured debate and verdict synthesis.",
       "trust_tier": 2,
       "decision_gate": "hitl",
       "resource_budget": "medium",
-      "required_skills": ["council"]
+      "required_skills": [
+        "council"
+      ]
     },
     "VerificationSwarm": {
       "leader": "qa-engineer",
-      "members": ["developer", "security-reviewer", "build-optimizer", "coverage-specialist"],
+      "members": [
+        "developer",
+        "security-reviewer",
+        "build-optimizer",
+        "coverage-specialist"
+      ],
       "focus": "6-phase quality gate execution with parallel build, type-check, lint, test, security scan, and diff review.",
       "trust_tier": 1,
       "decision_gate": "autonomous",
       "resource_budget": "medium",
-      "required_skills": ["verification-loop"]
+      "required_skills": [
+        "verification-loop"
+      ]
     },
     "LearningSwarm": {
       "leader": "instinct-curator",
-      "members": ["analyst", "developer"],
+      "members": [
+        "analyst",
+        "developer"
+      ],
       "focus": "Session observation, pattern detection, instinct creation and confidence scoring, skill promotion.",
       "trust_tier": 1,
       "decision_gate": "autonomous",
       "resource_budget": "low",
-      "required_skills": ["continuous-learning"]
+      "required_skills": [
+        "continuous-learning"
+      ]
     },
     "EvalSwarm": {
       "leader": "eval-judge",
-      "members": ["mf-reviewer", "qa-engineer", "anti-pattern-hunter"],
+      "members": [
+        "mf-reviewer",
+        "qa-engineer",
+        "anti-pattern-hunter"
+      ],
       "focus": "Structured evaluation using rubrics, pass@k metrics, regression detection, and anti-pattern identification.",
       "trust_tier": 1,
       "decision_gate": "autonomous",
       "resource_budget": "medium",
-      "required_skills": ["eval-harness", "quality-audit"]
+      "required_skills": [
+        "eval-harness",
+        "quality-audit"
+      ]
     },
     "OnboardingSwarm": {
       "leader": "onboarding-navigator",
-      "members": ["codebase-mapper", "advisor-researcher", "doc-auditor"],
+      "members": [
+        "codebase-mapper",
+        "advisor-researcher",
+        "doc-auditor"
+      ],
       "focus": "Codebase exploration, knowledge graph construction, entry point identification, and documentation gap analysis.",
       "trust_tier": 1,
       "decision_gate": "autonomous",
       "resource_budget": "low",
-      "required_skills": ["codebase-onboarding"]
+      "required_skills": [
+        "codebase-onboarding"
+      ]
     },
     "RFCSwarm": {
       "leader": "rfc-architect",
-      "members": ["architect", "developer", "analyst"],
+      "members": [
+        "architect",
+        "developer",
+        "analyst"
+      ],
       "focus": "Specification decomposition, dependency DAG construction, parallel execution planning, and merge conflict recovery.",
       "trust_tier": 2,
       "decision_gate": "hitl",
       "resource_budget": "high",
-      "required_skills": ["rfc-pipeline"]
+      "required_skills": [
+        "rfc-pipeline"
+      ]
     },
     "DeploymentSwarm": {
       "leader": "deployment-captain",
-      "members": ["developer", "qa-engineer", "security-reviewer"],
+      "members": [
+        "developer",
+        "qa-engineer",
+        "security-reviewer"
+      ],
       "focus": "Staged rollout execution, canary monitoring, rollback decisions, and post-deploy verification.",
       "trust_tier": 2,
       "decision_gate": "hitl",
       "resource_budget": "high",
-      "required_skills": ["deployment-workflow"]
+      "required_skills": [
+        "deployment-workflow"
+      ]
     },
     "ForgeSwarm": {
       "leader": "skill-smith",
-      "members": ["eval-judge", "quality-scorer", "developer"],
+      "members": [
+        "eval-judge",
+        "quality-scorer",
+        "developer"
+      ],
       "focus": "Meta-skill creation, evaluation loop optimization, trigger description tuning, and quality scoring.",
       "trust_tier": 1,
       "decision_gate": "autonomous",
       "resource_budget": "medium",
-      "required_skills": ["skill-creator-meta", "eval-harness"]
+      "required_skills": [
+        "skill-creator-meta",
+        "eval-harness"
+      ]
     },
     "ArchDesignSwarm": {
       "leader": "system-designer",
-      "members": ["architect", "event-driven-architect", "developer", "api-gateway-architect"],
+      "members": [
+        "architect",
+        "event-driven-architect",
+        "developer",
+        "api-gateway-architect"
+      ],
       "focus": "Large-scale system design, microservice boundaries, distributed architecture patterns, and capacity planning.",
       "trust_tier": 2,
       "decision_gate": "hitl",
       "resource_budget": "high",
-      "required_skills": ["system-design", "microservices-patterns"]
+      "required_skills": [
+        "system-design",
+        "microservices-patterns"
+      ]
     },
     "ProductSwarm": {
       "leader": "product-owner",
-      "members": ["business-analyst", "market-analyst", "ux-auditor"],
+      "members": [
+        "business-analyst",
+        "market-analyst",
+        "ux-auditor"
+      ],
       "focus": "Product strategy, business requirements, market sizing, and user journey mapping.",
       "trust_tier": 1,
       "decision_gate": "hitl",
       "resource_budget": "medium",
-      "required_skills": ["product-manager", "business-analyst"]
+      "required_skills": [
+        "product-manager",
+        "business-analyst"
+      ]
     },
     "DocumentationSwarm": {
       "leader": "proofreader",
-      "members": ["doc-auditor", "tech-writer", "onboarding-navigator"],
+      "members": [
+        "doc-auditor",
+        "tech-writer",
+        "onboarding-navigator"
+      ],
       "focus": "Content quality, documentation completeness, tone consistency, and readability scoring.",
       "trust_tier": 1,
       "decision_gate": "autonomous",
       "resource_budget": "low",
-      "required_skills": ["proofreader"]
+      "required_skills": [
+        "proofreader"
+      ]
     },
     "PromptEngineeringSwarm": {
       "leader": "prompt-architect",
-      "members": ["agent-orchestrator", "developer", "eval-judge"],
+      "members": [
+        "agent-orchestrator",
+        "developer",
+        "eval-judge"
+      ],
       "focus": "Prompt design, context engineering, agent orchestration patterns, and eval-driven prompt optimization.",
       "trust_tier": 2,
       "decision_gate": "hitl",
       "resource_budget": "high",
-      "required_skills": ["prompt-engineering", "agent-orchestration-patterns"]
+      "required_skills": [
+        "prompt-engineering",
+        "agent-orchestration-patterns"
+      ]
     },
     "SRESwarm": {
       "leader": "sre-lead",
-      "members": ["devops-engineer", "chaos-engineer", "observability-engineer"],
+      "members": [
+        "devops-engineer",
+        "chaos-engineer",
+        "observability-engineer"
+      ],
       "focus": "Site reliability, observability stack design, incident management, chaos engineering, and SLO-driven operations.",
       "trust_tier": 3,
       "decision_gate": "hitl",
       "resource_budget": "high",
-      "required_skills": ["observability-stack", "incident-management", "chaos-engineering"]
+      "required_skills": [
+        "observability-stack",
+        "incident-management",
+        "chaos-engineering"
+      ]
     },
     "FrontendSwarm": {
       "leader": "design-system-lead",
-      "members": ["react-specialist", "a11y-architect", "ui-auditor"],
+      "members": [
+        "react-specialist",
+        "a11y-architect",
+        "ui-auditor"
+      ],
       "focus": "Design system architecture, responsive patterns, state management, and accessibility compliance.",
       "trust_tier": 1,
       "decision_gate": "autonomous",
       "resource_budget": "medium",
-      "required_skills": ["design-system", "responsive-patterns", "state-management"]
+      "required_skills": [
+        "design-system",
+        "responsive-patterns",
+        "state-management"
+      ]
     },
     "TestingDeepSwarm": {
       "leader": "contract-tester",
-      "members": ["qa-engineer", "performance-optimizer", "anti-pattern-hunter"],
+      "members": [
+        "qa-engineer",
+        "performance-optimizer",
+        "anti-pattern-hunter"
+      ],
       "focus": "Deep testing patterns: contract testing, load testing, mutation testing, visual regression, and test anti-pattern detection.",
       "trust_tier": 1,
       "decision_gate": "autonomous",
       "resource_budget": "medium",
-      "required_skills": ["contract-testing", "load-testing", "mutation-testing"]
+      "required_skills": [
+        "contract-testing",
+        "load-testing",
+        "mutation-testing"
+      ]
     },
     "PlatformSwarm": {
       "leader": "platform-engineer",
-      "members": ["pipeline-engineer", "devops-engineer", "dx-engineer"],
+      "members": [
+        "pipeline-engineer",
+        "devops-engineer",
+        "dx-engineer"
+      ],
       "focus": "Internal platform capabilities: feature flags, zero-downtime migrations, monorepo management, and developer experience optimization.",
       "trust_tier": 2,
       "decision_gate": "hitl",
       "resource_budget": "high",
-      "required_skills": ["feature-flag-management", "migration-strategies", "monorepo-management"]
+      "required_skills": [
+        "feature-flag-management",
+        "migration-strategies",
+        "monorepo-management"
+      ]
     },
     "MLOpsSwarm": {
       "leader": "ml-ops-engineer",
-      "members": ["data-architect", "cost-optimizer", "eval-judge"],
+      "members": [
+        "data-architect",
+        "cost-optimizer",
+        "eval-judge"
+      ],
       "focus": "ML/AI operations: RAG pipeline architecture, fine-tuning workflows, LLM cost optimization, and model lifecycle management.",
       "trust_tier": 2,
       "decision_gate": "hitl",
       "resource_budget": "high",
-      "required_skills": ["rag-architecture", "fine-tuning-workflow", "llm-cost-optimization"]
+      "required_skills": [
+        "rag-architecture",
+        "fine-tuning-workflow",
+        "llm-cost-optimization"
+      ]
     },
     "StreamingSwarm": {
       "leader": "streaming-engineer",
-      "members": ["event-architect", "performance-optimizer", "cache-architect"],
+      "members": [
+        "event-architect",
+        "performance-optimizer",
+        "cache-architect"
+      ],
       "focus": "Real-time streaming architecture, message queue topology, backpressure management, and stream processing patterns.",
       "trust_tier": 2,
       "decision_gate": "hitl",
       "resource_budget": "high",
-      "required_skills": ["streaming-architecture", "queue-design"]
+      "required_skills": [
+        "streaming-architecture",
+        "queue-design"
+      ]
     },
     "ResilienceSwarm": {
       "leader": "resilience-engineer",
-      "members": ["sre-lead", "chaos-engineer", "cache-architect"],
+      "members": [
+        "sre-lead",
+        "chaos-engineer",
+        "cache-architect"
+      ],
       "focus": "Graceful degradation design, idempotency patterns, rate limiting, and failure engineering.",
       "trust_tier": 1,
       "decision_gate": "autonomous",
       "resource_budget": "medium",
-      "required_skills": ["graceful-degradation", "idempotency-patterns", "rate-limiting-design"]
+      "required_skills": [
+        "graceful-degradation",
+        "idempotency-patterns",
+        "rate-limiting-design"
+      ]
     },
     "GovernanceSwarm": {
       "leader": "multi-tenancy-architect",
-      "members": ["compliance-engineer", "auth-engineer", "data-architect"],
+      "members": [
+        "compliance-engineer",
+        "auth-engineer",
+        "data-architect"
+      ],
       "focus": "Multi-tenant isolation, audit logging, compliance verification, and data governance.",
       "trust_tier": 2,
       "decision_gate": "hitl",
       "resource_budget": "high",
-      "required_skills": ["multi-tenancy-patterns", "audit-logging", "compliance-as-code"]
+      "required_skills": [
+        "multi-tenancy-patterns",
+        "audit-logging",
+        "compliance-as-code"
+      ]
     },
     "DecisionSwarm": {
       "leader": "decision-architect",
-      "members": ["council-architect", "council-skeptic", "council-pragmatist"],
+      "members": [
+        "council-architect",
+        "council-skeptic",
+        "council-pragmatist"
+      ],
       "focus": "Engineering decision quality: build-vs-buy, technology radar, architecture tradeoff analysis, and quantified decision-making.",
       "trust_tier": 2,
       "decision_gate": "hitl",
       "resource_budget": "medium",
-      "required_skills": ["build-vs-buy", "technology-radar", "architecture-tradeoff-analysis"]
+      "required_skills": [
+        "build-vs-buy",
+        "technology-radar",
+        "architecture-tradeoff-analysis"
+      ]
     },
     "TeamDesignSwarm": {
       "leader": "team-coach",
-      "members": ["product-owner", "dx-engineer", "technical-writer-lead"],
+      "members": [
+        "product-owner",
+        "dx-engineer",
+        "technical-writer-lead"
+      ],
       "focus": "Team topology design, sprint retrospectives, knowledge sharing systems, estimation techniques, and on-call rotation.",
       "trust_tier": 1,
       "decision_gate": "hitl",
       "resource_budget": "medium",
-      "required_skills": ["team-topology-design", "sprint-retrospective-facilitation"]
+      "required_skills": [
+        "team-topology-design",
+        "sprint-retrospective-facilitation"
+      ]
     },
     "AgentMetaSwarm": {
       "leader": "agent-evaluator",
-      "members": ["prompt-architect", "agent-orchestrator", "eval-judge"],
+      "members": [
+        "prompt-architect",
+        "agent-orchestrator",
+        "eval-judge"
+      ],
       "focus": "Agent self-improvement: memory architecture, evaluation frameworks, tool selection optimization, and human-in-the-loop calibration.",
       "trust_tier": 1,
       "decision_gate": "autonomous",
       "resource_budget": "high",
-      "required_skills": ["agent-memory-design", "agent-evaluation-framework", "human-in-the-loop-design"]
+      "required_skills": [
+        "agent-memory-design",
+        "agent-evaluation-framework",
+        "human-in-the-loop-design"
+      ]
     },
     "EdgeScaleSwarm": {
       "leader": "edge-engineer",
-      "members": ["cdn-architect", "performance-optimizer", "streaming-engineer"],
+      "members": [
+        "cdn-architect",
+        "performance-optimizer",
+        "streaming-engineer"
+      ],
       "focus": "Edge computing architecture, CDN optimization, serverless patterns, and latency-critical system design.",
       "trust_tier": 2,
       "decision_gate": "hitl",
       "resource_budget": "high",
-      "required_skills": ["edge-computing", "cdn-optimization", "serverless-patterns"]
+      "required_skills": [
+        "edge-computing",
+        "cdn-optimization",
+        "serverless-patterns"
+      ]
     },
     "DistributedSwarm": {
       "leader": "consensus-engineer",
-      "members": ["data-pipeline-architect", "sre-lead", "resilience-engineer"],
+      "members": [
+        "data-pipeline-architect",
+        "sre-lead",
+        "resilience-engineer"
+      ],
       "focus": "Distributed consensus, data pipeline architecture, DNS-based routing, database sharding, and strong consistency patterns.",
       "trust_tier": 2,
       "decision_gate": "hitl",
       "resource_budget": "high",
-      "required_skills": ["distributed-consensus", "data-pipeline-design", "database-sharding-advanced"]
+      "required_skills": [
+        "distributed-consensus",
+        "data-pipeline-design",
+        "database-sharding-advanced"
+      ]
+    },
+    "IndustryVerticalSwarm": {
+      "leader": "fintech-architect",
+      "members": [
+        "healthcare-engineer",
+        "ecommerce-engineer",
+        "gaming-engineer",
+        "iot-architect",
+        "marketplace-engineer"
+      ],
+      "focus": "Domain-specific architecture review ensuring compliance, scalability, and industry-standard integration patterns.",
+      "trust_tier": 2,
+      "decision_gate": "HITL",
+      "resource_budget": "high",
+      "required_skills": [
+        "fintech-patterns",
+        "healthcare-systems",
+        "ecommerce-architecture"
+      ]
+    },
+    "LeadershipSwarm": {
+      "leader": "tech-lead-coach",
+      "members": [
+        "communication-architect",
+        "hiring-strategist",
+        "mentorship-lead",
+        "meeting-designer",
+        "change-agent"
+      ],
+      "focus": "Engineering leadership decisions, team topology, hiring strategy, and organizational change management.",
+      "trust_tier": 2,
+      "decision_gate": "HITL",
+      "resource_budget": "medium",
+      "required_skills": [
+        "technical-leadership",
+        "stakeholder-communication"
+      ]
+    },
+    "MobileSwarm": {
+      "leader": "mobile-architect",
+      "members": [
+        "react-native-engineer",
+        "flutter-engineer",
+        "offline-specialist",
+        "mobile-security-engineer",
+        "pwa-architect"
+      ],
+      "focus": "Cross-platform mobile architecture, offline-first design, performance optimization, and mobile security hardening.",
+      "trust_tier": 2,
+      "decision_gate": "HITL",
+      "resource_budget": "high",
+      "required_skills": [
+        "react-native-patterns",
+        "flutter-architecture",
+        "offline-first-design"
+      ]
+    },
+    "AIFrontierSwarm": {
+      "leader": "agent-architect",
+      "members": [
+        "multimodal-engineer",
+        "ai-safety-engineer",
+        "embedding-architect",
+        "llm-orchestrator",
+        "ai-economist"
+      ],
+      "focus": "Advanced AI system architecture, safety alignment, multi-model orchestration, and cost-optimized inference pipelines.",
+      "trust_tier": 1,
+      "decision_gate": "HITL",
+      "resource_budget": "high",
+      "required_skills": [
+        "autonomous-agents",
+        "ai-safety-alignment",
+        "llm-orchestration"
+      ]
+    },
+    "DataAlchemySwarm": {
+      "leader": "data-mesh-architect",
+      "members": [
+        "causal-scientist",
+        "stream-engineer",
+        "lakehouse-architect",
+        "privacy-engineer",
+        "analytics-engineer"
+      ],
+      "focus": "End-to-end data architecture from ingestion through real-time analytics, with privacy-by-design and causal rigor.",
+      "trust_tier": 2,
+      "decision_gate": "HITL",
+      "resource_budget": "high",
+      "required_skills": [
+        "data-mesh",
+        "stream-processing",
+        "data-lakehouse"
+      ]
+    },
+    "PlatformSwarmV2": {
+      "leader": "platform-lead",
+      "members": [
+        "build-engineer",
+        "environment-engineer",
+        "productivity-analyst",
+        "secrets-engineer",
+        "migration-architect"
+      ],
+      "focus": "Internal developer platform design, golden path creation, build optimization, and zero-downtime migration orchestration.",
+      "trust_tier": 2,
+      "decision_gate": "HITL",
+      "resource_budget": "high",
+      "required_skills": [
+        "internal-developer-platform",
+        "build-system-optimization",
+        "migration-platform"
+      ]
     }
   }
 }
