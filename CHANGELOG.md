@@ -1,5 +1,18 @@
 # Changelog
 
+## [10.0.8] - 2026-05-26 — "Deep Patterns"
+
+### Added (v10.0.8)
+
+- **20 new core skills** — contract-testing, load-testing, mutation-testing, visual-regression-testing, monorepo-management, cli-design, developer-onboarding, error-handling-architecture, caching-strategies, migration-strategies, connection-pooling, event-driven-architecture, api-gateway-patterns, websocket-patterns, feature-flag-management, secrets-rotation, compliance-as-code, rag-architecture, fine-tuning-workflow, llm-cost-optimization.
+- **10 new commands** — `/mindforge:contract-test`, `/mindforge:load-test`, `/mindforge:monorepo`, `/mindforge:cli`, `/mindforge:cache`, `/mindforge:events`, `/mindforge:secrets`, `/mindforge:rag`, `/mindforge:feature-flags`, `/mindforge:compliance`.
+- **8 new personas** — contract-tester, dx-engineer, cache-architect, event-architect, compliance-engineer, ml-ops-engineer, platform-engineer, api-gateway-designer.
+- **3 new swarm templates** — TestingDeepSwarm (autonomous deep testing), PlatformSwarm (HITL platform engineering), MLOpsSwarm (HITL ML operations).
+- **90 core skills milestone** — Production-depth coverage for testing, caching, events, secrets, compliance, RAG, and cost optimization.
+- **Swarm templates v11.0.0** — Bump from v10.0.0 with 3 new templates (total: 35 swarm templates).
+
+---
+
 ## [10.0.7] - 2026-05-26 — "Meta Engineer"
 
 ### Added (v10.0.7)

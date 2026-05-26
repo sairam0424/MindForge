@@ -78,6 +78,26 @@ This file tracks all active, validated, and legacy skills within the MindForge e
 | supply-chain-security | .mindforge/skills/supply-chain-security/SKILL.md | stable |
 | technical-writing | .mindforge/skills/technical-writing/SKILL.md | stable |
 | code-review-methodology | .mindforge/skills/code-review-methodology/SKILL.md | stable |
+| contract-testing | .mindforge/skills/contract-testing/SKILL.md | stable |
+| load-testing | .mindforge/skills/load-testing/SKILL.md | stable |
+| mutation-testing | .mindforge/skills/mutation-testing/SKILL.md | stable |
+| visual-regression-testing | .mindforge/skills/visual-regression-testing/SKILL.md | stable |
+| monorepo-management | .mindforge/skills/monorepo-management/SKILL.md | stable |
+| cli-design | .mindforge/skills/cli-design/SKILL.md | stable |
+| developer-onboarding | .mindforge/skills/developer-onboarding/SKILL.md | stable |
+| error-handling-architecture | .mindforge/skills/error-handling-architecture/SKILL.md | stable |
+| caching-strategies | .mindforge/skills/caching-strategies/SKILL.md | stable |
+| migration-strategies | .mindforge/skills/migration-strategies/SKILL.md | stable |
+| connection-pooling | .mindforge/skills/connection-pooling/SKILL.md | stable |
+| event-driven-architecture | .mindforge/skills/event-driven-architecture/SKILL.md | stable |
+| api-gateway-patterns | .mindforge/skills/api-gateway-patterns/SKILL.md | stable |
+| websocket-patterns | .mindforge/skills/websocket-patterns/SKILL.md | stable |
+| feature-flag-management | .mindforge/skills/feature-flag-management/SKILL.md | stable |
+| secrets-rotation | .mindforge/skills/secrets-rotation/SKILL.md | stable |
+| compliance-as-code | .mindforge/skills/compliance-as-code/SKILL.md | stable |
+| rag-architecture | .mindforge/skills/rag-architecture/SKILL.md | stable |
+| fine-tuning-workflow | .mindforge/skills/fine-tuning-workflow/SKILL.md | stable |
+| llm-cost-optimization | .mindforge/skills/llm-cost-optimization/SKILL.md | stable |
 
 ## Multi-Agent Skills
 

@@ -1,5 +1,5 @@
 {
-  "version": "10.0.0",
+  "version": "11.0.0",
   "mesh_protocols": {
     "shared_state": ".planning/phases/[N]/SWARM-STATE-[M].json",
     "consolidation_format": "SWARM-SUMMARY-[N]-[M].md",
@@ -293,6 +293,33 @@
       "decision_gate": "autonomous",
       "resource_budget": "medium",
       "required_skills": ["design-system", "responsive-patterns", "state-management"]
+    },
+    "TestingDeepSwarm": {
+      "leader": "contract-tester",
+      "members": ["qa-engineer", "performance-optimizer", "anti-pattern-hunter"],
+      "focus": "Deep testing patterns: contract testing, load testing, mutation testing, visual regression, and test anti-pattern detection.",
+      "trust_tier": 1,
+      "decision_gate": "autonomous",
+      "resource_budget": "medium",
+      "required_skills": ["contract-testing", "load-testing", "mutation-testing"]
+    },
+    "PlatformSwarm": {
+      "leader": "platform-engineer",
+      "members": ["pipeline-engineer", "devops-engineer", "dx-engineer"],
+      "focus": "Internal platform capabilities: feature flags, zero-downtime migrations, monorepo management, and developer experience optimization.",
+      "trust_tier": 2,
+      "decision_gate": "hitl",
+      "resource_budget": "high",
+      "required_skills": ["feature-flag-management", "migration-strategies", "monorepo-management"]
+    },
+    "MLOpsSwarm": {
+      "leader": "ml-ops-engineer",
+      "members": ["data-architect", "cost-optimizer", "eval-judge"],
+      "focus": "ML/AI operations: RAG pipeline architecture, fine-tuning workflows, LLM cost optimization, and model lifecycle management.",
+      "trust_tier": 2,
+      "decision_gate": "hitl",
+      "resource_budget": "high",
+      "required_skills": ["rag-architecture", "fine-tuning-workflow", "llm-cost-optimization"]
     }
   }
 }
