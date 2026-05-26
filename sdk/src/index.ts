@@ -22,4 +22,4 @@ export type {
   MigrationResult,
 } from './types';
 
-export const VERSION = '10.0.8';
+export const VERSION = '10.0.9';

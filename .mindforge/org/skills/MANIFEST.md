@@ -98,6 +98,26 @@ This file tracks all active, validated, and legacy skills within the MindForge e
 | rag-architecture | .mindforge/skills/rag-architecture/SKILL.md | stable |
 | fine-tuning-workflow | .mindforge/skills/fine-tuning-workflow/SKILL.md | stable |
 | llm-cost-optimization | .mindforge/skills/llm-cost-optimization/SKILL.md | stable |
+| streaming-architecture | .mindforge/skills/streaming-architecture/SKILL.md | stable |
+| queue-design | .mindforge/skills/queue-design/SKILL.md | stable |
+| real-time-sync | .mindforge/skills/real-time-sync/SKILL.md | stable |
+| cost-estimation | .mindforge/skills/cost-estimation/SKILL.md | stable |
+| technical-debt-management | .mindforge/skills/technical-debt-management/SKILL.md | stable |
+| capacity-planning | .mindforge/skills/capacity-planning/SKILL.md | stable |
+| graceful-degradation | .mindforge/skills/graceful-degradation/SKILL.md | stable |
+| idempotency-patterns | .mindforge/skills/idempotency-patterns/SKILL.md | stable |
+| rate-limiting-design | .mindforge/skills/rate-limiting-design/SKILL.md | stable |
+| code-generation-patterns | .mindforge/skills/code-generation-patterns/SKILL.md | stable |
+| dependency-management | .mindforge/skills/dependency-management/SKILL.md | stable |
+| git-workflow-design | .mindforge/skills/git-workflow-design/SKILL.md | stable |
+| i18n-architecture | .mindforge/skills/i18n-architecture/SKILL.md | stable |
+| a11y-testing | .mindforge/skills/a11y-testing/SKILL.md | stable |
+| multi-tenancy-patterns | .mindforge/skills/multi-tenancy-patterns/SKILL.md | stable |
+| audit-logging | .mindforge/skills/audit-logging/SKILL.md | stable |
+| database-performance | .mindforge/skills/database-performance/SKILL.md | stable |
+| bundle-optimization | .mindforge/skills/bundle-optimization/SKILL.md | stable |
+| graphql-patterns | .mindforge/skills/graphql-patterns/SKILL.md | stable |
+| pagination-patterns | .mindforge/skills/pagination-patterns/SKILL.md | stable |
 
 ## Multi-Agent Skills
 

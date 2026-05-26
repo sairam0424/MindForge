@@ -1,5 +1,5 @@
 {
-  "version": "11.0.0",
+  "version": "12.0.0",
   "mesh_protocols": {
     "shared_state": ".planning/phases/[N]/SWARM-STATE-[M].json",
     "consolidation_format": "SWARM-SUMMARY-[N]-[M].md",
@@ -320,6 +320,33 @@
       "decision_gate": "hitl",
       "resource_budget": "high",
       "required_skills": ["rag-architecture", "fine-tuning-workflow", "llm-cost-optimization"]
+    },
+    "StreamingSwarm": {
+      "leader": "streaming-engineer",
+      "members": ["event-architect", "performance-optimizer", "cache-architect"],
+      "focus": "Real-time streaming architecture, message queue topology, backpressure management, and stream processing patterns.",
+      "trust_tier": 2,
+      "decision_gate": "hitl",
+      "resource_budget": "high",
+      "required_skills": ["streaming-architecture", "queue-design"]
+    },
+    "ResilienceSwarm": {
+      "leader": "resilience-engineer",
+      "members": ["sre-lead", "chaos-engineer", "cache-architect"],
+      "focus": "Graceful degradation design, idempotency patterns, rate limiting, and failure engineering.",
+      "trust_tier": 1,
+      "decision_gate": "autonomous",
+      "resource_budget": "medium",
+      "required_skills": ["graceful-degradation", "idempotency-patterns", "rate-limiting-design"]
+    },
+    "GovernanceSwarm": {
+      "leader": "multi-tenancy-architect",
+      "members": ["compliance-engineer", "auth-engineer", "data-architect"],
+      "focus": "Multi-tenant isolation, audit logging, compliance verification, and data governance.",
+      "trust_tier": 2,
+      "decision_gate": "hitl",
+      "resource_budget": "high",
+      "required_skills": ["multi-tenancy-patterns", "audit-logging", "compliance-as-code"]
     }
   }
 }

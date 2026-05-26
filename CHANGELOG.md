@@ -1,5 +1,18 @@
 # Changelog
 
+## [10.0.9] - 2026-05-26 — "Full Spectrum"
+
+### Added (v10.0.9)
+
+- **20 new core skills** — streaming-architecture, queue-design, real-time-sync, cost-estimation, technical-debt-management, capacity-planning, graceful-degradation, idempotency-patterns, rate-limiting-design, code-generation-patterns, dependency-management, git-workflow-design, i18n-architecture, a11y-testing, multi-tenancy-patterns, audit-logging, database-performance, bundle-optimization, graphql-patterns, pagination-patterns.
+- **10 new commands** — `/mindforge:stream`, `/mindforge:queue`, `/mindforge:finops`, `/mindforge:tech-debt`, `/mindforge:degrade`, `/mindforge:idempotent`, `/mindforge:rate-limit`, `/mindforge:i18n`, `/mindforge:multi-tenant`, `/mindforge:graphql`.
+- **8 new personas** — streaming-engineer, finops-analyst, debt-manager, resilience-engineer, codegen-specialist, i18n-architect, multi-tenancy-architect, graphql-designer.
+- **3 new swarm templates** — StreamingSwarm (HITL real-time), ResilienceSwarm (autonomous failure engineering), GovernanceSwarm (HITL data governance).
+- **110 core skills milestone** — Comprehensive coverage across all major software engineering domains achieved.
+- **Swarm templates v12.0.0** — Bump from v11.0.0 with 3 new templates (total: 38 swarm templates).
+
+---
+
 ## [10.0.8] - 2026-05-26 — "Deep Patterns"
 
 ### Added (v10.0.8)
