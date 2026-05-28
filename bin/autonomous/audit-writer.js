@@ -6,10 +6,14 @@
 'use strict';
 
 const fs = require('fs');
+const path = require('path');
 const crypto = require('crypto');
+const { AuditRotator } = require('../utils/file-io');
 
 const FLUSH_INTERVAL_MS = 100;
 const FLUSH_THRESHOLD = 10;
+
+const rotator = new AuditRotator({ maxLines: 5000 });
 
 /**
  * Creates a buffered async audit writer.
@@ -70,6 +74,15 @@ function createAuditWriter(auditPath) {
 
     const payload = toWrite.map(e => JSON.stringify(e)).join('\n') + '\n';
     await fs.promises.appendFile(auditPath, payload);
+
+    try {
+      if (rotator.shouldRotate(auditPath)) {
+        const archiveDir = path.join(path.dirname(auditPath), '..', '.planning', 'audit-archive');
+        rotator.rotate(auditPath, archiveDir);
+      }
+    } catch (err) {
+      process.stderr.write(`[audit-writer] rotation warning: ${err.message}\n`);
+    }
   }
 
   /**

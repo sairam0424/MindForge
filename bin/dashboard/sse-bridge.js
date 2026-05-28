@@ -80,14 +80,14 @@ function pollAuditLog() {
     const newSize  = stat.size;
     const newIno   = stat.ino;
 
-    // File rotation detected: inode changed or new file is smaller
-    if (newIno !== _auditInode && _auditInode !== 0) {
-      process.stderr.write(`[sse-bridge] AUDIT.jsonl rotation detected (old ino: ${_auditInode}, new ino: ${newIno})\n`);
+    // File rotation detected: inode changed or file shrunk (truncated after archival)
+    if ((newIno !== _auditInode && _auditInode !== 0) || (newSize < _lastAuditSize)) {
+      process.stderr.write(`[sse-bridge] AUDIT.jsonl rotation detected (size: ${_lastAuditSize} -> ${newSize}, ino: ${_auditInode} -> ${newIno})\n`);
       _lastAuditSize = 0;
     }
     _auditInode = newIno;
 
-    if (newSize <= _lastAuditSize) return; // No new data
+    if (newSize <= _lastAuditSize) return;
 
     // Read only the new bytes appended since last poll
     const fd   = fs.openSync(AUDIT_PATH, 'r');
