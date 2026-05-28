@@ -1,12 +1,21 @@
 # MindForge
 
-**An agentic intelligence framework for Claude Code** — orchestrates multi-agent workflows with governance, memory, and autonomous execution. Install once, get structured AI-driven development with built-in quality gates.
+**An agentic intelligence framework for Claude Code** — orchestrates multi-agent workflows with governance, memory, and autonomous execution. Production-hardened with true parallelism, streaming SDK, and zero-trust security. Install once, get structured AI-driven development with built-in quality gates.
 
 ---
 
-## v10.0.3 — Council Awakens
+## v11.0.0 — Sovereign Stability
 
-MindForge v10.0.3 "Council Awakens" introduces the Council decision framework, Instinct Engine, Cost-Aware Routing, 6-phase Verification Loop, and Multi-LLM Consult. This release adds 10 skills (20 core total), 8 commands (71 total), 9 personas (117 total), 3 swarm templates (21 total), and 5 engine subsystems — expanding MindForge's autonomous governance and multi-agent reasoning capabilities.
+MindForge v11.0.0 "Sovereign Stability" is a production-hardening release focused on reliability, performance, and real-world deployment readiness. Key highlights:
+
+- **Memory-safe operations** — LRU-bounded caches, atomic writes, log rotation, and snapshot garbage collection eliminate resource leaks in long-running sessions.
+- **True wave parallelism** — Semaphore-based concurrent execution with configurable max concurrency replaces sequential task dispatch.
+- **Streaming SDK** — WebSocket event streaming, `streamExecution()` with AsyncIterable, and `batchExecute()` for high-throughput integrations.
+- **Hardened security** — Ephemeral enclave keys, session-scoped agent isolation, time-limited RBAC elevation, dashboard rate limiting, and structured ZK proof returns.
+- **Production observability** — `/api/v1/system` health endpoint, P95 latency tracking, heap health monitoring, and real EIS client with retry logic.
+- **Graduated intelligence** — Adaptive tier escalation (+1/+2/MAX) with cost-awareness, 3-tier stuck detection, and adaptive context windows.
+
+This release ships 200+ skills, 400+ personas, 18 pillars, and 49 swarm templates across 12 engineering domains.
 
 
 ## Installation & Setup
@@ -45,6 +54,12 @@ npx mindforge-cc@latest --antigravity --local
 
 ---
 
+- **Production Hardening (v11.0.0)** — LRU caches, atomic JSON writes, log rotation, HANDOFF validation, and temporal snapshot GC for crash-safe long-running sessions.
+- **True Wave Parallelism (v11.0.0)** — Semaphore-based concurrent wave execution with configurable max concurrency replaces sequential dispatch.
+- **Streaming SDK (v11.0.0)** — WebSocket event streaming, `streamExecution()` AsyncIterable, `batchExecute()`, model streaming across Anthropic/OpenAI/Gemini providers.
+- **Graduated Intelligence (v11.0.0)** — Adaptive tier escalation (+1/+2/MAX) with cost-awareness, 3-tier stuck detection, and adaptive context windows (10/20/30).
+- **Security Hardening (v11.0.0)** — Ephemeral enclave keys, session-scoped ZTAI, time-limited RBAC elevation, dashboard rate limiting (100 req/min/IP), token expiration.
+- **Observability (v11.0.0)** — `/api/v1/system` health endpoint, P95 latency ring buffer, heap health monitoring, real EIS client with exponential backoff.
 - **Grounded Wave Execution (v9.0.0)** — AutoRunner reads HANDOFF.json wave groups, dispatches tasks with audit tracing, persists progress, and resumes on restart (Pillar XXIV).
 - **Model Topology Modernization (v9.0.0)** — All model references updated to the Claude 4.x family: claude-opus-4-7, claude-sonnet-4-6, claude-haiku-4-5 (Pillar XXV).
 - **Unified Memory Architecture (v9.0.0)** — Knowledge and graph edges consolidated into SQLite (celestial.db) with FTS5 search. Four JSONL stores replaced by one queryable store (Pillar XXVI).
@@ -272,7 +287,7 @@ MindForge supports multiple interaction models to fit your engineering workflow:
 ```bash
 /mindforge:update
 /mindforge:update --apply
-/mindforge:migrate --from v0.6.0 --to v1.0.0
+/mindforge:migrate --from v10.7.0 --to v11.0.0
 ```
 
 ---
@@ -320,6 +335,36 @@ See `.mindforge/production/token-optimiser.md`.
 
 ## 📜 Framework Evolution & Version History
 
+<details>
+<summary><b>v11.0.0 — Sovereign Stability (Production Hardening)</b></summary>
+
+- **Phase 1: Foundation** — LRU-bounded caches, atomic JSON writes, AUDIT.jsonl log rotation, HANDOFF.json structural validation, temporal snapshot garbage collection.
+- **Phase 2: Intelligence** — BM25 scoring with document-length normalization, full remediation strategy implementations, graduated intelligence interlock (+1/+2/MAX), 3-tier stuck detection, adaptive context windows.
+- **Phase 3: Security** — Structured ZK proof returns, ephemeral SRE enclave keys, session-scoped ZTAI agent registry, time-limited RBAC elevation, dashboard rate limiting and token expiration, optional GPG approval verification.
+- **Phase 4: Observability** — Async temporal I/O, `/api/v1/system` health endpoint, P95 latency ring buffer, heap health monitoring, EIS client de-stub with real fetch and retry logic.
+- **Phase 5: SDK/Distributed** — Semaphore-based wave parallelism, WebSocket event streaming with auto-reconnect, `batchExecute()`, model streaming (Anthropic/OpenAI/Gemini), migration script from v10.7.0.
+</details>
+
+<details>
+<summary><b>v10.x — The 200-Skills Expansion (Council → Platform Sovereign)</b></summary>
+
+- **Council Awakens (v10.0.3)**: Council decision framework, Instinct Engine, Cost-Aware Routing, 6-phase Verification Loop, Multi-LLM Consult.
+- **Skills Expansion (v10.0.4–v10.7.0)**: From 20 to 200+ core skills across 12 domains — AI/ML, data engineering, platform engineering, mobile, leadership, industry verticals, and more.
+- **400+ Personas**: Comprehensive specialist coverage with domain-expert identity protocols.
+- **49 Swarm Templates**: Task-aware parallel specialist clusters covering every engineering discipline.
+</details>
+
+<details>
+<summary><b>v9.x — Grounded Execution & SQLite Persistence</b></summary>
+
+- **Grounded Wave Execution (Pillar XXIV)**: AutoRunner reads HANDOFF.json wave groups with audit tracing and restart persistence.
+- **Model Topology Modernization (Pillar XXV)**: Claude 4.x family (opus-4-7, sonnet-4-6, haiku-4-5).
+- **Unified Memory Architecture (Pillar XXVI)**: SQLite (celestial.db) with FTS5 search replacing JSONL stores.
+- **Schema Migration Engine (Pillar XXVII)**: Versioned migration tracking with transaction-wrapped imports.
+- **Integration Test Chain (Pillar XXVIII)**: 27-assertion end-to-end pipeline validation.
+</details>
+
+<details>
 <summary><b>v8.1.x — Sovereign Identity (Pillar XIX)</b></summary>
 
 - **Pillar XIX: Sovereign Identity Synthesis**: Autonomous creation and evolution of `SOUL.md` from execution traces.
