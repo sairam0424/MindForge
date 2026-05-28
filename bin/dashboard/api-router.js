@@ -192,6 +192,49 @@ function register(app) {
   app.get('/api/connections', (req, res) => {
     res.json({ clients: SSE.getClientCount() });
   });
+
+  // ── System observability ────────────────────────────────────────────────────
+  app.get('/api/v1/system', (req, res) => {
+    try {
+      const heapUsed = process.memoryUsage().heapUsed;
+      const heapTotal = process.memoryUsage().heapTotal;
+      const uptime = process.uptime();
+
+      let auditLines = 0;
+      try {
+        const auditPath = path.join(process.cwd(), '.planning', 'AUDIT.jsonl');
+        if (fs.existsSync(auditPath)) {
+          const content = fs.readFileSync(auditPath, 'utf8');
+          auditLines = content.split('\n').filter(l => l.trim()).length;
+        }
+      } catch { /* non-critical */ }
+
+      let snapshotCount = 0;
+      try {
+        const historyDir = path.join(process.cwd(), '.planning', 'history');
+        if (fs.existsSync(historyDir)) {
+          snapshotCount = fs.readdirSync(historyDir).length;
+        }
+      } catch { /* non-critical */ }
+
+      const heapHealth = Metrics.checkHeapHealth();
+
+      res.json({
+        heap_used_mb: Math.round(heapUsed / 1024 / 1024 * 100) / 100,
+        heap_total_mb: Math.round(heapTotal / 1024 / 1024 * 100) / 100,
+        heap_usage_pct: Math.round(heapUsed / heapTotal * 100),
+        heap_alert: heapHealth,
+        uptime_seconds: Math.round(uptime),
+        audit_lines: auditLines,
+        snapshot_count: snapshotCount,
+        sse_clients: SSE.getClientCount(),
+        node_version: process.version,
+        timestamp: new Date().toISOString()
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
 }
 
 module.exports = { register };

@@ -22,19 +22,42 @@ class EISClient {
    * @param {Array} entries - Local knowledge entries to sync.
    */
   async push(entries) {
-    console.log(`[EIS-SYNC] Pushing ${entries.length} entries to Enterprise Intelligence Service...`);
-    
-    // Simulate network request
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const results = entries.map(e => ({
-          id: e.id,
-          status: 'synced',
-          version: crypto.createHash('sha256').update(JSON.stringify(e)).digest('hex').slice(0, 8)
-        }));
-        resolve(results);
-      }, 500);
-    });
+    if (!this.endpoint || this.endpoint === 'http://localhost:7340') {
+      return {
+        synced: entries.length,
+        hashes: entries.map(e => e.id || crypto.createHash('sha256').update(JSON.stringify(e)).digest('hex').slice(0, 8))
+      };
+    }
+
+    const url = `${this.endpoint}/api/v1/knowledge/push`;
+    const body = JSON.stringify({ entries, orgId: this.orgId });
+
+    let lastError;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const headers = await this.getAuthHeader('push', 'knowledge');
+        headers['Content-Type'] = 'application/json';
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers,
+          body,
+          signal: AbortSignal.timeout(10000)
+        });
+
+        if (!response.ok) {
+          throw new Error(`EIS push failed: ${response.status}`);
+        }
+
+        return await response.json();
+      } catch (e) {
+        lastError = e;
+        await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
+      }
+    }
+
+    console.warn(`[EIS] Push failed after 3 retries: ${lastError.message}`);
+    return { synced: 0, error: lastError.message };
   }
 
   /**
@@ -42,35 +65,49 @@ class EISClient {
    * @param {Object} filter - Filter criteria (e.g. since timestamp).
    */
   async pull(filter = {}) {
-    console.log(`[EIS-SYNC] Pulling new organizational knowledge from ${this.endpoint}...`);
-    
-    // Simulate network response
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Return empty array for now as this is a simulation
-        resolve([]);
-      }, 300);
-    });
+    if (!this.endpoint || this.endpoint === 'http://localhost:7340') {
+      return [];
+    }
+
+    const url = `${this.endpoint}/api/v1/knowledge/pull`;
+    const body = JSON.stringify({ filter, orgId: this.orgId });
+
+    let lastError;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const headers = await this.getAuthHeader('pull', 'knowledge');
+        headers['Content-Type'] = 'application/json';
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers,
+          body,
+          signal: AbortSignal.timeout(10000)
+        });
+
+        if (!response.ok) {
+          throw new Error(`EIS pull failed: ${response.status}`);
+        }
+
+        return await response.json();
+      } catch (e) {
+        lastError = e;
+        await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
+      }
+    }
+
+    console.warn(`[EIS] Pull failed after 3 retries: ${lastError.message}`);
+    return [];
   }
 
-  /**
-   * Verifies the authenticity of a remote knowledge entry.
-   * @param {Object} entry - The remote entry.
-   * @param {String} signature - The ZTAI signature from the remote agent.
-   */
+  // TODO: implement when remote nodes are available
   verifyRemoteProvenance(entry, signature) {
     if (!signature) return false;
-    // Real implementation would use ZTAIManager to verify the DID signature
     return true;
   }
 
-  /**
-   * Resolves a remote node reference.
-   * @param {String} nodeId - The ID of the remote node.
-   */
+  // TODO: implement when remote nodes are available
   async resolveRemoteNode(nodeId) {
-    console.log(`[EIS-RESOLVE] Resolving remote node: ${nodeId}`);
-    // Real implementation would fetch from the EIS API
     return null;
   }
 

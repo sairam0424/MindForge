@@ -326,6 +326,32 @@ function getCosts(windowDays = 7) {
   return stats;
 }
 
+// ── Heap Health ──────────────────────────────────────────────────────────────
+function checkHeapHealth() {
+  const heapUsed = process.memoryUsage().heapUsed;
+  const maxHeap = getMaxOldSpaceSize();
+  const usagePct = Math.round(heapUsed / maxHeap * 100);
+
+  let status = 'healthy';
+  if (usagePct > 85) {
+    status = 'critical';
+  } else if (usagePct > 70) {
+    status = 'warning';
+  }
+
+  return { status, usage_pct: usagePct };
+}
+
+function getMaxOldSpaceSize() {
+  // Parse --max-old-space-size from process args, default 1.4GB
+  const flag = process.execArgv.find(a => a.startsWith('--max-old-space-size'));
+  if (flag) {
+    const mb = parseInt(flag.split('=')[1], 10);
+    if (mb > 0) return mb * 1024 * 1024;
+  }
+  return 1.4 * 1024 * 1024 * 1024;
+}
+
 module.exports = {
   getStatus,
   getAuditEntries,
@@ -333,5 +359,6 @@ module.exports = {
   getApprovals,
   getTeamActivity,
   getMemory,
-  getCosts
+  getCosts,
+  checkHeapHealth
 };
