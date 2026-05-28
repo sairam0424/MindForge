@@ -4,12 +4,12 @@
 
 | Version | Status | Support Level |
 |---------|--------|---------------|
-| 10.x | **Current** | Full security and feature updates |
-| 9.x | Maintenance | Critical security patches only (until 2026-08-31) |
-| 8.x | End of Life | No further updates |
-| 7.x and below | End of Life | No further updates |
+| 11.x | **Current** | Full security and feature updates |
+| 10.x | Maintenance | Critical security patches only (until 2026-11-30) |
+| 9.x | End of Life | No further updates |
+| 8.x and below | End of Life | No further updates |
 
-We recommend all users upgrade to the latest 10.x release. Security patches for 9.x will be provided for critical vulnerabilities only, on a best-effort basis, until August 2026.
+We recommend all users upgrade to the latest 11.x release. Security patches for 10.x will be provided for critical vulnerabilities only, on a best-effort basis, until November 2026.
 
 ---
 
@@ -44,18 +44,29 @@ We follow responsible disclosure practices. We will credit reporters in the rele
 
 ---
 
-## Security Features (v10.0.1)
+## Security Features (v11.0.0)
 
 ### Authentication & Authorization
 
 - **Bearer token auth on dashboard** — All mutating endpoints (`/api/steering`, `/api/approve`, SSE control) require `Authorization: Bearer <token>`. Token is sourced from `MINDFORGE_DASHBOARD_TOKEN` environment variable.
+- **Token expiration with refresh** — Dashboard tokens expire after 24 hours. Use `/api/v1/auth/refresh` to obtain a new token without re-authenticating.
+- **Dashboard rate limiting** — 100 requests per minute per IP address. Exceeding the limit returns 429 with `Retry-After` header.
+- **Session-scoped RBAC with TTL elevation** — Elevated permissions are session-scoped and auto-expire. No persistent privilege escalation.
 - **Browser daemon authentication** — The `/evaluate` endpoint requires auth before executing code in the Playwright context.
 - **ZTAI Trust Tiers** — 4-tier authorization model (Tier 0-3) controls which agents can perform which actions. Tier 3 (catastrophic-risk) operations require explicit human approval.
+
+### Cryptographic Security
+
+- **Ephemeral enclave keys** — All crypto keys generated via `crypto.randomBytes()` at runtime. No hardcoded secrets in source.
+- **Structured crypto boundaries** — Simulated (governance-enforcement) vs real (production-grade) cryptographic operations are clearly separated and labeled in code.
+- **GPG approval verification** — Optional GPG signature verification on governance approvals for high-trust environments.
+- **HMAC-signed temporal snapshots** — Temporal state captures are HMAC-signed to detect tampering during rollback operations.
 
 ### Audit & Integrity
 
 - **Merkle-chain audit log** — Every entry in `AUDIT.jsonl` includes a SHA-256 hash of the previous entry. Tampering with any historical entry breaks the chain, making modifications detectable.
 - **AuditWriter with buffered writes** — Atomic append operations prevent partial writes from corrupting the log.
+- **Log rotation with archival** — AUDIT.jsonl auto-archives beyond 5000 lines with gzip compression, preventing unbounded disk growth.
 - **npm provenance** — Published packages include SLSA Build Level 2 attestation via `--provenance`, proving the package was built from the stated source commit in CI.
 
 ### Input Validation & Injection Prevention
@@ -67,7 +78,7 @@ We follow responsible disclosure practices. We will credit reporters in the rele
 
 ### Governance & Policy
 
-- **Fail-closed ZK verification** — `verifyZKProof()` throws on invalid or missing proofs. The system denies by default.
+- **Structured ZK verification** — `verifyZKProof()` returns a structured result with `verified`, `reason`, and `timestamp` fields. The system denies by default when `verified` is false.
 - **Non-overridable parameters** — Security-critical MINDFORGE.md settings cannot be overridden by project-level or session-level configuration.
 - **CSP headers on dashboard** — Content Security Policy headers prevent XSS in the dashboard UI.
 - **Localhost-only binding** — The dashboard server binds to `127.0.0.1` only. It is not accessible from the network.
@@ -101,7 +112,8 @@ Before submitting code that touches security-sensitive paths:
 
 - **ZK-proofs are simulated** — The Dilithium-5 / ZK-proof layer uses cryptographic simulation, not hardware-backed TEEs. It provides logical governance enforcement, not hardware-grade isolation.
 - **Dashboard is localhost-only** — The dashboard is designed for local development. Do not expose it to the public internet, even behind a reverse proxy, without adding additional authentication.
-- **ZTAI keys are file-based** — Agent identity keys are stored on disk. In production deployments requiring hardware-bound keys, integrate with your organization's HSM or secure enclave.
+- **ZTAI keys are ephemeral** — Agent identity keys are generated per-session via `crypto.randomBytes()`. In production deployments requiring persistent hardware-bound keys, integrate with your organization's HSM or secure enclave.
+- **Rate limiting is per-process** — The 100 req/min limit is tracked in-memory. Restarting the dashboard resets counters. For distributed deployments, add an external rate limiter (e.g., nginx, Cloudflare).
 
 ---
 

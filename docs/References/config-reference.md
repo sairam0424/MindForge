@@ -67,7 +67,48 @@ Control how skills are discovered and injected.
 
 ---
 
-## 5. Non-Overridable Governance
+## 5. Temporal Configuration (v11.0.0+)
+
+Control reasoning snapshot retention for the Temporal Steering system.
+
+| Key | Description | Default |
+| :--- | :--- | :--- |
+| `temporal.max_snapshots` | Maximum number of reasoning snapshots retained per session. | `50` |
+| `temporal.max_age_days` | Snapshots older than this value (in days) are auto-pruned. | `30` |
+
+---
+
+## 6. Rate Limiting (v11.0.0+)
+
+Configure request rate limits for the dashboard and API endpoints.
+
+| Key | Description | Default |
+| :--- | :--- | :--- |
+| `rate_limiting.dashboard_rpm` | Maximum requests per minute to dashboard endpoints. | `120` |
+
+---
+
+## 7. Session Configuration (v11.0.0+)
+
+Control session token behaviour for dashboard authentication.
+
+| Key | Description | Default |
+| :--- | :--- | :--- |
+| `session.token_expiry_hours` | Hours before a dashboard bearer token expires. | `24` |
+
+---
+
+## 8. Wave Execution (v11.0.0+)
+
+Tune parallel wave execution behaviour.
+
+| Key | Description | Default |
+| :--- | :--- | :--- |
+| `wave_execution.max_concurrency` | Maximum number of tasks executed in parallel within a wave. | `6` |
+
+---
+
+## 9. Non-Overridable Governance
 
 To ensure enterprise safety, several rules **cannot** be disabled via `MINDFORGE.md`:
 
