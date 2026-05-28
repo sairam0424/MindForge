@@ -126,6 +126,22 @@ function getFilePath(type) {
   }
 }
 
+// ── File Integrity ────────────────────────────────────────────────────────────
+
+/**
+ * Ensures a JSONL file doesn't end with a partial/truncated line.
+ * Appends a trailing newline if missing — prevents corruption from propagating.
+ */
+function verifyFileIntegrity(filePath) {
+  if (!fs.existsSync(filePath)) return true;
+  const content = fs.readFileSync(filePath, 'utf8');
+  if (content.length === 0) return true;
+  if (!content.endsWith('\n')) {
+    fs.appendFileSync(filePath, '\n');
+  }
+  return true;
+}
+
 // ── Write operations ──────────────────────────────────────────────────────────
 
 /**
@@ -184,10 +200,12 @@ function add(entry) {
   };
 
   const filePath = getFilePath(entry.type);
+  verifyFileIntegrity(filePath);
   fs.appendFileSync(filePath, JSON.stringify(full) + '\n');
 
   // Also append to unified knowledge-base.jsonl for cross-type queries
   if (filePath !== paths.KB_PATH) {
+    verifyFileIntegrity(paths.KB_PATH);
     fs.appendFileSync(paths.KB_PATH, JSON.stringify(full) + '\n');
   }
 
@@ -217,8 +235,10 @@ function deprecate(id, reason, supersededBy = null) {
     deprecated_at:     new Date().toISOString(),
   };
 
+  verifyFileIntegrity(filePath);
   fs.appendFileSync(filePath, JSON.stringify(deprecated) + '\n');
   if (filePath !== paths.KB_PATH) {
+    verifyFileIntegrity(paths.KB_PATH);
     fs.appendFileSync(paths.KB_PATH, JSON.stringify(deprecated) + '\n');
   }
 
@@ -246,8 +266,10 @@ function reinforce(id) {
   };
 
   const filePath = getFilePath(entry.type);
+  verifyFileIntegrity(filePath);
   fs.appendFileSync(filePath, JSON.stringify(reinforced) + '\n');
   if (filePath !== paths.KB_PATH) {
+    verifyFileIntegrity(paths.KB_PATH);
     fs.appendFileSync(paths.KB_PATH, JSON.stringify(reinforced) + '\n');
   }
 
