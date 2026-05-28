@@ -14,18 +14,15 @@ class ContextRefactorer {
     this.history = [];
   }
 
-  /**
-   * Analyze the current context density.
-   * Density = (Implementation Events) / (Total Events)
-   */
   analyzeDensity(events) {
-    this.history = events.slice(-this.windowSize);
-    
-    if (this.history.length < 5) return { density: 1.0, shouldRefactor: false };
+    const windowSize = this._getAdaptiveWindow(events);
+    this.history = events.slice(-windowSize);
 
-    const implementationEvents = this.history.filter(h => 
-      h.tool === 'run_command' || 
-      h.tool === 'replace_file_content' || 
+    if (this.history.length < 5) return { density: 1.0, shouldRefactor: false, windowSize };
+
+    const implementationEvents = this.history.filter(h =>
+      h.tool === 'run_command' ||
+      h.tool === 'replace_file_content' ||
       h.tool === 'multi_replace_file_content' ||
       h.event === 'task_completed'
     );
@@ -35,8 +32,26 @@ class ContextRefactorer {
 
     return {
       density: parseFloat(density.toFixed(2)),
-      shouldRefactor: density < this.threshold
+      shouldRefactor: density < this.threshold,
+      windowSize
     };
+  }
+
+  _getAdaptiveWindow(events) {
+    const recent = events.slice(-10);
+    if (recent.length === 0) return 20;
+
+    const implEvents = recent.filter(e =>
+      e.event === 'run_command' ||
+      e.event?.includes('replace_file') ||
+      e.event === 'task_completed'
+    ).length;
+
+    const velocity = implEvents / recent.length;
+
+    if (velocity > 0.6) return 10;
+    if (velocity < 0.3) return 30;
+    return 20;
   }
 
   /**

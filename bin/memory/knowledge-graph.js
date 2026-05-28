@@ -109,6 +109,7 @@ function addEdge(edge) {
   record.checksum = crypto.createHash('sha256').update(payload).digest('hex');
 
   fs.appendFileSync(paths.EDGES_PATH, JSON.stringify(record) + '\n');
+  invalidateAdjacencyCache();
   return id;
 }
 
@@ -155,6 +156,7 @@ function deprecateEdge(edgeId, reason) {
   };
 
   fs.appendFileSync(paths.EDGES_PATH, JSON.stringify(deprecated) + '\n');
+  invalidateAdjacencyCache();
 }
 
 /**
@@ -181,18 +183,68 @@ function reinforceEdge(edgeId) {
   fs.appendFileSync(paths.EDGES_PATH, JSON.stringify(reinforced) + '\n');
 }
 
-// ── Adjacency Index ───────────────────────────────────────────────────────────
+// ── Adjacency Index (with persistent cache) ─────────────────────────────────
+
+function getAdjacencyCachePath() {
+  const paths = getPaths();
+  return path.join(paths.MEMORY_DIR, '.adjacency-cache.json');
+}
+
+function invalidateAdjacencyCache() {
+  const cachePath = getAdjacencyCachePath();
+  if (fs.existsSync(cachePath)) {
+    fs.unlinkSync(cachePath);
+  }
+}
+
+/**
+ * Load adjacency index from cache if edges file hasn't changed,
+ * otherwise rebuild and persist.
+ * @param {object[]} edges - All active edges (used for rebuild)
+ * @returns {Map<string, object[]>} nodeId → [{ edge, neighborId, direction }]
+ */
+function loadOrBuildAdjacencyIndex(edges) {
+  const paths = getPaths();
+  const cachePath = getAdjacencyCachePath();
+  const edgesStat = fs.statSync(paths.EDGES_PATH, { throwIfNoEntry: false });
+
+  if (edgesStat && fs.existsSync(cachePath)) {
+    try {
+      const cache = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      if (cache.mtime === edgesStat.mtimeMs) {
+        const index = new Map();
+        for (const [nodeId, neighbors] of Object.entries(cache.adjacency)) {
+          index.set(nodeId, neighbors);
+        }
+        return index;
+      }
+    } catch (e) { /* cache corrupt, rebuild */ }
+  }
+
+  const index = buildAdjacencyIndex(edges);
+
+  if (edgesStat) {
+    const serialized = {};
+    for (const [nodeId, neighbors] of index) {
+      serialized[nodeId] = neighbors;
+    }
+    const cacheData = { mtime: edgesStat.mtimeMs, adjacency: serialized };
+    ensureDir(paths.MEMORY_DIR);
+    fs.writeFileSync(cachePath, JSON.stringify(cacheData));
+  }
+
+  return index;
+}
 
 /**
  * Build an in-memory adjacency index for O(1) neighbor lookups.
  * @param {object[]} edges - All active edges
- * @returns {Map<string, object[]>} nodeId → [{ edge, neighborId }]
+ * @returns {Map<string, object[]>} nodeId → [{ edge, neighborId, direction }]
  */
 function buildAdjacencyIndex(edges) {
   const index = new Map();
 
   for (const edge of edges) {
-    // Forward direction
     if (!index.has(edge.sourceId)) index.set(edge.sourceId, []);
     index.get(edge.sourceId).push({
       edge,
@@ -200,7 +252,6 @@ function buildAdjacencyIndex(edges) {
       direction: 'outgoing',
     });
 
-    // Reverse direction (for bidirectional traversal)
     if (!index.has(edge.targetId)) index.set(edge.targetId, []);
     index.get(edge.targetId).push({
       edge,
@@ -262,7 +313,7 @@ function addFederatedEdge(edge) {
 function traverse(startId, maxDepth = 2, opts = {}) {
   const { edgeTypes, minWeight = 0 } = opts;
   const edges = readAllEdges();
-  const adjacency = buildAdjacencyIndex(edges);
+  const adjacency = loadOrBuildAdjacencyIndex(edges);
 
   const visited = new Set();
   const results = [];
@@ -598,6 +649,8 @@ module.exports = {
   deprecateEdge,
   reinforceEdge,
   buildAdjacencyIndex,
+  loadOrBuildAdjacencyIndex,
+  invalidateAdjacencyCache,
   traverse,
   findRelated,
   getNodeEdges,
