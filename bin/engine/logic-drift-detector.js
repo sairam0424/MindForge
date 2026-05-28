@@ -8,10 +8,11 @@
 'use strict';
 
 const configManager = require('../governance/config-manager');
+const { LRUMap } = require('../utils/index');
 
 class LogicDriftDetector {
   constructor() {
-    this.sessionDriftHistory = new Map(); // spanId -> [scores]
+    this.sessionDriftHistory = new LRUMap(500);
     this.DRIFT_THRESHOLD = configManager.get('governance.drift_threshold', 0.75);
     this.CRITICAL_DRIFT_THRESHOLD = configManager.get('governance.critical_drift_threshold', 0.50);
   }
