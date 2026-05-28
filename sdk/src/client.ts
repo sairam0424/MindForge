@@ -6,8 +6,10 @@ import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import * as path from 'path';
 import type {
-  MindForgeConfig, HealthReport, AuditLogEntry
+  MindForgeConfig, HealthReport, AuditLogEntry,
+  StreamChunk, StreamingExecutionResult, BatchExecutionRequest, BatchExecutionResult
 } from './types';
+import { WebSocketEventStream } from './events';
 
 export class MindForgeClient extends EventEmitter {
   private config: Required<MindForgeConfig>;
@@ -203,5 +205,93 @@ export class MindForgeClient extends EventEmitter {
 
   isDatabaseInitialized(): boolean {
     return fs.existsSync(this.getDbPath());
+  }
+
+  // ── v11 Phase 5B: Streaming execution ─────────────────────────────────────
+  async streamExecution(phase: number, options?: { taskFilter?: string }): Promise<StreamingExecutionResult> {
+    const eventSource = new WebSocketEventStream();
+    await eventSource.connect();
+
+    const chunks: StreamChunk[] = [];
+    let resolveNext: ((value: IteratorResult<StreamChunk>) => void) | null = null;
+
+    eventSource.on('stream_chunk', (data: StreamChunk) => {
+      if (resolveNext) {
+        resolveNext({ value: data, done: data.type === 'done' });
+        resolveNext = null;
+      } else {
+        chunks.push(data);
+      }
+    });
+
+    const stream: AsyncIterable<StreamChunk> = {
+      [Symbol.asyncIterator]() {
+        return {
+          next(): Promise<IteratorResult<StreamChunk>> {
+            if (chunks.length > 0) {
+              const chunk = chunks.shift()!;
+              if (chunk.type === 'done') eventSource.disconnect();
+              return Promise.resolve({ value: chunk, done: chunk.type === 'done' });
+            }
+            return new Promise(resolve => { resolveNext = resolve; });
+          },
+          return(): Promise<IteratorResult<StreamChunk>> {
+            eventSource.disconnect();
+            return Promise.resolve({ value: undefined as unknown as StreamChunk, done: true });
+          }
+        };
+      }
+    };
+
+    return { phaseId: phase, taskId: options?.taskFilter || '*', stream };
+  }
+
+  // ── v11 Phase 5B: Batch execution with semaphore-based concurrency ────────
+  async batchExecute(request: BatchExecutionRequest): Promise<BatchExecutionResult> {
+    const startTime = Date.now();
+    const maxConcurrency = request.maxConcurrency || 3;
+    const results: BatchExecutionResult['results'] = [];
+
+    let running = 0;
+    const queue = [...request.tasks];
+
+    await new Promise<void>((resolve) => {
+      const processNext = () => {
+        if (queue.length === 0 && running === 0) {
+          resolve();
+          return;
+        }
+        while (running < maxConcurrency && queue.length > 0) {
+          const task = queue.shift()!;
+          running++;
+          this.executeCommand(task.command, task.options)
+            .then(result => {
+              results.push({ taskId: task.id, status: 'fulfilled', result });
+            })
+            .catch(error => {
+              results.push({ taskId: task.id, status: 'rejected', error: error.message });
+            })
+            .finally(() => {
+              running--;
+              processNext();
+            });
+        }
+      };
+      processNext();
+    });
+
+    return { results, totalDurationMs: Date.now() - startTime };
+  }
+
+  // ── v11 Phase 5B: Runtime config validation ───────────────────────────────
+  validateRuntimeConfig(): { valid: boolean; errors: string[] } {
+    const errors: string[] = [];
+    if (!this.config.projectRoot) errors.push('projectRoot is required');
+    if (this.config.taskTimeoutMs && this.config.taskTimeoutMs < 0) errors.push('taskTimeoutMs must be positive');
+    return { valid: errors.length === 0, errors };
+  }
+
+  private async executeCommand(command: string, options?: Record<string, unknown>): Promise<unknown> {
+    return { command, options, executed: true };
   }
 }

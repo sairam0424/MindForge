@@ -61,3 +61,7 @@ export const commands = {
     return `/mindforge:pr-review ${flags}`.trim();
   },
 };
+
+export function batch(commands: string[]): string {
+  return commands.map(cmd => cmd.trim()).filter(Boolean).join(' && ');
+}
