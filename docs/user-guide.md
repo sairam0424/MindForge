@@ -1,4 +1,4 @@
-# MindForge User Guide (v10.0.1)
+# MindForge User Guide (v11.0.0)
 
 This guide gets you from install to productive, with the minimum needed to run MindForge in a real project.
 
@@ -136,7 +136,7 @@ Observe your agent waves, token spend, and milestone progress in real-time.
 
 The dashboard provides a premium web interface at `http://localhost:7339`.
 
-> **Authentication (v10.0.1+):** The dashboard now requires a bearer token for access. The token is printed to the console at startup. Pass it in the `Authorization` header or use the login prompt in the browser UI.
+> **Authentication (v11.0.0+):** The dashboard now requires a bearer token for access. The token is printed to the console at startup. Pass it in the `Authorization` header or use the login prompt in the browser UI.
 
 ---
 
