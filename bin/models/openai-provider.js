@@ -73,6 +73,50 @@ class OpenAIProvider {
       req.end();
     });
   }
+
+  async streamComplete(messages, options = {}) {
+    const model = options.model || 'gpt-4o';
+    const maxTokens = options.maxTokens || 4096;
+
+    const data = JSON.stringify({
+      model,
+      messages,
+      max_tokens: maxTokens,
+      stream: true,
+    });
+
+    return new Promise((resolve, reject) => {
+      const req = https.request({
+        hostname: 'api.openai.com',
+        path: '/v1/chat/completions',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Length': Buffer.byteLength(data),
+        },
+        timeout: 300_000,
+      }, res => {
+        if (res.statusCode !== 200) {
+          let body = '';
+          res.on('data', chunk => body += chunk);
+          res.on('end', () => {
+            reject(new Error(`OpenAI streaming failed: ${res.statusCode}`));
+          });
+          return;
+        }
+        resolve(res);
+      });
+
+      req.on('error', reject);
+      req.on('timeout', () => {
+        req.destroy();
+        reject(new Error('OpenAI stream timeout'));
+      });
+      req.write(data);
+      req.end();
+    });
+  }
 }
 
 module.exports = OpenAIProvider;

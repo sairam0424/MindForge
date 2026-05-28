@@ -74,6 +74,57 @@ class GeminiProvider {
       req.end();
     });
   }
+
+  async streamComplete(messages, options = {}) {
+    const model = options.model || 'gemini-2.5-pro';
+    const maxTokens = options.maxTokens || 8192;
+
+    const contents = messages.map(msg => ({
+      role: msg.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: msg.content }],
+    }));
+
+    const data = JSON.stringify({
+      contents,
+      generationConfig: {
+        maxOutputTokens: maxTokens,
+      },
+    });
+
+    const modelId = model.startsWith('models/') ? model : `models/${model}`;
+
+    return new Promise((resolve, reject) => {
+      const req = https.request({
+        hostname: 'generativelanguage.googleapis.com',
+        path: `/v1beta/${modelId}:streamGenerateContent?alt=sse`,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': this.apiKey,
+          'Content-Length': Buffer.byteLength(data),
+        },
+        timeout: 300_000,
+      }, res => {
+        if (res.statusCode !== 200) {
+          let body = '';
+          res.on('data', chunk => body += chunk);
+          res.on('end', () => {
+            reject(new Error(`Gemini streaming failed: ${res.statusCode}`));
+          });
+          return;
+        }
+        resolve(res);
+      });
+
+      req.on('error', reject);
+      req.on('timeout', () => {
+        req.destroy();
+        reject(new Error('Gemini stream timeout'));
+      });
+      req.write(data);
+      req.end();
+    });
+  }
 }
 
 module.exports = GeminiProvider;
