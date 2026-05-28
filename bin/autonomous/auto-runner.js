@@ -21,7 +21,7 @@ const ContextRefactorer = require('./context-refactorer');
 // Extracted modules (lightweight, always needed)
 const { createAuditWriter } = require('./audit-writer');
 const { createStateManager } = require('./state-manager');
-const { createWaveExecutor } = require('./wave-executor');
+const { createWaveExecutor, Semaphore } = require('./wave-executor');
 
 // ── Lazy-loaded heavy modules ────────────────────────────────────────────────
 // These are only required at the point of first use to reduce startup cost.
@@ -218,30 +218,63 @@ class AutoRunner {
     const wave = this.waves[this.currentWaveIndex];
     const waveNum = this.currentWaveIndex + 1;
     const pending = wave.tasks.filter(t => !this.completedTasks.has(t.id));
+    const maxConcurrency = this._getWaveConcurrency();
 
-    console.log(`\n⚡ Wave ${waveNum}/${this.waves.length}: ${pending.length} tasks`);
+    console.log(`\n⚡ Wave ${waveNum}/${this.waves.length}: ${pending.length} tasks (concurrency: ${maxConcurrency})`);
     if (idcStatus.action === 'UPGRADE_MIR') console.log(`  [IDC-ACTIVE] MIR Override: ${idcStatus.new_mir}`);
     this.writeAudit({ event: 'wave_started', phase: this.phase, wave: waveNum, task_count: pending.length });
 
-    for (const task of pending) {
-      const taskStart = Date.now();
-      console.log(`  → Task: ${task.name || task.id}`);
-      try {
-        this.writeAudit({ event: 'task_started', phase: this.phase, wave: waveNum, task_id: task.id, task_name: task.name || task.id });
-        this.writeAudit({ event: 'task_completed', phase: this.phase, wave: waveNum, task_id: task.id, task_name: task.name || task.id, duration_ms: Date.now() - taskStart });
-        this.completedTasks.add(task.id);
-      } catch (err) {
-        console.error(`  Task failed: ${task.id} — ${err.message}`);
-        this.writeAudit({ event: 'task_failed', phase: this.phase, wave: waveNum, task_id: task.id, error: err.message, duration_ms: Date.now() - taskStart });
-        const strategy = repairOperator.determineRepairStrategy({ planId: task.plan || task.id, phase: this.phase, attemptNumber: 1, errorOutput: err.message, isTier3Change: false, isOnCriticalPath: (task.depends_on || []).length > 0 });
-        if (strategy === 'RETRY') { console.log(`  Repair: retrying ${task.id}`); continue; }
-        if (strategy === 'ESCALATE') { this.writeAudit({ event: 'auto_mode_escalated', reason: `Task ${task.id} unrecoverable` }); this.isPaused = true; return; }
+    const semaphore = new Semaphore(maxConcurrency);
+
+    const settled = await Promise.allSettled(
+      pending.map(async (task) => {
+        await semaphore.acquire();
+        const taskStart = Date.now();
+        console.log(`  → Task: ${task.name || task.id}`);
+        try {
+          this.writeAudit({ event: 'task_started', phase: this.phase, wave: waveNum, task_id: task.id, task_name: task.name || task.id });
+          this.writeAudit({ event: 'task_completed', phase: this.phase, wave: waveNum, task_id: task.id, task_name: task.name || task.id, duration_ms: Date.now() - taskStart });
+          this.completedTasks.add(task.id);
+          return { taskId: task.id, status: 'fulfilled' };
+        } catch (err) {
+          console.error(`  Task failed: ${task.id} — ${err.message}`);
+          this.writeAudit({ event: 'task_failed', phase: this.phase, wave: waveNum, task_id: task.id, error: err.message, duration_ms: Date.now() - taskStart });
+          throw { taskId: task.id, error: err, task };
+        } finally {
+          semaphore.release();
+        }
+      })
+    );
+
+    const failures = settled.filter(r => r.status === 'rejected');
+    if (failures.length > 0) {
+      for (const failure of failures) {
+        const { taskId, error, task } = failure.reason;
+        const strategy = repairOperator.determineRepairStrategy({ planId: task.plan || taskId, phase: this.phase, attemptNumber: 1, errorOutput: error.message, isTier3Change: false, isOnCriticalPath: (task.depends_on || []).length > 0 });
+        if (strategy === 'ESCALATE') {
+          this.writeAudit({ event: 'auto_mode_escalated', reason: `Task ${taskId} unrecoverable` });
+          this.isPaused = true;
+          return;
+        }
       }
     }
 
     this.updateState({ currentWaveIndex: this.currentWaveIndex, completedTasks: Array.from(this.completedTasks), lastWaveCompletedAt: new Date().toISOString() });
     this.writeAudit({ event: 'wave_completed', phase: this.phase, wave: waveNum });
     this.currentWaveIndex++;
+  }
+
+  _getWaveConcurrency() {
+    try {
+      const configPath = path.join(process.cwd(), '.mindforge', 'config.json');
+      if (fs.existsSync(configPath)) {
+        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        if (typeof config.wave_concurrency === 'number' && config.wave_concurrency > 0) {
+          return config.wave_concurrency;
+        }
+      }
+    } catch (e) { /* Fall through to default */ }
+    return 3;
   }
 
   /**
@@ -316,6 +349,15 @@ class AutoRunner {
       if (captured.length + stability.length > 0) console.log(`🧠 Knowledge Graph: Captured ${captured.length + stability.length} insights.`);
     } catch (err) { console.error('⚠️ Knowledge Capture failed:', err.message); }
 
+    try {
+      _TemporalHub = lazyRequire(_TemporalHub, '../engine/temporal-hub');
+      const gcConfig = this._loadTemporalGcConfig();
+      const gcResult = await _TemporalHub.gc(gcConfig);
+      if (gcResult.deleted > 0) {
+        this.writeAudit({ event: 'temporal_gc_completed', deleted: gcResult.deleted, remaining: gcResult.remaining });
+      }
+    } catch (e) { /* GC failure is non-critical */ }
+
     this.writeAudit({ event: 'auto_mode_completed', timestamp: new Date().toISOString() });
     await this.auditWriter.close();
   }
@@ -334,7 +376,7 @@ class AutoRunner {
     const STATE_CHANGING_EVENTS = ['auto_mode_started', 'phase_planned', 'phase_execution_started', 'task_completed', 'hindsight_injected', 'auto_mode_completed'];
     if (STATE_CHANGING_EVENTS.includes(event.event)) {
       _TemporalHub = lazyRequire(_TemporalHub, '../engine/temporal-hub');
-      _TemporalHub.captureState(event.id, { agent: event.agent || 'auto-runner', event: event.event, phase: this.phase });
+      _TemporalHub.captureState(event.id, { agent: event.agent || 'auto-runner', event: event.event, phase: this.phase }).catch(() => {});
     }
 
     const result = this.monitor.analyze(event);
@@ -443,6 +485,22 @@ class AutoRunner {
     fs.closeSync(fd);
     const lines = buf.toString('utf8').trim().split('\n');
     return lines.slice(-count).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+  }
+
+  _loadTemporalGcConfig() {
+    try {
+      const configPath = path.join(process.cwd(), '.mindforge', 'config.json');
+      if (fs.existsSync(configPath)) {
+        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        if (config.temporal) {
+          return {
+            maxSnapshots: config.temporal.max_snapshots || 50,
+            maxAgeDays: config.temporal.max_age_days || 7
+          };
+        }
+      }
+    } catch (e) { /* Fall through to defaults */ }
+    return { maxSnapshots: 50, maxAgeDays: 7 };
   }
 }
 

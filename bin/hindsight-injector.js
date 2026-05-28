@@ -43,9 +43,9 @@ class HindsightInjector {
       }
 
       // 4. Capture the new state immediately
-      TemporalHub.captureState(hindsightEvent.id, { 
-        event: 'hindsight_injected', 
-        target_id: auditId 
+      await TemporalHub.captureState(hindsightEvent.id, {
+        event: 'hindsight_injected',
+        target_id: auditId
       });
 
       return { success: true, event: hindsightEvent };
