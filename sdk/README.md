@@ -64,7 +64,7 @@ if (!valid) console.error(errors);
 - The SDK operates on local files and provides no network authentication. Do not expose SDK
   endpoints to the public internet.
 
-## New in v9.0.0
+## New in v11.0.0
 
 ### Additional exports
 
@@ -72,13 +72,48 @@ if (!valid) console.error(errors);
 import {
   MindForgeClient,
   MindForgeEventStream,
-  VERSION,              // '9.0.0'
-} from '@mindforge/sdk';
+  WebSocketEventStream,
+  VERSION,              // '11.0.0'
+} from 'mindforge-sdk';
 
 import type {
-  WaveExecutionResult,  // Result type returned by wave execution operations
-  MigrationResult,      // Result type returned by schema migration operations
-} from '@mindforge/sdk';
+  WaveExecutionResult,
+  MigrationResult,
+  StreamChunk,
+  StreamingExecutionResult,
+  BatchExecutionRequest,
+  BatchExecutionResult,
+} from 'mindforge-sdk';
+```
+
+### Streaming execution
+
+```typescript
+import { MindForgeClient, WebSocketEventStream } from 'mindforge-sdk';
+
+const client = new MindForgeClient({ projectRoot: '.' });
+const { stream } = await client.streamExecution(1);
+
+for await (const chunk of stream) {
+  if (chunk.type === 'content') process.stdout.write(chunk.content!);
+  if (chunk.type === 'done') break;
+}
+```
+
+### Batch execution
+
+```typescript
+const results = await client.batchExecute([
+  { phase: 1, taskId: 'task-a' },
+  { phase: 1, taskId: 'task-b' },
+], { concurrency: 4 });
+```
+
+### Runtime config validation
+
+```typescript
+const { valid, errors } = client.validateRuntimeConfig();
+if (!valid) console.error(errors);
 ```
 
 ### New `MindForgeClient` methods

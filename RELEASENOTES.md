@@ -1,3 +1,83 @@
+# Release Notes — v11.0.0 "Sovereign Stability"
+
+**Release Date**: 2026-05-28  
+**Type**: Major (breaking changes)  
+**Upgrade Path**: Run `node bin/migrations/10.7.0-to-11.0.0.js`
+
+## Highlights
+
+MindForge v11.0.0 is a production-hardening release that addresses systemic stability, intelligence, security, and SDK capabilities. It eliminates memory leaks, adds crash-safe writes, upgrades semantic search from TF-IDF to BM25, completes previously-stubbed subsystems, and introduces true parallel execution.
+
+## What's New
+
+### Foundation Hardening
+- **Bounded caches** — LRUMap prevents unbounded memory growth in drift detector, entropy cache, and failure tracking
+- **Atomic writes** — State files use write-to-temp → fsync → rename (crash-safe)
+- **Log rotation** — AUDIT.jsonl auto-archives beyond 5000 lines with gzip compression
+- **Schema validation** — HANDOFF.json validated on load (fail-open with warnings)
+- **Snapshot GC** — Temporal history auto-cleaned (retain 50, expire > 7 days)
+
+### Intelligence Upgrades
+- **BM25 scoring** — Document-length-normalized search replacing raw TF-IDF
+- **Persistent caching** — Index and adjacency caches eliminate O(n) rebuilds
+- **Complete remediation** — All three strategies fully implemented (no more stubs)
+- **Adaptive systems** — Intelligence tier, context window, and stuck detection all auto-tune
+
+### Security Hardening
+- **Ephemeral enclave keys** — No more hardcoded secrets in source
+- **Structured crypto boundaries** — Simulated vs real clearly marked
+- **Session isolation** — RBAC elevation with TTL, session-scoped identity
+- **Dashboard security** — Token expiration, rate limiting, refresh endpoint
+
+### Observability
+- **System metrics** — `/api/v1/system` with heap monitoring and alerts
+- **P95 latency tracking** — Real measurements replace hardcoded values
+- **Effectiveness tracking** — Remediations measured for closed-loop improvement
+- **Dynamic config reload** — Model router refreshes on MINDFORGE.md changes
+
+### SDK & Distributed
+- **True parallelism** — Wave tasks execute concurrently via semaphore
+- **WebSocket streaming** — Real-time event delivery with auto-reconnect
+- **Batch execution** — Execute multiple tasks with concurrency control
+- **Model streaming** — Anthropic, OpenAI, and Gemini streaming support
+
+## Breaking Changes
+
+| Change | Impact | Migration |
+|--------|--------|-----------|
+| `verifyZKProof()` returns structured result | Code catching throws will miss denials | Check `result.verified` instead |
+| `signPQ()` returns object | Code using return value as string will break | Destructure `{ signature }` from result |
+| Wave execution non-deterministic | Task order within waves no longer guaranteed | Do not rely on execution order |
+| `captureState()`/`rollbackTo()` now async | Callers must await these methods | Add `await` at all call sites |
+| Dashboard tokens expire after 24h | Long-lived tokens stop working | Use `/api/v1/auth/refresh` endpoint |
+| SDK bumped to 11.0.0 | New exports, removed deprecated paths | Update `mindforge-sdk@11.0.0` |
+
+See upgrade guide at `docs/upgrade.md` for full migration steps.
+
+## Migration
+
+```bash
+node bin/migrations/10.7.0-to-11.0.0.js
+```
+
+The migration script:
+1. Backs up `.mindforge/config.json`
+2. Adds new config sections (temporal, rate_limiting, session, wave_execution)
+3. Archives old AUDIT.jsonl entries if > 5000 lines
+4. Runs temporal snapshot GC
+5. Bumps schema versions
+
+---
+
+## Previous Releases
+
+- [v10.0.3 — Council Awakens](https://github.com/sairam0424/MindForge/releases/tag/v10.0.3)
+- [v10.0.1 — Bedrock Fortified](https://github.com/sairam0424/MindForge/releases/tag/v10.0.1)
+- [v9.0.0 — Bedrock Meridian](https://github.com/sairam0424/MindForge/releases/tag/v9.0.0)
+
+---
+---
+
 # Release Notes — v10.0.3 "Council Awakens"
 
 **Release Date**: 2026-05-25  

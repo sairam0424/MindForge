@@ -1,5 +1,69 @@
 # Changelog
 
+## [11.0.0] - 2026-05-28 — "Sovereign Stability"
+
+### Breaking Changes
+
+- `verifyZKProof()` returns structured `{ verified, reason }` instead of throwing
+- `signPQ()` returns `{ signature, simulated, algorithm }` object instead of raw string
+- Wave task execution order within waves is no longer deterministic
+- SDK bumped to 11.0.0 with new type exports
+- Dashboard tokens now expire after 24 hours
+- `TemporalHub.captureState()` and `rollbackTo()` are now async
+
+### Added
+
+- LRUMap utility class for bounded caches with eviction callbacks
+- Atomic JSON write primitives (write-to-temp, fsync, rename)
+- AUDIT.jsonl log rotation with gzip archival (max 5000 lines)
+- HANDOFF.json structural validation (fail-open)
+- Temporal snapshot garbage collection (retain 50, expire > 7 days)
+- BM25 scoring with document-length normalization
+- Persistent index cache (mtime-based invalidation)
+- Persistent adjacency index for knowledge graph
+- Correction effectiveness tracking in self-corrective synthesizer
+- Full remediation strategy implementations (CONTEXT_COMPRESSION, GOLDEN_TRACE_INJECTION, REASONING_RESTART)
+- Graduated intelligence interlock (+1/+2/MAX tier) with cost-awareness
+- 3-tier stuck detection (hash → length → truncated Levenshtein)
+- Adaptive context window (10/20/30 based on velocity)
+- Configurable external ZK verifier module path
+- Ephemeral SRE enclave keys (crypto.randomBytes)
+- Time-limited RBAC role elevation with auto-expiry
+- Session-scoped ZTAI agent registry
+- Dashboard rate limiting (100 req/min/IP) and token expiration (24h)
+- /api/v1/token/refresh endpoint
+- Optional GPG approval verification
+- GET /api/v1/system observability endpoint (heap, uptime, audit stats)
+- checkHeapHealth() with warning/critical thresholds
+- Remediation effectiveness persistence
+- Model router dynamic reload (mtime-based, 60s interval)
+- P95 latency ring buffer for cloud broker
+- EIS client with real fetch + 3-retry exponential backoff
+- Semaphore-based parallel wave execution (max concurrency configurable)
+- WebSocketEventStream with auto-reconnect
+- SDK streamExecution() with AsyncIterable<StreamChunk>
+- SDK batchExecute() with concurrent task execution
+- SDK validateRuntimeConfig()
+- Model streaming support (Anthropic, OpenAI, Gemini providers)
+- Migration script (bin/migrations/10.7.0-to-11.0.0.js)
+
+### Changed
+
+- sessionDriftHistory bounded to 500 entries via LRUMap
+- entropyCache bounded to 1000 entries via LRUMap
+- Cloud broker failure tracking uses 5-minute sliding window
+- Self-corrective synthesizer window expanded from 10 → 50 events
+- Context refactorer uses adaptive window instead of fixed 20
+
+### Fixed
+
+- Memory leaks from unbounded Maps in long-running sessions
+- Data corruption risk on process crash during state file writes
+- Disk exhaustion from unbounded AUDIT.jsonl and snapshot growth
+- Hardcoded SRE enclave private key (security issue)
+
+---
+
 ## [10.7.0] - 2026-05-27 — "Platform Sovereign"
 
 ### Added (v10.7.0)

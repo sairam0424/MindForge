@@ -1,4 +1,4 @@
-# MindForge — Getting Started (v10.0.1)
+# MindForge — Getting Started (v11.0.0)
 
 This guide gets you from zero to a working MindForge project in under five minutes.
 

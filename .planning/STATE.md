@@ -1,7 +1,7 @@
 # MindForge — Project State
 
 ## Status
-🟢 Active — v9.0.0 (Bedrock Meridian Era)
+🟢 Active — v11.0.0 (Sovereign Stability)
 
 ## IMPORTANT
 HANDOFF.json is committed to git. Never write secrets or credentials into it.
@@ -9,28 +9,31 @@ Write "see .env" or "stored in secrets manager" if a note needs to reference cre
 
 
 ## Current version
-v9.0.0 — Bedrock Meridian release. Pillars XXIV–XXVIII delivered.
+v11.0.0 — Sovereign Stability release. Production-hardened streaming, batch execution, and runtime validation.
 
 ## Current phase
-Bedrock Meridian stabilisation and documentation updates.
+v11.0.0 released. Ready for next milestone planning.
 
 ## Last completed task
-v9.0.0 release — Grounded Wave Execution, Model Topology Modernization, Unified Memory Architecture, Schema Migration Engine, Integration Test Chain.
+v11.0.0 release — WebSocketEventStream, streamExecution(), batchExecute(), validateRuntimeConfig(), LRUMap, AuditRotator, Semaphore, new dashboard endpoints, temporal/rate-limiting/session/wave config sections.
 
 ## Next action
-Verify all documentation artifacts reflect v9.0.0 state. Run `/mindforge:health` to confirm installation integrity.
+Plan next milestone. Run `/mindforge:health` to confirm installation integrity.
 
 ## Decisions made
-- Unified persistence layer on SQLite with FTS5 (Pillar XXVI).
-- All model references updated to current-generation identifiers (Pillar XXV).
-- Provider routing switched from substring to prefix matching (Pillar XXV).
+- WebSocket-based event streaming with auto-reconnect replaces polling.
+- Semaphore-based concurrency control for batch execution (default max 6).
+- Runtime config validation at startup prevents misconfiguration drift.
+- Temporal snapshots auto-prune after 30 days (configurable).
+- Dashboard rate limiting enforced at 120 rpm default.
+- Session tokens expire after 24 hours (configurable).
 
 ## Active blockers
 None.
 
 ## Context for next session
-MindForge v9.0.0 shipped. All five Bedrock Meridian pillars (XXIV–XXVIII) are integrated.
-Config, context docs, and requirements updated for the v9.0.0 release.
+MindForge v11.0.0 shipped. All Sovereign Stability features are integrated.
+SDK, dashboard, and config documentation updated for the v11.0.0 release.
 
 ## Last updated
-2026-04-30T00:00:00Z
+2026-05-28T00:00:00Z

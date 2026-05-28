@@ -1,6 +1,6 @@
-# MindForge Codebase Map (v10.0.3 — "Council Awakens")
+# MindForge Codebase Map (v11.0.0 — "Sovereign Stability")
 
-> Generated: 2026-05-25 | Total: ~18.2K LOC across 345 published files
+> Generated: 2026-05-28 | Total: ~19.1K LOC across 350 published files
 
 ---
 
@@ -162,8 +162,9 @@ HANDOFF ──────────── Write state to HANDOFF.json + AUDIT
 | stuck-monitor.js | 120 | Detect deadlocks via AUDIT pattern analysis |
 | intent-harvester.js | 80 | Proactive semantic intent extraction |
 | mesh-self-healer.js | 70 | Detect/repair reasoning drift |
-| audit-writer.js | 75 | Buffered Merkle-chained JSONL writes |
+| audit-writer.js | 75 | Buffered Merkle-chained JSONL writes (LRUMap + AuditRotator) |
 | progress-stream.js | 65 | Real-time status to dashboard SSE |
+| semaphore.js | 45 | Semaphore-based concurrency limiter for batch execution |
 
 ### 2. Memory System (`bin/memory/`)
 
@@ -309,22 +310,29 @@ UISwarm, BackendSwarm, SecuritySwarm, AIEngineeringSwarm, DeveloperExperienceSwa
 | `instincts` | auto-capture, max 100/project, promote at 0.85 confidence + 5 applications |
 | `council` | 4 voices, 2 rounds max, 0.75 consensus threshold, 200 words/voice |
 | `cost_routing` | 5 tiers, session budget $5 warn / $20 hard, weekly $50 / $200 |
+| `temporal` | max_snapshots: 50, max_age_days: 30 |
+| `rate_limiting` | dashboard_rpm: 120 |
+| `session` | token_expiry_hours: 24 |
+| `wave_execution` | max_concurrency: 6 |
 
 ---
 
 ## SDK API (`@mindforge/sdk`)
 
 ```typescript
-import { MindForgeClient } from '@mindforge/sdk';
+import { MindForgeClient, WebSocketEventStream } from 'mindforge-sdk';
 
 const client = new MindForgeClient({ projectRoot: '.' });
-await client.health();         // Validate project structure
-await client.readState();      // Parse .planning/STATE.md
-await client.readHandoff();    // Read HANDOFF.json (schema-validated)
-client.isInitialised();        // Check if .planning/PROJECT.md exists
+await client.health();            // Validate project structure
+await client.readState();         // Parse .planning/STATE.md
+await client.readHandoff();       // Read HANDOFF.json (schema-validated)
+await client.streamExecution(1);  // AsyncIterable<StreamChunk> streaming
+await client.batchExecute(reqs);  // Semaphore-based concurrent batch
+client.validateRuntimeConfig();   // Startup config checking
+client.isInitialised();           // Check if .planning/PROJECT.md exists
 ```
 
-Exports: `MindForgeClient`, `MindForgeEventStream`, `MindForgeMemory`, `commands`, types (`PhaseResult`, `TaskResult`, `SecurityFinding`, `GateResult`, `HealthReport`).
+Exports: `MindForgeClient`, `MindForgeEventStream`, `WebSocketEventStream`, `MindForgeMemory`, `commands`, types (`PhaseResult`, `TaskResult`, `SecurityFinding`, `GateResult`, `HealthReport`, `StreamChunk`, `StreamingExecutionResult`, `BatchExecutionRequest`, `BatchExecutionResult`).
 
 ---
 

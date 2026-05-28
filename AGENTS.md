@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-MindForge v10.7.0 ("Platform Sovereign") is an agentic intelligence framework distributed as the `mindforge-cc` npm package. It has two package roots:
+MindForge v11.0.0 ("Sovereign Stability") is an agentic intelligence framework distributed as the `mindforge-cc` npm package. It has two package roots:
 
 - **Root (`/`)** — The CLI + framework. Two bin entries: `mindforge-cc` (installer via `bin/install.js`) and `mindforge` (CLI via `bin/mindforge-cli.js`). Runtime scripts live under `bin/` (CLI, sharding, governance, autonomous engine, SRE, dashboard, etc.).
 - **`sdk/`** — A TypeScript SDK (`mindforge-sdk`) with its own `tsconfig.json` and build step. Compiled output goes to `sdk/dist/`. Has its own test suite (`cd sdk && npm test`).
