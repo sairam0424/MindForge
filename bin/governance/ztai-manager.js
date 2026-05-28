@@ -122,9 +122,10 @@ class QuantumSafeKeyProvider extends KeyProvider {
   async sign(did, data) {
     const record = this.keyStore.get(did);
     if (!record) throw new Error(`PQ record not found for ${did}`);
-    
+
     console.log(`[PQAS-DILITHIUM] Delegating signature to lattice enclave [DID: ${did}]`);
-    return await this.quantumCrypto.signPQ(data, record.privateKey);
+    const result = await this.quantumCrypto.signPQ(data, record.privateKey);
+    return result;
   }
 
   async rotate(did) {
@@ -148,24 +149,34 @@ class ZTAIManager {
 
   /**
    * Registers a new agent and assigns a provider based on Trust Tier.
+   * @param {string} persona - Agent persona identifier
+   * @param {number} tier - Trust tier (1-4)
+   * @param {string|null} sessionId - Optional session scope for isolation
    */
-  async registerAgent(persona, tier = 1) {
+  async registerAgent(persona, tier = 1, sessionId = null) {
     const uuid = crypto.randomUUID();
     const did = `did:mindforge:${uuid}`;
-    
+
     // Tier 3 agents use the SecureEnclaveProvider
     const providerType = tier >= 3 ? 'enclave' : 'local';
     const provider = this.providers[providerType];
-    
+
     const publicKeyPEM = await provider.generate(did);
 
-    this.agentRegistry.set(did, {
+    const agentData = {
       publicKey: publicKeyPEM,
       persona,
       tier,
       providerType,
       createdAt: new Date().toISOString()
-    });
+    };
+
+    // Store sessionId if provided for session-scoped isolation
+    if (sessionId) {
+      agentData.sessionId = sessionId;
+    }
+
+    this.agentRegistry.set(did, agentData);
 
     return did;
   }
@@ -217,6 +228,37 @@ class ZTAIManager {
 
   getAgent(did) {
     return this.agentRegistry.get(did);
+  }
+
+  /**
+   * Returns all agents registered under a specific session.
+   * @param {string} sessionId - Session identifier to filter by
+   */
+  getSessionAgents(sessionId) {
+    const results = [];
+    for (const [did, agent] of this.agentRegistry.entries()) {
+      if (agent.sessionId === sessionId) {
+        results.push({ did, ...agent });
+      }
+    }
+    return results;
+  }
+
+  /**
+   * Revokes all agents belonging to a session. Used for session cleanup.
+   * @param {string} sessionId - Session identifier
+   */
+  revokeSessionAgents(sessionId) {
+    const dids = [];
+    for (const [did, agent] of this.agentRegistry.entries()) {
+      if (agent.sessionId === sessionId) {
+        dids.push(did);
+      }
+    }
+    for (const did of dids) {
+      this.revokeAgent(did);
+    }
+    return dids;
   }
 
   /**

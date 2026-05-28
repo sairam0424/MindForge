@@ -95,14 +95,21 @@ class PolicyEngine {
           // [ENTERPRISE] Tier 3 Reasoning/PQ Proof Bypass
           if (intent.tier >= 3 && (intent.reasoning_proof || intent.pq_proof)) {
              const quantumCrypto = require('./quantum-crypto');
-             const isProofValid = intent.pq_proof ? 
-                quantumCrypto.verifyZKProof(intent.pq_proof, intent.id) : true;
+             let isProofValid = true;
+
+             if (intent.pq_proof) {
+               const zkResult = quantumCrypto.verifyZKProof(intent.pq_proof, intent.id);
+               isProofValid = zkResult.verified === true;
+               if (!isProofValid) {
+                 console.log(`[APO-ZK] [${requestId}] ZK proof denied: ${zkResult.reason}${zkResult.simulated ? ' (simulated)' : ''}`);
+               }
+             }
 
              if (isProofValid) {
                 console.log(`[APO-BYPASS] [${requestId}] Tier 3 'Sovereign Proof' verified (${intent.pq_proof ? 'ZK-PQ' : 'Standard'}). Overriding Blast Radius limit.`);
                 // Continue to permit check
              } else {
-                verdict = { verdict: 'DENY', reason: 'Invalid or Malformed ZK-Proof detected.', requestId };
+                verdict = { verdict: 'DENY', reason: 'ZK proof verification failed. Configure a verifier module or provide a valid proof.', requestId };
                 this.logAudit(intent, impactScore, verdict);
                 return verdict;
              }

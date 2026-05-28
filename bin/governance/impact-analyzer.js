@@ -137,6 +137,34 @@ class ImpactAnalyzer {
   static resetSession(sessionId) {
     this.sessionState.delete(sessionId);
   }
+
+  /**
+   * Returns the current entropy count for a session without incrementing.
+   * Useful for diagnostics and monitoring.
+   */
+  static getSessionEntropy(sessionId) {
+    return this.sessionState.get(sessionId) || 0;
+  }
+
+  /**
+   * Clears all session state entries. Use during process cleanup or testing.
+   */
+  static clearAllSessions() {
+    this.sessionState.clear();
+  }
+
+  /**
+   * Clears sessions that have exceeded a given entropy threshold.
+   * Prevents unbounded memory growth from abandoned sessions.
+   * @param {number} maxEntropy - Sessions above this count are purged.
+   */
+  static clearStaleSessions(maxEntropy = 50) {
+    for (const [sessionId, count] of this.sessionState.entries()) {
+      if (count > maxEntropy) {
+        this.sessionState.delete(sessionId);
+      }
+    }
+  }
 }
 
 module.exports = ImpactAnalyzer;

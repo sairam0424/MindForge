@@ -6,9 +6,16 @@
 
 const crypto = require('crypto');
 
-// Simulated System DID for Enclave Proofs (Tier 3)
-const ENCLAVE_PRIVATE_KEY = 'tier3-enclave-secret-key-sim'; // In production, this would be a TEE-bound private key
+const EPHEMERAL_ENCLAVE_KEY = crypto.randomBytes(32).toString('hex');
 const SYSTEM_DID = 'did:mindforge:enclave:0xenterprise';
+
+let _enclaveWarningShown = false;
+function warnNonTEE() {
+  if (!_enclaveWarningShown) {
+    console.warn('[SRE] Running in simulated enclave mode — not backed by hardware TEE');
+    _enclaveWarningShown = true;
+  }
+}
 
 class SREManager {
   constructor() {
@@ -25,6 +32,7 @@ class SREManager {
       throw new Error(`[SRE-DENY] Tier ${context.tier} principal is not authorized for Sovereign Reason Enclaves.`);
     }
 
+    warnNonTEE();
     const enclaveId = crypto.randomBytes(12).toString('hex');
     this.activeEnclaves.set(enclaveId, {
       startedAt: new Date().toISOString(),
@@ -67,7 +75,7 @@ class SREManager {
     };
 
     // Sign the proof with the Enclave Private Key
-    const signature = crypto.createHmac('sha256', ENCLAVE_PRIVATE_KEY)
+    const signature = crypto.createHmac('sha256', EPHEMERAL_ENCLAVE_KEY)
       .update(JSON.stringify(proofPayload))
       .digest('hex');
 
@@ -93,7 +101,7 @@ class SREManager {
   verifyZKProof(certificate) {
     if (certificate.status !== 'SRE-ISOLATED') return false;
 
-    const expectedSignature = crypto.createHmac('sha256', ENCLAVE_PRIVATE_KEY)
+    const expectedSignature = crypto.createHmac('sha256', EPHEMERAL_ENCLAVE_KEY)
       .update(JSON.stringify(certificate.proof))
       .digest('hex');
 
