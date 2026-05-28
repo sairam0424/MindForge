@@ -4,6 +4,7 @@ const fs = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
 const crypto = require('crypto');
+const zlib = require('zlib');
 
 class AuditWriter {
   constructor(filePath) {
@@ -99,4 +100,65 @@ function readJSONSync(filePath) {
   }
 }
 
-module.exports = { AuditWriter, readJSON, writeJSON, readJSONL, readJSONSync };
+function atomicWriteJSON(filePath, data) {
+  const tmpPath = filePath + '.tmp.' + process.pid;
+  const content = JSON.stringify(data, null, 2) + '\n';
+  const fd = fs.openSync(tmpPath, 'w');
+  fs.writeSync(fd, content);
+  fs.fsyncSync(fd);
+  fs.closeSync(fd);
+  fs.renameSync(tmpPath, filePath);
+}
+
+async function atomicWriteJSONAsync(filePath, data) {
+  const tmpPath = filePath + '.tmp.' + process.pid;
+  const content = JSON.stringify(data, null, 2) + '\n';
+  const fh = await fsp.open(tmpPath, 'w');
+  await fh.write(content);
+  await fh.sync();
+  await fh.close();
+  await fsp.rename(tmpPath, filePath);
+}
+
+class AuditRotator {
+  constructor(options = {}) {
+    this.maxLines = options.maxLines || 5000;
+  }
+
+  shouldRotate(filePath) {
+    if (!fs.existsSync(filePath)) return false;
+    const content = fs.readFileSync(filePath, 'utf8');
+    const lineCount = content.split('\n').filter(l => l.trim()).length;
+    return lineCount >= this.maxLines;
+  }
+
+  rotate(filePath, archiveDir) {
+    const dir = archiveDir || path.join(path.dirname(filePath), '..', 'audit-archive');
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const baseName = path.basename(filePath, path.extname(filePath));
+    const archiveName = `${baseName}-${timestamp}.jsonl.gz`;
+    const archivePath = path.join(dir, archiveName);
+
+    // Crash-safe: write archive FIRST, then truncate source
+    const content = fs.readFileSync(filePath);
+    const compressed = zlib.gzipSync(content);
+    fs.writeFileSync(archivePath, compressed);
+
+    const lines = content.toString('utf8').split('\n').filter(l => l.trim());
+    const carryover = lines.slice(-100).join('\n') + '\n';
+    const tmpPath = filePath + '.tmp.' + process.pid;
+    const fd = fs.openSync(tmpPath, 'w');
+    fs.writeSync(fd, carryover);
+    fs.fsyncSync(fd);
+    fs.closeSync(fd);
+    fs.renameSync(tmpPath, filePath);
+
+    return archivePath;
+  }
+}
+
+module.exports = { AuditWriter, AuditRotator, readJSON, writeJSON, readJSONL, readJSONSync, atomicWriteJSON, atomicWriteJSONAsync };

@@ -4,8 +4,8 @@
  */
 
 export { MindForgeClient } from './client';
-export { MindForgeEventStream } from './events';
-export { commands } from './commands';
+export { MindForgeEventStream, WebSocketEventStream } from './events';
+export { commands, batch } from './commands';
 export { MindForgeMemory } from './memory';
 export type { CommandOptions } from './commands';
 export type {
@@ -20,6 +20,10 @@ export type {
   AuditLogEntry,
   WaveExecutionResult,
   MigrationResult,
+  StreamChunk,
+  StreamingExecutionResult,
+  BatchExecutionRequest,
+  BatchExecutionResult,
 } from './types';
 
-export const VERSION = '10.7.0';
+export const VERSION = '11.0.0';

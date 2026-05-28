@@ -42,12 +42,18 @@ const RevOpsAPI   = require('./revops-api');
 const app = express();
 
 // ── Bearer token authentication ──────────────────────────────────────────────
-const DASHBOARD_TOKEN = crypto.randomBytes(32).toString('hex');
+let currentToken = crypto.randomBytes(32).toString('hex');
 const TOKEN_FILE = path.join(process.cwd(), '.mindforge', '.dashboard-token');
+const TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
+let tokenCreatedAt = Date.now();
+
+function isTokenExpired() {
+  return (Date.now() - tokenCreatedAt) > TOKEN_EXPIRY_MS;
+}
 
 // Write token to file with restrictive permissions (owner-only read/write)
 fs.mkdirSync(path.dirname(TOKEN_FILE), { recursive: true });
-fs.writeFileSync(TOKEN_FILE, DASHBOARD_TOKEN, { mode: 0o600 });
+fs.writeFileSync(TOKEN_FILE, currentToken, { mode: 0o600 });
 
 /**
  * requireAuth — Validates Bearer token on mutating requests (POST/PUT/DELETE).
@@ -55,6 +61,11 @@ fs.writeFileSync(TOKEN_FILE, DASHBOARD_TOKEN, { mode: 0o600 });
  */
 function requireAuth(req, res, next) {
   if (req.method === 'GET' || req.method === 'OPTIONS') return next();
+
+  // Check token expiration first
+  if (isTokenExpired()) {
+    return res.status(401).json({ error: 'token_expired' });
+  }
 
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -65,7 +76,9 @@ function requireAuth(req, res, next) {
 
   const provided = authHeader.slice(7);
   // Constant-time comparison to prevent timing attacks
-  if (!crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(DASHBOARD_TOKEN))) {
+  const tokenBuf = Buffer.from(currentToken);
+  const providedBuf = Buffer.from(provided);
+  if (tokenBuf.length !== providedBuf.length || !crypto.timingSafeEqual(providedBuf, tokenBuf)) {
     return res.status(401).json({
       error: 'Authentication required. Use the token printed at dashboard startup.'
     });
@@ -73,6 +86,44 @@ function requireAuth(req, res, next) {
 
   next();
 }
+
+// ── Rate limiting (100 req/min/IP) ───────────────────────────────────────────
+const rateLimitMap = new Map(); // ip -> { count, resetAt }
+const RATE_LIMIT = 100;
+const RATE_WINDOW_MS = 60000;
+
+function rateLimitMiddleware(req, res, next) {
+  const ip = req.ip || req.connection.remoteAddress;
+  const now = Date.now();
+  let entry = rateLimitMap.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    entry = { count: 0, resetAt: now + RATE_WINDOW_MS };
+    rateLimitMap.set(ip, entry);
+  }
+
+  entry.count++;
+
+  if (entry.count > RATE_LIMIT) {
+    return res.status(429).json({
+      error: 'rate_limit_exceeded',
+      retry_after_ms: entry.resetAt - now
+    });
+  }
+
+  next();
+}
+
+// Periodically clean stale rate-limit entries to prevent memory growth
+const rateLimitCleanupInterval = setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of rateLimitMap.entries()) {
+    if (now > entry.resetAt) {
+      rateLimitMap.delete(ip);
+    }
+  }
+}, 60000);
+if (rateLimitCleanupInterval.unref) rateLimitCleanupInterval.unref();
 
 // Security middleware
 app.use((req, res, next) => {
@@ -83,6 +134,9 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+// ── Rate limiting — applied after localhost check, before auth ────────────────
+app.use(rateLimitMiddleware);
 
 // CORS — restrict to dashboard's own origin only (prevent cross-origin attacks)
 const DASHBOARD_ORIGIN = `http://127.0.0.1:${PORT}`;
@@ -124,6 +178,15 @@ app.get('/', (req, res) => {
   res.sendFile(FRONTEND);
 });
 
+// ── Token refresh endpoint (requires valid existing token) ───────────────────
+app.post('/api/v1/token/refresh', requireAuth, (req, res) => {
+  const newToken = crypto.randomBytes(32).toString('hex');
+  fs.writeFileSync(TOKEN_FILE, newToken, { mode: 0o600 });
+  tokenCreatedAt = Date.now();
+  currentToken = newToken;
+  res.json({ success: true, token: newToken, expires_in_ms: TOKEN_EXPIRY_MS });
+});
+
 // ── Register API routes ───────────────────────────────────────────────────────
 API.register(app);
 app.use('/api/temporal', TemporalAPI);
@@ -143,7 +206,7 @@ server.listen(PORT, '127.0.0.1', () => {
   console.log(`    Status:  http://localhost:${PORT}/api/status`);
   console.log(`    Events:  http://localhost:${PORT}/events`);
   console.log(`    PID:     ${process.pid}`);
-  console.log(`[Dashboard] Auth token: ${DASHBOARD_TOKEN}`);
+  console.log('[Dashboard] Auth token written to token file (not logged for security).');
   console.log(`    Token file: ${TOKEN_FILE}`);
   console.log('\n    Press CTRL+C to stop\n');
 

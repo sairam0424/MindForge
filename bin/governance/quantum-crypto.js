@@ -1,6 +1,9 @@
 /**
  * MindForge v7 — Post-Quantum Agentic Security (PQAS)
  * Simulated Lattice-Based Cryptography (Dilithium-5 / Kyber-1024)
+ *
+ * @typedef {Object} ZKVerifierProvider
+ * @property {(proof: string, intentId: string) => {verified: boolean, reason?: string}} verify
  */
 'use strict';
 
@@ -47,6 +50,7 @@ class QuantumCrypto {
 
   /**
    * Signs data using simulated Dilithium-5.
+   * @returns {{ signature: string, simulated: true, algorithm: string }}
    */
   async signPQ(data, privateKey) {
     if (!this.pqasEnabled) throw new Error('PQAS is disabled.');
@@ -54,14 +58,15 @@ class QuantumCrypto {
       throw new Error('Invalid Post-Quantum private key format.');
     }
 
-    // Simulate the lattice-based signature overhead
     const hash = crypto.createHash('sha3-512').update(data).digest('hex');
     const salt = crypto.randomBytes(16).toString('hex');
-    
-    // Dilithium signatures are significantly larger than Ed25519
-    const simulatedSignature = `pqas_sig_d5_${Buffer.from(hash + salt).toString('base64')}_${crypto.randomBytes(128).toString('base64')}`;
-    
-    return simulatedSignature;
+    const signature = `pqas_sig_d5_${Buffer.from(hash + salt).toString('base64')}_${crypto.randomBytes(128).toString('base64')}`;
+
+    return {
+      signature,
+      simulated: true,
+      algorithm: 'Dilithium-5'
+    };
   }
 
   /**
@@ -69,10 +74,11 @@ class QuantumCrypto {
    */
   verifyPQ(data, signature, publicKey) {
     if (!publicKey.startsWith('mfq7_dilithium5_pub_')) return false;
-    if (!signature.startsWith('pqas_sig_d5_')) return false;
+    const sig = typeof signature === 'object' && signature.signature ? signature.signature : signature;
+    if (!sig.startsWith('pqas_sig_d5_')) return false;
 
     try {
-      const parts = signature.split('_');
+      const parts = sig.split('_');
       const blob = Buffer.from(parts[3], 'base64').toString('utf8');
       const hashInSig = blob.slice(0, 128); 
       
@@ -102,17 +108,24 @@ class QuantumCrypto {
   }
 
   verifyZKProof(proof, intentId) {
-    if (!proof.startsWith('zkp_v1_')) return false;
-    // SECURITY: Real ZK verification is not yet implemented.
-    // Governance gate MUST block by default — fail-closed.
-    console.warn(
-      `[SECURITY][quantum-crypto] verifyZKProof is a STUB — real ZK verification not yet implemented. ` +
-      `Blocking proof for intent="${intentId}". All governance checks will fail until a real verifier is integrated.`
-    );
-    throw new Error(
-      'ZK proof verification is not implemented. Governance gate denies by default. ' +
-      'Integrate a real ZK verifier (e.g., snarkjs/circom) before enabling this path.'
-    );
+    if (!proof || !proof.startsWith('zkp_v1_')) {
+      return { verified: false, reason: 'invalid_proof_format' };
+    }
+
+    try {
+      const verifierModule = configManager.get('security.zk_verifier_module');
+      if (verifierModule) {
+        const verifier = require(verifierModule);
+        return verifier.verify(proof, intentId);
+      }
+    } catch (e) { /* no external verifier configured */ }
+
+    return {
+      verified: false,
+      reason: 'no_verifier_configured',
+      simulated: true,
+      message: 'ZK proof verification requires an external verifier module (e.g., snarkjs/circom). Configure via security.zk_verifier_module in config.json.'
+    };
   }
 }
 

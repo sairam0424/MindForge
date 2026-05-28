@@ -7,17 +7,37 @@
 const fs = require('fs');
 const path = require('path');
 
+// Per-provider latency ring buffer (last 10 calls)
+const latencyHistory = new Map();
+
+function recordLatency(provider, durationMs) {
+  if (!latencyHistory.has(provider)) {
+    latencyHistory.set(provider, []);
+  }
+  const history = latencyHistory.get(provider);
+  history.push(durationMs);
+  if (history.length > 10) history.shift();
+}
+
+function getP95Latency(provider) {
+  const history = latencyHistory.get(provider);
+  if (!history || history.length === 0) return 500;
+  const sorted = [...history].sort((a, b) => a - b);
+  const idx = Math.ceil(sorted.length * 0.95) - 1;
+  return sorted[Math.min(idx, sorted.length - 1)];
+}
+
 class CloudBroker {
   constructor(config = {}) {
     this.providers = config.providers || ['anthropic', 'google', 'aws', 'azure'];
     this.statsPath = config.statsPath || path.join(__dirname, 'performance-stats.json');
-    this.blacklist = new Map(); // provider -> expiry (Date)
-    this.failureWindow = new Map(); // provider:taskType -> count
+    this.blacklist = new Map();
+    this.failureWindow = new Map();
     this.state = {
-      'anthropic': { latency: 450, costMultiplier: 1.0, healthy: true },
-      'google': { latency: 600, costMultiplier: 0.85, healthy: true },
-      'aws': { latency: 550, costMultiplier: 0.95, healthy: true },
-      'azure': { latency: 650, costMultiplier: 1.1, healthy: true }
+      'anthropic': { costMultiplier: 1.0, healthy: true },
+      'google': { costMultiplier: 0.85, healthy: true },
+      'aws': { costMultiplier: 0.95, healthy: true },
+      'azure': { costMultiplier: 1.1, healthy: true }
     };
     this.reloadStats();
   }
@@ -71,21 +91,20 @@ class CloudBroker {
         return true;
       })
       .map(([id, data]) => {
-        // Calculate Success Probability for this task
         const stats = this.performanceStats[id]?.[taskType] || { success: 1, failure: 0 };
         const totalTasks = stats.success + stats.failure;
         const successProb = totalTasks > 0 ? (stats.success / totalTasks) : 0.5;
 
-        // Score Calculation (The "Affinity" Algorithm)
         const latencyWeight = 0.2;
         const costWeight = 0.3;
-        const affinityWeight = 0.5; 
+        const affinityWeight = 0.5;
 
-        const score = (data.latency * latencyWeight) + 
-                      (data.costMultiplier * 1000 * costWeight) + 
+        const providerLatency = getP95Latency(id);
+        const score = (providerLatency * latencyWeight) +
+                      (data.costMultiplier * 1000 * costWeight) +
                       ((1.0 - successProb) * 2000 * affinityWeight);
 
-        return { id, score, successProb: successProb.toFixed(2) };
+        return { id, score, successProb: successProb.toFixed(2), p95: providerLatency };
       });
 
     scored.sort((a, b) => a.score - b.score);
@@ -110,7 +129,7 @@ class CloudBroker {
 
     const fallback = Object.entries(this.state)
       .filter(([id, data]) => id !== failedProvider && data.healthy)
-      .sort((a, b) => a[1].latency - b[1].latency)[0];
+      .sort((a, b) => getP95Latency(a[0]) - getP95Latency(b[0]))[0];
 
     return fallback ? fallback[0] : 'google'; // Default fallback
   }
@@ -131,32 +150,61 @@ class CloudBroker {
   }
 
   /**
+   * Removes failure entries whose sliding window (5 min) has expired.
+   */
+  _pruneStaleFailures() {
+    const now = Date.now();
+    const WINDOW_MS = 5 * 60 * 1000;
+
+    for (const [key, entry] of this.failureWindow.entries()) {
+      if (now - entry.firstFailureAt > WINDOW_MS) {
+        this.failureWindow.delete(key);
+      }
+    }
+  }
+
+  /**
    * Records a task failure and manages the circuit breaker.
    */
   recordFailure(provider, taskType = 'default') {
-    const key = `${provider}:${taskType}`;
-    const failures = (this.failureWindow.get(key) || 0) + 1;
-    this.failureWindow.set(key, failures);
+    this._pruneStaleFailures();
 
-    if (failures >= 3) {
-      const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 min blacklist
+    const key = `${provider}:${taskType}`;
+    const existing = this.failureWindow.get(key);
+    const entry = existing
+      ? { count: existing.count + 1, firstFailureAt: existing.firstFailureAt }
+      : { count: 1, firstFailureAt: Date.now() };
+    this.failureWindow.set(key, entry);
+
+    if (entry.count >= 3) {
+      const expiry = new Date(Date.now() + 10 * 60 * 1000);
       this.blacklist.set(provider, expiry);
       console.warn(`[MCA-CIRCUIT-OPEN] Provider '${provider}' blacklisted for 10 min due to consecutive failures on '${taskType}'.`);
-      this.failureWindow.set(key, 0); // Reset window upon blacklisting
+      this.failureWindow.delete(key);
     }
   }
 
   /**
    * Hardening: Simulate provider failures to verify Fallback Protocol.
    */
+  recordLatency(provider, durationMs) {
+    recordLatency(provider, durationMs);
+  }
+
+  getP95Latency(provider) {
+    return getP95Latency(provider);
+  }
+
   startChaosMode() {
     console.log('[ENTERPRISE-RESILIENCE] CloudBroker Chaos Mode ACTIVE. Simulating jitter and provider dropouts...');
     setInterval(() => {
       const providers = Object.keys(this.state);
       const randomProvider = providers[Math.floor(Math.random() * providers.length)];
-      this.state[randomProvider].latency = Math.random() > 0.7 ? 5000 : 100;
+      recordLatency(randomProvider, Math.random() > 0.7 ? 5000 : 100);
     }, 10000);
   }
 }
 
 module.exports = CloudBroker;
+module.exports.recordLatency = recordLatency;
+module.exports.getP95Latency = getP95Latency;

@@ -130,6 +130,65 @@ function computeTfIdfVector(tokens, df, N) {
   return capped;
 }
 
+// ── BM25 Scoring ─────────────────────────────────────────────────────────────
+
+/**
+ * BM25 relevance scoring with document length normalization.
+ * @param {string[]} queryTokens - Tokenized query
+ * @param {string[]} docTokens - Tokenized document
+ * @param {Object<string, number>} docFrequency - term → number of docs containing term
+ * @param {number} totalDocs - Total documents in corpus
+ * @param {number} avgDocLength - Average document length across corpus
+ * @returns {number} BM25 score
+ */
+function bm25Score(queryTokens, docTokens, docFrequency, totalDocs, avgDocLength) {
+  const k1 = 1.5;
+  const b = 0.75;
+  let score = 0;
+  const docLength = docTokens.length;
+
+  for (const term of queryTokens) {
+    const tf = docTokens.filter(t => t === term).length;
+    const df = docFrequency[term] || 0;
+    const idf = Math.log((totalDocs - df + 0.5) / (df + 0.5) + 1);
+    const tfNorm = (tf * (k1 + 1)) / (tf + k1 * (1 - b + b * (docLength / avgDocLength)));
+    score += idf * tfNorm;
+  }
+  return score;
+}
+
+/**
+ * Build a reusable BM25 index structure from knowledge entries.
+ * Applies 2x weighting to compound terms (camelCase/underscore bigrams).
+ * @param {object[]} entries - Knowledge entries with { id, topic, content, tags }
+ * @returns {{ docFrequency: Object<string, number>, avgDocLength: number, tokenizedDocs: Array<{id: string, tokens: string[]}> }}
+ */
+function buildBM25Index(entries) {
+  const tokenizedDocs = entries
+    .filter(e => !e.deprecated)
+    .map(e => {
+      const text = `${e.topic || ''} ${e.content || ''} ${(e.tags || []).join(' ')}`;
+      const unigrams = tokenize(text);
+      const bi = bigrams(unigrams);
+      // Weight compound terms at 2x by duplicating bigrams
+      const tokens = [...unigrams, ...bi, ...bi];
+      return { id: e.id, tokens };
+    });
+
+  const docFrequency = {};
+  for (const doc of tokenizedDocs) {
+    const unique = new Set(doc.tokens);
+    for (const term of unique) {
+      docFrequency[term] = (docFrequency[term] || 0) + 1;
+    }
+  }
+
+  const totalTokens = tokenizedDocs.reduce((sum, doc) => sum + doc.tokens.length, 0);
+  const avgDocLength = tokenizedDocs.length > 0 ? totalTokens / tokenizedDocs.length : 0;
+
+  return { docFrequency, avgDocLength, tokenizedDocs };
+}
+
 // ── Similarity ────────────────────────────────────────────────────────────────
 
 /**
@@ -321,6 +380,8 @@ module.exports = {
   inferEdges,
   saveCache,
   loadCache,
+  bm25Score,
+  buildBM25Index,
   SIMILARITY_THRESHOLD,
   SHADOW_THRESHOLD,
 };

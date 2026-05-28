@@ -9,7 +9,10 @@
  */
 'use strict';
 
+const fs    = require('fs');
+const path  = require('path');
 const Store = require('./knowledge-store');
+const { buildBM25Index, bm25Score } = require('./embedding-engine');
 
 // ── Stopwords (excluded from TF-IDF scoring) ──────────────────────────────────
 const STOPWORDS = new Set([
@@ -79,6 +82,48 @@ function tfidfScore(queryTokens, entryId, index, docTokenCounts, N) {
   return score;
 }
 
+// ── Persistent BM25 Index Cache ──────────────────────────────────────────────
+
+function getKbPath() {
+  const memoryDir = path.join(process.cwd(), '.mindforge', 'memory');
+  return path.join(memoryDir, 'knowledge.jsonl');
+}
+
+function getCachePath() {
+  const memoryDir = path.join(process.cwd(), '.mindforge', 'memory');
+  return path.join(memoryDir, '.index-cache.json');
+}
+
+/**
+ * Load BM25 index from cache if source file hasn't changed,
+ * otherwise rebuild and persist.
+ */
+function loadOrBuildIndex(entries) {
+  const kbPath = getKbPath();
+  const cachePath = getCachePath();
+  const stat = fs.statSync(kbPath, { throwIfNoEntry: false });
+
+  if (stat && fs.existsSync(cachePath)) {
+    try {
+      const cache = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      if (cache.mtime === stat.mtimeMs && cache.entryCount === entries.length) {
+        return cache.index;
+      }
+    } catch (e) { /* cache corrupt, rebuild */ }
+  }
+
+  const index = buildBM25Index(entries);
+
+  if (stat) {
+    const dir = path.dirname(cachePath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const cacheData = { mtime: stat.mtimeMs, entryCount: entries.length, index };
+    fs.writeFileSync(cachePath, JSON.stringify(cacheData));
+  }
+
+  return index;
+}
+
 // ── Main search function ──────────────────────────────────────────────────────
 /**
  * Search knowledge base with TF-IDF scoring.
@@ -106,18 +151,20 @@ function search(queryText, filters = {}, limit = 10) {
 
   const queryTokens = tokenize(queryText);
   if (queryTokens.length === 0) {
-    // No meaningful query tokens — return by confidence
     return candidates
       .sort((a, b) => b.confidence - a.confidence)
       .slice(0, limit);
   }
 
-  const { index, docTokenCounts, N } = buildIndex(candidates);
+  // Use cached BM25 index for scoring
+  const bm25Index = loadOrBuildIndex(candidates);
+  const { docFrequency, avgDocLength, tokenizedDocs } = bm25Index;
+  const totalDocs = tokenizedDocs.length;
+  const docMap = new Map(tokenizedDocs.map(d => [d.id, d.tokens]));
 
-  // Score each candidate
   const scored = candidates.map(entry => {
-    const textScore = tfidfScore(queryTokens, entry.id, index, docTokenCounts, N);
-    // Combine TF-IDF score with confidence, but only if there's a text match
+    const docTokens = docMap.get(entry.id) || [];
+    const textScore = bm25Score(queryTokens, docTokens, docFrequency, totalDocs, avgDocLength);
     const finalScore = textScore > 0
       ? textScore * 0.7 + entry.confidence * 0.3
       : 0;
@@ -169,4 +216,4 @@ function loadSessionContext(context = {}) {
   return { preferences, decisions, bugPatterns, codePatterns, domain };
 }
 
-module.exports = { search, loadSessionContext, buildIndex, tfidfScore, tokenize };
+module.exports = { search, loadSessionContext, buildIndex, tfidfScore, tokenize, loadOrBuildIndex };

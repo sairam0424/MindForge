@@ -8,6 +8,35 @@
 const crypto = require('crypto');
 
 /**
+ * Semaphore for bounding concurrency within a wave.
+ * Tasks within a wave are independent — this limits how many run simultaneously.
+ */
+class Semaphore {
+  constructor(max) {
+    this.max = max;
+    this.current = 0;
+    this.queue = [];
+  }
+
+  async acquire() {
+    if (this.current < this.max) {
+      this.current++;
+      return;
+    }
+    await new Promise(resolve => this.queue.push(resolve));
+    this.current++;
+  }
+
+  release() {
+    this.current--;
+    if (this.queue.length > 0) {
+      const next = this.queue.shift();
+      next();
+    }
+  }
+}
+
+/**
  * Creates a wave executor with the given configuration.
  * @param {object} config
  * @param {function} [config.onTaskStart] — Called when a task begins
@@ -73,42 +102,54 @@ function createWaveExecutor(config = {}) {
   }
 
   /**
-   * Executes a single wave — runs tasks sequentially, skipping already-completed ones.
+   * Executes a single wave — runs tasks in parallel (bounded by maxConcurrency),
+   * skipping already-completed ones.
    * @param {object} wave — A wave object from planWaves
    * @param {object} context — Execution context passed to callbacks
-   * @param {object} context.executor — async function(task) => result (performs actual work)
+   * @param {function} context.executor — async function(task) => result (performs actual work)
+   * @param {number} [context.maxConcurrency=3] — Max parallel tasks within this wave
    * @returns {Promise<{ completed: string[], failed: string[], skipped: string[] }>}
    */
   async function executeWave(wave, context = {}) {
-    const { executor = async () => {} } = context;
+    const { executor = async () => {}, maxConcurrency = 3 } = context;
     status = 'running';
 
     const pending = wave.tasks.filter(t => !completedTasks.has(t.id));
     const result = { completed: [], failed: [], skipped: [] };
+    const semaphore = new Semaphore(maxConcurrency);
 
     onWaveStart({ wave: wave.wave, taskCount: pending.length });
 
-    for (const task of pending) {
-      const taskStart = Date.now();
-      onTaskStart({ task, wave: wave.wave });
+    const settled = await Promise.allSettled(
+      pending.map(async (task) => {
+        await semaphore.acquire();
+        const taskStart = Date.now();
+        try {
+          onTaskStart({ task, wave: wave.wave });
+          await executor(task);
 
-      try {
-        await executor(task);
+          const duration = Date.now() - taskStart;
+          completedTasks = new Set([...completedTasks, task.id]);
+          result.completed.push(task.id);
 
-        const duration = Date.now() - taskStart;
-        completedTasks = new Set([...completedTasks, task.id]);
-        result.completed.push(task.id);
+          onTaskComplete({ task, wave: wave.wave, duration_ms: duration });
+          return { task, status: 'fulfilled' };
+        } catch (err) {
+          const duration = Date.now() - taskStart;
+          result.failed.push(task.id);
 
-        onTaskComplete({ task, wave: wave.wave, duration_ms: duration });
-      } catch (err) {
-        const duration = Date.now() - taskStart;
-        result.failed.push(task.id);
+          onTaskFail({ task, wave: wave.wave, error: err, duration_ms: duration });
+          throw err;
+        } finally {
+          semaphore.release();
+        }
+      })
+    );
 
-        onTaskFail({ task, wave: wave.wave, error: err, duration_ms: duration });
-
-        // Re-throw to let caller decide on retry/escalation strategy
-        throw err;
-      }
+    const failures = settled.filter(r => r.status === 'rejected');
+    if (failures.length > 0) {
+      const failMsg = failures.map(f => f.reason?.message || 'unknown').join(', ');
+      throw new Error(`${failures.length} task(s) failed in wave: ${failMsg}`);
     }
 
     currentWaveIndex++;
@@ -166,4 +207,4 @@ function normalizeTask(h) {
   });
 }
 
-module.exports = { createWaveExecutor };
+module.exports = { createWaveExecutor, Semaphore };

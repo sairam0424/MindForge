@@ -5,7 +5,7 @@
     "drift_threshold": 0.75,
     "critical_drift_threshold": 0.5,
     "res_threshold": 0.8,
-    "active_did": "did:mindforge:7cf82529-930e-4e9f-b4bb-f3c3f346ca5b"
+    "active_did": "did:mindforge:c0ee3a53-5e0f-4e79-9048-e2a97164b03c"
   },
   "revops": {
     "market_registry": {
@@ -68,6 +68,11 @@
     "min_success_count": 3,
     "max_drift_threshold": 0.1,
     "auto_verify": false
+  },
+  "wave_concurrency": 3,
+  "temporal": {
+    "max_snapshots": 50,
+    "max_age_days": 7
   },
   "instincts": {
     "mode": "auto-capture",

@@ -36,15 +36,13 @@ const PERSONA_MAP = {
 };
 
 let _settingsCache = null;
+let _settingsMtime = 0;
+const CACHE_CHECK_INTERVAL_MS = 60000;
+let _lastCacheCheck = 0;
 
-function readMindforgeSettings() {
-  if (_settingsCache) return _settingsCache;
-  const configPath = path.join(process.cwd(), 'MINDFORGE.md');
-  if (!fs.existsSync(configPath)) return DEFAULTS;
-
-  const content = fs.readFileSync(configPath, 'utf8');
+function parseSettings(filePath) {
+  const content = fs.readFileSync(filePath, 'utf8');
   const settings = { ...DEFAULTS };
-  
   const lines = content.split('\n');
   for (const line of lines) {
     const match = line.match(/^([A-Z0-9_]+)=(.*)$/);
@@ -52,8 +50,28 @@ function readMindforgeSettings() {
       settings[match[1]] = match[2].trim();
     }
   }
-  _settingsCache = settings;
   return settings;
+}
+
+function readMindforgeSettings() {
+  const now = Date.now();
+  if (now - _lastCacheCheck < CACHE_CHECK_INTERVAL_MS && _settingsCache) {
+    return _settingsCache;
+  }
+  _lastCacheCheck = now;
+
+  const configPath = path.join(process.cwd(), 'MINDFORGE.md');
+  try {
+    const stat = fs.statSync(configPath);
+    if (stat.mtimeMs !== _settingsMtime) {
+      _settingsMtime = stat.mtimeMs;
+      _settingsCache = parseSettings(configPath);
+    }
+  } catch {
+    if (!_settingsCache) _settingsCache = { ...DEFAULTS };
+  }
+
+  return _settingsCache;
 }
 
 function route(persona = 'developer', tier = 1) {
@@ -105,6 +123,8 @@ function getModel(settingKey) {
 
 function clearCache() {
   _settingsCache = null;
+  _settingsMtime = 0;
+  _lastCacheCheck = 0;
 }
 
 function getAllSettings() {

@@ -82,6 +82,26 @@ class ModelClient {
     }
   }
 
+  static async streamComplete(params) {
+    const {
+      persona = 'developer',
+      tier = 1,
+      messages,
+      maxTokens,
+      taskName = 'unknown',
+    } = params;
+
+    const routing = Router.route(persona, tier);
+    const modelId = routing.model;
+    const provider = this._getProvider(modelId);
+
+    if (!provider || !provider.streamComplete) {
+      throw new Error(`Streaming not supported for model: ${modelId}`);
+    }
+
+    return provider.streamComplete(messages, { ...params, model: modelId });
+  }
+
   static _getProvider(modelId) {
     if (modelId.startsWith('claude') || modelId.startsWith('anthropic.claude')) {
       if (!process.env.ANTHROPIC_API_KEY) return null;
