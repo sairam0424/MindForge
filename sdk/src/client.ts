@@ -3,6 +3,7 @@
  */
 
 import { EventEmitter } from 'events';
+import { spawn } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import type {
@@ -291,7 +292,42 @@ export class MindForgeClient extends EventEmitter {
     return { valid: errors.length === 0, errors };
   }
 
-  private async executeCommand(command: string, options?: Record<string, unknown>): Promise<unknown> {
-    return { command, options, executed: true };
+  private executeCommand(command: string, options?: Record<string, unknown>): Promise<{ stdout: string; stderr: string; exitCode: number }> {
+    const args = Array.isArray(options?.args) ? (options!.args as string[]) : [];
+    const cwd = (options?.cwd as string) ?? this.projectRoot;
+    const timeoutMs = this.config.taskTimeoutMs;
+
+    return new Promise((resolve, reject) => {
+      const child = spawn(command, args, { cwd, shell: false });
+      let stdout = '';
+      let stderr = '';
+      let settled = false;
+
+      const timer = setTimeout(() => {
+        if (settled) return;
+        child.kill('SIGTERM');
+        setTimeout(() => { if (!child.killed) child.kill('SIGKILL'); }, 2_000).unref();
+        settled = true;
+        reject(new Error(`Command timed out after ${timeoutMs}ms: ${command}`));
+      }, timeoutMs);
+      timer.unref();
+
+      child.stdout?.on('data', (d: Buffer) => { stdout += d.toString(); });
+      child.stderr?.on('data', (d: Buffer) => { stderr += d.toString(); });
+
+      child.on('error', (err: Error) => {
+        if (settled) return;
+        clearTimeout(timer);
+        settled = true;
+        reject(err);
+      });
+
+      child.on('close', (code: number | null) => {
+        if (settled) return;
+        clearTimeout(timer);
+        settled = true;
+        resolve({ stdout, stderr, exitCode: code ?? -1 });
+      });
+    });
   }
 }
