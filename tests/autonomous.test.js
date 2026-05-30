@@ -8,6 +8,7 @@ const fs = require('fs');
 const repairOperator = require('../bin/autonomous/repair-operator');
 const StuckMonitor = require('../bin/autonomous/stuck-monitor');
 const steeringManager = require('../bin/autonomous/steer');
+const AutoRunner = require('../bin/autonomous/auto-runner');
 
 function runTest(name, fn) {
   try {
@@ -48,6 +49,47 @@ runTest('Steering Manager: Inject guidance', () => {
   const injected = steeringManager.injectSteering(original, guidance);
   assert.ok(injected.includes('[STEERING GUIDANCE — DO NOT IGNORE]'));
   assert.ok(injected.includes('Use v2 API'));
+});
+
+runTest('Pre-flight (UC-03): no-op when DAG mode is OFF (default)', () => {
+  const runner = new AutoRunner({ phase: 1 });
+  runner._useDagMode = () => false; // force OFF
+  // A cyclic plan must NOT throw when DAG is disabled (legacy behavior).
+  runner._assertNoCycles([
+    { id: 'A', depends_on: ['B'] },
+    { id: 'B', depends_on: ['A'] },
+  ]);
+});
+
+runTest('Pre-flight (UC-03): HALTS LOUD on cycle when DAG mode is ON', () => {
+  const runner = new AutoRunner({ phase: 1 });
+  runner._useDagMode = () => true; // force ON
+  assert.throws(
+    () => runner._assertNoCycles([
+      { id: 'A', depends_on: ['B'] },
+      { id: 'B', depends_on: ['A'] },
+    ]),
+    /\[pre-flight\] .*[Cc]ircular/
+  );
+});
+
+runTest('Pre-flight (UC-03): explicit .wave field bypasses DAG cycle check', () => {
+  const runner = new AutoRunner({ phase: 1 });
+  runner._useDagMode = () => true; // DAG on, but explicit .wave wins
+  // Cyclic depends_on is irrelevant because .wave grouping is used.
+  runner._assertNoCycles([
+    { id: 'A', wave: 0, depends_on: ['B'] },
+    { id: 'B', wave: 1, depends_on: ['A'] },
+  ]);
+});
+
+runTest('Pre-flight (UC-03): passes a valid DAG when DAG mode is ON', () => {
+  const runner = new AutoRunner({ phase: 1 });
+  runner._useDagMode = () => true;
+  runner._assertNoCycles([
+    { id: 'A', depends_on: [] },
+    { id: 'B', depends_on: ['A'] },
+  ]);
 });
 
 console.log('--- All Tests Passed ---');

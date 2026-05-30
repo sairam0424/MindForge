@@ -199,6 +199,12 @@ class AutoRunner {
     }
 
     const handoff = this.stateManager.readHandoff();
+
+    // UC-03: when DAG ordering is enabled (opt-in via config), detect cycles
+    // BEFORE any wave executes and HALT LOUD. Default OFF — legacy behavior
+    // (single-wave / explicit .wave grouping) is untouched.
+    this._assertNoCycles(handoff.handoffs);
+
     this.waves = this._buildWaves(handoff.handoffs);
     this.currentWaveIndex = 0;
 
@@ -286,11 +292,66 @@ class AutoRunner {
   }
 
   /**
+   * UC-03: DAG wave ordering is OPT-IN. Reads `wave_execution.use_dag` from
+   * config; defaults to false so legacy single-wave / explicit-.wave behavior
+   * is untouched. Enabling this reorders tasks by `depends_on` topology.
+   * @returns {boolean}
+   */
+  _useDagMode() {
+    try {
+      const configPath = path.join(process.cwd(), '.mindforge', 'config.json');
+      if (fs.existsSync(configPath)) {
+        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        return config.wave_execution?.use_dag === true;
+      }
+    } catch (e) { /* Fall through to default */ }
+    return false;
+  }
+
+  /**
+   * UC-03: Pre-flight cycle detection. ONLY active when DAG mode is enabled
+   * (opt-in) AND no explicit numeric `.wave` field is present (DAG would be the
+   * active strategy). Throws `[pre-flight] Circular dependency...` to HALT LOUD
+   * before any wave executes — never warn-and-continue. No-op when DAG is off.
+   * @param {Array} handoffs — Raw handoffs array from HANDOFF.json
+   */
+  _assertNoCycles(handoffs) {
+    if (!Array.isArray(handoffs) || handoffs.length === 0) return;
+    if (!this._useDagMode()) return;
+
+    // Explicit .wave field wins over DAG, so cycle check is irrelevant there.
+    const hasWaveField = handoffs.some(h => typeof h.wave === 'number');
+    if (hasWaveField) return;
+
+    const { buildGraph, hasCircularDependency } = require('./dependency-dag');
+    let graph;
+    try {
+      graph = buildGraph(handoffs.map(h => ({
+        id: h.id || h.task_id,
+        depends_on: Array.isArray(h.depends_on) ? h.depends_on : [],
+      })));
+    } catch (e) {
+      // Unknown-dependency reference — also a planning error; fail loud.
+      throw new Error(`[pre-flight] ${e.message}`);
+    }
+    if (hasCircularDependency(graph)) {
+      const { groupIntoWaves } = require('./dependency-dag');
+      try {
+        groupIntoWaves(graph);
+      } catch (e) {
+        throw new Error(`[pre-flight] ${e.message}`);
+      }
+      // Defensive: hasCircularDependency true but groupIntoWaves did not throw.
+      throw new Error('[pre-flight] Circular dependency detected in wave plan');
+    }
+  }
+
+  /**
    * Build wave groups from HANDOFF handoffs array.
    * Kept as instance method for backward compatibility with tests.
    */
   _buildWaves(handoffs) {
-    return this.waveExecutor.planWaves(handoffs);
+    return this.waveExecutor.planWaves(handoffs, { useDag: this._useDagMode() });
   }
 
   async checkIntelligenceDrift() {
