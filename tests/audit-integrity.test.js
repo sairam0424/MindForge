@@ -22,6 +22,47 @@ test('audit-writer: 50 rapid writes all land as valid JSON lines (no interleave/
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 });
 
+test('audit-writer: durable flush failure is NON-FATAL (no unhandled rejection, no process exit)', async () => {
+  // Regression for Critical #1: flush() is called UN-AWAITED on the threshold
+  // (>=10 entries) and timer paths. If the durable write rejects (ENOSPC/EACCES/
+  // EIO/EROFS), the orphaned promise must NOT become an unhandledRejection that
+  // terminates the process. The .catch() inside flush() must absorb it.
+  const { createAuditWriter } = require('../bin/autonomous/audit-writer');
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-aw-fail-'));
+
+  // Make a path whose DIRECTORY COMPONENT is actually a FILE — fs.open(..., 'a')
+  // then deterministically rejects with ENOTDIR on every platform (no chmod, no
+  // root-vs-non-root fragility). This drives the REAL production write path.
+  const blocker = path.join(tmp, 'blocker');
+  fs.writeFileSync(blocker, 'not a directory');
+  const unwritable = path.join(blocker, 'AUDIT.jsonl');
+
+  const unhandled = [];
+  const onUnhandled = (reason) => { unhandled.push(reason); };
+  process.on('unhandledRejection', onUnhandled);
+
+  try {
+    const w = createAuditWriter(unwritable);
+
+    // Write enough entries to cross FLUSH_THRESHOLD (10) and trigger the
+    // UN-AWAITED threshold flush() — the exact crash path from the review.
+    for (let i = 0; i < 15; i++) w.write({ event: 'task', n: i });
+
+    // close() must resolve (or reject gracefully) WITHOUT crashing the process.
+    await assert.doesNotReject(async () => { await w.close(); },
+      'close() must resolve even when the durable write fails');
+
+    // Give any orphaned microtasks/rejections a tick to surface.
+    await new Promise(r => setTimeout(r, 50));
+
+    assert.strictEqual(unhandled.length, 0,
+      `durable flush failure must NOT produce an unhandledRejection (got ${unhandled.length})`);
+  } finally {
+    process.removeListener('unhandledRejection', onUnhandled);
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
 (async () => {
   for (const { name, fn } of tests) {
     try { await fn(); console.log(`  ✅  ${name}`); passed++; }

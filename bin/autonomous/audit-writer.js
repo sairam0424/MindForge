@@ -74,8 +74,16 @@ function createAuditWriter(auditPath) {
     const toWrite = buffer;
     buffer = [];
 
-    const payload = toWrite.map(e => JSON.stringify(e)).join('\n') + '\n';
-    await queue.append(payload.replace(/\n$/, ''));
+    // append() re-adds the trailing newline delimiter, so build payload without it.
+    const payload = toWrite.map(e => JSON.stringify(e)).join('\n');
+    // Non-fatal durable write: a rejected append (ENOSPC/EACCES/EIO/EROFS) must NOT
+    // become an unhandledRejection and terminate the process — the threshold/timer
+    // paths call flush() un-awaited. Catch here so the failure is logged and the
+    // process survives; callers that explicitly `await flush()`/`await close()`
+    // still resolve cleanly (the rejection is absorbed, never rethrown).
+    await queue.append(payload).catch((err) => {
+      process.stderr.write(`[audit-writer] durable flush failed: ${err.message}\n`);
+    });
 
     try {
       if (rotator.shouldRotate(auditPath)) {

@@ -44,9 +44,11 @@ ROADMAP_V7.md
 .mindforge/*.db-journal
 .mindforge/*.db-wal
 .mindforge/*.db-shm
-# Transient atomic-write temp files (UC-09 durable writes: tmp + rename)
+# Transient atomic-write temp files (UC-09 durable writes: tmp + rename).
+# Scoped to the only dirs that actually produce them (.mindforge/, .planning/)
+# instead of an over-broad unanchored *.tmp.[0-9]* that could match anything.
 .mindforge/*.tmp.*
-*.tmp.[0-9]*
+.planning/*.tmp.*
 .mindforge/memory/sync-manifest.json
 # Runtime auth tokens (generated at server startup, never commit)
 .mindforge/.dashboard-token

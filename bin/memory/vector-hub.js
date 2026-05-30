@@ -27,10 +27,16 @@ class VectorHub {
     // behind one another so two exports never write the .db file concurrently
     // (a corrupted half-written database would otherwise be possible).
     this._saveChain = Promise.resolve();
-    // True when an async save() has been issued but may not yet have hit disk.
-    // The exit guard uses this to perform a synchronous final flush, preventing
-    // data loss for processes that hard-exit without calling close().
-    this._dirty = false;
+    // Count of async save()s that have been SCHEDULED but not yet COMPLETED their
+    // durable disk write. A boolean here is unsafe: with two rapid saves the chain
+    // is [writeA → clear → writeB → clear], leaving a window where the flag reads
+    // "clean" while writeB is still pending — a hard process.exit() in that window
+    // would make the exit guard skip saveSync() and lose the last batch (the exact
+    // data loss this guard exists to prevent). A counter has no such gap: it only
+    // returns to 0 once EVERY scheduled save has completed. saveSync() always
+    // exports the current in-memory DB, so over-flushing on exit is harmless — we
+    // deliberately bias toward flushing.
+    this._pendingSaves = 0;
     this._exitGuardInstalled = false;
   }
 
@@ -39,7 +45,7 @@ class VectorHub {
     this._exitGuardInstalled = true;
     // 'exit' handlers can only run synchronous code — saveSync() fits exactly.
     process.once('exit', () => {
-      if (this._db && this._dirty) this.saveSync();
+      if (this._db && this._pendingSaves > 0) this.saveSync();
     });
   }
 
@@ -216,12 +222,15 @@ class VectorHub {
     }
 
     const dbPath = this.dbPath;
-    this._dirty = true;
+    // Increment when SCHEDULED; decrement only once this specific save has
+    // COMPLETED (success or failure). The exit guard fires saveSync() while any
+    // scheduled save is still outstanding — see _installExitGuard().
+    this._pendingSaves++;
     this._saveChain = this._saveChain.then(() => writeDbDurable(dbPath, buffer))
-      .then(() => { this._dirty = false; })
       .catch((err) => {
         console.warn(`[VectorHub] Failed to save database: ${err.message}`);
-      });
+      })
+      .then(() => { this._pendingSaves--; });
     return this._saveChain;
   }
 
@@ -244,7 +253,10 @@ class VectorHub {
         fs.closeSync(fd);
       }
       fs.renameSync(tmpPath, this.dbPath);
-      this._dirty = false;
+      // A sync export captures the full in-memory DB — a superset of anything the
+      // outstanding async saves would have written — so the pending work is now
+      // durably satisfied. Clearing the counter prevents a redundant second flush.
+      this._pendingSaves = 0;
     } catch (err) {
       console.warn(`[VectorHub] Failed to save database (sync): ${err.message}`);
     }

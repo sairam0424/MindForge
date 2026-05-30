@@ -11,7 +11,11 @@
  */
 const fs = require('fs');
 
-const queues = new Map(); // path -> Promise chain tail
+// path -> Promise chain tail. NOTE: this is intended for a small, fixed set of
+// known paths (e.g. AUDIT.jsonl). Per-path entries are NEVER evicted, so do NOT
+// key this by high-cardinality dynamic paths — doing so would leak memory
+// unboundedly. Revisit with an LRU/eviction policy if dynamic paths are needed.
+const queues = new Map();
 
 function createAppendQueue(filePath) {
   if (!queues.has(filePath)) queues.set(filePath, Promise.resolve());
