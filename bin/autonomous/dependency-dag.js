@@ -1,10 +1,29 @@
 'use strict';
 /**
  * MindForge — Dependency DAG (UC-03).
- * Kahn topological sort + cycle detection + file-conflict detection.
+ * Kahn topological sort + cycle detection.
  * Ported from the previously test-only implementation into the real engine.
+ *
+ * TODO(UC-xx): same-wave file-conflict detection once tasks carry file lists.
+ *   Handoff tasks (see normalizeTask in wave-executor.js and validateHandoff in
+ *   state-manager.js) currently expose only id/name/plan/depends_on — there is
+ *   no `files` field to compare. A `findFileConflicts(plans)` check (two tasks
+ *   in the SAME wave writing the same file -> warn) cannot be wired meaningfully
+ *   until the handoff schema captures per-task file lists, so it is intentionally
+ *   not implemented here rather than left as dead exported surface.
  */
 function groupIntoWaves(graph) {
+  // Self-defense: every dependency target must be a known graph node. Throw a
+  // DISTINCT "unknown dependency" error (not the misleading "Circular" message)
+  // so callers that invoke groupIntoWaves standalone still fail descriptively.
+  for (const id of Object.keys(graph)) {
+    const deps = graph[id].dependsOn || [];
+    for (const d of deps) {
+      if (!(d in graph)) {
+        throw new Error(`Unknown dependency "${d}" referenced by "${id}"`);
+      }
+    }
+  }
   const remaining = new Set(Object.keys(graph));
   const completed = new Set();
   const waves = [];
@@ -25,17 +44,6 @@ function groupIntoWaves(graph) {
 function hasCircularDependency(graph) {
   try { groupIntoWaves(graph); return false; } catch { return true; }
 }
-function findFileConflicts(plans) {
-  const fileMap = {};
-  const conflicts = [];
-  for (const { id, files } of plans) {
-    for (const file of (files || [])) {
-      if (fileMap[file]) conflicts.push({ file, plans: [fileMap[file], id] });
-      else fileMap[file] = id;
-    }
-  }
-  return conflicts;
-}
 function buildGraph(tasks) {
   const ids = new Set(tasks.map(t => t.id));
   const graph = {};
@@ -48,4 +56,4 @@ function buildGraph(tasks) {
   }
   return graph;
 }
-module.exports = { groupIntoWaves, hasCircularDependency, findFileConflicts, buildGraph };
+module.exports = { groupIntoWaves, hasCircularDependency, buildGraph };

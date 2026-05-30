@@ -92,4 +92,62 @@ runTest('Pre-flight (UC-03): passes a valid DAG when DAG mode is ON', () => {
   ]);
 });
 
+runTest('Pre-flight (UC-03/FIX1): id-less handoffs are EXCLUDED from cycle-checking (warn, no throw)', () => {
+  // An id-less handoff gets a RANDOM synthesized id in planWaves, so it can
+  // never be a depends_on target and cannot form a real cycle. _assertNoCycles
+  // must skip it (logging a warning) rather than build a graph that differs from
+  // what executes. Two id-less, acyclic tasks must NOT throw.
+  const runner = new AutoRunner({ phase: 1 });
+  runner._useDagMode = () => true;
+  const warned = [];
+  const origWarn = console.warn;
+  console.warn = (msg) => warned.push(msg);
+  try {
+    runner._assertNoCycles([
+      { depends_on: [] },          // no id, no task_id
+      { name: 'also id-less' },    // no id, no task_id
+    ]);
+  } finally {
+    console.warn = origWarn;
+  }
+  assert.ok(
+    warned.some(m => /lack a stable id/.test(m)),
+    'expected a warning that id-less handoffs were excluded from cycle-checking'
+  );
+});
+
+runTest('Pre-flight (UC-03/FIX1): stable-id cycle still HALTS even with id-less tasks mixed in', () => {
+  // The pre-flight graph (stable-id subset) must still catch a genuine cycle
+  // among real-id tasks, regardless of any id-less tasks present.
+  const runner = new AutoRunner({ phase: 1 });
+  runner._useDagMode = () => true;
+  const origWarn = console.warn;
+  console.warn = () => {};
+  try {
+    assert.throws(
+      () => runner._assertNoCycles([
+        { id: 'A', depends_on: ['B'] },
+        { id: 'B', depends_on: ['A'] },
+        { depends_on: [] }, // id-less — excluded, irrelevant to the cycle
+      ]),
+      /\[pre-flight\] .*[Cc]ircular/
+    );
+  } finally {
+    console.warn = origWarn;
+  }
+});
+
+runTest('Pre-flight (UC-03/FIX4): dangling depends_on fails loud as unknown-dep (not circular)', () => {
+  // A depends_on target that is not itself a handoff is a planning error; it must
+  // surface the DISTINCT unknown-dependency message via buildGraph, not "circular".
+  const runner = new AutoRunner({ phase: 1 });
+  runner._useDagMode = () => true;
+  assert.throws(
+    () => runner._assertNoCycles([
+      { id: 'A', depends_on: ['GHOST'] },
+    ]),
+    (err) => /\[pre-flight\]/.test(err.message) && /unknown task|Unknown dependency/i.test(err.message) && !/[Cc]ircular/.test(err.message)
+  );
+});
+
 console.log('--- All Tests Passed ---');

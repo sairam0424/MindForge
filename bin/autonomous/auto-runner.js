@@ -200,12 +200,17 @@ class AutoRunner {
 
     const handoff = this.stateManager.readHandoff();
 
+    // FIX 3.2: read config ONCE for the whole pre-flight path and thread the
+    // resolved useDag boolean into both _assertNoCycles and _buildWaves, instead
+    // of each method re-reading + re-parsing .mindforge/config.json.
+    const useDag = this._useDagMode();
+
     // UC-03: when DAG ordering is enabled (opt-in via config), detect cycles
     // BEFORE any wave executes and HALT LOUD. Default OFF — legacy behavior
     // (single-wave / explicit .wave grouping) is untouched.
-    this._assertNoCycles(handoff.handoffs);
+    this._assertNoCycles(handoff.handoffs, useDag);
 
-    this.waves = this._buildWaves(handoff.handoffs);
+    this.waves = this._buildWaves(handoff.handoffs, useDag);
     this.currentWaveIndex = 0;
 
     const savedState = this.stateManager.getState();
@@ -313,20 +318,44 @@ class AutoRunner {
    * (opt-in) AND no explicit numeric `.wave` field is present (DAG would be the
    * active strategy). Throws `[pre-flight] Circular dependency...` to HALT LOUD
    * before any wave executes — never warn-and-continue. No-op when DAG is off.
+   *
+   * FIX 1: the pre-flight graph must NOT differ from the graph planWaves
+   * actually executes. planWaves builds its graph from normalizeTask, which
+   * SYNTHESIZES a random id (`task_<rand>`) for any handoff lacking both id and
+   * task_id. A random id can't be matched between two separate calls, AND a task
+   * with no stable id can never be a `depends_on` TARGET (nothing can reference
+   * an id that doesn't exist until it's randomly minted). So we cycle-check the
+   * SUBSET of handoffs that carry a real, stable id (id || task_id) — a subset
+   * guaranteed consistent with execution — and log a warning for any id-less
+   * handoff excluded from the check.
+   *
    * @param {Array} handoffs — Raw handoffs array from HANDOFF.json
+   * @param {boolean} [useDag] — Resolved DAG mode (threaded from runPreFlight to
+   *   avoid re-reading config). Falls back to _useDagMode() for direct callers.
    */
-  _assertNoCycles(handoffs) {
+  _assertNoCycles(handoffs, useDag = this._useDagMode()) {
     if (!Array.isArray(handoffs) || handoffs.length === 0) return;
-    if (!this._useDagMode()) return;
+    if (!useDag) return;
 
     // Explicit .wave field wins over DAG, so cycle check is irrelevant there.
     const hasWaveField = handoffs.some(h => typeof h.wave === 'number');
     if (hasWaveField) return;
 
-    const { buildGraph, hasCircularDependency } = require('./dependency-dag');
+    // Only handoffs with a STABLE id participate in cycle-checking (see above).
+    const stable = handoffs.filter(h => h.id || h.task_id);
+    const idless = handoffs.length - stable.length;
+    if (idless > 0) {
+      console.warn(
+        `[pre-flight] ${idless} handoff(s) lack a stable id (id/task_id) and are ` +
+        'excluded from cycle-checking; an id-less task cannot be a dependency target.'
+      );
+    }
+    if (stable.length === 0) return;
+
+    const { buildGraph, groupIntoWaves } = require('./dependency-dag');
     let graph;
     try {
-      graph = buildGraph(handoffs.map(h => ({
+      graph = buildGraph(stable.map(h => ({
         id: h.id || h.task_id,
         depends_on: Array.isArray(h.depends_on) ? h.depends_on : [],
       })));
@@ -334,24 +363,26 @@ class AutoRunner {
       // Unknown-dependency reference — also a planning error; fail loud.
       throw new Error(`[pre-flight] ${e.message}`);
     }
-    if (hasCircularDependency(graph)) {
-      const { groupIntoWaves } = require('./dependency-dag');
-      try {
-        groupIntoWaves(graph);
-      } catch (e) {
-        throw new Error(`[pre-flight] ${e.message}`);
-      }
-      // Defensive: hasCircularDependency true but groupIntoWaves did not throw.
-      throw new Error('[pre-flight] Circular dependency detected in wave plan');
+    // FIX 3.1: hasCircularDependency() is itself `try{groupIntoWaves}catch`, so
+    // running it then groupIntoWaves again ran Kahn 2-3 times and left an
+    // unreachable defensive throw. Run Kahn ONCE here; on throw, rethrow with the
+    // descriptive (circular OR unknown-dep) message prefixed for pre-flight.
+    try {
+      groupIntoWaves(graph);
+    } catch (e) {
+      throw new Error(`[pre-flight] ${e.message}`);
     }
   }
 
   /**
    * Build wave groups from HANDOFF handoffs array.
    * Kept as instance method for backward compatibility with tests.
+   * @param {Array} handoffs — Raw handoffs array from HANDOFF.json
+   * @param {boolean} [useDag] — Resolved DAG mode (threaded from runPreFlight).
+   *   Falls back to _useDagMode() for direct callers (e.g. tests).
    */
-  _buildWaves(handoffs) {
-    return this.waveExecutor.planWaves(handoffs, { useDag: this._useDagMode() });
+  _buildWaves(handoffs, useDag = this._useDagMode()) {
+    return this.waveExecutor.planWaves(handoffs, { useDag });
   }
 
   async checkIntelligenceDrift() {

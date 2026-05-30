@@ -24,18 +24,18 @@ test('hasCircularDependency returns true for a cycle, false for a DAG', () => {
   assert.strictEqual(hasCircularDependency({ X: { dependsOn: ['Y'] }, Y: { dependsOn: ['X'] } }), true);
   assert.strictEqual(hasCircularDependency({ A: { dependsOn: [] }, B: { dependsOn: ['A'] } }), false);
 });
-test('findFileConflicts detects two tasks writing the same file', () => {
-  const { findFileConflicts } = require('../bin/autonomous/dependency-dag');
-  const conflicts = findFileConflicts([
-    { id: 'A', files: ['src/x.js'] }, { id: 'B', files: ['src/x.js', 'src/y.js'] },
-  ]);
-  assert.strictEqual(conflicts.length, 1);
-  assert.strictEqual(conflicts[0].file, 'src/x.js');
-});
 test('buildGraph derives a dependsOn graph from handoff tasks (id + depends_on)', () => {
   const { buildGraph } = require('../bin/autonomous/dependency-dag');
   const g = buildGraph([{ id: 'A', depends_on: [] }, { id: 'B', depends_on: ['A'] }]);
   assert.deepStrictEqual(g.B.dependsOn, ['A']);
+});
+test('groupIntoWaves throws DISTINCT unknown-dep error (not "circular") for a dangling dep', () => {
+  // FIX 4: standalone self-defense — a dependsOn target missing from the graph
+  // must throw an "Unknown dependency" error, NOT the misleading "Circular" one.
+  const { groupIntoWaves } = require('../bin/autonomous/dependency-dag');
+  const graph = { A: { dependsOn: [] }, B: { dependsOn: ['GHOST'] } };
+  assert.throws(() => groupIntoWaves(graph), /Unknown dependency "GHOST" referenced by "B"/);
+  assert.throws(() => groupIntoWaves(graph), (err) => !/[Cc]ircular/.test(err.message));
 });
 
 test('planWaves({useDag:true}) orders by depends_on when no explicit .wave field', () => {
