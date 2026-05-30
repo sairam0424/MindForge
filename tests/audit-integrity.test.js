@@ -135,6 +135,35 @@ test('appendAuditEntrySync chains correctly across separate process-like seeding
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 });
 
+test('integration: file-io AuditWriter (nexus/policy path) + appendAuditEntrySync share ONE verifiable chain', async () => {
+  // UC-04b regression: file-io.AuditWriter previously used a DIVERGENT hasher
+  // (timestamp injected into the material), so its entries could not verify against
+  // the canonical chain. This drives BOTH real code paths — the class API used by
+  // nexus-tracer/policy-engine AND the direct unified append used by auto-runner/
+  // hindsight/skill-registry/approval-handler — into the SAME fresh file and asserts
+  // the resulting chain is valid end-to-end.
+  const { appendAuditEntrySync } = require('../bin/autonomous/audit-writer');
+  const { AuditWriter } = require('../bin/utils/file-io');
+  const { verifyAuditChain } = require('../bin/governance/audit-verifier');
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-integ-'));
+  const file = path.join(tmp, 'AUDIT.jsonl');
+  try {
+    // auto-runner-style direct append
+    appendAuditEntrySync(file, { event: 'auto_mode_started', agent: 'auto-runner' });
+    // nexus-tracer / policy-engine path (the formerly-divergent class)
+    const w = new AuditWriter(file);
+    await w.write({ event: 'reasoning_trace', agent: 'nexus-tracer', thought: 'plan' });
+    await w.write({ event: 'span_end', agent: 'nexus-tracer' });
+    await w.close();
+    // approval-handler / hindsight / skill-registry style direct append
+    appendAuditEntrySync(file, { event: 'approval_decision', decision: 'approve', agent: 'dashboard' });
+
+    const res = verifyAuditChain(file);
+    assert.strictEqual(res.valid, true, `mixed real-path chain must verify: ${JSON.stringify(res)}`);
+    assert.strictEqual(res.count, 4, `expected 4 chained entries, got ${res.count}`);
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+});
+
 (async () => {
   for (const { name, fn } of tests) {
     try { await fn(); console.log(`  ✅  ${name}`); passed++; }

@@ -215,7 +215,6 @@ function handleAudit() {
   }
 
   const entry = {
-    timestamp: new Date().toISOString(),
     event: 'skill_installed',
     skill_name: skillName,
     skill_version: version,
@@ -224,7 +223,9 @@ function handleAudit() {
     validation_passed: true
   };
 
-  fs.appendFileSync(auditPath, JSON.stringify(entry) + '\n', 'utf8');
+  // UC-04b: unified, hash-chained, durable append into the single verifiable chain.
+  const { appendAuditEntrySync } = require('./autonomous/audit-writer');
+  appendAuditEntrySync(auditPath, entry);
   console.log(`  📝 Audit entry written for ${skillName}`);
   process.exit(0);
 }

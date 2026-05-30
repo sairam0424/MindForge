@@ -45,6 +45,71 @@ function readLastHash(auditPath) {
   } catch { return null; }
 }
 
+// ── Unified synchronous-durable chained append (UC-04b) ───────────────────────
+// ONE primitive that ALL audit write sites funnel through, producing a single
+// verifiable chain via the canonical hashAuditEntry. Synchronous + fsync'd so an
+// acknowledged write is on disk before the call returns (UC-09 durability) — this
+// is what lets us delete the old raw `appendFileSync` shadow-writes: the durable
+// sync write gives in-process consumers (e.g. StuckMonitor, which is fed the event
+// object directly but may also re-read the file) immediate, durable data.
+//
+// Chain head caching: re-reading the file's tail on every append is O(file) — bad
+// on hot paths. Instead we keep a per-path in-memory lastHash (Map keyed by the
+// RESOLVED absolute path), seeded ONCE from the file's last entry on the first
+// append, then advanced in-process for O(1) appends. If the cache is cold (new
+// process, or a path never written in this process) we seed from disk — so a
+// second process correctly continues the on-disk chain from its tail.
+//
+// Concurrency: within a process this is fully synchronous, so calls cannot
+// interleave and the cached lastHash is always current. ACROSS processes, each
+// process seeds from the file tail on its first append; this is correct only under
+// the single-operator model (no two processes appending CONCURRENTLY to the same
+// audit file). MindForge runs one autonomous operator at a time, so this holds.
+const _lastHashCache = new Map(); // resolvedPath -> last `_hash` written/seen
+
+/**
+ * Synchronously appends ONE hash-chained, durable entry to an audit JSONL file.
+ * This is the single unified append used by every audit write site (UC-04b).
+ * @param {string} auditPath — path to the AUDIT.jsonl file
+ * @param {object} event — the event payload (id/timestamp stamped if missing)
+ * @returns {object} the stamped + chained entry actually written
+ */
+function appendAuditEntrySync(auditPath, event) {
+  const resolved = path.resolve(auditPath);
+
+  // 1. Stamp id + timestamp if missing — immutable (new object, never mutate input).
+  const stamped = {
+    ...event,
+    id: event.id || crypto.randomBytes(8).toString('hex'),
+    timestamp: event.timestamp || new Date().toISOString(),
+  };
+
+  // 2. Seed previous_hash: prefer the warm in-process cache; fall back to the
+  //    file's last entry when cold (first append in this process for this path).
+  let previous_hash = _lastHashCache.has(resolved)
+    ? _lastHashCache.get(resolved)
+    : readLastHash(resolved);
+
+  // 3. Compute _hash over {...stamped, previous_hash} WITHOUT _hash in the material.
+  const _hash = hashAuditEntry(stamped, previous_hash);
+
+  // 4. Write {...stamped, previous_hash, _hash} as one JSON line, durably+synchronously
+  //    (openSync('a') + writeSync + fsyncSync + closeSync — mirrors appendDurableSync).
+  const chained = { ...stamped, previous_hash, _hash };
+  fs.mkdirSync(path.dirname(resolved), { recursive: true });
+  const fd = fs.openSync(resolved, 'a');
+  try {
+    fs.writeSync(fd, JSON.stringify(chained) + '\n');
+    fs.fsyncSync(fd);
+  } finally {
+    fs.closeSync(fd);
+  }
+
+  // 5. Advance the in-process chain head and return the written entry.
+  _lastHashCache.set(resolved, _hash);
+  return chained;
+}
+
 /**
  * Creates a buffered async audit writer.
  * @param {string} auditPath — Path to the AUDIT.jsonl file
@@ -159,4 +224,4 @@ function createAuditWriter(auditPath) {
   return Object.freeze({ write, flush, close });
 }
 
-module.exports = { createAuditWriter };
+module.exports = { createAuditWriter, appendAuditEntrySync };

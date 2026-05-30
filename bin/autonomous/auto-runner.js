@@ -19,7 +19,7 @@ const progressStream = require('./progress-stream');
 const ContextRefactorer = require('./context-refactorer');
 
 // Extracted modules (lightweight, always needed)
-const { createAuditWriter } = require('./audit-writer');
+const { appendAuditEntrySync } = require('./audit-writer');
 const { createStateManager } = require('./state-manager');
 const { createWaveExecutor, Semaphore } = require('./wave-executor');
 
@@ -61,7 +61,6 @@ class AutoRunner {
 
     // Extracted module instances
     this.stateManager = createStateManager(planningDir);
-    this.auditWriter = createAuditWriter(this.auditPath);
     this.waveExecutor = createWaveExecutor({
       onTaskStart: ({ task, wave }) => this.writeAudit({ event: 'task_started', phase: this.phase, wave: wave + 1, task_id: task.id, task_name: task.name }),
       onTaskComplete: ({ task, wave, duration_ms }) => this.writeAudit({ event: 'task_completed', phase: this.phase, wave: wave + 1, task_id: task.id, task_name: task.name, duration_ms }),
@@ -368,27 +367,23 @@ class AutoRunner {
     } catch (e) { /* GC failure is non-critical */ }
 
     this.writeAudit({ event: 'auto_mode_completed', timestamp: new Date().toISOString() });
-    await this.auditWriter.close();
   }
 
   writeAudit(event) {
-    const crypto = require('crypto');
-    if (!event.id) event = Object.assign({}, event, { id: crypto.randomBytes(8).toString('hex') });
-    if (!event.timestamp) event = Object.assign({}, event, { timestamp: new Date().toISOString() });
-
-    // Synchronous write for backward compat (monitor needs immediate data)
-    fs.appendFileSync(this.auditPath, JSON.stringify(event) + '\n');
-
-    // Also buffer in async writer for future async consumers
-    this.auditWriter.write(event);
+    // UC-04b: single unified, hash-chained, synchronous-DURABLE append. The sync
+    // fsync'd write means in-process consumers (StuckMonitor reads the event
+    // object directly below; any file re-readers see it immediately) get durable
+    // data at once — replacing the old dual raw-appendFileSync + async-buffer write
+    // that left the live AUDIT.jsonl chain unverifiable.
+    const stamped = appendAuditEntrySync(this.auditPath, event);
 
     const STATE_CHANGING_EVENTS = ['auto_mode_started', 'phase_planned', 'phase_execution_started', 'task_completed', 'hindsight_injected', 'auto_mode_completed'];
-    if (STATE_CHANGING_EVENTS.includes(event.event)) {
+    if (STATE_CHANGING_EVENTS.includes(stamped.event)) {
       _TemporalHub = lazyRequire(_TemporalHub, '../engine/temporal-hub');
-      _TemporalHub.captureState(event.id, { agent: event.agent || 'auto-runner', event: event.event, phase: this.phase }).catch(() => {});
+      _TemporalHub.captureState(stamped.id, { agent: stamped.agent || 'auto-runner', event: stamped.event, phase: this.phase }).catch(() => {});
     }
 
-    const result = this.monitor.analyze(event);
+    const result = this.monitor.analyze(stamped);
     if (result) this.handleStuck(result);
   }
 
