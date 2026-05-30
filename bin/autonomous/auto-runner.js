@@ -689,7 +689,7 @@ class AutoRunner {
 
   async evaluateWavePolicy() {
     _ZTAIManager = lazyRequire(_ZTAIManager, '../governance/ztai-manager');
-    const manager = new _ZTAIManager();
+    const manager = _ZTAIManager;
     const identity = await manager.getIdentity();
     const intent = { did: identity.did, action: 'process_phase_wave', resource: `projects/${process.env.MF_PROJECT_ID || 'MF-ALPHA'}/phases/${this.phase}/*`, tier: identity.tier || 1, metadata: { engine: 'Nimbus-S4', mode: 'autonomous', wave_timestamp: new Date().toISOString() } };
     const result = this.policyEngine.evaluate(intent);
