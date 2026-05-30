@@ -38,6 +38,35 @@ test('buildGraph derives a dependsOn graph from handoff tasks (id + depends_on)'
   assert.deepStrictEqual(g.B.dependsOn, ['A']);
 });
 
+test('planWaves({useDag:true}) orders by depends_on when no explicit .wave field', () => {
+  const { createWaveExecutor } = require('../bin/autonomous/wave-executor');
+  const ex = createWaveExecutor();
+  const waves = ex.planWaves(
+    [{ id: 'A', depends_on: [] }, { id: 'B', depends_on: ['A'] }, { id: 'C', depends_on: ['A'] }],
+    { useDag: true }
+  );
+  assert.strictEqual(waves[0].tasks.length, 1, 'wave0 = A only');
+  assert.strictEqual(waves[0].tasks[0].id, 'A');
+  assert.strictEqual(waves[1].tasks.length, 2, 'wave1 = B,C');
+});
+test('planWaves preserves explicit .wave field as override even with useDag:true', () => {
+  const { createWaveExecutor } = require('../bin/autonomous/wave-executor');
+  const ex = createWaveExecutor();
+  const waves = ex.planWaves(
+    [{ id: 'A', wave: 5, depends_on: [] }, { id: 'B', wave: 1, depends_on: ['A'] }],
+    { useDag: true }
+  );
+  assert.strictEqual(waves[0].wave, 1);
+  assert.strictEqual(waves[0].tasks[0].id, 'B');
+});
+test('planWaves without useDag is unchanged (single wave when no .wave field)', () => {
+  const { createWaveExecutor } = require('../bin/autonomous/wave-executor');
+  const ex = createWaveExecutor();
+  const waves = ex.planWaves([{ id: 'A', depends_on: [] }, { id: 'B', depends_on: ['A'] }]);
+  assert.strictEqual(waves.length, 1, 'legacy default: one wave');
+  assert.strictEqual(waves[0].tasks.length, 2);
+});
+
 (async () => {
   for (const { name, fn } of tests) {
     try { await fn(); console.log(`  ✅  ${name}`); passed++; }
