@@ -19,7 +19,7 @@ if (!CMD) {
 async function main() {
   try {
     switch (CMD) {
-      case 'search':
+      case 'search': {
         const results = await Marketplace.search(QUERY);
         console.table(results.map(r => ({
           name: r.name,
@@ -28,12 +28,14 @@ async function main() {
           description: r.description.slice(0, 50) + '...'
         })));
         break;
-        
+      }
+
       case 'featured':
-      case 'trending':
+      case 'trending': {
         const list = await Marketplace.getFeatured();
         console.table(list);
         break;
+      }
         
       case 'install':
         if (!QUERY) throw new Error('Package name required for install');

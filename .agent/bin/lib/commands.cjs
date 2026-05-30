@@ -601,9 +601,9 @@ function cmdTodoMatchPhase(cwd, phase, raw) {
           files: filesMatch ? filesMatch[1].trim().split(/[,\s]+/).filter(Boolean) : [],
           body: body.slice(0, 200), // first 200 chars for context
         });
-      } catch {}
+      } catch { /* intentionally empty */ }
     }
-  } catch {}
+  } catch { /* intentionally empty */ }
 
   if (todos.length === 0) {
     output({ phase, matches: [], todo_count: 0 }, raw);
@@ -620,7 +620,7 @@ function cmdTodoMatchPhase(cwd, phase, raw) {
   const phaseText = `${phaseName} ${phaseGoal} ${phaseSection}`.toLowerCase();
   const stopWords = new Set(['the', 'and', 'for', 'with', 'from', 'that', 'this', 'will', 'are', 'was', 'has', 'have', 'been', 'not', 'but', 'all', 'can', 'into', 'each', 'when', 'any', 'use', 'new']);
   const phaseKeywords = new Set(
-    phaseText.split(/[\s\-_/.,;:()\[\]{}|]+/)
+    phaseText.split(/[\s\-_/.,;:()[\]{}|]+/)
       .map(w => w.replace(/[^a-z0-9]/g, ''))
       .filter(w => w.length > 2 && !stopWords.has(w))
   );
@@ -639,9 +639,9 @@ function cmdTodoMatchPhase(cwd, phase, raw) {
           if (fmFiles) {
             phasePlans.push(...fmFiles[1].split(',').map(s => s.trim().replace(/['"]/g, '')).filter(Boolean));
           }
-        } catch {}
+        } catch { /* intentionally empty */ }
       }
-    } catch {}
+    } catch { /* intentionally empty */ }
   }
 
   // Score each todo for relevance
@@ -652,7 +652,7 @@ function cmdTodoMatchPhase(cwd, phase, raw) {
 
     // Keyword match: todo title/body terms in phase text
     const todoWords = `${todo.title} ${todo.body}`.toLowerCase()
-      .split(/[\s\-_/.,;:()\[\]{}|]+/)
+      .split(/[\s\-_/.,;:()[\]{}|]+/)
       .map(w => w.replace(/[^a-z0-9]/g, ''))
       .filter(w => w.length > 2 && !stopWords.has(w));
 

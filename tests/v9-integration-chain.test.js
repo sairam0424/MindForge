@@ -38,7 +38,7 @@ async function asyncTest(name, fn) {
 
 const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mindforge-v9-test-'));
 process.on('exit', () => {
-  try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch {}
+  try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch { /* intentionally empty */ }
 });
 
 async function main() {
@@ -165,8 +165,8 @@ async function main() {
 
   test('Provider routing uses startsWith instead of includes', () => {
     const src = fs.readFileSync(path.join(__dirname, '..', 'bin', 'models', 'model-client.js'), 'utf8');
-    assert.ok(src.includes("modelId.startsWith('claude')"), 'Should use startsWith for claude');
-    assert.ok(src.includes("modelId.startsWith('gemini')"), 'Should use startsWith for gemini');
+    assert.ok(src.includes('modelId.startsWith(\'claude\')'), 'Should use startsWith for claude');
+    assert.ok(src.includes('modelId.startsWith(\'gemini\')'), 'Should use startsWith for gemini');
   });
 
   test('Error messages sanitize API keys', () => {
@@ -283,7 +283,7 @@ async function main() {
 
   test('SDK VERSION matches 11.0.0', () => {
     const src = fs.readFileSync(path.join(__dirname, '..', 'sdk', 'src', 'index.ts'), 'utf8');
-    assert.ok(src.includes("VERSION = '11.0.0'"));
+    assert.ok(src.includes('VERSION = \'11.0.0\''));
   });
 
   test('SDK exports WaveExecutionResult and MigrationResult', () => {

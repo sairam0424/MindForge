@@ -54,10 +54,10 @@ function migrateToWorkstreams(cwd, workstreamName) {
     }
   } catch (err) {
     for (const name of filesMoved) {
-      try { fs.renameSync(path.join(wsDir, name), path.join(baseDir, name)); } catch {}
+      try { fs.renameSync(path.join(wsDir, name), path.join(baseDir, name)); } catch { /* intentionally empty */ }
     }
-    try { fs.rmSync(wsDir, { recursive: true }); } catch {}
-    try { fs.rmdirSync(path.join(baseDir, 'workstreams')); } catch {}
+    try { fs.rmSync(wsDir, { recursive: true }); } catch { /* intentionally empty */ }
+    try { fs.rmdirSync(path.join(baseDir, 'workstreams')); } catch { /* intentionally empty */ }
     throw err;
   }
 
@@ -194,7 +194,7 @@ function cmdWorkstreamList(cwd, raw) {
         const plans = filterPlanFiles(phaseFiles);
         const summaries = filterSummaryFiles(phaseFiles);
         if (plans.length > 0 && summaries.length >= plans.length) completedCount++;
-      } catch {}
+      } catch { /* intentionally empty */ }
     }
 
     let status = 'unknown', currentPhase = null;
@@ -202,7 +202,7 @@ function cmdWorkstreamList(cwd, raw) {
       const stateContent = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf-8');
       status = stateExtractField(stateContent, 'Status') || 'unknown';
       currentPhase = stateExtractField(stateContent, 'Current Phase');
-    } catch {}
+    } catch { /* intentionally empty */ }
 
     workstreams.push({
       name: entry.name,
@@ -251,7 +251,7 @@ function cmdWorkstreamStatus(cwd, name, raw) {
         plan_count: plans.length,
         summary_count: summaries.length,
       });
-    } catch {}
+    } catch { /* intentionally empty */ }
   }
 
   let stateInfo = {};
@@ -262,7 +262,7 @@ function cmdWorkstreamStatus(cwd, name, raw) {
       current_phase: stateExtractField(stateContent, 'Current Phase'),
       last_activity: stateExtractField(stateContent, 'Last Activity'),
     };
-  } catch {}
+  } catch { /* intentionally empty */ }
 
   output({
     found: true,
@@ -311,21 +311,21 @@ function cmdWorkstreamComplete(cwd, name, options, raw) {
     }
   } catch (err) {
     for (const fname of filesMoved) {
-      try { fs.renameSync(path.join(archivePath, fname), path.join(wsDir, fname)); } catch {}
+      try { fs.renameSync(path.join(archivePath, fname), path.join(wsDir, fname)); } catch { /* intentionally empty */ }
     }
-    try { fs.rmSync(archivePath, { recursive: true }); } catch {}
+    try { fs.rmSync(archivePath, { recursive: true }); } catch { /* intentionally empty */ }
     if (active === name) setActiveWorkstream(cwd, name);
     output({ completed: false, error: 'archive_failed', message: err.message, workstream: name }, raw);
     return;
   }
 
-  try { fs.rmdirSync(wsDir); } catch {}
+  try { fs.rmdirSync(wsDir); } catch { /* intentionally empty */ }
 
   let remainingWs = 0;
   try {
     remainingWs = fs.readdirSync(wsRoot, { withFileTypes: true }).filter(e => e.isDirectory()).length;
     if (remainingWs === 0) fs.rmdirSync(wsRoot);
-  } catch {}
+  } catch { /* intentionally empty */ }
 
   output({
     completed: true,
@@ -396,7 +396,7 @@ function cmdWorkstreamProgress(cwd, raw) {
         totalPlans += plans.length;
         completedPlans += Math.min(summaries.length, plans.length);
         if (plans.length > 0 && summaries.length >= plans.length) completedCount++;
-      } catch {}
+      } catch { /* intentionally empty */ }
     }
 
     let roadmapPhaseCount = phaseCount;
@@ -404,14 +404,14 @@ function cmdWorkstreamProgress(cwd, raw) {
       const roadmapContent = fs.readFileSync(path.join(wsDir, 'ROADMAP.md'), 'utf-8');
       const phaseMatches = roadmapContent.match(/^###?\s+Phase\s+\d/gm);
       if (phaseMatches) roadmapPhaseCount = phaseMatches.length;
-    } catch {}
+    } catch { /* intentionally empty */ }
 
     let status = 'unknown', currentPhase = null;
     try {
       const stateContent = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf-8');
       status = stateExtractField(stateContent, 'Status') || 'unknown';
       currentPhase = stateExtractField(stateContent, 'Current Phase');
-    } catch {}
+    } catch { /* intentionally empty */ }
 
     workstreams.push({
       name: entry.name,
@@ -452,7 +452,7 @@ function getOtherActiveWorkstreams(cwd, excludeWs) {
       const content = fs.readFileSync(statePath, 'utf-8');
       status = stateExtractField(content, 'Status') || 'unknown';
       currentPhase = stateExtractField(content, 'Current Phase');
-    } catch {}
+    } catch { /* intentionally empty */ }
 
     if (status.toLowerCase().includes('milestone complete') ||
         status.toLowerCase().includes('archived')) {
@@ -469,7 +469,7 @@ function getOtherActiveWorkstreams(cwd, excludeWs) {
         const plans = filterPlanFiles(phaseFiles);
         const summaries = filterSummaryFiles(phaseFiles);
         if (plans.length > 0 && summaries.length >= plans.length) completedCount++;
-      } catch {}
+      } catch { /* intentionally empty */ }
     }
 
     others.push({ name: entry.name, status, current_phase: currentPhase, phases: `${completedCount}/${phaseCount}` });

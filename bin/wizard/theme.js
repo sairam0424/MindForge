@@ -177,8 +177,7 @@ const Theme = {
   },
 
   // --- Aliases for legacy compatibility ---
-  status(label, state) { this.printStatus(label, state); },
-  printSuccess(runtime, scope, stats) { this.printSuccessV2(runtime, scope, stats); }
+  status(label, state) { this.printStatus(label, state); }
 };
 
 module.exports = Theme;
