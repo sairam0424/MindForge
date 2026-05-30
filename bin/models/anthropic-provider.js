@@ -15,7 +15,7 @@ class AnthropicProvider {
 
     const data = JSON.stringify({
       model,
-      system: systemPrompt,
+      system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: userMessage }],
       max_tokens: maxTokens,
       temperature,
@@ -45,13 +45,15 @@ class AnthropicProvider {
 
             const inputTokens = json.usage.input_tokens;
             const outputTokens = json.usage.output_tokens;
+            const cacheRead = json.usage.cache_read_input_tokens || 0;
+            const cacheCreate = json.usage.cache_creation_input_tokens || 0;
 
             const { priceCall } = require('./pricing-registry');
             const cost = priceCall(json.model, {
               input_tokens: inputTokens,
               output_tokens: outputTokens,
-              cache_read_input_tokens: json.usage.cache_read_input_tokens || 0,
-              cache_creation_input_tokens: json.usage.cache_creation_input_tokens || 0,
+              cache_read_input_tokens: cacheRead,
+              cache_creation_input_tokens: cacheCreate,
             });
 
             resolve({
@@ -59,6 +61,8 @@ class AnthropicProvider {
               content: json.content[0].text,
               input_tokens: inputTokens,
               output_tokens: outputTokens,
+              cache_read_input_tokens: cacheRead,
+              cache_creation_input_tokens: cacheCreate,
               cost_usd: cost,
               provider: 'anthropic'
             });
