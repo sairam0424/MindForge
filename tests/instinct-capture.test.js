@@ -19,7 +19,7 @@ console.log('\nMindForge — Instinct Auto-Capture Hook Tests (UC-11)\n');
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function runHook(payload, env = {}) {
-  const input = JSON.stringify(payload);
+  const input = typeof payload === 'string' ? payload : JSON.stringify(payload);
   try {
     const result = execSync(`node "${HOOK_SCRIPT}"`, {
       input,
@@ -210,36 +210,17 @@ console.log('Test 5: Respects max_capture_per_session limit...');
 // Test 6: Handles malformed stdin gracefully
 console.log('Test 6: Handles malformed stdin gracefully...');
 {
-  try {
-    execSync(`echo "not valid json" | node "${HOOK_SCRIPT}"`, {
-      encoding: 'utf8',
-      cwd: PROJECT_ROOT,
-      timeout: 10000,
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
-    console.log('  PASS: Exits cleanly on malformed input');
-  } catch (err) {
-    // Should still exit 0
-    assert.strictEqual(err.status, 0, 'Hook should exit 0 on malformed input');
-    console.log('  PASS: Exits cleanly on malformed input');
-  }
+  const { exitCode } = runHook('not valid json at all');
+  assert.strictEqual(exitCode, 0, 'Hook should exit 0 on malformed input');
+  console.log('  PASS: Exits cleanly on malformed input');
 }
 
 // Test 7: Handles empty stdin gracefully
 console.log('Test 7: Handles empty stdin gracefully...');
 {
-  try {
-    execSync(`echo "" | node "${HOOK_SCRIPT}"`, {
-      encoding: 'utf8',
-      cwd: PROJECT_ROOT,
-      timeout: 10000,
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
-    console.log('  PASS: Exits cleanly on empty input');
-  } catch (err) {
-    assert.strictEqual(err.status, 0, 'Hook should exit 0 on empty input');
-    console.log('  PASS: Exits cleanly on empty input');
-  }
+  const { exitCode } = runHook('');
+  assert.strictEqual(exitCode, 0, 'Hook should exit 0 on empty input');
+  console.log('  PASS: Exits cleanly on empty input');
 }
 
 // ── Cleanup ──────────────────────────────────────────────────────────────────
