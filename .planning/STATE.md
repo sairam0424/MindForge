@@ -1,7 +1,7 @@
 # MindForge — Project State
 
 ## Status
-🟢 Active — v11.1.0 (Beast Mode)
+🟢 Active — v11.2.0 (Verification & Trust)
 
 ## IMPORTANT
 HANDOFF.json is committed to git. Never write secrets or credentials into it.
@@ -9,31 +9,30 @@ Write "see .env" or "stored in secrets manager" if a note needs to reference cre
 
 
 ## Current version
-v11.1.0 — Beast Mode release. Integrity-first upgrade: tamper-evident signed audit chain, opt-in dependency-DAG wave planning, unified cost-aware routing with prompt-cache accounting, native Claude Code alignment (real hooks, instinct capture, OTel tracing, RRF retrieval fusion).
+v11.2.0 — Verification & Trust release. Makes quality measurable (unified verification runner, eval harness with recall@k/nDCG), defends trust boundaries (manifest pinning, untrusted output tagging, high-impact command gating), and cleans tech debt.
 
 ## Current phase
-v11.1.0 implemented. Ready for release (push + tag + publish gated on human approval).
+v11.2.0 implemented. Ready for release (push + PR + CI + publish gated on human approval).
 
 ## Last completed task
-v11.1.0 beast-mode — 4 pillars: Integrity & Trust (UC-09/04/04b/24), Orchestration Correctness (UC-03/14/10), Cost-Aware Routing (UC-05/21/06), Native Alignment + Observability (UC-19a/11/18/20).
+v11.2.0 — UC-08 (verification runner), UC-25 (eval harness), UC-22 (trust boundaries), council CLI wiring, tech debt batch (5 fixes).
 
 ## Next action
-Push branch, open PR, let CI validate, then tag + publish v11.1.0 with human approval.
+Push branch, open PR to develop, let CI validate, then tag + publish v11.2.0 with human approval.
 
 ## Decisions made
-- Align-first strategy: delegate orchestration substrate to native Claude Code; concentrate on differentiated layer.
-- Version: 11.1.0 minor (new backward-compatible capability, per SemVer).
-- Kahn DAG ships opt-in only (explicit .wave always wins); never default this release.
-- Difficulty routing in shadow-mode (logs, doesn't gate); requires eval before flipping.
-- Ed25519 signing deferred (in-memory keys can't verify cross-process); hash-chain alone delivers tamper-evidence.
-- Simulated PQC off live trust path by default; gated behind experimental.pqc_demo.
-- Audit rotation retired (broke hash chain); unbounded growth accepted short-term.
+- Verification runner orchestrates test/lint/audit/typecheck (security stage TBD)
+- Eval harness uses binary relevance for recall@k; LLM-as-judge gated behind config flag (default off)
+- Trust-gate hook fails-open on parse errors (don't block user on hook bugs)
+- isHighImpact uses case-insensitive regex; conservative (may over-block, but safer)
+- Golden set seeds 10 queries — operators expand over time
+- Coverage ratchet deferred to CI configuration (not enforced in-code this release)
 
 ## Active blockers
-None (branch needs git push — DestructiveGuard hook routes to user).
+None (branch needs git push).
 
 ## Context for next session
-MindForge v11.1.0 "Beast Mode" fully implemented on branch `fix/v11.0.1-stability-patch` (51 commits, 53 tests). Stretch items (UC-08/25 verification runner, UC-22 trust boundaries) deferred to v11.2.0.
+MindForge v11.2.0 "Verification & Trust" fully implemented on branch `feat/v11.2.0-verification-trust`. 56 test files passing (0 failed, 2 skipped). v11.3.0 work: flip shadow-mode routing (requires eval pass), coverage ratchet enforcement, dense embeddings exploration.
 
 ## Last updated
-2026-05-31T00:00:00Z
+2026-05-31T12:00:00Z
