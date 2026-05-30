@@ -9,6 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { AuditRotator } = require('../utils/file-io');
+const { createAppendQueue } = require('../utils/append-queue');
 
 const FLUSH_INTERVAL_MS = 100;
 const FLUSH_THRESHOLD = 10;
@@ -24,6 +25,7 @@ function createAuditWriter(auditPath) {
   let buffer = [];
   let flushTimer = null;
   let isClosed = false;
+  const queue = createAppendQueue(auditPath);
 
   function scheduleFlush() {
     if (flushTimer !== null) return;
@@ -73,7 +75,7 @@ function createAuditWriter(auditPath) {
     buffer = [];
 
     const payload = toWrite.map(e => JSON.stringify(e)).join('\n') + '\n';
-    await fs.promises.appendFile(auditPath, payload);
+    await queue.append(payload.replace(/\n$/, ''));
 
     try {
       if (rotator.shouldRotate(auditPath)) {
@@ -95,6 +97,9 @@ function createAuditWriter(auditPath) {
       flushTimer = null;
     }
     await flush();
+    // Drain any in-flight threshold-triggered flushes that enqueued without being
+    // awaited — guarantees all acknowledged writes are durable before close resolves.
+    await queue.drain();
   }
 
   return Object.freeze({ write, flush, close });
