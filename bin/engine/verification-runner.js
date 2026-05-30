@@ -8,11 +8,15 @@ const MAX_OUTPUT_LENGTH = 2000;
 
 /**
  * Stage definitions — each maps a stage name to its command and optional skip condition.
+ * The tests stage guards against recursion: if NODE_ENV=test (set by run-all.js) or
+ * MINDFORGE_VERIFICATION_ACTIVE=1 (set by this runner), we skip to prevent infinite nesting.
  */
 const STAGE_DEFS = {
   tests: {
     command: 'node tests/run-all.js',
-    skipIf: null,
+    skipIf: () =>
+      process.env.MINDFORGE_VERIFICATION_ACTIVE === '1' ||
+      process.env.NODE_ENV === 'test',
   },
   lint: {
     command: 'npx eslint . --max-warnings=0',
@@ -47,11 +51,15 @@ function executeStage(name, cwd) {
   let status = 'pass';
 
   try {
+    const env = Object.assign({}, process.env, {
+      MINDFORGE_VERIFICATION_ACTIVE: '1',
+    });
     const result = execSync(def.command, {
       cwd,
       encoding: 'utf8',
       stdio: ['pipe', 'pipe', 'pipe'],
       timeout: 120000,
+      env,
     });
     output = (result || '').slice(0, MAX_OUTPUT_LENGTH);
   } catch (err) {
