@@ -133,6 +133,10 @@ const COMMANDS = {
     script: 'bin/engine/learning-manager.js',
     description: 'Append a new Learning Entry to the Evolution Log',
     defaultArgs: ['record']
+  },
+  'verify': {
+    script: 'bin/engine/verify-cli.js',
+    description: 'Run unified verification (tests, lint, audit, typecheck) and write report'
   }
 };
 
