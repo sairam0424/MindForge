@@ -49,6 +49,44 @@ test('runCouncil throws if no model function injected', async () => {
   await assert.rejects(() => runCouncil('Q?', { voices: ['architect'] }), /model/i);
 });
 
+test('runCouncil rejects a position with non-numeric (NaN) confidence', async () => {
+  const { runCouncil } = require('../bin/engine/council-runtime');
+  const badModel = async ({ voice }) =>
+    voice === 'skeptic'
+      ? { recommendation: 'PROCEED', confidence: NaN, rationale: 'malformed' }
+      : { recommendation: 'PROCEED', confidence: 0.9, rationale: `${voice} go` };
+  await assert.rejects(
+    () => runCouncil('Q?', { voices: ['architect', 'skeptic'], model: badModel, writeDecision: false }),
+    /invalid position|confidence/i,
+  );
+});
+
+test('runCouncil rejects a position with an invalid recommendation string', async () => {
+  const { runCouncil } = require('../bin/engine/council-runtime');
+  const badModel = async ({ voice }) =>
+    voice === 'critic'
+      ? { recommendation: 'MAYBE', confidence: 0.7, rationale: 'unsure' }
+      : { recommendation: 'PROCEED', confidence: 0.9, rationale: `${voice} go` };
+  await assert.rejects(
+    () => runCouncil('Q?', { voices: ['architect', 'critic'], model: badModel, writeDecision: false }),
+    /invalid position|recommendation/i,
+  );
+});
+
+test('runCouncil captures full dissent split under NO_CONSENSUS', async () => {
+  const { runCouncil } = require('../bin/engine/council-runtime');
+  // All voices PROCEED@0.5 → consensus 0.5 → NO_CONSENSUS (deadlock).
+  const split = async ({ voice }) => ({ recommendation: 'PROCEED', confidence: 0.5, rationale: `${voice} is on the fence` });
+  const r = await runCouncil('Q?', {
+    voices: ['architect', 'skeptic', 'pragmatist', 'critic'],
+    consensusThreshold: 0.75, model: split, writeDecision: false,
+  });
+  assert.strictEqual(r.verdict, 'NO_CONSENSUS', 'consensus 0.5 yields NO_CONSENSUS');
+  assert.ok(r.dissent.length > 0, 'dissent populated under NO_CONSENSUS');
+  assert.strictEqual(r.dissent.length, r.positions.length, 'full split captured');
+  assert.ok(r.dissent.every((d) => d.voice && d.recommendation && d.rationale), 'each dissent entry has voice/recommendation/rationale');
+});
+
 (async () => {
   for (const {name,fn} of tests){ try{ await fn(); console.log(`  ✅  ${name}`); passed++; }catch(e){ console.error(`  ❌  ${name}\n      ${e.message}`); failed++; } }
   console.log(`\nCouncil Runtime: ${passed} passed, ${failed} failed`);

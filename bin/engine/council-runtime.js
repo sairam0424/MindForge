@@ -24,6 +24,25 @@ const path = require('path');
 const { Semaphore } = require('../autonomous/wave-executor');
 
 const DEFAULT_VOICES = ['architect', 'skeptic', 'pragmatist', 'critic'];
+const VALID_RECOMMENDATIONS = ['PROCEED', 'REVISE'];
+
+/**
+ * Validates a single voice's position payload. Throws a clear, voice-named error
+ * on a malformed payload rather than letting it degrade into NaN consensus.
+ * @param {string} voice — The voice that produced the position (for the error message).
+ * @param {object} position — The raw position returned by the model.
+ */
+function validatePosition(voice, position) {
+  if (!position || typeof position !== 'object') {
+    throw new Error(`Council voice "${voice}" returned an invalid position: expected an object, got ${position === null ? 'null' : typeof position}`);
+  }
+  if (!VALID_RECOMMENDATIONS.includes(position.recommendation)) {
+    throw new Error(`Council voice "${voice}" returned an invalid position: recommendation must be one of ${VALID_RECOMMENDATIONS.join('/')}, got ${JSON.stringify(position.recommendation)}`);
+  }
+  if (typeof position.confidence !== 'number' || !Number.isFinite(position.confidence) || position.confidence < 0 || position.confidence > 1) {
+    throw new Error(`Council voice "${voice}" returned an invalid position: confidence must be a number in [0,1], got ${position.confidence}`);
+  }
+}
 
 /**
  * Runs a thin adversarial council over a question.
@@ -56,6 +75,10 @@ async function runCouncil(question, opts = {}) {
     await sem.acquire();
     try {
       const position = await model({ voice, question });
+      // Validate the payload immediately — never silently swallow a malformed
+      // position into NaN consensus (which would collapse to NO_CONSENSUS and
+      // write NaN to the decision record).
+      validatePosition(voice, position);
       return { voice, ...position };
     } finally {
       sem.release();
@@ -74,11 +97,17 @@ async function runCouncil(question, opts = {}) {
     : consensus <= (1 - consensusThreshold) ? 'REVISE'
     : 'NO_CONSENSUS';
 
-  // Dissent = voices opposing the verdict direction.
-  const dissent = positions.filter((p) =>
-    (verdict === 'PROCEED' && p.recommendation !== 'PROCEED') ||
-    (verdict === 'REVISE' && p.recommendation === 'PROCEED'))
-    .map((d) => ({ voice: d.voice, rationale: d.rationale }));
+  // Dissent capture:
+  // - For a decisive verdict (PROCEED/REVISE): the voices opposing that direction.
+  // - For NO_CONSENSUS (the deadlock ADS most needs documented): the FULL split —
+  //   every voice's {voice, recommendation, rationale} — so the decision record
+  //   preserves both camps rather than recording an empty dissent list.
+  const dissent = verdict === 'NO_CONSENSUS'
+    ? positions.map((p) => ({ voice: p.voice, recommendation: p.recommendation, rationale: p.rationale }))
+    : positions.filter((p) =>
+        (verdict === 'PROCEED' && p.recommendation !== 'PROCEED') ||
+        (verdict === 'REVISE' && p.recommendation === 'PROCEED'))
+      .map((d) => ({ voice: d.voice, rationale: d.rationale }));
 
   const result = { question, positions, consensus, verdict, dissent };
 
