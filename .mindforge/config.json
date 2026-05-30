@@ -5,7 +5,7 @@
     "drift_threshold": 0.75,
     "critical_drift_threshold": 0.5,
     "res_threshold": 0.8,
-    "active_did": "did:mindforge:abf46d8c-4a1f-44d2-872d-a44aa4c00d1f"
+    "active_did": "did:mindforge:7faf97d6-0754-459f-b915-f7de21837f8d"
   },
   "revops": {
     "market_registry": {
@@ -64,7 +64,7 @@
   "security": {
     "pqas_enabled": false,
     "enclave_tier": 2,
-    "provider": "simulated-lattice"
+    "provider": "Dilithium-5 (simulated — inactive)"
   },
   "experimental": {
     "pqc_demo": false
