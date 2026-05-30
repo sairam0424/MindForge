@@ -25,6 +25,33 @@ test('quantum-crypto self-labels as simulated (no false assurance)', () => {
   assert.ok(/simulated/i.test(src), 'quantum-crypto must honestly label simulated output');
 });
 
+test('Tier-3 signing uses real Ed25519 by default (verifiable round-trip, not simulated)', async () => {
+  // ZTAIManager is exported as a singleton instance. registerAgent(persona, tier, sessionId)
+  // -> Promise<did>; signData(did, data) -> Promise<base64 sig>; verifySignature(did, data, sig) -> bool.
+  const ztai = require('../bin/governance/ztai-manager');
+  const did = await ztai.registerAgent('security-engineer', 3);
+
+  // Tier-3 must route to the real-Ed25519 enclave provider, NOT the simulated quantum provider.
+  assert.strictEqual(ztai.getAgent(did).providerType, 'enclave',
+    'Tier-3 must use the real-Ed25519 enclave provider by default, not simulated PQC');
+
+  const payload = 'integrity-test-payload';
+  const sig = await ztai.signData(did, payload);
+
+  // A real Ed25519 signature is an opaque base64 blob, NOT a simulated PQC envelope object.
+  assert.strictEqual(typeof sig, 'string',
+    'Tier-3 signature must be a raw Ed25519 string, not a simulated {simulated:true} object');
+  assert.ok(!sig.startsWith('pqas_sig_'),
+    'Tier-3 signature must NOT be a simulated Dilithium-5 (pqas_sig_) envelope');
+
+  assert.strictEqual(ztai.verifySignature(did, payload, sig), true,
+    'Tier-3 signature must verify with real Ed25519 under default (pqc_demo=false) config');
+
+  // Tamper check: a modified payload must NOT verify (proves real crypto, not a stub).
+  assert.strictEqual(ztai.verifySignature(did, payload + 'X', sig), false,
+    'Tampered payload must fail verification under real Ed25519');
+});
+
 (async () => {
   for (const { name, fn } of tests) {
     try { await fn(); console.log(`  ✅  ${name}`); passed++; }

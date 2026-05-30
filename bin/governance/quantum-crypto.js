@@ -10,10 +10,43 @@
 const crypto = require('node:crypto');
 const configManager = require('./config-manager');
 
+/**
+ * Honest-disclosure guard message. The signatures produced by this module are
+ * SIMULATED Dilithium-5 (base64(SHA3 + random) — NOT real ML-DSA/FIPS-204
+ * lattice crypto). They must NEVER sit on the live trust path silently. The
+ * simulated implementation is preserved for demonstration only and is gated
+ * behind an explicit, opt-in flag.
+ */
+const PQC_DEMO_DISABLED_MSG =
+  'PQC demo disabled — set experimental.pqc_demo=true to use simulated lattice crypto (NOT for production trust)';
+
 class QuantumCrypto {
   constructor() {
     this.providerId = configManager.get('security.provider', 'simulated-lattice');
-    this.pqasEnabled = configManager.get('security.pqas_enabled', true);
+    // UC-24: simulated PQC is OFF the live trust path by default. Real PQC has
+    // not shipped, so pqas_enabled defaults to false and the simulated path is
+    // additionally gated behind the explicit experimental.pqc_demo opt-in.
+    this.pqasEnabled = configManager.get('security.pqas_enabled', false);
+  }
+
+  /**
+   * Returns true only when the operator has explicitly opted into the SIMULATED
+   * post-quantum demo. Read fresh from config so a runtime toggle is honored.
+   * @returns {boolean}
+   */
+  isPqcDemoEnabled() {
+    return configManager.get('experimental.pqc_demo', false) === true;
+  }
+
+  /**
+   * Hard gate: throws unless the operator has explicitly enabled the simulated
+   * PQC demo. Prevents simulated (false-assurance) signatures from silently
+   * landing on the live trust path.
+   */
+  _assertPqcDemoEnabled() {
+    if (!this.isPqcDemoEnabled()) {
+      throw new Error(PQC_DEMO_DISABLED_MSG);
+    }
   }
 
   /**
@@ -32,6 +65,9 @@ class QuantumCrypto {
    * Generates a key pair using the configured PQ provider.
    */
   async generateLatticeKeyPair() {
+    // UC-24: simulated keys are demo-only. Refuse to mint them on the live
+    // trust path unless the operator has explicitly opted in.
+    this._assertPqcDemoEnabled();
     if (!this.pqasEnabled) throw new Error('PQAS is disabled in configuration.');
 
     // Simulate high-entropy lattice seeds
@@ -53,6 +89,9 @@ class QuantumCrypto {
    * @returns {{ signature: string, simulated: true, algorithm: string }}
    */
   async signPQ(data, privateKey) {
+    // UC-24: never produce a simulated (false-assurance) signature on the live
+    // trust path unless the operator has explicitly enabled the PQC demo.
+    this._assertPqcDemoEnabled();
     if (!this.pqasEnabled) throw new Error('PQAS is disabled.');
     if (!privateKey.startsWith('mfq7_dilithium5_priv_')) {
       throw new Error('Invalid Post-Quantum private key format.');

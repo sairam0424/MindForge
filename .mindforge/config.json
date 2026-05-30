@@ -5,7 +5,7 @@
     "drift_threshold": 0.75,
     "critical_drift_threshold": 0.5,
     "res_threshold": 0.8,
-    "active_did": "did:mindforge:dcc85c83-b993-43f0-8584-293138f9f5ca"
+    "active_did": "did:mindforge:9c531f57-2fc5-46a2-8857-82dd473da217"
   },
   "revops": {
     "market_registry": {
@@ -56,9 +56,12 @@
     "premium_fallback_model": "claude-opus-4-7"
   },
   "security": {
-    "pqas_enabled": true,
+    "pqas_enabled": false,
     "enclave_tier": 2,
     "provider": "simulated-lattice"
+  },
+  "experimental": {
+    "pqc_demo": false
   },
   "mesh": {
     "node_id": "beta-node",
