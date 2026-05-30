@@ -10,6 +10,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { AuditRotator } = require('../utils/file-io');
 const { createAppendQueue } = require('../utils/append-queue');
+const { hashAuditEntry } = require('../governance/audit-hash');
 
 const FLUSH_INTERVAL_MS = 100;
 const FLUSH_THRESHOLD = 10;
@@ -18,18 +19,15 @@ const rotator = new AuditRotator({ maxLines: 5000 });
 
 /**
  * Computes the SHA-256 hash of an entry chained to its predecessor (UC-04).
- * CRITICAL INVARIANT: the hash material MUST be byte-identical to the verifier
- * (bin/governance/audit-verifier.js). The material is JSON.stringify({...entry,
- * previous_hash}) where `entry` does NOT yet contain `_hash`. The verifier strips
- * `_hash` from the stored entry to reproduce exactly this material. Do not reorder
- * keys or include `_hash` here.
+ * Delegates to the canonical {@link hashAuditEntry} (bin/governance/audit-hash.js)
+ * so the writer and verifier share ONE hasher — material drift is impossible.
+ * The material is {...entry, previous_hash} where `entry` does NOT contain `_hash`.
  * @param {object} entry — buffered entry WITHOUT a `_hash` field
  * @param {string|null} previousHash — prior entry's `_hash` (null for the first link)
  * @returns {string} hex-encoded SHA-256 digest
  */
 function hashEntry(entry, previousHash) {
-  const material = JSON.stringify({ ...entry, previous_hash: previousHash });
-  return crypto.createHash('sha256').update(material).digest('hex');
+  return hashAuditEntry(entry, previousHash);
 }
 
 /**

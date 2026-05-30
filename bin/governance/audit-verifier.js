@@ -14,18 +14,19 @@
  * order, so {...rest, previous_hash} reproduces the writer's material exactly.
  */
 const fs = require('fs');
-const crypto = require('crypto');
+const { hashAuditEntry } = require('./audit-hash');
 
 /**
- * Re-derives an entry's chained hash. Excludes `_hash` from the material.
+ * Re-derives an entry's chained hash. Excludes `_hash` from the material by
+ * stripping it, then delegating to the canonical {@link hashAuditEntry} so the
+ * writer and verifier share ONE hasher (no material drift possible).
  * @param {object} entry — stored entry (may include `_hash`, which is stripped)
  * @param {string|null} previousHash — prior entry's `_hash` (null for the first link)
  * @returns {string} hex-encoded SHA-256 digest
  */
 function hashEntry(entry, previousHash) {
   const { _hash, ...rest } = entry; // exclude _hash from material
-  const material = JSON.stringify({ ...rest, previous_hash: previousHash });
-  return crypto.createHash('sha256').update(material).digest('hex');
+  return hashAuditEntry(rest, previousHash);
 }
 
 /**

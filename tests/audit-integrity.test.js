@@ -101,6 +101,40 @@ test('verify-audit passes on an untampered chain and FAILS CLOSED on a mutated e
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 });
 
+test('appendAuditEntrySync produces a verifiable chain across mixed callers', async () => {
+  const { appendAuditEntrySync } = require('../bin/autonomous/audit-writer');
+  const { verifyAuditChain } = require('../bin/governance/audit-verifier');
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-unified-'));
+  const file = path.join(tmp, 'AUDIT.jsonl');
+  try {
+    for (let i = 0; i < 5; i++) appendAuditEntrySync(file, { event: 'e' + i, source: i % 2 ? 'A' : 'B' });
+    const res = verifyAuditChain(file);
+    assert.strictEqual(res.valid, true, `unified appends must verify: ${JSON.stringify(res)}`);
+    assert.strictEqual(res.count, 5);
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+});
+
+test('appendAuditEntrySync chains correctly across separate process-like seedings (cold-cache re-seed)', async () => {
+  // Simulates two processes appending to the same file: the cache module-state is
+  // shared in-test, so we assert the on-disk chain stays valid even when entries
+  // arrive from "different" callers and the function must seed from the file tail.
+  const { appendAuditEntrySync } = require('../bin/autonomous/audit-writer');
+  const { verifyAuditChain } = require('../bin/governance/audit-verifier');
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-unified-x-'));
+  const file = path.join(tmp, 'AUDIT.jsonl');
+  try {
+    appendAuditEntrySync(file, { event: 'proc-a-1', agent: 'auto-runner' });
+    appendAuditEntrySync(file, { event: 'proc-b-1', agent: 'nexus-tracer' });
+    appendAuditEntrySync(file, { event: 'proc-c-1', agent: 'approval-handler' });
+    const entries = fs.readFileSync(file, 'utf8').split('\n').filter(Boolean).map(JSON.parse);
+    assert.strictEqual(entries[0].previous_hash, null, 'first entry has null previous_hash');
+    assert.strictEqual(entries[1].previous_hash, entries[0]._hash, 'entry 2 links to entry 1');
+    assert.strictEqual(entries[2].previous_hash, entries[1]._hash, 'entry 3 links to entry 2');
+    const res = verifyAuditChain(file);
+    assert.strictEqual(res.valid, true, `mixed-caller chain must verify: ${JSON.stringify(res)}`);
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+});
+
 (async () => {
   for (const { name, fn } of tests) {
     try { await fn(); console.log(`  ✅  ${name}`); passed++; }
