@@ -64,7 +64,7 @@ if (!valid) console.error(errors);
 - The SDK operates on local files and provides no network authentication. Do not expose SDK
   endpoints to the public internet.
 
-## New in v11.0.0
+## New in v11.1.0
 
 ### Additional exports
 
