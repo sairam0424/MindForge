@@ -45,9 +45,14 @@ class AnthropicProvider {
 
             const inputTokens = json.usage.input_tokens;
             const outputTokens = json.usage.output_tokens;
-            
-            // Basic cost calculation (Sonnet 3.5 prices)
-            const cost = (inputTokens * 0.000003) + (outputTokens * 0.000015);
+
+            const { priceCall } = require('./pricing-registry');
+            const cost = priceCall(json.model, {
+              input_tokens: inputTokens,
+              output_tokens: outputTokens,
+              cache_read_input_tokens: json.usage.cache_read_input_tokens || 0,
+              cache_creation_input_tokens: json.usage.cache_creation_input_tokens || 0,
+            });
 
             resolve({
               model: json.model,
