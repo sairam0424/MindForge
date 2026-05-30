@@ -47,9 +47,15 @@ function lazyRequire(cached, modulePath) {
 /**
  * UC-14: Pure timeout predicate evaluated at wave boundaries.
  *
- * A falsy `timeoutAt` (null / undefined / '') means NO timeout is configured —
- * autonomous mode never times out in that case. Otherwise the run is considered
- * timed out once `now` strictly exceeds the parsed `timeout_at` instant.
+ * Three cases:
+ *   1. falsy `timeoutAt` (null / undefined / '') → NO timeout is configured →
+ *      false. Autonomous mode never times out in that case.
+ *   2. truthy but UNPARSEABLE deadline (`Date.parse` → NaN, e.g. 'garbage') → a
+ *      MALFORMED deadline. We FAIL CLOSED: warn to stderr AND return true (treat
+ *      as expired). For a stability/bounding feature, a broken deadline silently
+ *      never firing would let a run proceed UNBOUNDED — the wrong direction. A
+ *      malformed deadline must be VISIBLE and must HALT, not silently fail open.
+ *   3. valid date → `now > parsed` (timed out once `now` strictly exceeds it).
  *
  * `Date.now()` is the sane default for a RUNTIME comparison (unlike the council
  * UC, which avoided `Date.now()` only for deterministic/resumable FILENAMES — a
@@ -57,13 +63,23 @@ function lazyRequire(cached, modulePath) {
  * run-loop should still pass an explicit `now` for testability/consistency within
  * a single iteration.
  *
+ * NOTE: this is otherwise a PURE function (used directly in tests). The only
+ * side-effect is the diagnostic stderr write on the malformed branch — never on
+ * the falsy or valid-date paths — so existing pure assertions are unaffected.
+ *
  * @param {string|null|undefined} timeoutAt — ISO-8601 deadline, or falsy for "no timeout"
  * @param {number} [now=Date.now()] — Epoch ms to compare against
- * @returns {boolean} true iff a deadline is set AND it has passed
+ * @returns {boolean} true iff a deadline is set AND it has passed (or is malformed)
  */
 function isTimedOut(timeoutAt, now = Date.now()) {
   if (!timeoutAt) return false;
-  return now > Date.parse(timeoutAt);
+  const parsed = Date.parse(timeoutAt);
+  if (Number.isNaN(parsed)) {
+    // Malformed deadline → fail CLOSED (visible + halt), never silently fail open.
+    process.stderr.write(`[auto-runner] malformed timeout_at "${timeoutAt}" — treating as expired to fail closed\n`);
+    return true;
+  }
+  return now > parsed;
 }
 
 /**
@@ -439,6 +455,11 @@ class AutoRunner {
     // hasCommitTracking is hard-false: no per-wave SHA tracking exists yet.
     const decision = decideRollback(config, /* hasCommitTracking */ false);
 
+    // DRY: derive the flag from the `config` we ALREADY read above instead of
+    // calling _rollbackOnEscalate(), which would re-read + re-parse the SAME
+    // config.json a second time within this single escalation path.
+    const rollbackEnabled = config?.wave_execution?.rollback_on_escalate === true;
+
     this.writeAudit({
       event: 'rollback_point_recorded',
       phase: this.phase,
@@ -450,7 +471,7 @@ class AutoRunner {
       timestamp: new Date().toISOString(),
     });
     console.warn(`↩️  ROLLBACK POINT recorded at wave ${waveNum} (task ${taskId}): ${decision.reason}`);
-    if (this._rollbackOnEscalate() && !decision.gitReset) {
+    if (rollbackEnabled && !decision.gitReset) {
       console.warn('   (rollback_on_escalate is ON, but actual git reset is deferred until per-wave commit tracking exists.)');
     }
     return decision;

@@ -11,6 +11,17 @@ test('isTimedOut returns true when now exceeds timeout_at', () => {
   assert.strictEqual(isTimedOut(undefined, Date.parse('2026-01-01T00:00:00Z')), false);
 });
 
+// ── UC-14 review: MALFORMED timeout_at must fail CLOSED (visible, not silent) ──
+// A truthy-but-unparseable deadline (Date.parse → NaN) must NOT silently fail
+// open (which would let the run proceed UNBOUNDED). It must be treated as
+// expired so a broken deadline HALTS the run. Empty string is falsy → no timeout.
+test('isTimedOut fails CLOSED on malformed timeout_at, treats empty string as no-timeout', () => {
+  const { isTimedOut } = require('../bin/autonomous/auto-runner');
+  const now = Date.parse('2026-01-01T00:00:00Z');
+  assert.strictEqual(isTimedOut('garbage', now), true, 'malformed deadline → fail closed (true)');
+  assert.strictEqual(isTimedOut('', now), false, 'empty string is falsy → no timeout configured (false)');
+});
+
 // ── UC-14: rollback decision (pure) — SAFE DEFAULT is record-intent-only ───────
 
 test('decideRollback DEFAULT (flag off) records intent, NEVER mutates git', () => {
@@ -75,6 +86,40 @@ test('_enforceWaveTimeout stops cleanly: status=timeout, resumable state, audit 
     const audit = fs.readFileSync(path.join(planningDir, 'AUDIT.jsonl'), 'utf8').trim().split('\n')
       .map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
     assert.ok(audit.some(e => e.event === 'auto_mode_timeout'), 'an auto_mode_timeout audit event must be written');
+  } finally {
+    process.chdir(prevCwd);
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test('_enforceWaveTimeout FAILS CLOSED on a malformed timeout_at (status=timeout, not unbounded)', () => {
+  const fs = require('fs');
+  const os = require('os');
+  const path = require('path');
+  const AutoRunner = require('../bin/autonomous/auto-runner');
+
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-uc14-malformed-'));
+  const planningDir = path.join(tmp, '.planning');
+  fs.mkdirSync(planningDir, { recursive: true });
+  // auto-state with a MALFORMED timeout_at → must fail closed (trip the boundary).
+  fs.writeFileSync(
+    path.join(planningDir, 'auto-state.json'),
+    JSON.stringify({ status: 'running', timeout_at: 'not-a-real-date' })
+  );
+
+  const prevCwd = process.cwd();
+  try {
+    process.chdir(tmp);
+    const runner = new AutoRunner({ phase: 1 });
+    runner.waves = [{ wave: 0, tasks: [{ id: 'A' }] }];
+    runner.currentWaveIndex = 0;
+    runner.completedTasks = new Set();
+
+    const tripped = runner._enforceWaveTimeout();
+    assert.strictEqual(tripped, true, 'malformed deadline must fail closed and stop the run');
+
+    const state = JSON.parse(fs.readFileSync(path.join(planningDir, 'auto-state.json'), 'utf8'));
+    assert.strictEqual(state.status, 'timeout', 'malformed deadline must flip status to timeout');
   } finally {
     process.chdir(prevCwd);
     fs.rmSync(tmp, { recursive: true, force: true });
