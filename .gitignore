@@ -41,6 +41,12 @@ MIND-FORGE-V6-ENTERPRISE-PROPOSAL.md
 ROADMAP_V7.md
 
 .mindforge/*.db
+.mindforge/*.db-journal
+.mindforge/*.db-wal
+.mindforge/*.db-shm
+# Transient atomic-write temp files (UC-09 durable writes: tmp + rename)
+.mindforge/*.tmp.*
+*.tmp.[0-9]*
 .mindforge/memory/sync-manifest.json
 # Runtime auth tokens (generated at server startup, never commit)
 .mindforge/.dashboard-token
