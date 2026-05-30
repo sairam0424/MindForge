@@ -120,8 +120,9 @@ jobs:
             echo "::notice::No root or SDK tsconfig - skipping type check"
           fi
 
-      - name: Lint
+      - name: Lint (fail on error)
         run: |
+          npx eslint . --max-warnings=9999
           if [ -d "sdk" ] && ( [ -f "sdk/eslint.config.js" ] || [ -f "sdk/eslint.config.mjs" ] || [ -f "sdk/.eslintrc.json" ] || [ -f "sdk/.eslintrc.js" ] ); then
             cd sdk && npx eslint src/ --max-warnings 0 && cd ..
           else
