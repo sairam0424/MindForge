@@ -194,7 +194,7 @@ class AutoRunner {
     // UC-01: fail closed on version drift before any wave executes
     try {
       const { assertVersionConsistency } = require('../utils/version-check');
-      assertVersionConsistency(this.projectRoot || process.cwd());
+      assertVersionConsistency(process.cwd());
     } catch (e) {
       throw new Error(`[pre-flight] ${e.message}`);
     }
