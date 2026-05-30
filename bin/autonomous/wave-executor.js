@@ -6,6 +6,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const { buildGraph, groupIntoWaves } = require('./dependency-dag');
 
 /**
  * Semaphore for bounding concurrency within a wave.
@@ -64,10 +65,19 @@ function createWaveExecutor(config = {}) {
   /**
    * Groups handoff tasks into sequential waves based on wave field or dependency topology.
    * Returns a new array of wave objects — does not mutate input.
+   *
+   * Resolution order (UC-03):
+   *   1. Explicit numeric `.wave` field ALWAYS wins (legacy behavior, unchanged).
+   *   2. Else if `options.useDag === true` (OPT-IN), order by `depends_on` via Kahn
+   *      topological sort. Halts loud (throws) on cycles or unknown dependencies.
+   *   3. Else (legacy default), all tasks in a single parallel wave (unchanged).
+   *
+   * DAG ordering is OPT-IN to avoid silently reordering existing PLAN files.
    * @param {Array} handoffs — Raw handoffs array from HANDOFF.json
+   * @param {object} [options] — { useDag?: boolean }
    * @returns {Array<{ wave: number, tasks: Array }>}
    */
-  function planWaves(handoffs) {
+  function planWaves(handoffs, options = {}) {
     if (!Array.isArray(handoffs) || handoffs.length === 0) {
       waves = [];
       return [];
@@ -86,6 +96,15 @@ function createWaveExecutor(config = {}) {
       waves = Array.from(byWave.entries())
         .sort((a, b) => a[0] - b[0])
         .map(([waveNum, tasks]) => Object.freeze({ wave: waveNum, tasks: Object.freeze(tasks) }));
+    } else if (options.useDag === true) {
+      const normalized = handoffs.map(normalizeTask);
+      const graph = buildGraph(normalized);
+      const waveIds = groupIntoWaves(graph);
+      const byId = new Map(normalized.map(t => [t.id, t]));
+      waves = waveIds.map((ids, i) => Object.freeze({
+        wave: i,
+        tasks: Object.freeze(ids.map(id => byId.get(id))),
+      }));
     } else {
       // Single wave with all tasks
       waves = [Object.freeze({
