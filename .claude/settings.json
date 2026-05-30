@@ -10,6 +10,16 @@
             "timeout": 10000
           }
         ]
+      },
+      {
+        "matcher": "Bash|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node bin/hooks/instinct-capture-hook.js",
+            "timeout": 5000
+          }
+        ]
       }
     ],
     "PreToolUse": [
