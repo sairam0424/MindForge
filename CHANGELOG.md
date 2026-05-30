@@ -1,5 +1,59 @@
 # Changelog
 
+## [11.1.0] - 2026-05-31 — "Beast Mode"
+
+### Added
+
+- **Pillar I — Integrity & Trust**
+  - `bin/utils/append-queue.js`: single-writer fsync'd append queue for concurrent-safe durable writes (UC-09)
+  - `bin/governance/audit-hash.js`: single canonical SHA-256 hasher shared by writer + verifier (UC-04)
+  - `bin/governance/audit-verifier.js` + `bin/verify-audit.js` CLI: fail-closed hash-chain verifier (`exit 1` on any break) (UC-04)
+  - All 7 audit-write paths unified through `appendAuditEntrySync` — the audit log is now genuinely tamper-evident with a verifiable prev-hash chain (UC-04b)
+  - Simulated PQC demoted: `pqas_enabled=false` by default, gated behind `experimental.pqc_demo`; Tier-3 uses real Ed25519 (UC-24)
+
+- **Pillar II — Orchestration Correctness**
+  - `bin/autonomous/dependency-dag.js`: real Kahn topological sort + cycle detection, ported from test-only to the engine (UC-03)
+  - `planWaves(handoffs, {useDag:true})` opt-in DAG wave planning — explicit `.wave` always wins, legacy default unchanged (UC-03)
+  - Pre-flight cycle detection halts loud before any wave executes (UC-03)
+  - Wave-boundary timeout enforcement: `isTimedOut` + status `'timeout'` + resumable state (UC-14)
+  - Opt-in rollback hook records intent on terminal ESCALATE (no auto git-reset by default) (UC-14)
+  - `bin/engine/council-runtime.js`: minimal 4-voice council runtime (ADS loop) with injectable model, consensus scoring, dissent capture (UC-10)
+
+- **Pillar III — Cost-Aware Routing**
+  - `bin/models/pricing-registry.js`: single source of truth for model pricing, loaded from `config.json` market_registry (UC-05)
+  - All 3 providers routed through the registry — hardcoded pricing eliminated (UC-05)
+  - Prompt-cache accounting: `cache_control:{type:'ephemeral'}` on system blocks, `cache_read`/`cache_creation` parsed + priced at ~10% input rate (UC-21)
+  - `bin/models/difficulty-scorer.js`: heuristic 1-10 scorer with Tier-3 floor (UC-06)
+  - Shadow-mode difficulty routing: logs intended model without changing actual selection (UC-06)
+
+- **Pillar IV — Native Alignment + Observability**
+  - `.claude/settings.json` with hooks under real native events (`PostToolUse`/`PreToolUse`/`SessionStart`) — the security guard and context monitor now actually fire (UC-19a)
+  - `bin/hooks/instinct-capture-hook.js`: auto-captures behavioral patterns via PostToolUse, respects session limit (UC-11)
+  - `bin/engine/otel-exporter.js`: optional OTel GenAI exporter mapping NexusTracer spans to `gen_ai.*` semantic conventions, gated behind `OTEL_EXPORTER_OTLP_ENDPOINT` (UC-18)
+  - `bin/memory/retrieval-fusion.js`: Reciprocal Rank Fusion (RRF) over knowledge-graph + BM25 retrieval paths, replacing incomparable linear blends (UC-20)
+
+### Fixed
+
+- Audit-writer `close()` data-loss bug: threshold-triggered flushes were un-awaited, losing up to 10 entries on close (UC-09)
+- Audit-writer flush failure no longer crashes the process via unhandled rejection — logs to stderr (UC-09)
+- Vector-hub exit guard: `_dirty` boolean → pending-saves counter, closing a window where scheduled-but-unwritten saves were lost on hard exit (UC-09)
+- `isTimedOut` fails CLOSED on malformed `timeout_at` (garbage deadline = halt, not run unbounded) (UC-14)
+- Council position validation rejects NaN confidence / invalid recommendations (UC-10)
+- Dissent is now captured under NO_CONSENSUS verdict (the deadlock case where it matters most) (UC-10)
+- Pre-flight DAG check only cycle-checks stable-id tasks (id-less tasks can't be dependency targets) (UC-03)
+- `groupIntoWaves` self-defends: dangling dep throws "Unknown dependency" (not misleading "Circular") (UC-03)
+
+### Changed
+
+- Audit rotation retired (it broke the hash chain at every 5000-line boundary); AUDIT.jsonl grows unbounded for now — chain-aware compaction is a deferred future feature (UC-04b)
+- `knowledge-store.js` appends now use `appendDurableSync` (openSync+writeSync+fsyncSync+closeSync) for guaranteed durability (UC-09)
+- `auto-shadow.js` `generateShadowContext()` now fuses retrieval paths via RRF instead of a single-path linear blend (UC-20)
+
+### Removed
+
+- Orphaned `createAuditWriter` buffered path (zero production callers after UC-04b unification)
+- Hardcoded per-token pricing from `anthropic-provider.js`, `openai-provider.js`, `gemini-provider.js` (replaced by PricingRegistry)
+
 ## [11.0.1] - 2026-05-30 — "Stability Patch"
 
 ### Fixed

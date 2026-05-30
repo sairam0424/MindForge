@@ -46,7 +46,7 @@ function createTempConfig(storePath, maxCapture = 5) {
   const configDir = path.join(os.tmpdir(), `mf-config-test-${Date.now()}`, '.mindforge');
   fs.mkdirSync(configDir, { recursive: true });
   const config = {
-    version: '11.0.1',
+    version: '11.1.0',
     instincts: {
       mode: 'auto-capture',
       max_capture_per_session: maxCapture,

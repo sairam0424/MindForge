@@ -1,5 +1,5 @@
 /**
- * MindForge v11.0.1 — Version Consistency Tests
+ * MindForge v11.1.0 — Version Consistency Tests
  * Asserts every declared version agrees, and that the migration writes the live config.
  * Run: node tests/version-consistency.test.js
  */
@@ -85,7 +85,7 @@ test('assertVersionConsistency throws on a synthetic drift fixture', () => {
   const { assertVersionConsistency } = require('../bin/utils/version-check');
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-drift-'));
   try {
-    fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify({ version: '11.0.1' }));
+    fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify({ version: '11.1.0' }));
     fs.mkdirSync(path.join(tmp, '.mindforge'), { recursive: true });
     fs.writeFileSync(path.join(tmp, '.mindforge', 'config.json'), JSON.stringify({ version: '10.7.0' }));
     assert.throws(() => assertVersionConsistency(tmp), /Version drift detected/);
