@@ -73,7 +73,7 @@ import {
   MindForgeClient,
   MindForgeEventStream,
   WebSocketEventStream,
-  VERSION,              // '11.0.0'
+  VERSION,              // '11.0.1'
 } from 'mindforge-sdk';
 
 import type {

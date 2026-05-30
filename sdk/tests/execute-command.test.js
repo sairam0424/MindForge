@@ -26,7 +26,7 @@ const client = new MindForgeClient({ projectRoot: path.resolve(__dirname, '..', 
 
 test('batchExecute runs a real process and captures stdout', async () => {
   const res = await client.batchExecute({
-    tasks: [{ id: 't1', command: 'node', options: { args: ['-e', "process.stdout.write('REAL_OUTPUT')"] } }],
+    tasks: [{ id: 't1', command: 'node', options: { args: ['-e', 'process.stdout.write(\'REAL_OUTPUT\')'] } }],
     maxConcurrency: 1,
   });
   const t1 = res.results.find(r => r.taskId === 't1');
