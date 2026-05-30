@@ -1,5 +1,13 @@
 # Changelog
 
+## [11.0.1] - 2026-05-30 — "Stability Patch"
+
+### Fixed
+
+- **Version drift**: reconciled `.mindforge/config.json` (was 10.7.0) with the 11.x line; added a fail-closed pre-flight version-consistency assertion (`bin/utils/version-check.js`) and a regression test that runs the migration and asserts its post-state, so the drift cannot silently return. (UC-01)
+- **Lint & dead code**: resolved all 109 ESLint errors, removed orphaned `bin/dashboard/team-tracker.js`, and made CI fail on any lint error. Fixed a latent `no-const-assign` runtime crash in `bin/review/ads-engine.js`. (UC-02)
+- **SDK `executeCommand` no-op**: replaced the published no-op stub (which made `batchExecute` report every task "fulfilled" while executing nothing) with a real `child_process.spawn` executor with stdout/stderr capture, timeout (SIGTERM→SIGKILL), and exit-code propagation; added a regression test against the compiled dist. (UC-07a)
+
 ## [11.0.0] - 2026-05-28 — "Sovereign Stability"
 
 ### Breaking Changes
