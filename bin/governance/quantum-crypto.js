@@ -24,8 +24,11 @@ class QuantumCrypto {
   constructor() {
     this.providerId = configManager.get('security.provider', 'simulated-lattice');
     // UC-24: simulated PQC is OFF the live trust path by default. Real PQC has
-    // not shipped, so pqas_enabled defaults to false and the simulated path is
-    // additionally gated behind the explicit experimental.pqc_demo opt-in.
+    // not shipped. The simulated path is gated SOLELY behind the explicit
+    // experimental.pqc_demo opt-in (read fresh via isPqcDemoEnabled), so there
+    // is exactly one switch controlling the simulated minter. The legacy
+    // security.pqas_enabled flag is retained for provider metadata only and
+    // MUST NOT independently gate minting (see getProvider).
     this.pqasEnabled = configManager.get('security.pqas_enabled', false);
   }
 
@@ -53,10 +56,13 @@ class QuantumCrypto {
    * Returns the current active crypto provider.
    */
   getProvider() {
-    // In v7, this would resolve to a real provider like 'oqs-provider.js'
+    // In v7, this would resolve to a real provider like 'oqs-provider.js'.
+    // Read pqas_enabled FRESH from config (not the constructor cache) for
+    // symmetry with the demo gate. This is metadata only — it does NOT gate
+    // minting; experimental.pqc_demo is the single source of truth for that.
     return {
       id: this.providerId,
-      pqas_enabled: this.pqasEnabled,
+      pqas_enabled: configManager.get('security.pqas_enabled', false),
       algorithm: 'Dilithium-5'
     };
   }
@@ -65,10 +71,10 @@ class QuantumCrypto {
    * Generates a key pair using the configured PQ provider.
    */
   async generateLatticeKeyPair() {
-    // UC-24: simulated keys are demo-only. Refuse to mint them on the live
-    // trust path unless the operator has explicitly opted in.
+    // UC-24: simulated keys are demo-only. The SINGLE gate is the fresh-read
+    // experimental.pqc_demo flag — enabling it is sufficient to mint, and
+    // disabling it fails closed. security.pqas_enabled does NOT gate this.
     this._assertPqcDemoEnabled();
-    if (!this.pqasEnabled) throw new Error('PQAS is disabled in configuration.');
 
     // Simulate high-entropy lattice seeds
     const seed = crypto.randomBytes(64).toString('hex');
@@ -90,9 +96,10 @@ class QuantumCrypto {
    */
   async signPQ(data, privateKey) {
     // UC-24: never produce a simulated (false-assurance) signature on the live
-    // trust path unless the operator has explicitly enabled the PQC demo.
+    // trust path. The SINGLE gate is the fresh-read experimental.pqc_demo flag
+    // (same flag _selectProvider routes on) — security.pqas_enabled does NOT
+    // independently block signing.
     this._assertPqcDemoEnabled();
-    if (!this.pqasEnabled) throw new Error('PQAS is disabled.');
     if (!privateKey.startsWith('mfq7_dilithium5_priv_')) {
       throw new Error('Invalid Post-Quantum private key format.');
     }
@@ -131,19 +138,27 @@ class QuantumCrypto {
   }
 
   /**
-   * Generates a simulated ZK-Proof of policy adherence.
-   * This mimics a SNARK where the agent proves it ran the PolicyEngine rules.
+   * Generates a SIMULATED ZK-Proof of policy adherence.
+   * This mimics a SNARK where the agent proves it ran the PolicyEngine rules,
+   * but it is NOT a real zero-knowledge proof. The returned token is explicitly
+   * stamped with a `sim` marker (zkp_v1_sim_...) so downstream code and audit
+   * logs can never mistake it for a real SNARK. It remains inert by default —
+   * verifyZKProof DENYs unless an external verifier module is configured.
+   * @returns {string} A simulated ZK-proof token prefixed `zkp_v1_sim_`.
    */
   generateZKProof(intent, result) {
     const proofPayload = JSON.stringify({
       intent: intent.id,
       verdict: result.verdict,
       timestamp: Date.now(),
-      entropy: crypto.randomBytes(16).toString('hex')
+      entropy: crypto.randomBytes(16).toString('hex'),
+      simulated: true
     });
 
     const hash = crypto.createHash('sha256').update(proofPayload).digest('hex');
-    return `zkp_v1_${hash}_${crypto.randomBytes(32).toString('base64')}`;
+    // `sim` marker is embedded AFTER the `zkp_v1_` prefix so the existing
+    // format check (startsWith 'zkp_v1_') and any external verifier still work.
+    return `zkp_v1_sim_${hash}_${crypto.randomBytes(32).toString('base64')}`;
   }
 
   verifyZKProof(proof, intentId) {

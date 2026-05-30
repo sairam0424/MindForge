@@ -52,6 +52,55 @@ test('Tier-3 signing uses real Ed25519 by default (verifiable round-trip, not si
     'Tampered payload must fail verification under real Ed25519');
 });
 
+test('enabling only experimental.pqc_demo activates the simulated path without a second flag (no misleading throw)', async () => {
+  // I-1/I-2/M-4: experimental.pqc_demo is the SINGLE source of truth for the
+  // simulated minter. With ONLY pqc_demo on (security.pqas_enabled left at its
+  // default false), minting must NOT throw a misleading "PQAS disabled" error.
+  const configManager = require('../bin/governance/config-manager');
+  const quantumCrypto = require('../bin/governance/quantum-crypto');
+  // generateLatticeKeyPair is async, so assert on the Promise (doesNotReject).
+  const origExp = JSON.parse(JSON.stringify(configManager.config.experimental || {}));
+  const origCachedPqas = quantumCrypto.pqasEnabled;
+  try {
+    // Force demo ON in-memory only (no disk write). Deliberately do NOT touch
+    // pqas_enabled — prove a single flag is sufficient. Also leave the stale
+    // constructor cache as-is to prove it no longer gates minting.
+    configManager.config.experimental = { ...(configManager.config.experimental || {}), pqc_demo: true };
+    quantumCrypto.pqasEnabled = false; // stale cache must NOT block minting
+    await assert.doesNotReject(
+      () => quantumCrypto.generateLatticeKeyPair(),
+      'with pqc_demo=true the simulated minter must work without requiring a second flag (pqas_enabled)'
+    );
+  } finally {
+    configManager.config.experimental = origExp; // restore in-memory state
+    quantumCrypto.pqasEnabled = origCachedPqas;
+  }
+});
+
+test('with experimental.pqc_demo=false (default) the simulated minter throws (fail-closed)', async () => {
+  // Default config has pqc_demo=false, so the minter must reject regardless of
+  // any other flag — confirming the consolidated gate fails closed.
+  const quantumCrypto = require('../bin/governance/quantum-crypto');
+  await assert.rejects(
+    () => quantumCrypto.generateLatticeKeyPair(),
+    /PQC demo disabled/,
+    'with pqc_demo=false the simulated minter must fail closed'
+  );
+});
+
+test('generateZKProof self-labels as simulated (zkp_v1_sim_ marker, no false SNARK assurance)', () => {
+  // M-1: the simulated ZK token must be honestly marked while remaining a valid
+  // zkp_v1_ token so the existing format check / verifier path still works.
+  const quantumCrypto = require('../bin/governance/quantum-crypto');
+  const proof = quantumCrypto.generateZKProof({ id: 'intent_test' }, { verdict: 'ALLOW' });
+  assert.strictEqual(typeof proof, 'string', 'ZK proof must be a string token');
+  assert.ok(proof.startsWith('zkp_v1_'), 'simulated ZK token must still pass the zkp_v1_ format gate');
+  assert.ok(/zkp_v1_sim_/.test(proof), 'simulated ZK token must carry the explicit sim marker');
+  // It must remain inert by default: verifyZKProof DENYs without a verifier.
+  const result = quantumCrypto.verifyZKProof(proof, 'intent_test');
+  assert.strictEqual(result.verified, false, 'simulated ZK proof must DENY by default (no verifier configured)');
+});
+
 (async () => {
   for (const { name, fn } of tests) {
     try { await fn(); console.log(`  ✅  ${name}`); passed++; }
