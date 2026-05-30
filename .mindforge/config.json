@@ -5,7 +5,7 @@
     "drift_threshold": 0.75,
     "critical_drift_threshold": 0.5,
     "res_threshold": 0.8,
-    "active_did": "did:mindforge:9c531f57-2fc5-46a2-8857-82dd473da217"
+    "active_did": "did:mindforge:acd66af6-db5e-4c5f-87d2-6a4ee2f5944d"
   },
   "revops": {
     "market_registry": {
@@ -18,6 +18,8 @@
       "claude-sonnet-4-6": {
         "cost_input": 0.003,
         "cost_output": 0.015,
+        "cost_cache_read": 0.0003,
+        "cost_cache_creation": 0.00375,
         "benchmark": 99,
         "provider": "Anthropic"
       },
@@ -42,12 +44,16 @@
       "claude-haiku-4-5": {
         "cost_input": 0.0002,
         "cost_output": 0.0004,
+        "cost_cache_read": 0.00002,
+        "cost_cache_creation": 0.00025,
         "benchmark": 82,
         "provider": "Anthropic"
       },
       "claude-opus-4-7": {
         "cost_input": 0.015,
         "cost_output": 0.075,
+        "cost_cache_read": 0.0015,
+        "cost_cache_creation": 0.01875,
         "benchmark": 100,
         "provider": "Anthropic"
       }
