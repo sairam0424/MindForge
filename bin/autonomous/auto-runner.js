@@ -190,6 +190,15 @@ class AutoRunner {
 
   runPreFlight() {
     console.log('🔍 Running pre-flight checks...');
+
+    // UC-01: fail closed on version drift before any wave executes
+    try {
+      const { assertVersionConsistency } = require('../utils/version-check');
+      assertVersionConsistency(this.projectRoot || process.cwd());
+    } catch (e) {
+      throw new Error(`[pre-flight] ${e.message}`);
+    }
+
     const handoff = this.stateManager.readHandoff();
     this.waves = this._buildWaves(handoff.handoffs);
     this.currentWaveIndex = 0;

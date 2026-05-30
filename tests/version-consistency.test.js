@@ -57,16 +57,37 @@ test('RELEASENOTES.md contains no stale 10.0.1 version example', () => {
 test('10.7.0-to-11.0.0 migration sets config.version to target in a temp project', () => {
   const { migrate, TARGET_VERSION } = require('../bin/migrations/10.7.0-to-11.0.0');
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-migr-'));
-  try {
-    fs.mkdirSync(path.join(tmp, '.mindforge'), { recursive: true });
-    const cfgPath = path.join(tmp, '.mindforge', 'config.json');
-    fs.writeFileSync(cfgPath, JSON.stringify({ version: '10.7.0' }, null, 2));
+  fs.mkdirSync(path.join(tmp, '.mindforge'), { recursive: true });
+  const cfgPath = path.join(tmp, '.mindforge', 'config.json');
+  fs.writeFileSync(cfgPath, JSON.stringify({ version: '10.7.0' }, null, 2));
 
-    return migrate(tmp).then(() => {
-      const after = readJson(cfgPath);
-      assert.strictEqual(after.version, TARGET_VERSION,
-        `migration must set config.version to ${TARGET_VERSION}, got ${after.version}`);
-    });
+  // Defer temp-dir cleanup until AFTER the async migration resolves; a
+  // synchronous finally{} would rmSync the dir before migrate()'s promise
+  // reads it back, racing the assertion into an ENOENT.
+  return migrate(tmp).then(() => {
+    const after = readJson(cfgPath);
+    assert.strictEqual(after.version, TARGET_VERSION,
+      `migration must set config.version to ${TARGET_VERSION}, got ${after.version}`);
+  }).finally(() => {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
+});
+
+// ── 3. version-check module behavior ────────────────────────────────────────
+test('checkVersionConsistency reports no drift on the live repo', () => {
+  const { checkVersionConsistency } = require('../bin/utils/version-check');
+  const { drift } = checkVersionConsistency(ROOT);
+  assert.strictEqual(drift.length, 0, `unexpected drift: ${drift.join('; ')}`);
+});
+
+test('assertVersionConsistency throws on a synthetic drift fixture', () => {
+  const { assertVersionConsistency } = require('../bin/utils/version-check');
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-drift-'));
+  try {
+    fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify({ version: '11.0.1' }));
+    fs.mkdirSync(path.join(tmp, '.mindforge'), { recursive: true });
+    fs.writeFileSync(path.join(tmp, '.mindforge', 'config.json'), JSON.stringify({ version: '10.7.0' }));
+    assert.throws(() => assertVersionConsistency(tmp), /Version drift detected/);
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }
