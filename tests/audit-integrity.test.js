@@ -8,85 +8,64 @@ const assert = require('assert');
 let passed = 0, failed = 0; const tests = [];
 function test(name, fn) { tests.push({ name, fn }); }
 
-test('audit-writer: 50 rapid writes all land as valid JSON lines (no interleave/loss)', async () => {
-  const { createAuditWriter } = require('../bin/autonomous/audit-writer');
+test('appendAuditEntrySync: 50 rapid writes all land as valid JSON lines (no loss)', () => {
+  // Durability (UC-09): appendAuditEntrySync is synchronous + fsync'd, so every
+  // acknowledged write is on disk when the call returns. 50 sequential appends must
+  // therefore yield exactly 50 valid JSON lines with no loss or corruption.
+  const { appendAuditEntrySync } = require('../bin/autonomous/audit-writer');
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-aw-'));
   const file = path.join(tmp, 'AUDIT.jsonl');
   try {
-    const w = createAuditWriter(file);
-    for (let i = 0; i < 50; i++) w.write({ event: 'task', n: i });
-    await w.close();
+    for (let i = 0; i < 50; i++) appendAuditEntrySync(file, { event: 'task', n: i });
     const lines = fs.readFileSync(file, 'utf8').split('\n').filter(Boolean);
     assert.strictEqual(lines.length, 50, `expected 50, got ${lines.length}`);
     lines.forEach(l => JSON.parse(l));
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 });
 
-test('audit-writer: durable flush failure is NON-FATAL (no unhandled rejection, no process exit)', async () => {
-  // Regression for Critical #1: flush() is called UN-AWAITED on the threshold
-  // (>=10 entries) and timer paths. If the durable write rejects (ENOSPC/EACCES/
-  // EIO/EROFS), the orphaned promise must NOT become an unhandledRejection that
-  // terminates the process. The .catch() inside flush() must absorb it.
-  const { createAuditWriter } = require('../bin/autonomous/audit-writer');
+test('appendAuditEntrySync: a failed durable write surfaces synchronously to the caller (not silently lost)', () => {
+  // appendAuditEntrySync is SYNCHRONOUS + fsync'd, so a write failure throws straight
+  // to the caller — there is no buffered/un-awaited flush that could swallow it into
+  // an unhandledRejection (the failure mode the retired buffered writer guarded
+  // against). This asserts the error is not silently dropped: a durably-acknowledged
+  // append either lands on disk or throws. We force ENOTDIR by making the path's
+  // DIRECTORY COMPONENT a regular file (deterministic on every platform — no chmod,
+  // no root-vs-non-root fragility).
+  const { appendAuditEntrySync } = require('../bin/autonomous/audit-writer');
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-aw-fail-'));
-
-  // Make a path whose DIRECTORY COMPONENT is actually a FILE — fs.open(..., 'a')
-  // then deterministically rejects with ENOTDIR on every platform (no chmod, no
-  // root-vs-non-root fragility). This drives the REAL production write path.
-  const blocker = path.join(tmp, 'blocker');
-  fs.writeFileSync(blocker, 'not a directory');
-  const unwritable = path.join(blocker, 'AUDIT.jsonl');
-
-  const unhandled = [];
-  const onUnhandled = (reason) => { unhandled.push(reason); };
-  process.on('unhandledRejection', onUnhandled);
-
   try {
-    const w = createAuditWriter(unwritable);
-
-    // Write enough entries to cross FLUSH_THRESHOLD (10) and trigger the
-    // UN-AWAITED threshold flush() — the exact crash path from the review.
-    for (let i = 0; i < 15; i++) w.write({ event: 'task', n: i });
-
-    // close() must resolve (or reject gracefully) WITHOUT crashing the process.
-    await assert.doesNotReject(async () => { await w.close(); },
-      'close() must resolve even when the durable write fails');
-
-    // Give any orphaned microtasks/rejections a tick to surface.
-    await new Promise(r => setTimeout(r, 50));
-
-    assert.strictEqual(unhandled.length, 0,
-      `durable flush failure must NOT produce an unhandledRejection (got ${unhandled.length})`);
-  } finally {
-    process.removeListener('unhandledRejection', onUnhandled);
-    fs.rmSync(tmp, { recursive: true, force: true });
-  }
+    const blocker = path.join(tmp, 'blocker');
+    fs.writeFileSync(blocker, 'not a directory');
+    const unwritable = path.join(blocker, 'sub', 'AUDIT.jsonl');
+    assert.throws(() => appendAuditEntrySync(unwritable, { event: 'task' }), /ENOTDIR|EEXIST|ENOENT/,
+      'a non-writable audit path must throw to the caller, not silently lose the write');
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 });
 
-test('audit-writer chains entries: each entry carries previous_hash linking to prior _hash', async () => {
-  const { createAuditWriter } = require('../bin/autonomous/audit-writer');
+test('appendAuditEntrySync chains entries: each entry carries previous_hash linking to prior _hash', () => {
+  const { appendAuditEntrySync } = require('../bin/autonomous/audit-writer');
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-chain-'));
   const file = path.join(tmp, 'AUDIT.jsonl');
   try {
-    const w = createAuditWriter(file);
-    w.write({ event: 'a' }); w.write({ event: 'b' }); w.write({ event: 'c' });
-    await w.close();
+    appendAuditEntrySync(file, { event: 'a' });
+    appendAuditEntrySync(file, { event: 'b' });
+    appendAuditEntrySync(file, { event: 'c' });
     const entries = fs.readFileSync(file, 'utf8').split('\n').filter(Boolean).map(JSON.parse);
     assert.ok(entries.every(e => typeof e._hash === 'string'), 'every entry has _hash');
+    assert.strictEqual(entries[0].previous_hash, null, 'first entry has null previous_hash');
     assert.strictEqual(entries[1].previous_hash, entries[0]._hash, 'entry 2 links to entry 1');
     assert.strictEqual(entries[2].previous_hash, entries[1]._hash, 'entry 3 links to entry 2');
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 });
 
-test('verify-audit passes on an untampered chain and FAILS CLOSED on a mutated entry', async () => {
-  const { createAuditWriter } = require('../bin/autonomous/audit-writer');
+test('verify-audit passes on an untampered chain and FAILS CLOSED on a mutated entry', () => {
+  const { appendAuditEntrySync } = require('../bin/autonomous/audit-writer');
   const { verifyAuditChain } = require('../bin/governance/audit-verifier');
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-verify-'));
   const file = path.join(tmp, 'AUDIT.jsonl');
   try {
-    const w = createAuditWriter(file);
-    w.write({ event: 'x' }); w.write({ event: 'y' });
-    await w.close();
+    appendAuditEntrySync(file, { event: 'x' });
+    appendAuditEntrySync(file, { event: 'y' });
     const clean = verifyAuditChain(file);
     assert.strictEqual(clean.valid, true, `clean chain must verify: ${JSON.stringify(clean)}`);
 
@@ -114,25 +93,49 @@ test('appendAuditEntrySync produces a verifiable chain across mixed callers', as
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 });
 
-test('appendAuditEntrySync chains correctly across separate process-like seedings (cold-cache re-seed)', async () => {
-  // Simulates two processes appending to the same file: the cache module-state is
-  // shared in-test, so we assert the on-disk chain stays valid even when entries
-  // arrive from "different" callers and the function must seed from the file tail.
-  const { appendAuditEntrySync } = require('../bin/autonomous/audit-writer');
+test('appendAuditEntrySync seeds previous_hash from the file tail on a COLD cache (new-process re-seed)', async () => {
+  // GENUINELY exercises the cold-seed path: the first batch warms the module's
+  // in-process _lastHashCache, then we EVICT the module from require.cache and
+  // re-require it to get a fresh instance with an EMPTY cache — exactly like a second
+  // OS process. The reloaded function must seed previous_hash from the on-disk tail
+  // (readLastHash), so the second batch's first entry links to the prior batch's last
+  // _hash and the whole on-disk chain stays valid. (Previously this ran in one warm
+  // process and never touched the disk-seed branch.)
+  const writerPath = require.resolve('../bin/autonomous/audit-writer');
   const { verifyAuditChain } = require('../bin/governance/audit-verifier');
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-unified-x-'));
   const file = path.join(tmp, 'AUDIT.jsonl');
   try {
-    appendAuditEntrySync(file, { event: 'proc-a-1', agent: 'auto-runner' });
-    appendAuditEntrySync(file, { event: 'proc-b-1', agent: 'nexus-tracer' });
-    appendAuditEntrySync(file, { event: 'proc-c-1', agent: 'approval-handler' });
+    // Batch 1 — "process A": warms the in-process cache for this path.
+    const procA = require(writerPath);
+    procA.appendAuditEntrySync(file, { event: 'proc-a-1', agent: 'auto-runner' });
+    procA.appendAuditEntrySync(file, { event: 'proc-a-2', agent: 'auto-runner' });
+
+    // Evict + reload → fresh module instance with a COLD _lastHashCache.
+    delete require.cache[writerPath];
+    const procB = require(writerPath);
+    assert.notStrictEqual(procB.appendAuditEntrySync, procA.appendAuditEntrySync,
+      'reloaded module must be a distinct instance (cold cache)');
+
+    // Batch 2 — "process B": MUST seed previous_hash from the file tail on disk.
+    procB.appendAuditEntrySync(file, { event: 'proc-b-1', agent: 'nexus-tracer' });
+    procB.appendAuditEntrySync(file, { event: 'proc-b-2', agent: 'approval-handler' });
+
     const entries = fs.readFileSync(file, 'utf8').split('\n').filter(Boolean).map(JSON.parse);
     assert.strictEqual(entries[0].previous_hash, null, 'first entry has null previous_hash');
     assert.strictEqual(entries[1].previous_hash, entries[0]._hash, 'entry 2 links to entry 1');
-    assert.strictEqual(entries[2].previous_hash, entries[1]._hash, 'entry 3 links to entry 2');
+    // The cold-seed link: entry 3 (first write of the reloaded module) must chain to
+    // entry 2's _hash, proving it seeded from disk and not from a stale/empty cache.
+    assert.strictEqual(entries[2].previous_hash, entries[1]._hash,
+      'cold-cache entry must seed previous_hash from the on-disk tail');
+    assert.strictEqual(entries[3].previous_hash, entries[2]._hash, 'entry 4 links to entry 3');
     const res = verifyAuditChain(file);
-    assert.strictEqual(res.valid, true, `mixed-caller chain must verify: ${JSON.stringify(res)}`);
-  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+    assert.strictEqual(res.valid, true, `cold-reseeded chain must verify: ${JSON.stringify(res)}`);
+  } finally {
+    // Leave a clean, freshly-loaded module for any later tests.
+    delete require.cache[writerPath];
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
 });
 
 test('integration: file-io AuditWriter (nexus/policy path) + appendAuditEntrySync share ONE verifiable chain', async () => {

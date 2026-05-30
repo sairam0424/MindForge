@@ -21,7 +21,6 @@ const APPROVAL_DIR    = path.join(process.cwd(), '.planning', 'approvals');
 const clients = new Set(); // Connected SSE response objects
 
 let _lastAuditSize  = 0;
-let _auditInode     = 0; // Track file inode for rotation detection
 let _lastAutoState  = '';
 let _lastApprovals  = '';
 
@@ -78,14 +77,16 @@ function pollAuditLog() {
   try {
     const stat     = fs.statSync(AUDIT_PATH);
     const newSize  = stat.size;
-    const newIno   = stat.ino;
 
-    // File rotation detected: inode changed or file shrunk (truncated after archival)
-    if ((newIno !== _auditInode && _auditInode !== 0) || (newSize < _lastAuditSize)) {
-      process.stderr.write(`[sse-bridge] AUDIT.jsonl rotation detected (size: ${_lastAuditSize} -> ${newSize}, ino: ${_auditInode} -> ${newIno})\n`);
+    // Truncation / recreation recovery (NOT rotation — audit rotation was retired in
+    // UC-04b because it broke the hash chain; AUDIT.jsonl grows unbounded). If the
+    // file ever SHRINKS (manually truncated, .planning wiped, or replaced), reset the
+    // read offset to 0 so the live tail keeps working instead of stalling forever on
+    // the `newSize <= _lastAuditSize` early-return below or reading at a stale offset.
+    if (newSize < _lastAuditSize) {
+      process.stderr.write(`[sse-bridge] AUDIT.jsonl shrank (size: ${_lastAuditSize} -> ${newSize}) — re-tailing from start\n`);
       _lastAuditSize = 0;
     }
-    _auditInode = newIno;
 
     if (newSize <= _lastAuditSize) return;
 
@@ -169,9 +170,7 @@ function startPolling() {
 
   // Initialize AUDIT position on first start
   if (!_initialized && fs.existsSync(AUDIT_PATH)) {
-    const stat = fs.statSync(AUDIT_PATH);
-    _lastAuditSize = stat.size;
-    _auditInode    = stat.ino;
+    _lastAuditSize = fs.statSync(AUDIT_PATH).size;
     _initialized   = true;
   }
 
@@ -207,9 +206,7 @@ function stopPolling() {
 function start() {
   // Pre-initialize AUDIT position so first client gets instant data
   if (!_initialized && fs.existsSync(AUDIT_PATH)) {
-    const stat = fs.statSync(AUDIT_PATH);
-    _lastAuditSize = stat.size;
-    _auditInode    = stat.ino;
+    _lastAuditSize = fs.statSync(AUDIT_PATH).size;
     _initialized   = true;
   }
   // Polling starts lazily when addClient() is called

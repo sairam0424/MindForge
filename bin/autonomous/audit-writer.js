@@ -1,28 +1,32 @@
 /**
- * MindForge — Audit Writer (Async Buffered)
- * Extracted from auto-runner.js — handles all JSONL audit append operations.
- * Buffers entries and flushes every 100ms or when buffer reaches 10 entries.
+ * MindForge — Audit Writer (Synchronous Durable, Hash-Chained)
+ *
+ * Provides the ONE unified audit-append primitive {@link appendAuditEntrySync}
+ * that every audit write site funnels through, producing a single verifiable
+ * hash chain (UC-04 / UC-04b).
+ *
+ * Retired in UC-04b: the old buffered async writer (`createAuditWriter`) and its
+ * AuditRotator-based 5000-line rotation. Rotation BROKE the hash chain — archiving
+ * + truncating AUDIT.jsonl orphaned the carried head's `previous_hash` from an entry
+ * no longer on disk, so the verifier failed closed on a rotated-but-untampered file.
+ * As a result AUDIT.jsonl now grows UNBOUNDED. That is an accepted short-term tradeoff
+ * at single-operator/dev scale. The proper fix — chain-aware compaction (archive old
+ * entries AND re-anchor the first carried entry to previous_hash=null so the live tail
+ * verifies standalone) — is a DEFERRED future feature, intentionally NOT in scope here.
  */
 'use strict';
 
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { AuditRotator } = require('../utils/file-io');
-const { createAppendQueue } = require('../utils/append-queue');
 const { hashAuditEntry } = require('../governance/audit-hash');
-
-const FLUSH_INTERVAL_MS = 100;
-const FLUSH_THRESHOLD = 10;
-
-const rotator = new AuditRotator({ maxLines: 5000 });
 
 /**
  * Computes the SHA-256 hash of an entry chained to its predecessor (UC-04).
  * Delegates to the canonical {@link hashAuditEntry} (bin/governance/audit-hash.js)
  * so the writer and verifier share ONE hasher — material drift is impossible.
  * The material is {...entry, previous_hash} where `entry` does NOT contain `_hash`.
- * @param {object} entry — buffered entry WITHOUT a `_hash` field
+ * @param {object} entry — entry WITHOUT a `_hash` field
  * @param {string|null} previousHash — prior entry's `_hash` (null for the first link)
  * @returns {string} hex-encoded SHA-256 digest
  */
@@ -70,6 +74,14 @@ const _lastHashCache = new Map(); // resolvedPath -> last `_hash` written/seen
 /**
  * Synchronously appends ONE hash-chained, durable entry to an audit JSONL file.
  * This is the single unified append used by every audit write site (UC-04b).
+ *
+ * NOTE: performs an fsync (openSync('a') + writeSync + fsyncSync + closeSync) on
+ * EVERY call. This is deliberate for audit integrity/durability — but it makes the
+ * call relatively expensive, so it is intended for audit-grade events, NOT for
+ * high-frequency telemetry. Hot-path callers (e.g. nexus-tracer span/reasoning
+ * events) pay one fsync per event; keep that cost in mind before adding new hot
+ * write sites.
+ *
  * @param {string} auditPath — path to the AUDIT.jsonl file
  * @param {object} event — the event payload (id/timestamp stamped if missing)
  * @returns {object} the stamped + chained entry actually written
@@ -91,7 +103,7 @@ function appendAuditEntrySync(auditPath, event) {
     : readLastHash(resolved);
 
   // 3. Compute _hash over {...stamped, previous_hash} WITHOUT _hash in the material.
-  const _hash = hashAuditEntry(stamped, previous_hash);
+  const _hash = hashEntry(stamped, previous_hash);
 
   // 4. Write {...stamped, previous_hash, _hash} as one JSON line, durably+synchronously
   //    (openSync('a') + writeSync + fsyncSync + closeSync — mirrors appendDurableSync).
@@ -110,118 +122,4 @@ function appendAuditEntrySync(auditPath, event) {
   return chained;
 }
 
-/**
- * Creates a buffered async audit writer.
- * @param {string} auditPath — Path to the AUDIT.jsonl file
- * @returns {{ write: (entry: object) => void, flush: () => Promise<void>, close: () => Promise<void> }}
- */
-function createAuditWriter(auditPath) {
-  let buffer = [];
-  let flushTimer = null;
-  let isClosed = false;
-  // Hash-chain state (UC-04): seeded once from the existing file on first flush so
-  // a re-opened writer extends the on-disk chain rather than forking a new one.
-  let lastHash = null;
-  let seeded = false;
-  const queue = createAppendQueue(auditPath);
-
-  function scheduleFlush() {
-    if (flushTimer !== null) return;
-    flushTimer = setTimeout(async () => {
-      flushTimer = null;
-      await flush();
-    }, FLUSH_INTERVAL_MS);
-  }
-
-  /**
-   * Adds an entry to the buffer. Triggers flush if threshold reached.
-   * Stamps entry with id and timestamp if missing (immutable — creates new object).
-   */
-  function write(entry) {
-    if (isClosed) {
-      throw new Error('AuditWriter is closed — cannot write after close()');
-    }
-
-    const stamped = Object.assign(Object.create(null), entry, {
-      id: entry.id || crypto.randomBytes(8).toString('hex'),
-      timestamp: entry.timestamp || new Date().toISOString(),
-    });
-
-    buffer = [...buffer, stamped];
-
-    if (buffer.length >= FLUSH_THRESHOLD) {
-      // Immediate flush — don't wait for timer
-      if (flushTimer !== null) {
-        clearTimeout(flushTimer);
-        flushTimer = null;
-      }
-      flush();
-    } else {
-      scheduleFlush();
-    }
-
-    return stamped;
-  }
-
-  /**
-   * Flushes the buffer to disk using async appendFile.
-   */
-  async function flush() {
-    if (buffer.length === 0) return;
-
-    const toWrite = buffer;
-    buffer = [];
-
-    // Seed the chain head once from the existing file (continues an on-disk chain).
-    if (!seeded) { lastHash = readLastHash(auditPath); seeded = true; }
-
-    // Chain entries IN ORDER at serialize time: hash {...e, previous_hash} BEFORE
-    // adding _hash, then append _hash. The verifier strips _hash to reproduce the
-    // identical material. lastHash advances per entry so each links to its predecessor.
-    const chained = toWrite.map((e) => {
-      const previous_hash = lastHash;
-      const _hash = hashEntry(e, previous_hash);
-      lastHash = _hash;
-      return { ...e, previous_hash, _hash };
-    });
-
-    // append() re-adds the trailing newline delimiter, so build payload without it.
-    const payload = chained.map(e => JSON.stringify(e)).join('\n');
-    // Non-fatal durable write: a rejected append (ENOSPC/EACCES/EIO/EROFS) must NOT
-    // become an unhandledRejection and terminate the process — the threshold/timer
-    // paths call flush() un-awaited. Catch here so the failure is logged and the
-    // process survives; callers that explicitly `await flush()`/`await close()`
-    // still resolve cleanly (the rejection is absorbed, never rethrown).
-    await queue.append(payload).catch((err) => {
-      process.stderr.write(`[audit-writer] durable flush failed: ${err.message}\n`);
-    });
-
-    try {
-      if (rotator.shouldRotate(auditPath)) {
-        const archiveDir = path.join(path.dirname(auditPath), '..', '.planning', 'audit-archive');
-        rotator.rotate(auditPath, archiveDir);
-      }
-    } catch (err) {
-      process.stderr.write(`[audit-writer] rotation warning: ${err.message}\n`);
-    }
-  }
-
-  /**
-   * Flushes remaining entries and stops the timer. After close(), write() will throw.
-   */
-  async function close() {
-    isClosed = true;
-    if (flushTimer !== null) {
-      clearTimeout(flushTimer);
-      flushTimer = null;
-    }
-    await flush();
-    // Drain any in-flight threshold-triggered flushes that enqueued without being
-    // awaited — guarantees all acknowledged writes are durable before close resolves.
-    await queue.drain();
-  }
-
-  return Object.freeze({ write, flush, close });
-}
-
-module.exports = { createAuditWriter, appendAuditEntrySync };
+module.exports = { appendAuditEntrySync };
