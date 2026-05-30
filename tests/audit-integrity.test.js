@@ -63,6 +63,44 @@ test('audit-writer: durable flush failure is NON-FATAL (no unhandled rejection, 
   }
 });
 
+test('audit-writer chains entries: each entry carries previous_hash linking to prior _hash', async () => {
+  const { createAuditWriter } = require('../bin/autonomous/audit-writer');
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-chain-'));
+  const file = path.join(tmp, 'AUDIT.jsonl');
+  try {
+    const w = createAuditWriter(file);
+    w.write({ event: 'a' }); w.write({ event: 'b' }); w.write({ event: 'c' });
+    await w.close();
+    const entries = fs.readFileSync(file, 'utf8').split('\n').filter(Boolean).map(JSON.parse);
+    assert.ok(entries.every(e => typeof e._hash === 'string'), 'every entry has _hash');
+    assert.strictEqual(entries[1].previous_hash, entries[0]._hash, 'entry 2 links to entry 1');
+    assert.strictEqual(entries[2].previous_hash, entries[1]._hash, 'entry 3 links to entry 2');
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+});
+
+test('verify-audit passes on an untampered chain and FAILS CLOSED on a mutated entry', async () => {
+  const { createAuditWriter } = require('../bin/autonomous/audit-writer');
+  const { verifyAuditChain } = require('../bin/governance/audit-verifier');
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-verify-'));
+  const file = path.join(tmp, 'AUDIT.jsonl');
+  try {
+    const w = createAuditWriter(file);
+    w.write({ event: 'x' }); w.write({ event: 'y' });
+    await w.close();
+    const clean = verifyAuditChain(file);
+    assert.strictEqual(clean.valid, true, `clean chain must verify: ${JSON.stringify(clean)}`);
+
+    const lines = fs.readFileSync(file, 'utf8').split('\n').filter(Boolean);
+    const tampered = JSON.parse(lines[0]); tampered.event = 'TAMPERED';
+    lines[0] = JSON.stringify(tampered);
+    fs.writeFileSync(file, lines.join('\n') + '\n');
+
+    const broken = verifyAuditChain(file);
+    assert.strictEqual(broken.valid, false, 'tampered chain must fail closed');
+    assert.ok(broken.brokenAt !== undefined, 'must report where the chain broke');
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+});
+
 (async () => {
   for (const { name, fn } of tests) {
     try { await fn(); console.log(`  ✅  ${name}`); passed++; }
