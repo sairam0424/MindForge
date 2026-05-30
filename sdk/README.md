@@ -102,11 +102,34 @@ for await (const chunk of stream) {
 
 ### Batch execution
 
+Runs commands concurrently (semaphore-bounded by `maxConcurrency`, default 3). Each
+task's `command` is the executable and `options.args` is a **string array** — it is NOT a
+shell string. Commands run with `shell: false`, so arguments are passed directly to the
+process and are safe from shell injection.
+
 ```typescript
-const results = await client.batchExecute([
-  { phase: 1, taskId: 'task-a' },
-  { phase: 1, taskId: 'task-b' },
-], { concurrency: 4 });
+const batch = await client.batchExecute({
+  tasks: [
+    { id: 'task-a', command: 'node', options: { args: ['--version'] } },
+    { id: 'task-b', command: 'git',  options: { args: ['rev-parse', 'HEAD'] } },
+  ],
+  maxConcurrency: 4,
+});
+
+for (const entry of batch.results) {
+  if (entry.status === 'fulfilled') {
+    // entry.result is { stdout, stderr, exitCode }
+    const { stdout, stderr, exitCode } = entry.result as {
+      stdout: string; stderr: string; exitCode: number;
+    };
+    console.log(`${entry.taskId} exited ${exitCode}: ${stdout.trim()}`);
+  } else {
+    // entry.status === 'rejected'
+    console.error(`${entry.taskId} failed: ${entry.error}`);
+  }
+}
+
+console.log(`batch finished in ${batch.totalDurationMs}ms`);
 ```
 
 ### Runtime config validation

@@ -23,7 +23,7 @@
     "pretest": "npm run build",
     "test": "node tests/sdk.test.js && node tests/execute-command.test.js",
     "lint": "eslint .",
-    "prepublishOnly": "npm run build && npm test"
+    "prepublishOnly": "npm test"
   },
   "keywords": [
     "mindforge",
