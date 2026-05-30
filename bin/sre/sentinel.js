@@ -109,13 +109,15 @@ class Sentinel {
   }
 
   logToAudit(event, targetPath) {
-    const logEntry = {
-      id: crypto.randomBytes(8).toString('hex'),
-      timestamp: new Date().toISOString(),
+    // UC-04b: route through the unified, hash-chained, durable append so Sentinel's
+    // incident entries link into the single verifiable chain (was a raw appendFileSync
+    // that broke the chain). appendAuditEntrySync caches the chain head per resolved
+    // path, so an explicit targetPath is chained correctly too.
+    const { appendAuditEntrySync } = require('../autonomous/audit-writer');
+    appendAuditEntrySync(targetPath || this.auditPath, {
       agent: 'mindforge-sentinel',
       ...event
-    };
-    fs.appendFileSync(targetPath || this.auditPath, JSON.stringify(logEntry) + '\n');
+    });
   }
 
   stop() {

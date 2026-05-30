@@ -82,11 +82,10 @@ function register(params) {
     );
   }
 
-  // Write AUDIT entry
+  // Write AUDIT entry via the unified, hash-chained, durable append (UC-04b).
   if (fs.existsSync(path.dirname(AUDIT_PATH))) {
-    const entry = {
-      id:            require('crypto').randomBytes(8).toString('hex'),
-      timestamp:     new Date().toISOString(),
+    const { appendAuditEntrySync } = require('../autonomous/audit-writer');
+    appendAuditEntrySync(AUDIT_PATH, {
       event:         'skill_learned',
       agent:         'mindforge-skills-builder',
       phase:         null,
@@ -97,8 +96,7 @@ function register(params) {
       source_type:   sourceType,
       source:        String(source).slice(0, 200),
       skill_path:    relativePath,
-    };
-    fs.appendFileSync(AUDIT_PATH, JSON.stringify(entry) + '\n');
+    });
   }
 
   return { registered: true, skillName, tier, qualityScore };

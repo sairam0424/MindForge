@@ -46,9 +46,12 @@ class OpenAIProvider {
 
             const inputTokens = json.usage.prompt_tokens;
             const outputTokens = json.usage.completion_tokens;
-            
-            // Basic cost calculation (GPT-4o prices)
-            const cost = (inputTokens * 0.000005) + (outputTokens * 0.000015);
+
+            const { priceCall } = require('./pricing-registry');
+            const cost = priceCall(json.model, {
+              input_tokens: inputTokens,
+              output_tokens: outputTokens,
+            });
 
             resolve({
               model: json.model,

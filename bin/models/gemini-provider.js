@@ -46,10 +46,14 @@ class GeminiProvider {
               return reject(Object.assign(new Error(json.error?.message || 'Gemini API error'), { status: res.statusCode }));
             }
 
-            // Gemini 1.5 Pro billing is complex; using $1.25 / 1M input as baseline
             const inputTokens = json.usageMetadata.promptTokenCount;
             const outputTokens = json.usageMetadata.candidatesTokenCount;
-            const cost = (inputTokens * 0.00000125) + (outputTokens * 0.00000375);
+
+            const { priceCall } = require('./pricing-registry');
+            const cost = priceCall(modelId, {
+              input_tokens: inputTokens,
+              output_tokens: outputTokens,
+            });
 
             resolve({
               model: modelId,

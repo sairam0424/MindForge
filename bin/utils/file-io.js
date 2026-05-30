@@ -3,56 +3,46 @@
 const fs = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
-const crypto = require('crypto');
 const zlib = require('zlib');
 
+/**
+ * Hash-chained audit writer (class API preserved for nexus-tracer + policy-engine).
+ *
+ * UC-04b: this class previously maintained a SECOND, DIVERGENT chain implementation
+ * (it hashed {...entry, timestamp, previous_hash} — injecting timestamp into the
+ * material differently from the canonical writer), so entries it wrote could never
+ * verify against bin/governance/audit-verifier.js. It now delegates every write to
+ * the SINGLE shared `appendAuditEntrySync` (canonical hashAuditEntry, synchronous +
+ * fsync-durable), so there is ONE hasher and ONE on-disk chain per file.
+ *
+ * The async API (write/flush/close returning promises) is kept because callers do
+ * `await this._auditWriter.write(entry)`; the underlying append is now synchronous
+ * and durable, so flush()/close() are no-ops retained for API compatibility.
+ */
 class AuditWriter {
   constructor(filePath) {
     this._path = filePath;
-    this._buffer = [];
-    this._flushTimer = null;
+    // Retained for API compatibility; the unified append is synchronous so there
+    // is no longer an internal buffer or timer to manage.
     this._lastHash = null;
   }
 
-  write(entry) {
-    // Add Merkle chain link
-    const entryWithHash = {
-      ...entry,
-      timestamp: entry.timestamp || new Date().toISOString(),
-      previous_hash: this._lastHash
-    };
-    const serialized = JSON.stringify(entryWithHash);
-    this._lastHash = crypto.createHash('sha256').update(serialized).digest('hex');
-    entryWithHash._hash = this._lastHash;
-
-    this._buffer.push(JSON.stringify(entryWithHash));
-
-    if (this._buffer.length >= 10) {
-      return this.flush();
-    }
-    if (!this._flushTimer) {
-      this._flushTimer = setTimeout(() => this.flush(), 100);
-    }
-    return Promise.resolve();
+  async write(entry) {
+    // Lazy require to avoid a require-cycle: audit-writer.js requires this file
+    // (AuditRotator) at load time, so we cannot require it at module top level.
+    const { appendAuditEntrySync } = require('../autonomous/audit-writer');
+    const chained = appendAuditEntrySync(this._path, entry);
+    this._lastHash = chained._hash;
+    return chained;
   }
 
-  async flush() {
-    if (this._buffer.length === 0) return;
-    clearTimeout(this._flushTimer);
-    this._flushTimer = null;
+  async flush() { /* no-op: appendAuditEntrySync is synchronous + fsync-durable */ }
 
-    const lines = this._buffer.splice(0);
-    const content = lines.join('\n') + '\n';
-
-    await fsp.mkdir(path.dirname(this._path), { recursive: true });
-    await fsp.appendFile(this._path, content);
-  }
-
-  async close() {
-    await this.flush();
-  }
+  async close() { /* no-op: nothing buffered */ }
 
   async initLastHash() {
+    // The unified append seeds its own chain head from the file tail; this remains
+    // for callers that expect to prime _lastHash explicitly.
     try {
       const content = await fsp.readFile(this._path, 'utf8');
       const lines = content.trim().split('\n').filter(Boolean);

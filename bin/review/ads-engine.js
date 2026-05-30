@@ -49,7 +49,7 @@ Include a [ADS_METRICS] block for your counter-proposal or critique logic.`,
     sessionId,
     phaseNum
   });
-  const redCritique = redResponse.content;
+  let redCritique = redResponse.content;
   process.stdout.write('done.\n');
 
   // Red-Team Jailbreak: Force higher-fidelity critiques if Auditor is too lenient

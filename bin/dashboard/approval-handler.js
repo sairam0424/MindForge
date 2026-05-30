@@ -115,7 +115,9 @@ function writeAuditEntry(entry) {
   try {
     const paths = getPaths();
     if (!fs.existsSync(path.dirname(paths.audit))) return;
-    fs.appendFileSync(paths.audit, JSON.stringify(entry) + '\n');
+    // UC-04b: unified, hash-chained, durable append into the single verifiable chain.
+    const { appendAuditEntrySync } = require('../autonomous/audit-writer');
+    appendAuditEntrySync(paths.audit, entry);
   } catch { /* ignore AUDIT write failures */ }
 }
 

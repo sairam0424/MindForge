@@ -16,7 +16,7 @@ function cmdRequirementsMarkComplete(cwd, reqIdsRaw, raw) {
   // Accept comma-separated, space-separated, or bracket-wrapped: [REQ-01, REQ-02]
   const reqIds = reqIdsRaw
     .join(' ')
-    .replace(/[\[\]]/g, '')
+    .replace(/[[\]]/g, '')
     .split(/[,\s]+/)
     .map(r => r.trim())
     .filter(Boolean);

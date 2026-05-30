@@ -83,7 +83,7 @@ class SemanticHub {
     try {
       const data = await fs.readFile(this.syncManifest, 'utf8');
       manifest = JSON.parse(data);
-    } catch (e) {}
+    } catch (e) { /* intentionally empty */ }
 
     manifest[libraryName] = {
       lastSync: new Date().toISOString(),
@@ -106,7 +106,7 @@ class SemanticHub {
         sqliteTraces = await vectorHub.searchTraces(skillFilter);
       } else {
         sqliteTraces = vectorHub.query(
-          "SELECT * FROM traces WHERE event = ? LIMIT 20",
+          'SELECT * FROM traces WHERE event = ? LIMIT 20',
           ['reasoning_trace']
         );
       }

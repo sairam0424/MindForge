@@ -5,6 +5,7 @@
 
 const crypto = require('node:crypto');
 const { promisify } = require('node:util');
+const configManager = require('./config-manager');
 
 const generateKeyPair = promisify(crypto.generateKeyPair);
 
@@ -148,6 +149,34 @@ class ZTAIManager {
   }
 
   /**
+   * Selects a key provider for a given trust tier.
+   *
+   * UC-24: All tiers route to REAL crypto by default — Tier 1-2 use the
+   * in-memory Ed25519 provider, Tier 3+ use the (simulated-HSM) enclave
+   * provider which also signs with REAL Ed25519. The SIMULATED post-quantum
+   * lattice provider ('quantum') is NEVER selected on the live trust path
+   * unless the operator has explicitly opted into the demo via
+   * experimental.pqc_demo. This keeps false-assurance signatures off the
+   * default trust path while preserving the demo for explicit exploration.
+   *
+   * @param {number} tier - Trust tier (1-4)
+   * @returns {'local'|'enclave'|'quantum'}
+   */
+  _selectProvider(tier) {
+    const pqcDemo = configManager.get('experimental.pqc_demo', false) === true;
+
+    // Tier 4+ MAY use the simulated lattice provider, but only when the
+    // operator has explicitly enabled the PQC demo. Otherwise it falls back to
+    // the real-Ed25519 enclave provider so the trust path stays verifiable.
+    if (tier >= 4) {
+      return pqcDemo ? 'quantum' : 'enclave';
+    }
+
+    // Tier 3 agents use the SecureEnclaveProvider (real Ed25519).
+    return tier >= 3 ? 'enclave' : 'local';
+  }
+
+  /**
    * Registers a new agent and assigns a provider based on Trust Tier.
    * @param {string} persona - Agent persona identifier
    * @param {number} tier - Trust tier (1-4)
@@ -157,8 +186,7 @@ class ZTAIManager {
     const uuid = crypto.randomUUID();
     const did = `did:mindforge:${uuid}`;
 
-    // Tier 3 agents use the SecureEnclaveProvider
-    const providerType = tier >= 3 ? 'enclave' : 'local';
+    const providerType = this._selectProvider(tier);
     const provider = this.providers[providerType];
 
     const publicKeyPEM = await provider.generate(did);

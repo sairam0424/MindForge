@@ -25,7 +25,7 @@ class IdentitySynthesizer {
       .replace(/{PROJECT_OBJECTIVE}/g, answers.goal || 'Maximizing engineering leverage');
 
     await fs.writeFile(this.soulPath, soulContent);
-    console.log(`[IDENTITY] SOUL.md bootstrapped successfully from the Grand Blueprint.`);
+    console.log('[IDENTITY] SOUL.md bootstrapped successfully from the Grand Blueprint.');
   }
 
   /**
@@ -41,7 +41,7 @@ class IdentitySynthesizer {
     );
 
     if (traces.length === 0) {
-      console.log(`[IDENTITY] No execution traces found in celestial.db. Evolution skipped.`);
+      console.log('[IDENTITY] No execution traces found in celestial.db. Evolution skipped.');
       return;
     }
 

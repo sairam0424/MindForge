@@ -33,7 +33,7 @@ function mkProject() {
   const dir     = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-dashboard-'));
   const write   = (rel, c) => { const f = path.join(dir, rel); fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, c); return f; };
   const exists  = rel => fs.existsSync(path.join(dir, rel));
-  const cleanup = () => { try { fs.rmSync(dir, { recursive: true, force: true }); } catch {} };
+  const cleanup = () => { try { fs.rmSync(dir, { recursive: true, force: true }); } catch { /* intentionally empty */ } };
   return { dir, write, exists, cleanup };
 }
 

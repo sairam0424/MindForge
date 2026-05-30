@@ -23,6 +23,30 @@ class VectorHub {
     this.initialized = false;
     this._writeCount = 0;
     this._batchSize = 10;
+    // UC-09: serialized async persistence chain. Successive save() calls queue
+    // behind one another so two exports never write the .db file concurrently
+    // (a corrupted half-written database would otherwise be possible).
+    this._saveChain = Promise.resolve();
+    // Count of async save()s that have been SCHEDULED but not yet COMPLETED their
+    // durable disk write. A boolean here is unsafe: with two rapid saves the chain
+    // is [writeA → clear → writeB → clear], leaving a window where the flag reads
+    // "clean" while writeB is still pending — a hard process.exit() in that window
+    // would make the exit guard skip saveSync() and lose the last batch (the exact
+    // data loss this guard exists to prevent). A counter has no such gap: it only
+    // returns to 0 once EVERY scheduled save has completed. saveSync() always
+    // exports the current in-memory DB, so over-flushing on exit is harmless — we
+    // deliberately bias toward flushing.
+    this._pendingSaves = 0;
+    this._exitGuardInstalled = false;
+  }
+
+  _installExitGuard() {
+    if (this._exitGuardInstalled) return;
+    this._exitGuardInstalled = true;
+    // 'exit' handlers can only run synchronous code — saveSync() fits exactly.
+    process.once('exit', () => {
+      if (this._db && this._pendingSaves > 0) this.saveSync();
+    });
   }
 
   _ensureDir() {
@@ -167,22 +191,74 @@ class VectorHub {
     this._db.run('CREATE UNIQUE INDEX IF NOT EXISTS idx_migrations_name ON _migrations(name)');
 
     this.initialized = true;
+    this._installExitGuard();
     this.save();
     console.log(`[VectorHub] Initialized WASM SQLite persistence at ${this.dbPath}`);
   }
 
   /**
-   * Persist the in-memory database to disk.
+   * Persist the in-memory database to disk (UC-09).
+   *
+   * sql.js export() is intrinsically synchronous, but the (potentially large)
+   * FILE WRITE no longer blocks the event loop: we snapshot the bytes
+   * synchronously, then write+fsync them asynchronously. Successive saves are
+   * serialized on a single chain so two exports never write the .db file
+   * concurrently. The write is crash-safe (tmp file + atomic rename + fsync),
+   * so a partial write can never leave a corrupted database on disk.
+   *
+   * @returns {Promise<void>} Resolves once the snapshot is durably on disk.
    */
   save() {
+    if (!this._db) return Promise.resolve();
+
+    let buffer;
+    try {
+      this._ensureDir();
+      // Snapshot the DB synchronously so the bytes reflect this exact moment.
+      buffer = Buffer.from(this._db.export());
+    } catch (err) {
+      console.warn(`[VectorHub] Failed to export database: ${err.message}`);
+      return Promise.resolve();
+    }
+
+    const dbPath = this.dbPath;
+    // Increment when SCHEDULED; decrement only once this specific save has
+    // COMPLETED (success or failure). The exit guard fires saveSync() while any
+    // scheduled save is still outstanding — see _installExitGuard().
+    this._pendingSaves++;
+    this._saveChain = this._saveChain.then(() => writeDbDurable(dbPath, buffer))
+      .catch((err) => {
+        console.warn(`[VectorHub] Failed to save database: ${err.message}`);
+      })
+      .then(() => { this._pendingSaves--; });
+    return this._saveChain;
+  }
+
+  /**
+   * Synchronous, crash-safe persistence — used only on shutdown to GUARANTEE
+   * no acknowledged write is lost if the process exits before the async save
+   * chain drains. Correctness over non-blocking here.
+   */
+  saveSync() {
     if (!this._db) return;
     try {
       this._ensureDir();
-      const data = this._db.export();
-      const buffer = Buffer.from(data);
-      fs.writeFileSync(this.dbPath, buffer);
+      const buffer = Buffer.from(this._db.export());
+      const tmpPath = `${this.dbPath}.tmp.${process.pid}`;
+      const fd = fs.openSync(tmpPath, 'w');
+      try {
+        fs.writeSync(fd, buffer);
+        fs.fsyncSync(fd);
+      } finally {
+        fs.closeSync(fd);
+      }
+      fs.renameSync(tmpPath, this.dbPath);
+      // A sync export captures the full in-memory DB — a superset of anything the
+      // outstanding async saves would have written — so the pending work is now
+      // durably satisfied. Clearing the counter prevents a redundant second flush.
+      this._pendingSaves = 0;
     } catch (err) {
-      console.warn(`[VectorHub] Failed to save database: ${err.message}`);
+      console.warn(`[VectorHub] Failed to save database (sync): ${err.message}`);
     }
   }
 
@@ -199,10 +275,13 @@ class VectorHub {
 
   /**
    * Close the database and save final state to disk.
+   * Drains any pending async saves, then performs a guaranteed synchronous
+   * durable write so no acknowledged data is lost on shutdown (UC-09).
    */
   async close() {
     if (this._db) {
-      this.save();
+      try { await this._saveChain; } catch { /* logged in save() */ }
+      this.saveSync();
       this._db.close();
       this._db = null;
       this.initialized = false;
@@ -453,6 +532,32 @@ class VectorHub {
       [name, new Date().toISOString()]
     );
   }
+}
+
+// ── Durable async DB file write (UC-09) ───────────────────────────────────────
+// Crash-safe: write to a tmp file, fsync, then atomically rename over the target.
+// A crash mid-write leaves the previous good .db intact (rename is atomic on POSIX).
+function writeDbDurable(dbPath, buffer) {
+  return new Promise((resolve, reject) => {
+    const tmpPath = `${dbPath}.tmp.${process.pid}`;
+    const fail = (err) => { fs.unlink(tmpPath, () => reject(err)); };
+    fs.open(tmpPath, 'w', (openErr, fd) => {
+      if (openErr) return reject(openErr);
+      fs.write(fd, buffer, 0, buffer.length, 0, (writeErr) => {
+        if (writeErr) { fs.close(fd, () => fail(writeErr)); return; }
+        fs.fsync(fd, (syncErr) => {
+          fs.close(fd, (closeErr) => {
+            if (syncErr) return fail(syncErr);
+            if (closeErr) return fail(closeErr);
+            fs.rename(tmpPath, dbPath, (renameErr) => {
+              if (renameErr) return fail(renameErr);
+              resolve();
+            });
+          });
+        });
+      });
+    });
+  });
 }
 
 // ── Factory Function ──────────────────────────────────────────────────────────

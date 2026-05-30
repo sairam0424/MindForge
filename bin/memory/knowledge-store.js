@@ -15,6 +15,30 @@ const path = require('path');
 const os   = require('os');
 const crypto = require('crypto');
 
+// ── Durable append (UC-09) ──────────────────────────────────────────────────
+// The knowledge-store public API (add/deprecate/reinforce) is SYNCHRONOUS and
+// callers read-after-write synchronously (e.g. `const id = Store.add(...)`
+// immediately followed by `Store.readAll()`). Routing through the async
+// append-queue would make those reads observe stale data and would require an
+// API change across 9+ consumers — out of scope for UC-09.
+//
+// Instead we centralize every append through one durable, fsync'd, synchronous
+// writer. This delivers UC-09's durability guarantee (acknowledged writes are on
+// disk before the call returns) and a single serialized append path per file,
+// while preserving the synchronous read-after-write contract. appendFileSync's
+// per-call append is atomic on POSIX, so concurrent in-process appends do not
+// interleave at the byte level.
+function appendDurableSync(filePath, line) {
+  const record = line.endsWith('\n') ? line : line + '\n';
+  const fd = fs.openSync(filePath, 'a');
+  try {
+    fs.writeSync(fd, record);
+    fs.fsyncSync(fd);
+  } finally {
+    fs.closeSync(fd);
+  }
+}
+
 // ── ID Index for fast lookups (built lazily, invalidated on writes) ───────────
 let _idIndex = null;       // Map<id, entry> — latest version per ID
 let _indexDirty = true;    // Invalidated whenever entries are appended
@@ -201,12 +225,12 @@ function add(entry) {
 
   const filePath = getFilePath(entry.type);
   verifyFileIntegrity(filePath);
-  fs.appendFileSync(filePath, JSON.stringify(full) + '\n');
+  appendDurableSync(filePath, JSON.stringify(full));
 
   // Also append to unified knowledge-base.jsonl for cross-type queries
   if (filePath !== paths.KB_PATH) {
     verifyFileIntegrity(paths.KB_PATH);
-    fs.appendFileSync(paths.KB_PATH, JSON.stringify(full) + '\n');
+    appendDurableSync(paths.KB_PATH, JSON.stringify(full));
   }
 
   _invalidateIndex();
@@ -236,10 +260,10 @@ function deprecate(id, reason, supersededBy = null) {
   };
 
   verifyFileIntegrity(filePath);
-  fs.appendFileSync(filePath, JSON.stringify(deprecated) + '\n');
+  appendDurableSync(filePath, JSON.stringify(deprecated));
   if (filePath !== paths.KB_PATH) {
     verifyFileIntegrity(paths.KB_PATH);
-    fs.appendFileSync(paths.KB_PATH, JSON.stringify(deprecated) + '\n');
+    appendDurableSync(paths.KB_PATH, JSON.stringify(deprecated));
   }
 
   _invalidateIndex();
@@ -267,10 +291,10 @@ function reinforce(id) {
 
   const filePath = getFilePath(entry.type);
   verifyFileIntegrity(filePath);
-  fs.appendFileSync(filePath, JSON.stringify(reinforced) + '\n');
+  appendDurableSync(filePath, JSON.stringify(reinforced));
   if (filePath !== paths.KB_PATH) {
     verifyFileIntegrity(paths.KB_PATH);
-    fs.appendFileSync(paths.KB_PATH, JSON.stringify(reinforced) + '\n');
+    appendDurableSync(paths.KB_PATH, JSON.stringify(reinforced));
   }
 
   _invalidateIndex();

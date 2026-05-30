@@ -84,7 +84,7 @@ process.stdin.on('end', () => {
             const todos = JSON.parse(fs.readFileSync(path.join(todosDir, files[0].name), 'utf8'));
             const inProgress = todos.find(t => t.status === 'in_progress');
             if (inProgress) task = inProgress.activeForm || '';
-          } catch (e) {}
+          } catch (e) { /* intentionally empty */ }
         }
       } catch (e) {
         // Silently fail on file system errors - don't break statusline
@@ -103,7 +103,7 @@ process.stdin.on('end', () => {
         if (cache.stale_hooks && cache.stale_hooks.length > 0) {
           mindforgeUpdate += '\x1b[31m⚠ stale hooks — run /mindforge:update\x1b[0m │ ';
         }
-      } catch (e) {}
+      } catch (e) { /* intentionally empty */ }
     }
 
     // Output

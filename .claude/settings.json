@@ -1,0 +1,52 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash|Edit|Write|MultiEdit|Agent|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .agent/hooks/mindforge-context-monitor.js",
+            "timeout": 10000
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node bin/hooks/instinct-capture-hook.js",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .agent/hooks/mindforge-prompt-guard.js",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .agent/hooks/mindforge-session-init_extended.js"
+          },
+          {
+            "type": "command",
+            "command": "node .agent/hooks/mindforge-check-update.js"
+          }
+        ]
+      }
+    ]
+  }
+}

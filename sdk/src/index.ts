@@ -26,4 +26,4 @@ export type {
   BatchExecutionResult,
 } from './types';
 
-export const VERSION = '11.0.0';
+export const VERSION = '11.1.0';

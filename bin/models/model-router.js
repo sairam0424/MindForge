@@ -74,46 +74,59 @@ function readMindforgeSettings() {
   return _settingsCache;
 }
 
-function route(persona = 'developer', tier = 1) {
+function route(persona = 'developer', tier = 1, taskContext) {
   const settings = readMindforgeSettings();
-  
+  let result;
+
   // 1. Tier 3 override (Security/Privacy always uses SECURITY_MODEL)
   if (tier === 3) {
-    return {
+    result = {
       model: settings.SECURITY_MODEL,
       setting: 'SECURITY_MODEL',
       reason: 'Tier 3 (Security/Privacy) override'
     };
   }
-
   // 2. Persona mapping (Specific personas like research, debug, qa)
-  if (persona !== 'developer' && PERSONA_MAP[persona]) {
+  else if (persona !== 'developer' && PERSONA_MAP[persona]) {
     const settingKey = PERSONA_MAP[persona];
-    return {
+    result = {
       model: settings[settingKey],
       setting: settingKey,
       reason: `Mapped from specific persona "${persona}"`
     };
   }
-
   // 3. Budget Bias (Tier 1 uses QUICK_MODEL for default developer tasks)
-  if (tier === 1) {
-    return {
+  else if (tier === 1) {
+    result = {
       model: settings.QUICK_MODEL,
       setting: 'QUICK_MODEL',
       reason: 'Tier 1 Budget Bias (efficiency mode)'
     };
   }
-
   // 4. Default mapping
-  const settingKey = 'EXECUTOR_MODEL';
-  const model = settings[settingKey];
+  else {
+    const settingKey = 'EXECUTOR_MODEL';
+    result = {
+      model: settings[settingKey],
+      setting: settingKey,
+      reason: `Default EXECUTOR_MODEL for tier ${tier}`
+    };
+  }
 
-  return {
-    model,
-    setting: settingKey,
-    reason: `Default EXECUTOR_MODEL for tier ${tier}`
-  };
+  // Shadow-mode: difficulty-aware routing (UC-06)
+  // Logs what model the difficulty scorer WOULD select, without changing the result.
+  if (taskContext) {
+    const { score: scoreDifficulty } = require('./difficulty-scorer');
+    const difficulty = scoreDifficulty(taskContext);
+    const shadowModel = difficulty <= 3 ? settings.QUICK_MODEL
+                      : difficulty >= 8 ? settings.PLANNER_MODEL
+                      : settings.EXECUTOR_MODEL;
+    if (shadowModel !== result.model) {
+      process.stderr.write(`[model-router:shadow] difficulty=${difficulty} would route to ${shadowModel} (actual: ${result.model})\n`);
+    }
+  }
+
+  return result;
 }
 
 function getModel(settingKey) {

@@ -266,7 +266,7 @@ If your scripts call `mindforge sync-jira` or `mindforge sync-confluence`, remov
 ### Step 6: Verify
 
 ```bash
-npx mindforge-cc --version   # Should print 10.0.1
+npx mindforge-cc --version   # Should print 11.0.0
 npm test                      # All 41 tests should pass
 ```
 

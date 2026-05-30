@@ -68,7 +68,7 @@ async function runTest() {
     // Cleanup
     try {
         await fs.unlink(path.join(process.cwd(), '.mindforge', 'alpha-bundle.mfb'));
-    } catch(e) {}
+    } catch(e) { /* intentionally empty */ }
     process.exit(0);
   }
 }

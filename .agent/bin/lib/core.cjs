@@ -31,9 +31,9 @@ function detectSubRepos(cwd) {
         if (fs.existsSync(gitPath)) {
           results.push(entry.name);
         }
-      } catch {}
+      } catch { /* intentionally empty */ }
     }
-  } catch {}
+  } catch { /* intentionally empty */ }
   return results.sort();
 }
 
@@ -252,7 +252,7 @@ function loadConfig(cwd) {
 
     // Persist sub_repos changes (migration or sync)
     if (configDirty) {
-      try { fs.writeFileSync(configPath, JSON.stringify(parsed, null, 2), 'utf-8'); } catch {}
+      try { fs.writeFileSync(configPath, JSON.stringify(parsed, null, 2), 'utf-8'); } catch { /* intentionally empty */ }
     }
 
     const get = (key, nested) => {
@@ -592,7 +592,7 @@ function getActiveWorkstream(cwd) {
 function setActiveWorkstream(cwd, name) {
   const filePath = path.join(planningRoot(cwd), 'active-workstream');
   if (!name) {
-    try { fs.unlinkSync(filePath); } catch {}
+    try { fs.unlinkSync(filePath); } catch { /* intentionally empty */ }
     return;
   }
   if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
@@ -814,7 +814,7 @@ function extractCurrentMilestone(content, cwd) {
         version = milestoneMatch[1].trim();
       }
     }
-  } catch {}
+  } catch { /* intentionally empty */ }
 
   // 2. Fallback: derive version from getMilestoneInfo pattern in ROADMAP.md itself
   if (!version) {
