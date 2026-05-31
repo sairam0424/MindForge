@@ -1,9 +1,15 @@
 /**
- * MindForge v6.1.0-alpha — Neural Drift Remediation (NDR)
- * Component: Logic Drift Detector (Pillar X)
- * 
- * Analyzes reasoning traces for "Semantic Decay" (repeated failure patterns, 
- * hallucination-like markers, or mission drift).
+ * MindForge v6.1.0-alpha — Logic Drift Detector (Pillar X)
+ *
+ * HEURISTIC drift detector. Despite the "Pillar X" product naming, this
+ * component does NOT use a neural network, embeddings, or any learned model.
+ * It scores reasoning traces using pure keyword/ratio heuristics:
+ *   - unique-word-to-total ratio (proxy for "rambling")
+ *   - max word-repetition count (proxy for circular reasoning)
+ *   - presence of a small hardcoded list of contradiction phrases
+ *
+ * Flags "Semantic Decay" (repeated failure patterns, contradiction markers,
+ * or mission drift) heuristically. No model inference is performed.
  */
 'use strict';
 
@@ -48,7 +54,9 @@ class LogicDriftDetector {
   }
 
   /**
-   * Internal Heuristic: Detects low semantic density (rambling).
+   * Internal Heuristic: approximates "rambling" via a unique-keyword-to-word
+   * ratio. NOTE: this is NOT a semantic/embedding measure — "density" here is
+   * a plain lexical ratio, not model-derived semantic similarity.
    */
   _calculateSemanticDensity(thought) {
     const words = thought.split(/\s+/).length;

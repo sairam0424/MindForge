@@ -28,7 +28,7 @@
 ### Removed
 
 - Dead `quantum-verify` CLI command entry (no handler existed)
-- Dead `AuditRotator` references (broke hash chain on rotation boundaries)
+- Dead `AuditRotator` class and its export from `bin/utils/file-io.js` (zero callers; rotation broke the hash chain at rotation boundaries — see `bin/autonomous/audit-writer.js`)
 
 ### Changed
 

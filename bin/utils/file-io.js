@@ -3,7 +3,6 @@
 const fs = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
-const zlib = require('zlib');
 
 /**
  * Hash-chained audit writer (class API preserved for nexus-tracer + policy-engine).
@@ -28,8 +27,9 @@ class AuditWriter {
   }
 
   async write(entry) {
-    // Lazy require to avoid a require-cycle: audit-writer.js requires this file
-    // (AuditRotator) at load time, so we cannot require it at module top level.
+    // Lazy require (not module-top-level) to keep this leaf utility free of a
+    // load-time dependency on the autonomous layer and avoid any future require
+    // cycle: bin/autonomous/audit-writer.js is the canonical durable-append site.
     const { appendAuditEntrySync } = require('../autonomous/audit-writer');
     const chained = appendAuditEntrySync(this._path, entry);
     this._lastHash = chained._hash;
@@ -110,45 +110,4 @@ async function atomicWriteJSONAsync(filePath, data) {
   await fsp.rename(tmpPath, filePath);
 }
 
-class AuditRotator {
-  constructor(options = {}) {
-    this.maxLines = options.maxLines || 5000;
-  }
-
-  shouldRotate(filePath) {
-    if (!fs.existsSync(filePath)) return false;
-    const content = fs.readFileSync(filePath, 'utf8');
-    const lineCount = content.split('\n').filter(l => l.trim()).length;
-    return lineCount >= this.maxLines;
-  }
-
-  rotate(filePath, archiveDir) {
-    const dir = archiveDir || path.join(path.dirname(filePath), '..', 'audit-archive');
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const baseName = path.basename(filePath, path.extname(filePath));
-    const archiveName = `${baseName}-${timestamp}.jsonl.gz`;
-    const archivePath = path.join(dir, archiveName);
-
-    // Crash-safe: write archive FIRST, then truncate source
-    const content = fs.readFileSync(filePath);
-    const compressed = zlib.gzipSync(content);
-    fs.writeFileSync(archivePath, compressed);
-
-    const lines = content.toString('utf8').split('\n').filter(l => l.trim());
-    const carryover = lines.slice(-100).join('\n') + '\n';
-    const tmpPath = filePath + '.tmp.' + process.pid;
-    const fd = fs.openSync(tmpPath, 'w');
-    fs.writeSync(fd, carryover);
-    fs.fsyncSync(fd);
-    fs.closeSync(fd);
-    fs.renameSync(tmpPath, filePath);
-
-    return archivePath;
-  }
-}
-
-module.exports = { AuditWriter, AuditRotator, readJSON, writeJSON, readJSONL, readJSONSync, atomicWriteJSON, atomicWriteJSONAsync };
+module.exports = { AuditWriter, readJSON, writeJSON, readJSONL, readJSONSync, atomicWriteJSON, atomicWriteJSONAsync };

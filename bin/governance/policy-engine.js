@@ -92,10 +92,14 @@ class PolicyEngine {
             return verdict;
           }
 
-          // [ENTERPRISE] Tier 3 Reasoning/PQ Proof Bypass
+          // [ENTERPRISE] Tier 3 Sovereign Proof Bypass (fail-closed).
+          // A blast-radius override demands a CRYPTOGRAPHIC proof. Only a
+          // pq_proof verified via verifyZKProof may authorize the bypass.
+          // intent.reasoning_proof is free-form text validated nowhere, so it
+          // MUST NOT, on its own, grant an override (UC-22 authz bypass fix).
           if (intent.tier >= 3 && (intent.reasoning_proof || intent.pq_proof)) {
              const quantumCrypto = require('./quantum-crypto');
-             let isProofValid = true;
+             let isProofValid = false; // fail-closed: deny unless a real proof verifies
 
              if (intent.pq_proof) {
                const zkResult = quantumCrypto.verifyZKProof(intent.pq_proof, intent.id);
@@ -106,10 +110,19 @@ class PolicyEngine {
              }
 
              if (isProofValid) {
-                console.log(`[APO-BYPASS] [${requestId}] Tier 3 'Sovereign Proof' verified (${intent.pq_proof ? 'ZK-PQ' : 'Standard'}). Overriding Blast Radius limit.`);
+                console.log(`[APO-BYPASS] [${requestId}] Tier 3 'Sovereign Proof' verified (ZK-PQ). Overriding Blast Radius limit.`);
                 // Continue to permit check
-             } else {
+             } else if (intent.pq_proof) {
                 verdict = { verdict: 'DENY', reason: 'ZK proof verification failed. Configure a verifier module or provide a valid proof.', requestId };
+                this.logAudit(intent, impactScore, verdict);
+                return verdict;
+             } else {
+                // Only a reasoning_proof was supplied — not a cryptographic proof.
+                verdict = {
+                  verdict: 'DENY',
+                  reason: 'reasoning_proof is not a cryptographic proof; provide a valid pq_proof / Sovereign Proof for blast-radius override.',
+                  requestId
+                };
                 this.logAudit(intent, impactScore, verdict);
                 return verdict;
              }

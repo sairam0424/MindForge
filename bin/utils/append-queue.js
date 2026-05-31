@@ -17,6 +17,18 @@ const fs = require('fs');
 // unboundedly. Revisit with an LRU/eviction policy if dynamic paths are needed.
 const queues = new Map();
 
+/**
+ * @deprecated No production caller. The real durable-append path is
+ * `appendDurableSync` in `bin/memory/knowledge-store.js` (synchronous
+ * openSync+writeSync+fsyncSync+closeSync), which all audit/KB write sites use.
+ * This async single-writer queue is retained only as a tested reference
+ * implementation for the in-process serialized-append pattern (UC-09) and is
+ * exercised solely by `tests/append-queue.test.js`. Do NOT wire it into new
+ * code without first reconciling it with the canonical sync path.
+ *
+ * @param {string} filePath — file to serialize appends for
+ * @returns {{append: (line: string) => Promise<void>, drain: () => Promise<void>}}
+ */
 function createAppendQueue(filePath) {
   if (!queues.has(filePath)) queues.set(filePath, Promise.resolve());
 

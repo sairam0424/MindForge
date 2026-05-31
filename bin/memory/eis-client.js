@@ -100,10 +100,48 @@ class EISClient {
     return [];
   }
 
-  // TODO: implement when remote nodes are available
+  /**
+   * Verifies the provenance of a remote knowledge entry by cryptographically
+   * checking its signature against the signer DID's registered public key.
+   *
+   * HONEST / FAIL-CLOSED CONTRACT (UC-22, finding #22): this method NEVER
+   * returns true for a signature it has not actually verified. It returns true
+   * ONLY when ZTAI.verifySignature confirms the signature against a public key
+   * that is resolvable in the local trust registry. Every other case fails
+   * closed → false:
+   *   - no/empty signature,
+   *   - no signer DID on the entry,
+   *   - the DID is not resolvable here (e.g. a genuinely remote peer whose key
+   *     is not in the local registry — there is no remote DID-resolution infra
+   *     yet, see resolveRemoteNode),
+   *   - tampered payload or signature (crypto.verify returns false / throws).
+   *
+   * @param {{did?: string, signedData?: string}} entry - Provenance-bearing entry.
+   *   `did` is the signer's DID; `signedData` is the exact canonical bytes that
+   *   were signed (defaults to a deterministic JSON of the entry if absent).
+   * @param {string} signature - Base64 signature to verify.
+   * @returns {boolean} true only if cryptographically verified; false otherwise.
+   */
   verifyRemoteProvenance(entry, signature) {
-    if (!signature) return false;
-    return true;
+    if (!signature || typeof signature !== 'string') return false;
+    if (!entry || typeof entry !== 'object') return false;
+
+    const did = entry.did;
+    if (!did || typeof did !== 'string') return false;
+
+    // Canonical signed bytes: prefer an explicit signedData field, else a
+    // deterministic JSON of the entry (excluding the signature envelope).
+    const signedData = typeof entry.signedData === 'string'
+      ? entry.signedData
+      : JSON.stringify(entry);
+
+    try {
+      // ZTAI.verifySignature throws for an unresolvable (unregistered) DID —
+      // treat that as fail-closed rather than asserting verified provenance.
+      return ZTAI.verifySignature(did, signedData, signature) === true;
+    } catch {
+      return false;
+    }
   }
 
   // TODO: implement when remote nodes are available
@@ -113,7 +151,10 @@ class EISClient {
 
   /**
    * [HARDEN] Generates a cryptographically signed auth header using the agent's DID.
-   * This ensures verifiable provenance of knowledge within the mesh.
+   * This attaches OUTBOUND provenance to locally-originated requests (it signs
+   * what this node sends). It does NOT verify the provenance of inbound remote
+   * entries — that is verifyRemoteProvenance's job, which fails closed unless a
+   * signature is cryptographically verified against a resolvable public key.
    */
   async getAuthHeader(action, resource) {
     const manager = new ZTAI();

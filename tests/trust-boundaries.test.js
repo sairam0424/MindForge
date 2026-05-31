@@ -58,7 +58,12 @@ test('isHighImpact identifies destructive operations', () => {
   assert.strictEqual(isHighImpact('git reset --hard'), true);
   assert.strictEqual(isHighImpact('cat README.md'), false);
   assert.strictEqual(isHighImpact('ls -la'), false);
-  assert.strictEqual(isHighImpact('node index.js'), false);
+  // NOTE (UC-22 hardening): direct interpreter+script invocation like
+  // `node index.js` is now treated as MEDIUM and flagged — a deliberate
+  // false-positive tradeoff for the write-then-execute attack chain. Bare
+  // interpreters and npm-driven runs stay allowed (no script-file argument).
+  assert.strictEqual(isHighImpact('npm test'), false);
+  assert.strictEqual(isHighImpact('node --version'), false);
 });
 
 test('isHighImpact catches case-insensitive patterns', () => {
