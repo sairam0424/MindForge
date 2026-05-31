@@ -6,6 +6,10 @@
 
 const SEVERITY_ORDER = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
 
+// A severity spread of this many levels (or more) within a single location-group
+// is treated as a contradiction (e.g. CRITICAL=3 vs LOW=0 → gap 3).
+const CONTRADICTION_GAP_THRESHOLD = 2;
+
 function synthesizeFindings(reviews) {
   const allFindings = [];
   const modelSpecific = {};
@@ -18,8 +22,9 @@ function synthesizeFindings(reviews) {
     }
   }
 
-  // Detect consensus
+  // Detect consensus and contradictions from the same location-groups.
   const consensus = [];
+  const contradictions = [];
   const processed = new Set();
 
   for (let i = 0; i < allFindings.length; i++) {
@@ -31,7 +36,7 @@ function synthesizeFindings(reviews) {
     for (let j = i + 1; j < allFindings.length; j++) {
       if (processed.has(j)) continue;
       const f2 = allFindings[j];
-      
+
       if (isSameFinding(f1, f2)) {
         group.push(f2);
         processed.add(j);
@@ -45,12 +50,11 @@ function synthesizeFindings(reviews) {
         severity: getHighestSeverity(group.map(f => f.severity)),
         models: group.map(f => f.model),
       });
+
+      const contradiction = detectContradiction(f1.location, group);
+      if (contradiction) contradictions.push(contradiction);
     }
   }
-
-  // Detect contradictions (large severity gap on same finding)
-  const contradictions = [];
-  // (In a real implementation, we'd more deeply analyze conflicting logic)
 
   return {
     consensus,
@@ -90,6 +94,31 @@ function normalizeLocation(loc) {
     const band = Math.round(parseInt(n, 10) / 20) * 20;
     return `:${band}`;
   });
+}
+
+function severityRank(severity) {
+  const idx = SEVERITY_ORDER.indexOf(severity);
+  return idx < 0 ? 0 : idx;
+}
+
+// A location-group is contradictory when its reviews disagree on severity by
+// CONTRADICTION_GAP_THRESHOLD levels or more (e.g. CRITICAL vs LOW). Reuses the
+// already-computed location-group rather than re-deriving it.
+function detectContradiction(location, group) {
+  const ranks = group.map(f => severityRank(f.severity));
+  const maxRank = Math.max(...ranks);
+  const minRank = Math.min(...ranks);
+
+  if (maxRank - minRank < CONTRADICTION_GAP_THRESHOLD) return null;
+
+  return {
+    location,
+    severities: group.map(f => f.severity),
+    models: group.map(f => f.model),
+    description: `Severity disagreement at ${location}: ` +
+      `${SEVERITY_ORDER[minRank]} vs ${SEVERITY_ORDER[maxRank]} ` +
+      `(${maxRank - minRank}-level gap across ${group.length} reviews)`,
+  };
 }
 
 function getHighestSeverity(severities) {
