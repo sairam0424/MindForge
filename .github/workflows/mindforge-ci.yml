@@ -2,9 +2,9 @@ name: MindForge CI
 
 on:
   push:
-    branches: [ main, 'feat/**' ]
+    branches: [ main, develop, 'feat/**' ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
 
 env:
   CI: true
