@@ -96,6 +96,25 @@ const RUNTIMES = {
 };
 
 /**
+ * Reads the target project's experimental.pqc_demo flag — the SINGLE gate that
+ * the engine (bin/governance/quantum-crypto.js) uses to enable the simulated
+ * PQAS minter. Defaults to false (engine default) when the config is absent or
+ * unreadable, so the installer never over-claims that PQAS is enabled.
+ * @param {string} cwd - Target project root being installed into.
+ * @returns {boolean} - true only when experimental.pqc_demo === true.
+ */
+function isPqcDemoEnabled(cwd) {
+  try {
+    const cfgPath = path.join(cwd, '.mindforge', 'config.json');
+    if (!fs.existsSync(cfgPath)) return false;
+    const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+    return cfg && cfg.experimental && cfg.experimental.pqc_demo === true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Generates runtime-specific entry file content.
  * e.g. replacing "Claude" with "Gemini" in GEMINI.md
  */
@@ -650,9 +669,19 @@ async function install(runtime, scope, options = {}) {
       }
     });
 
-    // ✨ SOVEREIGN INITIALIZATION: Mark project as PQAS & Proactive enabled
+    // ✨ SOVEREIGN INITIALIZATION: report actual security posture honestly.
+    // The PQAS minter is gated SOLELY behind experimental.pqc_demo (see
+    // bin/governance/quantum-crypto.js: getProvider/_assertPqcDemoEnabled). When
+    // that flag is off (the default) PQAS is inert/simulated — claiming it is
+    // "enabled" would contradict the engine and mislead operators (UC-22).
     Theme.printStatus(c.magenta('Sovereign Intelligence v8.2.0 activated'), 'done');
-    Theme.printStatus(c.dim('  - Post-Quantum Agentic Security (PQAS) enabled'), 'info');
+    if (isPqcDemoEnabled(process.cwd())) {
+      Theme.printStatus(c.dim('  - Post-Quantum Agentic Security (PQAS): SIMULATED demo ENABLED '
+        + '(experimental.pqc_demo=true — simulated lattice crypto, NOT production trust)'), 'info');
+    } else {
+      Theme.printStatus(c.dim('  - Post-Quantum Agentic Security (PQAS): available in simulated/experimental '
+        + 'mode (inactive by default — set experimental.pqc_demo=true to enable the simulated demo)'), 'info');
+    }
     Theme.printStatus(c.dim('  - Proactive Semantic Intent Harvesting active'), 'info');
 
     // bin/ utilities (remaining non-engine scripts)
