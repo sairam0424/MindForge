@@ -57,6 +57,26 @@ class VectorHub {
   }
 
   /**
+   * Idempotently add a column to an existing table (lightweight migration).
+   * SQLite has no "ADD COLUMN IF NOT EXISTS", so we run the ALTER and swallow
+   * only the "duplicate column name" error — which simply means the column is
+   * already present (the table was created with it, or a prior run added it).
+   * Any other error is re-thrown so genuine schema problems surface loudly.
+   * @param {string} table
+   * @param {string} column
+   * @param {string} typeDecl - e.g. 'TEXT', 'INTEGER DEFAULT 0'
+   */
+  _addColumnIfMissing(table, column, typeDecl) {
+    try {
+      this._db.run(`ALTER TABLE ${table} ADD COLUMN ${column} ${typeDecl}`);
+    } catch (err) {
+      if (!/duplicate column name/i.test(err && err.message)) {
+        throw err;
+      }
+    }
+  }
+
+  /**
    * Initialize the WASM SQLite database and create tables + indexes.
    */
   async init() {
@@ -124,10 +144,22 @@ class VectorHub {
         id TEXT PRIMARY KEY,
         request_id TEXT NOT NULL,
         status TEXT NOT NULL,
+        did TEXT,
+        signed_message TEXT,
         attestation_payload TEXT,
         timestamp TEXT NOT NULL
       )
     `);
+
+    // UC-22 (audit finding #2): orbital attestations must carry the signer DID
+    // and the EXACT canonical message that was signed so verify() can re-check
+    // the cryptographic signature instead of trusting status='APPROVED' alone.
+    // CREATE TABLE IF NOT EXISTS won't add columns to a database created before
+    // this fix, so back-fill them with guarded ALTER TABLE statements. SQLite
+    // throws "duplicate column name" when the column already exists — that case
+    // is the success path (already migrated), so it is swallowed.
+    this._addColumnIfMissing('attestations', 'did', 'TEXT');
+    this._addColumnIfMissing('attestations', 'signed_message', 'TEXT');
 
     this._db.run(`
       CREATE TABLE IF NOT EXISTS mesh_config (
