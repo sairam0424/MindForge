@@ -1,6 +1,16 @@
 /**
  * MindForge v9.0.0 — Temporal Shadow Mirror (Pillar XXI)
- * Hybrid isolation for incident replication.
+ *
+ * Incident replication via git-worktree isolation.
+ *
+ * ISOLATION HONESTY (audit finding #24 / UC-22):
+ * This module provides GIT WORKTREE isolation only — a separate working tree
+ * and branch off the current repo. It does NOT provide container/Docker
+ * isolation (no separate kernel, network, filesystem, or process namespaces).
+ * A `docker --version` probe gates an "enhanced" path, but that path still runs
+ * in a git worktree; real Docker orchestration (build/run/mount) is a
+ * NOT-YET-IMPLEMENTED future enhancement. The returned mirror is always a
+ * worktree, and `activeMirror.isolation` reports the actual level provided.
  */
 'use strict';
 
@@ -20,27 +30,33 @@ class ShadowMirror {
    */
   async replicate(incident) {
     console.log(`🌀 Shadow Mirror: Replicating incident [${incident.remediation_id}]...`);
-    
-    // Choose isolation level
-    const level = (incident.details?.severity === 'CRITICAL') ? 2 : 1;
-    
-    if (level === 2 && this.isDockerAvailable()) {
-      return this.replicateLevel2(incident);
-    } else {
-      return this.replicateLevel1(incident);
+
+    // All replication currently runs in a git worktree (see file header).
+    // For CRITICAL incidents where a Docker toolchain is present we note that a
+    // future container-isolation path could be used, but we DO NOT claim to run
+    // it — we still replicate in a worktree and label it honestly.
+    const wantsContainer = incident.details?.severity === 'CRITICAL' && this.isDockerAvailable();
+
+    if (wantsContainer) {
+      return this.replicateCriticalWorktree(incident);
     }
+    return this.replicateLevel1(incident);
   }
 
   /**
    * Level 1 Replication: Git Worktree
-   * High-speed, lightweight logic isolation.
+   * High-speed, lightweight logic isolation (NOT container isolation).
+   *
+   * Provides a separate working tree + branch off the current repo. This
+   * isolates source/logic changes; it shares the host kernel, network,
+   * filesystem and process namespaces with the running engine.
    */
   async replicateLevel1(incident) {
     const mirrorId = `mirror-${incident.remediation_id}`;
     const mirrorPath = path.join(this.baseDir, mirrorId);
     const branchName = `sre-repro-${incident.remediation_id}`;
 
-    console.log(`[Level 1] Creating git worktree at ${mirrorPath}...`);
+    console.log(`[worktree] Creating git worktree at ${mirrorPath}...`);
 
     try {
       if (!fs.existsSync(this.baseDir)) {
@@ -50,40 +66,43 @@ class ShadowMirror {
       // 1. Create a reproduction branch and add worktree in one step (Atomic)
       // In a real system, we'd base this on the commit hash from the trace_id
       execSync(`git worktree add -b ${branchName} ${mirrorPath}`, { stdio: 'ignore' });
-      
-      this.activeMirror = { path: mirrorPath, branch: branchName, type: 'worktree' };
+
+      this.activeMirror = {
+        path: mirrorPath,
+        branch: branchName,
+        type: 'worktree-isolation',
+        // Honest disclosure of the isolation actually provided.
+        isolation: 'git-worktree',
+      };
 
       // 3. Inject incident metadata for the agent to use
       fs.writeFileSync(path.join(mirrorPath, 'REPLICATION.json'), JSON.stringify(incident, null, 2));
 
       return mirrorPath;
     } catch (err) {
-      console.error(`[ShadowMirror] Level 1 replication failed: ${err.message}`);
+      console.error(`[ShadowMirror] worktree replication failed: ${err.message}`);
       throw err;
     }
   }
 
   /**
-   * Level 2 Replication: Docker Sandbox
-   * Full environment isolation for state-bound incidents.
+   * CRITICAL-incident replication when a Docker toolchain is detected.
+   *
+   * HONESTY: This still replicates in a GIT WORKTREE. It does not build or run
+   * a container, does not mount any volume, and does not provide container
+   * isolation. Real Docker sandboxing (build/run/mount) is a NOT-YET-IMPLEMENTED
+   * enhancement tracked separately; until it lands, this path is identical in
+   * isolation guarantees to {@link replicateLevel1} and is labelled as such.
    */
-  async replicateLevel2(incident) {
-    console.log('[Level 2] Initializing Docker sandbox interface...');
-    // For the hackathon demo, we'll scaffold the Docker-ready worktree which would then be mounted
+  async replicateCriticalWorktree(incident) {
+    console.log('[worktree] CRITICAL incident: replicating in git worktree (container isolation not implemented).');
     const mirrorPath = await this.replicateLevel1(incident);
-    
-    const dockerfile = `
-FROM node:18-slim
-WORKDIR /app
-COPY . .
-RUN npm install --production
-CMD ["node", "bin/engine/logic-validator.js"]
-    `;
-    
-    fs.writeFileSync(path.join(mirrorPath, 'Dockerfile.sre'), dockerfile);
-    console.log(`[Level 2] Dockerfile.sre generated at ${mirrorPath}. Mounting volume for isolation.`);
-    
-    this.activeMirror.type = 'docker-hybrid';
+
+    // Note the unimplemented future path without claiming it ran.
+    this.activeMirror.dockerAvailable = true;
+    this.activeMirror.note =
+      'docker binary detected; real container isolation is a future enhancement — this mirror used git-worktree isolation only';
+
     return mirrorPath;
   }
 
@@ -104,7 +123,11 @@ CMD ["node", "bin/engine/logic-validator.js"]
 
     console.log(`🧹 Cleaning up Shadow Mirror: ${this.activeMirror.path}...`);
     try {
-      if (this.activeMirror.type === 'worktree' || this.activeMirror.type === 'docker-hybrid') {
+      // Every mirror this module produces is a git worktree (see replicate()).
+      // Accept the legacy 'worktree'/'docker-hybrid' labels for backward compat
+      // in case an older serialized mirror is handed in.
+      const worktreeTypes = ['worktree-isolation', 'worktree', 'docker-hybrid'];
+      if (worktreeTypes.includes(this.activeMirror.type)) {
         execSync(`git worktree remove ${this.activeMirror.path} --force`, { stdio: 'ignore' });
         execSync(`git branch -D ${this.activeMirror.branch}`, { stdio: 'ignore' });
         // Clean up the folder just in case
