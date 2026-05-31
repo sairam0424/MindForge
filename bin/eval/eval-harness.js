@@ -72,6 +72,8 @@ async function runEval({ goldenSet, retriever, k, judge }) {
     perQuery.push({ query, recall, ndcg: ndcgScore, retrieved });
   }
 
+  if (perQuery.length === 0) return { meanRecallAtK: 0, meanNDCG: 0, perQuery: [] };
+
   const meanRecallAtK = perQuery.reduce((s, q) => s + q.recall, 0) / perQuery.length;
   const meanNDCG = perQuery.reduce((s, q) => s + q.ndcg, 0) / perQuery.length;
 

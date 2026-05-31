@@ -15,7 +15,8 @@ process.stdin.on('end', () => {
       process.exit(0); // allow
     }
 
-    const command = event.tool_input?.command || '';
+    const fullCommand = event.tool_input?.command || '';
+    const command = fullCommand.split('\n')[0];
 
     if (isHighImpact(command)) {
       // Output a block reason (Claude Code shows this to the user)
@@ -28,8 +29,11 @@ process.stdin.on('end', () => {
 
     process.exit(0); // allow
   } catch (e) {
-    // Fail open on parse errors (don't block the user on hook bugs)
-    process.stderr.write('[trust-gate-hook] parse error: ' + e.message + '\n');
-    process.exit(0);
+    process.stderr.write('[trust-gate-hook] parse error (BLOCKING): ' + e.message + '\n');
+    process.stdout.write(JSON.stringify({
+      decision: 'block',
+      reason: '[TrustGate] Could not verify command safety — parse error'
+    }));
+    process.exit(2);
   }
 });

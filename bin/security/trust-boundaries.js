@@ -71,18 +71,21 @@ function tagUntrusted(content, meta) {
  * Returns true if the command matches known destructive patterns.
  */
 function isHighImpact(command) {
+  const sanitized = String(command).replace(/\x00/g, '');
   const patterns = [
     /rm\s+(-\w*r\w*\s+-\w*f|(-\w*f\w*\s+-\w*r)|-\w*rf|-\w*fr)/i,
     /git\s+push\s+.*--force/i,
     /git\s+push\s+.*-f/i,
-    /drop\s+table/i,
-    /drop\s+database/i,
+    /drop\s+(table|database)/i,
     /git\s+reset\s+--hard/i,
     /delete\s+from/i,
     /truncate\s+table/i,
-    /\bformat\b/i
+    /\bmkfs(\.\w+)?\s+\/dev\//i,
+    /\bdd\b.*\bof=\/dev\//i,
+    /\b(curl|wget)\b.*\|\s*(bash|sh|zsh)\b/i,
+    /^\s*find\s+.*-delete\b/i,
   ];
-  return patterns.some(pattern => pattern.test(command));
+  return patterns.some(pattern => pattern.test(sanitized));
 }
 
 module.exports = {
