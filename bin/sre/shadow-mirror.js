@@ -14,15 +14,39 @@
  */
 'use strict';
 
-const { execSync } = require('node:child_process');
+const { execSync, execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
-const crypto = require('node:crypto');
+
+// remediation_id flows from the SRE sentinel (a trust boundary) into git
+// branch/worktree names. Only allow a safe identifier charset and reject
+// anything that could be read as a flag or shell metacharacter. Defence in
+// depth on top of execFileSync (argv array, no shell). Fail-closed.
+const SAFE_REMEDIATION_ID = /^[A-Za-z0-9._-]+$/;
 
 class ShadowMirror {
   constructor(options = {}) {
     this.baseDir = options.baseDir || path.join(process.cwd(), '.mindforge', 'mirrors');
     this.activeMirror = null;
+  }
+
+  /**
+   * Validates a remediation_id (trust-boundary input) before it is used to
+   * build git branch/worktree names. Fail-closed: throws on missing, empty,
+   * overlong, flag-like, or metacharacter-bearing ids. Returns the id on pass.
+   * Static so it can be unit-tested in isolation.
+   */
+  static sanitizeRemediationId(id) {
+    if (typeof id !== 'string' || id.length === 0 || id.length > 128) {
+      throw new Error('[ShadowMirror] invalid remediation_id: must be a non-empty string of <=128 chars');
+    }
+    if (id.startsWith('-')) {
+      throw new Error('[ShadowMirror] invalid remediation_id: must not start with "-"');
+    }
+    if (!SAFE_REMEDIATION_ID.test(id)) {
+      throw new Error('[ShadowMirror] invalid remediation_id: only [A-Za-z0-9._-] characters allowed');
+    }
+    return id;
   }
 
   /**
@@ -52,9 +76,10 @@ class ShadowMirror {
    * filesystem and process namespaces with the running engine.
    */
   async replicateLevel1(incident) {
-    const mirrorId = `mirror-${incident.remediation_id}`;
+    const remediationId = ShadowMirror.sanitizeRemediationId(incident.remediation_id);
+    const mirrorId = `mirror-${remediationId}`;
     const mirrorPath = path.join(this.baseDir, mirrorId);
-    const branchName = `sre-repro-${incident.remediation_id}`;
+    const branchName = `sre-repro-${remediationId}`;
 
     console.log(`[worktree] Creating git worktree at ${mirrorPath}...`);
 
@@ -65,7 +90,9 @@ class ShadowMirror {
 
       // 1. Create a reproduction branch and add worktree in one step (Atomic)
       // In a real system, we'd base this on the commit hash from the trace_id
-      execSync(`git worktree add -b ${branchName} ${mirrorPath}`, { stdio: 'ignore' });
+      // execFileSync with an argv array — no shell, so branchName/mirrorPath
+      // cannot inject commands even if they somehow contained metacharacters.
+      execFileSync('git', ['worktree', 'add', '-b', branchName, mirrorPath], { stdio: 'ignore' });
 
       this.activeMirror = {
         path: mirrorPath,
@@ -128,8 +155,8 @@ class ShadowMirror {
       // in case an older serialized mirror is handed in.
       const worktreeTypes = ['worktree-isolation', 'worktree', 'docker-hybrid'];
       if (worktreeTypes.includes(this.activeMirror.type)) {
-        execSync(`git worktree remove ${this.activeMirror.path} --force`, { stdio: 'ignore' });
-        execSync(`git branch -D ${this.activeMirror.branch}`, { stdio: 'ignore' });
+        execFileSync('git', ['worktree', 'remove', this.activeMirror.path, '--force'], { stdio: 'ignore' });
+        execFileSync('git', ['branch', '-D', this.activeMirror.branch], { stdio: 'ignore' });
         // Clean up the folder just in case
         if (fs.existsSync(this.activeMirror.path)) {
           fs.rmSync(this.activeMirror.path, { recursive: true });
