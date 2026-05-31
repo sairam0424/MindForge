@@ -1,7 +1,7 @@
 # MindForge — Project State
 
 ## Status
-🟢 Active — v11.2.0 (Verification & Trust)
+🟢 Active — v11.2.1 (Security & Integrity Hardening) — PUBLISHED to npm
 
 ## IMPORTANT
 HANDOFF.json is committed to git. Never write secrets or credentials into it.
@@ -9,30 +9,42 @@ Write "see .env" or "stored in secrets manager" if a note needs to reference cre
 
 
 ## Current version
-v11.2.0 — Verification & Trust release. Makes quality measurable (unified verification runner, eval harness with recall@k/nDCG), defends trust boundaries (manifest pinning, untrusted output tagging, high-impact command gating), and cleans tech debt.
+v11.2.1 — Security & integrity hardening patch on top of v11.2.0. Closes every
+exploitable security defect and false-assurance stub from the post-v11.2.0
+end-to-end audit. No new features, no breaking changes. Published to npm
+(latest = 11.2.1).
 
 ## Current phase
-v11.2.0 implemented. Ready for release (push + PR + CI + publish gated on human approval).
+v11.2.1 published to npm. develop has the release commit + v11.2.1 tag (push
+of develop + tag is human-gated). PR #123 (security hardening) merged to develop.
 
 ## Last completed task
-v11.2.0 — UC-08 (verification runner), UC-25 (eval harness), UC-22 (trust boundaries), council CLI wiring, tech debt batch (5 fixes).
+v11.2.1 release — ~25 of 70 audit findings fixed: Tier-0 security bypasses
+(trust-gate multi-line, orbital forged-attestation, policy reasoning_proof,
+shadow-mirror injection, isHighImpact), Tier-1 false-assurance stubs
+(ztai-archiver Merkle, mesh-self-healer, logic-validator, reason-source-aligner,
+sre-manager, eis-client, installer, finding-synthesizer, logic-drift-detector,
+session-manager, shadow-mirror docker, regression-writer, skill-registry),
+Tier-2/3 hygiene (release-workflow guards, version-drift, dead-code).
 
 ## Next action
-Push branch, open PR to develop, let CI validate, then tag + publish v11.2.0 with human approval.
+Push develop + v11.2.1 tag (human-gated). Then v11.3.0 planning.
 
 ## Decisions made
-- Verification runner orchestrates test/lint/audit/typecheck (security stage TBD)
-- Eval harness uses binary relevance for recall@k; LLM-as-judge gated behind config flag (default off)
-- Trust-gate hook fails-open on parse errors (don't block user on hook bugs)
-- isHighImpact uses case-insensitive regex; conservative (may over-block, but safer)
-- Golden set seeds 10 queries — operators expand over time
-- Coverage ratchet deferred to CI configuration (not enforced in-code this release)
+- v11.2.1 = patch (fixes + honest-labeling only, no features/breaking changes per SemVer)
+- Published manually via `npm publish` from develop (proven path); annotated git tag for history
+- Honest-label + real-when-available strategy for stubs (not "make everything real" — avoids heavy deps)
+- Worktree isolation only for disjoint-file parallel work; main-tree for edits to recently-changed files (worktree base can lag HEAD)
 
 ## Active blockers
-None (branch needs git push).
+None (develop + tag need git push — DestructiveGuard routes to human).
 
 ## Context for next session
-MindForge v11.2.0 "Verification & Trust" fully implemented on branch `feat/v11.2.0-verification-trust`. 56 test files passing (0 failed, 2 skipped). v11.3.0 work: flip shadow-mode routing (requires eval pass), coverage ratchet enforcement, dense embeddings exploration.
+MindForge v11.2.1 published. ~45 of 70 audit findings remain, all DEFERRED-by-design
+(no security risk): #6 Write/Edit gating (UX policy decision), #36 CI coverage 30→80
+(needs real test-writing), #45 flip cost_routing.shadow_mode active (gated on eval),
+dense embeddings, real PQC, full swarm runtime (v12.0.0 oceans). Full backlog in
+agent memory (mindforge-remaining-backlog).
 
 ## Last updated
-2026-05-31T12:00:00Z
+2026-05-31T18:00:00Z
