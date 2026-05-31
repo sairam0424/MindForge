@@ -16,13 +16,23 @@ process.stdin.on('end', () => {
     }
 
     const fullCommand = event.tool_input?.command || '';
-    const command = fullCommand.split('\n')[0];
 
-    if (isHighImpact(command)) {
+    // Check the whole command AND every individual line, blocking if ANY
+    // segment is high-impact. Per-line scanning means a benign first line
+    // cannot cloak a destructive command on a later line; the whole-string
+    // check catches patterns a line split might fragment. This is a security
+    // gate, so it errs toward blocking: a destructive keyword in (e.g.) a
+    // commit message will prompt for approval rather than risk a cloaked
+    // command slipping through. Approval friction is preferable to a bypass.
+    const lines = fullCommand.split('\n');
+    const offending = [fullCommand, ...lines].find((segment) => isHighImpact(segment));
+
+    if (offending) {
+      const display = offending.length > 80 ? offending.slice(0, 80) + '...' : offending;
       // Output a block reason (Claude Code shows this to the user)
       process.stdout.write(JSON.stringify({
         decision: 'block',
-        reason: `[TrustGate] High-impact command detected: "${command.substring(0, 80)}..." — requires explicit user approval`
+        reason: `[TrustGate] High-impact command detected: "${display}" — requires explicit user approval`
       }));
       process.exit(2); // block
     }
