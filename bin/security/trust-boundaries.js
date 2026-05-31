@@ -70,15 +70,41 @@ function tagUntrusted(content, meta) {
 // character in a regex literal (eslint no-control-regex).
 const NUL = String.fromCharCode(0);
 
+// ${IFS} / $IFS are shell-internal field separators that expand to whitespace.
+// Attackers use them to avoid literal spaces between a destructive token and
+// its flags (rm${IFS}-rf${IFS}/). We normalize them back to a space so the
+// existing rm/-rf patterns catch the de-obfuscated form (audit #8).
+const IFS_TOKEN = /\$\{IFS\}|\$IFS/g;
+
+/**
+ * De-obfuscates shell metacharacter tricks WITHOUT emulating a real shell.
+ * Strips quotes (' ") and backslash escapes, collapses ${IFS}/$IFS to a space,
+ * then collapses runs of whitespace. This turns r''m, r"m, r\m and
+ * rm${IFS}-rf${IFS}/ back into plain `rm -rf /` so the existing patterns fire.
+ * Intentionally conservative: it removes characters rather than interpreting
+ * them, which can only make a string MORE likely to match (fail-toward-block).
+ */
+function normalizeShell(input) {
+  return input
+    .split(NUL).join('')          // shells ignore NUL; never let it split a token
+    .replace(IFS_TOKEN, ' ')       // ${IFS}/$IFS -> space
+    .replace(/[\\'"]/g, '')        // drop backslash escapes and quote chars
+    .replace(/\s+/g, ' ');         // collapse whitespace runs
+}
+
 /**
  * Detects high-impact / destructive commands via case-insensitive pattern matching.
  * Returns true if the command matches known destructive patterns.
+ *
+ * The detector errs toward blocking by design: this feeds a PreToolUse gate
+ * where approval friction is strictly preferable to a destructive bypass.
  */
 function isHighImpact(command) {
-  // Strip null bytes first — shells ignore them, so an attacker must not be
-  // able to use a NUL to split a destructive token and slip past the patterns.
-  const sanitized = String(command).split(NUL).join('');
+  // Normalize first so metacharacter-obfuscated commands (audit #8) are matched
+  // by the SAME pattern set as their plain-text equivalents.
+  const sanitized = normalizeShell(String(command));
   const patterns = [
+    // ── Original allowlist (unchanged) ──────────────────────────────────────
     /rm\s+(-\w*r\w*\s+-\w*f|(-\w*f\w*\s+-\w*r)|-\w*rf|-\w*fr)/i,
     /git\s+push\s+.*--force/i,
     /git\s+push\s+.*-f/i,
@@ -87,9 +113,65 @@ function isHighImpact(command) {
     /delete\s+from/i,
     /truncate\s+table/i,
     /\bmkfs(\.\w+)?\s+\/dev\//i,
-    /\bdd\b.*\bof=\/dev\//i,
+    // #11: any dd write target, not just /dev/ (dd if=... of=important.db).
+    // Original /dev/-only check is a subset of this, so it stays covered.
+    /\bdd\b.*\bof=/i,
     /\b(curl|wget)\b.*\|\s*(bash|sh|zsh)\b/i,
     /^\s*find\s+.*-delete\b/i,
+
+    // ── #4 Command/process substitution RCE ─────────────────────────────────
+    // `eval` anywhere is high-impact (dynamic code execution).
+    /\beval\b/i,
+    // Command substitution $(...) or backtick combined with a network fetch.
+    /\$\(\s*(curl|wget)\b/i,
+    new RegExp(String.fromCharCode(96) + '\\s*(curl|wget)\\b', 'i'),
+    // Process substitution feeding an interpreter: bash <(...), sh <(...).
+    /\b(bash|sh|zsh)\b.*<\(/i,
+    // Curl/wget directly inside a process substitution.
+    /<\(\s*(curl|wget)\b/i,
+
+    // ── #5 Interpreter invocation of a script file ──────────────────────────
+    // source <file> and `. <file>` are unambiguous script execution.
+    /\bsource\s+\S+/i,
+    /(^|[;&|]|\s)\.\s+\S+\.\w+/i,
+    // bash/sh/zsh running a .sh script — clearly script execution.
+    /\b(bash|sh|zsh)\s+\S*\.sh\b/i,
+    // MEDIUM: node/python/etc. running a script file. Documented false-positive
+    // tradeoff — e.g. `node tests/run-all.js` WILL be flagged. The gate errs
+    // toward blocking; bare `node`/`python` (no script arg) and npm-driven runs
+    // are NOT matched (no file token), so day-to-day tooling stays unaffected.
+    /\b(node|python3?|ruby|perl)\s+\S+\.(js|mjs|cjs|ts|py|rb|pl)\b/i,
+
+    // ── #7 Redirect-overwrite of critical files / devices ───────────────────
+    // > or >> targeting an absolute sensitive path (/etc/, /dev/, /boot/, /sys/,
+    // /proc/, /var/, /usr/, /bin/, /sbin/, /lib/). Project-local redirects
+    // (> out.log) are NOT matched.
+    />>?\s*\/(etc|dev|boot|sys|proc|var|usr|bin|sbin|lib|root|lib64)\//i,
+
+    // ── #8 handled by normalizeShell() above (de-obfuscation), no pattern here.
+
+    // ── #9 chmod dangerous modes ────────────────────────────────────────────
+    // Canonical dangerous octal modes only: 000 (full lockout) and the
+    // world-writable 666/777 family. Common safe modes (644/755/600/700/640)
+    // and symbolic modes (chmod +x build.sh) are intentionally NOT matched.
+    // ANY recursive chmod is also treated as high-impact regardless of mode.
+    /\bchmod\b.*\b(000|0?666|0?777)\b/i,
+    /\bchmod\s+-\w*[rR]/i,
+
+    // ── #10 chown recursive ─────────────────────────────────────────────────
+    /\bchown\s+-\w*[rR]/i,
+
+    // ── #12 mv of root / into /dev/null ─────────────────────────────────────
+    /\bmv\b.*\/dev\/null\b/i,
+    /\bmv\s+(-\w+\s+)?\/\s/i,
+
+    // ── #13 Process killers ─────────────────────────────────────────────────
+    /\bkill\s+-9\s+-1\b/i,
+    /\bkillall\b/i,
+    /\bpkill\b/i,
+
+    // ── #14 Power-state commands ────────────────────────────────────────────
+    /\b(shutdown|reboot|halt|poweroff)\b/i,
   ];
   return patterns.some(pattern => pattern.test(sanitized));
 }

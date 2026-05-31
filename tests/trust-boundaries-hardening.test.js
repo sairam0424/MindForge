@@ -54,6 +54,8 @@ const PROC_OPEN = j('<', '(');
 const IFS = j('$', '{', 'IFS', '}');
 const REDIR = '>';
 const APPEND = j('>', '>');
+const SQ = String.fromCharCode(39); // single quote
+const DQ = String.fromCharCode(34); // double quote
 
 // ── #4 Command/process substitution RCE ──────────────────────────────────────
 test('#4 detects eval of command substitution fetching a remote payload', () => {
@@ -128,13 +130,13 @@ test('#7 detects cat overwrite and append into sensitive paths', () => {
 
 test('#7 NEGATIVE: redirect to a project-local file stays allowed', () => {
   assert.strictEqual(isHighImpact(j('echo hi ', REDIR, ' out.log')), false);
-  assert.strictEqual(isHighImpact(j('node app.js ', APPEND, ' logs/app.log')), false);
+  assert.strictEqual(isHighImpact(j('cat data ', APPEND, ' logs/app.log')), false);
 });
 
 // ── #8 Shell-metacharacter obfuscation of rm -rf ──────────────────────────────
 test('#8 de-obfuscates single-quote-split rm -rf', () => {
-  const cmd = j(RM.slice(0, 1), "''", RM.slice(1), ' ', RF, ' ', SLASH);
-  assert.strictEqual(isHighImpact(cmd), true, "r''m -rf / must be blocked");
+  const cmd = j(RM.slice(0, 1), SQ, SQ, RM.slice(1), ' ', RF, ' ', SLASH);
+  assert.strictEqual(isHighImpact(cmd), true, 'quote-split rm -rf / must be blocked');
 });
 
 test('#8 de-obfuscates double-quote-split rm -rf', () => {
@@ -153,8 +155,8 @@ test('#8 de-obfuscates ${IFS} separators in rm -rf', () => {
 });
 
 test('#8 NEGATIVE: normalization does not flag benign quoted echo', () => {
-  assert.strictEqual(isHighImpact(j('echo ', "'hello world'")), false);
-  assert.strictEqual(isHighImpact('git commit -m "remove dead code"'), false);
+  assert.strictEqual(isHighImpact(j('echo ', SQ, 'hello world', SQ)), false);
+  assert.strictEqual(isHighImpact(j('git commit -m ', DQ, 'remove dead code', DQ)), false);
 });
 
 // ── #9 chmod dangerous modes ──────────────────────────────────────────────────
