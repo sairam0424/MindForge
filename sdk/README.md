@@ -64,7 +64,7 @@ if (!valid) console.error(errors);
 - The SDK operates on local files and provides no network authentication. Do not expose SDK
   endpoints to the public internet.
 
-## New in v9.0.0
+## New in v10.7.0
 
 ### Additional exports
 
@@ -72,7 +72,7 @@ if (!valid) console.error(errors);
 import {
   MindForgeClient,
   MindForgeEventStream,
-  VERSION,              // '9.0.0'
+  VERSION,              // '10.7.0'
 } from '@mindforge/sdk';
 
 import type {

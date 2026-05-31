@@ -1,5 +1,5 @@
 /**
- * MindForge v6.1.0-alpha — Neural Drift Remediation (NDR)
+ * MindForge v10.7.0 — Neural Drift Remediation (NDR)
  * Component: Remediation Engine (Pillar X)
  * 
  * Triggers corrective actions when logic drift or reasoning 
@@ -60,16 +60,17 @@ class RemediationEngine {
         console.log(`[Remediation] Forcing reasoner reset for ${spanId}`);
         // Logic to clear local thought window for span
         break;
-      case 'GOLDEN_TRACE_INJECTION':
+      case 'GOLDEN_TRACE_INJECTION': {
         console.log(`[Remediation] Injecting successful trace heuristics into ${spanId}`);
         const traces = await semanticHub.getGoldenTraces();
         if (traces.length > 0) {
            const bestTrace = traces[0];
            console.log(`[Remediation] Injected Golden Trace: ${bestTrace.id} (Skill: ${bestTrace.skill})`);
         } else {
-           console.warn(`[Remediation] No Golden Traces found in SemanticHub for injection.`);
+           console.warn('[Remediation] No Golden Traces found in SemanticHub for injection.');
         }
         break;
+      }
     }
   }
 
