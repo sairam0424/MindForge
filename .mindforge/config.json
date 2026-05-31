@@ -1,11 +1,11 @@
 {
-  "version": "11.2.0",
+  "version": "11.2.1",
   "environment": "development",
   "governance": {
     "drift_threshold": 0.75,
     "critical_drift_threshold": 0.5,
     "res_threshold": 0.8,
-    "active_did": "did:mindforge:17e346b0-7c75-4d98-a16e-ac23ef3508b2"
+    "active_did": "did:mindforge:96ffae09-fb2d-45ee-b362-d628ca63d214"
   },
   "revops": {
     "market_registry": {

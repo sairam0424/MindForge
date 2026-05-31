@@ -1,5 +1,41 @@
 # Changelog
 
+## [11.2.1] - 2026-05-31 — "Hardening" (security & integrity audit remediation)
+
+Post-v11.2.0 audit remediation. Closes every exploitable security defect and
+false-assurance stub surfaced by the end-to-end audit. No new features, no
+breaking changes — fixes and honest-labeling only.
+
+### Security (fixed)
+
+- **trust-gate-hook**: scans the whole command + every line (a benign first line could previously cloak a destructive later line)
+- **orbital-guardian**: `verify()` re-checks the Ed25519 attestation signature (added `did`/`signed_message` columns + migration); rejects forged APPROVED rows
+- **policy-engine**: `reasoning_proof` alone no longer bypasses the blast-radius limit (`isProofValid` inits false; cryptographic `pq_proof` path unchanged)
+- **shadow-mirror**: git calls use `execFileSync` (argv) + fail-closed `sanitizeRemediationId()` — closes command injection via `remediation_id`
+- **trust-boundaries `isHighImpact`**: added chmod/chown/dd/mv/kill/shutdown/eval/command-substitution/redirect detection + shell-obfuscation normalization; narrowed interpreter-script pattern to stop false-positives on `node <projectfile>`
+- **eis-client**: `verifyRemoteProvenance` delegates to real ZTAI signature verification, fail-closed (was returning true for any non-empty signature)
+
+### Integrity / honest labeling (fixed)
+
+- **ztai-archiver**: `verifyIntegrity()` recomputes the Merkle root from the live log (was a no-op `return true`); fail-closed on tamper/delete/reorder
+- **mesh-self-healer**: emits an honest degraded advisory instead of fabricated 94%/100% consensus
+- **logic-validator**: probes Ollama when reachable, honest heuristic fallback; stopped advertising the dead model path
+- **reason-source-aligner**: consistent return shape (uninitialized no longer silently disables the mission-fidelity gate); real Jaccard similarity
+- **sre-manager**: HMAC artifact relabeled as integrity tag, not "ZK-Proof"
+- **installer-core**: PQAS-enabled message gated on the real `experimental.pqc_demo` flag
+- **finding-synthesizer**: detects real severity-gap contradictions (was hardcoded `[]`)
+- **logic-drift-detector**: relabeled heuristic, not "Neural"
+- **session-manager / shadow-mirror(docker) / regression-writer / skill-registry**: honest disclosure instead of silent empties / fake isolation / tautological tests / mock placeholders
+- **MINDFORGE.md**: `[PQAS_ENFORCED]` reconciled to reflect simulated/inactive default; **ztai-manager** logs relabeled `[ZTAI-HSM-SIM]`
+
+### CI / hygiene
+
+- **release workflow**: asserts the git tag matches `package.json` version (fail-closed) + skips publish if the version is already on npm
+- **version-check**: runtime drift check widened to all 4 sources (was 2); SDK README guarded by test
+- removed dead `AuditRotator` class (CHANGELOG had wrongly claimed it removed); deprecated orphaned `createAppendQueue`
+- refreshed stale `v11.1.0` banners → current; added `cost_routing.shadow_mode` latch
+- version bumped to 11.2.1 across all sources
+
 ## [11.2.0] - 2026-05-31 — "Verification & Trust"
 
 ### Added
