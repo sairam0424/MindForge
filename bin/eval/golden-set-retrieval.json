@@ -1,0 +1,46 @@
+{
+  "description": "Golden set for retrieval quality evaluation. Each entry has a natural-language query and the IDs of documents that SHOULD be retrieved.",
+  "version": "1.0.0",
+  "queries": [
+    {
+      "query": "how does the audit hash chain work",
+      "relevant": ["audit-hash", "audit-verifier", "verify-audit"]
+    },
+    {
+      "query": "what model should I use for a security-sensitive task",
+      "relevant": ["difficulty-scorer", "model-router", "pricing-registry", "trust-boundaries"]
+    },
+    {
+      "query": "how does wave execution and parallel orchestration work",
+      "relevant": ["wave-executor", "swarm-controller", "auto-executor"]
+    },
+    {
+      "query": "how do I track token costs and budget enforcement",
+      "relevant": ["cost-tracker", "token-ledger", "budget-enforcer", "finops-hub"]
+    },
+    {
+      "query": "how does the knowledge store persist and retrieve entries",
+      "relevant": ["knowledge-store", "knowledge-graph-protocol", "shard-controller"]
+    },
+    {
+      "query": "what happens during council consensus and synthesis",
+      "relevant": ["council-protocol", "synthesis-engine", "council-templates"]
+    },
+    {
+      "query": "how do instincts get captured and promoted to skills",
+      "relevant": ["capture-engine", "promotion-engine", "instinct-schema", "skill-registry"]
+    },
+    {
+      "query": "what verification checks run before marking a task complete",
+      "relevant": ["verification-pipeline", "trust-verifier", "policy-engine"]
+    },
+    {
+      "query": "how does the autonomous stuck detector recover failed tasks",
+      "relevant": ["stuck-detector", "node-repair", "steering-manager", "progress-reporter"]
+    },
+    {
+      "query": "how are hooks triggered and what security gates exist pre-commit",
+      "relevant": ["trust-gate-hook", "instinct-capture-hook", "policy-gate-hardened", "impact-analyzer"]
+    }
+  ]
+}

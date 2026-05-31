@@ -115,11 +115,6 @@ const COMMANDS = {
     script: 'bin/autonomous/mesh-self-healer.js',
     description: 'Auto-detect and repair reasoning drifts in the active swarm'
   },
-  'quantum-verify': {
-    script: 'bin/governance/quantum-crypto.js',
-    description: 'Verify framework integrity using post-quantum signatures',
-    defaultArgs: ['--verify', '.mindforge/engine/']
-  },
   // Planned: jira-sync, confluence-sync (not yet implemented)
   'metrics': {
     script: 'bin/dashboard/metrics-aggregator.js',
@@ -138,6 +133,10 @@ const COMMANDS = {
     script: 'bin/engine/learning-manager.js',
     description: 'Append a new Learning Entry to the Evolution Log',
     defaultArgs: ['record']
+  },
+  'verify': {
+    script: 'bin/engine/verify-cli.js',
+    description: 'Run unified verification (tests, lint, audit, typecheck) and write report'
   }
 };
 

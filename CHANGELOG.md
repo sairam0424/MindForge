@@ -1,5 +1,44 @@
 # Changelog
 
+## [11.2.0] - 2026-05-31 — "Verification & Trust"
+
+### Added
+
+- **UC-08 — Unified Verification Runner**
+  - `bin/engine/verification-runner.js`: orchestrates test/lint/audit/typecheck stages into structured results with pass/fail/skip per stage
+  - `bin/engine/verify-cli.js`: CLI entrypoint writing `.planning/VERIFICATION.md` reports
+  - `mindforge verify` command registered in CLI
+
+- **UC-25 — Eval Harness**
+  - `bin/eval/eval-harness.js`: recall@k, nDCG (graded relevance), and `runEval()` orchestrator for measuring retrieval quality
+  - `bin/eval/golden-set-retrieval.json`: 10-query seed golden set covering orchestration, security, memory, cost, verification, hooks, and architecture domains
+
+- **UC-22 — Tool/MCP Trust Boundaries**
+  - `bin/security/trust-boundaries.js`: manifest pinning (deterministic SHA-256 with recursive key sort), tamper detection, untrusted output tagging with provenance, and high-impact command detection
+  - `bin/security/trust-gate-hook.js`: PreToolUse hook that blocks destructive Bash commands (rm -rf, force-push, DROP TABLE, hard reset) via native Claude Code hooks
+  - Trust-gate registered in `.claude/settings.json` PreToolUse
+
+- **Council CLI**
+  - `bin/council-cli.js`: thin wrapper wiring `runCouncil` to the `/mindforge:council` command with structured JSON output and formatted display
+
+### Fixed
+
+- `auto-runner.js`: removed erroneous `new` on singleton ZTAIManager instance (was line 692)
+
+### Removed
+
+- Dead `quantum-verify` CLI command entry (no handler existed)
+- Dead `AuditRotator` references (broke hash chain on rotation boundaries)
+
+### Changed
+
+- Config `pqas_signing` provider clarified as "Dilithium-5 (simulated — inactive)"
+- Banner version strings updated to v11.1.0 in self-corrective-synthesizer and remediation-engine
+- SDK README heading updated to "New in v11.1.0"
+- Version bumped to 11.2.0 across package.json and config.json
+
+---
+
 ## [11.1.0] - 2026-05-31 — "Beast Mode"
 
 ### Added

@@ -1,11 +1,11 @@
 {
-  "version": "11.1.0",
+  "version": "11.2.0",
   "environment": "development",
   "governance": {
     "drift_threshold": 0.75,
     "critical_drift_threshold": 0.5,
     "res_threshold": 0.8,
-    "active_did": "did:mindforge:abf46d8c-4a1f-44d2-872d-a44aa4c00d1f"
+    "active_did": "did:mindforge:c2b2f397-d47a-47e7-a7cc-e79120520a56"
   },
   "revops": {
     "market_registry": {
@@ -64,7 +64,7 @@
   "security": {
     "pqas_enabled": false,
     "enclave_tier": 2,
-    "provider": "simulated-lattice"
+    "provider": "Dilithium-5 (simulated — inactive)"
   },
   "experimental": {
     "pqc_demo": false
