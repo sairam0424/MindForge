@@ -2,95 +2,58 @@
 
 ## Project Structure & Module Organization
 
-MindForge v11.0.0 ("Sovereign Stability") is an agentic intelligence framework distributed as the `mindforge-cc` npm package. It has two package roots:
+MindForge v11.2.0 ("Verification & Trust") is an agentic intelligence framework distributed as the `mindforge-cc` npm package. Two package roots:
 
-- **Root (`/`)** — The CLI + framework. Two bin entries: `mindforge-cc` (installer via `bin/install.js`) and `mindforge` (CLI via `bin/mindforge-cli.js`). Runtime scripts live under `bin/` (CLI, sharding, governance, autonomous engine, SRE, dashboard, etc.).
-- **`sdk/`** — A TypeScript SDK (`mindforge-sdk`) with its own `tsconfig.json` and build step. Compiled output goes to `sdk/dist/`. Has its own test suite (`cd sdk && npm test`).
+- **Root (`/`)** — CLI + framework. Two bin entries: `mindforge-cc` (installer, `bin/install.js`) and `mindforge` (CLI, `bin/mindforge-cli.js`). The `bin/` runtime layer (~22K LOC) is organized by domain: `governance/` (audit hash-chain), `autonomous/` (wave executor, auto-runner), `engine/` (council runtime, nexus tracer, verification runner, OTel exporter), `models/` (provider clients + pricing registry), `memory/` (knowledge graph, sql.js vector hub, RRF fusion), `security/` (trust boundaries), `eval/` (recall@k, nDCG), `hooks/`, `utils/`, `wizard/`.
+- **`sdk/`** — TypeScript SDK (`mindforge-sdk`), own `tsconfig.json` (strict). `tsc` compiles `src/` → `dist/`. Own tests (`cd sdk && npm test`).
 
-Key directories:
-- `agents/` — Specialist agent personas (reviewer, planner, executor, researcher, memory, tool), each with identity protocols.
-- `bin/utils/` — Shared utilities layer (errors, file-io, paths) used across all bin scripts.
-- `.mindforge/` — Framework internals: intelligence mesh, skills, personas, governance, dashboard, audit, engine configs.
-- `.planning/` — Project state management (STATE.md, phase plans, audit trails).
-- `.agent/` — Agent orchestration layer: hooks (SessionStart, BeforeTool, AfterTool), workflows, skills, forge tools, and session settings.
-- `docs/` — Architecture docs, ADRs, reference guides, security guidelines, and project templates.
-- `examples/` — Starter projects and SDK integration examples for onboarding.
+Cross-cutting systems worth understanding before editing:
+- **Audit hash-chain** — `bin/governance/audit-hash.js` is the single canonical SHA-256 hasher used by both `audit-writer.js` and `audit-verifier.js`; `.planning/AUDIT.jsonl` is tamper-evident via `previous_hash` linkage. Verify with `node bin/verify-audit.js` (fail-closed, exit 1 on break).
+- **Pricing registry** — `bin/models/pricing-registry.js` is the single source of truth; all three providers call `priceCall()`. Never hardcode per-model prices in providers.
+- **Other roots:** `.mindforge/` (engine configs, ~200 skills, personas, governance), `.agent/` (hooks, ~130 workflows, `CLAUDE.md` protocols), `.planning/` (STATE.md, ROADMAP.md, audit), `docs/`, `examples/`, `tests/` (58 `*.test.js`).
 
 ## Build, Test, and Development Commands
 
 ```bash
-# Root package
-npm install          # Install dependencies (Node >= 18 required)
-npm test             # Unified test runner (tests/run-all.js) — pre-commit hook
-npm run lint         # ESLint across root
-npm run coverage     # c8 coverage via unified runner
-npm run prepare      # Set up Husky git hooks (runs automatically on install)
+npm install                       # Node >= 18 required
+npm test                          # node tests/run-all.js (pre-commit hook runs this)
+npm run lint                      # eslint .
+npm run coverage                  # npx c8 node tests/run-all.js
+npm run commit                    # Commitizen (cz) conventional-commit prompt
+node bin/mindforge-cli.js verify  # UC-08 runner: tests/lint/audit/typecheck → .planning/VERIFICATION.md
 
-# SDK (run from sdk/)
-cd sdk && npm install
-npm run build        # TypeScript compile (tsc) -> sdk/dist/
-npm test             # SDK-specific tests
-npm run lint         # ESLint across SDK
+# SDK (from sdk/)
+cd sdk && npm install && npm run build   # tsc → sdk/dist/
+npm test                                  # pretest runs build first
 ```
 
-Run a single test file directly:
-```bash
-node tests/install.test.js        # Core tests
-node tests/sharding.test.js       # Specific subsystem
-node tests/sdk.test.js            # SDK tests (or: cd sdk && npm test)
-node tests/run-all.js             # Full unified runner
-```
+Run a single test file: `node tests/sharding.test.js`. Filter the runner: `node tests/run-all.js --filter=security,audit` (case-insensitive filename substring). A test file whose first line is `// @skip: reason` is skipped.
 
-### Validation & CI
+Other validators: `node bin/validate-config.js` (MINDFORGE.md vs schema), `npx tsc --noEmit -p sdk/tsconfig.json`.
 
-```bash
-node bin/validate-config.js                    # Validate MINDFORGE.md + config.json
-node bin/wizard/setup-wizard.js --claude --local  # MindForge setup (CI does this)
-npx tsc --noEmit -p sdk/tsconfig.json          # Type-check SDK without emitting
-npm audit --audit-level=high                   # Security audit (CI gate)
-```
-
-### Database Layer
-
-The project uses **sql.js** (WebAssembly SQLite) for persistence via `celestial.db` — zero native dependencies, no compilation required. This replaced `better-sqlite3` in v10 for cross-platform portability.
+**Persistence:** sql.js (WebAssembly SQLite) at `.mindforge/celestial.db` — no native deps, no compile step.
 
 ## Coding Style & Naming Conventions
 
-ESLint 9 flat config (`eslint.config.mjs`) enforces:
-- **Single quotes** (`'error'`), **semicolons required** (`'error'`)
-- `no-unused-vars`: warn, `no-console`: off
-- ES2021+ globals, Node.js environment, `sourceType: 'module'`
+ESLint 9 flat config (`eslint.config.mjs`): single quotes (`error`), semicolons (`error`), `no-unused-vars` warn, `no-console` off; `sourceType: 'module'`, Node + ES2021 globals; ignores `**/dist/`, `coverage/`. The SDK adds strict-mode TypeScript (`tsconfig.json`: `strict: true`, target ES2020, CommonJS).
 
-The SDK additionally uses `typescript-eslint` with **strict mode** TypeScript (`tsconfig.json`: `"strict": true`, target ES2020, CommonJS output).
+CI lint gates differ by package: root tolerates warnings (`eslint . --max-warnings=9999`, errors only); SDK is zero-tolerance (`eslint src/ --max-warnings 0`).
 
 ## Testing Guidelines
 
-Tests use Node.js built-in `assert` module with a custom lightweight harness — no Jest or Mocha. Each test file is self-contained and runnable via `node <file>`.
-
-The pre-commit hook (Husky) runs `npm test` before every commit. All tests must pass to commit.
+Node's built-in `assert` with a custom lightweight harness — no Jest/Mocha. Each file is self-contained and runnable via `node <file>`. CI runs the Node 18/20/22 matrix and gates coverage at 30% lines (`c8 --check-coverage --lines 30`). The Husky pre-commit hook runs `npm test`; all tests must pass to commit. `version-consistency.test.js` and `v9-integration-chain.test.js` assert the version string across `package.json`, `sdk/package.json`, `sdk/src/index.ts`, `.mindforge/config.json`, `MINDFORGE.md` — bump all five each release.
 
 ## Commit & Pull Request Guidelines
 
-Commits follow **Conventional Commits** via Commitizen (`npm run commit`):
+Conventional Commits via Commitizen, with a trailing `(UC-XX)` use-case reference where applicable:
 ```
-feat(scope): add new capability
-fix(scope): correct behavior
-chore(scope): maintenance task
-docs(scope): documentation update
+feat(council): wire runCouncil runtime to /mindforge:council command (UC-22)
+fix(security): harden trust-gate — fail-closed, null-strip (UC-22)
 ```
-
-Releases pair a version number with a thematic name (e.g., `v10.7.0 Platform Sovereign — 200 skills milestone`).
-
-A PR template (`.github/pull_request_template.md`) requires: Goal, Proposed Changes (grouped by component/persona), Verification checklist (`npm test`, manual verification, persona consistency check), and Brain Context links.
+Types seen in history: `feat`, `fix`, `chore`, `test`, `docs`, `ci`. The PR template (`.github/pull_request_template.md`) requires: Goal, Proposed Changes (grouped by component/persona), Verification checklist, and Brain Context links.
 
 ## Agent Orchestration
 
-MindForge operates as a multi-agent mesh. Key conventions for contributing agents/personas:
+Native Claude Code hooks live in `.claude/settings.json` under real event names — `PreToolUse`, `PostToolUse`, `SessionStart` (the legacy `.agent/settings.json` with `BeforeTool`/`AfterTool` is dead; do not register hooks there). Active hooks: `bin/security/trust-gate-hook.js` (PreToolUse Bash, blocks high-impact commands, fail-closed), `bin/hooks/instinct-capture-hook.js` (PostToolUse), `.agent/hooks/mindforge-{context-monitor,prompt-guard,session-init_extended,check-update}.js`.
 
-- **Persona files** live in `.mindforge/personas/` (400+) — each is a markdown identity protocol.
-- **Skills** live in `.mindforge/skills/` (400+ directories) — self-contained capability definitions.
-- **Workflows** live in `.agent/workflows/` (400+) — orchestration steps invoked by the CLI.
-- **Hooks** live in `.agent/hooks/` — lifecycle triggers (session-init, prompt-guard, workflow-guard, context-monitor, statusline).
-- **Governance policies** live in `.mindforge/governance/policies/` — compliance gates and approval flows.
-
-The framework enforces a **Plan → Execute → Verify** loop. Never bypass the planning phase for changes touching >3 files.
+`.agent/CLAUDE.md` defines the contributor protocol. Source-of-truth order: SOUL.md → MINDFORGE.md → `.agent/CLAUDE.md` → `.mindforge/`. Enforce **Plan → Execute → Verify**; never skip planning for changes touching >3 files. Changes to Auth/Payment/PII/Uploads auto-trigger a security review — run `mindforge:security-scan` pre-commit and resolve Medium+ findings.
