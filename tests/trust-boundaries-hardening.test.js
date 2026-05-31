@@ -97,13 +97,26 @@ test('#5 detects shell interpreter running a .sh file', () => {
   assert.strictEqual(isHighImpact(j('sh ', EVIL)), true, 'sh file.sh must be blocked');
 });
 
-test('#5 detects node/python running a script (MEDIUM, errs toward block)', () => {
-  assert.strictEqual(isHighImpact(j('node ', 'payload.js')), true, 'node <file> blocks (documented FP tradeoff)');
-  assert.strictEqual(isHighImpact(j('python ', 'wipe.py')), true);
-  assert.strictEqual(isHighImpact(j('python3 ', 'wipe.py')), true);
+test('#5 detects node/python running a script from an UNTRUSTED path', () => {
+  // UC-22 narrowing: the interpreter+script rule was retuned to fire only on
+  // untrusted script locations — an absolute path (/...), a writable temp dir
+  // (/tmp, /var/tmp, /dev/shm), or a home-relative ~/ path — i.e. the
+  // write-then-execute attack chain. Previously this case asserted that ANY
+  // `node <file>.js` was blocked (a documented FP tradeoff); that over-matched
+  // the project's own idiom `node tests/run-all.js` and is corrected below.
+  const TMP = j('/t', 'mp/');
+  assert.strictEqual(isHighImpact(j('node ', TMP, 'payload.js')), true, 'node <tmp>/payload.js blocks');
+  assert.strictEqual(isHighImpact(j('python ', TMP, 'wipe.py')), true);
+  assert.strictEqual(isHighImpact(j('python3 ', SLASH, 'var/', 'tmp/', 'wipe.py')), true);
 });
 
-test('#5 NEGATIVE: bare interpreters and package managers stay allowed', () => {
+test('#5 NEGATIVE: project-relative scripts, bare interpreters and package managers stay allowed', () => {
+  // Project-relative interpreter runs are THE default safe action in a Node /
+  // Python repo and must NOT be flagged (UC-22 false-positive fix).
+  assert.strictEqual(isHighImpact('node tests/run-all.js'), false);
+  assert.strictEqual(isHighImpact('node bin/mindforge-cli.js'), false);
+  assert.strictEqual(isHighImpact('python3 scripts/build.py'), false);
+  assert.strictEqual(isHighImpact('node index.js'), false);
   // No script argument -> not flagged as direct script execution.
   assert.strictEqual(isHighImpact('python --version'), false);
   assert.strictEqual(isHighImpact('node --version'), false);

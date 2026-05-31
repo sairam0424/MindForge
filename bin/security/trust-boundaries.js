@@ -134,13 +134,23 @@ function isHighImpact(command) {
     // source <file> and `. <file>` are unambiguous script execution.
     /\bsource\s+\S+/i,
     /(^|[;&|]|\s)\.\s+\S+\.\w+/i,
-    // bash/sh/zsh running a .sh script — clearly script execution.
+    // bash/sh/zsh running a .sh script — clearly script execution. Kept broad
+    // (any .sh) because shelling out to an arbitrary shell script is itself a
+    // strong execution signal; this also covers untrusted paths like
+    // `bash /tmp/x.sh`.
     /\b(bash|sh|zsh)\s+\S*\.sh\b/i,
-    // MEDIUM: node/python/etc. running a script file. Documented false-positive
-    // tradeoff — e.g. `node tests/run-all.js` WILL be flagged. The gate errs
-    // toward blocking; bare `node`/`python` (no script arg) and npm-driven runs
-    // are NOT matched (no file token), so day-to-day tooling stays unaffected.
-    /\b(node|python3?|ruby|perl)\s+\S+\.(js|mjs|cjs|ts|py|rb|pl)\b/i,
+    // node/python/etc. running a script — narrowed (UC-22). Running a project
+    // file is THE default safe action in a Node/Python repo, so a blanket
+    // `node <file>.js` match is a terrible signal-to-noise ratio and blocked
+    // the project's OWN idiom (`node tests/run-all.js`). We now flag ONLY when
+    // the script path looks UNTRUSTED — an absolute path (/...), a writable
+    // temp dir (/tmp, /var/tmp, /dev/shm), or a home-relative path (~/...) —
+    // i.e. the write-then-execute attack chain (drop payload in a writable
+    // location, then run it). Project-relative paths (tests/run-all.js,
+    // bin/foo.js, scripts/build.py, index.js) are NOT matched. Piped/
+    // substituted execution (curl | bash, $(...), <(...), backticks) is
+    // already covered by the #4 patterns above.
+    /\b(node|python3?|ruby|perl)\s+(~\/|\/)\S*\.(js|mjs|cjs|ts|py|rb|pl)\b/i,
 
     // ── #7 Redirect-overwrite of critical files / devices ───────────────────
     // > or >> targeting an absolute sensitive path (/etc/, /dev/, /boot/, /sys/,
