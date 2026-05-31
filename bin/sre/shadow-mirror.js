@@ -4,15 +4,49 @@
  */
 'use strict';
 
-const { execSync } = require('node:child_process');
+const { execSync, execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
-const crypto = require('node:crypto');
+
+// Whitelist for the trust-boundary remediation_id. Git branch/path names built
+// from it must contain only characters that are inert both to the shell and to
+// git ref syntax. We allow conservative identifier characters only.
+const REMEDIATION_ID_PATTERN = /^[A-Za-z0-9._-]+$/;
+// Reject a leading '-' so the id can never be parsed as a git option/flag even
+// when passed via an argv array (defence-in-depth alongside the whitelist).
+const REMEDIATION_ID_MAX = 128;
 
 class ShadowMirror {
   constructor(options = {}) {
     this.baseDir = options.baseDir || path.join(process.cwd(), '.mindforge', 'mirrors');
     this.activeMirror = null;
+  }
+
+  /**
+   * Validates and returns a remediation_id safe for use in git branch/path
+   * names. Fail-closed: throws on missing, empty, oversized, or non-whitelisted
+   * input rather than building a worktree with an attacker-controlled or empty
+   * name. Only `[A-Za-z0-9._-]` is permitted, and a leading dash is rejected so
+   * the value can never be interpreted as a git flag.
+   *
+   * @param {string} id incident.remediation_id (TRUST BOUNDARY)
+   * @returns {string} the validated id, unchanged
+   * @throws {Error} if the id is missing or contains unsafe characters
+   */
+  static sanitizeRemediationId(id) {
+    if (typeof id !== 'string' || id.length === 0) {
+      throw new Error('ShadowMirror: missing or invalid remediation_id (expected non-empty string)');
+    }
+    if (id.length > REMEDIATION_ID_MAX) {
+      throw new Error(`ShadowMirror: invalid remediation_id (exceeds ${REMEDIATION_ID_MAX} chars)`);
+    }
+    if (id.startsWith('-')) {
+      throw new Error('ShadowMirror: invalid remediation_id (must not start with a dash)');
+    }
+    if (!REMEDIATION_ID_PATTERN.test(id)) {
+      throw new Error('ShadowMirror: invalid remediation_id (only [A-Za-z0-9._-] allowed — refusing unsafe value)');
+    }
+    return id;
   }
 
   /**
@@ -36,9 +70,12 @@ class ShadowMirror {
    * High-speed, lightweight logic isolation.
    */
   async replicateLevel1(incident) {
-    const mirrorId = `mirror-${incident.remediation_id}`;
+    // Validate the trust-boundary id BEFORE it is used to build any git
+    // branch/path or command. Fail-closed on anything unsafe.
+    const safeId = ShadowMirror.sanitizeRemediationId(incident && incident.remediation_id);
+    const mirrorId = `mirror-${safeId}`;
     const mirrorPath = path.join(this.baseDir, mirrorId);
-    const branchName = `sre-repro-${incident.remediation_id}`;
+    const branchName = `sre-repro-${safeId}`;
 
     console.log(`[Level 1] Creating git worktree at ${mirrorPath}...`);
 
@@ -47,10 +84,11 @@ class ShadowMirror {
         fs.mkdirSync(this.baseDir, { recursive: true });
       }
 
-      // 1. Create a reproduction branch and add worktree in one step (Atomic)
-      // In a real system, we'd base this on the commit hash from the trace_id
-      execSync(`git worktree add -b ${branchName} ${mirrorPath}`, { stdio: 'ignore' });
-      
+      // 1. Create a reproduction branch and add worktree in one step (Atomic).
+      // Arguments are passed as an argv array (NO shell) so branchName/mirrorPath
+      // cannot inject commands even if validation were bypassed.
+      execFileSync('git', ['worktree', 'add', '-b', branchName, mirrorPath], { stdio: 'ignore' });
+
       this.activeMirror = { path: mirrorPath, branch: branchName, type: 'worktree' };
 
       // 3. Inject incident metadata for the agent to use
@@ -105,8 +143,11 @@ CMD ["node", "bin/engine/logic-validator.js"]
     console.log(`🧹 Cleaning up Shadow Mirror: ${this.activeMirror.path}...`);
     try {
       if (this.activeMirror.type === 'worktree' || this.activeMirror.type === 'docker-hybrid') {
-        execSync(`git worktree remove ${this.activeMirror.path} --force`, { stdio: 'ignore' });
-        execSync(`git branch -D ${this.activeMirror.branch}`, { stdio: 'ignore' });
+        // argv-array form (NO shell): path/branch are stored values derived from
+        // an already-validated remediation_id, but we pass them as arguments so
+        // no shell interpolation can ever occur.
+        execFileSync('git', ['worktree', 'remove', this.activeMirror.path, '--force'], { stdio: 'ignore' });
+        execFileSync('git', ['branch', '-D', this.activeMirror.branch], { stdio: 'ignore' });
         // Clean up the folder just in case
         if (fs.existsSync(this.activeMirror.path)) {
           fs.rmSync(this.activeMirror.path, { recursive: true });
