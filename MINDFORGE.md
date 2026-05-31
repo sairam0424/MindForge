@@ -26,7 +26,7 @@
 [ZTAI_KEY_TYPE] = "Dilithium-5"
 [NEXUS_TRACE_RETENTION_DAYS] = 30
 [CADIA_CORE] = true
-[PQAS_ENFORCED] = true
+[PQAS_ENFORCED] = false  # PQAS is SIMULATED/inactive by default (config: pqas_enabled=false, gated behind experimental.pqc_demo). Tier-3 trust uses real Ed25519. See .mindforge/config.json + bin/governance/quantum-crypto.js.
 [PROACTIVE_HOMING] = true
 
 ---
@@ -100,6 +100,6 @@ The following parameters cannot be overridden by plugins, agents, or session-lev
 - [MIN_SOUL_SCORE] — Minimum SOUL score required for architectural changes
 - [BLOCK_ON_SECURITY] — Security gate enforcement cannot be disabled
 - [COST_HARD_LIMIT_USD] — Hard cost limit cannot be raised without human approval
-- [PQAS_ENFORCED] — Post-quantum security cannot be disabled
+- [BLOCK_ON_SECURITY] is non-overridable; PQAS itself is simulated/experimental (inactive by default) and is NOT a non-overridable guarantee — do not rely on it as an enforced control
 - [SOVEREIGN_IDENTITY] — Identity verification is always required
 - [ENABLE_ZTAI] — Zero-trust identity cannot be bypassed

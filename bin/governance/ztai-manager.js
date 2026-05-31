@@ -65,7 +65,7 @@ class SecureEnclaveProvider extends KeyProvider {
   }
 
   async generate(did) {
-    console.log(`[ZTAI-HSM] Provisioning protected identity enclave for ${did}...`);
+    console.log(`[ZTAI-HSM-SIM] Provisioning simulated (in-process) identity enclave for ${did}...`);
     const { publicKey, privateKey } = await generateKeyPair('ed25519');
     const pubPEM = publicKey.export({ type: 'spki', format: 'pem' });
     
@@ -82,7 +82,7 @@ class SecureEnclaveProvider extends KeyProvider {
     const record = this.enclaveStore.get(did);
     if (!record) throw new Error(`Enclave record not found for ${did}`);
     
-    console.log(`[ZTAI-HSM] Delegating signature to hardware enclave [DID: ${did}]`);
+    console.log(`[ZTAI-HSM-SIM] Signing via simulated in-process enclave (NOT a hardware HSM/TPM) [DID: ${did}]`);
     
     // Simulate enclave "wrapping" or "sealing" logic
     const signature = crypto.sign(null, Buffer.from(data), record.privateKey);
@@ -93,7 +93,7 @@ class SecureEnclaveProvider extends KeyProvider {
   }
 
   async rotate(did) {
-    console.log(`[ZTAI-HSM] Rotating enclave keys for ${did}...`);
+    console.log(`[ZTAI-HSM-SIM] Rotating simulated enclave keys for ${did}...`);
     return this.generate(did);
   }
 
