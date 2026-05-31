@@ -66,12 +66,18 @@ function tagUntrusted(content, meta) {
   };
 }
 
+// Null byte (char code 0). Built via fromCharCode so we never embed a control
+// character in a regex literal (eslint no-control-regex).
+const NUL = String.fromCharCode(0);
+
 /**
  * Detects high-impact / destructive commands via case-insensitive pattern matching.
  * Returns true if the command matches known destructive patterns.
  */
 function isHighImpact(command) {
-  const sanitized = String(command).replace(/\x00/g, '');
+  // Strip null bytes first — shells ignore them, so an attacker must not be
+  // able to use a NUL to split a destructive token and slip past the patterns.
+  const sanitized = String(command).split(NUL).join('');
   const patterns = [
     /rm\s+(-\w*r\w*\s+-\w*f|(-\w*f\w*\s+-\w*r)|-\w*rf|-\w*fr)/i,
     /git\s+push\s+.*--force/i,

@@ -17,15 +17,14 @@
  *   2 — NO_CONSENSUS
  *   3 — Runtime error
  */
-const path = require('path');
 const { runCouncil } = require('./engine/council-runtime');
 const ModelClient = require('./models/model-client');
 
 const VOICE_SYSTEM_PROMPTS = {
-  architect: `You are the Architect voice in a decision council. You focus on system design, scalability, maintainability, and long-term architectural integrity. Evaluate the decision from a structural perspective.`,
-  skeptic: `You are the Skeptic voice in a decision council. You challenge assumptions, identify risks, hidden costs, and failure modes. Your job is to stress-test the proposal.`,
-  pragmatist: `You are the Pragmatist voice in a decision council. You focus on delivery timelines, team capacity, incremental value, and practical trade-offs. Favor what ships reliably.`,
-  critic: `You are the Critic voice in a decision council. You evaluate quality, correctness, edge cases, and whether the solution meets its stated goals without over-engineering.`,
+  architect: 'You are the Architect voice in a decision council. You focus on system design, scalability, maintainability, and long-term architectural integrity. Evaluate the decision from a structural perspective.',
+  skeptic: 'You are the Skeptic voice in a decision council. You challenge assumptions, identify risks, hidden costs, and failure modes. Your job is to stress-test the proposal.',
+  pragmatist: 'You are the Pragmatist voice in a decision council. You focus on delivery timelines, team capacity, incremental value, and practical trade-offs. Favor what ships reliably.',
+  critic: 'You are the Critic voice in a decision council. You evaluate quality, correctness, edge cases, and whether the solution meets its stated goals without over-engineering.',
 };
 
 const POSITION_INSTRUCTION = `
@@ -61,7 +60,7 @@ async function councilModel({ voice, question }) {
     // Strip markdown fences if model adds them despite instructions
     const cleaned = content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
     parsed = JSON.parse(cleaned);
-  } catch (e) {
+  } catch {
     throw new Error(`Council voice "${voice}" returned unparseable response: ${content.slice(0, 200)}`);
   }
 

@@ -51,10 +51,9 @@ function ndcg(retrieved, relevanceMap, k) {
  * @param {Array<{query: string, relevant: string[]}>} opts.goldenSet
  * @param {function(string): string[]} opts.retriever
  * @param {number} opts.k
- * @param {function} [opts.judge] - optional judge (unused for now)
  * @returns {Promise<{meanRecallAtK: number, meanNDCG: number, perQuery: Array}>}
  */
-async function runEval({ goldenSet, retriever, k, judge }) {
+async function runEval({ goldenSet, retriever, k }) {
   const perQuery = [];
 
   for (const { query, relevant } of goldenSet) {
