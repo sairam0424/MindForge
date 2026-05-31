@@ -45,7 +45,17 @@ class ReasonSourceAligner {
    * @returns {Object} - Alignment results.
    */
   checkAlignment(thought) {
-    if (!this.initialized) return { score: 1.0, reason: 'uninitialized' }; // Fail-safe stable
+    // Fail-safe stable: when no requirements are loaded we CANNOT assess
+    // alignment, so we honestly decline rather than assert perfect alignment.
+    // Returning the SAME shape as the normal branch means the sole caller
+    // (auto-runner.checkMissionFidelity) reads a real boolean instead of
+    // `undefined`, so the mission-fidelity gate is no longer silently disabled.
+    // is_aligned:false is the safe direction — the caller only injects a
+    // correction when is_aligned is truthy, so an honest "can't assess" simply
+    // does nothing (no false correction, no silent shape mismatch).
+    if (!this.initialized) {
+      return { is_aligned: false, best_match_id: null, confidence: 0, status: 'uninitialized' };
+    }
 
     const alignmentScores = this.registry.map(req => {
       const score = this._calculateSimilarity(thought, req.summary + ' ' + req.description);
@@ -58,6 +68,7 @@ class ReasonSourceAligner {
       is_aligned: bestMatch ? bestMatch.score > 0.25 : false, // Sparse mapping allowed
       best_match_id: bestMatch ? bestMatch.id : null,
       confidence: bestMatch ? parseFloat(bestMatch.score.toFixed(4)) : 0,
+      status: 'assessed',
     };
   }
 
@@ -82,19 +93,21 @@ class ReasonSourceAligner {
   }
 
   /**
-   * Similarity Heuristic (Keyword-based overlap)
+   * Keyword-based overlap heuristic (Jaccard similarity).
+   * NOTE: This is a token-overlap heuristic, NOT semantic embeddings.
+   * Returns |A ∩ B| / |A ∪ B| in [0, 1].
    */
   _calculateSimilarity(a, b) {
     const getTokens = (str) => new Set(str.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(t => t.length > 3));
     const tokensA = getTokens(a);
     const tokensB = getTokens(b);
-    
+
     if (tokensA.size === 0 || tokensB.size === 0) return 0;
-    
+
     const intersection = new Set([...tokensA].filter(x => tokensB.has(x)));
     const union = new Set([...tokensA, ...tokensB]);
-    
-    return intersection.size / tokensA.size; // Weighted by thought coverage
+
+    return intersection.size / union.size; // Jaccard: overlap over combined vocabulary
   }
 
   /**
