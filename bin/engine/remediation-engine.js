@@ -1,5 +1,5 @@
 /**
- * MindForge v11.1.0 — Neural Drift Remediation (NDR)
+ * MindForge v11.2.0 — Neural Drift Remediation (NDR)
  * Component: Remediation Engine (Pillar X)
  *
  * Triggers corrective actions when logic drift or reasoning

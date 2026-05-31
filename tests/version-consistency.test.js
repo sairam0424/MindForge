@@ -49,6 +49,23 @@ test('MINDFORGE.md [VERSION] matches package.json', () => {
     `MINDFORGE.md VERSION (${m[1]}) must equal package.json (${pkg.version})`);
 });
 
+test('sdk/README.md VERSION comment + heading match package.json (no stale drift)', () => {
+  const pkg  = readJson(path.join(ROOT, 'package.json'));
+  const text = readText(path.join(ROOT, 'sdk', 'README.md'));
+  // The `VERSION, // 'X.Y.Z'` export comment must not lag the canonical version.
+  const verComment = text.match(/VERSION,\s*\/\/\s*'([\d.]+)'/);
+  if (verComment) {
+    assert.strictEqual(verComment[1], pkg.version,
+      `sdk/README.md VERSION comment (${verComment[1]}) must equal package.json (${pkg.version})`);
+  }
+  // The "New in vX.Y.Z" heading should reference the current version, not an old one.
+  const heading = text.match(/##\s*New in v([\d.]+)/);
+  if (heading) {
+    assert.strictEqual(heading[1], pkg.version,
+      `sdk/README.md "New in v${heading[1]}" heading must equal package.json (${pkg.version})`);
+  }
+});
+
 test('RELEASENOTES.md contains no stale 10.0.1 version example', () => {
   const text = readText(path.join(ROOT, 'RELEASENOTES.md'));
   assert.ok(!/Should print 10\.0\.1/.test(text),

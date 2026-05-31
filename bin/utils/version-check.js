@@ -3,11 +3,24 @@
  * MindForge version single-source-of-truth + drift detector.
  * package.json is canonical; everything else must agree.
  */
+const fs = require('fs');
 const path = require('path');
 // Use the repo's stricter reader: returns null only on ENOENT and RE-THROWS on
 // parse errors. Re-throwing on a corrupt JSON source is the fail-closed
 // behavior we want — a file we cannot parse means we cannot establish truth.
 const { readJSONSync } = require('./file-io');
+
+/**
+ * Extracts `[VERSION] = X` from MINDFORGE.md. Returns null when the file is
+ * absent or the marker is missing (treated as skip, not drift).
+ */
+function readMindforgeMdVersion(projectRoot) {
+  const mdPath = path.join(projectRoot, 'MINDFORGE.md');
+  if (!fs.existsSync(mdPath)) return null;
+  const text = fs.readFileSync(mdPath, 'utf8');
+  const match = text.match(/\[VERSION\]\s*=\s*([^\s]+)/);
+  return match ? match[1].trim() : null;
+}
 
 /**
  * @param {string} projectRoot
@@ -18,14 +31,17 @@ function checkVersionConsistency(projectRoot) {
   const canonical = pkg ? pkg.version : null;
 
   const configJson = readJSONSync(path.join(projectRoot, '.mindforge', 'config.json'));
-  // Runtime drift coverage is intentionally limited to package.json (canonical)
-  // vs .mindforge/config.json — the live config is the operational drift risk
-  // during `auto`. Wider agreement (sdk/package.json, MINDFORGE.md [VERSION]) is
-  // enforced by the test suite (tests/version-consistency.test.js), not at
-  // runtime — do not assume this checker provides full version coverage.
+  const sdkPkg = readJSONSync(path.join(projectRoot, 'sdk', 'package.json'));
+  const mindforgeMdVersion = readMindforgeMdVersion(projectRoot);
+  // Runtime coverage now spans every source the test suite knows about, so
+  // drift in any of them halts `auto` — not just the live config. Absent
+  // optional sources (no sdk/, no MINDFORGE.md) read as null and are SKIPPED
+  // (not counted as drift); only a present-but-mismatched source flags drift.
   const sources = {
     'package.json': canonical,
     '.mindforge/config.json': configJson ? configJson.version : null,
+    'sdk/package.json': sdkPkg ? sdkPkg.version : null,
+    'MINDFORGE.md': mindforgeMdVersion,
   };
 
   const drift = [];
