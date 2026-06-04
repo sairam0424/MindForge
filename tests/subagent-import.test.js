@@ -97,6 +97,19 @@ test('every index line is valid JSON with non-empty name/path/category/model/des
   });
 });
 
+// Every indexed name MUST satisfy the loader's own allowlist, or the agent is
+// silently unspawnable via `spawn-agent.js subagent <name>` (the allowlist
+// rejects it before any lookup). This guards the dotted-name class of bug
+// (e.g. an upstream 'foo-4.8-expert') from shipping a broken agent.
+test('every indexed name passes the loader allowlist (no unspawnable agents)', () => {
+  const LOADER_ALLOWLIST = /^[A-Za-z0-9-_]+$/; // mirrors SAFE_NAME_PATTERN in bin/spawn-agent.js
+  const bad = loadIndexEntries()
+    .map(e => e.name)
+    .filter(name => !LOADER_ALLOWLIST.test(name));
+  assert.deepStrictEqual(bad, [],
+    `these indexed names contain characters the loader rejects (unspawnable): ${bad.join(', ')}`);
+});
+
 // ── 2. Paths resolve and stay under subagents/ ────────────────────────────────
 test('every entry.path exists on disk and resolves under subagents/', () => {
   const containmentRoot = SUBAGENTS_DIR + path.sep;

@@ -40,7 +40,7 @@ Modern .NET expert specializing in cross-platform development, minimal APIs, and
 
 **Use when:** Building cross-platform .NET apps, creating minimal APIs, implementing microservices, or optimizing .NET performance.
 
-### [**dotnet-framework-4.8-expert**](dotnet-framework-4.8-expert.md) - .NET Framework legacy enterprise specialist
+### [**dotnet-framework-48-expert**](dotnet-framework-48-expert.md) - .NET Framework legacy enterprise specialist
 Expert in maintaining and modernizing .NET Framework 4.8 enterprise applications. Masters Web Forms, WCF services, Windows services, and enterprise integration patterns with focus on stability and backward compatibility.
 
 **Use when:** Maintaining legacy .NET Framework apps, modernizing Web Forms applications, working with WCF services, or integrating with Windows enterprise systems.
@@ -104,7 +104,7 @@ Modern PHP specialist with expertise in PHP 8+ features, Composer ecosystem, and
 
 **Use when:** Developing PHP applications, modernizing legacy PHP code, implementing PHP APIs, or working with PHP frameworks.
 
-### [**powershell-5.1-expert**](powershell-5.1-expert.md) - Windows PowerShell 5.1 automation specialist  
+### [**powershell-51-expert**](powershell-51-expert.md) - Windows PowerShell 5.1 automation specialist  
 Expert in PowerShell 5.1 scripting for Windows infrastructure, RSAT modules, and legacy .NET Framework environments. Ensures compatibility, stability, and safe automation across AD, DNS, DHCP, and GPO.
 
 **Use when:** Working with Windows-only automation, legacy modules, on-prem infrastructure, or scripts requiring compatibility with older servers and full .NET Framework.
@@ -174,7 +174,7 @@ Vue.js framework specialist mastering the Composition API, reactivity system, an
 | Django | **django-developer** | Python web apps, REST APIs |
 | FastAPI | **fastapi-developer** | Modern async Python APIs |
 | .NET Core | **dotnet-core-expert** | Cross-platform .NET, microservices |
-| .NET Framework | **dotnet-framework-4.8-expert** | Legacy enterprise apps, Windows services |
+| .NET Framework | **dotnet-framework-48-expert** | Legacy enterprise apps, Windows services |
 | Elixir | **elixir-expert** | Fault-tolerant systems, Phoenix/LiveView |
 | Expo/React Native | **expo-react-native-expert** | Expo mobile apps, EAS deployment |
 | Flutter | **flutter-expert** | Cross-platform mobile apps |

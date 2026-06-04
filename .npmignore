@@ -20,6 +20,9 @@ test/
 
 # Operational state (generated at runtime)
 *.jsonl
+# ...but the imported-subagent index MUST ship — it powers the subagent loader.
+# Negation guard so a future files-allowlist refactor can't silently drop it.
+!.mindforge/imported-agents.jsonl
 
 # Heavy documentation (available on GitHub)
 docs/References/
