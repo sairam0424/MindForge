@@ -1,0 +1,24 @@
+{
+  "name": "mindforge-core-dev",
+  "version": "1.0.2",
+  "description": "Essential development subagents for everyday coding tasks - backend, frontend, fullstack, mobile, and API design",
+  "author": {
+    "name": "MindForge Team",
+    "url": "https://github.com/sairam0424"
+  },
+  "repository": "https://github.com/sairam0424/MindForge",
+  "license": "MIT",
+  "agents": [
+    "./api-designer.md",
+    "./backend-developer.md",
+    "./design-bridge.md",
+    "./electron-pro.md",
+    "./frontend-developer.md",
+    "./fullstack-developer.md",
+    "./graphql-architect.md",
+    "./microservices-architect.md",
+    "./mobile-developer.md",
+    "./ui-designer.md",
+    "./websocket-engineer.md"
+  ]
+}
