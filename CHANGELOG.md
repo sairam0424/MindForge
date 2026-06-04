@@ -1,5 +1,42 @@
 # Changelog
 
+## [11.3.1] - 2026-06-05 — Packaging hotfix (commands, skills & framework now ship)
+
+Critical fix for v11.3.0, where a too-narrow npm `files` allowlist silently dropped
+most of the product from the published tarball. Users who ran `npx mindforge-cc` got
+only hooks, personas, subagents, and three `.mindforge/` folders — **no slash commands,
+no skills, and an incomplete framework** — with no error (the installer skips any source
+absent from the tarball). v11.3.1 restores the full payload and adds a regression test
+so this class of bug cannot ship silently again.
+
+### Fixed
+
+- **npm `files` allowlist** (`package.json`) widened to ship what the installer reads:
+  `.claude/commands/` (174 slash commands), `.agent/mindforge/` + `.agent/forge/`,
+  `.agent/skills/` (73 skills), the entry `.claude/CLAUDE.md`, and the full `.mindforge/`
+  framework (`governance`, `integrations`, `intelligence`, `memory`, `metrics`, `models`,
+  `org`, `plugins`, `team` — previously only `engine`/`personas`/`skills` reached users).
+  Runtime state is explicitly **excluded** (`celestial.db`, `metrics/token-usage.jsonl`,
+  `memory/pattern-library.jsonl`) — `files` overrides `.npmignore`, so these are negated
+  in the allowlist itself.
+- **`.planning/` scaffolding now ships and installs** — sourced from the clean, generic
+  `examples/starter-project/.planning/` (never the framework repo's own live `.planning/`,
+  which holds dev state: `AUDIT.jsonl`, `slack-threads.json`, `jira-sync.json`). Added the
+  four missing starter templates (`ROADMAP.md`, `REQUIREMENTS.md`, `ARCHITECTURE.md`,
+  `RELEASE-CHECKLIST.md`) so the autonomous engine (`/mindforge:auto`, `:next`) has the
+  files it expects.
+- **`docs/References` / `docs/Templates` case-sensitivity bug** — the installer read
+  lowercase `docs/references`/`templates`, which "worked" on case-insensitive macOS but
+  silently missed on case-sensitive Linux/npm (manifest showed `REFERENCES 0 / TEMPLATES 0`).
+  Installer now reads the exact on-disk case and both dirs are allowlisted.
+
+### Added
+
+- **`tests/packaging-allowlist.test.js`** — packs the real tarball (`npm pack --dry-run
+  --json`) and asserts commands, skills, subagents, entry files, the full `.mindforge/`
+  framework, and `.planning/` templates all ship, while runtime DBs/telemetry do not.
+  Proven to fail under the broken v11.3.0 allowlist. Skips loudly if npm is unavailable.
+
 ## [11.3.0] - 2026-06-04 — "Legion" (154-subagent expansion)
 
 Imports the full VoltAgent `awesome-claude-code-subagents` collection (154 Claude-Code-native
