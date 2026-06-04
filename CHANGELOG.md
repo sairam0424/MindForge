@@ -1,5 +1,48 @@
 # Changelog
 
+## [11.3.0] - 2026-06-04 — "Legion" (154-subagent expansion)
+
+Imports the full VoltAgent `awesome-claude-code-subagents` collection (154 Claude-Code-native
+subagents across 10 categories) into MindForge, fully rebranded. Additive and
+backward-compatible — no existing persona, skill, or command changed behavior.
+
+### Added
+
+- **`subagents/` tree** — 154 specialized subagent definitions in 10 categories
+  (`01-core-development` … `10-research-analysis`), kept verbatim from upstream except
+  the rebrand and collision/functional fixes below. Agent bodies are unmodified prose.
+- **`.mindforge/imported-agents.jsonl`** — generated index (name → path → category → model →
+  description) and **`scripts/build-subagent-index.js`** to regenerate it deterministically.
+- **`bin/spawn-agent.js subagent <name>`** — third loader mode that resolves an imported
+  subagent via the index. Hardened with a strict name allowlist (`[A-Za-z0-9-_]`), exact
+  index-match resolution (never builds a path from input), and a `subagents/` containment
+  check — defense-in-depth path-traversal guards consistent with `BLOCK_ON_SECURITY`.
+- **Installer delivery** — `bin/installer-core.js` now installs the 154 subagents into the
+  runtime's native agents directory (`.claude/agents/`, via the new `agentsSubdir` runtime
+  config + `installSubagents()`), flattening the category tree (READMEs excluded) so Claude
+  Code auto-discovers them. Runs for both global and local scope; mirrored to `.claude/agents/`
+  for non-claude local runtimes. Shown in `--dry-run` and the payload manifest; `--uninstall`
+  removes only the imported set, never the user's own agents. The `.mindforge/imported-agents.jsonl`
+  index ships with `.mindforge/`, so the `subagent` loader mode also works post-install.
+- **`tests/subagent-import.test.js`** — asserts 154 indexed, every path exists, all 16
+  collisions renamed, no bare-name clash with personas, and the loader's traversal guards.
+
+### Changed (rebrand — VoltAgent → MindForge)
+
+- Plugin/marketplace metadata (`subagents/.claude-plugin/marketplace.json` + 10 category
+  `plugin.json`) renamed `voltagent-*` → `mindforge-*`, author → MindForge Team, URLs →
+  `github.com/sairam0424/MindForge`. Per-plugin versions preserved for upstream re-sync.
+  No live marketplace is published — metadata only.
+- 16 name collisions with existing hand-authored MindForge personas resolved with a `-cc`
+  suffix (`api-designer-cc`, `debugger-cc`, …); the original personas remain authoritative
+  for the bare names.
+- **agent-installer** fetch URLs repointed to `sairam0424/MindForge` under `subagents/`.
+- **design-bridge** VoltAgent design-md dependency replaced with a `<DESIGN_MD_SOURCE>`
+  placeholder + a needs-configuration notice (MindForge ships no design-md repo yet).
+- Dead VoltAgent Discord/sponsor links removed (no MindForge equivalent).
+- `package.json` `files` allowlist now ships `subagents/` + the index; README capability
+  line notes the 154 subagents.
+
 ## [11.2.1] - 2026-05-31 — "Hardening" (security & integrity audit remediation)
 
 Post-v11.2.0 audit remediation. Closes every exploitable security defect and
