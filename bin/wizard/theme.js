@@ -125,14 +125,15 @@ const Theme = {
    * Print Manifest (Hardened for V2)
    */
   printManifest(stats = {}) {
-    const { personas = 117, skills = 20, governance = 4, integrations = 7, actions = 71, docs = 12, templates = 21 } = stats;
-    
+    const { personas = 117, skills = 20, subagents = 154, governance = 4, integrations = 7, actions = 71, docs = 12, templates = 21 } = stats;
+
     console.log(`  ${this.colors.bold('PAYLOAD MANIFEST')}`);
     console.log(`  ${this.colors.dim('┌' + '─'.repeat(74) + '┐')}`);
-    
+
     const rows = [
       ['PERSONAS', personas, 'The autonomous persona ecosystem'],
       ['SKILLS', skills, 'Enterprise-grade skill packs'],
+      ['SUBAGENTS', subagents, 'Specialized Claude Code subagents'],
       ['GOVERNANCE', governance, 'Compliance and safety modules'],
       ['INTEGRATIONS', integrations, 'Multi-platform connector suite'],
       ['REFERENCES', docs, 'Standardized architecture references'],
