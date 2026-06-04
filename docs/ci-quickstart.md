@@ -1,4 +1,4 @@
-# MindForge CI Quickstart (v10.0.1)
+# MindForge CI Quickstart (v11.3.1)
 
 This page shows how to run MindForge in real pipelines with non-interactive
 behavior and reliable outputs.

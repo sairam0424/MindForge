@@ -25,12 +25,31 @@
 - [x] Wire runCouncil to /mindforge:council command (council-cli.js)
 - [x] Tech debt batch: singleton bug, dead CLI command, stale version strings, Dilithium-5 labeling
 
-**Deferred to v11.3.0:**
+**Deferred to a future minor:**
 - [ ] Coverage ratchet 30% → 60% (stepwise CI enforcement)
 - [ ] Flip shadow-mode routing to active (requires eval pass first)
 - [ ] LLM-as-judge reranker (gated, needs cost/quality measurement)
 
-### v11.3.0 — Measured Routing + Coverage (next)
+### v11.3.0 — "Legion" (154-subagent expansion) ✅ (2026-06-04)
+**Goal:** Import the full Claude-Code subagent collection into MindForge, rebranded and collision-safe.
+**Status:** Shipped (the v11.3.0 npm artifact had a packaging defect — see v11.3.1).
+**Delivered:**
+- [x] 154 subagents across 10 categories → `.claude/agents/`, fully rebranded (VoltAgent → MindForge)
+- [x] 16 persona-name collisions resolved with `-cc` suffix
+- [x] `bin/spawn-agent.js subagent <name>` loader mode + hardened allowlist + path-traversal guards
+- [x] `.mindforge/imported-agents.jsonl` generated index + `tests/subagent-import.test.js`
+
+### v11.3.1 — Packaging hotfix ✅ (2026-06-05)
+**Goal:** Restore the full published payload that v11.3.0's narrow npm allowlist dropped.
+**Status:** Shipped and verified end-to-end from the live npm artifact. v11.3.0 deprecated.
+**Delivered:**
+- [x] Widened npm `files[]` to ship commands (174), skills (73), entry CLAUDE.md, full `.mindforge/`
+- [x] Negated runtime state in `files[]` (celestial.db, telemetry jsonl) since `files[]` beats `.npmignore`
+- [x] `.planning/` installs from clean `examples/starter-project/.planning` (no dev-state leak)
+- [x] Fixed docs/References + docs/Templates case-sensitivity (Linux/npm)
+- [x] `tests/packaging-allowlist.test.js` — packs the real tarball, asserts full payload ships
+
+### v11.4.0 — Measured Routing + Coverage (next)
 **Goal:** Flip difficulty routing from shadow to active (after eval validates), enforce coverage ratchet.
 **Depends on:** v11.2.0 eval harness proving routing quality
 **Plans:**
@@ -38,6 +57,7 @@
 - [ ] Flip `cost_routing.shadow_mode: false` if eval passes threshold
 - [ ] Coverage ratchet: CI gate at 40% → 50% → 60% stepwise
 - [ ] LLM-as-judge reranker for retrieval (behind flag, measure cost vs quality gain)
+- [ ] Re-enable GitHub Actions so releases publish via signed CI (`--provenance`)
 
 ### v12.0.0 — Oceans (future)
 **Goal:** Breaking/transformative changes requiring a major bump.

@@ -1,4 +1,4 @@
-# MindForge v10.0.1 — Full Tutorial (Install → Advanced Usage)
+# MindForge v11.3.1 — Full Tutorial (Install → Advanced Usage)
 
 This tutorial walks a new user from installation to advanced usage. It is written for engineers who want to adopt MindForge in a real codebase.
 

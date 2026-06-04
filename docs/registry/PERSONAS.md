@@ -1,4 +1,4 @@
-# MindForge — Persona Registry (v6.2.0-alpha)
+# MindForge — Persona Registry (v11.3.1)
 
 This registry catalogs the specialized agent essences available for direct interaction and autonomous reasoning.
 

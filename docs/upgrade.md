@@ -4,6 +4,26 @@ This guide covers upgrades across all major MindForge versions.
 
 ---
 
+## Upgrading to v11.3.1 (from any v11.x)
+
+No migration script and no breaking changes — v11.3.x is additive. Just reinstall:
+
+```bash
+npm install -g mindforge-cc@latest
+# or, per-project:
+npx mindforge-cc@latest --claude --local
+```
+
+This brings in the 154 subagents (v11.3.0 "Legion") and the v11.3.1 packaging fix
+that restores all commands, skills, and the full framework. Existing `.mindforge/`,
+`.planning/`, and persona files are preserved (the installer never overwrites your
+data without `--force`).
+
+> If you previously installed v11.3.0, reinstalling v11.3.1 is strongly recommended —
+> the v11.3.0 npm artifact was missing commands and skills.
+
+---
+
 ## Upgrading from v10.x to v11.0.0
 
 ### Prerequisites
