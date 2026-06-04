@@ -1,6 +1,6 @@
 {
   "name": "mindforge-cc",
-  "version": "11.2.1",
+  "version": "11.3.0",
   "description": "MindForge \u2014 Sovereign Agentic Intelligence Framework. Sovereign Stability: Production-Hardened Agentic Intelligence (v11)",
   "bin": {
     "mindforge-cc": "bin/install.js",
@@ -16,6 +16,8 @@
     ".mindforge/skills/",
     ".mindforge/engine/",
     "bin/",
+    "subagents/",
+    ".mindforge/imported-agents.jsonl",
     "docs/getting-started.md",
     "docs/user-guide.md",
     "docs/sdk-reference.md",

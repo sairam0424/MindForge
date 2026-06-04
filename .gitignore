@@ -1,4 +1,7 @@
 node_modules/
+scratch-pad/
+# Upstream source repo (its own git repo) — content is ported into subagents/
+awesome-claude-code-subagents/
 .env
 .env.*
 *.log

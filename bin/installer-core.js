@@ -28,6 +28,7 @@ const RUNTIMES = {
     docsSubdir:     'docs',
     memorySubdir:   'memory',
     pluginsSubdir:  'plugins',
+    agentsSubdir:   'agents',
   },
   antigravity: {
     displayName:    'Antigravity',
@@ -202,6 +203,50 @@ const fsu = {
     }
   },
 };
+
+/**
+ * Flatten-copy the imported Claude-Code subagents into a runtime's native agents
+ * directory. The 154 source files live under subagents/categories/NN-name/*.md;
+ * Claude Code auto-discovers agents from the top level of .claude/agents/, so we
+ * flatten (basenames are already collision-free after the -cc renames) and skip
+ * the per-category README.md index files. Returns the count installed.
+ * @param {string} agentsDir - Destination agents directory (absolute).
+ * @param {object} options - { noOverwrite }.
+ * @returns {number} number of agent files copied.
+ */
+function installSubagents(agentsDir, options = {}) {
+  const { noOverwrite = false } = options;
+  const sourceDir = src('subagents', 'categories');
+  if (!fsu.exists(sourceDir)) return 0;
+
+  fsu.ensureDir(agentsDir);
+  let count = 0;
+  for (const file of fsu.listFilesRecursive(sourceDir, '.md')) {
+    if (path.basename(file) === 'README.md') continue;
+    const dst = path.join(agentsDir, path.basename(file));
+    if (noOverwrite && fsu.exists(dst)) continue;
+    fsu.copy(file, dst);
+    count++;
+  }
+  return count;
+}
+
+/**
+ * The set of imported-subagent basenames (e.g. 'api-designer-cc.md'). Used by
+ * uninstall to remove ONLY our agents from a runtime's agents/ dir, never the
+ * user's own hand-authored agents that may live alongside them.
+ * @returns {Set<string>}
+ */
+function importedSubagentBasenames() {
+  const sourceDir = src('subagents', 'categories');
+  const names = new Set();
+  if (!fsu.exists(sourceDir)) return names;
+  for (const file of fsu.listFilesRecursive(sourceDir, '.md')) {
+    const base = path.basename(file);
+    if (base !== 'README.md') names.add(base);
+  }
+  return names;
+}
 
 // ── Registry Management ────────────────────────────────────────────────────────
 const RegistryManager = {
@@ -415,6 +460,13 @@ async function install(runtime, scope, options = {}) {
         }
       }
     });
+
+    if (cfg.agentsSubdir && fsu.exists(src('subagents', 'categories'))) {
+      const agentCount = fsu.listFilesRecursive(src('subagents', 'categories'), '.md')
+        .filter(f => path.basename(f) !== 'README.md').length;
+      const countStr = `${agentCount} subagents`.padEnd(12);
+      console.log(`    ${countStr} → ${path.join(baseDir, cfg.agentsSubdir)}`);
+    }
     return;
   }
 
@@ -548,6 +600,21 @@ async function install(runtime, scope, options = {}) {
         Theme.printResolved(`${c.bold(asset.label.padEnd(12))} (Enterprise sync)`);
       }
     });
+  }
+
+  // ── 2.2 Install Subagents (native Claude-Code agents, both scopes) ──────────
+  // The 154 imported subagents are Claude-Code-native .md files; Claude Code
+  // auto-discovers them from <runtime>/agents/. Installed for BOTH scopes so a
+  // global install also exposes them. Mirrored to .claude/agents/ for non-claude
+  // local runtimes (same cross-IDE rationale as the command mirror above).
+  if (cfg.agentsSubdir && !selfInstall) {
+    const agentsDir = path.join(baseDir, cfg.agentsSubdir);
+    const count = installSubagents(agentsDir, { noOverwrite: !force });
+    if (count > 0) Theme.printResolved(`${c.bold(`${count} subagents`)} (native agents)`);
+  }
+  if (scope === 'local' && runtime !== 'claude' && !selfInstall) {
+    const mirrorDir = path.join(process.cwd(), '.claude', 'agents');
+    installSubagents(mirrorDir, { noOverwrite: !force });
   }
 
   // ── 3. Framework files (local scope only, non-self-install) ─────────────────
@@ -712,9 +779,16 @@ async function uninstall(runtime, scope, options = {}) {
   const cmdsDir = norm(path.join(baseDir, cfg.commandsSubdir));
   const entryFile = norm(path.join(baseDir, cfg.entryFile));
 
+  const agentsDir = cfg.agentsSubdir ? norm(path.join(baseDir, cfg.agentsSubdir)) : null;
+  const importedAgents = importedSubagentBasenames();
+
   console.log(`\n  Uninstalling MindForge (${runtime} / ${scope})...`);
   if (dryRun) {
     console.log(`  Would remove: ${cmdsDir}`);
+    if (agentsDir && fsu.exists(agentsDir)) {
+      const present = fsu.listFiles(agentsDir).filter(f => importedAgents.has(f)).length;
+      if (present > 0) console.log(`  Would remove: ${present} imported subagents from ${agentsDir}`);
+    }
     if (fsu.exists(entryFile) && fsu.read(entryFile).includes('MindForge'))
       console.log(`  Would remove: ${entryFile}`);
     return;
@@ -724,6 +798,18 @@ async function uninstall(runtime, scope, options = {}) {
   if (fsu.exists(cmdsDir)) {
     fs.rmSync(cmdsDir, { recursive: true, force: true });
     console.log(`  ✅  Removed: ${cmdsDir}`);
+  }
+
+  // Remove ONLY our imported subagents — leave the user's own agents/ files intact.
+  if (agentsDir && fsu.exists(agentsDir)) {
+    let removed = 0;
+    for (const f of fsu.listFiles(agentsDir)) {
+      if (importedAgents.has(f)) {
+        fs.unlinkSync(path.join(agentsDir, f));
+        removed++;
+      }
+    }
+    if (removed > 0) console.log(`  ✅  Removed: ${removed} imported subagents from ${agentsDir}`);
   }
 
   // Remove entry file only if it's a MindForge-generated file
@@ -744,6 +830,7 @@ function collectManifestStats() {
   const stats = {
     personas: 0,
     skills: 0,
+    subagents: 0,
     governance: 0,
     integrations: 0,
     actions: 0,
@@ -758,6 +845,13 @@ function collectManifestStats() {
       stats.skills = fsu.listFiles(path.join(SOURCE_ROOT, '.agent', 'skills')).length;
       stats.governance = fsu.listFiles(path.join(forgeSrc, 'governance')).filter(f => f.endsWith('.md')).length;
       stats.integrations = fsu.listFiles(path.join(forgeSrc, 'integrations')).filter(f => f.endsWith('.md')).length;
+    }
+
+    // Imported subagents (subagents/categories/**, excluding category READMEs)
+    const subagentsSrc = src('subagents', 'categories');
+    if (fsu.exists(subagentsSrc)) {
+      stats.subagents = fsu.listFilesRecursive(subagentsSrc, '.md')
+        .filter(f => path.basename(f) !== 'README.md').length;
     }
 
     // Docs & Templates count
@@ -777,7 +871,7 @@ function collectManifestStats() {
     }
   } catch (e) {
     // Fallback to default values if counting fails
-    return { personas: 117, skills: 20, governance: 4, integrations: 6, actions: 71, docs: 12, templates: 21 };
+    return { personas: 117, skills: 20, subagents: 154, governance: 4, integrations: 6, actions: 71, docs: 12, templates: 21 };
   }
 
   return stats;

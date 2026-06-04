@@ -15,7 +15,7 @@ MindForge v11.0.0 "Sovereign Stability" is a production-hardening release focuse
 - **Production observability** — `/api/v1/system` health endpoint, P95 latency tracking, heap health monitoring, and real EIS client with retry logic.
 - **Graduated intelligence** — Adaptive tier escalation (+1/+2/MAX) with cost-awareness, 3-tier stuck detection, and adaptive context windows.
 
-This release ships 200+ skills, 400+ personas, 18 pillars, and 49 swarm templates across 12 engineering domains.
+This release ships 200+ skills, 400+ personas, 154 specialized subagents, 18 pillars, and 49 swarm templates across 12 engineering domains.
 
 
 ## Installation & Setup
