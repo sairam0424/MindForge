@@ -8,6 +8,7 @@ MindForge v11.2.1 is an agentic intelligence framework distributed as the `mindf
 - **`sdk/`** — TypeScript SDK (`mindforge-sdk`), own `tsconfig.json` (strict). `tsc` compiles `src/` → `dist/`. Own tests (`cd sdk && npm test`).
 
 Cross-cutting systems worth understanding before editing:
+
 - **Audit hash-chain** — `bin/governance/audit-hash.js` is the single canonical SHA-256 hasher used by both `bin/autonomous/audit-writer.js` and `bin/governance/audit-verifier.js` (note: writer lives under `autonomous/`, verifier under `governance/`); `.planning/AUDIT.jsonl` is tamper-evident via `previous_hash` linkage. Verify with `node bin/verify-audit.js` (fail-closed, exit 1 on break).
 - **Pricing registry** — `bin/models/pricing-registry.js` is the single source of truth; all three providers call `priceCall()`. Never hardcode per-model prices in providers.
 - **Other roots:** `.mindforge/` (engine configs, ~200 skills, personas, governance), `.agent/` (6 hooks, ~130 workflows, `CLAUDE.md` protocols), `.planning/` (STATE.md, ROADMAP.md, audit), `docs/`, `examples/`, `tests/` (72 `*.test.js`).
@@ -46,10 +47,12 @@ Node's built-in `assert` with a custom lightweight harness — no Jest/Mocha. Ea
 ## Commit & Pull Request Guidelines
 
 Conventional Commits via Commitizen, with a trailing `(UC-XX)` use-case reference where applicable:
-```
+
+```text
 feat(council): wire runCouncil runtime to /mindforge:council command (UC-22)
 fix(security): harden trust-gate — fail-closed, null-strip (UC-22)
 ```
+
 Types seen in history: `feat`, `fix`, `chore`, `test`, `docs`, `ci`, `refactor`. The PR template (`.github/pull_request_template.md`) requires: Goal, Proposed Changes (grouped by component/persona), Verification checklist, and Brain Context links.
 
 ## Agent Orchestration
