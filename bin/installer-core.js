@@ -444,8 +444,11 @@ async function install(runtime, scope, options = {}) {
       { key: 'skillsSubdir',   src: src('.agent', 'skills'),      label: 'skills' },
       { key: 'hooksSubdir',    src: src('.agent', 'hooks'),       label: 'hooks' },
       { key: 'personasSubdir', src: src('.mindforge', 'personas'), label: 'personas' },
-      { key: 'docsSubdir',     src: src('docs', 'references'),    label: 'references' },
-      { key: 'docsSubdir',     src: src('docs', 'templates'),     label: 'templates' }
+      // NB: on-disk dirs are capitalized (docs/References, docs/Templates). macOS is
+      // case-insensitive so lowercase used to "work" locally, but npm/Linux is
+      // case-sensitive — the lookup silently missed in production (UC: REFERENCES 0).
+      { key: 'docsSubdir',     src: src('docs', 'References'),    label: 'references' },
+      { key: 'docsSubdir',     src: src('docs', 'Templates'),     label: 'templates' }
     ];
 
     assetMappings.forEach(asset => {
@@ -580,8 +583,8 @@ async function install(runtime, scope, options = {}) {
       { key: 'skillsSubdir',   src: src('.agent', 'skills'),      label: 'skills' },
       { key: 'hooksSubdir',    src: src('.agent', 'hooks'),       label: 'hooks' },
       { key: 'personasSubdir', src: src('.mindforge', 'personas'), label: 'personas' },
-      { key: 'docsSubdir',     src: src('docs', 'references'),    label: 'references' },
-      { key: 'docsSubdir',     src: src('docs', 'templates'),     label: 'templates' },
+      { key: 'docsSubdir',     src: src('docs', 'References'),    label: 'references' },
+      { key: 'docsSubdir',     src: src('docs', 'Templates'),     label: 'templates' },
       { key: 'memorySubdir',   src: src('.mindforge', 'memory'),   label: 'memory' },
       { key: 'pluginsSubdir',  src: src('.mindforge', 'plugins'),  label: 'plugins' }
     ];
@@ -658,9 +661,12 @@ async function install(runtime, scope, options = {}) {
       }
     }
 
-    // .planning/ — merge templates but preserve existing state
+    // .planning/ — merge templates but preserve existing state.
+    // Source from examples/starter-project/.planning (clean, generic, always shipped)
+    // — NEVER from the framework repo's own .planning/, which holds live dev state
+    // (AUDIT.jsonl, slack-threads.json, jira-sync.json) that must not reach users.
     const planningDst = path.join(process.cwd(), '.planning');
-    const planningSrc = src('.planning');
+    const planningSrc = src('examples', 'starter-project', '.planning');
     if (fsu.exists(planningSrc)) {
       fsu.ensureDir(planningDst);
       
@@ -700,7 +706,7 @@ async function install(runtime, scope, options = {}) {
 
     // AGENTS_LEARNING.md — create only if it doesn't already exist
     const learningDst = path.join(process.cwd(), 'AGENTS_LEARNING.md');
-    const learningSrc = src('docs', 'templates', 'Project', 'AGENTS_LEARNING.md');
+    const learningSrc = src('docs', 'Templates', 'Project', 'AGENTS_LEARNING.md');
     if (!fsu.exists(learningDst) && fsu.exists(learningSrc)) {
       fsu.copy(learningSrc, learningDst);
       Theme.printResolved(`${c.bold('AGENTS_LEARNING.md')} (agentic memory)`);
@@ -708,7 +714,7 @@ async function install(runtime, scope, options = {}) {
 
     // WALKTHROUGH.md — update if exists
     const walkDst = path.join(process.cwd(), 'WALKTHROUGH.md');
-    const walkSrc = src('docs', 'templates', 'Project', 'WALKTHROUGH.md');
+    const walkSrc = src('docs', 'Templates', 'Project', 'WALKTHROUGH.md');
     if (fsu.exists(walkSrc)) {
       fsu.copy(walkSrc, walkDst);
       Theme.printResolved(`${c.bold('WALKTHROUGH.md')} (updated)`);
@@ -854,9 +860,9 @@ function collectManifestStats() {
         .filter(f => path.basename(f) !== 'README.md').length;
     }
 
-    // Docs & Templates count
-    const refSrc = src('docs', 'references');
-    const tmpSrc = src('docs', 'templates');
+    // Docs & Templates count (on-disk dirs are capitalized — see assetMappings note)
+    const refSrc = src('docs', 'References');
+    const tmpSrc = src('docs', 'Templates');
     if (fsu.exists(refSrc)) stats.docs = fsu.listFiles(refSrc).filter(f => f.endsWith('.md')).length;
     if (fsu.exists(tmpSrc)) stats.templates = fsu.listFilesRecursive(tmpSrc).length;
     
