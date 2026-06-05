@@ -277,7 +277,7 @@ const counts = {
 };
 buildManifest(counts);
 
-console.log(`Generated plugins/mindforge/:`);
+console.log('Generated plugins/mindforge/:');
 console.log(`  commands: ${counts.commands}`);
 console.log(`  agents:   ${counts.agents}`);
 console.log(`  skills:   ${counts.skills} (incl. synthesized mindforge-protocol)`);

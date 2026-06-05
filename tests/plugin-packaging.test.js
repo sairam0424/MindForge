@@ -49,7 +49,7 @@ function frontmatterIsParseable(file) {
     if (!fm) continue;
     const v = fm[2].trim();
     if (v === '') continue;
-    if (v.startsWith('"') || v.startsWith('>') || v.startsWith('|') || v.startsWith("'")) continue;
+    if (v.startsWith('"') || v.startsWith('>') || v.startsWith('|') || v.startsWith('\'')) continue;
     // Plain scalar: reject the tokens that made the real source files mis-parse.
     if (v.startsWith('-') || v.startsWith('@') || /:\s/.test(v) || v.endsWith(':')) return false;
   }
