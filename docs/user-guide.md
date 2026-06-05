@@ -1,4 +1,4 @@
-# MindForge User Guide (v11.0.0)
+# MindForge User Guide (v11.3.1)
 
 This guide gets you from install to productive, with the minimum needed to run MindForge in a real project.
 

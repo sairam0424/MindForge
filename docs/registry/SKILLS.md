@@ -1,4 +1,4 @@
-# MindForge — Skill Registry (v6.2.0-alpha)
+# MindForge — Skill Registry (v11.3.1)
 
 This registry catalogs the high-fidelity SkillStacks available to the MindForge Intelligence Mesh.
 

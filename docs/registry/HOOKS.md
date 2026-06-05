@@ -1,4 +1,4 @@
-# MindForge — Hook Registry (v6.2.0-alpha)
+# MindForge — Hook Registry (v11.3.1)
 
 This registry catalogs the automation and security lifecycle hooks available in the MindForge environment.
 

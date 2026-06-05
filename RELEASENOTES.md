@@ -1,4 +1,48 @@
-# Release Notes — v11.0.0 "Sovereign Stability"
+# Release Notes
+
+## v11.3.1 — Packaging hotfix
+
+**Release Date**: 2026-06-05
+**Type**: Patch (no API changes)
+**Upgrade Path**: `npm install -g mindforge-cc@latest` (or `npx mindforge-cc@latest`)
+
+Fixes a critical packaging regression in v11.3.0, where a too-narrow npm `files`
+allowlist silently dropped most of the product from the published tarball. Users who
+installed v11.3.0 received only hooks, personas, subagents, and three `.mindforge/`
+folders — **no slash commands, no skills, and an incomplete framework** — with no error,
+because the installer skips any source absent from the tarball.
+
+- **Restored payload** — every install now delivers all **174 slash commands**, **73 skills**,
+  **154 subagents**, the entry `CLAUDE.md`, and the full `.mindforge/` framework
+  (`governance`, `integrations`, `intelligence`, `memory`, `metrics`, `models`, `org`,
+  `plugins`, `team`). Runtime state (`celestial.db`, telemetry `.jsonl`) is explicitly excluded.
+- **`.planning/` scaffolding** now ships from a clean generic source (never the framework's
+  own dev state) so the autonomous engine has its templates.
+- **docs/References + docs/Templates** case-sensitivity fixed (worked on macOS, silently
+  missed on Linux/npm — they now install correctly).
+- **Regression test** (`tests/packaging-allowlist.test.js`) packs the real tarball and
+  asserts the full payload ships — proven to fail under the broken v11.3.0 allowlist.
+
+> v11.3.0 is deprecated on npm. Upgrade to v11.3.1.
+
+## v11.3.0 — "Legion" (154-subagent expansion)
+
+**Release Date**: 2026-06-04
+**Type**: Minor (additive, backward-compatible)
+
+Imports 154 specialized Claude-Code-native subagents across 10 categories
+(`01-core-development` … `10-research-analysis`) into `.claude/agents/`, fully rebranded
+and collision-safe (16 names that clashed with existing personas were suffixed `-cc`).
+Adds `bin/spawn-agent.js subagent <name>` with a hardened name allowlist and path-traversal
+guards, plus a generated `.mindforge/imported-agents.jsonl` index. No existing persona,
+skill, or command changed behavior.
+
+> Note: the v11.3.0 npm artifact was affected by the packaging regression fixed in v11.3.1.
+> Install v11.3.1 to get the subagents and the rest of the payload.
+
+---
+
+# v11.0.0 "Sovereign Stability"
 
 **Release Date**: 2026-05-28  
 **Type**: Major (breaking changes)  

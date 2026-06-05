@@ -1,4 +1,4 @@
-# MindForge — Agent Identity Registry (v6.2.0-alpha)
+# MindForge — Agent Identity Registry (v11.3.1)
 
 This registry catalogs the specialized agent identities available for direct invocation and autonomous collaboration within the MindForge mesh.
 

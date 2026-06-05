@@ -1,4 +1,4 @@
-# MindForge v6.2.0-alpha — Capabilities Manifest
+# MindForge v11.3.1 — Capabilities Manifest
 
 This manifest provides a line-item inventory of every engine, protocol, and feature available in the MindForge "Enterprise-Grade" installation.
 
@@ -46,19 +46,29 @@ Native adapters for the modern engineering stack.
 - **Slack/Discord Hubs**: Real-time event notifications and approval requests.
 - **GitHub Actions Support**: CI-integrated validation and PR review pipelines.
 
-## 👤 6. Persona Library (30+ Identities)
+## 👤 6. Persona Library (211 Identities)
 Specialized agent essences available via `node bin/spawn-agent.js`.
 - **Strategic**: `mf-planner`, `architect`, `tech-writer`.
 - **Implementation**: `mf-executor`, `developer`, `ui-checker`.
 - **Quality**: `mf-reviewer`, `nyquist-auditor`, `security-reviewer`.
 - **Specialized**: `debug-specialist`, `research-synthesizer`, `user-profiler`.
 
-## 🛠 7. CLI Command Suite (64+ Commands)
-Comprehensive control via `mindforge-cli.js`.
+## 🤖 7. Subagent Library (154 Claude-Code-native agents)
+Imported "Legion" collection (v11.3.0), installed into `.claude/agents/` and resolvable
+via `node bin/spawn-agent.js subagent <name>`. 10 categories spanning core development,
+language specialists, infrastructure, quality/security, data/AI, developer experience,
+specialized domains, business/product, meta-orchestration, and research/analysis.
+
+## 🛠 8. CLI Command Suite (174 Commands)
+Comprehensive control via `mindforge-cli.js` and `/mindforge:*` slash commands.
 - **Strategic**: `init-project`, `milestone`, `plan-phase`, `ship`.
 - **Operational**: `auto`, `headless`, `steer`, `stuck-monitor`.
 - **Governance**: `security-scan`, `approve`, `audit`, `metrics`, `tokens`.
 - **Sovereign**: `harvest`, `self-heal`, `quantum-verify`.
 
+## 📚 9. Skill Packs (73 Skills)
+Enterprise-grade skill packs installed into `<runtime>/skills/`, covering planning,
+execution, debugging, TDD, shipping, verification, and domain-specific workflows.
+
 ---
-*MindForge v6.2.0-alpha "Production-Grade" — Empowering the Autonomous Enterprise.*
+*MindForge v11.3.1 — Empowering the Autonomous Enterprise.*

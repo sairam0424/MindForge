@@ -4,6 +4,13 @@
 
 ---
 
+## Latest: v11.3.1
+
+- **v11.3.1 — Packaging hotfix.** Restores the full published payload: every `npx mindforge-cc` install now delivers all 174 slash commands, 73 skills, 154 subagents, and the complete `.mindforge/` framework. (v11.3.0 shipped a too-narrow npm allowlist that silently dropped commands and skills — fixed here, with a tarball regression test so it cannot recur.)
+- **v11.3.0 — "Legion".** Imports 154 specialized Claude-Code-native subagents across 10 categories into `.claude/agents/`, fully rebranded and collision-safe. Additive and backward-compatible.
+
+See [CHANGELOG.md](./CHANGELOG.md) for full release history.
+
 ## v11.0.0 — Sovereign Stability
 
 MindForge v11.0.0 "Sovereign Stability" is a production-hardening release focused on reliability, performance, and real-world deployment readiness. Key highlights:
@@ -15,7 +22,7 @@ MindForge v11.0.0 "Sovereign Stability" is a production-hardening release focuse
 - **Production observability** — `/api/v1/system` health endpoint, P95 latency tracking, heap health monitoring, and real EIS client with retry logic.
 - **Graduated intelligence** — Adaptive tier escalation (+1/+2/MAX) with cost-awareness, 3-tier stuck detection, and adaptive context windows.
 
-This release ships 200+ skills, 400+ personas, 154 specialized subagents, 18 pillars, and 49 swarm templates across 12 engineering domains.
+This release ships 211 personas, 73 skills, 154 specialized subagents, 174 commands, 18 pillars, and 49 swarm templates across 12 engineering domains.
 
 
 ## Installation & Setup
