@@ -101,11 +101,11 @@ engine's *reads* without running the npx installer. Tools:
 
 How it works: the server is a thin stdio adapter over the MindForge SDK
 (`MindForgeMemory` + `MindForgeClient`), scoped to your project via `${CLAUDE_PROJECT_DIR}`.
-Its `node_modules` (~48 MB) is **not** bundled; a SessionStart hook installs the runtime
-deps into `${CLAUDE_PLUGIN_DATA}` on first run (the documented persistent-data pattern), so
-the committed plugin stays small. Every tool degrades gracefully — if MindForge isn't set
-up in the project, it returns an actionable message pointing you to the npx installer or
-`/mindforge:init-project` rather than failing.
+It ships as a **single self-contained bundle** (`mcp/dist/index.js`, ~750 KB, all
+dependencies inlined by esbuild) — so it needs **no runtime `node_modules` and no install
+step**, and it starts on the very first session, offline. Every tool degrades gracefully —
+if MindForge isn't set up in the project, it returns an actionable message pointing you to
+the npx installer or `/mindforge:init-project` rather than failing.
 
 > The **autonomous runtime + SQLite/governance write-path** still live with the npx
 > installer; the MCP server exposes the safe read surface plus an append-only `remember`.
@@ -119,9 +119,9 @@ so it can't drift from what the npx installer ships:
 node scripts/fix-command-frontmatter.js   # quote YAML-unsafe frontmatter (idempotent)
 node scripts/build-subagent-plugins.js    # per-category plugin.json from on-disk agents
 node scripts/vendor-sdk-into-mcp.js       # vendor the SDK into the MCP server
-npm --prefix mcp-server install            # MCP server deps (first time only)
-npm --prefix mcp-server run build          # compile mcp-server/dist
-node scripts/build-mindforge-plugin.js    # the comprehensive plugins/mindforge/ tree (incl. MCP bundle)
+npm --prefix mcp-server install            # MCP server build deps (first time only)
+npm --prefix mcp-server run build          # typecheck + esbuild into one self-contained dist/index.js
+node scripts/build-mindforge-plugin.js    # the comprehensive plugins/mindforge/ tree (incl. the MCP bundle)
 node scripts/build-plugin-marketplace.js  # the repo-root .claude-plugin/marketplace.json
 claude plugin validate .                  # validate the marketplace
 claude plugin validate ./plugins/mindforge # deep-validate the plugin

@@ -154,22 +154,12 @@ function buildHooks(mcpBundled) {
     }));
   }
 
-  // Merge in the MCP dependency-install SessionStart hook (see buildMcp). This installs
-  // the server's production deps into ${CLAUDE_PLUGIN_DATA} on first run / dep change —
-  // the documented pattern for plugins that need node_modules too large to bundle. Only
-  // added when the MCP bundle is present.
-  if (mcpBundled) {
-    const mcpInstall = {
-      type: 'command',
-      command:
-        'diff -q "${CLAUDE_PLUGIN_ROOT}/mcp/package.json" "${CLAUDE_PLUGIN_DATA}/mcp/package.json" >/dev/null 2>&1 ' +
-        '|| (mkdir -p "${CLAUDE_PLUGIN_DATA}/mcp" && cp "${CLAUDE_PLUGIN_ROOT}/mcp/package.json" "${CLAUDE_PLUGIN_DATA}/mcp/" ' +
-        '&& npm install --omit=dev --prefix "${CLAUDE_PLUGIN_DATA}/mcp" >/dev/null 2>&1) ' +
-        '|| rm -f "${CLAUDE_PLUGIN_DATA}/mcp/package.json"',
-    };
-    out.SessionStart = out.SessionStart || [];
-    out.SessionStart.push({ hooks: [mcpInstall] });
-  }
+  // NB: no MCP dependency-install hook. The MCP server ships as a single self-contained
+  // esbuild bundle (all deps inlined), so there is nothing to install at runtime — the
+  // server starts directly from ${CLAUDE_PLUGIN_ROOT}/mcp/dist/index.js. (The earlier
+  // lazy-npm-install-into-${CLAUDE_PLUGIN_DATA} approach failed: Claude Code auto-starts
+  // the stdio server at session start, before any install hook could provision deps.)
+  void mcpBundled;
 
   const hooksDir = path.join(PLUGIN, 'hooks');
   ensure(hooksDir);
@@ -177,44 +167,33 @@ function buildHooks(mcpBundled) {
   return Object.keys(out).length;
 }
 
-// ── 4b. MCP server: bundle built dist/ + runtime package.json, emit .mcp.json ─────
-// The server's full node_modules is ~48M (the SDK's transitive tree), too large to ship.
-// So we bundle only the compiled dist/ and a production-only package.json; the deps are
-// installed into ${CLAUDE_PLUGIN_DATA}/mcp/node_modules by the SessionStart hook above
-// (the documented ${CLAUDE_PLUGIN_DATA} pattern). The server runs with NODE_PATH pointed
-// there. projectRoot resolves to ${CLAUDE_PROJECT_DIR} (the user's project) inside the server.
+// ── 4b. MCP server: bundle the self-contained single-file build, emit .mcp.json ───
+// The server ships as ONE esbuild bundle (mcp-server/dist/index.js, ~750KB) with all deps
+// (@modelcontextprotocol/sdk, zod, transitive tree) inlined. So the plugin needs NO runtime
+// node_modules and NO install step — the stdio server starts directly on first session,
+// offline. (An audit caught that the prior lazy-install-into-${CLAUDE_PLUGIN_DATA} approach
+// left a clean install with empty deps because Claude Code auto-starts the server before any
+// hook can install them.) projectRoot resolves to ${CLAUDE_PROJECT_DIR} inside the server.
 function buildMcp() {
-  const mcpSrcDist = path.join(ROOT, 'mcp-server', 'dist');
-  if (!fs.existsSync(mcpSrcDist)) {
-    console.log('  mcp: SKIPPED (mcp-server/dist not built — run `npm --prefix mcp-server run build`)');
+  const mcpEntry = path.join(ROOT, 'mcp-server', 'dist', 'index.js');
+  if (!fs.existsSync(mcpEntry)) {
+    console.log('  mcp: SKIPPED (mcp-server/dist/index.js not built — run `npm --prefix mcp-server run build`)');
     return false;
   }
-  const mcpDst = path.join(PLUGIN, 'mcp');
-  ensure(mcpDst);
+  const mcpDistDst = path.join(PLUGIN, 'mcp', 'dist');
+  ensure(mcpDistDst);
 
-  // Bundle the compiled server.
-  copyDirRecursive(mcpSrcDist, path.join(mcpDst, 'dist'));
+  // Bundle the single self-contained file (no vendor/, no node_modules, no package.json needed).
+  fs.copyFileSync(mcpEntry, path.join(mcpDistDst, 'index.js'));
 
-  // Ship a production-only package.json (deps installed at runtime into CLAUDE_PLUGIN_DATA).
-  const serverPkg = require(path.join(ROOT, 'mcp-server', 'package.json'));
-  const runtimePkg = {
-    name: serverPkg.name,
-    version: serverPkg.version,
-    private: true,
-    type: serverPkg.type,
-    dependencies: serverPkg.dependencies,
-    engines: serverPkg.engines,
-  };
-  fs.writeFileSync(path.join(mcpDst, 'package.json'), JSON.stringify(runtimePkg, null, 2) + '\n', 'utf8');
-
-  // .mcp.json at plugin root: start the bundled server over stdio, deps from CLAUDE_PLUGIN_DATA.
+  // .mcp.json at plugin root: launch the bundled server over stdio. No NODE_PATH — deps are
+  // inlined. CLAUDE_PROJECT_DIR scopes the server's reads to the user's project.
   const mcpConfig = {
     mcpServers: {
       mindforge: {
         command: 'node',
         args: ['${CLAUDE_PLUGIN_ROOT}/mcp/dist/index.js'],
         env: {
-          NODE_PATH: '${CLAUDE_PLUGIN_DATA}/mcp/node_modules',
           CLAUDE_PROJECT_DIR: '${CLAUDE_PROJECT_DIR}',
         },
       },
