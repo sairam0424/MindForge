@@ -1,5 +1,41 @@
 # Changelog
 
+## [11.4.0] - 2026-06-06 — Claude Code plugin distribution
+
+MindForge is now installable as a native **Claude Code plugin** from a marketplace, in
+addition to the `npx mindforge-cc` installer. This release ships the plugin tooling so
+both the GitHub plugin channel and the npm tarball stay coherent.
+
+### Added
+
+- **Plugin marketplace** (`.claude-plugin/marketplace.json` at the repo root) — users run
+  `/plugin marketplace add sairam0424/MindForge` then `/plugin install mindforge@mindforge`.
+  Lists 11 plugins: the comprehensive `mindforge` plugin + 10 à-la-carte subagent packs.
+- **Comprehensive `mindforge` plugin** (`plugins/mindforge/`) bundling the full surface:
+  174 commands, 154 subagents, 73 skills + a synthesized `mindforge-protocol` skill (the
+  CLAUDE.md operating directive, since a plugin-root CLAUDE.md isn't loaded as context),
+  and governance hooks (translated to Claude `PreToolUse`/`PostToolUse` events with
+  `${CLAUDE_PLUGIN_ROOT}`-relative paths).
+- **Bundled MindForge MCP server** — a self-contained esbuild single-file build
+  (`mcp/dist/index.js`, all deps inlined, no runtime `node_modules`) exposing 7 tools over
+  stdio: `mindforge_health`, `mindforge_status`, `mindforge_memory_query`,
+  `mindforge_memory_stats`, `mindforge_memory_find_related`, `mindforge_audit_log`
+  (read-only), and append-only `mindforge_memory_remember`. Scoped to the user's project
+  via `${CLAUDE_PROJECT_DIR}`; degrades gracefully when MindForge isn't set up.
+- **Generators** (single source of truth, drift-guarded): `build-plugin-marketplace.js`,
+  `build-subagent-plugins.js`, `build-mindforge-plugin.js`, `vendor-sdk-into-mcp.js`,
+  `fix-command-frontmatter.js`; new `mcp-server/` package with esbuild build.
+- **`tests/plugin-packaging.test.js`** (in `npm test`) — guards the generated plugin tree,
+  frontmatter validity, and MCP-bundle self-containment.
+
+### Fixed
+
+- Quoted YAML-unsafe `name`/`description` frontmatter across commands/agents/skills that
+  the plugin validator flagged (leading `-`/`@`, embedded `: `, trailing `:`) — these
+  silently loaded empty metadata. The npx installer inherits the fix.
+- Per-category subagent `plugin.json` `agents[]` now derived from on-disk files, fixing
+  stale bare names for the 16 collision-renamed (`-cc`) agents.
+
 ## [11.3.1] - 2026-06-05 — Packaging hotfix (commands, skills & framework now ship)
 
 Critical fix for v11.3.0, where a too-narrow npm `files` allowlist silently dropped

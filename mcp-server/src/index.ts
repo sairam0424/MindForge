@@ -56,7 +56,7 @@ async function safe<T>(
   }
 }
 
-const server = new McpServer({ name: 'mindforge', version: '11.3.1' });
+const server = new McpServer({ name: 'mindforge', version: '11.4.0' });
 
 /**
  * Tool config + handler types. We register through a single helper whose `config.inputSchema`
