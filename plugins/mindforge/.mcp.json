@@ -6,7 +6,6 @@
         "${CLAUDE_PLUGIN_ROOT}/mcp/dist/index.js"
       ],
       "env": {
-        "NODE_PATH": "${CLAUDE_PLUGIN_DATA}/mcp/node_modules",
         "CLAUDE_PROJECT_DIR": "${CLAUDE_PROJECT_DIR}"
       }
     }

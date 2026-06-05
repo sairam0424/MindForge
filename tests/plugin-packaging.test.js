@@ -160,8 +160,8 @@ test('the 10 category packs list 154 agents in total', () => {
   assert.strictEqual(total, 154, `expected 154 agents across packs, got ${total}`);
 });
 
-// ── 6. Bundled MCP server (Phase 3) ───────────────────────────────────────────
-test('plugin bundles the MCP server: .mcp.json + compiled dist + runtime package.json', () => {
+// ── 6. Bundled MCP server (Phase 3 — self-contained single-file build) ────────
+test('plugin bundles the MCP server as a self-contained single file (no runtime deps)', () => {
   const mcpJsonPath = path.join(PLUGIN, '.mcp.json');
   assert.ok(fs.existsSync(mcpJsonPath), 'missing plugins/mindforge/.mcp.json');
   const cfg = readJson(mcpJsonPath);
@@ -173,30 +173,38 @@ test('plugin bundles the MCP server: .mcp.json + compiled dist + runtime package
   const entry = path.join(PLUGIN, 'mcp', 'dist', 'index.js');
   assert.ok(fs.existsSync(entry), 'missing compiled plugins/mindforge/mcp/dist/index.js (run build-mindforge-plugin.js after building mcp-server)');
 
-  // The args must point at the bundled entry via ${CLAUDE_PLUGIN_ROOT}, and deps must load
-  // from ${CLAUDE_PLUGIN_DATA} (the documented persistent-data pattern — node_modules is not bundled).
   assert.ok(srv.args.some((a) => a.includes('${CLAUDE_PLUGIN_ROOT}/mcp/dist/index.js')),
     '.mcp.json args must reference ${CLAUDE_PLUGIN_ROOT}/mcp/dist/index.js');
-  assert.ok(srv.env && srv.env.NODE_PATH && srv.env.NODE_PATH.includes('${CLAUDE_PLUGIN_DATA}'),
-    'MCP server NODE_PATH must point into ${CLAUDE_PLUGIN_DATA}');
 
-  // node_modules must NOT be bundled (it is installed at runtime); keeps the plugin small.
+  // The bundle is self-contained: NO NODE_PATH (deps are inlined, not loaded from disk).
+  assert.ok(!(srv.env && srv.env.NODE_PATH),
+    '.mcp.json must NOT set NODE_PATH — the bundle is self-contained, not dep-loaded');
+
+  // No runtime node_modules and no runtime package.json should be bundled — deps are inlined.
   assert.ok(!fs.existsSync(path.join(PLUGIN, 'mcp', 'node_modules')),
-    'mcp/node_modules must NOT be committed — it installs into ${CLAUDE_PLUGIN_DATA} at SessionStart');
+    'mcp/node_modules must NOT exist — deps are inlined in the bundle');
+  assert.ok(!fs.existsSync(path.join(PLUGIN, 'mcp', 'package.json')),
+    'mcp/package.json must NOT exist — the self-contained bundle needs no runtime install');
 
-  // The runtime package.json declares the deps the SessionStart hook installs.
-  const runtimePkg = readJson(path.join(PLUGIN, 'mcp', 'package.json'));
-  assert.ok(runtimePkg.dependencies && runtimePkg.dependencies['@modelcontextprotocol/sdk'],
-    'mcp/package.json must declare @modelcontextprotocol/sdk for the runtime install');
+  // The bundle must actually inline its deps: it must NOT require the external SDK/zod at
+  // runtime (esbuild rewrites those to inlined modules). A residual top-level require of an
+  // external package would mean the clean-install MODULE_NOT_FOUND blocker is back.
+  const bundle = fs.readFileSync(entry, 'utf8');
+  assert.ok(!/require\(["']@modelcontextprotocol\/sdk/.test(bundle),
+    'bundle still require()s @modelcontextprotocol/sdk — not self-contained (the clean-install blocker would recur)');
+  assert.ok(!/require\(["']zod["']\)/.test(bundle),
+    'bundle still require()s zod — not self-contained');
+  assert.ok(bundle.length > 100_000, `bundle suspiciously small (${bundle.length} bytes) — deps may not be inlined`);
 });
 
-test('a SessionStart hook installs the MCP deps into ${CLAUDE_PLUGIN_DATA}', () => {
+test('no MCP dependency-install hook remains (self-contained bundle needs none)', () => {
   const hooks = readJson(path.join(PLUGIN, 'hooks', 'hooks.json')).hooks;
-  const sessionStart = hooks.SessionStart || [];
-  const commands = sessionStart.flatMap((g) => (g.hooks || []).map((h) => h.command || ''));
+  const commands = Object.values(hooks)
+    .flat()
+    .flatMap((g) => (g.hooks || []).map((h) => h.command || ''));
   assert.ok(
-    commands.some((c) => c.includes('npm install') && c.includes('${CLAUDE_PLUGIN_DATA}/mcp')),
-    'expected a SessionStart hook that npm-installs MCP deps into ${CLAUDE_PLUGIN_DATA}/mcp'
+    !commands.some((c) => c.includes('npm install')),
+    'no hook should run npm install — the MCP bundle is self-contained (the lazy-install pattern was the clean-install blocker)'
   );
 });
 
