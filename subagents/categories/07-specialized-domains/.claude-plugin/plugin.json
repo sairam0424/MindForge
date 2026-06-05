@@ -4,7 +4,7 @@
   "description": "Domain-specific technology experts - blockchain, fintech, gaming, IoT, payments",
   "author": {
     "name": "MindForge Team",
-    "url": "https://github.com/sairam0424"
+    "email": "uggesairam0000@gmail.com"
   },
   "repository": "https://github.com/sairam0424/MindForge",
   "license": "MIT",
@@ -22,6 +22,6 @@
     "./payment-integration.md",
     "./quant-analyst.md",
     "./risk-manager.md",
-    "./seo-specialist.md"
+    "./seo-specialist-cc.md"
   ]
 }

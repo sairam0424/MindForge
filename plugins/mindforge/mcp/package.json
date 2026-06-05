@@ -1,0 +1,13 @@
+{
+  "name": "mindforge-mcp-server",
+  "version": "11.3.1",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^3.25.76"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

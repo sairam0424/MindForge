@@ -27,9 +27,24 @@ This release ships 211 personas, 73 skills, 154 specialized subagents, 174 comma
 
 ## Installation & Setup
 
-### 🚀 Quick Start (No Install)
+### 🔌 Claude Code Plugin (fastest)
 
-Run MindForge immediately for a specific runtime without a permanent installation:
+Install MindForge's commands, subagents, and skills directly from the marketplace —
+no project files written:
+
+```bash
+/plugin marketplace add sairam0424/MindForge
+/plugin install mindforge@mindforge
+```
+
+Prefer just a slice (e.g. Python agents)? Install a focused pack like
+`mindforge-lang@mindforge` instead. See [docs/plugin-installation.md](docs/plugin-installation.md)
+for all 11 plugins, token-budget guidance, and team setup.
+
+### 🚀 Quick Start (npx — full framework engine)
+
+The npx installer also writes the complete `.mindforge/` engine (governance, memory,
+planning) into your project:
 
 ```bash
 # For Claude Code

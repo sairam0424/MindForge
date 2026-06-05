@@ -1,0 +1,26 @@
+{
+  "name": "mindforge-mcp-server",
+  "version": "11.3.1",
+  "private": true,
+  "description": "MindForge MCP server — exposes the MindForge engine (memory graph, project health, audit) to Claude Code as MCP tools",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "bin": {
+    "mindforge-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
