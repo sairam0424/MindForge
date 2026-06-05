@@ -4,7 +4,7 @@
   "description": "Language-specific expert agents with deep framework knowledge - Python, TypeScript, Go, Rust, Java, and more",
   "author": {
     "name": "MindForge Team",
-    "url": "https://github.com/sairam0424"
+    "email": "uggesairam0000@gmail.com"
   },
   "repository": "https://github.com/sairam0424/MindForge",
   "license": "MIT",
@@ -31,7 +31,7 @@
     "./powershell-7-expert.md",
     "./python-pro.md",
     "./rails-expert.md",
-    "./react-specialist.md",
+    "./react-specialist-cc.md",
     "./rust-engineer.md",
     "./spring-boot-engineer.md",
     "./sql-pro.md",

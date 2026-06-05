@@ -4,22 +4,22 @@
   "description": "DevOps, cloud, and deployment specialists - Kubernetes, Terraform, AWS, Azure, GCP, and SRE",
   "author": {
     "name": "MindForge Team",
-    "url": "https://github.com/sairam0424"
+    "email": "uggesairam0000@gmail.com"
   },
   "repository": "https://github.com/sairam0424/MindForge",
   "license": "MIT",
   "agents": [
     "./azure-infra-engineer.md",
-    "./cloud-architect.md",
+    "./cloud-architect-cc.md",
     "./database-administrator.md",
-    "./docker-expert.md",
     "./deployment-engineer.md",
-    "./devops-engineer.md",
+    "./devops-engineer-cc.md",
     "./devops-incident-responder.md",
+    "./docker-expert.md",
     "./incident-responder.md",
     "./kubernetes-specialist.md",
     "./network-engineer.md",
-    "./platform-engineer.md",
+    "./platform-engineer-cc.md",
     "./security-engineer.md",
     "./sre-engineer.md",
     "./terraform-engineer.md",

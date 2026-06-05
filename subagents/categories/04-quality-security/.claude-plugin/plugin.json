@@ -4,19 +4,19 @@
   "description": "Testing, security, and code quality experts - code review, penetration testing, QA automation, and UI flow validation",
   "author": {
     "name": "MindForge Team",
-    "url": "https://github.com/sairam0424"
+    "email": "uggesairam0000@gmail.com"
   },
   "repository": "https://github.com/sairam0424/MindForge",
   "license": "MIT",
   "agents": [
-    "./accessibility-tester.md",
+    "./accessibility-tester-cc.md",
     "./ad-security-reviewer.md",
     "./ai-writing-auditor.md",
     "./architect-reviewer.md",
-    "./chaos-engineer.md",
+    "./chaos-engineer-cc.md",
     "./code-reviewer.md",
-    "./compliance-auditor.md",
-    "./debugger.md",
+    "./compliance-auditor-cc.md",
+    "./debugger-cc.md",
     "./error-detective.md",
     "./gdpr-ccpa-compliance.md",
     "./penetration-tester.md",

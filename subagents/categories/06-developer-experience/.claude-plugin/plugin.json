@@ -4,12 +4,12 @@
   "description": "Tooling and developer productivity experts - CLI tools, documentation, README generation, and DX optimization",
   "author": {
     "name": "MindForge Team",
-    "url": "https://github.com/sairam0424"
+    "email": "uggesairam0000@gmail.com"
   },
   "repository": "https://github.com/sairam0424/MindForge",
   "license": "MIT",
   "agents": [
-    "./build-engineer.md",
+    "./build-engineer-cc.md",
     "./cli-developer.md",
     "./dependency-manager.md",
     "./documentation-engineer.md",
