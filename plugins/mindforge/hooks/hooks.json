@@ -12,6 +12,14 @@
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/mindforge-session-init_extended.js\""
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "diff -q \"${CLAUDE_PLUGIN_ROOT}/mcp/package.json\" \"${CLAUDE_PLUGIN_DATA}/mcp/package.json\" >/dev/null 2>&1 || (mkdir -p \"${CLAUDE_PLUGIN_DATA}/mcp\" && cp \"${CLAUDE_PLUGIN_ROOT}/mcp/package.json\" \"${CLAUDE_PLUGIN_DATA}/mcp/\" && npm install --omit=dev --prefix \"${CLAUDE_PLUGIN_DATA}/mcp\" >/dev/null 2>&1) || rm -f \"${CLAUDE_PLUGIN_DATA}/mcp/package.json\""
+          }
+        ]
       }
     ],
     "PostToolUse": [

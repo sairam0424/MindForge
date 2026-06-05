@@ -160,6 +160,46 @@ test('the 10 category packs list 154 agents in total', () => {
   assert.strictEqual(total, 154, `expected 154 agents across packs, got ${total}`);
 });
 
+// ── 6. Bundled MCP server (Phase 3) ───────────────────────────────────────────
+test('plugin bundles the MCP server: .mcp.json + compiled dist + runtime package.json', () => {
+  const mcpJsonPath = path.join(PLUGIN, '.mcp.json');
+  assert.ok(fs.existsSync(mcpJsonPath), 'missing plugins/mindforge/.mcp.json');
+  const cfg = readJson(mcpJsonPath);
+  const srv = cfg.mcpServers && cfg.mcpServers.mindforge;
+  assert.ok(srv, '.mcp.json must define an mcpServers.mindforge entry');
+
+  // The compiled server entrypoint must be COMMITTED (a github-source install copies it;
+  // an unbuilt dist would mean no MCP server). Guards the .gitignore dist/ negation.
+  const entry = path.join(PLUGIN, 'mcp', 'dist', 'index.js');
+  assert.ok(fs.existsSync(entry), 'missing compiled plugins/mindforge/mcp/dist/index.js (run build-mindforge-plugin.js after building mcp-server)');
+
+  // The args must point at the bundled entry via ${CLAUDE_PLUGIN_ROOT}, and deps must load
+  // from ${CLAUDE_PLUGIN_DATA} (the documented persistent-data pattern — node_modules is not bundled).
+  assert.ok(srv.args.some((a) => a.includes('${CLAUDE_PLUGIN_ROOT}/mcp/dist/index.js')),
+    '.mcp.json args must reference ${CLAUDE_PLUGIN_ROOT}/mcp/dist/index.js');
+  assert.ok(srv.env && srv.env.NODE_PATH && srv.env.NODE_PATH.includes('${CLAUDE_PLUGIN_DATA}'),
+    'MCP server NODE_PATH must point into ${CLAUDE_PLUGIN_DATA}');
+
+  // node_modules must NOT be bundled (it is installed at runtime); keeps the plugin small.
+  assert.ok(!fs.existsSync(path.join(PLUGIN, 'mcp', 'node_modules')),
+    'mcp/node_modules must NOT be committed — it installs into ${CLAUDE_PLUGIN_DATA} at SessionStart');
+
+  // The runtime package.json declares the deps the SessionStart hook installs.
+  const runtimePkg = readJson(path.join(PLUGIN, 'mcp', 'package.json'));
+  assert.ok(runtimePkg.dependencies && runtimePkg.dependencies['@modelcontextprotocol/sdk'],
+    'mcp/package.json must declare @modelcontextprotocol/sdk for the runtime install');
+});
+
+test('a SessionStart hook installs the MCP deps into ${CLAUDE_PLUGIN_DATA}', () => {
+  const hooks = readJson(path.join(PLUGIN, 'hooks', 'hooks.json')).hooks;
+  const sessionStart = hooks.SessionStart || [];
+  const commands = sessionStart.flatMap((g) => (g.hooks || []).map((h) => h.command || ''));
+  assert.ok(
+    commands.some((c) => c.includes('npm install') && c.includes('${CLAUDE_PLUGIN_DATA}/mcp')),
+    'expected a SessionStart hook that npm-installs MCP deps into ${CLAUDE_PLUGIN_DATA}/mcp'
+  );
+});
+
 (async () => {
   for (const { name, fn } of tests) {
     try { await fn(); console.log(`  ✅  ${name}`); passed++; }

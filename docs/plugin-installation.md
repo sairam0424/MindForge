@@ -83,6 +83,33 @@ In your project's `.claude/settings.json`:
 
 Teammates are prompted to enable the plugin when they trust the project folder.
 
+## The bundled MindForge engine (MCP server)
+
+The full plugin also bundles a **MindForge MCP server** that exposes the framework's
+knowledge graph and project state to Claude Code as tools — so plugin users get the
+engine's *reads* without running the npx installer. Tools:
+
+| Tool | Purpose |
+|------|---------|
+| `mindforge_health` | Project health check (required files, HANDOFF validity, audit size) |
+| `mindforge_status` | Init state, STATE.md, HANDOFF.json, auto-state.json |
+| `mindforge_memory_query` | Search the knowledge graph (decisions, patterns, preferences) |
+| `mindforge_memory_stats` | Knowledge + graph statistics |
+| `mindforge_memory_find_related` | Keyword + graph-traversal related-knowledge search |
+| `mindforge_audit_log` | Read `.planning/AUDIT.jsonl` (filterable) |
+| `mindforge_memory_remember` | Append a knowledge entry (non-destructive write) |
+
+How it works: the server is a thin stdio adapter over the MindForge SDK
+(`MindForgeMemory` + `MindForgeClient`), scoped to your project via `${CLAUDE_PROJECT_DIR}`.
+Its `node_modules` (~48 MB) is **not** bundled; a SessionStart hook installs the runtime
+deps into `${CLAUDE_PLUGIN_DATA}` on first run (the documented persistent-data pattern), so
+the committed plugin stays small. Every tool degrades gracefully — if MindForge isn't set
+up in the project, it returns an actionable message pointing you to the npx installer or
+`/mindforge:init-project` rather than failing.
+
+> The **autonomous runtime + SQLite/governance write-path** still live with the npx
+> installer; the MCP server exposes the safe read surface plus an append-only `remember`.
+
 ## For maintainers — how the plugin is built
 
 The plugin tree is **generated** from MindForge's canonical sources (never hand-edited),
@@ -91,16 +118,18 @@ so it can't drift from what the npx installer ships:
 ```bash
 node scripts/fix-command-frontmatter.js   # quote YAML-unsafe frontmatter (idempotent)
 node scripts/build-subagent-plugins.js    # per-category plugin.json from on-disk agents
-node scripts/build-mindforge-plugin.js    # the comprehensive plugins/mindforge/ tree
+node scripts/vendor-sdk-into-mcp.js       # vendor the SDK into the MCP server
+npm --prefix mcp-server install            # MCP server deps (first time only)
+npm --prefix mcp-server run build          # compile mcp-server/dist
+node scripts/build-mindforge-plugin.js    # the comprehensive plugins/mindforge/ tree (incl. MCP bundle)
 node scripts/build-plugin-marketplace.js  # the repo-root .claude-plugin/marketplace.json
 claude plugin validate .                  # validate the marketplace
 claude plugin validate ./plugins/mindforge # deep-validate the plugin
 ```
 
 `tests/plugin-packaging.test.js` (in the standard `npm test` suite) guards the generated
-tree against drift and frontmatter regressions.
+tree against drift, frontmatter regressions, and MCP-bundle integrity.
 
-> **Note:** the `.mindforge/` framework engine (governance, memory/SQLite, the autonomous
-> runtime) is **not** part of the plugin — a plugin's install directory is ephemeral and
-> can't hold persistent state. The engine remains available through the npx installer. A
-> future release may expose it as a bundled MCP server writing to `${CLAUDE_PLUGIN_DATA}`.
+> **Note:** the compiled `plugins/mindforge/mcp/dist/` is committed (a github-source
+> install copies it). It is the only `dist/` exempted from `.gitignore`; `mcp-server/dist`
+> and `sdk/dist` remain build artifacts.

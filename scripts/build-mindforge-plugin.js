@@ -129,7 +129,7 @@ function buildProtocolSkill(skillsDst) {
 // plugin hook events. A hook under an unrecognized event name silently never fires.
 const EVENT_MAP = { SessionStart: 'SessionStart', BeforeTool: 'PreToolUse', AfterTool: 'PostToolUse' };
 
-function buildHooks() {
+function buildHooks(mcpBundled) {
   const scriptsDst = path.join(PLUGIN, 'scripts');
   ensure(scriptsDst);
   for (const f of fs.readdirSync(SRC.hooks)) {
@@ -154,10 +154,85 @@ function buildHooks() {
     }));
   }
 
+  // Merge in the MCP dependency-install SessionStart hook (see buildMcp). This installs
+  // the server's production deps into ${CLAUDE_PLUGIN_DATA} on first run / dep change —
+  // the documented pattern for plugins that need node_modules too large to bundle. Only
+  // added when the MCP bundle is present.
+  if (mcpBundled) {
+    const mcpInstall = {
+      type: 'command',
+      command:
+        'diff -q "${CLAUDE_PLUGIN_ROOT}/mcp/package.json" "${CLAUDE_PLUGIN_DATA}/mcp/package.json" >/dev/null 2>&1 ' +
+        '|| (mkdir -p "${CLAUDE_PLUGIN_DATA}/mcp" && cp "${CLAUDE_PLUGIN_ROOT}/mcp/package.json" "${CLAUDE_PLUGIN_DATA}/mcp/" ' +
+        '&& npm install --omit=dev --prefix "${CLAUDE_PLUGIN_DATA}/mcp" >/dev/null 2>&1) ' +
+        '|| rm -f "${CLAUDE_PLUGIN_DATA}/mcp/package.json"',
+    };
+    out.SessionStart = out.SessionStart || [];
+    out.SessionStart.push({ hooks: [mcpInstall] });
+  }
+
   const hooksDir = path.join(PLUGIN, 'hooks');
   ensure(hooksDir);
   fs.writeFileSync(path.join(hooksDir, 'hooks.json'), JSON.stringify({ hooks: out }, null, 2) + '\n', 'utf8');
   return Object.keys(out).length;
+}
+
+// ── 4b. MCP server: bundle built dist/ + runtime package.json, emit .mcp.json ─────
+// The server's full node_modules is ~48M (the SDK's transitive tree), too large to ship.
+// So we bundle only the compiled dist/ and a production-only package.json; the deps are
+// installed into ${CLAUDE_PLUGIN_DATA}/mcp/node_modules by the SessionStart hook above
+// (the documented ${CLAUDE_PLUGIN_DATA} pattern). The server runs with NODE_PATH pointed
+// there. projectRoot resolves to ${CLAUDE_PROJECT_DIR} (the user's project) inside the server.
+function buildMcp() {
+  const mcpSrcDist = path.join(ROOT, 'mcp-server', 'dist');
+  if (!fs.existsSync(mcpSrcDist)) {
+    console.log('  mcp: SKIPPED (mcp-server/dist not built — run `npm --prefix mcp-server run build`)');
+    return false;
+  }
+  const mcpDst = path.join(PLUGIN, 'mcp');
+  ensure(mcpDst);
+
+  // Bundle the compiled server.
+  copyDirRecursive(mcpSrcDist, path.join(mcpDst, 'dist'));
+
+  // Ship a production-only package.json (deps installed at runtime into CLAUDE_PLUGIN_DATA).
+  const serverPkg = require(path.join(ROOT, 'mcp-server', 'package.json'));
+  const runtimePkg = {
+    name: serverPkg.name,
+    version: serverPkg.version,
+    private: true,
+    type: serverPkg.type,
+    dependencies: serverPkg.dependencies,
+    engines: serverPkg.engines,
+  };
+  fs.writeFileSync(path.join(mcpDst, 'package.json'), JSON.stringify(runtimePkg, null, 2) + '\n', 'utf8');
+
+  // .mcp.json at plugin root: start the bundled server over stdio, deps from CLAUDE_PLUGIN_DATA.
+  const mcpConfig = {
+    mcpServers: {
+      mindforge: {
+        command: 'node',
+        args: ['${CLAUDE_PLUGIN_ROOT}/mcp/dist/index.js'],
+        env: {
+          NODE_PATH: '${CLAUDE_PLUGIN_DATA}/mcp/node_modules',
+          CLAUDE_PROJECT_DIR: '${CLAUDE_PROJECT_DIR}',
+        },
+      },
+    },
+  };
+  fs.writeFileSync(path.join(PLUGIN, '.mcp.json'), JSON.stringify(mcpConfig, null, 2) + '\n', 'utf8');
+  return true;
+}
+
+/** Recursively copy a directory (files + subdirs). */
+function copyDirRecursive(src, dst) {
+  ensure(dst);
+  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    const s = path.join(src, entry.name);
+    const d = path.join(dst, entry.name);
+    if (entry.isDirectory()) copyDirRecursive(s, d);
+    else fs.copyFileSync(s, d);
+  }
 }
 
 // ── 5. Manifest ───────────────────────────────────────────────────────────────
@@ -187,14 +262,18 @@ function buildManifest(counts) {
 
 // ── Run ──────────────────────────────────────────────────────────────────────
 // Rebuild from scratch so deletions in source propagate (no stale files linger).
-for (const sub of ['commands', 'agents', 'skills', 'hooks', 'scripts', '.claude-plugin']) {
+for (const sub of ['commands', 'agents', 'skills', 'hooks', 'scripts', 'mcp', '.claude-plugin']) {
   rmrf(path.join(PLUGIN, sub));
 }
+rmrf(path.join(PLUGIN, '.mcp.json'));
+
+// Build the MCP bundle first so buildHooks knows whether to add the dep-install hook.
+const mcpBundled = buildMcp();
 const counts = {
   commands: buildCommands(),
   agents: buildAgents(),
   skills: buildSkills(),
-  hookEvents: buildHooks(),
+  hookEvents: buildHooks(mcpBundled),
 };
 buildManifest(counts);
 
@@ -203,3 +282,4 @@ console.log(`  commands: ${counts.commands}`);
 console.log(`  agents:   ${counts.agents}`);
 console.log(`  skills:   ${counts.skills} (incl. synthesized mindforge-protocol)`);
 console.log(`  hook events: ${counts.hookEvents}`);
+console.log(`  mcp server: ${mcpBundled ? 'bundled (.mcp.json + mcp/dist)' : 'not bundled'}`);

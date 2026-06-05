@@ -8,6 +8,11 @@ awesome-claude-code-subagents/
 .DS_Store
 Thumbs.db
 dist/
+# ...but the MCP server's COMPILED dist must ship inside the plugin (a github-source
+# plugin install copies committed files; an unbuilt dist would mean no MCP server).
+# This is the generated, committed bundle — distinct from mcp-server/dist (build artifact).
+!plugins/mindforge/mcp/dist/
+!plugins/mindforge/mcp/dist/**
 build/
 coverage/
 .nyc_output/
