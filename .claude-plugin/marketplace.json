@@ -8,6 +8,21 @@
   "description": "MindForge — Sovereign Agentic Intelligence for Claude Code: the full framework plugin (commands, agents, skills, hooks) plus à-la-carte subagent packs.",
   "plugins": [
     {
+      "name": "mindforge",
+      "source": "./plugins/mindforge",
+      "description": "Sovereign Agentic Intelligence for Claude Code — 174 commands, 154 subagents, 74 skills, and governance hooks. The full MindForge framework as one plugin.",
+      "version": "11.3.1",
+      "category": "framework",
+      "keywords": [
+        "agentic",
+        "orchestration",
+        "swarm",
+        "governance",
+        "mindforge",
+        "claude-code"
+      ]
+    },
+    {
       "name": "mindforge-core-dev",
       "source": "./subagents/categories/01-core-development",
       "description": "Essential development subagents for everyday coding tasks - backend, frontend, fullstack, mobile, and API design",
