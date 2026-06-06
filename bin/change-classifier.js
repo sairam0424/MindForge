@@ -31,10 +31,21 @@ const SENSITIVE_PATTERNS = [
 
 function classify() {
   try {
-    // Get list of changed files compared to origin/main or HEAD~1
+    // Get list of changed files compared to origin/<base> or HEAD~1.
+    // Three-dot (...) diffs against the MERGE-BASE, so on a PR branch that is behind its base
+    // we see ONLY this branch's own changes — not unrelated commits already on the base.
+    // (Two-dot here caused Tier-3 false positives by pulling in base-only changes.)
     const base = process.env.GITHUB_BASE_REF ? `origin/${process.env.GITHUB_BASE_REF}` : 'HEAD~1';
-    const diffFiles = execFileSync('git', ['diff', '--name-only', `${base}..HEAD`], { encoding: 'utf8' }).split('\n').filter(Boolean);
-    
+    const range = process.env.GITHUB_BASE_REF ? `${base}...HEAD` : `${base}..HEAD`;
+    const diffFiles = execFileSync('git', ['diff', '--name-only', range], { encoding: 'utf8' }).split('\n').filter(Boolean);
+
+    // Test and documentation files are excluded from the sensitive-PATTERN scan below: a test
+    // asserting on "password"/key patterns, or a doc mentioning secrets, is not a sensitive
+    // change and must not trip Tier 3. (Path-based detection still covers genuinely sensitive
+    // source paths.) This is the fix for test-only PRs being misclassified as Tier 3.
+    const isTestOrDoc = (f) =>
+      /(^|\/)(tests?|__tests__|docs)\//.test(f) || /\.(test|spec)\.[cm]?[jt]s$/.test(f) || f.endsWith('.md');
+
     let tier = 1;
     let reasons = [];
 
@@ -45,9 +56,12 @@ function classify() {
       reasons.push(`Sensitive path modified: ${matchedPath}`);
     }
 
-    // 2. Pattern-based detection in diff (Tier 3)
+    // 2. Pattern-based detection in diff (Tier 3) — non-test/doc files only
     if (tier < 3) {
-      const diffContent = execFileSync('git', ['diff', `${base}..HEAD`], { encoding: 'utf8' });
+      const scanFiles = diffFiles.filter(f => !isTestOrDoc(f));
+      const diffContent = scanFiles.length
+        ? execFileSync('git', ['diff', range, '--', ...scanFiles], { encoding: 'utf8' })
+        : '';
       for (const pattern of SENSITIVE_PATTERNS) {
         if (pattern.test(diffContent)) {
           tier = 3;

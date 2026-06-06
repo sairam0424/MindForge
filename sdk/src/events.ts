@@ -169,13 +169,28 @@ export class MindForgeEventStream {
  * WebSocket-based event stream client for real-time bidirectional communication.
  * Requires Node 22+ (global WebSocket) or the 'ws' package for older versions.
  */
-declare const WebSocket: any;
+
+// Minimal structural type for the WebSocket we use — the global type isn't guaranteed
+// across Node versions / the optional 'ws' fallback, so we declare only the surface this
+// client touches rather than depending on lib.dom or pulling @types/ws.
+interface WebSocketLike {
+  onopen: (() => void) | null;
+  onerror: ((err: unknown) => void) | null;
+  onmessage: ((event: { data: unknown }) => void) | null;
+  onclose: (() => void) | null;
+  send(data: string): void;
+  close(): void;
+}
+declare const WebSocket: { new (url: string): WebSocketLike };
+
+// Socket payloads are untyped JSON off the wire; callers narrow as needed.
+type EventHandler = (data: unknown) => void;
 
 export class WebSocketEventStream {
-  private ws: InstanceType<typeof WebSocket> | null = null;
+  private ws: WebSocketLike | null = null;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
-  private listeners: Map<string, Set<(data: any) => void>> = new Map();
+  private listeners: Map<string, Set<EventHandler>> = new Map();
 
   constructor(private url: string = 'ws://127.0.0.1:7337/ws') {}
 
@@ -186,10 +201,10 @@ export class WebSocketEventStream {
         this.reconnectAttempts = 0;
         resolve();
       };
-      this.ws.onerror = (err: any) => reject(err);
-      this.ws.onmessage = (event: any) => {
+      this.ws.onerror = (err: unknown) => reject(err);
+      this.ws.onmessage = (event: { data: unknown }) => {
         try {
-          const parsed = JSON.parse(event.data.toString());
+          const parsed = JSON.parse(String(event.data));
           const handlers = this.listeners.get(parsed.type) || new Set();
           handlers.forEach(handler => handler(parsed.data));
         } catch { /* malformed message */ }
@@ -203,14 +218,14 @@ export class WebSocketEventStream {
     });
   }
 
-  on(eventType: string, handler: (data: any) => void): void {
+  on(eventType: string, handler: EventHandler): void {
     if (!this.listeners.has(eventType)) {
       this.listeners.set(eventType, new Set());
     }
     this.listeners.get(eventType)!.add(handler);
   }
 
-  off(eventType: string, handler: (data: any) => void): void {
+  off(eventType: string, handler: EventHandler): void {
     this.listeners.get(eventType)?.delete(handler);
   }
 

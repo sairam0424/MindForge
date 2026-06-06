@@ -216,7 +216,8 @@ export class MindForgeClient extends EventEmitter {
     const chunks: StreamChunk[] = [];
     let resolveNext: ((value: IteratorResult<StreamChunk>) => void) | null = null;
 
-    eventSource.on('stream_chunk', (data: StreamChunk) => {
+    eventSource.on('stream_chunk', (raw: unknown) => {
+      const data = raw as StreamChunk; // socket payload is untyped JSON; narrow at the boundary
       if (resolveNext) {
         resolveNext({ value: data, done: data.type === 'done' });
         resolveNext = null;
