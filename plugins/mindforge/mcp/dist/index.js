@@ -21994,7 +21994,7 @@ If MindForge is not set up in this project, run \`npx mindforge-cc@latest --clau
     };
   }
 }
-var server = new McpServer({ name: "mindforge", version: "11.3.1" });
+var server = new McpServer({ name: "mindforge", version: "11.4.0" });
 function registerTool(name, config2, handler) {
   server.registerTool(name, config2, handler);
 }
