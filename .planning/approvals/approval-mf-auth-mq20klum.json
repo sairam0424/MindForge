@@ -1,0 +1,15 @@
+{
+  "id": "MF-AUTH-MQ20KLUM",
+  "project": "mindforge-cc",
+  "version": "11.4.0",
+  "tier": 3,
+  "approved_by": "sairamugge",
+  "timestamp": "2026-06-06T07:10:44.638Z",
+  "reason": "Approve CI-green workflow fixes (mindforge-ci audit scoping, ai-review non-blocking, auto-pr base/try-catch, change-classifier merge-base+test-exclusion). Reviewed: no auth/payment/PII logic changed; edits are CI config + governance classifier + SDK types.",
+  "signature": "sha256:a36bcda3d8b0cb5c77acc20d8a1c3438ed16f7863fa61cac8b1b43e6220edfe7",
+  "identity_verification": {
+    "verified": false,
+    "method": "git_identity",
+    "identity": "sairamugge"
+  }
+}
