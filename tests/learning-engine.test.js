@@ -17,7 +17,7 @@ async function runTests() {
 
   const manager = new LearningManager({
     rootDir: testDir,
-    templateDir: path.join(__dirname, '../docs/templates/Project')
+    templateDir: path.join(__dirname, '../docs/Templates/Project')
   });
 
   try {
