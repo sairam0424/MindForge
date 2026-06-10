@@ -252,4 +252,32 @@ test('every real module path is covered by a package.json files[] entry', { skip
     `module paths not covered by package.json files[]: ${uncovered.join(', ')}`);
 });
 
+// ── Real-tree profiles (the shipped install-profiles.json) ───────────────────
+
+const REAL_PROFILES_PATH = path.join(ROOT, '.mindforge', 'manifests', 'install-profiles.json');
+const hasRealProfiles = hasRealModules && fs.existsSync(REAL_PROFILES_PATH);
+
+test('every real profile resolves end-to-end against the live manifests', { skip: !hasRealProfiles }, () => {
+  const profiles = JSON.parse(fs.readFileSync(REAL_PROFILES_PATH, 'utf8')).profiles;
+  assert.ok(Object.keys(profiles).length >= 1, 'expected at least one profile');
+  for (const profileId of Object.keys(profiles)) {
+    const plan = engine.resolveInstallPlan({ profileId });
+    // Every module the profile lists must appear in the resolved (dependency-closed) set.
+    for (const id of profiles[profileId].modules) {
+      assert.ok(plan.selectedModuleIds.includes(id),
+        `profile ${profileId} lists ${id} but it didn't resolve`);
+    }
+  }
+});
+
+test('profile module ids all exist in the modules manifest', { skip: !hasRealProfiles }, () => {
+  const profiles = JSON.parse(fs.readFileSync(REAL_PROFILES_PATH, 'utf8')).profiles;
+  const ids = new Set(realModules.map(m => m.id));
+  for (const [profileId, profile] of Object.entries(profiles)) {
+    for (const id of profile.modules) {
+      assert.ok(ids.has(id), `profile ${profileId} references unknown module ${id}`);
+    }
+  }
+});
+
 console.log('install-manifests resolver tests defined');
