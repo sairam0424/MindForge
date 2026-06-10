@@ -177,4 +177,79 @@ test('loadInstallManifests throws when manifests are absent', () => {
   assert.throws(() => engine.loadInstallManifests({ repoRoot: root }), /not found/);
 });
 
+// ── Real-tree integrity (the shipped install-modules.json) ───────────────────
+// These validate the ACTUAL manifest against the live repo, the schema, and the
+// npm tarball — so a module can never name an asset path that doesn't exist or
+// doesn't ship. Skips gracefully if the real modules manifest isn't present yet.
+
+const REAL_MODULES_PATH = path.join(ROOT, '.mindforge', 'manifests', 'install-modules.json');
+const hasRealModules = fs.existsSync(REAL_MODULES_PATH);
+const realModules = hasRealModules
+  ? JSON.parse(fs.readFileSync(REAL_MODULES_PATH, 'utf8')).modules
+  : [];
+
+test('every module path in the real manifest exists on disk', { skip: !hasRealModules }, () => {
+  const missing = [];
+  for (const m of realModules) {
+    for (const p of m.paths) {
+      if (!fs.existsSync(path.join(ROOT, p))) missing.push(`${m.id}:${p}`);
+    }
+  }
+  assert.deepStrictEqual(missing, [], `module paths missing on disk: ${missing.join(', ')}`);
+});
+
+test('no module references a phantom .mindforge/dashboard path', { skip: !hasRealModules }, () => {
+  const bogus = realModules.flatMap(m => m.paths).filter(p => /dashboard/i.test(p));
+  assert.deepStrictEqual(bogus, [], `phantom dashboard paths: ${bogus.join(', ')}`);
+});
+
+test('real manifest dependency ids and targets all resolve', { skip: !hasRealModules }, () => {
+  const ids = new Set(realModules.map(m => m.id));
+  const targets = new Set(engine.SUPPORTED_INSTALL_TARGETS);
+  for (const m of realModules) {
+    for (const d of (m.dependencies || [])) {
+      assert.ok(ids.has(d), `module ${m.id} depends on unknown module ${d}`);
+    }
+    for (const t of m.targets) {
+      assert.ok(targets.has(t), `module ${m.id} names unsupported target ${t}`);
+    }
+  }
+});
+
+test('real manifest validates against the install-modules schema shape', { skip: !hasRealModules }, () => {
+  // Lightweight structural check (no ajv dep): required fields + id pattern.
+  const idPattern = /^[a-z0-9][a-z0-9-]*$/;
+  for (const m of realModules) {
+    for (const field of ['id', 'kind', 'description', 'paths', 'targets', 'defaultInstall']) {
+      assert.ok(Object.prototype.hasOwnProperty.call(m, field), `module ${m.id} missing ${field}`);
+    }
+    assert.ok(idPattern.test(m.id), `module id ${m.id} violates id pattern`);
+    assert.ok(Array.isArray(m.paths) && m.paths.length >= 1, `module ${m.id} needs >=1 path`);
+    assert.ok(Array.isArray(m.targets) && m.targets.length >= 1, `module ${m.id} needs >=1 target`);
+    assert.strictEqual(typeof m.defaultInstall, 'boolean', `module ${m.id} defaultInstall must be boolean`);
+  }
+});
+
+// ── package.json files[] coverage (the v11.3.0 silent-drop regression) ───────
+// Every module path must be covered by a package.json files[] entry, or the
+// installer would copy nothing for that module from a published tarball.
+
+test('every real module path is covered by a package.json files[] entry', { skip: !hasRealModules }, () => {
+  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+  // Positive allowlist entries only (drop "!negation" excludes).
+  const allow = pkg.files.filter(f => !f.startsWith('!')).map(f => f.replace(/\/$/, ''));
+  const covered = (p) => {
+    const norm = p.replace(/\/$/, '');
+    return allow.some(a => norm === a || norm.startsWith(a + '/') || a.startsWith(norm + '/') || a === norm);
+  };
+  const uncovered = [];
+  for (const m of realModules) {
+    for (const p of m.paths) {
+      if (!covered(p)) uncovered.push(`${m.id}:${p}`);
+    }
+  }
+  assert.deepStrictEqual(uncovered, [],
+    `module paths not covered by package.json files[]: ${uncovered.join(', ')}`);
+});
+
 console.log('install-manifests resolver tests defined');
