@@ -19,14 +19,22 @@
     "./debugger-cc.md",
     "./error-detective.md",
     "./gdpr-ccpa-compliance.md",
+    "./go-build-resolver.md",
+    "./go-reviewer.md",
     "./penetration-tester.md",
     "./performance-engineer.md",
     "./powershell-security-hardening.md",
+    "./python-reviewer.md",
     "./qa-expert.md",
+    "./react-build-resolver.md",
+    "./react-reviewer.md",
+    "./rust-build-resolver.md",
+    "./rust-reviewer.md",
     "./security-auditor.md",
     "./silent-failure-hunter.md",
     "./test-automator.md",
     "./type-design-analyzer.md",
+    "./typescript-reviewer.md",
     "./ui-ux-tester.md"
   ]
 }

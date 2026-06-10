@@ -60,6 +60,22 @@ The instinct engine runs in auto-capture mode, watching for:
 - Instincts inactive for 30 days are auto-pruned
 - User can manually deprecate any instinct
 
+### Project scoping (no cross-project leak)
+Every captured instinct carries a `project_id` (a stable 12-char SHA256 of the
+git remote URL, normalized so https/ssh/scp clones of the same repo match) plus
+a human-readable `project` name. Outside a git repo, both fall back to
+`global`. This enforces the invariant that instincts learned in repo A never
+surface in repo B:
+
+- **Read-time filter:** when recalling instincts (status, evolve-skills,
+  cluster-instincts), match `project_id` to the current repo's detected id, OR
+  `global`. Ignore entries from other projects.
+- **Detection:** `bin/hooks/lib/detect-project.js` (`detectProject(cwd)`) is the
+  single source of the id; the capture hook stamps it on write.
+- **Promotion across projects:** an instinct seen in 2+ projects with avg
+  confidence >= 0.8 is a candidate to promote to a `global` instinct (deeper
+  cross-project promotion criteria are handled by evolve-skills).
+
 ### During any task (passive observation)
 - Note patterns that repeat across tasks
 - When user corrects behavior: acknowledge and create instinct

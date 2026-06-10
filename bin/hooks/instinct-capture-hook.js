@@ -14,6 +14,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const os = require('os');
+const { detectProject } = require('./lib/detect-project');
 
 // ── Configuration ────────────────────────────────────────────────────────────
 
@@ -147,6 +148,19 @@ function main() {
     process.exit(0);
   }
 
+  // Detect the current project so instincts are scoped per-repo (no cross-project
+  // leak). Falls back to 'global' outside a git repo. project_id is the portable
+  // git-remote hash; project is the human-readable name.
+  let projectId = 'global';
+  let projectName = 'global';
+  try {
+    const detected = detectProject(process.cwd());
+    projectId = detected.id;
+    projectName = detected.name;
+  } catch {
+    // Non-fatal — keep defaults; hooks must never block.
+  }
+
   // Build instinct entry
   const entry = {
     id: `inst-${crypto.randomUUID()}`,
@@ -158,7 +172,8 @@ function main() {
     times_applied: 0,
     times_succeeded: 0,
     times_failed: 0,
-    project: 'mindforge',
+    project: projectName,
+    project_id: projectId,
     tags: [],
     status: 'active',
     promoted_to_skill: null,

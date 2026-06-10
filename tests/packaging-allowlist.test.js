@@ -81,10 +81,10 @@ test('ships the entry CLAUDE.md (.claude/CLAUDE.md and .agent/CLAUDE.md)', () =>
 });
 
 // ── 4. Subagents + index ship ─────────────────────────────────────────────────
-test('ships 156 subagents and the imported-agents index', () => {
+test('ships 164 subagents and the imported-agents index', () => {
   const n = FILES.filter(f =>
     f.startsWith('subagents/categories/') && f.endsWith('.md') && !f.endsWith('README.md')).length;
-  assert.strictEqual(n, 156, `expected 156 subagent .md files in tarball, got ${n}`);
+  assert.strictEqual(n, 164, `expected 164 subagent .md files in tarball, got ${n}`);
   assert.ok(FILES.includes('.mindforge/imported-agents.jsonl'),
     'missing .mindforge/imported-agents.jsonl — the subagent loader index');
 });
