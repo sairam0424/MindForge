@@ -947,4 +947,4 @@ async function run(args) {
   }
 }
 
-module.exports = { run, install, uninstall, RUNTIMES, generateEntryContent };
+module.exports = { run, install, uninstall, RUNTIMES, generateEntryContent, SENSITIVE_EXCLUDE, MINDFORGE_DEV_EXCLUDE };
