@@ -23,6 +23,79 @@ plans, migration plans, refactoring plans, and any multi-step work breakdown.
 2. **Identify the scope boundary.** What is IN the plan vs OUT of scope?
 3. **Identify dependencies.** Which steps depend on other steps? Which can be parallel?
 
+### EXPLORE — Structured Codebase Discovery (run BEFORE plan authoring)
+
+> Adapted from the PRP EXPLORE protocol (PRPs-agentic-eng by Wirasm). This is a
+> discovery discipline that PRECEDES authoring the MindForge XML/structured plan —
+> it does NOT replace the plan format. The output of EXPLORE feeds the plan's
+> Context, Files, and Details sections with real, cited patterns.
+
+**Golden Rule**: If you would need to search the codebase *during* implementation,
+capture that knowledge NOW, during EXPLORE.
+
+#### The 8 Search Categories
+
+Search the codebase directly (grep, find, file reads) for each category. Do NOT
+skip a category by assuming — confirm it against the actual repository.
+
+1. **Existing Patterns** — Architectural patterns already in use (repository,
+   service, controller, middleware, hook, etc.) in the area you'll modify.
+2. **Similar Features** — Existing features that resemble the planned one. The
+   closest analogue is the single most valuable reference.
+3. **Conventions** — How files, functions, variables, classes, and exports are
+   named and organized in the relevant area.
+4. **Dependencies** — Packages, imports, and internal modules used by similar
+   features. Note versions where they matter.
+5. **Tests** — How similar features are tested: test file locations, naming,
+   setup/teardown, fixtures, and assertion style.
+6. **Configs** — Relevant config files, environment variables, and feature flags.
+7. **Error Handling** — How errors are caught, propagated, logged, and surfaced
+   to users in similar code paths.
+8. **Integration Points** — Entry points, data flow, state changes, and the
+   contracts/interfaces the new code must honor.
+
+#### Patterns to Mirror (capture as file:line snippet references)
+
+For each category that yields a concrete convention, record a **Patterns to Mirror**
+entry. Every entry MUST cite a real `file:line` source and quote the actual snippet
+— never paraphrase, never invent:
+
+```markdown
+## Patterns to Mirror
+
+### NAMING_CONVENTION
+// SOURCE: src/services/userService.ts:1-5
+[actual snippet copied from the file]
+
+### ERROR_HANDLING
+// SOURCE: src/middleware/errorHandler.ts:10-25
+[actual snippet copied from the file]
+
+### TEST_STRUCTURE
+// SOURCE: tests/services/userService.test.ts:1-30
+[actual snippet copied from the file]
+```
+
+These mirrored snippets get folded into the plan's **Details** blocks so the
+executor writes code indistinguishable from existing code.
+
+#### The "No Prior Knowledge" Gate (MANDATORY before authoring)
+
+The plan must be executable by someone with **NO prior knowledge of this repo**.
+Therefore:
+
+- Every convention the plan references MUST be cited from the actual codebase
+  (a real `file:line` + snippet). If you cannot cite it, you have not explored
+  enough — go search.
+- NEVER invent a convention, path, type, or import. If the codebase does not
+  establish it, the plan does not assume it.
+- If a needed pattern genuinely does not exist yet, say so explicitly and define
+  the new convention in the plan (rather than pretending it already exists).
+
+**Gate check**: Before moving from EXPLORE to plan authoring, confirm —
+"Could a developer who has never seen this repo implement every step using ONLY
+this plan, without searching or asking?" If not, the EXPLORE pass is incomplete.
+
 ### During plan writing
 
 #### Core Principle: NO PLACEHOLDERS
@@ -168,3 +241,6 @@ Before marking a task done when this skill was active:
 - [ ] Plan scope (IN/OUT) is clearly defined.
 - [ ] If > 15 steps, organized into phases with phase-level gates.
 - [ ] All file paths verified to exist (or marked as "new file").
+- [ ] EXPLORE ran across all 8 search categories before authoring.
+- [ ] Patterns to Mirror captured as real `file:line` snippets (no invented conventions).
+- [ ] "No Prior Knowledge" gate passes — every referenced convention is cited from the codebase.

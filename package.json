@@ -52,12 +52,14 @@
     "SECURITY.md"
   ],
   "scripts": {
-    "test": "node tests/run-all.js",
+    "test": "node scripts/ci/validate-assets.js && node tests/run-all.js",
     "test:single": "node",
     "coverage": "npx c8 node tests/run-all.js",
     "lint": "eslint .",
     "harness:audit": "node bin/harness-audit.js",
     "harness:compliance": "node bin/installer/harness-adapter-compliance.js --check",
+    "release:ready": "node bin/utils/readiness-gate.js release",
+    "validate:assets": "node scripts/ci/validate-assets.js",
     "commit": "cz",
     "prepare": "husky"
   },

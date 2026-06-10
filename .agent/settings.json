@@ -28,11 +28,16 @@
     ],
     "BeforeTool": [
       {
-        "matcher": "Write|Edit",
+        "matcher": "Write|Edit|MultiEdit",
         "hooks": [
           {
             "type": "command",
             "command": "node .agent/hooks/run-with-flags.js mindforge-prompt-guard .agent/hooks/mindforge-prompt-guard.js standard,strict",
+            "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "node .agent/hooks/run-with-flags.js mindforge-config-protection .agent/hooks/mindforge-config-protection.js standard,strict",
             "timeout": 5000
           }
         ]

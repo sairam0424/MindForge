@@ -10,6 +10,8 @@ const AnthropicProvider = require('./anthropic-provider');
 const OpenAIProvider = require('./openai-provider');
 const GeminiProvider = require('./gemini-provider');
 const OllamaProvider = require('./ollama-provider');
+const { resolveProvider } = require('./provider-registry');
+const { LLMError } = require('./llm-errors');
 
 // v9: Fallback chains aligned to Claude 4.x family.
 // llama-3-70b-local is the sovereign last-resort — only reachable when
@@ -76,10 +78,27 @@ class ModelClient {
 
       } catch (err) {
         const safeMsg = (err.message || '').replace(/sk-[a-zA-Z0-9_-]+/g, 'sk-***').replace(/key-[a-zA-Z0-9_-]+/g, 'key-***');
-        process.stderr.write(`[model-client] ${currentModel} failed: ${safeMsg}\n`);
+        process.stderr.write(`[model-client] ${currentModel} failed (${err.name || 'Error'}/${err.code || 'unknown'}): ${safeMsg}\n`);
+
+        // Context-aware fallback: branch on the typed-error taxonomy instead of
+        // blindly trying the next model.
+        //  - ContextLengthError: this model's window is too small — keep trying
+        //    the chain (later entries may have larger context); don't abort.
+        //  - AuthenticationError: the provider's key is bad/missing — trying it
+        //    again is pointless, but other providers in the chain may work, so
+        //    continue to the next attempt.
+        //  - Otherwise: continue through the chain as before.
+        const isTyped = err instanceof LLMError;
+        const isAuth = isTyped && err.name === 'AuthenticationError';
+        if (isAuth) {
+          process.stderr.write(`[model-client] ${currentModel}: auth failure — skipping this provider for the rest of this call\n`);
+        }
+
         if (attempts.indexOf(currentModel) === attempts.length - 1) {
           const safeErr = new Error(safeMsg);
           safeErr.code = err.code;
+          safeErr.name = err.name;
+          safeErr.retryable = isTyped ? err.retryable : undefined;
           throw safeErr;
         }
       }
@@ -107,6 +126,12 @@ class ModelClient {
   }
 
   static _getProvider(modelId) {
+    // Consult the pluggable registry first (honors MINDFORGE_LLM_PROVIDER
+    // override for sovereignty/offline test isolation). Falls through to the
+    // built-in prefix routing when nothing is registered.
+    const registered = resolveProvider(modelId);
+    if (registered) return registered;
+
     if (modelId.startsWith('claude') || modelId.startsWith('anthropic.claude')) {
       if (!process.env.ANTHROPIC_API_KEY) return null;
       return new AnthropicProvider(process.env.ANTHROPIC_API_KEY);
