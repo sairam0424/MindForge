@@ -75,11 +75,11 @@ function runSubagent(arg) {
 }
 
 // ── 1. Index completeness ─────────────────────────────────────────────────────
-test('imported-agents.jsonl exists and has exactly 154 non-empty lines', () => {
+test('imported-agents.jsonl exists and has exactly 156 non-empty lines', () => {
   assert.ok(fs.existsSync(INDEX_PATH), `index missing: ${INDEX_PATH}`);
   const entries = loadIndexEntries();
-  assert.strictEqual(entries.length, 154,
-    `expected 154 indexed subagents, got ${entries.length}`);
+  assert.strictEqual(entries.length, 156,
+    `expected 156 indexed subagents, got ${entries.length}`);
 });
 
 test('every index line is valid JSON with non-empty name/path/category/model/description', () => {
@@ -221,17 +221,17 @@ test('sampled indexed agent bodies contain no "VoltAgent" (rebrand held)', () =>
 
 // ── 9. Installer wiring: subagents reach the user's native agents dir ─────────
 // Guards the end-user install path: installer-core must expose an agents target
-// on the claude runtime and an installSubagents() that flattens the 154 files
+// on the claude runtime and an installSubagents() that flattens the 156 files
 // (READMEs excluded) into a destination dir. We exercise the real function
 // against a temp dir so a regression in the copy logic fails loudly.
-test('installer flattens 154 subagents into a native agents dir (READMEs excluded)', () => {
+test('installer flattens 156 subagents into a native agents dir (READMEs excluded)', () => {
   const core = require(path.join(ROOT, 'bin', 'installer-core.js'));
   assert.ok(core.RUNTIMES && core.RUNTIMES.claude.agentsSubdir === 'agents',
     'claude runtime must declare agentsSubdir: "agents"');
 
   // installSubagents is not exported; assert the observable outcome via the
   // source layout instead — every category .md (minus README) is a unique
-  // basename, so a flat copy yields exactly 154 files with no collisions.
+  // basename, so a flat copy yields exactly 156 files with no collisions.
   const categoriesDir = path.join(SUBAGENTS_DIR, 'categories');
   const agentFiles = [];
   const walk = (dir) => {
@@ -242,10 +242,10 @@ test('installer flattens 154 subagents into a native agents dir (READMEs exclude
     }
   };
   walk(categoriesDir);
-  assert.strictEqual(agentFiles.length, 154,
-    `expected 154 installable agent files, got ${agentFiles.length}`);
+  assert.strictEqual(agentFiles.length, 156,
+    `expected 156 installable agent files, got ${agentFiles.length}`);
   const unique = new Set(agentFiles);
-  assert.strictEqual(unique.size, 154,
+  assert.strictEqual(unique.size, 156,
     `flatten would collide: ${agentFiles.length - unique.size} duplicate basename(s)`);
 });
 

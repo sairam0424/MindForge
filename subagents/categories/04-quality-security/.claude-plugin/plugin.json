@@ -24,7 +24,9 @@
     "./powershell-security-hardening.md",
     "./qa-expert.md",
     "./security-auditor.md",
+    "./silent-failure-hunter.md",
     "./test-automator.md",
+    "./type-design-analyzer.md",
     "./ui-ux-tester.md"
   ]
 }

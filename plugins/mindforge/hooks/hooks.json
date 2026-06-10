@@ -21,7 +21,7 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/mindforge-context-monitor.js\"",
-            "timeout": 10
+            "timeout": 10000
           }
         ]
       }
@@ -33,7 +33,22 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/mindforge-prompt-guard.js\"",
-            "timeout": 5
+            "timeout": 5000
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node bin/security/trust-gate-hook.js",
+            "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/mindforge-block-no-verify.js\"",
+            "timeout": 5000
           }
         ]
       }

@@ -178,8 +178,16 @@ test('No secrets in any committed file', () => {
     /sk-[a-zA-Z0-9]{20,}/,
   ];
 
+  // Skip dirs that are not committed to this repo: deps, VCS internals, and the
+  // gitignored donor/upstream repos (ECC/, awesome-claude-code-subagents/) whose
+  // OWN content — including security docs that contain example secret patterns —
+  // is not part of MindForge's committed tree. This test asserts on COMMITTED
+  // files, so scanning gitignored donor trees is both wrong and a false-positive
+  // source.
+  const SKIP_DIRS = ['node_modules', '.git', 'ECC', 'awesome-claude-code-subagents', '.serena'];
   function scanDir(dir) {
-    if (dir.includes('node_modules') || dir.includes('.git')) return;
+    const base = path.basename(dir);
+    if (SKIP_DIRS.includes(base) || dir.includes('node_modules') || dir.includes('.git')) return;
     const entries = fs.readdirSync(dir, { withFileTypes: true });
     entries.forEach(entry => {
       const full = path.join(dir, entry.name);
