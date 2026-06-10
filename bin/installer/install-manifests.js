@@ -131,8 +131,8 @@ function listInstallComponents(options = {}) {
 function resolveInstallPlan(options = {}) {
   if (options.target) {
     throw new Error(
-      `target-scoped install planning requires the install-target adapter factory, ` +
-      `which is deferred to a future PR. Resolve without a target for now.`
+      'target-scoped install planning requires the install-target adapter factory, ' +
+      'which is deferred to a future PR. Resolve without a target for now.'
     );
   }
 
