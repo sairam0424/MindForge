@@ -20,11 +20,12 @@ Each instinct is a single JSON line in `instinct-store.jsonl`:
   "times_succeeded": 6,
   "times_failed": 2,
   "project": "mindforge",
+  "project_id": "a1b2c3d4e5f6",
   "tags": ["database", "documentation", "patterns"],
   "status": "active",
   "promoted_to_skill": null,
   "last_applied_at": "2026-05-25T14:20:00Z",
-  "source_sessions": ["session-abc123", "session-def456"]
+  "source": "auto-capture"
 }
 ```
 
@@ -41,12 +42,13 @@ Each instinct is a single JSON line in `instinct-store.jsonl`:
 | times_applied | int | yes | Total times this instinct was applied |
 | times_succeeded | int | yes | Times application led to positive outcome |
 | times_failed | int | yes | Times application led to negative outcome or correction |
-| project | string | yes | Project scope (instincts never leak between projects) |
+| project | string | yes | Human-readable project name (or `global`) |
+| project_id | string | yes | Stable 12-char git-remote hash; the read-time scope key (instincts never leak between projects). `global` outside a git repo |
 | tags | string[] | yes | Classification tags for retrieval |
 | status | enum | yes | One of: active, promoted, deprecated, pruned |
-| promoted_to_skill | string|null | yes | Skill name if promoted, null otherwise |
-| last_applied_at | ISO-8601 | yes | When instinct was last used |
-| source_sessions | string[] | yes | Session IDs where this instinct was observed/reinforced |
+| promoted_to_skill | string\|null | yes | Skill name if promoted, null otherwise |
+| last_applied_at | ISO-8601\|null | yes | When instinct was last used (null until first applied) |
+| source | string | yes | Origin: `auto-capture` (PostToolUse hook), `manual` (/mindforge:learn-instinct), `imported`, or `observer` |
 
 ## Confidence Scoring
 
@@ -56,16 +58,22 @@ confidence = (times_succeeded / times_applied) * weight_factor
 where weight_factor = min(1.0, times_applied / 10)
 ```
 
-- New instincts start at 0.5 confidence (neutral)
-- Each success: recalculate with updated counts
-- Each failure: recalculate with updated counts
+Starting confidence depends on `source` (a new instinct has `times_applied: 0`,
+so the ratio formula does not yet apply — it seeds an initial value):
+- `auto-capture` (PostToolUse hook): **0.3** — low trust, inferred from a single success
+- `manual` (/mindforge:learn-instinct): **0.7** — user-stated, higher trust
+- `imported` / `observer`: as stamped by the importer/observer (default 0.3)
+- 0.5 is the neutral midpoint the ratio formula trends toward once applications accrue
+
+Then, once `times_applied > 0`:
+- Each success/failure recalculates `confidence` with updated counts
 - Weight factor prevents high confidence from single observations
 - Minimum 5 applications before promotion is considered
 
 ## Status Transitions
 
 ```
-[new observation] → active (confidence: 0.5)
+[auto-capture] → active (confidence: 0.3)   [manual] → active (0.7)
                        ↓
             confidence >= 0.85 AND times_applied >= 5
                        ↓
