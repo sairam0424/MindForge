@@ -280,4 +280,29 @@ test('profile module ids all exist in the modules manifest', { skip: !hasRealPro
   }
 });
 
+// ── Real-tree components (the shipped install-components.json) ───────────────
+
+const REAL_COMPONENTS_PATH = path.join(ROOT, '.mindforge', 'manifests', 'install-components.json');
+const hasRealComponents = hasRealProfiles && fs.existsSync(REAL_COMPONENTS_PATH);
+
+test('every real component references known modules', { skip: !hasRealComponents }, () => {
+  const components = JSON.parse(fs.readFileSync(REAL_COMPONENTS_PATH, 'utf8')).components;
+  const ids = new Set(realModules.map(m => m.id));
+  for (const c of components) {
+    assert.ok(Array.isArray(c.modules) && c.modules.length >= 1, `component ${c.id} needs >=1 module`);
+    for (const id of c.modules) {
+      assert.ok(ids.has(id), `component ${c.id} references unknown module ${id}`);
+    }
+  }
+});
+
+test('--with and --without round-trip against the live manifests', { skip: !hasRealComponents }, () => {
+  const withPlan = engine.resolveInstallPlan({ profileId: 'standard', includeComponentIds: ['subagents'] });
+  assert.ok(withPlan.selectedModuleIds.includes('subagents'), '--with subagents must add it');
+
+  const withoutPlan = engine.resolveInstallPlan({ profileId: 'full', excludeComponentIds: ['docs'] });
+  assert.ok(!withoutPlan.selectedModuleIds.includes('docs-references'), '--without docs must drop docs-references');
+  assert.ok(!withoutPlan.selectedModuleIds.includes('docs-templates'), '--without docs must drop docs-templates');
+});
+
 console.log('install-manifests resolver tests defined');

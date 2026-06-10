@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "_comment": "Optional install components for the MindForge manifest engine (INERT). A component is a named module grouping the resolver can ADD (--with) or REMOVE (--without) on top of a profile. 'family' classifies the component for listing/filtering. Module ids must exist in install-modules.json. Replaces ad-hoc flags once a driver wires this.",
+  "components": [
+    {
+      "id": "subagents",
+      "family": "capability",
+      "description": "The imported subagent corpus (subagents/categories). Heavy; excluded from minimal/standard, included in full.",
+      "modules": ["subagents"]
+    },
+    {
+      "id": "integrations",
+      "family": "capability",
+      "description": "Third-party integration adapters (.mindforge/integrations). Beta.",
+      "modules": ["integrations"]
+    },
+    {
+      "id": "docs",
+      "family": "capability",
+      "description": "Reference and template documentation (docs/References + docs/Templates).",
+      "modules": ["docs-references", "docs-templates"]
+    },
+    {
+      "id": "hooks",
+      "family": "capability",
+      "description": "Runtime hook scripts (.agent/hooks): TrustGate, guards, lib helpers. Drop with --without hooks for a hook-free install.",
+      "modules": ["hooks-runtime"]
+    },
+    {
+      "id": "engine",
+      "family": "capability",
+      "description": "The full engine stack: engine core, governance, intelligence, models, and engine-format skills.",
+      "modules": ["engine-core", "governance", "intelligence", "models", "engine-skills"]
+    }
+  ]
+}
