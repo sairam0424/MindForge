@@ -131,6 +131,10 @@ const unicodeRoots = [
   path.join(ROOT, '.claude', 'commands', 'mindforge'),
   path.join(ROOT, 'subagents', 'categories'),
   path.join(ROOT, '.mindforge', 'rules'),
+  // Personas are markdown bodies imported (sometimes verbatim) from upstream
+  // donors — exactly the ASCII/tag-smuggling vector this scan defends against.
+  // Previously unscanned; covers loop-operator/harness-optimizer + GAN/observer.
+  path.join(ROOT, '.mindforge', 'personas'),
 ];
 for (const root of unicodeRoots) {
   for (const file of walk(root, n => n.endsWith('.md'))) {
