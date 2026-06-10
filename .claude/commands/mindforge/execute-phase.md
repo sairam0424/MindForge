@@ -80,19 +80,60 @@ Write to console:
 For each plan in the wave:
 1. Load context package (per `context-injector.md`)
 2. Execute the plan instructions
-   - Run `<verify>` — capture exact output
-   - If verify PASSES:
+   - Run the **5-Level Escalating Validation Ladder** (see below) as the `<verify>` body.
+     Capture exact output at each level.
+   - If all levels PASS:
      - Run `<verify-visual>` via `visual-verify-executor.js`
      - If visual verify FAILS: stop and report (treat as verify failure)
-     - Write SUMMARY-[N]-[M].md
+     - Write SUMMARY-[N]-[M].md (include the Deviation Report block, see below)
    - Execute commit: `git add [files] && git commit -m "[type]([scope]): [task name]"`
    - Capture git SHA
    - Write AUDIT entry for task completion
-5. If verify FAILS:
-   - Write SUMMARY-[N]-[M].md with failure details
+
+#### 5-Level Escalating Validation Ladder (per task)
+
+> Adapted from the PRP-implement validation loops (PRPs-agentic-eng by Wirasm).
+> Run levels **in order**. **Fix immediately** — never proceed past a failing
+> level, never accumulate broken state. Each higher level is more expensive and
+> more end-to-end than the last.
+
+- **Level 1 — Static**: formatter + linter + type-check (`[project lint command]`,
+  `[project lint-fix command]`, `[project type-check command]`).
+  EXPECT: zero lint errors, zero type errors. Auto-fix first, then fix manually.
+- **Level 2 — Unit**: run unit tests for the affected area (`[project test command]`).
+  EXPECT: all green; every new function has at least one test; plan edge cases covered.
+  If a test fails, fix the implementation (not the test, unless the test is wrong).
+- **Level 3 — Build**: `[project build command]`. EXPECT: build succeeds, zero errors.
+- **Level 4 — Integration**: start the service, hit it end-to-end, stop it
+  (`[project dev/integration command]`). EXPECT: integration assertions pass.
+  Skip with an explicit "N/A — no integration surface" note if not applicable.
+- **Level 5 — Edge / Manual**: walk the edge-case checklist from the plan's Testing
+  Strategy (empty input, max size, invalid types, concurrency, failure paths) plus
+  any manual checks the plan flags. EXPECT: all edge cases handled.
+
+**Fix-immediately rule**: A failing level halts the task. Diagnose, fix, re-run
+that level from the top, and only then climb to the next. Do NOT move to the next
+task with any level red.
+
+#### Deviation Report (record in each task's SUMMARY-[N]-[M].md)
+
+If implementation deviated from the plan, append a Deviation Report — never deviate
+silently:
+
+```markdown
+## Deviation Report
+| What changed | Why | Plan step affected | Re-validated? |
+|---|---|---|---|
+| [what differed from the plan] | [reason / root cause] | [task/step id] | [levels re-run] |
+```
+
+If there were no deviations, write `## Deviation Report\nNone — implemented exactly as planned.`
+
+5. If any validation level FAILS (and cannot be fixed in place per the fix-immediately rule):
+   - Write SUMMARY-[N]-[M].md with failure details (which level, exact output, Deviation Report)
    - Write AUDIT entry for task failure
    - STOP this wave immediately
-   - Report: "Task [plan ID] failed: [verify output]. Stopping Phase [N]."
+   - Report: "Task [plan ID] failed at Level [1-5]: [verify output]. Stopping Phase [N]."
    - Do not start next wave
    - Ask user: "Spawn debug agent to diagnose? (yes/no)"
 

@@ -23,6 +23,17 @@ Knowledge: ARCHITECTURE.md, CONVENTIONS.md, current codebase structure, dependen
    - Identify constraints: performance, security, backward compatibility
    - Determine target step count (--steps N, default: auto-size based on complexity)
 
+1.5. **EXPLORE the codebase BEFORE decomposing** (per `writing-plans/SKILL.md` →
+   "EXPLORE — Structured Codebase Discovery"): run a structured discovery pass
+   across the 8 search categories — existing patterns, similar features,
+   conventions, dependencies, tests, configs, error handling, integration points.
+   - Capture **Patterns to Mirror** as real `file:line` snippet references (quote
+     the actual code; never invent a convention).
+   - Apply the **"No Prior Knowledge" gate**: the plan must be executable by
+     someone with zero repo knowledge — every convention the plan references must
+     be cited from the actual codebase. If you cannot cite it, explore more.
+   - Feed these mirrored snippets into each step's code/Details below.
+
 2. **Decompose into bite-sized steps**: Break the work into atomic steps where each step:
    - Changes 1-3 files maximum
    - Can be verified independently
