@@ -90,9 +90,9 @@ test('mindforge plugin manifest is correct and components live at plugin root', 
   }
 });
 
-test('mindforge plugin bundles the full surface (181 cmds, 164 agents, 74 skills)', () => {
-  assert.strictEqual(listMd(path.join(PLUGIN, 'commands')).length, 181,
-    'expected 181 commands in plugin');
+test('mindforge plugin bundles the full surface (182 cmds, 164 agents, 74 skills)', () => {
+  assert.strictEqual(listMd(path.join(PLUGIN, 'commands')).length, 182,
+    'expected 182 commands in plugin');
   assert.strictEqual(listMd(path.join(PLUGIN, 'agents')).length, 164,
     'expected 164 agents in plugin');
   const skillDirs = fs.readdirSync(path.join(PLUGIN, 'skills'), { withFileTypes: true })
