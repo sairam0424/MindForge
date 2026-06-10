@@ -9,11 +9,15 @@ const CostTracker = require('./cost-tracker');
 const AnthropicProvider = require('./anthropic-provider');
 const OpenAIProvider = require('./openai-provider');
 const GeminiProvider = require('./gemini-provider');
+const OllamaProvider = require('./ollama-provider');
 
-// v9: Fallback chains aligned to Claude 4.x family
+// v9: Fallback chains aligned to Claude 4.x family.
+// llama-3-70b-local is the sovereign last-resort — only reachable when
+// OLLAMA_BASE_URL is set (see _getProvider); otherwise _getProvider returns
+// null and the chain skips it, leaving cloud routing unchanged.
 const FALLBACK_CHAINS = {
   'claude-opus-4-7': ['claude-sonnet-4-6', 'gemini-2.5-pro'],
-  'claude-sonnet-4-6': ['claude-haiku-4-5', 'gemini-2.5-pro'],
+  'claude-sonnet-4-6': ['claude-haiku-4-5', 'gemini-2.5-pro', 'llama-3-70b-local'],
   'gemini-2.5-pro': ['claude-sonnet-4-6'],
 };
 
@@ -114,6 +118,12 @@ class ModelClient {
     if (modelId.startsWith('gemini')) {
       if (!process.env.GOOGLE_API_KEY) return null;
       return new GeminiProvider(process.env.GOOGLE_API_KEY);
+    }
+    // Sovereign local models (e.g. llama-3-70b-local). Gated on OLLAMA_BASE_URL
+    // being explicitly set, so cloud routing is unchanged unless opted in.
+    if (modelId.includes('local') || modelId.includes('llama')) {
+      if (!process.env.OLLAMA_BASE_URL) return null;
+      return new OllamaProvider(process.env.OLLAMA_BASE_URL);
     }
     return null;
   }

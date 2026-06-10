@@ -90,11 +90,11 @@ test('mindforge plugin manifest is correct and components live at plugin root', 
   }
 });
 
-test('mindforge plugin bundles the full surface (176 cmds, 156 agents, 74 skills)', () => {
+test('mindforge plugin bundles the full surface (176 cmds, 164 agents, 74 skills)', () => {
   assert.strictEqual(listMd(path.join(PLUGIN, 'commands')).length, 176,
     'expected 176 commands in plugin');
-  assert.strictEqual(listMd(path.join(PLUGIN, 'agents')).length, 156,
-    'expected 156 agents in plugin');
+  assert.strictEqual(listMd(path.join(PLUGIN, 'agents')).length, 164,
+    'expected 164 agents in plugin');
   const skillDirs = fs.readdirSync(path.join(PLUGIN, 'skills'), { withFileTypes: true })
     .filter((e) => e.isDirectory() && fs.existsSync(path.join(PLUGIN, 'skills', e.name, 'SKILL.md')));
   assert.strictEqual(skillDirs.length, 74, 'expected 74 skills (73 + mindforge-protocol)');
@@ -149,15 +149,15 @@ test('each category plugin.json agents[] matches the .md files on disk', () => {
   }
 });
 
-// ── 5. Total agent count across packs == 156 ──────────────────────────────────
-test('the 10 category packs list 156 agents in total', () => {
+// ── 5. Total agent count across packs == 164 ──────────────────────────────────
+test('the 10 category packs list 164 agents in total', () => {
   let total = 0;
   for (const dir of fs.readdirSync(CATEGORIES, { withFileTypes: true })) {
     if (!dir.isDirectory()) continue;
     const mp = path.join(CATEGORIES, dir.name, '.claude-plugin', 'plugin.json');
     if (fs.existsSync(mp)) total += readJson(mp).agents.length;
   }
-  assert.strictEqual(total, 156, `expected 156 agents across packs, got ${total}`);
+  assert.strictEqual(total, 164, `expected 164 agents across packs, got ${total}`);
 });
 
 // ── 6. Bundled MCP server (Phase 3 — self-contained single-file build) ────────

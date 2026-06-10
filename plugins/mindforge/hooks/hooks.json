@@ -5,11 +5,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/mindforge-check-update.js\""
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run-with-flags.js\" mindforge-check-update .agent/hooks/mindforge-check-update.js minimal,standard,strict"
           },
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/mindforge-session-init_extended.js\""
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run-with-flags.js\" mindforge-session-init .agent/hooks/mindforge-session-init_extended.js minimal,standard,strict"
           }
         ]
       }
@@ -20,7 +20,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/mindforge-context-monitor.js\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run-with-flags.js\" mindforge-context-monitor .agent/hooks/mindforge-context-monitor.js standard,strict",
             "timeout": 10000
           }
         ]
@@ -32,7 +32,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/mindforge-prompt-guard.js\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run-with-flags.js\" mindforge-prompt-guard .agent/hooks/mindforge-prompt-guard.js standard,strict",
             "timeout": 5000
           }
         ]
@@ -42,12 +42,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node bin/security/trust-gate-hook.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run-with-flags.js\" trust-gate bin/security/trust-gate-hook.js minimal,standard,strict",
             "timeout": 5000
           },
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/mindforge-block-no-verify.js\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run-with-flags.js\" mindforge-block-no-verify .agent/hooks/mindforge-block-no-verify.js minimal,standard,strict",
             "timeout": 5000
           }
         ]
