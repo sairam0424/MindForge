@@ -65,10 +65,16 @@ function isPublicV6(ip) {
   const lower = ip.toLowerCase();
   if (lower === '::1') return false;                   // loopback
   if (lower === '::') return false;                    // unspecified
-  if (lower.startsWith('fe80') || lower.startsWith('fe9') ||
-      lower.startsWith('fea') || lower.startsWith('feb')) return false; // fe80::/10 link-local
-  if (/^f[cd]/.test(lower)) return false;              // fc00::/7 unique-local
-  if (lower.startsWith('ff')) return false;            // ff00::/8 multicast
+  // Classify by the FIRST 16-bit hextet as a NUMBER, not a string prefix.
+  // String prefixes silently miss sub-ranges: e.g. fe80::/10 spans fe80-febf,
+  // and `startsWith('fe9'|'fea'|'feb')` left fe81-fe8f (fe8x) reachable as
+  // "public" — an SSRF hole. Numeric masks check the actual bit ranges.
+  const firstHextet = lower.startsWith('::') ? 0 : parseInt(lower.split(':')[0] || '0', 16);
+  if (Number.isNaN(firstHextet)) return false;         // unparseable → fail closed
+  if ((firstHextet & 0xffc0) === 0xfe80) return false; // fe80::/10 link-local (fe80-febf)
+  if ((firstHextet & 0xffc0) === 0xfec0) return false; // fec0::/10 site-local (deprecated, non-routable)
+  if ((firstHextet & 0xfe00) === 0xfc00) return false; // fc00::/7  unique-local (fc00-fdff)
+  if ((firstHextet & 0xff00) === 0xff00) return false; // ff00::/8  multicast
   return true;
 }
 
@@ -165,7 +171,17 @@ function validateFilePath(pathStr, { mustExist = false } = {}) {
   const expanded = pathStr.startsWith('~')
     ? path.join(require('os').homedir(), pathStr.slice(1))
     : pathStr;
-  const resolved = path.resolve(expanded);
+  const lexical = path.resolve(expanded);
+
+  // Canonicalize BEFORE the system-dir check. path.resolve() only normalizes
+  // lexically — it does NOT follow symlinks — so a symlink planted in a writable
+  // dir (e.g. /tmp/x -> /etc) would pass the prefix check while the subsequent
+  // fs.read/writeFileSync followed the link into a blocked dir. Resolve the real
+  // path so the check sees the actual on-disk target. Export targets may not
+  // exist yet, so fall back to realpath-ing the deepest existing ancestor and
+  // re-joining the not-yet-created tail (a symlinked ancestor is still caught).
+  const resolved = canonicalize(lexical);
+
   for (const prefix of BLOCKED_PREFIXES) {
     if (resolved === prefix || resolved.startsWith(prefix + path.sep)) {
       throw new Error(`path '${resolved}' targets a system directory`);
@@ -175,6 +191,29 @@ function validateFilePath(pathStr, { mustExist = false } = {}) {
     throw new Error(`path does not exist: ${resolved}`);
   }
   return resolved;
+}
+
+/**
+ * Resolve symlinks in an absolute path, tolerating a not-yet-created tail.
+ * Walks up to the deepest existing ancestor, realpath()s THAT (catching a
+ * symlinked parent), then re-appends the non-existent remainder.
+ */
+function canonicalize(absPath) {
+  let existing = absPath;
+  const tail = [];
+  // Find the deepest ancestor that exists on disk.
+  while (!fs.existsSync(existing)) {
+    const parent = path.dirname(existing);
+    if (parent === existing) break; // reached filesystem root
+    tail.unshift(path.basename(existing));
+    existing = parent;
+  }
+  try {
+    const realExisting = fs.realpathSync(existing);
+    return tail.length ? path.join(realExisting, ...tail) : realExisting;
+  } catch {
+    return absPath; // realpath failed (race/permission) → fall back, fail closed downstream
+  }
 }
 
 /**

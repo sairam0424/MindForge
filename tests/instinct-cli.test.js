@@ -72,6 +72,40 @@ test('isPublicAddress blocks private/loopback/link-local incl IPv4-mapped IPv6',
   }
 });
 
+// Regression: the original prefix check (startsWith fe80/fe9/fea/feb) left the
+// fe81-fe8f block reachable as "public" — an SSRF hole into link-local services.
+// fe80::/10 spans the FULL fe80-febf first-hextet range; assert every step blocked.
+test('isPublicAddress blocks the entire fe80::/10 link-local range (no fe8x gap)', () => {
+  for (const hextet of ['fe80', 'fe81', 'fe85', 'fe8a', 'fe8f', 'fe90', 'fe9f',
+    'fea0', 'feaf', 'feb0', 'febf']) {
+    assert.strictEqual(guard.isPublicAddress(`${hextet}::1`), false,
+      `${hextet}:: is link-local (fe80::/10) and must be non-public`);
+  }
+  // fec0::/10 site-local (deprecated) is likewise non-routable.
+  assert.strictEqual(guard.isPublicAddress('fec0::1'), false);
+  // ULA fc00::/7 boundaries and a global-unicast sanity check.
+  assert.strictEqual(guard.isPublicAddress('fdff::1'), false, 'fdff is ULA');
+  assert.strictEqual(guard.isPublicAddress('2001:4860:4860::8888'), true, 'global unicast stays public');
+});
+
+// Regression: path.resolve() does not follow symlinks, so a symlink planted in a
+// writable dir pointing at a blocked system dir would pass the prefix check while
+// fs.read/writeFileSync followed it into the system dir. validateFilePath must
+// canonicalize (realpath) before the BLOCKED_PREFIXES check.
+test('validateFilePath follows symlinks into blocked dirs and rejects them', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-symlink-'));
+  try {
+    fs.mkdirSync(path.join(tmp, 'safe'));
+    fs.symlinkSync('/etc', path.join(tmp, 'link-to-etc'));
+    // Symlinked ancestor resolving into /etc must be caught.
+    assert.throws(() => guard.validateFilePath(path.join(tmp, 'link-to-etc', 'passwd')),
+      /system directory/, 'symlink -> /etc must be rejected');
+    // A genuinely safe, not-yet-created export target stays allowed.
+    const safe = guard.validateFilePath(path.join(tmp, 'safe', 'export.jsonl'));
+    assert.ok(safe.includes('safe'), 'safe new-file path allowed');
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+});
+
 test('validateImportUrl rejects http and non-public hosts', async () => {
   await assert.rejects(() => guard.validateImportUrl('http://example.com/x'), /https/);
   await assert.rejects(() => guard.validateImportUrl('https://127.0.0.1/x'), /non-public/);
