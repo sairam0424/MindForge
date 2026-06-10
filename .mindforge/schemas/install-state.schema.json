@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MindForge install state",
+  "description": "Provenance record written after a MindForge install/update. Sibling to .agent/file-manifest.json (which stores content hashes); this records WHO installed, from WHICH source commit, for WHICH runtimes/scope, WHEN, and the operation log — enabling precise diff, uninstall, and supply-chain audit.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "installedAt",
+    "target",
+    "request",
+    "source",
+    "operations"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "mindforge.install.v1"
+    },
+    "installedAt": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lastValidatedAt": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "root"],
+      "properties": {
+        "scope": {
+          "type": "string",
+          "enum": ["global", "local"]
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1
+        },
+        "installStatePath": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtimes"],
+      "properties": {
+        "runtimes": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Runtimes installed for, e.g. claude, antigravity, cursor, opencode, gemini, copilot"
+        },
+        "withUtils": { "type": "boolean" },
+        "minimal": { "type": "boolean" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repoVersion", "repoCommit"],
+      "properties": {
+        "repoVersion": { "type": ["string", "null"] },
+        "repoCommit": { "type": ["string", "null"] }
+      }
+    },
+    "operations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["kind", "destinationPath", "ownership"],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "minLength": 1,
+            "description": "copy | merge-json | scaffold | symlink | transform"
+          },
+          "sourceRelativePath": { "type": "string", "minLength": 1 },
+          "destinationPath": { "type": "string", "minLength": 1 },
+          "runtime": { "type": "string", "minLength": 1 },
+          "ownership": {
+            "type": "string",
+            "minLength": 1,
+            "description": "mindforge | user | shared — governs what uninstall may remove"
+          },
+          "sha256": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

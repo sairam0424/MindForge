@@ -108,6 +108,22 @@ Before submitting code that touches security-sensitive paths:
 
 ---
 
+## Agentic-Harness Threat Model
+
+This document covers application/code vulnerabilities. The **outward** harness threat
+model — prompt injection, poisoned project config / hooks / MCP, supply-chain risk in
+skills/agents, the lethal trifecta, sandboxing, and the autonomous-agent minimum-bar
+checklist — lives in **[MINDFORGE-AGENTIC-SECURITY.md](./MINDFORGE-AGENTIC-SECURITY.md)**.
+Both are required reading before running MindForge autonomously.
+
+Minimum bar (see that doc for detail): separate agent identities · short-lived scoped
+creds · sandbox untrusted work · deny egress by default · `permissions.deny` on
+secret-bearing paths · sanitize foreign content · human approval for shell/egress/deploy
+(TrustGate + Tier-3) · log tool calls (AUDIT.jsonl) · process-group kill + heartbeat ·
+narrow disposable memory · scan skills/hooks/MCP/agents as supply-chain artifacts.
+
+---
+
 ## Known Mitigations & Limitations
 
 - **ZK-proofs are simulated** — The Dilithium-5 / ZK-proof layer uses cryptographic simulation, not hardware-backed TEEs. It provides logical governance enforcement, not hardware-grade isolation.

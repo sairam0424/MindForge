@@ -1,4 +1,17 @@
 {
+  "permissions": {
+    "deny": [
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(**/.env*)",
+      "Write(~/.ssh/**)",
+      "Write(~/.aws/**)",
+      "Bash(curl * | bash)",
+      "Bash(ssh *)",
+      "Bash(scp *)",
+      "Bash(nc *)"
+    ]
+  },
   "hooks": {
     "PostToolUse": [
       {
@@ -39,6 +52,11 @@
           {
             "type": "command",
             "command": "node bin/security/trust-gate-hook.js",
+            "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "node .agent/hooks/mindforge-block-no-verify.js",
             "timeout": 5000
           }
         ]

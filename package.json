@@ -56,6 +56,8 @@
     "test:single": "node",
     "coverage": "npx c8 node tests/run-all.js",
     "lint": "eslint .",
+    "harness:audit": "node bin/harness-audit.js",
+    "harness:compliance": "node bin/installer/harness-adapter-compliance.js --check",
     "commit": "cz",
     "prepare": "husky"
   },

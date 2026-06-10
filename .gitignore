@@ -2,6 +2,11 @@ node_modules/
 scratch-pad/
 # Upstream source repo (its own git repo) — content is ported into subagents/
 awesome-claude-code-subagents/
+# ECC donor repo (its own git repo) — capabilities are ported into MindForge per
+# the feat/ecc-upgrade plan; the donor itself must never be committed.
+ECC/
+# Serena MCP project cache (generated)
+.serena/
 .env
 .env.*
 *.log

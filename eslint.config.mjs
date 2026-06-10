@@ -25,7 +25,11 @@ export default [
       '**/node_modules/',
       '**/dist/',
       'coverage/',
-      '.gemini/'
+      '.gemini/',
+      // Donor/upstream repos (gitignored, never shipped) — not MindForge's lint posture.
+      'ECC/',
+      'awesome-claude-code-subagents/',
+      '.serena/'
     ]
   }
 ];
