@@ -1,5 +1,27 @@
 # Release Notes
 
+## v11.5.2 — Tech-debt cleanup (debt-zero)
+
+**Release Date**: 2026-06-11
+**Type**: Patch (no API changes)
+**Upgrade Path**: `npx mindforge-cc@latest`
+
+Clears the last low/medium tech-debt surfaced by the v11.5.0 audit. No new
+features — purely hardening + honesty.
+
+- **Config writes are now crash-safe.** The central `.mindforge/config.json` is
+  written via temp + fsync + atomic rename (the shared `atomicWriteJSON` helper)
+  instead of a bare write, so a crash or concurrent read can never see a
+  truncated/partial config.
+- **The autonomous observer no longer wedges on a hard kill.** The
+  session-guardian cooldown lock survived SIGKILL and blocked all future cycles;
+  it now reaps a stale lock (older than 2x the interval, min 300s) before
+  acquiring, while still honoring a genuinely concurrent lock.
+- **The OTel exporter is honestly labeled.** It was zero-caller code that looked
+  dead; a header comment now records that this is intentional (an additive,
+  env-gated UC-18 primitive with a placeholder transport), so it is not mistaken
+  for dead code or assumed to be a live telemetry feed.
+
 ## v11.5.1 — Robustness + governance-gate patch
 
 **Release Date**: 2026-06-11

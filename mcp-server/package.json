@@ -1,6 +1,6 @@
 {
   "name": "mindforge-mcp-server",
-  "version": "11.5.1",
+  "version": "11.5.2",
   "private": true,
   "description": "MindForge MCP server — exposes the MindForge engine (memory graph, project health, audit) to Claude Code as MCP tools",
   "type": "commonjs",

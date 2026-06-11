@@ -1,5 +1,31 @@
 # Changelog
 
+## [11.5.2] - 2026-06-11 — Tech-debt cleanup (Wave 9)
+
+Debt-zero patch from the v11.5.0 audit follow-up. Three low/medium hardening
+items; no new features, no API changes.
+
+### Fixed
+
+- **Atomic config writes** (`bin/governance/config-manager.js`) — `_save()` did a
+  bare `fs.writeFileSync` on the central `.mindforge/config.json`; a crash or
+  concurrent read mid-write could truncate/corrupt it. Now routes through the
+  shared `bin/utils/file-io.atomicWriteJSON` helper (temp + fsync + atomic rename),
+  the same writer `state-manager` already uses.
+- **session-guardian stale-lock recovery** (`bin/autonomous/session-guardian.sh`) —
+  the cooldown lock (`mkdir` + `trap … EXIT INT TERM`) leaked forever on SIGKILL
+  (untrappable), silently skipping every future observer cycle. Now reaps a lock
+  older than the staleness threshold (2x interval, min 300s) before acquiring,
+  while still respecting a fresh lock.
+
+### Changed
+
+- **otel-exporter documented as intentionally not-yet-wired** (`bin/engine/otel-exporter.js`)
+  — clarified that its zero-caller state is BY DESIGN (additive, env-gated UC-18
+  primitive; `exportSpan` is still a local-.jsonl placeholder, not live OTLP).
+  Header comment records the do-not-delete rationale and the single-call-site path
+  to finish UC-18 later. No behavior change.
+
 ## [11.5.1] - 2026-06-11 — Robustness + governance-gate patch (Wave 8)
 
 A fast-follow patch from a fresh adversarial audit of the shipped v11.5.0 tree.
