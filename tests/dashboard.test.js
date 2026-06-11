@@ -322,6 +322,50 @@ test('processDecision: writes AUDIT before updating approval file (integrity)', 
   } finally { process.chdir(orig); p.cleanup(); }
 });
 
+// ── Security regression (v11.5.1): /api/approve must not trust client approver ──
+// The route used to pass req.body.approver straight to processDecision, letting a
+// caller forge the recorded identity (resolved_by). The fix records a FIXED trusted
+// actor instead. We mount the router on a stub app to capture the handler, then
+// invoke it with a forged approver and assert processDecision never receives it.
+console.log('\nSecurity — approver attribution:');
+
+test('/api/approve ignores a client-supplied approver (no forged audit identity)', () => {
+  const apiRouter = require('../bin/dashboard/api-router');
+  const Approval  = require('../bin/dashboard/approval-handler');
+
+  // Capture the registered POST /api/approve/:id handler via a stub express app.
+  const routes = {};
+  const stubApp = {
+    get() {}, put() {}, delete() {},
+    post(routePath, handler) { routes[routePath] = handler; },
+  };
+  apiRouter.register(stubApp);
+  const handler = routes['/api/approve/:id'];
+  assert.ok(typeof handler === 'function', 'approve route must be registered');
+
+  // Spy on processDecision to capture the approver argument the route passes.
+  const orig = Approval.processDecision;
+  let capturedApprover = '__never_set__';
+  Approval.processDecision = (id, decision, comment, approver) => {
+    capturedApprover = approver;
+    return { success: true, decision, approval_id: id, tier: 2, message: 'ok' };
+  };
+
+  try {
+    const req = { params: { id: 'aaaabbbb-cccc-dddd-eeee-ffffffffffff' },
+      body: { decision: 'approve', comment: 'x', approver: 'admin-user-FORGED' } };
+    const res = { json() {}, status() { return { json() {} }; } };
+    handler(req, res);
+
+    assert.notStrictEqual(capturedApprover, 'admin-user-FORGED',
+      'route must NOT pass the client-supplied approver through to the audit trail');
+    assert.strictEqual(capturedApprover, 'dashboard-authenticated',
+      'route must attribute the action to the fixed trusted actor');
+  } finally {
+    Approval.processDecision = orig;
+  }
+});
+
 // ── Summary ───────────────────────────────────────────────────────────────────
 console.log(`\nTests finished: ${passed} passed, ${failed} failed\n`);
 if (failed > 0) process.exit(1);
