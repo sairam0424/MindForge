@@ -59,7 +59,11 @@ function verifyApproverIdentity(approver) {
     }
     console.warn('[GOVERNANCE] No GPG key — minting an UNVERIFIED approval (MINDFORGE_ALLOW_UNVERIFIED_APPROVAL=1). ' +
       'git identity is spoofable; this approval is NOT cryptographically attributed.');
-    return { verified: false, method: 'git_identity_unverified', identity: approver };
+    // unverified_ack=true is the EXPLICIT, audited override the CI Tier-3 gate
+    // looks for. A bare verified:false record WITHOUT this marker (e.g. a stale
+    // pre-fail-closed file or a hand-forged empty one) is still rejected by the
+    // gate — only a deliberately opted-in unverified approval is accepted.
+    return { verified: false, method: 'git_identity_unverified', identity: approver, unverified_ack: true };
   }
 
   return { verified: true, method: 'gpg_key', identity: approver, keyId: gpgKey };
