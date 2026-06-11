@@ -8,7 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const ModelClient = require('../models/model-client');
 const { calculateSoulScore, parseMetrics, synthesizeADSPlan } = require('./ads-synthesizer');
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 
 async function runADSSynthesis(params) {
   const {
@@ -89,7 +89,7 @@ Finalize the PLAN.md. Include the [ADS_VERDICT]: [MERGED|BLUE|RED] (Score: X.XXX
   process.stdout.write('done.\n');
 
   // Finalize outputs
-  const adsUuid = uuidv4();
+  const adsUuid = crypto.randomUUID();
   const adrDir = path.join(process.cwd(), '.planning', 'decisions');
   if (!fs.existsSync(adrDir)) fs.mkdirSync(adrDir, { recursive: true });
 
