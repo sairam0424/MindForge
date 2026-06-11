@@ -48,10 +48,31 @@ class MarketEvaluator {
 
   /**
    * Intelligence fallback for mission-critical tasks.
+   *
+   * Resolves a model that ACTUALLY exists in the market registry (with real
+   * cost/benchmark fields), so downstream cost accounting can never silently
+   * zero out. Order: configured premium_fallback_model -> highest-benchmark
+   * registry entry. FAILS CLOSED (throws) if the registry is empty rather than
+   * returning a phantom costless model — a missing cost must never let the
+   * AgRevOps hard-limit escalation become a no-op.
+   *
+   * (Previously hardcoded 'claude-3-5-sonnet', which is ABSENT from the registry
+   * — `gold` was undefined and this returned a model with no cost fields.)
    */
   getPremiumProvider() {
-    const gold = this.marketRegistry['claude-3-5-sonnet'];
-    return { model_id: 'claude-3-5-sonnet', ...gold };
+    const preferred = configManager.get('revops.premium_fallback_model', null);
+    if (preferred && this.marketRegistry[preferred]) {
+      return { model_id: preferred, ...this.marketRegistry[preferred] };
+    }
+
+    // Fall back to the highest-benchmark registry entry.
+    const ranked = Object.entries(this.marketRegistry)
+      .sort((a, b) => (b[1].benchmark || 0) - (a[1].benchmark || 0));
+    if (ranked.length === 0) {
+      throw new Error('[market-evaluator] no models in revops.market_registry — cannot resolve a premium provider (failing closed)');
+    }
+    const [id, data] = ranked[0];
+    return { model_id: id, ...data };
   }
 
   /**

@@ -19,6 +19,8 @@
     ".mindforge/config.json",
     ".mindforge/imported-agents.jsonl",
     ".mindforge/engine/",
+    ".mindforge/manifests/",
+    ".mindforge/schemas/",
     ".mindforge/personas/",
     ".mindforge/skills/",
     ".mindforge/governance/",

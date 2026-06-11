@@ -83,67 +83,83 @@ function walk(dir, filter) {
   return out;
 }
 
-const violations = [];
-function fail(file, msg) { violations.push(`${path.relative(ROOT, file)}: ${msg}`); }
+// ── validation chain ──────────────────────────────────────────────────────────
+function runValidation() {
+  const violations = [];
+  const fail = (file, msg) => violations.push(`${path.relative(ROOT, file)}: ${msg}`);
 
-// ── 1. STRICT: .mindforge/skills engine schema ────────────────────────────────
-for (const file of walk(path.join(ROOT, '.mindforge', 'skills'), n => n === 'SKILL.md')) {
-  const content = fs.readFileSync(file, 'utf8');
-  const fm = parseFrontmatter(content);
-  if (!fm) { fail(file, 'missing/malformed frontmatter (strict engine skill)'); continue; }
-  for (const req of ['name', 'version', 'status']) {
-    if (!fm[req]) fail(file, `missing required engine field "${req}"`);
-  }
-}
-
-// ── 2. LENIENT: .agent/skills (name + body only) ──────────────────────────────
-for (const file of walk(path.join(ROOT, '.agent', 'skills'), n => n === 'SKILL.md')) {
-  const content = fs.readFileSync(file, 'utf8');
-  const fm = parseFrontmatter(content);
-  if (!fm) { fail(file, 'missing/malformed frontmatter (.agent skill)'); continue; }
-  if (!fm.name) fail(file, 'missing "name"');
-}
-
-// ── 3. LENIENT: subagents (name + description) ────────────────────────────────
-for (const file of walk(path.join(ROOT, 'subagents', 'categories'), n => n.endsWith('.md') && n !== 'README.md')) {
-  const content = fs.readFileSync(file, 'utf8');
-  const fm = parseFrontmatter(content);
-  if (!fm) { fail(file, 'missing/malformed frontmatter (subagent)'); continue; }
-  if (!fm.name) fail(file, 'missing "name"');
-  if (!fm.description) fail(file, 'missing "description"');
-}
-
-// ── 4. commands: description frontmatter ──────────────────────────────────────
-for (const dir of [path.join(ROOT, '.claude', 'commands', 'mindforge'), path.join(ROOT, '.agent', 'mindforge')]) {
-  for (const file of walk(dir, n => n.endsWith('.md'))) {
+  // 1. STRICT: .mindforge/skills engine schema
+  for (const file of walk(path.join(ROOT, '.mindforge', 'skills'), n => n === 'SKILL.md')) {
     const content = fs.readFileSync(file, 'utf8');
     const fm = parseFrontmatter(content);
-    if (!fm) { fail(file, 'missing/malformed frontmatter (command)'); continue; }
+    if (!fm) { fail(file, 'missing/malformed frontmatter (strict engine skill)'); continue; }
+    for (const req of ['name', 'version', 'status']) {
+      if (!fm[req]) fail(file, `missing required engine field "${req}"`);
+    }
+  }
+
+  // 2. LENIENT: .agent/skills (name + body only)
+  for (const file of walk(path.join(ROOT, '.agent', 'skills'), n => n === 'SKILL.md')) {
+    const content = fs.readFileSync(file, 'utf8');
+    const fm = parseFrontmatter(content);
+    if (!fm) { fail(file, 'missing/malformed frontmatter (.agent skill)'); continue; }
+    if (!fm.name) fail(file, 'missing "name"');
+  }
+
+  // 3. LENIENT: subagents (name + description)
+  for (const file of walk(path.join(ROOT, 'subagents', 'categories'), n => n.endsWith('.md') && n !== 'README.md')) {
+    const content = fs.readFileSync(file, 'utf8');
+    const fm = parseFrontmatter(content);
+    if (!fm) { fail(file, 'missing/malformed frontmatter (subagent)'); continue; }
+    if (!fm.name) fail(file, 'missing "name"');
     if (!fm.description) fail(file, 'missing "description"');
   }
-}
 
-// ── 5. BLOCKING: dangerous-invisible unicode across all asset markdown ────────
-const unicodeRoots = [
-  path.join(ROOT, '.mindforge', 'skills'),
-  path.join(ROOT, '.agent', 'skills'),
-  path.join(ROOT, '.agent', 'mindforge'),
-  path.join(ROOT, '.claude', 'commands', 'mindforge'),
-  path.join(ROOT, 'subagents', 'categories'),
-  path.join(ROOT, '.mindforge', 'rules'),
-];
-for (const root of unicodeRoots) {
-  for (const file of walk(root, n => n.endsWith('.md'))) {
-    const hits = scanInvisible(fs.readFileSync(file, 'utf8'));
-    for (const h of hits) fail(file, `dangerous invisible unicode ${h.codePoint} at line ${h.line} (ASCII smuggling vector)`);
+  // 4. commands: description frontmatter
+  for (const dir of [path.join(ROOT, '.claude', 'commands', 'mindforge'), path.join(ROOT, '.agent', 'mindforge')]) {
+    for (const file of walk(dir, n => n.endsWith('.md'))) {
+      const content = fs.readFileSync(file, 'utf8');
+      const fm = parseFrontmatter(content);
+      if (!fm) { fail(file, 'missing/malformed frontmatter (command)'); continue; }
+      if (!fm.description) fail(file, 'missing "description"');
+    }
   }
+
+  // 5. BLOCKING: dangerous-invisible unicode across all asset markdown
+  const unicodeRoots = [
+    path.join(ROOT, '.mindforge', 'skills'),
+    path.join(ROOT, '.agent', 'skills'),
+    path.join(ROOT, '.agent', 'mindforge'),
+    path.join(ROOT, '.claude', 'commands', 'mindforge'),
+    path.join(ROOT, 'subagents', 'categories'),
+    path.join(ROOT, '.mindforge', 'rules'),
+    // Personas are markdown bodies imported (sometimes verbatim) from upstream
+    // donors — exactly the ASCII/tag-smuggling vector this scan defends against.
+    // Previously unscanned; covers loop-operator/harness-optimizer + GAN/observer.
+    path.join(ROOT, '.mindforge', 'personas'),
+  ];
+  for (const root of unicodeRoots) {
+    for (const file of walk(root, n => n.endsWith('.md'))) {
+      const hits = scanInvisible(fs.readFileSync(file, 'utf8'));
+      for (const h of hits) fail(file, `dangerous invisible unicode ${h.codePoint} at line ${h.line} (ASCII smuggling vector)`);
+    }
+  }
+
+  return violations;
 }
 
-// ── report ────────────────────────────────────────────────────────────────────
-if (violations.length > 0) {
-  console.error(`\nAsset validation FAILED — ${violations.length} violation(s):`);
-  for (const v of violations) console.error(`  - ${v}`);
-  process.exit(1);
+// ── exports + direct-execution entrypoint ─────────────────────────────────────
+// require()ing this script (the negative test) gets the pure detection helpers
+// and does NOT scan/exit. The validation chain runs only on direct execution.
+module.exports = { isDangerousInvisible, scanInvisible, parseFrontmatter, runValidation };
+
+if (require.main === module) {
+  const violations = runValidation();
+  if (violations.length > 0) {
+    console.error(`\nAsset validation FAILED — ${violations.length} violation(s):`);
+    for (const v of violations) console.error(`  - ${v}`);
+    process.exit(1);
+  }
+  console.log('Asset validation passed (per-root frontmatter + dangerous-unicode scan).');
+  process.exit(0);
 }
-console.log('Asset validation passed (per-root frontmatter + dangerous-unicode scan).');
-process.exit(0);

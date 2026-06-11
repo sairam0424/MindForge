@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "_comment": "Named install profiles for the MindForge manifest engine (INERT). Each profile is a curated module bundle resolved by bin/installer/install-manifests.js. Module ids must exist in install-modules.json; dependencies are pulled in automatically by the resolver. Replaces the two-boolean --minimal/--with-utils selectivity once a driver wires this.",
+  "profiles": {
+    "minimal": {
+      "description": "Smallest viable install: entry docs, parameter registry, command corpus, and skills. No heavy engine subtrees or subagent corpus.",
+      "modules": [
+        "entry-claude",
+        "entry-agent",
+        "parameter-registry",
+        "commands-claude",
+        "commands-agent",
+        "skills"
+      ]
+    },
+    "standard": {
+      "description": "Default install: minimal plus runtime hooks, personas, engine core, governance, intelligence, models, and engine-format skills. Excludes the heavy subagent corpus and optional docs.",
+      "modules": [
+        "entry-claude",
+        "entry-agent",
+        "parameter-registry",
+        "commands-claude",
+        "commands-agent",
+        "skills",
+        "hooks-runtime",
+        "personas",
+        "engine-core",
+        "governance",
+        "intelligence",
+        "models",
+        "engine-skills"
+      ]
+    },
+    "full": {
+      "description": "Everything: standard plus the subagent corpus, integrations, and reference/template docs.",
+      "modules": [
+        "entry-claude",
+        "entry-agent",
+        "parameter-registry",
+        "commands-claude",
+        "commands-agent",
+        "skills",
+        "hooks-runtime",
+        "personas",
+        "subagents",
+        "engine-core",
+        "governance",
+        "intelligence",
+        "integrations",
+        "models",
+        "engine-skills",
+        "docs-references",
+        "docs-templates"
+      ]
+    }
+  }
+}
