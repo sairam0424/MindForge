@@ -22,6 +22,13 @@ const fs = require('fs');
 const DEFAULT_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
 const DEFAULT_TIMEOUT_MS = 15000;
 
+// A remote instinct import is plain HTTPS, so only the standard HTTPS port is
+// meaningful. Allowing an explicit non-standard port would let an allowed
+// public host be used to reach an internal service co-located on it
+// (e.g. https://public-host:6379/) — the destination port is otherwise carried
+// through unchecked. An empty port means the URL uses the https default (443).
+const ALLOWED_IMPORT_PORTS = new Set(['', '443']);
+
 // System dirs an import/export path must never target (port of the py list;
 // macOS resolves /etc -> /private/etc, so both forms are blocked).
 const BLOCKED_PREFIXES = [
@@ -94,6 +101,12 @@ async function validateImportUrl(source) {
   }
   if (!parsed.hostname) {
     throw new Error('remote import URL is missing a hostname');
+  }
+  // Port allowlist: only the standard HTTPS port (or none) is permitted. This
+  // blocks using an allowed public host to reach an internal service port
+  // (6379/27017/8080/...) without maintaining a per-service blocklist.
+  if (!ALLOWED_IMPORT_PORTS.has(parsed.port)) {
+    throw new Error(`remote import port not allowed: ${parsed.port} (only the standard https port is permitted)`);
   }
 
   let addrs;

@@ -112,6 +112,19 @@ test('validateImportUrl rejects http and non-public hosts', async () => {
   await assert.rejects(() => guard.validateImportUrl('not a url'), /invalid import URL/);
 });
 
+// Regression (Wave 6): an allowed public host must not be usable to reach an
+// internal-service port. Only the standard https port (or none) is permitted.
+test('validateImportUrl rejects non-standard / internal-service ports', async () => {
+  await assert.rejects(() => guard.validateImportUrl('https://8.8.8.8:6379/x.jsonl'), /port not allowed/);
+  await assert.rejects(() => guard.validateImportUrl('https://1.1.1.1:8080/x'), /port not allowed/);
+  await assert.rejects(() => guard.validateImportUrl('https://8.8.8.8:27017/x'), /port not allowed/);
+});
+
+test('validateImportUrl allows the standard https port (explicit 443 or none)', async () => {
+  await assert.doesNotReject(() => guard.validateImportUrl('https://1.1.1.1:443/x'));
+  await assert.doesNotReject(() => guard.validateImportUrl('https://8.8.8.8/x'));
+});
+
 test('validateFilePath blocks system dirs; validateInstinctId rejects traversal', () => {
   assert.throws(() => guard.validateFilePath('/etc/passwd'), /system directory/);
   assert.strictEqual(guard.validateInstinctId('../x'), false);
