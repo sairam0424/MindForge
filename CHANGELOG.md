@@ -1,5 +1,40 @@
 # Changelog
 
+## [11.5.1] - 2026-06-11 — Robustness + governance-gate patch (Wave 8)
+
+A fast-follow patch from a fresh adversarial audit of the shipped v11.5.0 tree.
+Hardens crash-prone JSON parsing in the autonomous/memory pipelines, closes a
+CI governance-gate gap, and tightens two security surfaces. No new features.
+
+### Fixed
+
+- **Crash-proof AUDIT.jsonl parsing** (`bin/memory/pillar-health-tracker.js`) —
+  `summarizePhase()` parsed every audit line with an unguarded `JSON.parse`, so a
+  single malformed/torn line crashed the knowledge-capture pipeline. Now parses
+  per-line in try/catch and skips bad lines.
+- **Crash-proof compaction capture** (`bin/memory/knowledge-capture.js`) — a
+  malformed `handoff.json` no longer throws out of `captureFromCompaction()`; it
+  logs and returns `[]`, mirroring the missing-file path.
+- **Resilient federated-sync stats** (`bin/memory/federated-sync.js`) — the two
+  unguarded `JSON.parse` calls on `sync-stats.json` (`handleSyncFailure`,
+  `resetFailures`) now fall back to `{failures:0}` on corruption, matching the
+  sibling `getLastSyncTimestamp` pattern.
+
+### Security
+
+- **CI Tier-3 governance gate now validates content** (`.github/workflows/control-plane.yml`)
+  — the gate counted approval files but never checked them; it now requires at
+  least one approval with `identity_verification.verified === true` and a
+  signature, and rejects any unverified/empty file. Completes the Wave-6
+  fail-closed `approve.js` work (a hand-committed empty approval no longer passes).
+- **Dashboard approval attribution** (`bin/dashboard/api-router.js`) —
+  `POST /api/approve/:id` no longer records the client-supplied `approver`
+  (forgeable audit identity); it attributes the action to a fixed authenticated
+  actor. The dashboard remains localhost-bound + token-gated.
+- **Destructive-command detector blocks Unix `truncate`** (`bin/security/trust-boundaries.js`)
+  — the SQL-only `truncate table` pattern missed `truncate -s 0 <path>` (in-place
+  file zeroing). Added a size-flag pattern so it is gated; benign uses stay allowed.
+
 ## [11.5.0] - 2026-06-11 — Governance hardening + autonomous-engine repair (Waves 4–7)
 
 This release bundles four waves of work: orchestration primitives, an **inert** manifest

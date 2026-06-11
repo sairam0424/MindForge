@@ -1,5 +1,43 @@
 # Release Notes
 
+## v11.5.1 — Robustness + governance-gate patch
+
+**Release Date**: 2026-06-11
+**Type**: Patch (no API changes; one CI-gate behavior change)
+**Upgrade Path**: `npx mindforge-cc@latest`
+
+A fast-follow patch driven by a fresh adversarial audit of the shipped v11.5.0
+tree. It hardens crash-prone JSON parsing in the autonomous/memory pipelines,
+closes a governance-gate gap left by the v11.5.0 approval work, and tightens two
+security surfaces. No features, no API changes.
+
+### Robustness — no more crashes on a torn JSONL line
+
+Three pipelines parsed JSON without guards, so one malformed/partially-written
+line could crash them:
+
+- `summarizePhase()` (pillar-health) parsed every `AUDIT.jsonl` line unguarded —
+  it now skips bad lines and keeps the valid ones.
+- `captureFromCompaction()` (knowledge-capture) now returns `[]` on a malformed
+  `handoff.json` instead of throwing.
+- `federated-sync` now tolerates a corrupted `sync-stats.json` in both
+  `handleSyncFailure` and `resetFailures` (falls back to `{failures:0}`).
+
+### Security & governance
+
+- **The CI Tier-3 gate now actually validates approvals.** Previously it only
+  counted approval files; a hand-committed empty file would pass. It now requires
+  at least one approval with `identity_verification.verified === true` plus a
+  signature, and rejects unverified/empty files — completing the v11.5.0
+  fail-closed `approve.js` work.
+- **Dashboard approvals can't forge an identity.** `POST /api/approve/:id` no
+  longer records a client-supplied `approver` into the audit trail; it attributes
+  the action to a fixed authenticated actor. (The dashboard is already
+  localhost-bound and Bearer-token gated, so this is attribution hardening.)
+- **The destructive-command guard now blocks Unix `truncate -s`.** In-place file
+  zeroing (`truncate -s 0 <path>`) was missed by the SQL-only pattern; it is now
+  gated, with benign uses unaffected.
+
 ## v11.5.0 — Governance hardening + autonomous-engine repair
 
 **Release Date**: 2026-06-11
