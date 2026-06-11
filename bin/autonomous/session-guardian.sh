@@ -64,6 +64,23 @@ mkdir -p "$(dirname "$LOG_PATH")" || {
 }
 
 _lock_dir="${LOG_PATH}.lock"
+
+# Stale-lock recovery: the lock is an mkdir + `trap … EXIT INT TERM` cleanup.
+# SIGKILL (signal 9) cannot be trapped, so a hard-killed holder leaves
+# _lock_dir behind forever and every future cycle is skipped. Reap a lock
+# older than the staleness threshold (2x the cooldown interval, min 300s)
+# before attempting to acquire it.
+_lock_max_age=$(( INTERVAL * 2 ))
+[ "$_lock_max_age" -lt 300 ] && _lock_max_age=300
+if [ -d "$_lock_dir" ]; then
+  _lock_mtime=""
+  _lock_mtime=$(stat -f %m "$_lock_dir" 2>/dev/null || stat -c %Y "$_lock_dir" 2>/dev/null) || true
+  if [[ "$_lock_mtime" =~ ^[0-9]+$ ]] && [ "$(( now - _lock_mtime ))" -ge "$_lock_max_age" ]; then
+    echo "session-guardian: removing stale lock (age $(( now - _lock_mtime ))s >= ${_lock_max_age}s)" >&2
+    rm -rf "$_lock_dir"
+  fi
+fi
+
 if ! mkdir "$_lock_dir" 2>/dev/null; then
   echo "session-guardian: log locked by concurrent process, skipping cycle" >&2
   exit 1
