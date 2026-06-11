@@ -687,12 +687,53 @@ class AutoRunner {
     fs.writeFileSync(this.statePath, JSON.stringify(state, null, 2));
   }
 
+  /**
+   * Lazily registers (once) the autonomous runner's own ZTAI identity and
+   * returns { did, tier }. ztai-manager is a SINGLETON (not a constructor) and
+   * exposes no getIdentity() — the runner must register a DID to obtain one.
+   * Cached on the instance so every wave evaluates under one stable identity.
+   * Tier 3: autonomous phase processing is a high-trust operation; the policy
+   * engine still runs its own blast-radius analysis on top, so this is an INPUT
+   * to evaluation, not a self-granted bypass.
+   */
+  async _getRunnerIdentity() {
+    if (!this._runnerIdentity) {
+      _ZTAIManager = lazyRequire(_ZTAIManager, '../governance/ztai-manager');
+      const did = await _ZTAIManager.registerAgent(
+        `auto-runner:${process.env.MF_PROJECT_ID || 'MF-ALPHA'}:phase-${this.phase}`,
+        3,
+        this._sessionId
+      );
+      const agent = _ZTAIManager.getAgent(did);
+      this._runnerIdentity = { did, tier: agent && typeof agent.tier === 'number' ? agent.tier : 3 };
+    }
+    return this._runnerIdentity;
+  }
+
   async evaluateWavePolicy() {
-    _ZTAIManager = lazyRequire(_ZTAIManager, '../governance/ztai-manager');
-    const manager = _ZTAIManager;
-    const identity = await manager.getIdentity();
-    const intent = { did: identity.did, action: 'process_phase_wave', resource: `projects/${process.env.MF_PROJECT_ID || 'MF-ALPHA'}/phases/${this.phase}/*`, tier: identity.tier || 1, metadata: { engine: 'Nimbus-S4', mode: 'autonomous', wave_timestamp: new Date().toISOString() } };
-    const result = this.policyEngine.evaluate(intent);
+    let identity;
+    try {
+      identity = await this._getRunnerIdentity();
+    } catch (err) {
+      // Fail CLOSED: if the runner cannot establish a verifiable identity, deny
+      // the wave rather than proceeding ungoverned.
+      console.warn(`[APO-DENY] Could not establish runner identity: ${err.message}`);
+      this.writeAudit({ event: 'auto_mode_denied', reason: `identity unavailable: ${err.message}`, phase: this.phase });
+      return false;
+    }
+
+    const intent = {
+      did: identity.did,
+      action: 'process_phase_wave',
+      resource: `projects/${process.env.MF_PROJECT_ID || 'MF-ALPHA'}/phases/${this.phase}/*`,
+      tier: identity.tier,
+      sessionId: this._sessionId,
+      metadata: { engine: 'Nimbus-S4', mode: 'autonomous', wave_timestamp: new Date().toISOString() }
+    };
+
+    // policyEngine.evaluate is ASYNC — must be awaited, or `result` is a Promise
+    // and `result.verdict === 'DENY'` is always false (the gate never fires).
+    const result = await this.policyEngine.evaluate(intent);
     if (result.verdict === 'DENY') { console.warn(`[APO-DENY] ${result.reason}`); return false; }
     return true;
   }
