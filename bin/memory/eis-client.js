@@ -150,20 +150,41 @@ class EISClient {
   }
 
   /**
-   * [HARDEN] Generates a cryptographically signed auth header using the agent's DID.
-   * This attaches OUTBOUND provenance to locally-originated requests (it signs
-   * what this node sends). It does NOT verify the provenance of inbound remote
-   * entries — that is verifyRemoteProvenance's job, which fails closed unless a
-   * signature is cryptographically verified against a resolvable public key.
+   * Lazily registers (once) this client's outbound node identity in the ZTAI
+   * trust registry and returns its DID. ZTAI is a SINGLETON instance (exported
+   * as `new ZTAIManager()`), so we call it directly — never `new ZTAI()`. The
+   * DID is cached so every header from this client shares one resolvable key.
+   */
+  async _getNodeDid() {
+    if (!this._nodeDid) {
+      // Tier 3: the enclave provider signs with real Ed25519 (see ztai-manager).
+      this._nodeDid = await ZTAI.registerAgent(`eis-client:${this.orgId}`, 3);
+    }
+    return this._nodeDid;
+  }
+
+  /**
+   * [HARDEN] Generates a cryptographically signed auth header using this node's
+   * DID. Attaches OUTBOUND provenance to locally-originated requests (it signs
+   * what this node sends). It does NOT verify inbound remote entries — that is
+   * verifyRemoteProvenance's job, which fails closed unless a signature is
+   * cryptographically verified against a resolvable public key.
+   *
+   * FAIL-CLOSED: uses the real ZTAI API (registerAgent -> signData) and asserts
+   * the produced signature is a non-empty string. A signing failure THROWS
+   * rather than shipping a malformed `ZTAI-v5 <did>:` header with an empty sig.
    */
   async getAuthHeader(action, resource) {
-    const manager = new ZTAI();
-    const identity = manager.getIdentity();
+    const did = await this._getNodeDid();
     const payload = `${this.orgId}:${action}:${resource}:${Date.now()}`;
-    const signature = manager.sign(payload);
-    
+    const signature = await ZTAI.signData(did, payload);
+
+    if (typeof signature !== 'string' || signature.length === 0) {
+      throw new Error('EIS auth header signing failed: ZTAI produced an empty signature');
+    }
+
     return {
-      'Authorization': `ZTAI-v5 ${identity.did}:${signature}`,
+      'Authorization': `ZTAI-v5 ${did}:${signature}`,
       'X-MF-Org': this.orgId,
       'X-MF-Timestamp': Date.now().toString()
     };
