@@ -75,11 +75,20 @@ function register(app) {
   app.post('/api/approve/:id', (req, res) => {
     try {
       const { id }                  = req.params;
-      const { decision, comment, approver } = req.body || {};
+      const { decision, comment }   = req.body || {};
 
       if (!decision) {
         return res.status(400).json({ error: 'Missing "decision" field (approve|reject)' });
       }
+
+      // SECURITY (v11.5.1): do NOT trust a client-supplied `approver` for the
+      // recorded identity — it is forgeable and would let any caller write a
+      // false approval audit trail (e.g. resolved_by: 'admin'). requireAuth
+      // (server.js) proves the caller holds the owner-only dashboard token but
+      // exposes no named principal, so we attribute the action to a FIXED
+      // trusted actor. (A future RBAC pass can map a Bearer token -> DID and
+      // record the real principal; until then, never echo req.body.approver.)
+      const approver = 'dashboard-authenticated';
 
       const result = Approval.processDecision(id, decision, comment, approver);
 

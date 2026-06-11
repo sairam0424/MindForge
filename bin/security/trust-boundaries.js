@@ -124,6 +124,11 @@ function isHighImpact(command) {
     /git\s+reset\s+--hard/i,
     /delete\s+from/i,
     /truncate\s+table/i,
+    // Unix `truncate -s <size> <path>` zeroes/shrinks a file in place — a
+    // destructive data-loss op the SQL-only `truncate table` pattern above
+    // misses. Match the size flag (-s, -s0, --size) so `truncate -s 0 <path>`
+    // is gated; benign words ("truncated output") and the SQL form are not.
+    /\btruncate\s+(-{1,2}s\w*|--size)\b/i,
     /\bmkfs(\.\w+)?\s+\/dev\//i,
     // #11: any dd write target, not just /dev/ (dd if=... of=important.db).
     // Original /dev/-only check is a subset of this, so it stays covered.

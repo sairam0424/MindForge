@@ -38,6 +38,8 @@ const SHUTDOWN = j('shut', 'down');
 const REBOOT = j('reb', 'oot');
 const HALT = j('ha', 'lt');
 const POWEROFF = j('power', 'off');
+const TRUNCATE = j('trun', 'cate');
+const TABLE = j('tab', 'le');
 const SLASH = '/';
 const ETC = j('/et', 'c');
 const DEV = j('/de', 'v');
@@ -265,6 +267,34 @@ test('#14 detects power-state commands', () => {
 test('#14 NEGATIVE: substrings of power words stay allowed', () => {
   assert.strictEqual(isHighImpact('echo rebooting message'), false);
   assert.strictEqual(isHighImpact('npm run halting-problem-demo'), false);
+});
+
+// ── #15 Unix `truncate -s` file zeroing ───────────────────────────────────────
+// The SQL-only `truncate table` pattern missed the Unix `truncate -s 0 <path>`
+// command, which zeroes/shrinks a file in place (irreversible data loss). The
+// new size-flag pattern gates it. Built from fragments per the file convention.
+test('#15 detects Unix truncate zeroing a file via -s 0', () => {
+  const TMP = j('/v', 'ar/', 'log/');
+  const cmd = j(TRUNCATE, ' -s 0 ', TMP, 'app.log');
+  assert.strictEqual(isHighImpact(cmd), true, 'truncate -s 0 <path> must be blocked');
+});
+
+test('#15 detects truncate size-flag variants', () => {
+  assert.strictEqual(isHighImpact(j(TRUNCATE, ' -s0 data.db')), true, 'truncate -s0 must be blocked');
+  assert.strictEqual(isHighImpact(j(TRUNCATE, ' --size=0 ', ETC, SLASH, PASSWD)), true, 'truncate --size=0 must be blocked');
+  assert.strictEqual(isHighImpact(j(TRUNCATE, ' -s 100M big.img')), true, 'truncate -s <size> must be blocked');
+});
+
+test('#15 NEGATIVE: SQL truncate table is still caught by the original pattern', () => {
+  assert.strictEqual(isHighImpact(j(TRUNCATE, ' ', TABLE, ' users')), true);
+});
+
+test('#15 NEGATIVE: benign uses of the word truncate stay allowed', () => {
+  // No size flag -> not the destructive file-zeroing invocation.
+  assert.strictEqual(isHighImpact(j('echo ', TRUNCATE, ' the string')), false);
+  assert.strictEqual(isHighImpact(j(TRUNCATE, 'd output ready')), false);
+  assert.strictEqual(isHighImpact(j('npm run ', TRUNCATE, '-logs')), false);
+  assert.strictEqual(isHighImpact(j(TRUNCATE, ' -v file')), false);
 });
 
 // ── Existing-coverage regression: original patterns must still fire ───────────
