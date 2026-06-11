@@ -53,13 +53,39 @@ jobs:
       - name: Check Tier 3 Compliance
         if: needs.classify.outputs.tier == '3'
         run: |
-          APPROVAL_COUNT=$(ls .planning/approvals/*.json 2>/dev/null | wc -l)
-          if [ "$APPROVAL_COUNT" -eq 0 ]; then
-            echo "❌ ERROR: Tier 3 changes detected but no approval signature found in .planning/approvals/"
-            echo "Please run /mindforge:approve and commit the resulting approval file."
-            exit 1
-          fi
-          echo "✅ Tier 3 approval found."
+          # Tier-3 gate (v11.5.1): do NOT just count approval files — a hand-committed
+          # empty/fake file would pass a count check. Require at least one approval whose
+          # identity_verification.verified === true (matching approve.js's fail-closed
+          # record), and reject if ANY committed approval is unverified.
+          node -e '
+            const fs = require("fs"), path = require("path");
+            const dir = ".planning/approvals";
+            let files = [];
+            try { files = fs.readdirSync(dir).filter(f => f.endsWith(".json")); } catch { files = []; }
+            if (files.length === 0) {
+              console.error("❌ ERROR: Tier 3 changes detected but no approval found in .planning/approvals/");
+              console.error("Run /mindforge:approve (with a GPG signing key) and commit the approval file.");
+              process.exit(1);
+            }
+            let verified = 0;
+            for (const f of files) {
+              let rec;
+              try { rec = JSON.parse(fs.readFileSync(path.join(dir, f), "utf8")); }
+              catch { console.error(`❌ ERROR: approval ${f} is not valid JSON`); process.exit(1); }
+              const iv = rec && rec.identity_verification;
+              if (!iv || iv.verified !== true) {
+                console.error(`❌ ERROR: approval ${f} is UNVERIFIED (identity_verification.verified !== true).`);
+                console.error("   A Tier 3 gate requires a GPG-verified approval; unverified records are rejected.");
+                process.exit(1);
+              }
+              if (!rec.signature) {
+                console.error(`❌ ERROR: approval ${f} is missing its signature.`);
+                process.exit(1);
+              }
+              verified++;
+            }
+            console.log(`✅ Tier 3 approval verified (${verified} verified approval file(s)).`);
+          '
 
       - name: Security Scan
         run: node bin/mindforge-cli.js security-scan
