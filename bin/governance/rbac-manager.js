@@ -40,18 +40,26 @@ class RBACManager {
   }
 
   /**
-   * [HARDEN] Dynamically binds roles based on ZTAI trust tiers if no explicit role exists.
-   * Ensures high-trust agents automatically get architect-level visibility.
+   * [HARDEN] Dynamically binds roles based on ZTAI trust tiers on top of the
+   * agent's explicit/default roles. High-trust agents automatically gain
+   * architect-level visibility.
+   *
+   * ztai-manager is a SINGLETON instance (not a constructor), and exposes no
+   * getIdentity(); the agent's tier lives in the trust registry, read via
+   * getAgent(did). Fails SAFE: an unregistered/unknown DID has no resolvable
+   * tier, so it receives only its base roles (no tier-based elevation) rather
+   * than throwing. (Wave 6: the previous `new ztai().getIdentity()` threw on
+   * every call — "ztai is not a constructor".)
    */
   async getRolesByTier(did) {
-    const manager = new ztai();
-    const identity = await manager.getIdentity();
     const explicit = this.getRoles(did);
+    const agent = ztai.getAgent(did);
+    const tier = agent && typeof agent.tier === 'number' ? agent.tier : 0;
 
-    if (identity.tier >= 3) {
+    if (tier >= 3) {
       return [...new Set([...explicit, 'lead-architect'])];
     }
-    if (identity.tier >= 2) {
+    if (tier >= 2) {
       return [...new Set([...explicit, 'developer'])];
     }
     return explicit;
