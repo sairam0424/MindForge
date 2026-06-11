@@ -1,5 +1,80 @@
 # Changelog
 
+## [11.5.0] - 2026-06-11 — Governance hardening + autonomous-engine repair (Waves 4–7)
+
+This release bundles four waves of work: orchestration primitives, an **inert** manifest
+engine + the new instinct CLI + GAN harness personas, governance/security hardening, and a
+repair that makes the autonomous engine (`/mindforge:auto`) actually functional. Several
+items ship deliberately **inert** (scaffolding present, not wired into any live path) and
+are flagged as such below — they introduce **no behavior change yet**.
+
+### Added
+
+- **Instinct CLI** (`/mindforge:instinct`, `bin/learning/instinct-cli.js`) — deterministic,
+  no-LLM management of the JSONL instinct store: `list`, `export`, `import`,
+  `promote-candidates` (list + flag), and `prune`.
+- **Typed Inter-Agent Message Protocol** (`bin/autonomous/handoff-schema.js`) — five message
+  kinds (`task_handoff`, `query`, `response`, `completed`, `conflict`) with priority levels
+  (`low`/`normal`/`high`/`critical`) and message validation. Internal orchestration primitive.
+- **Manifest-driven install resolver** (`bin/installer/install-manifests.js`,
+  `.mindforge/manifests/install-*.json`) — profile-to-module expansion and dependency
+  detection. Ships **INERT**: the adapter wiring it into `bin/installer-core.js`'s live
+  `install()` path is deferred to a future PR. No behavior change.
+- **GAN-style harness personas** (`.mindforge/personas/gan-evaluator.md`, `gan-generator.md`,
+  `gan-planner.md`) — fully scoped and documented. Ships **INERT**: not wired to any live
+  command or automated workflow. No behavior change.
+- **Governance test coverage** — `tests/trust-verifier.test.js` (7 tests) and
+  `tests/rbac-manager.test.js` (8 tests) lock the fail-closed contracts for future
+  safety-critical governance changes.
+
+### Fixed
+
+- **SSRF import-URL guard** (`bin/learning/lib/ssrf-guard.js`) — closed an IPv6 link-local
+  bypass (`fe81`–`fe8f` reachable via string-prefix check) and a symlink path-traversal
+  bypass, using numeric bitmask validation and canonical-path checking before system-dir
+  validation.
+- **Federated EIS sync** (`bin/memory/eis-client.js`) — `getAuthHeader` no longer throws on
+  every call; it now registers a node identity via `ZTAI.registerAgent` and signs with
+  `ZTAI.signData`, restoring sync to non-localhost EIS endpoints.
+- **RBAC tier elevation** (`bin/governance/rbac-manager.js`) — `getRolesByTier` now fails
+  safely for unregistered agents (no thrown exception) and resolves agent tier via the
+  correct ZTAI API.
+- **Autonomous engine — wave crash** (`bin/autonomous/auto-runner.js`) — replaced ZTAI
+  singleton misuse (`getIdentity()`, non-existent) with `_getRunnerIdentity()` using the
+  real `registerAgent` API; `/mindforge:auto` no longer crashes on every wave.
+- **Autonomous policy gate — fail-open** (`bin/autonomous/auto-runner.js`) — the async
+  policy verdict is now `await`ed (`this.policyEngine.evaluate(intent)`); the per-wave gate
+  previously always allowed.
+- **Autonomous engine — fail-closed identity** (`bin/autonomous/auto-runner.js`) — if runner
+  identity cannot be established, the policy gate now denies and audits (`auto_mode_denied`)
+  instead of proceeding ungoverned.
+
+### Changed
+
+- **Instinct store schema** (`.mindforge/engine/instincts/instinct-schema.md`) — added
+  `project_id` (stable scope key) and `source` (`auto-capture`/`manual`/`imported`/
+  `observer`), plus origin-based confidence scoring: auto-capture starts at `0.3`, manual
+  at `0.7`.
+- **Cost-routing shadow mode** (`bin/revops/router-steering-v2.js`) — arbitrage steering now
+  respects `cost_routing.shadow_mode` (default `true`); in observe-only mode `steer()`
+  returns `{ shadow, authoritative: false }` with SHADOW vs LIVE logging.
+
+### Security
+
+- **Tier-3 approvals now fail closed** (`bin/governance/approve.js`) — approvals require GPG
+  verification and **throw before writing any record** when no GPG key is configured, unless
+  `MINDFORGE_ALLOW_UNVERIFIED_APPROVAL=1` is set; unverified approvals are marked
+  `verified: false`.
+- **Persona supply-chain scan** (`scripts/ci/validate-assets.js`) — persona asset validation
+  now detects dangerous invisible unicode (zero-width, bidi overrides, Unicode tags) across
+  `.mindforge/personas` to prevent ASCII-smuggling injection.
+- **Destructive-command detector** (`bin/security/trust-boundaries.js`) — `normalizeShell`
+  now strips bare `#` tokens after quote-stripping, blocking quoted-hash evasion (e.g.
+  `rm "#" -rf /`).
+- **Instinct import port allowlist** (`bin/learning/lib/ssrf-guard.js`) — `validateImportUrl`
+  enforces an `ALLOWED_IMPORT_PORTS` allowlist (`{'', '443'}`), blocking attempts to reach
+  internal services (Redis `:6379`, Mongo `:27017`, etc.) on otherwise-allowed public hosts.
+
 ## [11.4.0] - 2026-06-06 — Claude Code plugin distribution
 
 MindForge is now installable as a native **Claude Code plugin** from a marketplace, in

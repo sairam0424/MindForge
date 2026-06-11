@@ -1,5 +1,91 @@
 # Release Notes
 
+## v11.5.0 — Governance hardening + autonomous-engine repair
+
+**Release Date**: 2026-06-11
+**Type**: Minor (one behavior change — see "Heads-up" below)
+**Upgrade Path**: `npx mindforge-cc@latest`
+
+This release consolidates four waves of work into a single minor: new orchestration and
+learning primitives, a broad governance/security hardening pass, and — most importantly —
+a repair that takes the autonomous engine from "crashes on every wave" to actually
+functional. Some new pieces ship deliberately **inert** (present but not wired in); those
+are called out so you know not to expect new behavior from them yet.
+
+### Heads-up — Tier-3 approvals now fail closed (the one behavior change)
+
+`bin/governance/approve.js` no longer rubber-stamps approvals. Tier-3 approvals now
+**require GPG verification** and will **fail before writing any record** if no GPG key is
+configured. If you relied on the old, unverified path, you have two choices:
+
+- Configure a GPG key (recommended), or
+- Set `MINDFORGE_ALLOW_UNVERIFIED_APPROVAL=1` to keep the old behavior — in which case the
+  approval record is written with `verified: false` so the gap is auditable.
+
+This is the only item in v11.5.0 that can change an existing workflow's outcome.
+
+### The autonomous engine is functional again
+
+`/mindforge:auto` was effectively broken. Three fixes in `bin/autonomous/auto-runner.js`
+bring it back:
+
+- **No more per-wave crash.** The runner was calling a non-existent `getIdentity()` on the
+  ZTAI singleton and dying on every wave. It now establishes identity through the real
+  `registerAgent` API (`_getRunnerIdentity()`).
+- **The policy gate actually enforces now.** The async policy verdict was never `await`ed,
+  so the gate silently allowed everything. It now awaits `policyEngine.evaluate(intent)` on
+  every wave.
+- **It fails closed.** If runner identity can't be established, the gate now **denies and
+  audits** (`auto_mode_denied`) rather than running ungoverned.
+
+### Security & governance hardening
+
+- **SSRF guard hardened (twice).** The import-URL guard now closes an IPv6 link-local
+  bypass and a symlink path-traversal bypass via numeric bitmask + canonical-path checks.
+  Separately, remote instinct imports now enforce a port allowlist (`443`/none only), so an
+  attacker can no longer pivot through an allowed public host to reach internal services
+  like Redis (`:6379`) or Mongo (`:27017`).
+- **Persona supply-chain scan.** Persona asset validation now flags dangerous invisible
+  unicode (zero-width, bidi overrides, Unicode tags) across `.mindforge/personas`, closing
+  an ASCII-smuggling injection vector.
+- **Destructive-command detector closed an evasion.** Quoted-hash tricks like
+  `rm "#" -rf /` are now caught.
+- **Federated memory sync works again.** `eis-client`'s `getAuthHeader` was throwing on
+  every call; it now correctly registers a node identity and signs requests, so sync to
+  non-localhost EIS endpoints functions.
+- **RBAC fails safe.** Tier elevation no longer throws for unregistered agents and resolves
+  tiers through the correct ZTAI API.
+- **Fail-closed contracts are now tested.** New `trust-verifier` and `rbac-manager` test
+  suites lock in identity-verification and tier-authorization behavior so future governance
+  changes can't quietly regress them.
+
+### Learning & cost routing
+
+- **New instinct CLI** — `/mindforge:instinct` manages the JSONL instinct store
+  deterministically (no LLM spawn): `list`, `export`, `import`, `promote-candidates`, and
+  `prune`.
+- **Instinct store schema** gains `project_id` (stable scoping) and a `source` field
+  (`auto-capture`/`manual`/`imported`/`observer`), with origin-weighted confidence —
+  auto-captured instincts start at `0.3`, manually added ones at `0.7`.
+- **Cost-routing shadow mode is now real.** Arbitrage steering respects
+  `cost_routing.shadow_mode` (default on); in observe-only mode, selections are returned as
+  `authoritative: false` and logged as SHADOW, so you can watch the router's
+  recommendations without it taking the wheel.
+
+### Shipped inert (no behavior change yet)
+
+These landed as scaffolding and are **not** wired into any live path — they do nothing
+until a follow-up enables them:
+
+- **Manifest-driven install resolver** (`install-manifests.js`) — profile-to-module
+  expansion and dependency detection are implemented, but the adapter into the installer's
+  live `install()` path is deferred.
+- **GAN-style harness personas** (`gan-evaluator`, `gan-generator`, `gan-planner`) — fully
+  scoped and documented, not yet attached to any command or workflow.
+- **Typed Inter-Agent Message Protocol** (`handoff-schema.js`) — an internal orchestration
+  primitive (five message kinds, four priority levels, validation) for upcoming
+  agent-handoff work.
+
 ## v11.3.1 — Packaging hotfix
 
 **Release Date**: 2026-06-05
