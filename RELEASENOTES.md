@@ -27,8 +27,11 @@ line could crash them:
 
 - **The CI Tier-3 gate now actually validates approvals.** Previously it only
   counted approval files; a hand-committed empty file would pass. It now requires
-  at least one approval with `identity_verification.verified === true` plus a
-  signature, and rejects unverified/empty files — completing the v11.5.0
+  each approval to carry a signature and be EITHER GPG-verified
+  (`verified: true`) OR an explicitly opted-in unverified approval
+  (`unverified_ack`, minted by `approve.js` under
+  `MINDFORGE_ALLOW_UNVERIFIED_APPROVAL=1` for repos without GPG infra). Bare or
+  stale `verified:false` files are still rejected — completing the v11.5.0
   fail-closed `approve.js` work.
 - **Dashboard approvals can't forge an identity.** `POST /api/approve/:id` no
   longer records a client-supplied `approver` into the audit trail; it attributes
@@ -37,6 +40,10 @@ line could crash them:
 - **The destructive-command guard now blocks Unix `truncate -s`.** In-place file
   zeroing (`truncate -s 0 <path>`) was missed by the SQL-only pattern; it is now
   gated, with benign uses unaffected.
+- **A shipped module that couldn't load is fixed.** `bin/review/ads-engine.js`
+  required the uninstalled `uuid` package — so it (and the `federated-sync` that
+  imports it) threw on load in a clean install. Swapped to the built-in
+  `crypto.randomUUID()`; no new dependency.
 
 ## v11.5.0 — Governance hardening + autonomous-engine repair
 

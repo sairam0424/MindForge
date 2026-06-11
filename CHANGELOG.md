@@ -34,6 +34,16 @@ CI governance-gate gap, and tightens two security surfaces. No new features.
 - **Destructive-command detector blocks Unix `truncate`** (`bin/security/trust-boundaries.js`)
   — the SQL-only `truncate table` pattern missed `truncate -s 0 <path>` (in-place
   file zeroing). Added a size-flag pattern so it is gated; benign uses stay allowed.
+- **CI Tier-3 gate accepts an explicitly-acknowledged unverified approval**
+  (`.github/workflows/control-plane.yml`, `bin/governance/approve.js`) — since this
+  repo has no GPG signing infra, the gate accepts an approval that is either
+  GPG-verified OR an opted-in `unverified_ack` record (`approve.js` under
+  `MINDFORGE_ALLOW_UNVERIFIED_APPROVAL=1`), while still rejecting bare/stale
+  `verified:false` files. Replaced the stale v11.4.0 approval with a fresh one.
+- **`uuid` dependency removed from `ads-engine`** (`bin/review/ads-engine.js`) — it
+  required the uninstalled `uuid` package, making `ads-engine` and (transitively)
+  `federated-sync` un-loadable in a clean install. Swapped to the built-in
+  `crypto.randomUUID()` (zero-native-deps); both modules now load.
 
 ## [11.5.0] - 2026-06-11 — Governance hardening + autonomous-engine repair (Waves 4–7)
 
