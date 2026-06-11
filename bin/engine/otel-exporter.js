@@ -4,6 +4,18 @@
  * Translates NexusTracer spans to OpenTelemetry GenAI semantic conventions.
  * Active only when OTEL_EXPORTER_OTLP_ENDPOINT is set.
  *
+ * WIRING STATUS — INTENTIONALLY NOT YET WIRED (deferred to a future telemetry milestone).
+ * This module is a standalone, additive, opt-in primitive. As of v11.5.x `exportSpan`
+ * has NO production callers: NexusTracer (bin/engine/nexus-tracer.js) keeps AUDIT.jsonl
+ * as its sole local sink (per the UC-18 plan: "additive, no change to local AUDIT sink").
+ * It is NOT auto-invoked on span-end, and no live OTel run-telemetry feed exists yet —
+ * `exportSpan` is still a placeholder that appends to a local .jsonl rather than POSTing
+ * to OTLP (see exportSpan below). The zero-caller state is BY DESIGN, not dead code.
+ * Do NOT delete: the translation helpers (isEnabled/toOtelSpan/toJsonSafe) are real,
+ * tested, working code an operator/integrator can opt into. To finish UC-18, a future
+ * milestone should add a real OTLP transport and a SINGLE call site in
+ * NexusTracer.endSpan(), gated behind isEnabled() so it stays a no-op by default.
+ *
  * NexusTracer span shape (from nexus-tracer.js startSpan/endSpan):
  *   {
  *     id: 'sp_<hex>',
