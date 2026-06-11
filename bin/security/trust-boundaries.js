@@ -79,8 +79,18 @@ const IFS_TOKEN = /\$\{IFS\}|\$IFS/g;
 /**
  * De-obfuscates shell metacharacter tricks WITHOUT emulating a real shell.
  * Strips quotes (' ") and backslash escapes, collapses ${IFS}/$IFS to a space,
- * then collapses runs of whitespace. This turns r''m, r"m, r\m and
- * rm${IFS}-rf${IFS}/ back into plain `rm -rf /` so the existing patterns fire.
+ * removes bare `#` tokens, then collapses runs of whitespace. This turns r''m,
+ * r"m, r\m, rm${IFS}-rf${IFS}/ and the quoted-hash evasion rm "#" -rf / back
+ * into plain `rm -rf /` so the existing patterns fire.
+ *
+ * The `#` step closes a real bypass (audit, Wave 6): quote-stripping turns the
+ * DESTRUCTIVE `rm "#" -rf /` (in bash, "#" is a literal arg, so rm -rf / runs)
+ * into `rm # -rf /`, where the bare `#` sat between `rm` and its flags and broke
+ * the regex. We drop standalone `#` tokens (a `#` delimited by whitespace/start/
+ * end) so the de-obfuscated form collapses to `rm -rf /` and matches. We do NOT
+ * strip `#`-to-end-of-line (that would swallow flags after a genuine comment and
+ * could MASK a destructive prefix); only the lone token is removed.
+ *
  * Intentionally conservative: it removes characters rather than interpreting
  * them, which can only make a string MORE likely to match (fail-toward-block).
  */
@@ -89,7 +99,9 @@ function normalizeShell(input) {
     .split(NUL).join('')          // shells ignore NUL; never let it split a token
     .replace(IFS_TOKEN, ' ')       // ${IFS}/$IFS -> space
     .replace(/[\\'"]/g, '')        // drop backslash escapes and quote chars
-    .replace(/\s+/g, ' ');         // collapse whitespace runs
+    .replace(/(^|\s)#(?=\s|$)/g, '$1') // drop bare `#` tokens (post-unquote evasion)
+    .replace(/\s+/g, ' ')          // collapse whitespace runs
+    .trim();
 }
 
 /**

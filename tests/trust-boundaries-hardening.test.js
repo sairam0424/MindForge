@@ -172,6 +172,28 @@ test('#8 NEGATIVE: normalization does not flag benign quoted echo', () => {
   assert.strictEqual(isHighImpact(j('git commit -m ', DQ, 'remove dead code', DQ)), false);
 });
 
+// ── Wave 6: quoted-# evasion of the rm -rf detector ───────────────────────────
+// In bash a QUOTED `#` is a literal argument, so `rm "#" -rf /` actually runs
+// rm -rf /. The old normalizeShell stripped the quotes but left the bare `#`
+// between `rm` and `-rf`, breaking the regex. The fix drops bare `#` tokens.
+const HASH = String.fromCharCode(35); // #
+test('#8b de-obfuscates the quoted-hash evasion rm "#" -rf /', () => {
+  const cmd = j(RM, ' ', DQ, HASH, DQ, ' ', RF, ' ', SLASH);
+  assert.strictEqual(isHighImpact(cmd), true, 'rm "#" -rf / (destructive in bash) must be blocked');
+});
+
+test('#8b de-obfuscates a single-quoted-hash evasion', () => {
+  const cmd = j(RM, ' ', SQ, HASH, SQ, ' ', RF, ' ', SLASH);
+  assert.strictEqual(isHighImpact(cmd), true, 'single-quoted-hash rm -rf / must be blocked');
+});
+
+test('#8b NEGATIVE: a # inside a quoted message/arg does not cause false positives', () => {
+  // These are NOT destructive commands; the bare-# strip must not over-match.
+  assert.strictEqual(isHighImpact(j('git commit -m ', DQ, 'fix ', HASH, '123', DQ)), false);
+  assert.strictEqual(isHighImpact(j('grep ', DQ, HASH, 'define', DQ, ' file.c')), false);
+  assert.strictEqual(isHighImpact(j('echo ', DQ, 'a ', HASH, ' b', DQ)), false);
+});
+
 // ── #9 chmod dangerous modes ──────────────────────────────────────────────────
 test('#9 detects chmod with dangerous octal modes', () => {
   assert.strictEqual(isHighImpact(j(CHMOD, ' -R 000 ', ETC)), true);
