@@ -8,6 +8,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { atomicWriteJSON } = require('../utils/file-io');
 
 class ConfigManager {
   constructor() {
@@ -68,7 +69,11 @@ class ConfigManager {
       if (!fs.existsSync(path.dirname(this.configPath))) {
         fs.mkdirSync(path.dirname(this.configPath), { recursive: true });
       }
-      fs.writeFileSync(this.configPath, JSON.stringify(this.config, null, 2));
+      // Atomic write (temp + fsync + rename) via the shared helper — a crash or
+      // concurrent read mid-write can never observe a truncated/partial config.json.
+      // Reuses bin/utils/file-io.atomicWriteJSON (also used by state-manager) rather
+      // than a bare writeFileSync.
+      atomicWriteJSON(this.configPath, this.config);
     } catch (err) {
       console.error(`[ConfigManager] Failed to save config: ${err.message}`);
     }
