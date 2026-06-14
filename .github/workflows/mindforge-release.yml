@@ -74,6 +74,25 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      # Standalone MCP server — published as its own public package (mindforge-mcp-server)
+      # so it can be listed on the official MCP Registry, Docker MCP Catalog, PulseMCP, etc.
+      # The same bundle is also vendored into the Claude Code plugin; this publish is additive.
+      - name: Publish standalone MCP server to npm
+        id: mcp_publish
+        working-directory: mcp-server
+        run: |
+          MCP_VER="$(node -p "require('./package.json').version")"
+          PUBLISHED="$(npm view "mindforge-mcp-server@${MCP_VER}" version 2>/dev/null || true)"
+          if [ -n "${PUBLISHED}" ]; then
+            echo "::notice::mindforge-mcp-server@${MCP_VER} already on npm — skipping"
+            exit 0
+          fi
+          npm install --no-audit --no-fund
+          npm run build
+          npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:

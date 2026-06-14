@@ -13,9 +13,12 @@ await build({
   target: 'node18',
   format: 'cjs',
   outfile: 'dist/index.js',
-  // No shebang: the server is always launched as `node dist/index.js` (per .mcp.json), so a
-  // shebang is unnecessary. We intentionally omit both an esbuild banner AND a source shebang
-  // — having both produced two shebang lines, and the second parsed as code (SyntaxError).
+  // Single shebang via esbuild banner ONLY (the source file has none). This makes the
+  // standalone npm `bin` (mindforge-mcp / npx mindforge-mcp) directly executable, while the
+  // plugin path (`node dist/index.js`, per .mcp.json) is unaffected — Node ignores the
+  // shebang line. Never add a source-level shebang too: two shebangs => the second parses
+  // as code (SyntaxError), which is the failure this comment originally guarded against.
+  banner: { js: '#!/usr/bin/env node' },
   // Node built-ins are external by default on platform:node; nothing else is external,
   // so the two deps + their tree are inlined into the single output file.
   logLevel: 'info',
