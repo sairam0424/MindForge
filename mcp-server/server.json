@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.sairam0424/mindforge",
-  "description": "Read the MindForge engine from any MCP host: query the knowledge graph, find related memory, check project health, and read the audit log (plus a guarded memory write).",
+  "description": "Read the MindForge engine over MCP: knowledge graph, project health, and audit log.",
   "version": "11.5.1",
   "repository": {
     "url": "https://github.com/sairam0424/MindForge",
