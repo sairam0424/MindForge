@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-MindForge (`mindforge-cc`, v11.4.0) is an agentic-intelligence framework for Claude Code / Antigravity: it installs slash commands, subagents, skills, hooks, and a Node runtime that add governance, memory, cost-aware model routing, and autonomous wave execution to AI-driven development. It ships as an npm package (`npx mindforge-cc@latest`) and a Claude Code plugin marketplace. Pure JS runtime + a separate TypeScript SDK; **zero native deps** (persistence is sql.js / WASM SQLite).
+MindForge (`mindforge-cc`, v11.5.1) is an agentic-intelligence framework for Claude Code / Antigravity: it installs slash commands, subagents, skills, hooks, and a Node runtime that add governance, memory, cost-aware model routing, and autonomous wave execution to AI-driven development. It ships as an npm package (`npx mindforge-cc@latest`) and a Claude Code plugin marketplace. Pure JS runtime + a separate TypeScript SDK; **zero native deps** (persistence is sql.js / WASM SQLite).
 
 ## Commands
 
