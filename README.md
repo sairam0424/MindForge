@@ -4,8 +4,9 @@
 
 ---
 
-## Latest: v11.3.1
+## Latest: v11.5.1
 
+- **v11.5.1 — Standalone MCP server.** The MindForge MCP server now ships as its own npm package, `mindforge-mcp-server@11.5.1`, listed on the official MCP Registry as `io.github.sairam0424/mindforge`. Add it to Claude Code with one command (see [Use the MCP server](#-use-the-mcp-server-standalone)); it exposes 7 tools over stdio (6 read-only + 1 guarded write). `mindforge-cc` is also at 11.5.1.
 - **v11.3.1 — Packaging hotfix.** Restores the full published payload: every `npx mindforge-cc` install now delivers all 174 slash commands, 73 skills, 154 subagents, and the complete `.mindforge/` framework. (v11.3.0 shipped a too-narrow npm allowlist that silently dropped commands and skills — fixed here, with a tarball regression test so it cannot recur.)
 - **v11.3.0 — "Legion".** Imports 154 specialized Claude-Code-native subagents across 10 categories into `.claude/agents/`, fully rebranded and collision-safe. Additive and backward-compatible.
 
@@ -73,6 +74,29 @@ npx mindforge-cc@latest --claude --local
 # For Antigravity
 npx mindforge-cc@latest --antigravity --local
 ```
+
+### 🔗 Use the MCP server (standalone)
+
+The MindForge MCP server is published as its own npm package,
+**`mindforge-mcp-server`** (`11.5.1`), and is listed on the official
+[MCP Registry](https://registry.modelcontextprotocol.io) as
+`io.github.sairam0424/mindforge`. Wire it into Claude Code with one command:
+
+```bash
+claude mcp add mindforge -- npx -y mindforge-mcp-server
+```
+
+It exposes **7 tools over stdio** — 6 read-only plus 1 guarded write:
+
+| Tool | Purpose |
+| :--- | :--- |
+| `mindforge_health` | Framework health check |
+| `mindforge_status` | Project status snapshot |
+| `mindforge_memory_query` | Query the knowledge graph |
+| `mindforge_memory_stats` | Knowledge graph statistics |
+| `mindforge_memory_find_related` | Find related knowledge entries |
+| `mindforge_audit_log` | Read the append-only audit trail |
+| `mindforge_memory_remember` | Persist a memory (guarded write) |
 
 ---
 

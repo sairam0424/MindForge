@@ -1,4 +1,4 @@
-# MindForge — Getting Started (v11.3.1)
+# MindForge — Getting Started (v11.5.1)
 
 This guide gets you from zero to a working MindForge project in under five minutes.
 
@@ -9,20 +9,57 @@ This guide gets you from zero to a working MindForge project in under five minut
 
 ## Install
 
-MindForge is installed via `npx` for zero-config setup:
+MindForge ships across several channels. Pick the one that matches how you work — the CLI installer is the recommended starting point.
+
+### 1. CLI installer (recommended, via `npx`)
+
+Zero-config setup that scaffolds the full framework:
 
 ```bash
 # Recommended (auto-detects your runtime)
-npx mindforge-cc
+npx mindforge-cc@latest
 
 # Antigravity (local development)
-npx mindforge-cc --antigravity --local
+npx mindforge-cc@latest --antigravity --local
 
 # Claude Code (local, per project)
-npx mindforge-cc --claude --local
+npx mindforge-cc@latest --claude --local
 ```
 
 After installation, the `mindforge` CLI command is available for runtime operations (health checks, security scans, headless execution, etc.).
+
+### 2. Claude Code plugin (self-hosted marketplace)
+
+Install MindForge as a Claude Code plugin from its marketplace:
+
+```bash
+/plugin marketplace add sairam0424/MindForge
+/plugin install mindforge@mindforge
+```
+
+### 3. Standalone MCP server
+
+Run the MindForge MCP server (`mindforge-mcp-server`) over stdio — it exposes 7 tools (6 read-only plus 1 guarded write): `mindforge_health`, `mindforge_status`, `mindforge_memory_query`, `mindforge_memory_stats`, `mindforge_memory_find_related`, `mindforge_audit_log`, and `mindforge_memory_remember`.
+
+```bash
+claude mcp add mindforge -- npx -y mindforge-mcp-server
+```
+
+This server is also published to the [MCP Registry](https://registry.modelcontextprotocol.io) as `io.github.sairam0424/mindforge` (currently `11.5.1`, marked latest).
+
+### 4. Homebrew
+
+```bash
+brew install sairam0424/tap/mindforge
+```
+
+### SDK
+
+To build on top of MindForge programmatically, install the TypeScript SDK:
+
+```bash
+npm i mindforge-sdk
+```
 
 ## Initialise Your Project
 
