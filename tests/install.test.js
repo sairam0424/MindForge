@@ -184,7 +184,7 @@ test('No secrets in any committed file', () => {
   // is not part of MindForge's committed tree. This test asserts on COMMITTED
   // files, so scanning gitignored donor trees is both wrong and a false-positive
   // source.
-  const SKIP_DIRS = ['node_modules', '.git', 'ECC', 'awesome-claude-code-subagents', '.serena'];
+  const SKIP_DIRS = ['node_modules', '.git', 'ECC', 'awesome-claude-code-subagents', '.serena', 'hermes-agent'];
 
   // Obvious placeholder tokens. A "secret-shaped" match that contains one of
   // these is a pedagogical example (e.g. security rule docs that TEACH about
