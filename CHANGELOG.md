@@ -1,5 +1,48 @@
 # Changelog
 
+## [11.6.0] - 2026-06-17 — Skill Forge
+
+Largest single skill expansion in MindForge's history. Adds 80 community-sourced skills across 8 engineering domains with zero external attribution in any committed file. 30 skills are promoted to the engine tier for automatic trigger-matching; 50 live in the extended tier for explicit activation. Three new slash commands complete the discovery surface.
+
+### Added
+
+- **Engine-tier skills (auto-trigger, `.mindforge/skills/`)** — 30 new skills activated automatically when task description matches trigger phrases:
+  - *Software development:* `systematic-debugging` (4-phase root-cause methodology), `test-driven-development` (RED-GREEN-REFACTOR), `plan` (implementation planning), `simplify-code`, `requesting-code-review`, `spike`, `subagent-driven-development`, `code-wiki`
+  - *DevOps & orchestration:* `kanban-orchestrator`, `kanban-worker` (multi-agent task routing)
+  - *GitHub workflows:* `github-code-review`, `github-pr-workflow`, `github-issues`, `codebase-inspection`
+  - *Research & intelligence:* `research-paper-writing`, `arxiv`, `osint-investigation`, `domain-intel`, `duckduckgo-search`, `scrapling`, `blogwatcher`
+  - *Creative:* `concept-diagrams` (SVG educational visuals), `creative-ideation`, `pixel-art`, `meme-generation`
+  - *Security:* `web-pentest` (authorized penetration testing), `oss-forensics`, `sherlock`
+  - *Data-science & note-taking:* `jupyter-live-kernel`, `obsidian`
+
+- **Extended-tier skills (explicit activation, `.agent/skills/`)** — 20 additional skills beyond the promoted 30:
+  - *Software development:* `node-inspect-debugger`, `python-debugpy`, `skill-authoring`, `rest-graphql-debug`
+  - *GitHub:* `github-auth`, `github-repo-management`
+  - *DevOps:* `docker-management`, `devops-cli`, `devops-watchers`, `pinggy-tunnel`, `s6-container-supervision`
+  - *Research:* `llm-wiki`, `polymarket`, `parallel-cli`
+  - *Security:* `godmode`, `1password-skill`
+  - *Creative:* `hyperframes`, `article-illustrator`, `comic-creator`, `video-orchestrator`
+
+- **3 new slash commands:**
+  - `/mindforge:systematic-debug` — 4-phase root-cause debugging (no fixes without RCA)
+  - `/mindforge:skill-tdd` — strict RED-GREEN-REFACTOR TDD enforcement
+  - `/mindforge:skills-index` — browseable catalog of all 153 skills grouped by category
+
+### Changed
+
+- `tests/install.test.js` — added `hermes-agent` to secret-scanner skip list (gitignored donor directory)
+- `CLAUDE.md` — new **Extended Skill Library** section documents both skill tiers, trigger mechanics, and bulk import pattern
+
+### Skill counts
+
+| Tier | Before | After |
+|---|---|---|
+| Engine tier (`.mindforge/skills/`) | 202 | 232 |
+| Extended tier (`.agent/skills/`) | 73 | 123 |
+| Slash commands | 174 | 177 |
+
+---
+
 ## [11.5.1] - 2026-06-11 — Robustness + governance-gate patch (Wave 8)
 
 A fast-follow patch from a fresh adversarial audit of the shipped v11.5.0 tree.
