@@ -96,12 +96,49 @@ class StuckMonitor {
     return identical.length >= 3;
   }
 
-  isContentSimilar(a, b) {
+  isContentSimilar(a, b, threshold = 10) {
     if (!a || !b) return false;
     if (a === b) return true;
-    // Simple similarity check (hardened from Roadmap requirement)
-    const dist = this.levenshtein(a.slice(0, 100), b.slice(0, 100));
-    return dist < 10;
+
+    const hashA = this._quickHash(a);
+    const hashB = this._quickHash(b);
+    if (hashA === hashB) return true;
+
+    const lenDiff = Math.abs(a.length - b.length);
+    if (lenDiff > Math.max(a.length, b.length) * 0.2) return false;
+
+    const cached = this._getCachedSimilarity(hashA, hashB);
+    if (cached !== undefined) return cached;
+
+    const truncA = a.substring(0, 100);
+    const truncB = b.substring(0, 100);
+    const result = this.levenshtein(truncA, truncB) <= threshold;
+
+    this._setCachedSimilarity(hashA, hashB, result);
+    return result;
+  }
+
+  _quickHash(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash = hash & hash;
+    }
+    return hash;
+  }
+
+  _getCachedSimilarity(keyA, keyB) {
+    const key = keyA < keyB ? `${keyA}|${keyB}` : `${keyB}|${keyA}`;
+    return StuckMonitor._similarityCache.get(key);
+  }
+
+  _setCachedSimilarity(keyA, keyB, result) {
+    const key = keyA < keyB ? `${keyA}|${keyB}` : `${keyB}|${keyA}`;
+    if (StuckMonitor._similarityCache.size >= 200) {
+      const firstKey = StuckMonitor._similarityCache.keys().next().value;
+      StuckMonitor._similarityCache.delete(firstKey);
+    }
+    StuckMonitor._similarityCache.set(key, result);
   }
 
   levenshtein(a, b) {
@@ -109,12 +146,14 @@ class StuckMonitor {
     for (let i = 0; i <= a.length; i++) { tmp[i] = [i]; }
     for (let j = 0; j <= b.length; j++) { tmp[0][j] = j; }
     for (let i = 1; i <= a.length; i++) {
-        for (let j = 1; j <= b.length; j++) {
-            tmp[i][j] = Math.min(tmp[i - 1][j] + 1, tmp[i][j - 1] + 1, tmp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
-        }
+      for (let j = 1; j <= b.length; j++) {
+        tmp[i][j] = Math.min(tmp[i - 1][j] + 1, tmp[i][j - 1] + 1, tmp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      }
     }
     return tmp[a.length][b.length];
   }
 }
+
+StuckMonitor._similarityCache = new Map();
 
 module.exports = StuckMonitor;

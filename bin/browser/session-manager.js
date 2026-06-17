@@ -7,7 +7,6 @@
 
 const fs   = require('fs');
 const path = require('path');
-const os   = require('os');
 
 const SESSIONS_DIR = path.join(process.cwd(), '.mindforge', 'browser', 'sessions');
 const ensureDir = () => fs.mkdirSync(SESSIONS_DIR, { recursive: true });
@@ -71,23 +70,28 @@ async function loadSession(name, context) {
   return { cookiesLoaded };
 }
 
+/**
+ * Import cookies/sessions directly from a native browser profile.
+ *
+ * NOT IMPLEMENTED: native browser cookie DB import was removed together with
+ * the `better-sqlite3` dependency (the project now uses sql.js / WASM). Browser
+ * cookie stores are SQLite databases, and decoding them required that native
+ * backend. Rather than silently returning an empty array — which would lie about
+ * capability and let callers mistake "no cookies imported" for success — this
+ * method throws so the missing capability is explicit.
+ *
+ * To populate a session, capture cookies live via a browser context and use
+ * `saveSession` / `loadSession` instead.
+ *
+ * @param {string} source - Browser identifier (chrome, arc, brave, edge).
+ * @throws {Error} Always — native browser cookie import is not implemented.
+ */
 function importFromBrowser(source) {
-  const home = os.homedir();
-  const paths = {
-    chrome: `${home}/Library/Application Support/Google/Chrome/Default/Cookies`,
-    arc: `${home}/Library/Application Support/Arc/User Data/Default/Cookies`,
-    brave: `${home}/Library/Application Support/BraveSoftware/Brave-Browser/Default/Cookies`,
-    edge: `${home}/Library/Application Support/Microsoft Edge/Default/Cookies`,
-  };
-
-  const p = paths[source.toLowerCase()];
-  if (!p || !fs.existsSync(p)) {
-    throw new Error(`Cookie file for ${source} not found at ${p}`);
-  }
-
-  // Real SQLite parsing would happen here via better-sqlite3 if installed.
-  // This is a placeholder for the logic specified in the roadmap.
-  return [];
+  throw new Error(
+    `importFromBrowser not implemented for "${source}": the native browser ` +
+    'cookie-DB backend (better-sqlite3) was removed project-wide. ' +
+    'Capture cookies live via a browser context and use saveSession/loadSession instead.'
+  );
 }
 
 module.exports = { saveSession, loadSession, importFromBrowser };

@@ -85,3 +85,60 @@ export interface AuditLogEntry {
   phase?: number;
   [key: string]: unknown;
 }
+
+/** v9 Pillar XXIV: Result from a wave execution cycle */
+export interface WaveExecutionResult {
+  phase: number;
+  waveIndex: number;
+  tasksCompleted: number;
+  tasksTotal: number;
+  tasksFailed: string[];
+  durationMs: number;
+  status: 'completed' | 'partial' | 'failed' | 'escalated';
+}
+
+/** v9 Pillar XXVII: Result from a schema migration run */
+export interface MigrationResult {
+  status: 'migrated' | 'no-migration-needed' | 'no-planning-dir' | 'no-files' | 'no-migrations';
+  from?: string;
+  to?: string;
+  migrationsApplied?: string[];
+  backupDir?: string;
+}
+
+/** v11 Phase 5B: Streaming execution chunk from WebSocket event stream */
+export interface StreamChunk {
+  type: 'content' | 'tool_use' | 'thinking' | 'done';
+  content?: string;
+  toolName?: string;
+  toolInput?: Record<string, unknown>;
+  finishReason?: 'end_turn' | 'max_tokens' | 'stop_sequence';
+}
+
+/** v11 Phase 5B: Result handle for a streaming execution */
+export interface StreamingExecutionResult {
+  phaseId: number;
+  taskId: string;
+  stream: AsyncIterable<StreamChunk>;
+}
+
+/** v11 Phase 5B: Request payload for batch execution */
+export interface BatchExecutionRequest {
+  tasks: Array<{
+    id: string;
+    command: string;
+    options?: Record<string, unknown>;
+  }>;
+  maxConcurrency?: number;
+}
+
+/** v11 Phase 5B: Aggregated result from batch execution */
+export interface BatchExecutionResult {
+  results: Array<{
+    taskId: string;
+    status: 'fulfilled' | 'rejected';
+    result?: unknown;
+    error?: string;
+  }>;
+  totalDurationMs: number;
+}

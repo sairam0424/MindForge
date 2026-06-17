@@ -15,24 +15,41 @@ class IntelligenceInterlock {
     this.UPGRADE_THRESHOLD = 0.50; // v6.3.0 Threshold (Recalibrated for IDC readiness)
   }
 
-  /**
-   * Evaluates if a model upgrade is required based on reasoning drift.
-   * @param {string} spanId 
-   * @param {string} thought 
-   */
   evaluate(spanId, thought) {
-    const analysis = driftDetector.analyze(spanId, thought);
-    
-    if (analysis.drift_score > this.UPGRADE_THRESHOLD) {
-      console.log(`[IDC] Critical Drift Detected (${analysis.drift_score}). Recommending intelligence upgrade for Span ${spanId}.`);
-      return {
-        action: 'UPGRADE_MIR',
-        new_mir: 99, // Force maximum intelligence (Tier 1+)
-        reason: analysis.markers
-      };
+    const driftReport = driftDetector.analyze(spanId, thought);
+    const driftScore = driftReport.drift_score;
+
+    if (driftScore <= this.UPGRADE_THRESHOLD) {
+      return { action: 'CONTINUE', drift_score: driftScore };
     }
 
-    return { action: 'CONTINUE', drift: analysis.drift_score };
+    let tierIncrease;
+    if (driftScore > 0.80) {
+      tierIncrease = 'MAX';
+    } else if (driftScore > 0.65) {
+      tierIncrease = 2;
+    } else {
+      tierIncrease = 1;
+    }
+
+    let costWarning = false;
+    try {
+      const CostTracker = require('../models/cost-tracker');
+      const dailySpend = CostTracker.getDailySpend ? CostTracker.getDailySpend() : 0;
+      const hardLimit = CostTracker.getHardLimit ? CostTracker.getHardLimit() : Infinity;
+      if (dailySpend / hardLimit > 0.8) {
+        costWarning = true;
+        tierIncrease = Math.min(tierIncrease === 'MAX' ? 3 : tierIncrease, 1);
+      }
+    } catch { /* cost tracker unavailable */ }
+
+    return {
+      action: 'UPGRADE_MIR',
+      tier_increase: tierIncrease,
+      drift_score: driftScore,
+      cost_constrained: costWarning,
+      reason: driftReport.markers
+    };
   }
 }
 

@@ -75,11 +75,20 @@ function register(app) {
   app.post('/api/approve/:id', (req, res) => {
     try {
       const { id }                  = req.params;
-      const { decision, comment, approver } = req.body || {};
+      const { decision, comment }   = req.body || {};
 
       if (!decision) {
         return res.status(400).json({ error: 'Missing "decision" field (approve|reject)' });
       }
+
+      // SECURITY (v11.5.1): do NOT trust a client-supplied `approver` for the
+      // recorded identity — it is forgeable and would let any caller write a
+      // false approval audit trail (e.g. resolved_by: 'admin'). requireAuth
+      // (server.js) proves the caller holds the owner-only dashboard token but
+      // exposes no named principal, so we attribute the action to a FIXED
+      // trusted actor. (A future RBAC pass can map a Bearer token -> DID and
+      // record the real principal; until then, never echo req.body.approver.)
+      const approver = 'dashboard-authenticated';
 
       const result = Approval.processDecision(id, decision, comment, approver);
 
@@ -130,18 +139,29 @@ function register(app) {
   });
 
   // ── Steering (requires auto mode running) ───────────────────────────────────
+  const VALID_STEER_ACTIONS = ['pause', 'resume', 'switch_phase', 'priority_bump', 'skip_task', 'abort'];
+
   app.post('/api/steer', (req, res) => {
     try {
-      const { instruction, priority = 'normal' } = req.body || {};
+      const { action, params = {} } = req.body || {};
 
-      if (!instruction || typeof instruction !== 'string') {
-        return res.status(400).json({ error: 'Missing "instruction" field' });
+      // Validate action is present and in allowlist
+      if (!action || typeof action !== 'string') {
+        return res.status(400).json({
+          error: `Invalid action. Valid actions: ${VALID_STEER_ACTIONS.join(', ')}`
+        });
       }
-      if (instruction.length > 500) {
-        return res.status(400).json({ error: 'Instruction too long (max 500 chars)' });
+      if (!VALID_STEER_ACTIONS.includes(action)) {
+        return res.status(400).json({
+          error: `Invalid action. Valid actions: ${VALID_STEER_ACTIONS.join(', ')}`
+        });
       }
-      if (!['normal', 'urgent', 'stop'].includes(priority)) {
-        return res.status(400).json({ error: 'Invalid priority. Use: normal|urgent|stop' });
+
+      // If params contains freeText, cap at 200 characters
+      if (params.freeText && typeof params.freeText === 'string') {
+        if (params.freeText.length > 200) {
+          return res.status(400).json({ error: 'params.freeText exceeds 200 character limit' });
+        }
       }
 
       // Check auto mode is running
@@ -153,24 +173,12 @@ function register(app) {
         return res.status(409).json({ error: 'Auto mode is not running. Steering has no effect.' });
       }
 
-      // Run injection guard
-      const INJECTION_PATTERNS = [
-        /IGNORE ALL PREVIOUS INSTRUCTIONS/i,
-        /DISREGARD YOUR INSTRUCTIONS/i,
-        /FORGET YOUR TRAINING/i,
-        /YOUR NEW INSTRUCTIONS ARE/i,
-        /OVERRIDE:/i,
-      ];
-      if (INJECTION_PATTERNS.some(p => p.test(instruction))) {
-        return res.status(400).json({ error: 'Instruction rejected: contains prohibited patterns' });
-      }
-
       // Write to steering queue
       const entry = {
         id:          require('crypto').randomBytes(8).toString('hex'),
         timestamp:   new Date().toISOString(),
-        instruction: instruction.trim(),
-        priority,
+        action,
+        params,
         authored_by: 'dashboard',
         applies_to:  'all',
         status:      'queued',
@@ -183,7 +191,7 @@ function register(app) {
       }
       fs.appendFileSync(STEERING_QUEUE, JSON.stringify(entry) + '\n');
 
-      res.json({ success: true, queued: true, id: entry.id, priority });
+      res.json({ success: true, queued: true, id: entry.id, action });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -192,6 +200,49 @@ function register(app) {
   // ── Client count (for dashboard connection indicator) ───────────────────────
   app.get('/api/connections', (req, res) => {
     res.json({ clients: SSE.getClientCount() });
+  });
+
+  // ── System observability ────────────────────────────────────────────────────
+  app.get('/api/v1/system', (req, res) => {
+    try {
+      const heapUsed = process.memoryUsage().heapUsed;
+      const heapTotal = process.memoryUsage().heapTotal;
+      const uptime = process.uptime();
+
+      let auditLines = 0;
+      try {
+        const auditPath = path.join(process.cwd(), '.planning', 'AUDIT.jsonl');
+        if (fs.existsSync(auditPath)) {
+          const content = fs.readFileSync(auditPath, 'utf8');
+          auditLines = content.split('\n').filter(l => l.trim()).length;
+        }
+      } catch { /* non-critical */ }
+
+      let snapshotCount = 0;
+      try {
+        const historyDir = path.join(process.cwd(), '.planning', 'history');
+        if (fs.existsSync(historyDir)) {
+          snapshotCount = fs.readdirSync(historyDir).length;
+        }
+      } catch { /* non-critical */ }
+
+      const heapHealth = Metrics.checkHeapHealth();
+
+      res.json({
+        heap_used_mb: Math.round(heapUsed / 1024 / 1024 * 100) / 100,
+        heap_total_mb: Math.round(heapTotal / 1024 / 1024 * 100) / 100,
+        heap_usage_pct: Math.round(heapUsed / heapTotal * 100),
+        heap_alert: heapHealth,
+        uptime_seconds: Math.round(uptime),
+        audit_lines: auditLines,
+        snapshot_count: snapshotCount,
+        sse_clients: SSE.getClientCount(),
+        node_version: process.version,
+        timestamp: new Date().toISOString()
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
   });
 }
 

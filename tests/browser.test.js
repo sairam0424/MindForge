@@ -1,3 +1,4 @@
+// @skip: requires Chromium daemon and display environment
 /**
  * MindForge v2 — Browser Runtime Verification Suite
  * Covers Daemon, Session, Visual Verify, and QA Engine.

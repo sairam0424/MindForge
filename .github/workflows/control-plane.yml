@@ -53,13 +53,48 @@ jobs:
       - name: Check Tier 3 Compliance
         if: needs.classify.outputs.tier == '3'
         run: |
-          APPROVAL_COUNT=$(ls .planning/approvals/*.json 2>/dev/null | wc -l)
-          if [ "$APPROVAL_COUNT" -eq 0 ]; then
-            echo "❌ ERROR: Tier 3 changes detected but no approval signature found in .planning/approvals/"
-            echo "Please run /mindforge:approve and commit the resulting approval file."
-            exit 1
-          fi
-          echo "✅ Tier 3 approval found."
+          # Tier-3 gate (v11.5.1): do NOT just count approval files — a hand-committed
+          # empty/fake file would pass a count check. An approval is ACCEPTED only if it
+          # is EITHER (a) GPG-verified (identity_verification.verified === true) OR
+          # (b) an EXPLICITLY acknowledged unverified approval — verified:false with
+          # method 'git_identity_unverified' AND unverified_ack === true, exactly what
+          # `approve.js` stamps under MINDFORGE_ALLOW_UNVERIFIED_APPROVAL=1 (this repo has
+          # no GPG signing infra yet). A bare/silent verified:false file WITHOUT the
+          # explicit ack — a stale pre-fail-closed record or a hand-forged empty one — is
+          # still REJECTED. Every committed approval must clear one of the two bars.
+          node -e '
+            const fs = require("fs"), path = require("path");
+            const dir = ".planning/approvals";
+            let files = [];
+            try { files = fs.readdirSync(dir).filter(f => f.endsWith(".json")); } catch { files = []; }
+            if (files.length === 0) {
+              console.error("❌ ERROR: Tier 3 changes detected but no approval found in .planning/approvals/");
+              console.error("Run /mindforge:approve and commit the approval file.");
+              process.exit(1);
+            }
+            let accepted = 0;
+            for (const f of files) {
+              let rec;
+              try { rec = JSON.parse(fs.readFileSync(path.join(dir, f), "utf8")); }
+              catch { console.error(`❌ ERROR: approval ${f} is not valid JSON`); process.exit(1); }
+              if (!rec.signature) {
+                console.error(`❌ ERROR: approval ${f} is missing its signature.`); process.exit(1);
+              }
+              const iv = rec && rec.identity_verification;
+              const isVerified = iv && iv.verified === true;
+              const isAckedUnverified = iv && iv.verified === false
+                && iv.method === "git_identity_unverified" && iv.unverified_ack === true;
+              if (!isVerified && !isAckedUnverified) {
+                console.error(`❌ ERROR: approval ${f} is UNVERIFIED and not explicitly acknowledged.`);
+                console.error("   Accepted: a GPG-verified approval (verified:true), OR an opted-in");
+                console.error("   unverified approval (approve.js with MINDFORGE_ALLOW_UNVERIFIED_APPROVAL=1).");
+                console.error("   A bare/stale verified:false record is rejected.");
+                process.exit(1);
+              }
+              accepted++;
+            }
+            console.log(`✅ Tier 3 approval present (${accepted} accepted approval file(s)).`);
+          '
 
       - name: Security Scan
         run: node bin/mindforge-cli.js security-scan

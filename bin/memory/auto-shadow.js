@@ -18,6 +18,8 @@ const path     = require('path');
 const Store    = require('./knowledge-store');
 const Graph    = require('./knowledge-graph');
 const Embedder = require('./embedding-engine');
+const Indexer  = require('./knowledge-indexer');
+const { fuseResults } = require('./retrieval-fusion');
 
 // ── Configuration ─────────────────────────────────────────────────────────────
 const MAX_SHADOW_CHARS  = 8000;    // ~2KB tokens
@@ -63,12 +65,39 @@ function generateShadowContext(opts = {}) {
 
   const { vectors, df, N } = Embedder.buildEmbeddings(activeEntries);
 
-  // 2. Hybrid query: embedding similarity + graph traversal
+  // 2. Multi-path retrieval with RRF fusion (UC-20)
+  //    Path 1: Knowledge Graph (embedding + graph traversal)
+  //    Path 2: Knowledge Indexer (BM25 + confidence)
+  //    Results are fused via Reciprocal Rank Fusion for scale-free merging.
   const queryText = `${taskDescription} ${techStack.join(' ')}`;
-  const related = Graph.findRelated(queryText, vectors, df, N, {
+  const fetchK = maxItems * 3; // Over-fetch for filtering headroom
+
+  const graphResults = Graph.findRelated(queryText, vectors, df, N, {
     maxHops: 2,
-    topK: maxItems * 2, // Over-fetch for filtering
+    topK: fetchK,
   });
+
+  let indexerResults = [];
+  try {
+    const rawIndexer = Indexer.search(queryText, { includeGlobal: true }, fetchK);
+    indexerResults = rawIndexer.map((entry, rank) => ({
+      id: entry.id,
+      score: entry.confidence || 0,
+      source: 'indexer',
+    }));
+  } catch {
+    // Indexer may fail on empty store — non-fatal
+  }
+
+  // RRF fusion: merge both ranked lists by ordinal position
+  const fusedResults = fuseResults([graphResults, indexerResults]);
+
+  // Map fused results back to the legacy shape expected downstream
+  const related = fusedResults.map(item => ({
+    id: item.id,
+    score: item.rrfScore, // RRF score replaces incomparable linear blends
+    source: item.source || 'fused',
+  }));
 
   // 3. Filter and enrich results
   const excludeSet = new Set(excludeIds);

@@ -1,4 +1,4 @@
-# Core Requirements Registry (MindForge v6.5.0)
+# Core Requirements Registry (MindForge v9.0.0)
 
 This registry contains the canonical requirements that all autonomous reasoning waves must align with. This file is parsed by the `ReasonSourceAligner` (RSA).
 
@@ -21,3 +21,15 @@ Every reasoning thought in an autonomous wave must be traceable back to at least
 ## [REQ-005] Zero-Trust Verification
 
 Implementation plans must include a verification phase with automated shell scripts or browser-based UAT to confirm success before claiming feature completion.
+
+## [REQ-006] Grounded Wave Execution
+
+The AutoRunner must parse HANDOFF.json wave groups and dispatch tasks with full audit trail persistence. Resume from auto-state.json must restore completed task state.
+
+## [REQ-007] Model Topology Currency
+
+All model references must use current-generation identifiers. Provider routing must use prefix matching, not substring matching.
+
+## [REQ-008] Unified Persistence
+
+All knowledge and graph data must be queryable via a single SQLite database with FTS5 search indexes.

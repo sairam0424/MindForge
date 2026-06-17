@@ -1,6 +1,6 @@
-# 🚀 MindForge 5-Layer Plane Architecture (CI/CD)
+# MindForge 5-Layer Plane Architecture (CI/CD)
 
-MindForge v2.0.0 uses a sophisticated Control + Execution Plane architecture for its GitHub Actions, ensuring enterprise-grade governance and autonomous execution capabilities.
+MindForge v10.0.1 uses a sophisticated Control + Execution Plane architecture for its GitHub Actions, ensuring enterprise-grade governance and autonomous execution capabilities.
 
 ## 🏗️ The 5 Planes
 
@@ -70,16 +70,18 @@ If a PR touches sensitive components (Auth, Payments, Security):
 Releases are triggered by pushing a semver tag:
 
 ```bash
-git tag v2.0.0
-git push origin v2.0.0
+git tag v10.0.1
+git push origin v10.0.1
 ```
 
 This will automatically:
 
-- Run the full test suite.
+- Run the full test suite across Node 18, 20, and 22.
 - Generate a CHANGELOG.
-- Publish to npm.
+- Publish to npm with provenance attestation.
 - Create a GitHub Release with build artifacts.
+
+> **Dependabot** is enabled for automated dependency updates. **npm provenance** ensures every published package is cryptographically linked to its source commit and CI run.
 
 ---
 

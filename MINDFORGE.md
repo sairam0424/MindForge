@@ -1,12 +1,12 @@
-# MINDFORGE.md — Parameter Registry (v8.2.0)
+# MINDFORGE.md — Parameter Registry (v11.5.1)
 
 ## 1. IDENTITY & VERSIONING
 
 [NAME]    = MindForge
-[VERSION] = 8.2.0-SRE
+[VERSION] = 11.6.0
 [STABLE]  = true
-[MODE]    = \"Autonomous SRE Mesh\"
-[REQUIRED_CORE_VERSION] = 8.2.0
+[MODE]    = "Platform Sovereign"
+[REQUIRED_CORE_VERSION] = 11.6.0
 [SOVEREIGN_IDENTITY] = true
 [SRE_LAYER_ENABLED]  = true
 
@@ -26,23 +26,23 @@
 [ZTAI_KEY_TYPE] = "Dilithium-5"
 [NEXUS_TRACE_RETENTION_DAYS] = 30
 [CADIA_CORE] = true
-[PQAS_ENFORCED] = true
+[PQAS_ENFORCED] = false  # PQAS is SIMULATED/inactive by default (config: pqas_enabled=false, gated behind experimental.pqc_demo). Tier-3 trust uses real Ed25519. See .mindforge/config.json + bin/governance/quantum-crypto.js.
 [PROACTIVE_HOMING] = true
 
 ---
 
 ## 3. MODEL TOPOLOGY
 
-### Persona to Model mapping
+### Persona to Model mapping (v10: Claude 4.x aligned)
 
-[PLANNER]  = claude-opus-4-5
-[EXECUTOR] = claude-sonnet-4-5
-[REVIEWER] = claude-sonnet-4-5
-[VERIFIER] = claude-sonnet-4-5
-[SECURITY] = claude-opus-4-5
-[DEBUG]    = claude-opus-4-5
-[RESEARCH] = gemini-1.5-pro
-[QA]       = claude-4-5-sonnet
+[PLANNER]  = claude-opus-4-7
+[EXECUTOR] = claude-sonnet-4-6
+[REVIEWER] = claude-sonnet-4-6
+[VERIFIER] = claude-sonnet-4-6
+[SECURITY] = claude-opus-4-7
+[DEBUG]    = claude-opus-4-7
+[RESEARCH] = gemini-2.5-pro
+[QA]       = claude-sonnet-4-6
 
 ---
 
@@ -90,3 +90,16 @@
 - Date manipulation using date-fns only.
 
 """
+
+---
+
+## 7. NON-OVERRIDABLE
+
+The following parameters cannot be overridden by plugins, agents, or session-level configuration:
+
+- [MIN_SOUL_SCORE] — Minimum SOUL score required for architectural changes
+- [BLOCK_ON_SECURITY] — Security gate enforcement cannot be disabled
+- [COST_HARD_LIMIT_USD] — Hard cost limit cannot be raised without human approval
+- [BLOCK_ON_SECURITY] is non-overridable; PQAS itself is simulated/experimental (inactive by default) and is NOT a non-overridable guarantee — do not rely on it as an enforced control
+- [SOVEREIGN_IDENTITY] — Identity verification is always required
+- [ENABLE_ZTAI] — Zero-trust identity cannot be bypassed

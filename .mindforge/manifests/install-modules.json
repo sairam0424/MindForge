@@ -1,0 +1,193 @@
+{
+  "version": 1,
+  "_comment": "MindForge install module vocabulary (INERT). Each module names a real, package.json-files[]-covered asset path the installer already copies. The adapter-factory that would CONSUME a resolved plan is deferred; this manifest + resolver ship inert (the live install() path is unchanged). 'targets' uses installer-core RUNTIMES ids. Validated by .mindforge/schemas/install-modules.schema.json.",
+  "modules": [
+    {
+      "id": "entry-claude",
+      "kind": "configs",
+      "description": "Claude runtime entry document (.claude/CLAUDE.md).",
+      "paths": [".claude/CLAUDE.md"],
+      "targets": ["claude", "cursor", "opencode", "copilot"],
+      "dependencies": [],
+      "defaultInstall": true,
+      "cost": "light",
+      "stability": "stable"
+    },
+    {
+      "id": "entry-agent",
+      "kind": "configs",
+      "description": "Agent runtime entry document (.agent/CLAUDE.md) for Antigravity/Gemini-style harnesses.",
+      "paths": [".agent/CLAUDE.md"],
+      "targets": ["antigravity", "gemini"],
+      "dependencies": [],
+      "defaultInstall": true,
+      "cost": "light",
+      "stability": "stable"
+    },
+    {
+      "id": "parameter-registry",
+      "kind": "configs",
+      "description": "MINDFORGE.md parameter registry (the session-start source of truth).",
+      "paths": ["MINDFORGE.md"],
+      "targets": ["claude", "antigravity", "cursor", "opencode", "gemini", "copilot"],
+      "dependencies": [],
+      "defaultInstall": true,
+      "cost": "light",
+      "stability": "stable"
+    },
+    {
+      "id": "commands-claude",
+      "kind": "commands",
+      "description": "Claude slash-command corpus under .claude/commands/mindforge.",
+      "paths": [".claude/commands/mindforge"],
+      "targets": ["claude", "cursor", "opencode", "copilot"],
+      "dependencies": ["entry-claude"],
+      "defaultInstall": true,
+      "cost": "medium",
+      "stability": "stable"
+    },
+    {
+      "id": "commands-agent",
+      "kind": "commands",
+      "description": "Agent-runtime command sets (.agent/mindforge + .agent/forge namespaces).",
+      "paths": [".agent/mindforge", ".agent/forge"],
+      "targets": ["antigravity", "gemini"],
+      "dependencies": ["entry-agent"],
+      "defaultInstall": true,
+      "cost": "medium",
+      "stability": "stable"
+    },
+    {
+      "id": "skills",
+      "kind": "skills",
+      "description": "Skill corpus under .agent/skills (SKILL.md definitions).",
+      "paths": [".agent/skills"],
+      "targets": ["claude", "antigravity", "cursor", "opencode", "gemini", "copilot"],
+      "dependencies": [],
+      "defaultInstall": true,
+      "cost": "medium",
+      "stability": "stable"
+    },
+    {
+      "id": "hooks-runtime",
+      "kind": "hooks",
+      "description": "Runtime hook scripts under .agent/hooks (TrustGate, guards, lib helpers).",
+      "paths": [".agent/hooks"],
+      "targets": ["claude", "antigravity", "cursor", "gemini", "copilot"],
+      "dependencies": [],
+      "defaultInstall": true,
+      "cost": "medium",
+      "stability": "stable"
+    },
+    {
+      "id": "personas",
+      "kind": "agents",
+      "description": "Persona prompt library under .mindforge/personas.",
+      "paths": [".mindforge/personas"],
+      "targets": ["claude", "antigravity", "cursor", "opencode", "gemini", "copilot"],
+      "dependencies": [],
+      "defaultInstall": true,
+      "cost": "light",
+      "stability": "stable"
+    },
+    {
+      "id": "subagents",
+      "kind": "agents",
+      "description": "Imported subagent corpus under subagents/categories.",
+      "paths": ["subagents/categories"],
+      "targets": ["claude", "antigravity", "cursor", "opencode", "gemini", "copilot"],
+      "dependencies": [],
+      "defaultInstall": true,
+      "cost": "heavy",
+      "stability": "stable"
+    },
+    {
+      "id": "engine-core",
+      "kind": "engine",
+      "description": "MindForge engine binary logic and schemas under .mindforge/engine.",
+      "paths": [".mindforge/engine"],
+      "targets": ["claude", "antigravity", "cursor", "opencode", "gemini", "copilot"],
+      "dependencies": [],
+      "defaultInstall": true,
+      "cost": "heavy",
+      "stability": "stable"
+    },
+    {
+      "id": "governance",
+      "kind": "engine",
+      "description": "Tier-3 governance assets under .mindforge/governance.",
+      "paths": [".mindforge/governance"],
+      "targets": ["claude", "antigravity", "cursor", "opencode", "gemini", "copilot"],
+      "dependencies": ["engine-core"],
+      "defaultInstall": true,
+      "cost": "medium",
+      "stability": "stable"
+    },
+    {
+      "id": "intelligence",
+      "kind": "engine",
+      "description": "Neural/intelligence assets under .mindforge/intelligence.",
+      "paths": [".mindforge/intelligence"],
+      "targets": ["claude", "antigravity", "cursor", "opencode", "gemini", "copilot"],
+      "dependencies": ["engine-core"],
+      "defaultInstall": true,
+      "cost": "medium",
+      "stability": "stable"
+    },
+    {
+      "id": "integrations",
+      "kind": "engine",
+      "description": "Third-party integration adapters under .mindforge/integrations.",
+      "paths": [".mindforge/integrations"],
+      "targets": ["claude", "antigravity", "cursor", "opencode", "gemini", "copilot"],
+      "dependencies": ["engine-core"],
+      "defaultInstall": false,
+      "cost": "medium",
+      "stability": "beta"
+    },
+    {
+      "id": "models",
+      "kind": "engine",
+      "description": "Model provider definitions under .mindforge/models.",
+      "paths": [".mindforge/models"],
+      "targets": ["claude", "antigravity", "cursor", "opencode", "gemini", "copilot"],
+      "dependencies": ["engine-core"],
+      "defaultInstall": true,
+      "cost": "light",
+      "stability": "stable"
+    },
+    {
+      "id": "engine-skills",
+      "kind": "skills",
+      "description": "Engine-format skills under .mindforge/skills (full schema).",
+      "paths": [".mindforge/skills"],
+      "targets": ["claude", "antigravity", "cursor", "opencode", "gemini", "copilot"],
+      "dependencies": ["engine-core"],
+      "defaultInstall": true,
+      "cost": "medium",
+      "stability": "stable"
+    },
+    {
+      "id": "docs-references",
+      "kind": "configs",
+      "description": "Reference documentation under docs/References.",
+      "paths": ["docs/References"],
+      "targets": ["claude", "antigravity", "cursor", "opencode", "gemini", "copilot"],
+      "dependencies": [],
+      "defaultInstall": false,
+      "cost": "light",
+      "stability": "stable"
+    },
+    {
+      "id": "docs-templates",
+      "kind": "configs",
+      "description": "Planning/document templates under docs/Templates.",
+      "paths": ["docs/Templates"],
+      "targets": ["claude", "antigravity", "cursor", "opencode", "gemini", "copilot"],
+      "dependencies": [],
+      "defaultInstall": false,
+      "cost": "light",
+      "stability": "stable"
+    }
+  ]
+}

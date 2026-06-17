@@ -13,15 +13,15 @@ async function testRouter() {
   
   // Test Persona Mapping
   const researchModel = Router.route('research-agent', 1).model;
-  assert.strictEqual(researchModel, 'gemini-1.5-pro');
+  assert.strictEqual(researchModel, 'gemini-2.5-pro');
 
   // Test Tier Override (Tier 3 -> Security Model)
   const securityModel = Router.route('developer', 3).model;
-  assert.strictEqual(securityModel, 'claude-3-opus-20240229');
+  assert.strictEqual(securityModel, 'claude-opus-4-7');
 
   // Test Budget Bias (Low difficulty/tier -> Cheap model)
   const cheapModel = Router.route('developer', 1).model;
-  assert.strictEqual(cheapModel, 'claude-3-5-haiku-20241022');
+  assert.strictEqual(cheapModel, 'claude-haiku-4-5');
 
   console.log('✅ Router tests passed.');
 }

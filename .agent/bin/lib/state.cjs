@@ -783,7 +783,7 @@ function writeStateMd(statePath, content, cwd) {
 
         if (i === maxRetries - 1) {
           // Last resort: write anyway rather than losing data
-          try { fs.unlinkSync(lockPath); } catch {}
+          try { fs.unlinkSync(lockPath); } catch { /* intentionally empty */ }
           break;
         }
         // Spin-wait with small jitter
@@ -938,7 +938,7 @@ function cmdSignalResume(cwd, raw) {
   let removed = false;
   for (const p of paths) {
     if (fs.existsSync(p)) {
-      try { fs.unlinkSync(p); removed = true; } catch {}
+      try { fs.unlinkSync(p); removed = true; } catch { /* intentionally empty */ }
     }
   }
 

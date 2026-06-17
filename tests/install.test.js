@@ -178,8 +178,24 @@ test('No secrets in any committed file', () => {
     /sk-[a-zA-Z0-9]{20,}/,
   ];
 
+  // Skip dirs that are not committed to this repo: deps, VCS internals, and the
+  // gitignored donor/upstream repos (ECC/, awesome-claude-code-subagents/) whose
+  // OWN content — including security docs that contain example secret patterns —
+  // is not part of MindForge's committed tree. This test asserts on COMMITTED
+  // files, so scanning gitignored donor trees is both wrong and a false-positive
+  // source.
+  const SKIP_DIRS = ['node_modules', '.git', 'ECC', 'awesome-claude-code-subagents', '.serena', 'hermes-agent'];
+
+  // Obvious placeholder tokens. A "secret-shaped" match that contains one of
+  // these is a pedagogical example (e.g. security rule docs that TEACH about
+  // secret patterns), not a real credential. We allowlist the placeholder VALUE
+  // rather than skip whole directories, so the scanner stays active over those
+  // files and would still catch a genuine leaked secret.
+  const PLACEHOLDER = /(xxxx|x{4,}|your[-_]?(api[-_]?)?key|placeholder|example|redacted|\.\.\.|<[^>]+>|changeme|dummy|fake|sample)/i;
+
   function scanDir(dir) {
-    if (dir.includes('node_modules') || dir.includes('.git')) return;
+    const base = path.basename(dir);
+    if (SKIP_DIRS.includes(base) || dir.includes('node_modules') || dir.includes('.git')) return;
     const entries = fs.readdirSync(dir, { withFileTypes: true });
     entries.forEach(entry => {
       const full = path.join(dir, entry.name);
@@ -188,7 +204,11 @@ test('No secrets in any committed file', () => {
       } else if (entry.name.endsWith('.md') || entry.name.endsWith('.js') || entry.name.endsWith('.json')) {
         const content = fs.readFileSync(full, 'utf8');
         secretPatterns.forEach(pattern => {
-          assert.ok(!pattern.test(content), `Potential secret in ${full}`);
+          const m = content.match(pattern);
+          // A match is a violation only if it is NOT an obvious placeholder.
+          if (m && !PLACEHOLDER.test(m[0])) {
+            assert.fail(`Potential secret in ${full}: ${m[0].slice(0, 40)}`);
+          }
         });
       }
     });

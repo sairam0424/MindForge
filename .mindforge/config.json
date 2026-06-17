@@ -1,23 +1,25 @@
 {
-  "version": "8.0.0",
+  "version": "11.6.0",
   "environment": "development",
   "governance": {
     "drift_threshold": 0.75,
     "critical_drift_threshold": 0.5,
     "res_threshold": 0.8,
-    "active_did": "did:mindforge:85a9b9dd-30fa-4f5d-a725-d7a4ac845c79"
+    "active_did": "did:mindforge:55870cf5-1395-4d17-9423-59e7fa1053ec"
   },
   "revops": {
     "market_registry": {
-      "gemini-1.5-pro": {
+      "gemini-2.5-pro": {
         "cost_input": 0.0035,
         "cost_output": 0.0105,
         "benchmark": 98,
         "provider": "Google"
       },
-      "claude-3-5-sonnet": {
+      "claude-sonnet-4-6": {
         "cost_input": 0.003,
         "cost_output": 0.015,
+        "cost_cache_read": 0.0003,
+        "cost_cache_creation": 0.00375,
         "benchmark": 99,
         "provider": "Anthropic"
       },
@@ -33,26 +35,39 @@
         "benchmark": 92,
         "provider": "Sovereign"
       },
-      "gemini-1.5-flash": {
+      "gemini-2.5-flash": {
         "cost_input": 0.0003,
         "cost_output": 0.0003,
         "benchmark": 85,
         "provider": "Google"
       },
-      "haiku-3": {
+      "claude-haiku-4-5": {
         "cost_input": 0.0002,
         "cost_output": 0.0004,
+        "cost_cache_read": 0.00002,
+        "cost_cache_creation": 0.00025,
         "benchmark": 82,
+        "provider": "Anthropic"
+      },
+      "claude-opus-4-7": {
+        "cost_input": 0.015,
+        "cost_output": 0.075,
+        "cost_cache_read": 0.0015,
+        "cost_cache_creation": 0.01875,
+        "benchmark": 100,
         "provider": "Anthropic"
       }
     },
-    "default_baseline_model": "gpt-4o",
-    "premium_fallback_model": "claude-3-5-sonnet"
+    "default_baseline_model": "claude-sonnet-4-6",
+    "premium_fallback_model": "claude-opus-4-7"
   },
   "security": {
-    "pqas_enabled": true,
+    "pqas_enabled": false,
     "enclave_tier": 2,
-    "provider": "simulated-lattice"
+    "provider": "Dilithium-5 (simulated — inactive)"
+  },
+  "experimental": {
+    "pqc_demo": false
   },
   "mesh": {
     "node_id": "beta-node",
@@ -62,5 +77,76 @@
     "min_success_count": 3,
     "max_drift_threshold": 0.1,
     "auto_verify": false
+  },
+  "wave_concurrency": 3,
+  "temporal": {
+    "max_snapshots": 50,
+    "max_age_days": 7
+  },
+  "instincts": {
+    "mode": "auto-capture",
+    "max_active_per_project": 100,
+    "promotion_confidence_threshold": 0.85,
+    "promotion_min_applications": 5,
+    "prune_below_confidence": 0.2,
+    "prune_after_days_inactive": 30,
+    "max_capture_per_session": 5,
+    "store_path": ".mindforge/engine/instincts/instinct-store.jsonl"
+  },
+  "council": {
+    "voices": [
+      "architect",
+      "skeptic",
+      "pragmatist",
+      "critic"
+    ],
+    "max_rounds": 2,
+    "consensus_threshold": 0.75,
+    "word_limit_per_voice": 200,
+    "output_path": ".planning/decisions/"
+  },
+  "cost_routing": {
+    "enabled": true,
+    "shadow_mode": true,
+    "simple_threshold": 3,
+    "standard_threshold": 6,
+    "complex_threshold": 8,
+    "model_tiers": {
+      "simple": "claude-haiku-4-5",
+      "standard": "claude-sonnet-4-6",
+      "complex": "claude-opus-4-7",
+      "research": "gemini-2.5-pro",
+      "consult": "gpt-4o"
+    },
+    "budget": {
+      "session_warn_usd": 5,
+      "session_hard_limit_usd": 20,
+      "project_weekly_warn_usd": 50,
+      "project_weekly_hard_limit_usd": 200
+    },
+    "ledger_path": ".mindforge/metrics/token-ledger.jsonl"
+  },
+  "proactive_suggestions": {
+    "enabled": true,
+    "confidence_threshold": 0.7,
+    "cooldown_seconds": 300,
+    "debounce_seconds": 30,
+    "max_recent": 50,
+    "store_path": ".mindforge/engine/proactive/recent-suggestions.json"
+  },
+  "eval": {
+    "default_k": 5,
+    "evals_path": ".mindforge/evals/",
+    "default_grader": "code"
+  },
+  "quality_audit": {
+    "passing_threshold": 3,
+    "accuracy_blocking_gate": 3,
+    "weights": {
+      "clarity": 0.25,
+      "completeness": 0.25,
+      "accuracy": 0.3,
+      "usefulness": 0.2
+    }
   }
 }

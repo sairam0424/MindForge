@@ -7,18 +7,18 @@
 const fs = require('fs');
 const path = require('path');
 
-// Default model assignments
+// v9: Model topology aligned to Claude 4.x family (2026-04)
 const DEFAULTS = {
-  PLANNER_MODEL:          'claude-4-5-opus-preview',
-  EXECUTOR_MODEL:         'claude-3-5-sonnet-20240620',
-  REVIEWER_MODEL:         'gpt-4o',
-  SECURITY_MODEL:         'claude-3-opus-20240229',
-  RESEARCH_MODEL:         'gemini-1.5-pro',
-  QA_MODEL:               'claude-3-5-sonnet-20240620',
-  DEBUG_MODEL:            'claude-3-opus-20240229',
-  QUICK_MODEL:            'claude-3-5-haiku-20241022',
-  CROSS_REVIEW_SECONDARY: 'gpt-4o',
-  CROSS_REVIEW_TERTIARY:  'gemini-1.5-pro',
+  PLANNER_MODEL:          'claude-opus-4-7',
+  EXECUTOR_MODEL:         'claude-sonnet-4-6',
+  REVIEWER_MODEL:         'claude-sonnet-4-6',
+  SECURITY_MODEL:         'claude-opus-4-7',
+  RESEARCH_MODEL:         'gemini-2.5-pro',
+  QA_MODEL:               'claude-sonnet-4-6',
+  DEBUG_MODEL:            'claude-opus-4-7',
+  QUICK_MODEL:            'claude-haiku-4-5',
+  CROSS_REVIEW_SECONDARY: 'claude-sonnet-4-6',
+  CROSS_REVIEW_TERTIARY:  'gemini-2.5-pro',
 };
 
 // Persona to setting key mapping
@@ -36,15 +36,13 @@ const PERSONA_MAP = {
 };
 
 let _settingsCache = null;
+let _settingsMtime = 0;
+const CACHE_CHECK_INTERVAL_MS = 60000;
+let _lastCacheCheck = 0;
 
-function readMindforgeSettings() {
-  if (_settingsCache) return _settingsCache;
-  const configPath = path.join(process.cwd(), 'MINDFORGE.md');
-  if (!fs.existsSync(configPath)) return DEFAULTS;
-
-  const content = fs.readFileSync(configPath, 'utf8');
+function parseSettings(filePath) {
+  const content = fs.readFileSync(filePath, 'utf8');
   const settings = { ...DEFAULTS };
-  
   const lines = content.split('\n');
   for (const line of lines) {
     const match = line.match(/^([A-Z0-9_]+)=(.*)$/);
@@ -52,50 +50,83 @@ function readMindforgeSettings() {
       settings[match[1]] = match[2].trim();
     }
   }
-  _settingsCache = settings;
   return settings;
 }
 
-function route(persona = 'developer', tier = 1) {
+function readMindforgeSettings() {
+  const now = Date.now();
+  if (now - _lastCacheCheck < CACHE_CHECK_INTERVAL_MS && _settingsCache) {
+    return _settingsCache;
+  }
+  _lastCacheCheck = now;
+
+  const configPath = path.join(process.cwd(), 'MINDFORGE.md');
+  try {
+    const stat = fs.statSync(configPath);
+    if (stat.mtimeMs !== _settingsMtime) {
+      _settingsMtime = stat.mtimeMs;
+      _settingsCache = parseSettings(configPath);
+    }
+  } catch {
+    if (!_settingsCache) _settingsCache = { ...DEFAULTS };
+  }
+
+  return _settingsCache;
+}
+
+function route(persona = 'developer', tier = 1, taskContext) {
   const settings = readMindforgeSettings();
-  
+  let result;
+
   // 1. Tier 3 override (Security/Privacy always uses SECURITY_MODEL)
   if (tier === 3) {
-    return {
+    result = {
       model: settings.SECURITY_MODEL,
       setting: 'SECURITY_MODEL',
       reason: 'Tier 3 (Security/Privacy) override'
     };
   }
-
   // 2. Persona mapping (Specific personas like research, debug, qa)
-  if (persona !== 'developer' && PERSONA_MAP[persona]) {
+  else if (persona !== 'developer' && PERSONA_MAP[persona]) {
     const settingKey = PERSONA_MAP[persona];
-    return {
+    result = {
       model: settings[settingKey],
       setting: settingKey,
       reason: `Mapped from specific persona "${persona}"`
     };
   }
-
   // 3. Budget Bias (Tier 1 uses QUICK_MODEL for default developer tasks)
-  if (tier === 1) {
-    return {
+  else if (tier === 1) {
+    result = {
       model: settings.QUICK_MODEL,
       setting: 'QUICK_MODEL',
       reason: 'Tier 1 Budget Bias (efficiency mode)'
     };
   }
-
   // 4. Default mapping
-  const settingKey = 'EXECUTOR_MODEL';
-  const model = settings[settingKey];
+  else {
+    const settingKey = 'EXECUTOR_MODEL';
+    result = {
+      model: settings[settingKey],
+      setting: settingKey,
+      reason: `Default EXECUTOR_MODEL for tier ${tier}`
+    };
+  }
 
-  return {
-    model,
-    setting: settingKey,
-    reason: `Default EXECUTOR_MODEL for tier ${tier}`
-  };
+  // Shadow-mode: difficulty-aware routing (UC-06)
+  // Logs what model the difficulty scorer WOULD select, without changing the result.
+  if (taskContext) {
+    const { score: scoreDifficulty } = require('./difficulty-scorer');
+    const difficulty = scoreDifficulty(taskContext);
+    const shadowModel = difficulty <= 3 ? settings.QUICK_MODEL
+                      : difficulty >= 8 ? settings.PLANNER_MODEL
+                      : settings.EXECUTOR_MODEL;
+    if (shadowModel !== result.model) {
+      process.stderr.write(`[model-router:shadow] difficulty=${difficulty} would route to ${shadowModel} (actual: ${result.model})\n`);
+    }
+  }
+
+  return result;
 }
 
 function getModel(settingKey) {
@@ -105,6 +136,8 @@ function getModel(settingKey) {
 
 function clearCache() {
   _settingsCache = null;
+  _settingsMtime = 0;
+  _lastCacheCheck = 0;
 }
 
 function getAllSettings() {

@@ -1,5 +1,789 @@
 # Changelog
 
+## [11.6.0] - 2026-06-17 — Skill Forge
+
+Largest single skill expansion in MindForge's history. Adds 80 community-sourced skills across 8 engineering domains with zero external attribution in any committed file. 30 skills are promoted to the engine tier for automatic trigger-matching; 50 live in the extended tier for explicit activation. Three new slash commands complete the discovery surface.
+
+### Added
+
+- **Engine-tier skills (auto-trigger, `.mindforge/skills/`)** — 30 new skills activated automatically when task description matches trigger phrases:
+  - *Software development:* `systematic-debugging` (4-phase root-cause methodology), `test-driven-development` (RED-GREEN-REFACTOR), `plan` (implementation planning), `simplify-code`, `requesting-code-review`, `spike`, `subagent-driven-development`, `code-wiki`
+  - *DevOps & orchestration:* `kanban-orchestrator`, `kanban-worker` (multi-agent task routing)
+  - *GitHub workflows:* `github-code-review`, `github-pr-workflow`, `github-issues`, `codebase-inspection`
+  - *Research & intelligence:* `research-paper-writing`, `arxiv`, `osint-investigation`, `domain-intel`, `duckduckgo-search`, `scrapling`, `blogwatcher`
+  - *Creative:* `concept-diagrams` (SVG educational visuals), `creative-ideation`, `pixel-art`, `meme-generation`
+  - *Security:* `web-pentest` (authorized penetration testing), `oss-forensics`, `sherlock`
+  - *Data-science & note-taking:* `jupyter-live-kernel`, `obsidian`
+
+- **Extended-tier skills (explicit activation, `.agent/skills/`)** — 20 additional skills beyond the promoted 30:
+  - *Software development:* `node-inspect-debugger`, `python-debugpy`, `skill-authoring`, `rest-graphql-debug`
+  - *GitHub:* `github-auth`, `github-repo-management`
+  - *DevOps:* `docker-management`, `devops-cli`, `devops-watchers`, `pinggy-tunnel`, `s6-container-supervision`
+  - *Research:* `llm-wiki`, `polymarket`, `parallel-cli`
+  - *Security:* `godmode`, `1password-skill`
+  - *Creative:* `hyperframes`, `article-illustrator`, `comic-creator`, `video-orchestrator`
+
+- **3 new slash commands:**
+  - `/mindforge:systematic-debug` — 4-phase root-cause debugging (no fixes without RCA)
+  - `/mindforge:skill-tdd` — strict RED-GREEN-REFACTOR TDD enforcement
+  - `/mindforge:skills-index` — browseable catalog of all 153 skills grouped by category
+
+### Changed
+
+- `tests/install.test.js` — added `hermes-agent` to secret-scanner skip list (gitignored donor directory)
+- `CLAUDE.md` — new **Extended Skill Library** section documents both skill tiers, trigger mechanics, and bulk import pattern
+
+### Skill counts
+
+| Tier | Before | After |
+|---|---|---|
+| Engine tier (`.mindforge/skills/`) | 202 | 232 |
+| Extended tier (`.agent/skills/`) | 73 | 123 |
+| Slash commands | 174 | 177 |
+
+---
+
+## [11.5.1] - 2026-06-11 — Robustness + governance-gate patch (Wave 8)
+
+A fast-follow patch from a fresh adversarial audit of the shipped v11.5.0 tree.
+Hardens crash-prone JSON parsing in the autonomous/memory pipelines, closes a
+CI governance-gate gap, and tightens two security surfaces. No new features.
+
+### Fixed
+
+- **Crash-proof AUDIT.jsonl parsing** (`bin/memory/pillar-health-tracker.js`) —
+  `summarizePhase()` parsed every audit line with an unguarded `JSON.parse`, so a
+  single malformed/torn line crashed the knowledge-capture pipeline. Now parses
+  per-line in try/catch and skips bad lines.
+- **Crash-proof compaction capture** (`bin/memory/knowledge-capture.js`) — a
+  malformed `handoff.json` no longer throws out of `captureFromCompaction()`; it
+  logs and returns `[]`, mirroring the missing-file path.
+- **Resilient federated-sync stats** (`bin/memory/federated-sync.js`) — the two
+  unguarded `JSON.parse` calls on `sync-stats.json` (`handleSyncFailure`,
+  `resetFailures`) now fall back to `{failures:0}` on corruption, matching the
+  sibling `getLastSyncTimestamp` pattern.
+
+### Security
+
+- **CI Tier-3 governance gate now validates content** (`.github/workflows/control-plane.yml`)
+  — the gate counted approval files but never checked them; it now requires at
+  least one approval with `identity_verification.verified === true` and a
+  signature, and rejects any unverified/empty file. Completes the Wave-6
+  fail-closed `approve.js` work (a hand-committed empty approval no longer passes).
+- **Dashboard approval attribution** (`bin/dashboard/api-router.js`) —
+  `POST /api/approve/:id` no longer records the client-supplied `approver`
+  (forgeable audit identity); it attributes the action to a fixed authenticated
+  actor. The dashboard remains localhost-bound + token-gated.
+- **Destructive-command detector blocks Unix `truncate`** (`bin/security/trust-boundaries.js`)
+  — the SQL-only `truncate table` pattern missed `truncate -s 0 <path>` (in-place
+  file zeroing). Added a size-flag pattern so it is gated; benign uses stay allowed.
+- **CI Tier-3 gate accepts an explicitly-acknowledged unverified approval**
+  (`.github/workflows/control-plane.yml`, `bin/governance/approve.js`) — since this
+  repo has no GPG signing infra, the gate accepts an approval that is either
+  GPG-verified OR an opted-in `unverified_ack` record (`approve.js` under
+  `MINDFORGE_ALLOW_UNVERIFIED_APPROVAL=1`), while still rejecting bare/stale
+  `verified:false` files. Replaced the stale v11.4.0 approval with a fresh one.
+- **`uuid` dependency removed from `ads-engine`** (`bin/review/ads-engine.js`) — it
+  required the uninstalled `uuid` package, making `ads-engine` and (transitively)
+  `federated-sync` un-loadable in a clean install. Swapped to the built-in
+  `crypto.randomUUID()` (zero-native-deps); both modules now load.
+
+## [11.5.0] - 2026-06-11 — Governance hardening + autonomous-engine repair (Waves 4–7)
+
+This release bundles four waves of work: orchestration primitives, an **inert** manifest
+engine + the new instinct CLI + GAN harness personas, governance/security hardening, and a
+repair that makes the autonomous engine (`/mindforge:auto`) actually functional. Several
+items ship deliberately **inert** (scaffolding present, not wired into any live path) and
+are flagged as such below — they introduce **no behavior change yet**.
+
+### Added
+
+- **Instinct CLI** (`/mindforge:instinct`, `bin/learning/instinct-cli.js`) — deterministic,
+  no-LLM management of the JSONL instinct store: `list`, `export`, `import`,
+  `promote-candidates` (list + flag), and `prune`.
+- **Typed Inter-Agent Message Protocol** (`bin/autonomous/handoff-schema.js`) — five message
+  kinds (`task_handoff`, `query`, `response`, `completed`, `conflict`) with priority levels
+  (`low`/`normal`/`high`/`critical`) and message validation. Internal orchestration primitive.
+- **Manifest-driven install resolver** (`bin/installer/install-manifests.js`,
+  `.mindforge/manifests/install-*.json`) — profile-to-module expansion and dependency
+  detection. Ships **INERT**: the adapter wiring it into `bin/installer-core.js`'s live
+  `install()` path is deferred to a future PR. No behavior change.
+- **GAN-style harness personas** (`.mindforge/personas/gan-evaluator.md`, `gan-generator.md`,
+  `gan-planner.md`) — fully scoped and documented. Ships **INERT**: not wired to any live
+  command or automated workflow. No behavior change.
+- **Governance test coverage** — `tests/trust-verifier.test.js` (7 tests) and
+  `tests/rbac-manager.test.js` (8 tests) lock the fail-closed contracts for future
+  safety-critical governance changes.
+
+### Fixed
+
+- **SSRF import-URL guard** (`bin/learning/lib/ssrf-guard.js`) — closed an IPv6 link-local
+  bypass (`fe81`–`fe8f` reachable via string-prefix check) and a symlink path-traversal
+  bypass, using numeric bitmask validation and canonical-path checking before system-dir
+  validation.
+- **Federated EIS sync** (`bin/memory/eis-client.js`) — `getAuthHeader` no longer throws on
+  every call; it now registers a node identity via `ZTAI.registerAgent` and signs with
+  `ZTAI.signData`, restoring sync to non-localhost EIS endpoints.
+- **RBAC tier elevation** (`bin/governance/rbac-manager.js`) — `getRolesByTier` now fails
+  safely for unregistered agents (no thrown exception) and resolves agent tier via the
+  correct ZTAI API.
+- **Autonomous engine — wave crash** (`bin/autonomous/auto-runner.js`) — replaced ZTAI
+  singleton misuse (`getIdentity()`, non-existent) with `_getRunnerIdentity()` using the
+  real `registerAgent` API; `/mindforge:auto` no longer crashes on every wave.
+- **Autonomous policy gate — fail-open** (`bin/autonomous/auto-runner.js`) — the async
+  policy verdict is now `await`ed (`this.policyEngine.evaluate(intent)`); the per-wave gate
+  previously always allowed.
+- **Autonomous engine — fail-closed identity** (`bin/autonomous/auto-runner.js`) — if runner
+  identity cannot be established, the policy gate now denies and audits (`auto_mode_denied`)
+  instead of proceeding ungoverned.
+
+### Changed
+
+- **Instinct store schema** (`.mindforge/engine/instincts/instinct-schema.md`) — added
+  `project_id` (stable scope key) and `source` (`auto-capture`/`manual`/`imported`/
+  `observer`), plus origin-based confidence scoring: auto-capture starts at `0.3`, manual
+  at `0.7`.
+- **Cost-routing shadow mode** (`bin/revops/router-steering-v2.js`) — arbitrage steering now
+  respects `cost_routing.shadow_mode` (default `true`); in observe-only mode `steer()`
+  returns `{ shadow, authoritative: false }` with SHADOW vs LIVE logging.
+
+### Security
+
+- **Tier-3 approvals now fail closed** (`bin/governance/approve.js`) — approvals require GPG
+  verification and **throw before writing any record** when no GPG key is configured, unless
+  `MINDFORGE_ALLOW_UNVERIFIED_APPROVAL=1` is set; unverified approvals are marked
+  `verified: false`.
+- **Persona supply-chain scan** (`scripts/ci/validate-assets.js`) — persona asset validation
+  now detects dangerous invisible unicode (zero-width, bidi overrides, Unicode tags) across
+  `.mindforge/personas` to prevent ASCII-smuggling injection.
+- **Destructive-command detector** (`bin/security/trust-boundaries.js`) — `normalizeShell`
+  now strips bare `#` tokens after quote-stripping, blocking quoted-hash evasion (e.g.
+  `rm "#" -rf /`).
+- **Instinct import port allowlist** (`bin/learning/lib/ssrf-guard.js`) — `validateImportUrl`
+  enforces an `ALLOWED_IMPORT_PORTS` allowlist (`{'', '443'}`), blocking attempts to reach
+  internal services (Redis `:6379`, Mongo `:27017`, etc.) on otherwise-allowed public hosts.
+
+## [11.4.0] - 2026-06-06 — Claude Code plugin distribution
+
+MindForge is now installable as a native **Claude Code plugin** from a marketplace, in
+addition to the `npx mindforge-cc` installer. This release ships the plugin tooling so
+both the GitHub plugin channel and the npm tarball stay coherent.
+
+### Added
+
+- **Plugin marketplace** (`.claude-plugin/marketplace.json` at the repo root) — users run
+  `/plugin marketplace add sairam0424/MindForge` then `/plugin install mindforge@mindforge`.
+  Lists 11 plugins: the comprehensive `mindforge` plugin + 10 à-la-carte subagent packs.
+- **Comprehensive `mindforge` plugin** (`plugins/mindforge/`) bundling the full surface:
+  174 commands, 154 subagents, 73 skills + a synthesized `mindforge-protocol` skill (the
+  CLAUDE.md operating directive, since a plugin-root CLAUDE.md isn't loaded as context),
+  and governance hooks (translated to Claude `PreToolUse`/`PostToolUse` events with
+  `${CLAUDE_PLUGIN_ROOT}`-relative paths).
+- **Bundled MindForge MCP server** — a self-contained esbuild single-file build
+  (`mcp/dist/index.js`, all deps inlined, no runtime `node_modules`) exposing 7 tools over
+  stdio: `mindforge_health`, `mindforge_status`, `mindforge_memory_query`,
+  `mindforge_memory_stats`, `mindforge_memory_find_related`, `mindforge_audit_log`
+  (read-only), and append-only `mindforge_memory_remember`. Scoped to the user's project
+  via `${CLAUDE_PROJECT_DIR}`; degrades gracefully when MindForge isn't set up.
+- **Generators** (single source of truth, drift-guarded): `build-plugin-marketplace.js`,
+  `build-subagent-plugins.js`, `build-mindforge-plugin.js`, `vendor-sdk-into-mcp.js`,
+  `fix-command-frontmatter.js`; new `mcp-server/` package with esbuild build.
+- **`tests/plugin-packaging.test.js`** (in `npm test`) — guards the generated plugin tree,
+  frontmatter validity, and MCP-bundle self-containment.
+
+### Fixed
+
+- Quoted YAML-unsafe `name`/`description` frontmatter across commands/agents/skills that
+  the plugin validator flagged (leading `-`/`@`, embedded `: `, trailing `:`) — these
+  silently loaded empty metadata. The npx installer inherits the fix.
+- Per-category subagent `plugin.json` `agents[]` now derived from on-disk files, fixing
+  stale bare names for the 16 collision-renamed (`-cc`) agents.
+
+## [11.3.1] - 2026-06-05 — Packaging hotfix (commands, skills & framework now ship)
+
+Critical fix for v11.3.0, where a too-narrow npm `files` allowlist silently dropped
+most of the product from the published tarball. Users who ran `npx mindforge-cc` got
+only hooks, personas, subagents, and three `.mindforge/` folders — **no slash commands,
+no skills, and an incomplete framework** — with no error (the installer skips any source
+absent from the tarball). v11.3.1 restores the full payload and adds a regression test
+so this class of bug cannot ship silently again.
+
+### Fixed
+
+- **npm `files` allowlist** (`package.json`) widened to ship what the installer reads:
+  `.claude/commands/` (174 slash commands), `.agent/mindforge/` + `.agent/forge/`,
+  `.agent/skills/` (73 skills), the entry `.claude/CLAUDE.md`, and the full `.mindforge/`
+  framework (`governance`, `integrations`, `intelligence`, `memory`, `metrics`, `models`,
+  `org`, `plugins`, `team` — previously only `engine`/`personas`/`skills` reached users).
+  Runtime state is explicitly **excluded** (`celestial.db`, `metrics/token-usage.jsonl`,
+  `memory/pattern-library.jsonl`) — `files` overrides `.npmignore`, so these are negated
+  in the allowlist itself.
+- **`.planning/` scaffolding now ships and installs** — sourced from the clean, generic
+  `examples/starter-project/.planning/` (never the framework repo's own live `.planning/`,
+  which holds dev state: `AUDIT.jsonl`, `slack-threads.json`, `jira-sync.json`). Added the
+  four missing starter templates (`ROADMAP.md`, `REQUIREMENTS.md`, `ARCHITECTURE.md`,
+  `RELEASE-CHECKLIST.md`) so the autonomous engine (`/mindforge:auto`, `:next`) has the
+  files it expects.
+- **`docs/References` / `docs/Templates` case-sensitivity bug** — the installer read
+  lowercase `docs/references`/`templates`, which "worked" on case-insensitive macOS but
+  silently missed on case-sensitive Linux/npm (manifest showed `REFERENCES 0 / TEMPLATES 0`).
+  Installer now reads the exact on-disk case and both dirs are allowlisted.
+
+### Added
+
+- **`tests/packaging-allowlist.test.js`** — packs the real tarball (`npm pack --dry-run
+  --json`) and asserts commands, skills, subagents, entry files, the full `.mindforge/`
+  framework, and `.planning/` templates all ship, while runtime DBs/telemetry do not.
+  Proven to fail under the broken v11.3.0 allowlist. Skips loudly if npm is unavailable.
+
+## [11.3.0] - 2026-06-04 — "Legion" (154-subagent expansion)
+
+Imports the full VoltAgent `awesome-claude-code-subagents` collection (154 Claude-Code-native
+subagents across 10 categories) into MindForge, fully rebranded. Additive and
+backward-compatible — no existing persona, skill, or command changed behavior.
+
+### Added
+
+- **`subagents/` tree** — 154 specialized subagent definitions in 10 categories
+  (`01-core-development` … `10-research-analysis`), kept verbatim from upstream except
+  the rebrand and collision/functional fixes below. Agent bodies are unmodified prose.
+- **`.mindforge/imported-agents.jsonl`** — generated index (name → path → category → model →
+  description) and **`scripts/build-subagent-index.js`** to regenerate it deterministically.
+- **`bin/spawn-agent.js subagent <name>`** — third loader mode that resolves an imported
+  subagent via the index. Hardened with a strict name allowlist (`[A-Za-z0-9-_]`), exact
+  index-match resolution (never builds a path from input), and a `subagents/` containment
+  check — defense-in-depth path-traversal guards consistent with `BLOCK_ON_SECURITY`.
+- **Installer delivery** — `bin/installer-core.js` now installs the 154 subagents into the
+  runtime's native agents directory (`.claude/agents/`, via the new `agentsSubdir` runtime
+  config + `installSubagents()`), flattening the category tree (READMEs excluded) so Claude
+  Code auto-discovers them. Runs for both global and local scope; mirrored to `.claude/agents/`
+  for non-claude local runtimes. Shown in `--dry-run` and the payload manifest; `--uninstall`
+  removes only the imported set, never the user's own agents. The `.mindforge/imported-agents.jsonl`
+  index ships with `.mindforge/`, so the `subagent` loader mode also works post-install.
+- **`tests/subagent-import.test.js`** — asserts 154 indexed, every path exists, all 16
+  collisions renamed, no bare-name clash with personas, and the loader's traversal guards.
+
+### Changed (rebrand — VoltAgent → MindForge)
+
+- Plugin/marketplace metadata (`subagents/.claude-plugin/marketplace.json` + 10 category
+  `plugin.json`) renamed `voltagent-*` → `mindforge-*`, author → MindForge Team, URLs →
+  `github.com/sairam0424/MindForge`. Per-plugin versions preserved for upstream re-sync.
+  No live marketplace is published — metadata only.
+- 16 name collisions with existing hand-authored MindForge personas resolved with a `-cc`
+  suffix (`api-designer-cc`, `debugger-cc`, …); the original personas remain authoritative
+  for the bare names.
+- **agent-installer** fetch URLs repointed to `sairam0424/MindForge` under `subagents/`.
+- **design-bridge** VoltAgent design-md dependency replaced with a `<DESIGN_MD_SOURCE>`
+  placeholder + a needs-configuration notice (MindForge ships no design-md repo yet).
+- Dead VoltAgent Discord/sponsor links removed (no MindForge equivalent).
+- `package.json` `files` allowlist now ships `subagents/` + the index; README capability
+  line notes the 154 subagents.
+
+## [11.2.1] - 2026-05-31 — "Hardening" (security & integrity audit remediation)
+
+Post-v11.2.0 audit remediation. Closes every exploitable security defect and
+false-assurance stub surfaced by the end-to-end audit. No new features, no
+breaking changes — fixes and honest-labeling only.
+
+### Security (fixed)
+
+- **trust-gate-hook**: scans the whole command + every line (a benign first line could previously cloak a destructive later line)
+- **orbital-guardian**: `verify()` re-checks the Ed25519 attestation signature (added `did`/`signed_message` columns + migration); rejects forged APPROVED rows
+- **policy-engine**: `reasoning_proof` alone no longer bypasses the blast-radius limit (`isProofValid` inits false; cryptographic `pq_proof` path unchanged)
+- **shadow-mirror**: git calls use `execFileSync` (argv) + fail-closed `sanitizeRemediationId()` — closes command injection via `remediation_id`
+- **trust-boundaries `isHighImpact`**: added chmod/chown/dd/mv/kill/shutdown/eval/command-substitution/redirect detection + shell-obfuscation normalization; narrowed interpreter-script pattern to stop false-positives on `node <projectfile>`
+- **eis-client**: `verifyRemoteProvenance` delegates to real ZTAI signature verification, fail-closed (was returning true for any non-empty signature)
+
+### Integrity / honest labeling (fixed)
+
+- **ztai-archiver**: `verifyIntegrity()` recomputes the Merkle root from the live log (was a no-op `return true`); fail-closed on tamper/delete/reorder
+- **mesh-self-healer**: emits an honest degraded advisory instead of fabricated 94%/100% consensus
+- **logic-validator**: probes Ollama when reachable, honest heuristic fallback; stopped advertising the dead model path
+- **reason-source-aligner**: consistent return shape (uninitialized no longer silently disables the mission-fidelity gate); real Jaccard similarity
+- **sre-manager**: HMAC artifact relabeled as integrity tag, not "ZK-Proof"
+- **installer-core**: PQAS-enabled message gated on the real `experimental.pqc_demo` flag
+- **finding-synthesizer**: detects real severity-gap contradictions (was hardcoded `[]`)
+- **logic-drift-detector**: relabeled heuristic, not "Neural"
+- **session-manager / shadow-mirror(docker) / regression-writer / skill-registry**: honest disclosure instead of silent empties / fake isolation / tautological tests / mock placeholders
+- **MINDFORGE.md**: `[PQAS_ENFORCED]` reconciled to reflect simulated/inactive default; **ztai-manager** logs relabeled `[ZTAI-HSM-SIM]`
+
+### CI / hygiene
+
+- **release workflow**: asserts the git tag matches `package.json` version (fail-closed) + skips publish if the version is already on npm
+- **version-check**: runtime drift check widened to all 4 sources (was 2); SDK README guarded by test
+- removed dead `AuditRotator` class (CHANGELOG had wrongly claimed it removed); deprecated orphaned `createAppendQueue`
+- refreshed stale `v11.1.0` banners → current; added `cost_routing.shadow_mode` latch
+- version bumped to 11.2.1 across all sources
+
+## [11.2.0] - 2026-05-31 — "Verification & Trust"
+
+### Added
+
+- **UC-08 — Unified Verification Runner**
+  - `bin/engine/verification-runner.js`: orchestrates test/lint/audit/typecheck stages into structured results with pass/fail/skip per stage
+  - `bin/engine/verify-cli.js`: CLI entrypoint writing `.planning/VERIFICATION.md` reports
+  - `mindforge verify` command registered in CLI
+
+- **UC-25 — Eval Harness**
+  - `bin/eval/eval-harness.js`: recall@k, nDCG (graded relevance), and `runEval()` orchestrator for measuring retrieval quality
+  - `bin/eval/golden-set-retrieval.json`: 10-query seed golden set covering orchestration, security, memory, cost, verification, hooks, and architecture domains
+
+- **UC-22 — Tool/MCP Trust Boundaries**
+  - `bin/security/trust-boundaries.js`: manifest pinning (deterministic SHA-256 with recursive key sort), tamper detection, untrusted output tagging with provenance, and high-impact command detection
+  - `bin/security/trust-gate-hook.js`: PreToolUse hook that blocks destructive Bash commands (rm -rf, force-push, DROP TABLE, hard reset) via native Claude Code hooks
+  - Trust-gate registered in `.claude/settings.json` PreToolUse
+
+- **Council CLI**
+  - `bin/council-cli.js`: thin wrapper wiring `runCouncil` to the `/mindforge:council` command with structured JSON output and formatted display
+
+### Fixed
+
+- `auto-runner.js`: removed erroneous `new` on singleton ZTAIManager instance (was line 692)
+
+### Removed
+
+- Dead `quantum-verify` CLI command entry (no handler existed)
+- Dead `AuditRotator` class and its export from `bin/utils/file-io.js` (zero callers; rotation broke the hash chain at rotation boundaries — see `bin/autonomous/audit-writer.js`)
+
+### Changed
+
+- Config `pqas_signing` provider clarified as "Dilithium-5 (simulated — inactive)"
+- Banner version strings updated to v11.1.0 in self-corrective-synthesizer and remediation-engine
+- SDK README heading updated to "New in v11.1.0"
+- Version bumped to 11.2.0 across package.json and config.json
+
+---
+
+## [11.1.0] - 2026-05-31 — "Beast Mode"
+
+### Added
+
+- **Pillar I — Integrity & Trust**
+  - `bin/utils/append-queue.js`: single-writer fsync'd append queue for concurrent-safe durable writes (UC-09)
+  - `bin/governance/audit-hash.js`: single canonical SHA-256 hasher shared by writer + verifier (UC-04)
+  - `bin/governance/audit-verifier.js` + `bin/verify-audit.js` CLI: fail-closed hash-chain verifier (`exit 1` on any break) (UC-04)
+  - All 7 audit-write paths unified through `appendAuditEntrySync` — the audit log is now genuinely tamper-evident with a verifiable prev-hash chain (UC-04b)
+  - Simulated PQC demoted: `pqas_enabled=false` by default, gated behind `experimental.pqc_demo`; Tier-3 uses real Ed25519 (UC-24)
+
+- **Pillar II — Orchestration Correctness**
+  - `bin/autonomous/dependency-dag.js`: real Kahn topological sort + cycle detection, ported from test-only to the engine (UC-03)
+  - `planWaves(handoffs, {useDag:true})` opt-in DAG wave planning — explicit `.wave` always wins, legacy default unchanged (UC-03)
+  - Pre-flight cycle detection halts loud before any wave executes (UC-03)
+  - Wave-boundary timeout enforcement: `isTimedOut` + status `'timeout'` + resumable state (UC-14)
+  - Opt-in rollback hook records intent on terminal ESCALATE (no auto git-reset by default) (UC-14)
+  - `bin/engine/council-runtime.js`: minimal 4-voice council runtime (ADS loop) with injectable model, consensus scoring, dissent capture (UC-10)
+
+- **Pillar III — Cost-Aware Routing**
+  - `bin/models/pricing-registry.js`: single source of truth for model pricing, loaded from `config.json` market_registry (UC-05)
+  - All 3 providers routed through the registry — hardcoded pricing eliminated (UC-05)
+  - Prompt-cache accounting: `cache_control:{type:'ephemeral'}` on system blocks, `cache_read`/`cache_creation` parsed + priced at ~10% input rate (UC-21)
+  - `bin/models/difficulty-scorer.js`: heuristic 1-10 scorer with Tier-3 floor (UC-06)
+  - Shadow-mode difficulty routing: logs intended model without changing actual selection (UC-06)
+
+- **Pillar IV — Native Alignment + Observability**
+  - `.claude/settings.json` with hooks under real native events (`PostToolUse`/`PreToolUse`/`SessionStart`) — the security guard and context monitor now actually fire (UC-19a)
+  - `bin/hooks/instinct-capture-hook.js`: auto-captures behavioral patterns via PostToolUse, respects session limit (UC-11)
+  - `bin/engine/otel-exporter.js`: optional OTel GenAI exporter mapping NexusTracer spans to `gen_ai.*` semantic conventions, gated behind `OTEL_EXPORTER_OTLP_ENDPOINT` (UC-18)
+  - `bin/memory/retrieval-fusion.js`: Reciprocal Rank Fusion (RRF) over knowledge-graph + BM25 retrieval paths, replacing incomparable linear blends (UC-20)
+
+### Fixed
+
+- Audit-writer `close()` data-loss bug: threshold-triggered flushes were un-awaited, losing up to 10 entries on close (UC-09)
+- Audit-writer flush failure no longer crashes the process via unhandled rejection — logs to stderr (UC-09)
+- Vector-hub exit guard: `_dirty` boolean → pending-saves counter, closing a window where scheduled-but-unwritten saves were lost on hard exit (UC-09)
+- `isTimedOut` fails CLOSED on malformed `timeout_at` (garbage deadline = halt, not run unbounded) (UC-14)
+- Council position validation rejects NaN confidence / invalid recommendations (UC-10)
+- Dissent is now captured under NO_CONSENSUS verdict (the deadlock case where it matters most) (UC-10)
+- Pre-flight DAG check only cycle-checks stable-id tasks (id-less tasks can't be dependency targets) (UC-03)
+- `groupIntoWaves` self-defends: dangling dep throws "Unknown dependency" (not misleading "Circular") (UC-03)
+
+### Changed
+
+- Audit rotation retired (it broke the hash chain at every 5000-line boundary); AUDIT.jsonl grows unbounded for now — chain-aware compaction is a deferred future feature (UC-04b)
+- `knowledge-store.js` appends now use `appendDurableSync` (openSync+writeSync+fsyncSync+closeSync) for guaranteed durability (UC-09)
+- `auto-shadow.js` `generateShadowContext()` now fuses retrieval paths via RRF instead of a single-path linear blend (UC-20)
+
+### Removed
+
+- Orphaned `createAuditWriter` buffered path (zero production callers after UC-04b unification)
+- Hardcoded per-token pricing from `anthropic-provider.js`, `openai-provider.js`, `gemini-provider.js` (replaced by PricingRegistry)
+
+## [11.0.1] - 2026-05-30 — "Stability Patch"
+
+### Fixed
+
+- **Version drift**: reconciled `.mindforge/config.json` (was 10.7.0) with the 11.x line; added a fail-closed pre-flight version-consistency assertion (`bin/utils/version-check.js`) and a regression test that runs the migration and asserts its post-state, so the drift cannot silently return. (UC-01)
+- **Lint & dead code**: resolved all 109 ESLint errors, removed orphaned `bin/dashboard/team-tracker.js`, and made CI fail on any lint error. Fixed a latent `no-const-assign` runtime crash in `bin/review/ads-engine.js`. (UC-02)
+- **SDK `executeCommand` no-op**: replaced the published no-op stub (which made `batchExecute` report every task "fulfilled" while executing nothing) with a real `child_process.spawn` executor with stdout/stderr capture, timeout (SIGTERM→SIGKILL), and exit-code propagation; added a regression test against the compiled dist. (UC-07a)
+
+## [11.0.0] - 2026-05-28 — "Sovereign Stability"
+
+### Breaking Changes
+
+- `verifyZKProof()` returns structured `{ verified, reason }` instead of throwing
+- `signPQ()` returns `{ signature, simulated, algorithm }` object instead of raw string
+- Wave task execution order within waves is no longer deterministic
+- SDK bumped to 11.0.0 with new type exports
+- Dashboard tokens now expire after 24 hours
+- `TemporalHub.captureState()` and `rollbackTo()` are now async
+
+### Added
+
+- LRUMap utility class for bounded caches with eviction callbacks
+- Atomic JSON write primitives (write-to-temp, fsync, rename)
+- AUDIT.jsonl log rotation with gzip archival (max 5000 lines)
+- HANDOFF.json structural validation (fail-open)
+- Temporal snapshot garbage collection (retain 50, expire > 7 days)
+- BM25 scoring with document-length normalization
+- Persistent index cache (mtime-based invalidation)
+- Persistent adjacency index for knowledge graph
+- Correction effectiveness tracking in self-corrective synthesizer
+- Full remediation strategy implementations (CONTEXT_COMPRESSION, GOLDEN_TRACE_INJECTION, REASONING_RESTART)
+- Graduated intelligence interlock (+1/+2/MAX tier) with cost-awareness
+- 3-tier stuck detection (hash → length → truncated Levenshtein)
+- Adaptive context window (10/20/30 based on velocity)
+- Configurable external ZK verifier module path
+- Ephemeral SRE enclave keys (crypto.randomBytes)
+- Time-limited RBAC role elevation with auto-expiry
+- Session-scoped ZTAI agent registry
+- Dashboard rate limiting (100 req/min/IP) and token expiration (24h)
+- /api/v1/token/refresh endpoint
+- Optional GPG approval verification
+- GET /api/v1/system observability endpoint (heap, uptime, audit stats)
+- checkHeapHealth() with warning/critical thresholds
+- Remediation effectiveness persistence
+- Model router dynamic reload (mtime-based, 60s interval)
+- P95 latency ring buffer for cloud broker
+- EIS client with real fetch + 3-retry exponential backoff
+- Semaphore-based parallel wave execution (max concurrency configurable)
+- WebSocketEventStream with auto-reconnect
+- SDK streamExecution() with AsyncIterable<StreamChunk>
+- SDK batchExecute() with concurrent task execution
+- SDK validateRuntimeConfig()
+- Model streaming support (Anthropic, OpenAI, Gemini providers)
+- Migration script (bin/migrations/10.7.0-to-11.0.0.js)
+
+### Changed
+
+- sessionDriftHistory bounded to 500 entries via LRUMap
+- entropyCache bounded to 1000 entries via LRUMap
+- Cloud broker failure tracking uses 5-minute sliding window
+- Self-corrective synthesizer window expanded from 10 → 50 events
+- Context refactorer uses adaptive window instead of fixed 20
+
+### Fixed
+
+- Memory leaks from unbounded Maps in long-running sessions
+- Data corruption risk on process crash during state file writes
+- Disk exhaustion from unbounded AUDIT.jsonl and snapshot growth
+- Hardcoded SRE enclave private key (security issue)
+
+---
+
+## [10.7.0] - 2026-05-27 — "Platform Sovereign"
+
+### Added (v10.7.0)
+
+- **10 new core skills** — internal-developer-platform, self-serve-infrastructure, platform-reliability, developer-productivity-metrics, api-marketplace, build-system-optimization, secrets-platform, environment-management, platform-observability, migration-platform.
+- **6 new commands** — `/mindforge:platform`, `/mindforge:build-opt`, `/mindforge:secrets-mgmt`, `/mindforge:environments`, `/mindforge:observability-platform`, `/mindforge:migration-mgmt`.
+- **6 new personas** — platform-lead, build-engineer, environment-engineer, productivity-analyst, secrets-engineer, migration-architect.
+- **1 new swarm template** — PlatformSwarmV2 (HITL platform engineering + migration).
+- **200 core skills milestone** — Full coverage across 12 domains.
+- **Swarm templates v15.0.0** — 49 total templates.
+
+---
+
+## [10.6.0] - 2026-05-27 — "Data Alchemy"
+
+### Added (v10.6.0)
+
+- **10 new core skills** — causal-inference, feature-engineering, ml-monitoring, data-governance, stream-processing, data-lakehouse, experiment-platform, data-mesh, real-time-analytics, data-privacy-engineering.
+- **6 new commands** — `/mindforge:causal`, `/mindforge:lakehouse`, `/mindforge:data-mesh`, `/mindforge:stream`, `/mindforge:privacy-eng`, `/mindforge:realtime-analytics`.
+- **6 new personas** — causal-scientist, data-mesh-architect, stream-engineer, lakehouse-architect, privacy-engineer, analytics-engineer.
+- **1 new swarm template** — DataAlchemySwarm (HITL data architecture + privacy).
+
+---
+
+## [10.5.0] - 2026-05-27 — "AI Frontier"
+
+### Added (v10.5.0)
+
+- **10 new core skills** — multimodal-ai, ai-safety-alignment, synthetic-data-generation, model-evaluation, embedding-systems, llm-orchestration, knowledge-graphs, ml-feature-store, ai-cost-management, autonomous-agents.
+- **8 new commands** — `/mindforge:multimodal`, `/mindforge:ai-safety`, `/mindforge:embeddings`, `/mindforge:llm-route`, `/mindforge:knowledge-graph`, `/mindforge:feature-store`, `/mindforge:ai-cost`, `/mindforge:agent-design`.
+- **8 new personas** — multimodal-engineer, ai-safety-engineer, embedding-architect, llm-orchestrator, knowledge-engineer, feature-store-engineer, ai-economist, agent-architect.
+- **1 new swarm template** — AIFrontierSwarm (HITL AI system architecture + safety).
+
+---
+
+## [10.4.0] - 2026-05-27 — "Cross-Platform"
+
+### Added (v10.4.0)
+
+- **10 new core skills** — react-native-patterns, flutter-architecture, offline-first-design, progressive-web-app, mobile-performance, cross-platform-testing, app-store-deployment, mobile-security, responsive-native, push-notification-architecture.
+- **6 new commands** — `/mindforge:mobile`, `/mindforge:react-native`, `/mindforge:flutter`, `/mindforge:offline`, `/mindforge:pwa`, `/mindforge:push-notify`.
+- **6 new personas** — mobile-architect, react-native-engineer, flutter-engineer, offline-specialist, mobile-security-engineer, pwa-architect.
+- **1 new swarm template** — MobileSwarm (HITL cross-platform architecture).
+
+---
+
+## [10.3.0] - 2026-05-27 — "Leader's Edge"
+
+### Added (v10.3.0)
+
+- **10 new core skills** — technical-leadership, mentoring-patterns, stakeholder-communication, conflict-resolution, incident-communication, hiring-engineering, delegation-patterns, meeting-architecture, performance-reviews, change-management.
+- **6 new commands** — `/mindforge:lead`, `/mindforge:communicate`, `/mindforge:hire`, `/mindforge:delegate`, `/mindforge:meeting-design`, `/mindforge:change`.
+- **6 new personas** — tech-lead-coach, communication-architect, hiring-strategist, change-agent, meeting-designer, mentorship-lead.
+- **1 new swarm template** — LeadershipSwarm (HITL engineering leadership).
+
+---
+
+## [10.2.0] - 2026-05-27 — "Industry Forge"
+
+### Added (v10.2.0)
+
+- **10 new core skills** — healthcare-systems, fintech-patterns, ecommerce-architecture, gaming-backend, edtech-platform, saas-multi-tenant, media-streaming, iot-platform, marketplace-trust, logistics-optimization.
+- **8 new commands** — `/mindforge:healthcare`, `/mindforge:fintech`, `/mindforge:ecommerce`, `/mindforge:gaming`, `/mindforge:edtech`, `/mindforge:iot`, `/mindforge:marketplace`, `/mindforge:logistics`.
+- **8 new personas** — healthcare-engineer, fintech-architect, ecommerce-engineer, gaming-engineer, edtech-architect, iot-architect, marketplace-engineer, logistics-architect.
+- **1 new swarm template** — IndustryVerticalSwarm (HITL domain-specific architecture).
+- **150 core skills milestone** — Industry vertical coverage added.
+
+---
+
+## [10.1.1] - 2026-05-26 — "Scale & Edge"
+
+### Added (v10.1.1)
+
+- **10 new core skills** — edge-computing, serverless-patterns, container-security, zero-trust-architecture, ai-agent-deployment, distributed-consensus, data-pipeline-design, dns-architecture, cdn-optimization, database-sharding-advanced.
+- **6 new commands** — `/mindforge:edge`, `/mindforge:serverless`, `/mindforge:zero-trust`, `/mindforge:agent-deploy`, `/mindforge:data-pipeline`, `/mindforge:cdn`.
+- **6 new personas** — edge-engineer, zero-trust-engineer, agent-ops-engineer, consensus-engineer, data-pipeline-architect, cdn-architect.
+- **2 new swarm templates** — EdgeScaleSwarm (HITL edge + CDN), DistributedSwarm (HITL consensus + pipelines).
+- **140 core skills milestone** — Comprehensive coverage of emerging technology and massive-scale patterns.
+- **Swarm templates v14.0.0** — Bump from v13.0.0 with 2 new templates (total: 43 swarm templates).
+
+---
+
+## [10.1.0] - 2026-05-26 — "Strategic Intelligence"
+
+### Added (v10.1.0)
+
+- **20 new core skills** — build-vs-buy, technology-radar, architecture-tradeoff-analysis, technical-interview-design, post-incident-learning, team-topology-design, sprint-retrospective-facilitation, knowledge-sharing-systems, estimation-techniques, on-call-design, experiment-design, analytics-instrumentation, notification-system-design, payment-integration, email-deliverability, agent-memory-design, agent-evaluation-framework, multi-turn-conversation-design, agent-tool-selection, human-in-the-loop-design.
+- **10 new commands** — `/mindforge:build-vs-buy`, `/mindforge:tech-radar`, `/mindforge:team-topology`, `/mindforge:retro`, `/mindforge:experiment`, `/mindforge:analytics`, `/mindforge:payments`, `/mindforge:agent-memory`, `/mindforge:agent-eval`, `/mindforge:hitl`.
+- **8 new personas** — decision-architect, team-coach, knowledge-curator, experiment-designer, payments-engineer, agent-memory-designer, agent-evaluator, hitl-architect.
+- **3 new swarm templates** — DecisionSwarm (HITL decision quality), TeamDesignSwarm (HITL team topology), AgentMetaSwarm (autonomous self-improvement).
+- **130 core skills milestone** — Category expansion into decision science, team engineering, product patterns, and agent meta-intelligence.
+- **Minor version bump (10.1.0)** — Represents category expansion beyond pure engineering into strategy and meta-intelligence.
+- **Swarm templates v13.0.0** — Bump from v12.0.0 with 3 new templates (total: 41 swarm templates).
+
+---
+
+## [10.0.9] - 2026-05-26 — "Full Spectrum"
+
+### Added (v10.0.9)
+
+- **20 new core skills** — streaming-architecture, queue-design, real-time-sync, cost-estimation, technical-debt-management, capacity-planning, graceful-degradation, idempotency-patterns, rate-limiting-design, code-generation-patterns, dependency-management, git-workflow-design, i18n-architecture, a11y-testing, multi-tenancy-patterns, audit-logging, database-performance, bundle-optimization, graphql-patterns, pagination-patterns.
+- **10 new commands** — `/mindforge:stream`, `/mindforge:queue`, `/mindforge:finops`, `/mindforge:tech-debt`, `/mindforge:degrade`, `/mindforge:idempotent`, `/mindforge:rate-limit`, `/mindforge:i18n`, `/mindforge:multi-tenant`, `/mindforge:graphql`.
+- **8 new personas** — streaming-engineer, finops-analyst, debt-manager, resilience-engineer, codegen-specialist, i18n-architect, multi-tenancy-architect, graphql-designer.
+- **3 new swarm templates** — StreamingSwarm (HITL real-time), ResilienceSwarm (autonomous failure engineering), GovernanceSwarm (HITL data governance).
+- **110 core skills milestone** — Comprehensive coverage across all major software engineering domains achieved.
+- **Swarm templates v12.0.0** — Bump from v11.0.0 with 3 new templates (total: 38 swarm templates).
+
+---
+
+## [10.0.8] - 2026-05-26 — "Deep Patterns"
+
+### Added (v10.0.8)
+
+- **20 new core skills** — contract-testing, load-testing, mutation-testing, visual-regression-testing, monorepo-management, cli-design, developer-onboarding, error-handling-architecture, caching-strategies, migration-strategies, connection-pooling, event-driven-architecture, api-gateway-patterns, websocket-patterns, feature-flag-management, secrets-rotation, compliance-as-code, rag-architecture, fine-tuning-workflow, llm-cost-optimization.
+- **10 new commands** — `/mindforge:contract-test`, `/mindforge:load-test`, `/mindforge:monorepo`, `/mindforge:cli`, `/mindforge:cache`, `/mindforge:events`, `/mindforge:secrets`, `/mindforge:rag`, `/mindforge:feature-flags`, `/mindforge:compliance`.
+- **8 new personas** — contract-tester, dx-engineer, cache-architect, event-architect, compliance-engineer, ml-ops-engineer, platform-engineer, api-gateway-designer.
+- **3 new swarm templates** — TestingDeepSwarm (autonomous deep testing), PlatformSwarm (HITL platform engineering), MLOpsSwarm (HITL ML operations).
+- **90 core skills milestone** — Production-depth coverage for testing, caching, events, secrets, compliance, RAG, and cost optimization.
+- **Swarm templates v11.0.0** — Bump from v10.0.0 with 3 new templates (total: 35 swarm templates).
+
+---
+
+## [10.0.7] - 2026-05-26 — "Meta Engineer"
+
+### Added (v10.0.7)
+
+- **20 new core skills** — prompt-engineering, context-engineering, agent-orchestration-patterns, tool-design, guardrails-and-safety, observability-stack, ci-cd-pipeline, infrastructure-as-code, incident-management, chaos-engineering, data-modeling, api-versioning, search-implementation, design-system, state-management, responsive-patterns, auth-patterns, supply-chain-security, technical-writing, code-review-methodology.
+- **10 new commands** — `/mindforge:prompt`, `/mindforge:context-budget`, `/mindforge:orchestrate`, `/mindforge:observability`, `/mindforge:pipeline`, `/mindforge:data-model`, `/mindforge:design-tokens`, `/mindforge:auth-flow`, `/mindforge:write-rfc`, `/mindforge:review-guide`.
+- **8 new personas** — prompt-architect, agent-orchestrator, sre-lead, pipeline-engineer, data-architect, design-system-lead, auth-engineer, technical-writer-lead.
+- **3 new swarm templates** — PromptEngineeringSwarm (HITL AI engineering), SRESwarm (HITL reliability), FrontendSwarm (autonomous design system).
+- **70 core skills milestone** — Framework now covers AI engineering, DevOps, reliability, data, frontend, advanced security, and technical communication.
+- **Swarm templates v10.0.0** — Bump from v9.0.0 with 3 new templates (total: 32 swarm templates).
+
+---
+
+## [10.0.6] - 2026-05-26 — "Complete Arsenal"
+
+### Added (v10.0.6)
+
+- **17 new core skills** — microservices-patterns, cqrs-event-sourcing, system-design, business-analyst, product-manager, market-researcher, typescript-advanced, python-performance, react-performance, k8s-deployment, writing-plans, writing-skills, using-git-worktrees, code-tour, autonomous-agent-harness, mcp-server-patterns, proofreader.
+- **10 new commands** — `/mindforge:microservices`, `/mindforge:system-design`, `/mindforge:brd`, `/mindforge:product-spec`, `/mindforge:market-research`, `/mindforge:code-tour`, `/mindforge:mcp-server`, `/mindforge:proofread`, `/mindforge:worktrees`, `/mindforge:plan-write`.
+- **8 new personas** — business-analyst, product-owner, market-analyst, mcp-designer, proofreader, system-designer, worktree-manager, code-narrator.
+- **3 new swarm templates** — ArchDesignSwarm (HITL system design), ProductSwarm (HITL product strategy), DocumentationSwarm (autonomous content quality).
+- **Swarm templates v9.0.0** — Bump from v8.0.0 with 3 new templates (total: 29 swarm templates).
+- **50 core skills milestone** — Framework now covers architecture, business, languages, workflow, infrastructure, and documentation domains.
+
+---
+
+## [10.0.5] - 2026-05-26 — "Forge Master"
+
+### Added (v10.0.5)
+
+- **5 new core skills** — skill-creator-meta, deployment-workflow, dmux-workflows, vibe-security, instinct-clustering.
+- **5 new commands** — `/mindforge:create-skill`, `/mindforge:deploy`, `/mindforge:dmux`, `/mindforge:vibe-check`, `/mindforge:cluster-instincts`.
+- **5 new personas** — skill-smith, deployment-captain, dmux-orchestrator, vibe-checker, saga-orchestrator.
+- **2 new swarm templates** — DeploymentSwarm (HITL staged rollout), ForgeSwarm (autonomous skill creation).
+- **De-slop gate** — Phase 6.5 in verification-loop: informational de-slop scan before shipping (non-blocking).
+- **Cross-model eval spec** — `.mindforge/engine/cross-model-eval.md` for routing same task to 2 models and comparing outputs.
+- **Swarm templates v8.0.0** — Bump from v7.0.0 with 2 new templates (total: 26 swarm templates).
+
+---
+
+## [10.0.4] - 2026-05-26 — "Santa's Eval"
+
+### Added (v10.0.4)
+
+- **8 new core skills** — santa-method, eval-harness, quality-audit, testing-anti-patterns, defense-in-depth, codebase-onboarding, rfc-pipeline, de-sloppify.
+- **6 new commands** — `/mindforge:santa`, `/mindforge:eval`, `/mindforge:quality-audit`, `/mindforge:rfc`, `/mindforge:onboard`, `/mindforge:de-slop`.
+- **6 new personas** — eval-judge, rfc-architect, anti-pattern-hunter, onboarding-navigator, de-sloppifier, quality-scorer.
+- **3 new swarm templates** — EvalSwarm (autonomous eval gate), OnboardingSwarm (autonomous codebase discovery), RFCSwarm (HITL spec decomposition).
+- **Proactive Skill Suggestion Engine** — Signal-based skill detection (file/error/task patterns) with confidence threshold (0.7), cooldown tracking, and debounce logic.
+- **Eval storage** — `.mindforge/evals/` directory for persisting eval configs, rubrics, and results.
+- **Swarm templates v7.0.0** — Bump from v6.0.0 with 3 new templates (total: 24 swarm templates).
+
+---
+
+## [10.0.3] - 2026-05-25 — "Council Awakens"
+
+### Added (v10.0.3)
+
+- **10 new core skills** — agent-loops, multi-llm-consult, continuous-learning, council, verification-loop, threat-modeling, autonomous-loops, agent-introspection-debugging, cost-aware-routing, doc-health-audit.
+- **8 new commands** — `/mindforge:council`, `/mindforge:consult`, `/mindforge:verify-loop`, `/mindforge:introspect`, `/mindforge:cost-report`, `/mindforge:threat-model`, `/mindforge:learn-instinct`, `/mindforge:evolve-skills`.
+- **9 new personas** — cost-optimizer, threat-modeler, council-architect, council-skeptic, council-pragmatist, council-critic, instinct-curator, doc-auditor, multi-model-bridge.
+- **3 new swarm templates** — CouncilSwarm (HITL decision gate), VerificationSwarm (autonomous quality gates), LearningSwarm (instinct management).
+- **Skill Composition System** — Skills can now declare dependencies on other skills via `compose:` frontmatter field. Composed skills are injected as summaries (max 2-level depth, cycle detection).
+- **Instinct Engine** — Auto-capture learned behaviors with confidence scoring. Instincts auto-promote to skills at 0.85 confidence after 5+ successful applications. Project-scoped, max 100 per project.
+- **Cost Tracking Module** — Token budgeting, 5-tier model routing (Haiku/Sonnet/Opus/Gemini/GPT-4o), spend analytics via token-ledger.jsonl.
+- **Council Framework** — 4-voice decision harness (Architect, Skeptic, Pragmatist, Critic) with weighted consensus scoring, dissent documentation, and 5 pre-built templates.
+- **Cross-Iteration Bridge** — SHARED_TASK_NOTES.md for semantic context persistence across autonomous mode iterations (complements HANDOFF.json).
+- **Swarm templates v6.0.0** — Bump from v5.0.0 with 3 new templates (total: 21 swarm templates).
+- **claude-opus-4-7** added to market_registry in config.json.
+- **Loader composition step** — New Step 4.1 in skill loader for resolving `compose:` dependencies.
+
+---
+
+## [10.0.2] - 2026-05-24 — "Persona Expansion"
+
+### Added (v10.0.2)
+
+- **47 new specialist personas** — Security & Compliance (6), Architecture & System Design (8), Frontend & UX (10), Performance & Reliability (5), Data & ML (4), DevOps & Infrastructure (6), Language Specialists (5), DX & Operations (8), Strategy & Review (9), Specialized Engineering (10).
+- **6 new swarm templates** — ArchitectureSwarm, PerformanceSwarm, InfrastructureSwarm, AccessibilitySwarm, ReviewSwarm, MigrationSwarm.
+- **Updated existing swarms** — UISwarm, BackendSwarm, SecuritySwarm, DeveloperExperienceSwarm, DataMeshSwarm, IncidentResponseSwarm, ComplianceSwarm, QualityAssuranceSwarm now include relevant new specialist personas.
+- **Swarm templates v5.0.0** — Bump from 4.2.0 with expanded member rosters and new specialist orchestration patterns.
+- **Persona registry documentation** — 10 new category tables in `docs/registry/PERSONAS.md`.
+- **Persona reference guide** — Updated `docs/PERSONAS.md` with all 47 entries (total: 108 personas).
+
+---
+
+## [10.0.0] - 2026-05-21 — "Bedrock Fortified"
+
+### Added (v10.0.0)
+
+- **Bearer token authentication** — All dashboard mutating endpoints now require `Authorization: Bearer <token>` header. Protects SSE, steering, and approval routes.
+- **Auth on browser daemon** — The `/evaluate` endpoint on the Playwright browser daemon now requires authentication, closing a remote code execution vector.
+- **Unified test runner** — `tests/run-all.js` discovers and executes all 43 test files with pass/fail summary and exit code propagation.
+- **Shared utilities layer** — `bin/utils/paths.js`, `file-io.js`, and `errors.js` provide consistent path resolution, safe file I/O, and typed error classes across the codebase.
+- **AuditWriter module** — Buffered async writes with Merkle hash chaining, replacing direct synchronous file append calls in the auto-runner.
+- **State manager module** — Extracted from auto-runner for clean separation of execution state persistence.
+- **Task dispatcher module** — Extracted from auto-runner for isolated task routing and repair-operator logic.
+- **Wave executor module** — Extracted from auto-runner for wave-level orchestration and progress tracking.
+- **Dependabot configuration** — Weekly npm dependency updates and monthly GitHub Actions version bumps.
+- **CODEOWNERS file** — Defines review ownership for security-sensitive paths (`bin/governance/`, `bin/engine/`, SDK).
+- **npm provenance** — Release workflow now publishes with `--provenance` for SLSA Build Level 2 supply chain attestation.
+- **CLI "Did you mean?" suggestions** — Levenshtein distance matching for mistyped commands (e.g., `mindforge statsus` suggests `status`).
+- **CLI --verbose flag** — Enables detailed execution tracing for debugging framework behavior.
+- **CLI mindforge bin entry** — Post-install accessible binary for direct invocation without `npx`.
+- **Structured action allowlist** — Replaces the regex-based prompt injection blocklist with an explicit allowlist of permitted autonomous actions.
+- **.npmignore** — Excludes runtime artifacts, test fixtures, planning state, and intelligence logs from the published package.
+- **Knowledge store O(1) index** — Hash-map index for stores exceeding 100 entries, eliminating linear scans.
+- **SSE idle detection** — Dashboard polling pauses when no clients are connected, reducing CPU and I/O overhead.
+- **Metrics TTL cache** — 5-second time-to-live cache prevents redundant metrics recomputation on rapid dashboard refreshes.
+- **Smart mtime-based polling** — File watchers skip re-reads when mtime has not changed since last poll cycle.
+- **NON-OVERRIDABLE governance** — Added non-overridable parameter section to MINDFORGE.md for security-critical settings.
+- **HANDOFF schema alignment** — Unified HANDOFF.json to v1.0.0 schema with all required fields.
+
+### Changed (v10.0.0)
+
+- **VectorHub: sql.js (WASM) replaces better-sqlite3 (native C++)** — Eliminates native compilation, node-gyp, and platform-specific build failures. Zero native dependencies.
+- **VectorHub: lazy Proxy + factory pattern** — Database connection is deferred until first query. Callers use `createVectorHub()` factory instead of direct constructor.
+- **VectorHub: WAL mode + FTS4** — Write-Ahead Logging for concurrent reads; FTS4 replaces FTS5 for sql.js compatibility.
+- **VectorHub: parameterized queries throughout** — All user-influenced values use bound parameters, closing SQL injection vectors.
+- **Auto-runner decomposition** — Reduced from 672 lines to 367 lines by extracting 4 focused modules (task-dispatcher, wave-executor, state-manager, audit-writer).
+- **NexusTracer async migration** — Moved from synchronous file appends to non-blocking writes with back-pressure handling.
+- **PolicyEngine async migration** — Governance evaluation no longer blocks the event loop during high-throughput wave execution.
+- **SDK memory.ts rewrite** — Now self-contained with no imports from `../../bin/`. Independently publishable.
+- **SDK exports field** — Package.json `exports` map enables tree-shaking and prevents deep import of internal modules.
+- **SDK files field** — Only ships compiled output and type declarations; source maps excluded from production.
+- **Real validateConfig() implementation** — Validates 5 required fields with type checking and schema enforcement (replaces no-op stub).
+- **Lazy module loading in auto-runner** — 12 heavy `require()` calls deferred to first-use, cutting cold-start time.
+- **Package size reduction** — From 3.9 MB / 866 files to 1.1 MB / 245 files (72% smaller).
+- **CI workflow** — Node 18/20/22 matrix, `npm ci`, npm caching, c8 coverage at 30% threshold.
+- **Model topology assertions** — Updated test expectations to match Claude 4.x and Gemini 2.5 model family.
+- **Skills MANIFEST** — Updated manifest to register all 10 core skills with proper paths and schema version.
+- **README rewritten** — Clear value proposition, quick-start, and architecture overview at the top.
+- **All docs version-stamped** — References updated to v10.0.0 throughout.
+- **SDK reference documentation** — Expanded from 28 lines to 230+ lines with full API surface coverage.
+
+### Fixed (v10.0.0)
+
+- **CRITICAL: Hardcoded npm token removed** — `NPM_TOKEN` was embedded in CI config; now sourced exclusively from environment variables with startup validation.
+- **CRITICAL: ZK-proof governance bypass closed** — `verifyZKProof()` previously returned `true` unconditionally; now throws `GovernanceViolationError` with fail-closed semantics.
+- **CRITICAL: Path traversal in temporal API** — `auditId` parameter accepted `../` sequences; now validated with regex allowlist and directory containment check.
+- **CRITICAL: Command injection in change-classifier** — Shell-interpreted user input replaced with argument-array invocation, eliminating shell interpretation.
+- **Runtime crash in learning-manager.js** — Null reference on empty knowledge store; added defensive initialization.
+- **4 broken test files** — Fixed `nexus-tracing.test.js`, `model-broker.test.js`, `feedback-loop.test.js`, and `security-audit.test.js` (stale mocks, missing fixtures, async race conditions).
+- **Observability workflow trigger** — Workflow `name:` field now matches the `workflow_run.workflows` reference in dependent jobs.
+- **Duplicate release-plane.yml** — Removed conflicting workflow file that caused CI confusion.
+
+### Removed (v10.0.0)
+
+- **better-sqlite3 dependency** — Native C++ addon removed in favor of sql.js (pure WASM). Eliminates `node-gyp`, Python, and platform-specific build toolchains.
+- **Dead CLI routes** — `sync-jira` and `sync-confluence` commands removed (integration stubs with no implementation).
+- **Duplicate release workflow** — `release-plane.yml` deleted; single `release.yml` is the canonical publish pipeline.
+- **Regex-based prompt injection blocklist** — Replaced by structured action allowlist (fewer false positives, auditable).
+
+---
+
+## [9.0.0] - 2026-04-30
+
+### Added (v9.0.0: Bedrock Meridian — Pillars XXIV-XXVIII)
+
+- **Pillar XXIV: Grounded Wave Execution** — Replaced AutoRunner stubs with real HANDOFF-driven wave parsing, task dispatch, progress tracking, and state persistence. `hasNextWave()` reads HANDOFF.json wave groups. `executeWave()` iterates tasks with audit logging and repair-operator integration. `runPreFlight()` validates project state and restores progress from `auto-state.json`.
+- **Pillar XXV: Model Topology Modernization** — Updated all model references from Claude 3.x to Claude 4.x family (`claude-opus-4-7`, `claude-sonnet-4-6`, `claude-haiku-4-5`). Updated `model-router.js`, `model-client.js`, `model-broker.js`, `cloud-broker.js`, and `MINDFORGE.md`. Aligned pricing tables and fallback chains.
+- **Pillar XXVI: Unified Memory Architecture** — Added `knowledge` and `graph_edges` tables to VectorHub (SQLite). New `saveKnowledge()`, `searchKnowledge()`, `saveEdge()`, `getEdges()` methods. FTS5 index on knowledge content. Consolidates 4 JSONL-based memory systems into a single SQLite store.
+- **Pillar XXVII: Schema Migration Engine** — Added `_migrations` table to VectorHub for tracking applied migrations. New `v9-unified-memory.js` migration script that reads legacy JSONL stores and imports into SQLite. Registered in `migrate.js` runner.
+- **Pillar XXVIII: Integration Test Chain** — New `tests/v9-integration-chain.test.js` verifying the full pipeline: wave parsing, model topology, VectorHub schema, migration engine, and SDK sync. 17 assertions across all v9 pillars.
+
+### Changed (v9.0.0)
+
+- **SDK**: Bumped `@mindforge/sdk` VERSION to `9.0.0`. Added `WaveExecutionResult` and `MigrationResult` types. Added `readAutoState()` and `isDatabaseInitialized()` to client.
+- **VectorHub**: Removed try/catch `ALTER TABLE` pattern (v8 legacy). Schema creation is now declarative via `createTable().ifNotExists()`.
+- **MINDFORGE.md**: Version bumped to `9.0.0-BEDROCK`. Model topology section normalized to Claude 4.x.
+
+---
+
+## [8.2.1] - 2026-04-25
+
+### Fixed (v8.2.1: Stability & Cleanup)
+
+- **Payload Pruning**: Removed development-only test scripts from `bin/engine` and `bin/governance`.
+- **State Sanitization**: Cleaned up local persistence files (`celestial.db`, `memory/*.jsonl`) and session-specific planning artifacts.
+- **Structural Hardening**: Restored clean templates for `.planning/HANDOFF.json` and other core descriptors.
+- **NPM Optimization**: Reduced package size by excluding unneeded build-time caches and logs.
+
 ## [8.2.0] - 2026-04-18
 
 ### Added (v8.2.0: Autonomous SRE Layer — Pillars XX-XXIII)
@@ -9,8 +793,6 @@
 - **Adversarial SRE Debate**: Three-way consensus protocol for high-fidelity remediation auditing.
 - **SLI-Gating Protocol**: Metric-driven verification loops to prevent performance regressions during self-healing.
 - **Persona Hardening**: Registered `sre-engineer` and `sre-auditor`, with the Auditor locked to **Claude 4.5 Opus**.
-
----
 
 ## [8.1.0] - 2026-04-13
 

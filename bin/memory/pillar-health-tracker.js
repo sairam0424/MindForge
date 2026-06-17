@@ -18,7 +18,15 @@ class PillarHealthTracker {
     if (!fs.existsSync(auditPath)) return null;
 
     const lines = fs.readFileSync(auditPath, 'utf8').trim().split('\n');
-    const events = lines.map(l => JSON.parse(l));
+    const events = lines
+      .map(l => {
+        try {
+          return JSON.parse(l);
+        } catch {
+          return null; // Skip malformed lines rather than crashing the pipeline.
+        }
+      })
+      .filter(Boolean);
 
     // 1. RSA (Mission Fidelity) Analysis
     const rsaEvents = events.filter(e => e.type === 'mission_fidelity' || e.event === 'scs_homing_injected');

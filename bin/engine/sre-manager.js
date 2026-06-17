@@ -6,9 +6,16 @@
 
 const crypto = require('crypto');
 
-// Simulated System DID for Enclave Proofs (Tier 3)
-const ENCLAVE_PRIVATE_KEY = 'tier3-enclave-secret-key-sim'; // In production, this would be a TEE-bound private key
+const EPHEMERAL_ENCLAVE_KEY = crypto.randomBytes(32).toString('hex');
 const SYSTEM_DID = 'did:mindforge:enclave:0xenterprise';
+
+let _enclaveWarningShown = false;
+function warnNonTEE() {
+  if (!_enclaveWarningShown) {
+    console.warn('[SRE] Running in simulated enclave mode — not backed by hardware TEE');
+    _enclaveWarningShown = true;
+  }
+}
 
 class SREManager {
   constructor() {
@@ -25,6 +32,7 @@ class SREManager {
       throw new Error(`[SRE-DENY] Tier ${context.tier} principal is not authorized for Sovereign Reason Enclaves.`);
     }
 
+    warnNonTEE();
     const enclaveId = crypto.randomBytes(12).toString('hex');
     this.activeEnclaves.set(enclaveId, {
       startedAt: new Date().toISOString(),
@@ -39,12 +47,22 @@ class SREManager {
   }
 
   /**
-   * Sanitizes a thought chain and generates a ZK-Proof Compliance Certificate.
-   * Ensures that sensitive IP or "zero-visibility" thoughts are isolated while proving audit-eligibility.
+   * Sanitizes a thought chain and generates an HMAC integrity certificate.
+   *
+   * IMPORTANT — HONEST LABELING: This is NOT a zero-knowledge proof. The
+   * artifact is an HMAC-SHA256 tag computed with a process-local shared secret
+   * (EPHEMERAL_ENCLAVE_KEY). It provides tamper-evidence/integrity over the
+   * proof payload, but:
+   *   - any party holding the key can forge it (symmetric MAC, not asymmetric),
+   *   - the payload carries the plaintext sha256(thoughtChain) digest, so it is
+   *     not "zero-visibility".
+   * The enclave is simulated (no hardware TEE). Consumers must treat the
+   * returned object as an integrity tag, not a cryptographic ZK proof.
+   *
    * @param {string} thoughtChain - The raw agentic thought chain.
    * @param {string} enclaveId - The active enclave ID.
    * @param {Object} policyResult - Whether the content passed internal policy checks.
-   * @returns {Object} - ZK-Proof compliance certificate.
+   * @returns {Object} - HMAC integrity certificate (simulated enclave).
    */
   sanitizeThoughtChain(thoughtChain, enclaveId, policyResult = { passed: true }) {
     if (!this.activeEnclaves.has(enclaveId)) {
@@ -56,7 +74,7 @@ class SREManager {
     const prevHash = enclaveData.cumulativeHash;
     const digest = crypto.createHash('sha256').update(thoughtChain).digest('hex');
     
-    // Generate a simulated ZK-Proof Compliance Certificate
+    // Generate a simulated-enclave HMAC integrity certificate (NOT a ZK proof)
     const proofPayload = {
       enclaveId: enclaveId,
       digest: digest,
@@ -67,7 +85,7 @@ class SREManager {
     };
 
     // Sign the proof with the Enclave Private Key
-    const signature = crypto.createHmac('sha256', ENCLAVE_PRIVATE_KEY)
+    const signature = crypto.createHmac('sha256', EPHEMERAL_ENCLAVE_KEY)
       .update(JSON.stringify(proofPayload))
       .digest('hex');
 
@@ -77,23 +95,40 @@ class SREManager {
 
     const certificate = {
       status: 'SRE-ISOLATED',
+      // Honest labeling: this is a symmetric HMAC integrity tag, not a ZK proof.
+      type: 'hmac-integrity-certificate',
+      method: 'hmac-sha256-integrity',
+      simulated: true,
+      zeroKnowledge: false,
+      disclosure: 'HMAC integrity tag (simulated enclave; NOT a zero-knowledge proof). '
+        + 'Forgeable by any holder of the shared enclave key; payload carries the plaintext sha256(thought) digest.',
       proof: proofPayload,
       signature: signature,
       proofHash: proofHash,
       verificationDid: SYSTEM_DID,
-      message: `[SRE-ZK-PROOF] Confidential reasoning (sha256:${digest.substring(0, 8)}...) verified by Enclave Auditor.`
+      message: `[SRE-HMAC] HMAC integrity tag for confidential reasoning (sha256:${digest.substring(0, 8)}...) `
+        + 'in simulated enclave — NOT a zero-knowledge proof.'
     };
 
     return certificate;
   }
 
   /**
-   * Verifies an SRE Compliance Certificate without seeing the original content.
+   * Verifies an SRE integrity certificate's HMAC tag and policy flag.
+   *
+   * NOTE — HONEST LABELING: this recomputes the HMAC-SHA256 tag using the
+   * shared enclave key and compares it. It is symmetric MAC verification, NOT
+   * zero-knowledge verification. The method name is retained for API
+   * compatibility with existing callers; see verifyIntegrityCertificate alias.
    */
+  verifyIntegrityCertificate(certificate) {
+    return this.verifyZKProof(certificate);
+  }
+
   verifyZKProof(certificate) {
     if (certificate.status !== 'SRE-ISOLATED') return false;
 
-    const expectedSignature = crypto.createHmac('sha256', ENCLAVE_PRIVATE_KEY)
+    const expectedSignature = crypto.createHmac('sha256', EPHEMERAL_ENCLAVE_KEY)
       .update(JSON.stringify(certificate.proof))
       .digest('hex');
 

@@ -1,13 +1,52 @@
-# MindForge v8.2.0 — Autonomous SRE (Pillars XX-XXIII Enabled)
+# MindForge
 
-MindForge v8.2.0 introduces the **Autonomous SRE Layer**, enabling self-healing intelligence for production environments. This follows the **Sovereign Identity** synthesis stage (v8.1.1), adding proactive observability (Sentinel) and adversarial remediation auditing (Pillars XX-XXIII).
+**An agentic intelligence framework for Claude Code** — orchestrates multi-agent workflows with governance, memory, and autonomous execution. Production-hardened with true parallelism, streaming SDK, and zero-trust security. Install once, get structured AI-driven development with built-in quality gates.
+
+---
+
+## Latest: v11.6.0
+
+- **v11.6.0 — "Skill Forge".** Adds 80 community-sourced skills across 8 domains (software-development, github, devops, research, security, creative, data-science, note-taking) — 30 promoted to engine tier for automatic trigger-matching, 50 in the extended tier for explicit activation. Three new slash commands: `/mindforge:systematic-debug`, `/mindforge:skill-tdd`, `/mindforge:skills-index`. Total: 153 skills, 232 engine-tier entries, 177 commands.
+- **v11.5.1 — Standalone MCP server.** The MindForge MCP server now ships as its own npm package, `mindforge-mcp-server@11.5.1`, listed on the official MCP Registry as `io.github.sairam0424/mindforge`. Add it to Claude Code with one command (see [Use the MCP server](#-use-the-mcp-server-standalone)); it exposes 7 tools over stdio (6 read-only + 1 guarded write).
+- **v11.3.1 — Packaging hotfix.** Restores the full published payload: every `npx mindforge-cc` install now delivers all 177 slash commands, 153 skills, 154 subagents, and the complete `.mindforge/` framework.
+- **v11.3.0 — "Legion".** Imports 154 specialized Claude-Code-native subagents across 10 categories into `.claude/agents/`, fully rebranded and collision-safe. Additive and backward-compatible.
+
+See [CHANGELOG.md](./CHANGELOG.md) for full release history.
+
+## v11.0.0 — Sovereign Stability
+
+MindForge v11.0.0 "Sovereign Stability" is a production-hardening release focused on reliability, performance, and real-world deployment readiness. Key highlights:
+
+- **Memory-safe operations** — LRU-bounded caches, atomic writes, log rotation, and snapshot garbage collection eliminate resource leaks in long-running sessions.
+- **True wave parallelism** — Semaphore-based concurrent execution with configurable max concurrency replaces sequential task dispatch.
+- **Streaming SDK** — WebSocket event streaming, `streamExecution()` with AsyncIterable, and `batchExecute()` for high-throughput integrations.
+- **Hardened security** — Ephemeral enclave keys, session-scoped agent isolation, time-limited RBAC elevation, dashboard rate limiting, and structured ZK proof returns.
+- **Production observability** — `/api/v1/system` health endpoint, P95 latency tracking, heap health monitoring, and real EIS client with retry logic.
+- **Graduated intelligence** — Adaptive tier escalation (+1/+2/MAX) with cost-awareness, 3-tier stuck detection, and adaptive context windows.
+
+This release ships 211 personas, 153 skills, 154 specialized subagents, 177 commands, 18 pillars, and 49 swarm templates across 12 engineering domains.
 
 
 ## Installation & Setup
 
-### 🚀 Quick Start (No Install)
+### 🔌 Claude Code Plugin (fastest)
 
-Run MindForge immediately for a specific runtime without a permanent installation:
+Install MindForge's commands, subagents, and skills directly from the marketplace —
+no project files written:
+
+```bash
+/plugin marketplace add sairam0424/MindForge
+/plugin install mindforge@mindforge
+```
+
+Prefer just a slice (e.g. Python agents)? Install a focused pack like
+`mindforge-lang@mindforge` instead. See [docs/plugin-installation.md](docs/plugin-installation.md)
+for all 11 plugins, token-budget guidance, and team setup.
+
+### 🚀 Quick Start (npx — full framework engine)
+
+The npx installer also writes the complete `.mindforge/` engine (governance, memory,
+planning) into your project:
 
 ```bash
 # For Claude Code
@@ -37,8 +76,42 @@ npx mindforge-cc@latest --claude --local
 npx mindforge-cc@latest --antigravity --local
 ```
 
+### 🔗 Use the MCP server (standalone)
+
+The MindForge MCP server is published as its own npm package,
+**`mindforge-mcp-server`** (`11.5.1`), and is listed on the official
+[MCP Registry](https://registry.modelcontextprotocol.io) as
+`io.github.sairam0424/mindforge`. Wire it into Claude Code with one command:
+
+```bash
+claude mcp add mindforge -- npx -y mindforge-mcp-server
+```
+
+It exposes **7 tools over stdio** — 6 read-only plus 1 guarded write:
+
+| Tool | Purpose |
+| :--- | :--- |
+| `mindforge_health` | Framework health check |
+| `mindforge_status` | Project status snapshot |
+| `mindforge_memory_query` | Query the knowledge graph |
+| `mindforge_memory_stats` | Knowledge graph statistics |
+| `mindforge_memory_find_related` | Find related knowledge entries |
+| `mindforge_audit_log` | Read the append-only audit trail |
+| `mindforge_memory_remember` | Persist a memory (guarded write) |
+
 ---
 
+- **Production Hardening (v11.0.0)** — LRU caches, atomic JSON writes, log rotation, HANDOFF validation, and temporal snapshot GC for crash-safe long-running sessions.
+- **True Wave Parallelism (v11.0.0)** — Semaphore-based concurrent wave execution with configurable max concurrency replaces sequential dispatch.
+- **Streaming SDK (v11.0.0)** — WebSocket event streaming, `streamExecution()` AsyncIterable, `batchExecute()`, model streaming across Anthropic/OpenAI/Gemini providers.
+- **Graduated Intelligence (v11.0.0)** — Adaptive tier escalation (+1/+2/MAX) with cost-awareness, 3-tier stuck detection, and adaptive context windows (10/20/30).
+- **Security Hardening (v11.0.0)** — Ephemeral enclave keys, session-scoped ZTAI, time-limited RBAC elevation, dashboard rate limiting (100 req/min/IP), token expiration.
+- **Observability (v11.0.0)** — `/api/v1/system` health endpoint, P95 latency ring buffer, heap health monitoring, real EIS client with exponential backoff.
+- **Grounded Wave Execution (v9.0.0)** — AutoRunner reads HANDOFF.json wave groups, dispatches tasks with audit tracing, persists progress, and resumes on restart (Pillar XXIV).
+- **Model Topology Modernization (v9.0.0)** — All model references updated to the Claude 4.x family: claude-opus-4-7, claude-sonnet-4-6, claude-haiku-4-5 (Pillar XXV).
+- **Unified Memory Architecture (v9.0.0)** — Knowledge and graph edges consolidated into SQLite (celestial.db) with FTS5 search. Four JSONL stores replaced by one queryable store (Pillar XXVI).
+- **Schema Migration Engine (v9.0.0)** — `_migrations` table with versioned migration tracking and transaction-wrapped bulk imports (Pillar XXVII).
+- **Integration Test Chain (v9.0.0)** — 27-assertion end-to-end test suite validating the full execution pipeline (Pillar XXVIII).
 - **Sovereign Identity Synthesis (v8.1.1)** — Autonomous `SOUL.md` generation derived from reasoning traces and interaction sentiment (Pillar XIX).
 - **Autonomous SRE Layer (v8.2.0)** — Self-healing production reliability engine with reactive sentinel observability and adversarial remediation auditing (Pillars XX-XXIII).
 - **Unified Persistence Layer (v8.0)** — Centralized SQLite/FTS5 engine for sub-millisecond reasoning audits and semantic reasoning (Pillar XV).
@@ -261,7 +334,7 @@ MindForge supports multiple interaction models to fit your engineering workflow:
 ```bash
 /mindforge:update
 /mindforge:update --apply
-/mindforge:migrate --from v0.6.0 --to v1.0.0
+/mindforge:migrate --from v10.7.0 --to v11.0.0
 ```
 
 ---
@@ -309,6 +382,46 @@ See `.mindforge/production/token-optimiser.md`.
 
 ## 📜 Framework Evolution & Version History
 
+<details>
+<summary><b>v11.6.0 — Skill Forge (Core + Dev Skill Pack)</b></summary>
+
+- **80 new skills** across 8 domains: software-development, GitHub workflows, DevOps orchestration, research intelligence, security, creative tooling, data-science, and note-taking.
+- **Engine tier (auto-trigger):** 30 skills in `.mindforge/skills/` activated automatically by trigger-phrase matching — systematic debugging, TDD, kanban orchestration, OSINT investigation, web pentesting, concept diagram generation, research paper writing, and more.
+- **Extended tier (explicit):** 50 skills in `.agent/skills/` covering GitHub auth, docker management, DevOps watchers, 1Password, debuggers, pixel art, video orchestration, and more.
+- **3 new slash commands:** `/mindforge:systematic-debug` (4-phase RCA), `/mindforge:skill-tdd` (RED-GREEN-REFACTOR), `/mindforge:skills-index` (browseable skill catalog).
+- All skills cleanly integrated — zero external attribution in any committed file.
+</details>
+
+<details>
+<summary><b>v11.0.0 — Sovereign Stability (Production Hardening)</b></summary>
+
+- **Phase 1: Foundation** — LRU-bounded caches, atomic JSON writes, AUDIT.jsonl log rotation, HANDOFF.json structural validation, temporal snapshot garbage collection.
+- **Phase 2: Intelligence** — BM25 scoring with document-length normalization, full remediation strategy implementations, graduated intelligence interlock (+1/+2/MAX), 3-tier stuck detection, adaptive context windows.
+- **Phase 3: Security** — Structured ZK proof returns, ephemeral SRE enclave keys, session-scoped ZTAI agent registry, time-limited RBAC elevation, dashboard rate limiting and token expiration, optional GPG approval verification.
+- **Phase 4: Observability** — Async temporal I/O, `/api/v1/system` health endpoint, P95 latency ring buffer, heap health monitoring, EIS client de-stub with real fetch and retry logic.
+- **Phase 5: SDK/Distributed** — Semaphore-based wave parallelism, WebSocket event streaming with auto-reconnect, `batchExecute()`, model streaming (Anthropic/OpenAI/Gemini), migration script from v10.7.0.
+</details>
+
+<details>
+<summary><b>v10.x — The 200-Skills Expansion (Council → Platform Sovereign)</b></summary>
+
+- **Council Awakens (v10.0.3)**: Council decision framework, Instinct Engine, Cost-Aware Routing, 6-phase Verification Loop, Multi-LLM Consult.
+- **Skills Expansion (v10.0.4–v10.7.0)**: From 20 to 200+ core skills across 12 domains — AI/ML, data engineering, platform engineering, mobile, leadership, industry verticals, and more.
+- **400+ Personas**: Comprehensive specialist coverage with domain-expert identity protocols.
+- **49 Swarm Templates**: Task-aware parallel specialist clusters covering every engineering discipline.
+</details>
+
+<details>
+<summary><b>v9.x — Grounded Execution & SQLite Persistence</b></summary>
+
+- **Grounded Wave Execution (Pillar XXIV)**: AutoRunner reads HANDOFF.json wave groups with audit tracing and restart persistence.
+- **Model Topology Modernization (Pillar XXV)**: Claude 4.x family (opus-4-7, sonnet-4-6, haiku-4-5).
+- **Unified Memory Architecture (Pillar XXVI)**: SQLite (celestial.db) with FTS5 search replacing JSONL stores.
+- **Schema Migration Engine (Pillar XXVII)**: Versioned migration tracking with transaction-wrapped imports.
+- **Integration Test Chain (Pillar XXVIII)**: 27-assertion end-to-end pipeline validation.
+</details>
+
+<details>
 <summary><b>v8.1.x — Sovereign Identity (Pillar XIX)</b></summary>
 
 - **Pillar XIX: Sovereign Identity Synthesis**: Autonomous creation and evolution of `SOUL.md` from execution traces.
@@ -423,3 +536,4 @@ MindForge never stores credentials in files. Review:
 
 ## ⚖️ License
 MIT © 2026 MindForge Team
+eam

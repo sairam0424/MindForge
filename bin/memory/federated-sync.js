@@ -58,7 +58,11 @@ class FederatedSync {
     const statsPath = path.join(this.localStore.getPaths().MEMORY_DIR, 'sync-stats.json');
     let stats = { failures: 0 };
     if (fs.existsSync(statsPath)) {
-      stats = JSON.parse(fs.readFileSync(statsPath, 'utf8'));
+      try {
+        stats = JSON.parse(fs.readFileSync(statsPath, 'utf8'));
+      } catch {
+        stats = { failures: 0 };
+      }
     }
     stats.failures = (stats.failures || 0) + 1;
     stats.last_error = err.message;
@@ -122,7 +126,12 @@ class FederatedSync {
   resetFailures() {
     const statsPath = path.join(this.localStore.getPaths().MEMORY_DIR, 'sync-stats.json');
     if (fs.existsSync(statsPath)) {
-      const stats = JSON.parse(fs.readFileSync(statsPath, 'utf8'));
+      let stats = { failures: 0 };
+      try {
+        stats = JSON.parse(fs.readFileSync(statsPath, 'utf8'));
+      } catch {
+        stats = { failures: 0 };
+      }
       stats.failures = 0;
       fs.writeFileSync(statsPath, JSON.stringify(stats, null, 2));
     }

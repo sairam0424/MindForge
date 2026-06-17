@@ -1,0 +1,27 @@
+{
+  "name": "mindforge-domains",
+  "version": "1.0.2",
+  "description": "Domain-specific technology experts - blockchain, fintech, gaming, IoT, payments",
+  "author": {
+    "name": "MindForge Team",
+    "email": "uggesairam0000@gmail.com"
+  },
+  "repository": "https://github.com/sairam0424/MindForge",
+  "license": "MIT",
+  "agents": [
+    "./api-documenter.md",
+    "./blockchain-developer.md",
+    "./embedded-systems.md",
+    "./fintech-engineer.md",
+    "./game-developer.md",
+    "./healthcare-admin.md",
+    "./hipaa-compliance.md",
+    "./iot-engineer.md",
+    "./m365-admin.md",
+    "./mobile-app-developer.md",
+    "./payment-integration.md",
+    "./quant-analyst.md",
+    "./risk-manager.md",
+    "./seo-specialist-cc.md"
+  ]
+}

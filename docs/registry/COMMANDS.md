@@ -1,4 +1,4 @@
-# MindForge — Command Registry (v6.2.0-alpha)
+# MindForge — Command Registry (v11.3.1)
 
 This registry catalogs every strategic, operational, and governance command available in the MindForge ecosystem.
 

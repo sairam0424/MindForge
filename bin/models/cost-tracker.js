@@ -101,10 +101,12 @@ function getSummary(params = { days: 7 }) {
         result.calls++;
         
         const model = entry.model || 'unknown';
-        if (!result.by_model[model]) result.by_model[model] = { cost: 0, calls: 0, tokens: 0 };
+        if (!result.by_model[model]) result.by_model[model] = { cost: 0, calls: 0, tokens: 0, cache_read_tokens: 0, cache_creation_tokens: 0 };
         result.by_model[model].cost += cost;
         result.by_model[model].calls++;
         result.by_model[model].tokens += (entry.input_tokens || 0) + (entry.output_tokens || 0);
+        result.by_model[model].cache_read_tokens += (entry.cache_read_input_tokens || 0);
+        result.by_model[model].cache_creation_tokens += (entry.cache_creation_input_tokens || 0);
 
         const phase = entry.phase || 'unknown';
         if (!result.by_phase[phase]) result.by_phase[phase] = 0;

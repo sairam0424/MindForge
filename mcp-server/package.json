@@ -1,0 +1,57 @@
+{
+  "name": "mindforge-mcp-server",
+  "version": "11.6.0",
+  "description": "MindForge MCP server — exposes the MindForge engine (knowledge graph, project health, audit log) to Claude Code and any MCP host as 7 stdio tools. Self-contained, zero runtime dependencies.",
+  "mcpName": "io.github.sairam0424/mindforge",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "bin": {
+    "mindforge-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist/",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc --noEmit && node build.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "mindforge",
+    "claude-code",
+    "claude",
+    "anthropic",
+    "agentic",
+    "knowledge-graph",
+    "memory",
+    "audit"
+  ],
+  "homepage": "https://github.com/sairam0424/MindForge/tree/main/mcp-server#readme",
+  "bugs": {
+    "url": "https://github.com/sairam0424/MindForge/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sairam0424/MindForge.git",
+    "directory": "mcp-server"
+  },
+  "author": "MindForge Team <uggesairam0000@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "esbuild": "^0.28.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

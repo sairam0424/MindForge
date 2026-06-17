@@ -15,6 +15,73 @@ const path = require('path');
 const os   = require('os');
 const crypto = require('crypto');
 
+// ── Durable append (UC-09) ──────────────────────────────────────────────────
+// The knowledge-store public API (add/deprecate/reinforce) is SYNCHRONOUS and
+// callers read-after-write synchronously (e.g. `const id = Store.add(...)`
+// immediately followed by `Store.readAll()`). Routing through the async
+// append-queue would make those reads observe stale data and would require an
+// API change across 9+ consumers — out of scope for UC-09.
+//
+// Instead we centralize every append through one durable, fsync'd, synchronous
+// writer. This delivers UC-09's durability guarantee (acknowledged writes are on
+// disk before the call returns) and a single serialized append path per file,
+// while preserving the synchronous read-after-write contract. appendFileSync's
+// per-call append is atomic on POSIX, so concurrent in-process appends do not
+// interleave at the byte level.
+function appendDurableSync(filePath, line) {
+  const record = line.endsWith('\n') ? line : line + '\n';
+  const fd = fs.openSync(filePath, 'a');
+  try {
+    fs.writeSync(fd, record);
+    fs.fsyncSync(fd);
+  } finally {
+    fs.closeSync(fd);
+  }
+}
+
+// ── ID Index for fast lookups (built lazily, invalidated on writes) ───────────
+let _idIndex = null;       // Map<id, entry> — latest version per ID
+let _indexDirty = true;    // Invalidated whenever entries are appended
+const INDEX_THRESHOLD = 100; // Only use index optimization for files > 100 entries
+
+function _buildIndex() {
+  const paths = getPaths();
+  const filePath = paths.KB_PATH;
+  if (!fs.existsSync(filePath)) {
+    _idIndex = new Map();
+    _indexDirty = false;
+    return;
+  }
+
+  const lines = fs.readFileSync(filePath, 'utf8').split('\n').filter(Boolean);
+  _idIndex = new Map();
+  for (const line of lines) {
+    try {
+      const entry = JSON.parse(line);
+      _idIndex.set(entry.id, entry); // Last write wins
+    } catch { /* skip malformed */ }
+  }
+  _indexDirty = false;
+}
+
+function _getIndex() {
+  if (_indexDirty || !_idIndex) _buildIndex();
+  return _idIndex;
+}
+
+function _invalidateIndex() {
+  _indexDirty = true;
+}
+
+/**
+ * Find a single entry by ID using the index (O(1) lookup after index build).
+ * Falls back to full scan for small files.
+ */
+function findById(id) {
+  const index = _getIndex();
+  return index.get(id) || null;
+}
+
 // ── Paths ─────────────────────────────────────────────────────────────────────
 let baseDir = process.cwd();
 let globalBaseDir = os.homedir();
@@ -24,6 +91,7 @@ let globalBaseDir = os.homedir();
  */
 function setBaseDir(dir) {
   baseDir = dir;
+  _invalidateIndex();
 }
 
 /**
@@ -31,6 +99,7 @@ function setBaseDir(dir) {
  */
 function setGlobalDir(dir) {
   globalBaseDir = dir;
+  _invalidateIndex();
 }
 
 // Test-mode override: flat memory dir without .mindforge/ nesting
@@ -43,6 +112,7 @@ let testMemoryDir = null;
  */
 function setTestMode(dir) {
   testMemoryDir = dir;
+  _invalidateIndex();
 }
 
 function getPaths() {
@@ -78,6 +148,22 @@ function getFilePath(type) {
     case 'team_preference':        return paths.PREFERENCES_PATH;
     default:                       return paths.KB_PATH; // bug_pattern, domain_knowledge, all others
   }
+}
+
+// ── File Integrity ────────────────────────────────────────────────────────────
+
+/**
+ * Ensures a JSONL file doesn't end with a partial/truncated line.
+ * Appends a trailing newline if missing — prevents corruption from propagating.
+ */
+function verifyFileIntegrity(filePath) {
+  if (!fs.existsSync(filePath)) return true;
+  const content = fs.readFileSync(filePath, 'utf8');
+  if (content.length === 0) return true;
+  if (!content.endsWith('\n')) {
+    fs.appendFileSync(filePath, '\n');
+  }
+  return true;
 }
 
 // ── Write operations ──────────────────────────────────────────────────────────
@@ -138,23 +224,29 @@ function add(entry) {
   };
 
   const filePath = getFilePath(entry.type);
-  fs.appendFileSync(filePath, JSON.stringify(full) + '\n');
+  verifyFileIntegrity(filePath);
+  appendDurableSync(filePath, JSON.stringify(full));
 
   // Also append to unified knowledge-base.jsonl for cross-type queries
   if (filePath !== paths.KB_PATH) {
-    fs.appendFileSync(paths.KB_PATH, JSON.stringify(full) + '\n');
+    verifyFileIntegrity(paths.KB_PATH);
+    appendDurableSync(paths.KB_PATH, JSON.stringify(full));
   }
 
+  _invalidateIndex();
   return id;
 }
 
 /**
  * Deprecate an entry (never hard-delete).
+ * Uses ID index for O(1) lookup when file has > INDEX_THRESHOLD entries.
  */
 function deprecate(id, reason, supersededBy = null) {
   const paths = getPaths();
-  const entries = readAll();
-  const entry   = entries.find(e => e.id === id);
+  const index = _getIndex();
+  const entry = index.size > INDEX_THRESHOLD
+    ? findById(id)
+    : readAll().find(e => e.id === id);
   if (!entry) throw new Error(`Knowledge entry not found: ${id}`);
 
   // Append a deprecation marker (new entry with same id, deprecated=true)
@@ -167,22 +259,28 @@ function deprecate(id, reason, supersededBy = null) {
     deprecated_at:     new Date().toISOString(),
   };
 
-  fs.appendFileSync(filePath, JSON.stringify(deprecated) + '\n');
+  verifyFileIntegrity(filePath);
+  appendDurableSync(filePath, JSON.stringify(deprecated));
   if (filePath !== paths.KB_PATH) {
-    fs.appendFileSync(paths.KB_PATH, JSON.stringify(deprecated) + '\n');
+    verifyFileIntegrity(paths.KB_PATH);
+    appendDurableSync(paths.KB_PATH, JSON.stringify(deprecated));
   }
 
+  _invalidateIndex();
   return id;
 }
 
 /**
  * Reinforce an entry (increase confidence, increment reference count).
+ * Uses ID index for O(1) lookup when file has > INDEX_THRESHOLD entries.
  */
 function reinforce(id) {
   const paths = getPaths();
-  const entries   = readAll();
-  const entry     = entries.find(e => e.id === id && !e.deprecated);
-  if (!entry) return;
+  const index = _getIndex();
+  const entry = index.size > INDEX_THRESHOLD
+    ? findById(id)
+    : readAll().find(e => e.id === id && !e.deprecated);
+  if (!entry || entry.deprecated) return;
 
   const reinforced = {
     ...entry,
@@ -192,10 +290,14 @@ function reinforce(id) {
   };
 
   const filePath = getFilePath(entry.type);
-  fs.appendFileSync(filePath, JSON.stringify(reinforced) + '\n');
+  verifyFileIntegrity(filePath);
+  appendDurableSync(filePath, JSON.stringify(reinforced));
   if (filePath !== paths.KB_PATH) {
-    fs.appendFileSync(paths.KB_PATH, JSON.stringify(reinforced) + '\n');
+    verifyFileIntegrity(paths.KB_PATH);
+    appendDurableSync(paths.KB_PATH, JSON.stringify(reinforced));
   }
+
+  _invalidateIndex();
 }
 
 // ── Read operations ───────────────────────────────────────────────────────────
@@ -331,7 +433,7 @@ function stats() {
 }
 
 module.exports = {
-  add, deprecate, reinforce,
+  add, deprecate, reinforce, findById,
   readAll, readByType, readFile, query, stats,
   setBaseDir, setGlobalDir, setTestMode, getPaths,
 };

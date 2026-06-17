@@ -124,31 +124,42 @@ function handleInstall() {
   if (tier === '1') targetBase = '.mindforge/skills';
   if (tier === '3') targetBase = '.mindforge/project-skills';
 
+  // Resolve a real local source for the skill. There is no remote registry
+  // backend, so the ONLY honest sources are an examples/ entry or a SKILL.md in
+  // the current working directory (the agentic authoring flow).
+  const exampleSrc = path.join(process.cwd(), 'examples', 'skills', `${skillName}.md`);
+  const localSrc = path.join(process.cwd(), 'SKILL.md');
+
+  let source = null;
+  if (fs.existsSync(exampleSrc)) {
+    source = exampleSrc;
+  } else if (fs.existsSync(localSrc)) {
+    source = localSrc;
+  }
+
+  if (!source) {
+    // HONEST REFUSAL (UC-22): no local source and no remote registry is
+    // configured. Do NOT write a placeholder file that masquerades as an
+    // installed skill — that would falsely report success. Refuse clearly and
+    // exit non-zero so callers can detect the failure.
+    console.error(
+      `❌ Skill '${skillName}' not found locally and no remote registry is configured — nothing installed.`
+    );
+    console.error(
+      '   Provide a source first: place a SKILL.md in the current directory ' +
+      `or add examples/skills/${skillName}.md, then re-run.`
+    );
+    process.exit(1);
+  }
+
+  // Real source found → perform the actual install.
   const targetDir = path.join(process.cwd(), targetBase, skillName);
   if (!fs.existsSync(targetDir)) {
     fs.mkdirSync(targetDir, { recursive: true });
   }
-
-  // Mock behavior for Day 3/4 testing if no real registry
-  // Expect source to be in examples/ if it exists, otherwise just touch it
-  const mockSrc = path.join(process.cwd(), 'examples', 'skills', `${skillName}.md`);
   const targetFile = path.join(targetDir, 'SKILL.md');
-
-  if (fs.existsSync(mockSrc)) {
-    fs.copyFileSync(mockSrc, targetFile);
-    console.log(`  ✅ Copied from ${mockSrc}`);
-  } else {
-    // If no source, we look for it in the current dir for the agentic flow
-    const localSrc = path.join(process.cwd(), 'SKILL.md');
-    if (fs.existsSync(localSrc)) {
-       fs.copyFileSync(localSrc, targetFile);
-       console.log('  ✅ Copied from local SKILL.md');
-    } else {
-       // Just create a placeholder for testing if nothing else
-       fs.writeFileSync(targetFile, `---\nname: ${skillName}\nversion: 1.0.0\nstatus: alpha\ntriggers: test, mock, placeholder\n---\n# ${skillName}\nPlaceholder for ${skillName} skill.\n`);
-       console.log('  ⚠️  Created mock SKILL.md (no source found)');
-    }
-  }
+  fs.copyFileSync(source, targetFile);
+  console.log(`  ✅ Installed ${skillName} from ${path.relative(process.cwd(), source)}`);
 
   process.exit(0);
 }
@@ -215,7 +226,6 @@ function handleAudit() {
   }
 
   const entry = {
-    timestamp: new Date().toISOString(),
     event: 'skill_installed',
     skill_name: skillName,
     skill_version: version,
@@ -224,7 +234,9 @@ function handleAudit() {
     validation_passed: true
   };
 
-  fs.appendFileSync(auditPath, JSON.stringify(entry) + '\n', 'utf8');
+  // UC-04b: unified, hash-chained, durable append into the single verifiable chain.
+  const { appendAuditEntrySync } = require('./autonomous/audit-writer');
+  appendAuditEntrySync(auditPath, entry);
   console.log(`  📝 Audit entry written for ${skillName}`);
   process.exit(0);
 }

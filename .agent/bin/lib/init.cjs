@@ -65,7 +65,7 @@ function cmdInitExecutePhase(cwd, phase, raw) {
   }
   const reqMatch = roadmapPhase?.section?.match(/^\*\*Requirements\*\*:[^\S\n]*([^\n]*)$/m);
   const reqExtracted = reqMatch
-    ? reqMatch[1].replace(/[\[\]]/g, '').split(',').map(s => s.trim()).filter(Boolean).join(', ')
+    ? reqMatch[1].replace(/[[\]]/g, '').split(',').map(s => s.trim()).filter(Boolean).join(', ')
     : null;
   const phase_req_ids = (reqExtracted && reqExtracted !== 'TBD') ? reqExtracted : null;
 
@@ -158,7 +158,7 @@ function cmdInitPlanPhase(cwd, phase, raw) {
   }
   const reqMatch = roadmapPhase?.section?.match(/^\*\*Requirements\*\*:[^\S\n]*([^\n]*)$/m);
   const reqExtracted = reqMatch
-    ? reqMatch[1].replace(/[\[\]]/g, '').split(',').map(s => s.trim()).filter(Boolean).join(', ')
+    ? reqMatch[1].replace(/[[\]]/g, '').split(',').map(s => s.trim()).filter(Boolean).join(', ')
     : null;
   const phase_req_ids = (reqExtracted && reqExtracted !== 'TBD') ? reqExtracted : null;
 
@@ -323,7 +323,7 @@ function cmdInitNewMilestone(cwd, raw) {
         .filter(entry => entry.isDirectory())
         .length;
     }
-  } catch {}
+  } catch { /* intentionally empty */ }
 
   const result = {
     // Models

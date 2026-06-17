@@ -666,7 +666,7 @@ function cmdPhaseComplete(cwd, phaseNum, raw) {
       if (/status: human_needed/.test(content)) warnings.push(`${file}: needs human verification`);
       if (/status: gaps_found/.test(content)) warnings.push(`${file}: has unresolved gaps`);
     }
-  } catch {}
+  } catch { /* intentionally empty */ }
 
   // Update ROADMAP.md: mark phase complete
   if (fs.existsSync(roadmapPath)) {
@@ -725,7 +725,7 @@ function cmdPhaseComplete(cwd, phaseNum, raw) {
       const reqMatch = sectionText.match(/\*\*Requirements:\*\*\s*([^\n]+)/i);
 
       if (reqMatch) {
-        const reqIds = reqMatch[1].replace(/[\[\]]/g, '').split(/[,\s]+/).map(r => r.trim()).filter(Boolean);
+        const reqIds = reqMatch[1].replace(/[[\]]/g, '').split(/[,\s]+/).map(r => r.trim()).filter(Boolean);
         let reqContent = fs.readFileSync(reqPath, 'utf-8');
 
         for (const reqId of reqIds) {

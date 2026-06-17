@@ -10,7 +10,7 @@
 **Tagline:** Enterprise Agentic Framework — the best agentic framework
 **Repository:** `github.com/mindforge-dev/mindforge` (conceptual)
 **npm package:** `npx mindforge-cc@latest`
-**Current version:** v8.2.0 (Autonomous SRE Era)
+**Current version:** v9.0.0 (Bedrock Meridian Era)
 **Runtimes supported:** Claude Code (`.claude/`) and Antigravity (`.agent/`)
 **License:** MIT
 
@@ -34,7 +34,7 @@ anti-pattern detector, quality metrics, team profiling).
 Built the entire structural foundation:
 
 - **`.claude/CLAUDE.md`** — The agent entry point. Session start protocol, plan-first rule, quality gates, security auto-trigger, state artifact table. Mirrored identically to `.agent/CLAUDE.md` (Antigravity runtime).
-- **32 agent persona files** in `.mindforge/personas/`:
+- **108 agent persona files** in `.mindforge/personas/`:
   - `advisor-researcher.md`, `analyst.md`, `architect.md`, `assumptions-analyzer-extend.md`, `assumptions-analyzer.md`, `codebase-mapper-extend.md`, `codebase-mapper.md`, `coverage-specialist.md`, `debug-specialist.md`, `debugger.md`, `decision-architect.md`, `developer.md`, `executor.md`, `integration-checker.md`, `nyquist-auditor.md`, `phase-researcher.md`, `plan-checker.md`, `planner.md`, `project-researcher.md`, `qa-engineer.md`, `release-manager.md`, `research-agent.md`, `research-synthesizer.md`, `roadmapper-extend.md`, `roadmapper.md`, `security-reviewer.md`, `tech-writer.md`, `ui-auditor.md`, `ui-checker.md`, `ui-researcher.md`, `user-profiler.md`, `verifier.md`
 - **5 initial core skill packs** in `.mindforge/skills/`:
   - `security-review/SKILL.md` — 29 trigger keywords, OWASP A01-A10
@@ -309,6 +309,23 @@ Built the framework's self-healing and production reliability layer:
 
 ---
 
+### — Bedrock Meridian (`feat/mindforge-bedrock-meridian` → v9.0.0)
+
+**Branch:** `feat/mindforge-bedrock-meridian`
+**Pillars:** XXIV, XXV, XXVI, XXVII, XXVIII
+
+Grounded the framework on modern model topologies, unified persistence, and verified execution chains:
+
+- **Pillar XXIV: Grounded Wave Execution** — The AutoRunner now parses `HANDOFF.json` wave groups and dispatches tasks with full audit trail persistence. Resume from `auto-state.json` restores completed task state, eliminating re-execution of already-verified waves.
+- **Pillar XXV: Model Topology Modernization (Claude 4.x)** — All model references updated to current-generation identifiers (`claude-sonnet-4-6`, `claude-opus-4-7`, `claude-haiku-4-5`). Provider routing switched from substring matching to prefix matching to prevent false-positive model resolution.
+- **Pillar XXVI: Unified Memory Architecture (SQLite consolidation)** — All knowledge and graph data consolidated into a single SQLite database with FTS5 search indexes, replacing the previous multi-file JSONL approach for queryable persistence.
+- **Pillar XXVII: Schema Migration Engine** — Automated migration pipeline for `.planning/` schema evolution. Supports forward-only migrations with backup-and-restore safety, dry-run mode, and CI integration.
+- **Pillar XXVIII: Integration Test Chain (27 assertions)** — End-to-end verification suite covering the full autonomous loop: init → plan → execute → verify → ship. 27 discrete assertions validate state transitions, audit entries, and artifact integrity across the complete lifecycle.
+
+**Key ADRs:** ADR-024 (Grounded Wave Execution), ADR-025 (Model Topology Currency), ADR-026 (Unified SQLite Persistence)
+
+---
+
 ## CURRENT SYSTEM ARCHITECTURE
 
 ```
@@ -344,7 +361,7 @@ mindforge-cc/                         ← npm package root
 │       └── [36 .md command files]
 │
 ├── .mindforge/
-│   ├── personas/                     ← 32 persona definitions + overrides/
+│   ├── personas/                     ← 108 persona definitions + overrides/
 │   ├── skills/                       ← 10 core skill packs (SKILL.md each)
 │   ├── engine/
 │   │   ├── wave-executor.md          ← Kahn's topological sort, parallel waves
@@ -711,4 +728,4 @@ All prompt files are in `/mnt/user-data/outputs/`:
 
 ---
 
-*State file generated at completion. MindForge v8.2.0 — 36 commands · 10 skills · 34 personas · 23 ADRs · 16 test suites.*
+*State file generated at completion. MindForge v9.0.0 — 36 commands · 10 skills · 34 personas · 23 ADRs · 17 test suites.*

@@ -1,29 +1,67 @@
 {
   "name": "mindforge-cc",
-  "version": "8.2.0",
-  "description": "MindForge — Sovereign Agentic Intelligence Framework. (Autonomous SRE Layer — Pillars XX-XXIII enabled)",
+  "version": "11.6.0",
+  "description": "MindForge \u2014 Sovereign Agentic Intelligence Framework. Sovereign Stability: Production-Hardened Agentic Intelligence (v11)",
   "bin": {
-    "mindforge-cc": "bin/install.js"
+    "mindforge-cc": "bin/install.js",
+    "mindforge": "bin/mindforge-cli.js"
   },
   "files": [
-    ".agent/",
-    ".claude/",
-    ".mindforge/",
-    ".planning/",
+    ".agent/CLAUDE.md",
+    ".agent/hooks/",
+    ".agent/mindforge/",
+    ".agent/forge/",
+    ".agent/skills/",
+    ".claude/CLAUDE.md",
+    ".claude/commands/",
+    ".mindforge/MINDFORGE-SCHEMA.json",
+    ".mindforge/MINDFORGE-V2-SCHEMA.json",
+    ".mindforge/config.json",
+    ".mindforge/imported-agents.jsonl",
+    ".mindforge/engine/",
+    ".mindforge/manifests/",
+    ".mindforge/schemas/",
+    ".mindforge/personas/",
+    ".mindforge/skills/",
+    ".mindforge/governance/",
+    ".mindforge/integrations/",
+    ".mindforge/intelligence/",
+    ".mindforge/memory/",
+    "!.mindforge/memory/pattern-library.jsonl",
+    ".mindforge/metrics/",
+    "!.mindforge/metrics/token-usage.jsonl",
+    ".mindforge/models/",
+    ".mindforge/org/",
+    ".mindforge/plugins/",
+    ".mindforge/team/",
+    ".mindforge/docs/",
     "bin/",
-    "docs/",
+    "subagents/",
+    "docs/getting-started.md",
+    "docs/user-guide.md",
+    "docs/sdk-reference.md",
+    "docs/commands-reference.md",
+    "docs/troubleshooting.md",
+    "docs/faq.md",
+    "docs/References/",
+    "docs/Templates/",
     "examples/",
     "CHANGELOG.md",
     "LICENSE",
     "MINDFORGE.md",
     "README.md",
     "RELEASENOTES.md",
-    "SECURITY.md",
-    "package.json"
+    "SECURITY.md"
   ],
   "scripts": {
-    "test": "node tests/install.test.js",
+    "test": "node scripts/ci/validate-assets.js && node tests/run-all.js",
+    "test:single": "node",
+    "coverage": "npx c8 node tests/run-all.js",
     "lint": "eslint .",
+    "harness:audit": "node bin/harness-audit.js",
+    "harness:compliance": "node bin/installer/harness-adapter-compliance.js --check",
+    "release:ready": "node bin/utils/readiness-gate.js release",
+    "validate:assets": "node scripts/ci/validate-assets.js",
     "commit": "cz",
     "prepare": "husky"
   },
@@ -33,7 +71,11 @@
     "agentic-framework",
     "context-engineering",
     "enterprise",
-    "mindforge"
+    "mindforge",
+    "wasm-sqlite",
+    "zero-native-deps",
+    "agent-orchestration",
+    "sovereign-ai"
   ],
   "author": "sairamugge",
   "license": "MIT",
@@ -48,7 +90,8 @@
   "devDependencies": {
     "@eslint/js": "^9.0.0",
     "@types/node": "^20.0.0",
-    "commitizen": "4.3.1",
+    "c8": "^10.0.0",
+    "commitizen": "^4.2.4",
     "cz-conventional-changelog": "3.3.0",
     "eslint": "^9.0.0",
     "globals": "^15.0.0",
@@ -59,8 +102,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "better-sqlite3": "^12.8.0",
     "express": "^4.19.2",
-    "kysely": "^0.28.16"
+    "sql.js": "^1.14.1"
   }
 }

@@ -28,6 +28,7 @@ const RUNTIMES = {
     docsSubdir:     'docs',
     memorySubdir:   'memory',
     pluginsSubdir:  'plugins',
+    agentsSubdir:   'agents',
   },
   antigravity: {
     displayName:    'Antigravity',
@@ -94,6 +95,25 @@ const RUNTIMES = {
     supportsSlash:  false,
   },
 };
+
+/**
+ * Reads the target project's experimental.pqc_demo flag — the SINGLE gate that
+ * the engine (bin/governance/quantum-crypto.js) uses to enable the simulated
+ * PQAS minter. Defaults to false (engine default) when the config is absent or
+ * unreadable, so the installer never over-claims that PQAS is enabled.
+ * @param {string} cwd - Target project root being installed into.
+ * @returns {boolean} - true only when experimental.pqc_demo === true.
+ */
+function isPqcDemoEnabled(cwd) {
+  try {
+    const cfgPath = path.join(cwd, '.mindforge', 'config.json');
+    if (!fs.existsSync(cfgPath)) return false;
+    const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+    return cfg && cfg.experimental && cfg.experimental.pqc_demo === true;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Generates runtime-specific entry file content.
@@ -183,6 +203,50 @@ const fsu = {
     }
   },
 };
+
+/**
+ * Flatten-copy the imported Claude-Code subagents into a runtime's native agents
+ * directory. The 154 source files live under subagents/categories/NN-name/*.md;
+ * Claude Code auto-discovers agents from the top level of .claude/agents/, so we
+ * flatten (basenames are already collision-free after the -cc renames) and skip
+ * the per-category README.md index files. Returns the count installed.
+ * @param {string} agentsDir - Destination agents directory (absolute).
+ * @param {object} options - { noOverwrite }.
+ * @returns {number} number of agent files copied.
+ */
+function installSubagents(agentsDir, options = {}) {
+  const { noOverwrite = false } = options;
+  const sourceDir = src('subagents', 'categories');
+  if (!fsu.exists(sourceDir)) return 0;
+
+  fsu.ensureDir(agentsDir);
+  let count = 0;
+  for (const file of fsu.listFilesRecursive(sourceDir, '.md')) {
+    if (path.basename(file) === 'README.md') continue;
+    const dst = path.join(agentsDir, path.basename(file));
+    if (noOverwrite && fsu.exists(dst)) continue;
+    fsu.copy(file, dst);
+    count++;
+  }
+  return count;
+}
+
+/**
+ * The set of imported-subagent basenames (e.g. 'api-designer-cc.md'). Used by
+ * uninstall to remove ONLY our agents from a runtime's agents/ dir, never the
+ * user's own hand-authored agents that may live alongside them.
+ * @returns {Set<string>}
+ */
+function importedSubagentBasenames() {
+  const sourceDir = src('subagents', 'categories');
+  const names = new Set();
+  if (!fsu.exists(sourceDir)) return names;
+  for (const file of fsu.listFilesRecursive(sourceDir, '.md')) {
+    const base = path.basename(file);
+    if (base !== 'README.md') names.add(base);
+  }
+  return names;
+}
 
 // ── Registry Management ────────────────────────────────────────────────────────
 const RegistryManager = {
@@ -380,8 +444,11 @@ async function install(runtime, scope, options = {}) {
       { key: 'skillsSubdir',   src: src('.agent', 'skills'),      label: 'skills' },
       { key: 'hooksSubdir',    src: src('.agent', 'hooks'),       label: 'hooks' },
       { key: 'personasSubdir', src: src('.mindforge', 'personas'), label: 'personas' },
-      { key: 'docsSubdir',     src: src('docs', 'references'),    label: 'references' },
-      { key: 'docsSubdir',     src: src('docs', 'templates'),     label: 'templates' }
+      // NB: on-disk dirs are capitalized (docs/References, docs/Templates). macOS is
+      // case-insensitive so lowercase used to "work" locally, but npm/Linux is
+      // case-sensitive — the lookup silently missed in production (UC: REFERENCES 0).
+      { key: 'docsSubdir',     src: src('docs', 'References'),    label: 'references' },
+      { key: 'docsSubdir',     src: src('docs', 'Templates'),     label: 'templates' }
     ];
 
     assetMappings.forEach(asset => {
@@ -396,6 +463,13 @@ async function install(runtime, scope, options = {}) {
         }
       }
     });
+
+    if (cfg.agentsSubdir && fsu.exists(src('subagents', 'categories'))) {
+      const agentCount = fsu.listFilesRecursive(src('subagents', 'categories'), '.md')
+        .filter(f => path.basename(f) !== 'README.md').length;
+      const countStr = `${agentCount} subagents`.padEnd(12);
+      console.log(`    ${countStr} → ${path.join(baseDir, cfg.agentsSubdir)}`);
+    }
     return;
   }
 
@@ -509,8 +583,8 @@ async function install(runtime, scope, options = {}) {
       { key: 'skillsSubdir',   src: src('.agent', 'skills'),      label: 'skills' },
       { key: 'hooksSubdir',    src: src('.agent', 'hooks'),       label: 'hooks' },
       { key: 'personasSubdir', src: src('.mindforge', 'personas'), label: 'personas' },
-      { key: 'docsSubdir',     src: src('docs', 'references'),    label: 'references' },
-      { key: 'docsSubdir',     src: src('docs', 'templates'),     label: 'templates' },
+      { key: 'docsSubdir',     src: src('docs', 'References'),    label: 'references' },
+      { key: 'docsSubdir',     src: src('docs', 'Templates'),     label: 'templates' },
       { key: 'memorySubdir',   src: src('.mindforge', 'memory'),   label: 'memory' },
       { key: 'pluginsSubdir',  src: src('.mindforge', 'plugins'),  label: 'plugins' }
     ];
@@ -529,6 +603,21 @@ async function install(runtime, scope, options = {}) {
         Theme.printResolved(`${c.bold(asset.label.padEnd(12))} (Enterprise sync)`);
       }
     });
+  }
+
+  // ── 2.2 Install Subagents (native Claude-Code agents, both scopes) ──────────
+  // The 154 imported subagents are Claude-Code-native .md files; Claude Code
+  // auto-discovers them from <runtime>/agents/. Installed for BOTH scopes so a
+  // global install also exposes them. Mirrored to .claude/agents/ for non-claude
+  // local runtimes (same cross-IDE rationale as the command mirror above).
+  if (cfg.agentsSubdir && !selfInstall) {
+    const agentsDir = path.join(baseDir, cfg.agentsSubdir);
+    const count = installSubagents(agentsDir, { noOverwrite: !force });
+    if (count > 0) Theme.printResolved(`${c.bold(`${count} subagents`)} (native agents)`);
+  }
+  if (scope === 'local' && runtime !== 'claude' && !selfInstall) {
+    const mirrorDir = path.join(process.cwd(), '.claude', 'agents');
+    installSubagents(mirrorDir, { noOverwrite: !force });
   }
 
   // ── 3. Framework files (local scope only, non-self-install) ─────────────────
@@ -572,9 +661,12 @@ async function install(runtime, scope, options = {}) {
       }
     }
 
-    // .planning/ — merge templates but preserve existing state
+    // .planning/ — merge templates but preserve existing state.
+    // Source from examples/starter-project/.planning (clean, generic, always shipped)
+    // — NEVER from the framework repo's own .planning/, which holds live dev state
+    // (AUDIT.jsonl, slack-threads.json, jira-sync.json) that must not reach users.
     const planningDst = path.join(process.cwd(), '.planning');
-    const planningSrc = src('.planning');
+    const planningSrc = src('examples', 'starter-project', '.planning');
     if (fsu.exists(planningSrc)) {
       fsu.ensureDir(planningDst);
       
@@ -614,7 +706,7 @@ async function install(runtime, scope, options = {}) {
 
     // AGENTS_LEARNING.md — create only if it doesn't already exist
     const learningDst = path.join(process.cwd(), 'AGENTS_LEARNING.md');
-    const learningSrc = src('docs', 'templates', 'Project', 'AGENTS_LEARNING.md');
+    const learningSrc = src('docs', 'Templates', 'Project', 'AGENTS_LEARNING.md');
     if (!fsu.exists(learningDst) && fsu.exists(learningSrc)) {
       fsu.copy(learningSrc, learningDst);
       Theme.printResolved(`${c.bold('AGENTS_LEARNING.md')} (agentic memory)`);
@@ -622,7 +714,7 @@ async function install(runtime, scope, options = {}) {
 
     // WALKTHROUGH.md — update if exists
     const walkDst = path.join(process.cwd(), 'WALKTHROUGH.md');
-    const walkSrc = src('docs', 'templates', 'Project', 'WALKTHROUGH.md');
+    const walkSrc = src('docs', 'Templates', 'Project', 'WALKTHROUGH.md');
     if (fsu.exists(walkSrc)) {
       fsu.copy(walkSrc, walkDst);
       Theme.printResolved(`${c.bold('WALKTHROUGH.md')} (updated)`);
@@ -650,9 +742,19 @@ async function install(runtime, scope, options = {}) {
       }
     });
 
-    // ✨ SOVEREIGN INITIALIZATION: Mark project as PQAS & Proactive enabled
+    // ✨ SOVEREIGN INITIALIZATION: report actual security posture honestly.
+    // The PQAS minter is gated SOLELY behind experimental.pqc_demo (see
+    // bin/governance/quantum-crypto.js: getProvider/_assertPqcDemoEnabled). When
+    // that flag is off (the default) PQAS is inert/simulated — claiming it is
+    // "enabled" would contradict the engine and mislead operators (UC-22).
     Theme.printStatus(c.magenta('Sovereign Intelligence v8.2.0 activated'), 'done');
-    Theme.printStatus(c.dim('  - Post-Quantum Agentic Security (PQAS) enabled'), 'info');
+    if (isPqcDemoEnabled(process.cwd())) {
+      Theme.printStatus(c.dim('  - Post-Quantum Agentic Security (PQAS): SIMULATED demo ENABLED '
+        + '(experimental.pqc_demo=true — simulated lattice crypto, NOT production trust)'), 'info');
+    } else {
+      Theme.printStatus(c.dim('  - Post-Quantum Agentic Security (PQAS): available in simulated/experimental '
+        + 'mode (inactive by default — set experimental.pqc_demo=true to enable the simulated demo)'), 'info');
+    }
     Theme.printStatus(c.dim('  - Proactive Semantic Intent Harvesting active'), 'info');
 
     // bin/ utilities (remaining non-engine scripts)
@@ -683,9 +785,16 @@ async function uninstall(runtime, scope, options = {}) {
   const cmdsDir = norm(path.join(baseDir, cfg.commandsSubdir));
   const entryFile = norm(path.join(baseDir, cfg.entryFile));
 
+  const agentsDir = cfg.agentsSubdir ? norm(path.join(baseDir, cfg.agentsSubdir)) : null;
+  const importedAgents = importedSubagentBasenames();
+
   console.log(`\n  Uninstalling MindForge (${runtime} / ${scope})...`);
   if (dryRun) {
     console.log(`  Would remove: ${cmdsDir}`);
+    if (agentsDir && fsu.exists(agentsDir)) {
+      const present = fsu.listFiles(agentsDir).filter(f => importedAgents.has(f)).length;
+      if (present > 0) console.log(`  Would remove: ${present} imported subagents from ${agentsDir}`);
+    }
     if (fsu.exists(entryFile) && fsu.read(entryFile).includes('MindForge'))
       console.log(`  Would remove: ${entryFile}`);
     return;
@@ -695,6 +804,18 @@ async function uninstall(runtime, scope, options = {}) {
   if (fsu.exists(cmdsDir)) {
     fs.rmSync(cmdsDir, { recursive: true, force: true });
     console.log(`  ✅  Removed: ${cmdsDir}`);
+  }
+
+  // Remove ONLY our imported subagents — leave the user's own agents/ files intact.
+  if (agentsDir && fsu.exists(agentsDir)) {
+    let removed = 0;
+    for (const f of fsu.listFiles(agentsDir)) {
+      if (importedAgents.has(f)) {
+        fs.unlinkSync(path.join(agentsDir, f));
+        removed++;
+      }
+    }
+    if (removed > 0) console.log(`  ✅  Removed: ${removed} imported subagents from ${agentsDir}`);
   }
 
   // Remove entry file only if it's a MindForge-generated file
@@ -715,6 +836,7 @@ function collectManifestStats() {
   const stats = {
     personas: 0,
     skills: 0,
+    subagents: 0,
     governance: 0,
     integrations: 0,
     actions: 0,
@@ -731,9 +853,16 @@ function collectManifestStats() {
       stats.integrations = fsu.listFiles(path.join(forgeSrc, 'integrations')).filter(f => f.endsWith('.md')).length;
     }
 
-    // Docs & Templates count
-    const refSrc = src('docs', 'references');
-    const tmpSrc = src('docs', 'templates');
+    // Imported subagents (subagents/categories/**, excluding category READMEs)
+    const subagentsSrc = src('subagents', 'categories');
+    if (fsu.exists(subagentsSrc)) {
+      stats.subagents = fsu.listFilesRecursive(subagentsSrc, '.md')
+        .filter(f => path.basename(f) !== 'README.md').length;
+    }
+
+    // Docs & Templates count (on-disk dirs are capitalized — see assetMappings note)
+    const refSrc = src('docs', 'References');
+    const tmpSrc = src('docs', 'Templates');
     if (fsu.exists(refSrc)) stats.docs = fsu.listFiles(refSrc).filter(f => f.endsWith('.md')).length;
     if (fsu.exists(tmpSrc)) stats.templates = fsu.listFilesRecursive(tmpSrc).length;
     
@@ -748,7 +877,7 @@ function collectManifestStats() {
     }
   } catch (e) {
     // Fallback to default values if counting fails
-    return { personas: 32, skills: 10, governance: 4, integrations: 6, actions: 60, docs: 12, templates: 5 };
+    return { personas: 117, skills: 20, subagents: 154, governance: 4, integrations: 6, actions: 71, docs: 12, templates: 21 };
   }
 
   return stats;
@@ -818,4 +947,4 @@ async function run(args) {
   }
 }
 
-module.exports = { run, install, uninstall, RUNTIMES, generateEntryContent };
+module.exports = { run, install, uninstall, RUNTIMES, generateEntryContent, SENSITIVE_EXCLUDE, MINDFORGE_DEV_EXCLUDE };

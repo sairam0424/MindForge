@@ -1,3 +1,5 @@
+/* This script is served to and executed in the browser (brainstorming dashboard client). */
+/* global window, document */
 (function() {
   const WS_URL = 'ws://' + window.location.host;
   let ws = null;

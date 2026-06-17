@@ -18,14 +18,14 @@ class IdentitySynthesizer {
    */
   async bootstrap(answers = {}) {
     const blueprint = this.getGrandBlueprint();
-    
+
     // Inject initialization metadata into the blueprint
     let soulContent = blueprint
       .replace(/{USER_CONTEXT}/g, answers.user || 'Sovereign Agent User')
       .replace(/{PROJECT_OBJECTIVE}/g, answers.goal || 'Maximizing engineering leverage');
 
     await fs.writeFile(this.soulPath, soulContent);
-    console.log(`[IDENTITY] SOUL.md bootstrapped successfully from the Grand Blueprint.`);
+    console.log('[IDENTITY] SOUL.md bootstrapped successfully from the Grand Blueprint.');
   }
 
   /**
@@ -33,23 +33,21 @@ class IdentitySynthesizer {
    */
   async evolve() {
     await vectorHub.init();
-    
+
     // 1. Mine recent traces (Golden & Ghost)
-    const traces = await vectorHub.db.selectFrom('traces')
-      .selectAll()
-      .where('event', '=', 'reasoning_trace')
-      .orderBy('timestamp', 'desc')
-      .limit(100)
-      .execute();
+    const traces = vectorHub.query(
+      'SELECT * FROM traces WHERE event = ? ORDER BY timestamp DESC LIMIT 100',
+      ['reasoning_trace']
+    );
 
     if (traces.length === 0) {
-      console.log(`[IDENTITY] No execution traces found in celestial.db. Evolution skipped.`);
+      console.log('[IDENTITY] No execution traces found in celestial.db. Evolution skipped.');
       return;
     }
 
     // 2. Extract Decision Heuristics
     const heuristics = this._extractHeuristics(traces);
-    
+
     // 3. Update SOUL.md sections (v8.1 Intelligence Mirroring)
     await this._applyMirroring(heuristics);
   }
@@ -76,11 +74,11 @@ class IdentitySynthesizer {
 
   async _applyMirroring(heuristics) {
     let content = await fs.readFile(this.soulPath, 'utf8');
-    
+
     // Update the Decision Engine section with derived heuristics
     const heuristicMarker = `Decision Mode = ${heuristics.mode} (Derived from traces)`;
     content = content.replace(/Decision Mode = .*/, heuristicMarker);
-    
+
     await fs.writeFile(this.soulPath, content);
     console.log(`[IDENTITY] SOUL.md evolved: Mode shifted to ${heuristics.mode}.`);
   }

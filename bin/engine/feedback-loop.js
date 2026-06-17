@@ -98,6 +98,14 @@ class WaveFeedbackLoop {
     return { shouldPause: false };
   }
 
+  recordRemediationOutcome(remediationId, outcome) {
+    this.recordPerformance(
+      outcome.strategy,
+      'remediation',
+      outcome.effective
+    );
+  }
+
   reset() {
     this.waveState = { completed: 0, failed: 0, skipped: 0, total: 0 };
   }

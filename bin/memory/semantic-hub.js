@@ -70,7 +70,7 @@ class SemanticHub {
 
       // 4. Update sync manifest
       await this.updateManifest(libraryName, localEntries.length);
-      
+
       return true;
     } catch (err) {
       console.error(`[SEMANTIC-HUB] Sync failed for ${libraryName}: ${err.message}`);
@@ -83,7 +83,7 @@ class SemanticHub {
     try {
       const data = await fs.readFile(this.syncManifest, 'utf8');
       manifest = JSON.parse(data);
-    } catch (e) {}
+    } catch (e) { /* intentionally empty */ }
 
     manifest[libraryName] = {
       lastSync: new Date().toISOString(),
@@ -98,18 +98,17 @@ class SemanticHub {
    */
   async getGoldenTraces(skillFilter = null) {
     await this.ensureInit();
-    
+
     // v8: Prioritize SQLite search for high-speed retrieval
     let sqliteTraces = [];
     try {
       if (skillFilter) {
         sqliteTraces = await vectorHub.searchTraces(skillFilter);
       } else {
-        sqliteTraces = await vectorHub.db.selectFrom('traces')
-          .selectAll()
-          .where('event', '=', 'reasoning_trace')
-          .limit(20)
-          .execute();
+        sqliteTraces = vectorHub.query(
+          'SELECT * FROM traces WHERE event = ? LIMIT 20',
+          ['reasoning_trace']
+        );
       }
     } catch (err) {
       console.warn(`[SEMANTIC-HUB] SQLite trace lookup failed: ${err.message}`);
@@ -124,7 +123,7 @@ class SemanticHub {
         .filter(Boolean)
         .map(JSON.parse)
         .filter(p => p.type === 'golden-trace' || p.tags?.includes('success'));
-      
+
       if (skillFilter) {
         fileTraces = fileTraces.filter(t => t.skill === skillFilter || t.tags?.includes(skillFilter));
       }
@@ -135,7 +134,7 @@ class SemanticHub {
     // Merge and deduplicate
     const allTraces = [...sqliteTraces, ...fileTraces];
     const uniqueTraces = Array.from(new Map(allTraces.map(t => [t.id || t.trace_id, t])).values());
-    
+
     return uniqueTraces;
   }
 
@@ -160,12 +159,11 @@ class SemanticHub {
 
     // 2. Fetch from SQLite high-drift traces (v8 specific ghosting)
     try {
-      const v8Ghosts = await vectorHub.db.selectFrom('traces')
-        .selectAll()
-        .where('drift_score', '>', 0.5)
-        .limit(20)
-        .execute();
-      
+      const v8Ghosts = vectorHub.query(
+        'SELECT * FROM traces WHERE drift_score > ? LIMIT 20',
+        [0.5]
+      );
+
       const v8Mapped = v8Ghosts.map(g => ({
         id: g.id,
         tags: ['v8-drift-risk', 'failure'],
@@ -186,21 +184,19 @@ class SemanticHub {
    */
   async saveSkill(skill) {
     await this.ensureInit();
-    await vectorHub.db.insertInto('skills')
-      .values({
-        skill_id: skill.id || `sk_${Math.random().toString(36).substr(2, 6)}`,
-        name: skill.name,
-        description: skill.description || '',
-        path: skill.path || '',
-        success_rate: skill.success_rate || 0.0,
-        last_verified: new Date().toISOString()
-      })
-      .onConflict(oc => oc.column('skill_id').doUpdateSet({
-        success_rate: skill.success_rate,
-        last_verified: new Date().toISOString()
-      }))
-      .execute();
-    
+    vectorHub.run(
+      `INSERT OR REPLACE INTO skills (skill_id, name, description, path, success_rate, last_verified)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        skill.id || `sk_${Math.random().toString(36).substr(2, 6)}`,
+        skill.name,
+        skill.description || '',
+        skill.path || '',
+        skill.success_rate || 0.0,
+        new Date().toISOString()
+      ]
+    );
+
     // v8 Pillar XVII: Metadata provenance for evolved skills
     if (skill.is_autonomous) {
       console.log(`[SEMANTIC-HUB] Persistence acknowledged for ASE evolved skill: ${skill.name}`);

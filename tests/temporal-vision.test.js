@@ -25,8 +25,8 @@ async function runTests() {
     console.log('✅ Created test file in .planning');
 
     // 2. Capture state
-    const auditId = 'test-audit-001';
-    const snapshotDir = TemporalHub.captureState(auditId, { task: 'Verification Test' });
+    const auditId = 'a0b1c2d3-e4f5-6789-abcd-ef0123456789';
+    const snapshotDir = await TemporalHub.captureState(auditId, { task: 'Verification Test' });
     assert(fs.existsSync(snapshotDir), 'Snapshot directory should exist');
     assert(fs.existsSync(path.join(snapshotDir, 'TEMPORAL-TEST.md')), 'Snapshot file should exist');
     console.log('✅ TemporalHub.captureState works');
@@ -42,7 +42,7 @@ async function runTests() {
     console.log('✅ TemporalHub.getHistory works');
 
     // 5. Rollback
-    const rollbackSuccess = TemporalHub.rollbackTo(auditId);
+    const rollbackSuccess = await TemporalHub.rollbackTo(auditId);
     assert(rollbackSuccess === true, 'Rollback should return success');
     const content = fs.readFileSync(testFile, 'utf8');
     assert(content === 'Initial State: $T_0$', 'Rollback did not restore file content correctly');

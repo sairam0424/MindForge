@@ -1,0 +1,51 @@
+# Test files
+tests/
+test/
+
+# Development files
+.github/
+.gitlab-ci-mindforge.yml
+.husky/
+.aava/
+.claude/
+.git/
+.planning/AUDIT.jsonl
+.planning/jira-sync.json
+.planning/slack-threads.json
+
+# Database files (generated at runtime)
+*.db
+*.db-journal
+*.db-wal
+
+# Operational state (generated at runtime)
+*.jsonl
+# ...but the imported-subagent index MUST ship — it powers the subagent loader.
+# Negation guard so a future files-allowlist refactor can't silently drop it.
+!.mindforge/imported-agents.jsonl
+
+# Heavy documentation (available on GitHub)
+docs/References/
+docs/Context/
+docs/Templates/
+docs/adr/
+docs/architecture/
+
+# Build/dev artifacts
+node_modules/
+sdk/node_modules/
+sdk/dist/
+coverage/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Config that shouldn't ship
+.npmrc
+.czrc
+auto-pr.yml
+skills-lock.json
+AGENTS.md
+AGENTS_LEARNING.md

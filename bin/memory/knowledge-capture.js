@@ -238,7 +238,16 @@ function captureFromPhaseCompletion(phaseNum) {
 function captureFromCompaction(handoffPath) {
   if (!fs.existsSync(handoffPath)) return [];
 
-  const handoff = JSON.parse(fs.readFileSync(handoffPath, 'utf8'));
+  let handoff;
+  try {
+    handoff = JSON.parse(fs.readFileSync(handoffPath, 'utf8'));
+  } catch (err) {
+    // Malformed handoff.json must not crash the capture pipeline — mirror the
+    // missing-file path and return [] after logging the parse failure.
+    console.error(`[knowledge-capture] Failed to parse handoff file ${handoffPath}: ${err.message}`);
+    return [];
+  }
+
   const items   = handoff.implicit_knowledge || [];
   const project = getProjectName();
   const captured = [];

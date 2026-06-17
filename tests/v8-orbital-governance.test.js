@@ -51,10 +51,10 @@ async function runTest() {
 
     // 5. Verify SQL Persistence
     console.log('[TEST] Verifying SQLite persistence of the attestation record...');
-    const records = await vectorHub.db.selectFrom('attestations')
-        .selectAll()
-        .where('request_id', '=', request.requestId)
-        .execute();
+    const records = vectorHub.query(
+        'SELECT * FROM attestations WHERE request_id = ?',
+        [request.requestId]
+    );
 
     if (records.length === 1 && records[0].status === 'APPROVED') {
         process.stdout.write('✅ SQLite Attestation Audit Trail Verified.\n');

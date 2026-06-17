@@ -21,17 +21,16 @@ class HindsightInjector {
       // 1. Rollback .planning directory
       TemporalHub.rollbackTo(auditId);
 
-      // 2. Append the "Hindsight" event to AUDIT.jsonl
+      // 2. Append the "Hindsight" event to AUDIT.jsonl via the unified, hash-chained,
+      //    durable append (UC-04b) so this entry links into the single verifiable chain.
+      const { appendAuditEntrySync } = require('./autonomous/audit-writer');
       const auditPath = path.join(process.cwd(), '.planning', 'AUDIT.jsonl');
-      const hindsightEvent = {
-        id:          require('crypto').randomBytes(8).toString('hex'),
-        timestamp:   new Date().toISOString(),
+      const hindsightEvent = appendAuditEntrySync(auditPath, {
         event:       'hindsight_injected',
         target_id:   auditId,
         description: fixDescription,
         agent:       'temporal-hub'
-      };
-      fs.appendFileSync(auditPath, JSON.stringify(hindsightEvent) + '\n');
+      });
 
       // 3. Mark the state as "ready_for_regeneration"
       const statePath = path.join(process.cwd(), '.planning', 'auto-state.json');
@@ -43,9 +42,9 @@ class HindsightInjector {
       }
 
       // 4. Capture the new state immediately
-      TemporalHub.captureState(hindsightEvent.id, { 
-        event: 'hindsight_injected', 
-        target_id: auditId 
+      await TemporalHub.captureState(hindsightEvent.id, {
+        event: 'hindsight_injected',
+        target_id: auditId
       });
 
       return { success: true, event: hindsightEvent };

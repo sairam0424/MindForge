@@ -34,12 +34,18 @@ async function testProactiveHoming() {
   console.log('✅ Intent Harvesting successful.');
 
   // 3. Test Mesh Self-Healing
-  console.log('\nStep 2: Testing Mesh Self-Healing (Drift Recovery)...');
+  // UC-22 (audit finding #16): this previously asserted the FABRICATED contract
+  // (type==='collective_repair' + truthy consensus). With no live peer mesh at
+  // runtime, homeIn() now degrades to an HONEST advisory — so we assert the
+  // truthful shape instead: a degraded advisory with no fabricated consensus.
+  console.log('\nStep 2: Testing Mesh Self-Healing (Honest Degraded Advisory)...');
   const recovery = await meshSelfHealer.homeIn('did:mindforge:drifting-agent', 85);
-  
-  assert.strictEqual(recovery.type, 'collective_repair', 'Mesh self-healing failed to generate recovery vector');
-  assert.ok(recovery.consensus, 'Mesh recovery consensus missing');
-  console.log('✅ Mesh Self-Healing successful (Recovery vector generated).');
+
+  assert.strictEqual(recovery.type, 'advisory', 'Mesh self-healing must emit an honest advisory');
+  assert.strictEqual(recovery.degraded, true, 'No live peers => advisory must be flagged degraded');
+  assert.strictEqual(recovery.consensus, null, 'Degraded advisory must not claim consensus');
+  assert.ok(recovery.recommendation, 'Mesh recovery must still provide a heuristic recommendation');
+  console.log('✅ Mesh Self-Healing successful (honest degraded advisory generated).');
 
   console.log('\n--- Proactive Homing Verification Complete ---');
   

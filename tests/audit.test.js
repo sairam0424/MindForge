@@ -53,11 +53,12 @@ console.log('\nMindForge Day 2 — Audit System Tests\n');
 
 console.log('AUDIT.jsonl file:');
 
-test('AUDIT.jsonl exists', () => {
-  assert.ok(fs.existsSync('.planning/AUDIT.jsonl'), 'AUDIT.jsonl not found');
-});
-
-test('AUDIT.jsonl is valid (empty or valid JSONL)', () => {
+// .planning/AUDIT.jsonl is a runtime artifact and is gitignored, so it is ABSENT on a
+// fresh clone / CI runner and present only in a populated working dir. These tests
+// validate it WHEN it exists rather than asserting it must exist (the latter fails on
+// any clean checkout, e.g. the release workflow's Linux runner).
+test('AUDIT.jsonl is valid when present (gitignored runtime artifact)', () => {
+  if (!fs.existsSync('.planning/AUDIT.jsonl')) return; // absent on fresh clone — nothing to validate
   const content = fs.readFileSync('.planning/AUDIT.jsonl', 'utf8');
   if (content.trim().length === 0) return;
   parseAuditLog(content);
@@ -183,6 +184,7 @@ test('rejects entry with malformed UUID', () => {
 });
 
 test('AUDIT.jsonl contains no secrets', () => {
+  if (!fs.existsSync('.planning/AUDIT.jsonl')) return; // gitignored runtime artifact, absent on fresh clone
   const content = fs.readFileSync('.planning/AUDIT.jsonl', 'utf8');
   const secretPatterns = [
     /password\\s*["']?\\s*:\\s*["'][^"']{6,}/i,

@@ -12,7 +12,7 @@ const SUBCOMMAND = ARGS[0];
 
 async function main() {
   switch (SUBCOMMAND) {
-    case 'status':
+    case 'status': {
       const history = TemporalHub.getHistory();
       console.log('\n⏳  MindForge Temporal Status');
       console.log(`    Snapshots:  ${history.length}`);
@@ -20,6 +20,7 @@ async function main() {
         console.log(`    Latest:     ${history[0].id} (${history[0].timestamp})`);
       }
       break;
+    }
 
     case 'cleanup':
       console.log('🧹 Cleaning up old temporal snapshots...');
@@ -27,7 +28,7 @@ async function main() {
       console.log('✅ Cleanup complete.');
       break;
 
-    case 'inject':
+    case 'inject': {
       const auditId = ARGS[1];
       const fix = ARGS.slice(2).join(' ');
       if (!auditId || !fix) {
@@ -42,6 +43,7 @@ async function main() {
         process.exit(1);
       }
       break;
+    }
 
     default:
       console.log('Usage: /mindforge:temporal <status|cleanup|inject>');

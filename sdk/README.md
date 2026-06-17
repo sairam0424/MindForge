@@ -64,6 +64,97 @@ if (!valid) console.error(errors);
 - The SDK operates on local files and provides no network authentication. Do not expose SDK
   endpoints to the public internet.
 
+## New in v11.6.0
+
+### Additional exports
+
+```typescript
+import {
+  MindForgeClient,
+  MindForgeEventStream,
+  WebSocketEventStream,
+  VERSION,              // '11.6.0'
+} from 'mindforge-sdk';
+
+import type {
+  WaveExecutionResult,
+  MigrationResult,
+  StreamChunk,
+  StreamingExecutionResult,
+  BatchExecutionRequest,
+  BatchExecutionResult,
+} from 'mindforge-sdk';
+```
+
+### Streaming execution
+
+```typescript
+import { MindForgeClient, WebSocketEventStream } from 'mindforge-sdk';
+
+const client = new MindForgeClient({ projectRoot: '.' });
+const { stream } = await client.streamExecution(1);
+
+for await (const chunk of stream) {
+  if (chunk.type === 'content') process.stdout.write(chunk.content!);
+  if (chunk.type === 'done') break;
+}
+```
+
+### Batch execution
+
+Runs commands concurrently (semaphore-bounded by `maxConcurrency`, default 3). Each
+task's `command` is the executable and `options.args` is a **string array** — it is NOT a
+shell string. Commands run with `shell: false`, so arguments are passed directly to the
+process and are safe from shell injection.
+
+```typescript
+const batch = await client.batchExecute({
+  tasks: [
+    { id: 'task-a', command: 'node', options: { args: ['--version'] } },
+    { id: 'task-b', command: 'git',  options: { args: ['rev-parse', 'HEAD'] } },
+  ],
+  maxConcurrency: 4,
+});
+
+for (const entry of batch.results) {
+  if (entry.status === 'fulfilled') {
+    // entry.result is { stdout, stderr, exitCode }
+    const { stdout, stderr, exitCode } = entry.result as {
+      stdout: string; stderr: string; exitCode: number;
+    };
+    console.log(`${entry.taskId} exited ${exitCode}: ${stdout.trim()}`);
+  } else {
+    // entry.status === 'rejected'
+    console.error(`${entry.taskId} failed: ${entry.error}`);
+  }
+}
+
+console.log(`batch finished in ${batch.totalDurationMs}ms`);
+```
+
+### Runtime config validation
+
+```typescript
+const { valid, errors } = client.validateRuntimeConfig();
+if (!valid) console.error(errors);
+```
+
+### New `MindForgeClient` methods
+
+```typescript
+const client = new MindForgeClient({ projectRoot: '/path/to/project' });
+
+// Read the current auto-state from auto-state.json
+const state = client.readAutoState();
+console.log(state.status); // 'idle' | 'running' | 'awaiting_regeneration'
+
+// Check whether the local MindForge database has been initialized
+const ready = client.isDatabaseInitialized();
+if (!ready) {
+  console.warn('Run mindforge:init-project first');
+}
+```
+
 ## TypeScript support
 
 Full type definitions included. No `@types/` package needed.

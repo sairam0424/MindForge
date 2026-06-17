@@ -1,0 +1,30 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.sairam0424/mindforge",
+  "description": "Read the MindForge engine over MCP: knowledge graph, project health, and audit log.",
+  "version": "11.5.1",
+  "repository": {
+    "url": "https://github.com/sairam0424/MindForge",
+    "source": "github",
+    "subfolder": "mcp-server"
+  },
+  "websiteUrl": "https://github.com/sairam0424/MindForge#readme",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "mindforge-mcp-server",
+      "version": "11.5.1",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "CLAUDE_PROJECT_DIR",
+          "description": "Absolute path to the project whose .mindforge/ and .planning/ the server reads. Defaults to the current working directory if unset.",
+          "isRequired": false
+        }
+      ]
+    }
+  ]
+}

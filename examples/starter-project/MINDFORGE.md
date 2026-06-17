@@ -1,15 +1,15 @@
 NAME=ExampleProject
 VERSION=1.0.0
-DESCRIPTION=Starter example for MindForge v1.0.0
-MINDFORGE_VERSION_REQUIRED=1.0.0
+DESCRIPTION=Starter example for MindForge v10.0.1
+MINDFORGE_VERSION_REQUIRED=10.0.1
 
 # Model preferences
-PLANNER_MODEL=claude-sonnet-4-5
-EXECUTOR_MODEL=claude-sonnet-4-5
-REVIEWER_MODEL=claude-sonnet-4-5
-VERIFIER_MODEL=claude-sonnet-4-5
-SECURITY_MODEL=claude-opus-4-5
-DEBUG_MODEL=claude-opus-4-5
+PLANNER_MODEL=claude-sonnet-4-6
+EXECUTOR_MODEL=claude-sonnet-4-6
+REVIEWER_MODEL=claude-sonnet-4-6
+VERIFIER_MODEL=claude-sonnet-4-6
+SECURITY_MODEL=claude-opus-4-7
+DEBUG_MODEL=claude-opus-4-7
 
 # Execution behavior
 TIER1_AUTO_APPROVE=true

@@ -21,7 +21,9 @@ class ConfigManager {
       if (fs.existsSync(this.configPath)) {
         const raw = fs.readFileSync(this.configPath, 'utf8');
         this.config = JSON.parse(raw);
-        console.log(`[ConfigManager] Loaded configuration from ${this.configPath}`);
+        // Diagnostic goes to stderr (not stdout) so it never pollutes JSON that a
+        // consumer parses from this process's stdout. Matches the warn/error lines below.
+        console.error(`[ConfigManager] Loaded configuration from ${this.configPath}`);
       } else {
         console.warn(`[ConfigManager] Config file not found at ${this.configPath}. Using defaults.`);
         this.config = { env: 'default' };

@@ -1,6 +1,6 @@
 /**
  * MindForge v8 Persistence Verification Test
- * Tests the Unified Persistence Layer (SQLite)
+ * Tests the Unified Persistence Layer (SQLite via sql.js)
  */
 const nexusTracer = require('../bin/engine/nexus-tracer');
 const remediationQueue = require('../bin/revops/remediation-queue');
@@ -28,7 +28,7 @@ async function runTest() {
       strategy: 'REASONING_RESTART'
     });
     console.log(`[TEST] Enqueued: ${remediation.remediation_id}`);
-    
+
     await remediationQueue.updateStatus(remId, 'COMPLETED');
     console.log('[TEST] Updated remediation status.');
 
@@ -45,27 +45,27 @@ async function runTest() {
     // 4. Verify SQLite contents
     console.log('[TEST] Verifying SQLite contents...');
     await vectorHub.init();
-    
-    const traces = await vectorHub.db.selectFrom('traces')
-      .selectAll()
-      .where('trace_id', '=', `v8_trace_${testId}`)
-      .execute();
+
+    const traces = vectorHub.query(
+      'SELECT * FROM traces WHERE trace_id = ?',
+      [`v8_trace_${testId}`]
+    );
     console.log(`[TEST] Traces found: ${traces.length}`);
 
-    const rems = await vectorHub.db.selectFrom('remediations')
-      .selectAll()
-      .where('id', '=', remId)
-      .execute();
+    const rems = vectorHub.query(
+      'SELECT * FROM remediations WHERE id = ?',
+      [remId]
+    );
     console.log(`[TEST] Remediations found: ${rems.length} (Status: ${rems[0]?.status})`);
 
-    const skills = await vectorHub.db.selectFrom('skills')
-      .selectAll()
-      .where('skill_id', '=', skillId)
-      .execute();
+    const skills = vectorHub.query(
+      'SELECT * FROM skills WHERE skill_id = ?',
+      [skillId]
+    );
     console.log(`[TEST] Skills found: ${skills.length} (Success Rate: ${skills[0]?.success_rate})`);
 
     // 5. Semantic Search Test
-    console.log('[TEST] Testing semantic search (FTS5)...');
+    console.log('[TEST] Testing semantic search (FTS)...');
     const results = await vectorHub.searchTraces(`persistence test ${testId}`);
     console.log(`[TEST] FTS Search Results: ${results.length}`);
 

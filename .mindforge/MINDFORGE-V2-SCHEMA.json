@@ -1,14 +1,51 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "MindForge v2 Autonomous Engine Schema",
-  "description": "Schema for HANDOFF.json and auto-state.json in v2.0.0-alpha.1",
+  "description": "Schema for HANDOFF.json and auto-state.json in v2.0.0-alpha.1+",
   "type": "object",
   "properties": {
-    "schema_version": { "type": "string", "const": "2.0.0" },
+    "schema_version": { "type": "string" },
+    "schema_type": { "type": "string", "enum": ["HANDOFF", "AUTO_STATE"] },
     "auto_mode_active": { "type": "boolean" },
-    "phase": { "type": "integer" },
-    "wave_current": { "type": "integer" },
-    "tasks_completed": { "type": "integer" },
+    "phase": { "oneOf": [{ "type": "integer" }, { "type": "string" }] },
+    "wave_current": { "type": "integer", "minimum": 0 },
+    "tasks_completed": { "type": "integer", "minimum": 0 },
+    "status": {
+      "type": "string",
+      "enum": ["idle", "running", "paused", "completed", "escalated", "timeout"]
+    },
+    "handoffs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "plan": { "type": "string" },
+          "depends_on": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "wave": { "type": "integer", "minimum": 0 }
+        },
+        "required": ["id", "name"]
+      }
+    },
+    "timestamps": {
+      "type": "object",
+      "properties": {
+        "started_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "next_task": { "type": "string" },
+    "context_refs": { "type": "array", "items": { "type": "string" } },
+    "blockers": { "type": "array", "items": { "type": "string" } },
+    "decisions_needed": { "type": "array", "items": { "type": "string" } },
+    "recent_commits": { "type": "array", "items": { "type": "string" } },
+    "recent_files": { "type": "array", "items": { "type": "string" } },
+    "current_context": { "type": "string" },
+    "last_updated": { "type": "string", "format": "date-time" },
     "PLANNER_MODEL": { "type": "string" },
     "EXECUTOR_MODEL": { "type": "string" },
     "REVIEWER_MODEL": { "type": "string" },
@@ -21,10 +58,6 @@
     "MODEL_COST_HARD_LIMIT_USD": { "type": "number" },
     "MODEL_PREFER_CHEAP_BELOW_DIFFICULTY": { "type": "number" },
     "REQUIRE_CROSS_REVIEW": { "type": "boolean" },
-    "status": {
-      "type": "string",
-      "enum": ["idle", "running", "paused", "completed", "escalated", "timeout"]
-    },
     "governance": {
       "type": "object",
       "properties": {
@@ -43,5 +76,5 @@
       }
     }
   },
-  "required": ["schema_version", "auto_mode_active", "status"]
+  "required": ["schema_version"]
 }

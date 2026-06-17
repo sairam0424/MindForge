@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "mindforge",
+  "owner": {
+    "name": "MindForge Team",
+    "email": "uggesairam0000@gmail.com"
+  },
+  "description": "MindForge — Sovereign Agentic Intelligence for Claude Code: the full framework plugin (commands, agents, skills, hooks) plus à-la-carte subagent packs.",
+  "plugins": [
+    {
+      "name": "mindforge",
+      "source": "./plugins/mindforge",
+      "description": "Sovereign Agentic Intelligence for Claude Code — 174 commands, 154 subagents, 74 skills, and governance hooks. The full MindForge framework as one plugin.",
+      "version": "11.4.0",
+      "category": "framework",
+      "keywords": [
+        "agentic",
+        "orchestration",
+        "swarm",
+        "governance",
+        "mindforge",
+        "claude-code"
+      ]
+    },
+    {
+      "name": "mindforge-core-dev",
+      "source": "./subagents/categories/01-core-development",
+      "description": "Essential development subagents for everyday coding tasks - backend, frontend, fullstack, mobile, and API design",
+      "version": "1.0.2",
+      "category": "agents",
+      "keywords": []
+    },
+    {
+      "name": "mindforge-lang",
+      "source": "./subagents/categories/02-language-specialists",
+      "description": "Language-specific expert agents with deep framework knowledge - Python, TypeScript, Go, Rust, Java, and more",
+      "version": "1.0.4",
+      "category": "agents",
+      "keywords": []
+    },
+    {
+      "name": "mindforge-infra",
+      "source": "./subagents/categories/03-infrastructure",
+      "description": "DevOps, cloud, and deployment specialists - Kubernetes, Terraform, AWS, Azure, GCP, and SRE",
+      "version": "1.0.1",
+      "category": "agents",
+      "keywords": []
+    },
+    {
+      "name": "mindforge-qa-sec",
+      "source": "./subagents/categories/04-quality-security",
+      "description": "Testing, security, and code quality experts - code review, penetration testing, QA automation, and UI flow validation",
+      "version": "1.1.1",
+      "category": "agents",
+      "keywords": []
+    },
+    {
+      "name": "mindforge-data-ai",
+      "source": "./subagents/categories/05-data-ai",
+      "description": "Data engineering, ML, and AI specialists - data pipelines, machine learning, LLM architecture",
+      "version": "1.0.2",
+      "category": "agents",
+      "keywords": []
+    },
+    {
+      "name": "mindforge-dev-exp",
+      "source": "./subagents/categories/06-developer-experience",
+      "description": "Tooling and developer productivity experts - CLI tools, documentation, README generation, and DX optimization",
+      "version": "1.0.3",
+      "category": "agents",
+      "keywords": []
+    },
+    {
+      "name": "mindforge-domains",
+      "source": "./subagents/categories/07-specialized-domains",
+      "description": "Domain-specific technology experts - blockchain, fintech, gaming, IoT, payments",
+      "version": "1.0.2",
+      "category": "agents",
+      "keywords": []
+    },
+    {
+      "name": "mindforge-biz",
+      "source": "./subagents/categories/08-business-product",
+      "description": "Product, legal, and business specialists - product strategy, licensing, project management, UX research",
+      "version": "1.0.3",
+      "category": "agents",
+      "keywords": []
+    },
+    {
+      "name": "mindforge-meta",
+      "source": "./subagents/categories/09-meta-orchestration",
+      "description": "Agent coordination and meta-programming - multi-agent orchestration, workflow automation, and safe refactor governance. Works best with other mindforge plugins installed.",
+      "version": "1.0.3",
+      "category": "agents",
+      "keywords": []
+    },
+    {
+      "name": "mindforge-research",
+      "source": "./subagents/categories/10-research-analysis",
+      "description": "Research, search, and analysis specialists - market research, competitive analysis, trend forecasting, and idea validation",
+      "version": "1.0.4",
+      "category": "agents",
+      "keywords": []
+    }
+  ]
+}

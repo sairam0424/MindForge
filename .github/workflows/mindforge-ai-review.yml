@@ -29,28 +29,42 @@ jobs:
 
       - name: Run AI Review
         id: review
+        # Non-blocking: the AI review needs ANTHROPIC_API_KEY / OPENAI_API_KEY, which are not
+        # present on this repo (and never on fork/dependabot PRs). When keys are absent the
+        # engine can't run — that's an advisory enhancement, not a merge gate, so it must not
+        # red the PR. continue-on-error lets the workflow proceed; the comment step below only
+        # fires when a review was actually produced.
+        continue-on-error: true
         run: |
           echo "::group::AI Review Execution"
+          if [ -z "$ANTHROPIC_API_KEY" ] && [ -z "$OPENAI_API_KEY" ]; then
+            echo "::notice::No AI API keys configured — skipping AI review (advisory step, non-blocking)."
+            echo "::endgroup::"
+            exit 0
+          fi
           # Run the cross-review engine with designated models
           node bin/review/cross-review-engine.js --models claude,gpt4o --output json > /tmp/review-results.json
           echo "::endgroup::"
-          
+
           # Generate review markdown
           node -e "
             const results = JSON.parse(require('fs').readFileSync('/tmp/review-results.json', 'utf8'));
-            const md = '# 🧠 MindForge AI Review\n\n' + 
+            const md = '# 🧠 MindForge AI Review\n\n' +
                        '## Summary\n' + results.summary + '\n\n' +
                        '## Findings\n' + results.findings.map(f => '- ' + f).join('\n');
             require('fs').writeFileSync('/tmp/mindforge-review.md', md);
           "
 
       - name: Post AI Review Comment
+        # Only run when a review markdown was actually generated (keys present + engine ran).
+        if: hashFiles('/tmp/mindforge-review.md') != ''
+        continue-on-error: true
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
             const reviewContent = fs.readFileSync('/tmp/mindforge-review.md', 'utf8');
-            
+
             await github.rest.pulls.createReview({
               owner: context.repo.owner,
               repo: context.repo.repo,

@@ -46,10 +46,14 @@ class GeminiProvider {
               return reject(Object.assign(new Error(json.error?.message || 'Gemini API error'), { status: res.statusCode }));
             }
 
-            // Gemini 1.5 Pro billing is complex; using $1.25 / 1M input as baseline
             const inputTokens = json.usageMetadata.promptTokenCount;
             const outputTokens = json.usageMetadata.candidatesTokenCount;
-            const cost = (inputTokens * 0.00000125) + (outputTokens * 0.00000375);
+
+            const { priceCall } = require('./pricing-registry');
+            const cost = priceCall(modelId, {
+              input_tokens: inputTokens,
+              output_tokens: outputTokens,
+            });
 
             resolve({
               model: modelId,
@@ -69,6 +73,57 @@ class GeminiProvider {
       req.on('timeout', () => {
         req.destroy();
         reject(Object.assign(new Error('Gemini timeout'), { status: 408 }));
+      });
+      req.write(data);
+      req.end();
+    });
+  }
+
+  async streamComplete(messages, options = {}) {
+    const model = options.model || 'gemini-2.5-pro';
+    const maxTokens = options.maxTokens || 8192;
+
+    const contents = messages.map(msg => ({
+      role: msg.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: msg.content }],
+    }));
+
+    const data = JSON.stringify({
+      contents,
+      generationConfig: {
+        maxOutputTokens: maxTokens,
+      },
+    });
+
+    const modelId = model.startsWith('models/') ? model : `models/${model}`;
+
+    return new Promise((resolve, reject) => {
+      const req = https.request({
+        hostname: 'generativelanguage.googleapis.com',
+        path: `/v1beta/${modelId}:streamGenerateContent?alt=sse`,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': this.apiKey,
+          'Content-Length': Buffer.byteLength(data),
+        },
+        timeout: 300_000,
+      }, res => {
+        if (res.statusCode !== 200) {
+          let body = '';
+          res.on('data', chunk => body += chunk);
+          res.on('end', () => {
+            reject(new Error(`Gemini streaming failed: ${res.statusCode}`));
+          });
+          return;
+        }
+        resolve(res);
+      });
+
+      req.on('error', reject);
+      req.on('timeout', () => {
+        req.destroy();
+        reject(new Error('Gemini stream timeout'));
       });
       req.write(data);
       req.end();

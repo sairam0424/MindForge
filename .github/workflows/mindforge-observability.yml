@@ -2,7 +2,7 @@ name: MindForge Observability
 
 on:
   workflow_run:
-    workflows: ["MindForge Core CI"]
+    workflows: ["MindForge CI"]
     types:
       - completed
 

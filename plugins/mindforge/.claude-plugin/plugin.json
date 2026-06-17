@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "mindforge",
+  "displayName": "MindForge",
+  "version": "11.5.1",
+  "description": "Sovereign Agentic Intelligence for Claude Code — 182 commands, 164 subagents, 74 skills, and governance hooks. The full MindForge framework as one plugin.",
+  "author": {
+    "name": "MindForge Team",
+    "email": "uggesairam0000@gmail.com"
+  },
+  "homepage": "https://github.com/sairam0424/MindForge#readme",
+  "repository": "https://github.com/sairam0424/MindForge",
+  "license": "MIT",
+  "keywords": [
+    "agentic",
+    "orchestration",
+    "swarm",
+    "governance",
+    "mindforge",
+    "claude-code"
+  ]
+}

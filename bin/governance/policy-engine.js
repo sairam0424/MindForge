@@ -8,12 +8,14 @@ const fs = require('node:fs');
 const path = require('node:path');
 const ImpactAnalyzer = require('./impact-analyzer');
 const policyGate = require('./policy-gate-hardened');
+const { AuditWriter } = require('../utils/file-io');
 
 class PolicyEngine {
   constructor(config = {}) {
     this.policiesDir = config.policiesDir || path.join(__dirname, 'policies');
     this.planningDir = config.planningDir || path.join(process.cwd(), '.planning');
     this.auditLogPath = path.join(this.planningDir, 'RISK-AUDIT.jsonl');
+    this._auditWriter = new AuditWriter(this.auditLogPath);
     this.ensurePoliciesDir();
   }
 
@@ -73,7 +75,7 @@ class PolicyEngine {
           // [PQAS] v7: Hardened Biometric Bypass for Risk > 95
           if (impactScore > 95) {
             const gateResult = await policyGate.evaluateBypass(intent, impactScore);
-            if (gateResult.status === 'WAIT_FOR_BIOMETRIC') {
+            if (gateResult.status === 'WAIT_FOR_BIOMETRIC' || gateResult.status === 'WAIT_FOR_ORBITAL') {
               verdict = { 
                 verdict: 'DENY', 
                 reason: gateResult.reason, 
@@ -90,17 +92,37 @@ class PolicyEngine {
             return verdict;
           }
 
-          // [ENTERPRISE] Tier 3 Reasoning/PQ Proof Bypass
+          // [ENTERPRISE] Tier 3 Sovereign Proof Bypass (fail-closed).
+          // A blast-radius override demands a CRYPTOGRAPHIC proof. Only a
+          // pq_proof verified via verifyZKProof may authorize the bypass.
+          // intent.reasoning_proof is free-form text validated nowhere, so it
+          // MUST NOT, on its own, grant an override (UC-22 authz bypass fix).
           if (intent.tier >= 3 && (intent.reasoning_proof || intent.pq_proof)) {
              const quantumCrypto = require('./quantum-crypto');
-             const isProofValid = intent.pq_proof ? 
-                quantumCrypto.verifyZKProof(intent.pq_proof, intent.id) : true;
+             let isProofValid = false; // fail-closed: deny unless a real proof verifies
+
+             if (intent.pq_proof) {
+               const zkResult = quantumCrypto.verifyZKProof(intent.pq_proof, intent.id);
+               isProofValid = zkResult.verified === true;
+               if (!isProofValid) {
+                 console.log(`[APO-ZK] [${requestId}] ZK proof denied: ${zkResult.reason}${zkResult.simulated ? ' (simulated)' : ''}`);
+               }
+             }
 
              if (isProofValid) {
-                console.log(`[APO-BYPASS] [${requestId}] Tier 3 'Sovereign Proof' verified (${intent.pq_proof ? 'ZK-PQ' : 'Standard'}). Overriding Blast Radius limit.`);
+                console.log(`[APO-BYPASS] [${requestId}] Tier 3 'Sovereign Proof' verified (ZK-PQ). Overriding Blast Radius limit.`);
                 // Continue to permit check
+             } else if (intent.pq_proof) {
+                verdict = { verdict: 'DENY', reason: 'ZK proof verification failed. Configure a verifier module or provide a valid proof.', requestId };
+                this.logAudit(intent, impactScore, verdict);
+                return verdict;
              } else {
-                verdict = { verdict: 'DENY', reason: 'Invalid or Malformed ZK-Proof detected.', requestId };
+                // Only a reasoning_proof was supplied — not a cryptographic proof.
+                verdict = {
+                  verdict: 'DENY',
+                  reason: 'reasoning_proof is not a cryptographic proof; provide a valid pq_proof / Sovereign Proof for blast-radius override.',
+                  requestId
+                };
                 this.logAudit(intent, impactScore, verdict);
                 return verdict;
              }
@@ -143,7 +165,7 @@ class PolicyEngine {
   }
 
   logAudit(intent, impactScore, verdict) {
-    const entry = JSON.stringify({
+    this._auditWriter.write({
       timestamp: new Date().toISOString(),
       requestId: verdict.requestId,
       did: intent.did,
@@ -153,9 +175,7 @@ class PolicyEngine {
       impactScore,
       verdict: verdict.verdict,
       reason: verdict.reason
-    }) + '\n';
-    
-    fs.appendFileSync(this.auditLogPath, entry); 
+    });
   }
 
   loadPolicies() {

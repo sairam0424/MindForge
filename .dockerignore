@@ -1,0 +1,5 @@
+# The image installs the published mindforge-mcp-server package — the repo itself
+# does not enter the build context. Keep it minimal and avoid leaking local state.
+*
+!Dockerfile
+!tools.json

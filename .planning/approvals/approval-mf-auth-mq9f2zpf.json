@@ -1,0 +1,16 @@
+{
+  "id": "MF-AUTH-MQ9F2ZPF",
+  "project": "mindforge-cc",
+  "version": "11.5.1",
+  "tier": 3,
+  "approved_by": "sairamugge",
+  "timestamp": "2026-06-11T11:31:20.259Z",
+  "reason": "Wave 8 v11.5.1: robustness JSON.parse guards (pillar-health/knowledge-capture/federated-sync), CI Tier-3 gate content validation, dashboard approver attribution, Unix truncate detector. No auth/payment/PII logic changed.",
+  "signature": "sha256:c477efc5370e7a721e84dd4467de02b5fa12a09f0dd3d854ee581509cd69e828",
+  "identity_verification": {
+    "verified": false,
+    "method": "git_identity_unverified",
+    "identity": "sairamugge",
+    "unverified_ack": true
+  }
+}

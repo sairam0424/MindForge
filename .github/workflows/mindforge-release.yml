@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   release:
@@ -29,6 +30,35 @@ jobs:
       - name: Run Full Test Suite
         run: npm test
 
+      - name: Verify tag matches package.json version
+        id: verify_version
+        run: |
+          # Strip leading 'v' from the tag ref (e.g. v11.2.0 -> 11.2.0)
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          echo "Tag version:     ${TAG_VERSION}"
+          echo "package.json:    ${PKG_VERSION}"
+          if [ "${TAG_VERSION}" != "${PKG_VERSION}" ]; then
+            echo "::error title=Version Mismatch::Git tag (${TAG_VERSION}) does not match package.json (${PKG_VERSION}). Refusing to publish."
+            exit 1
+          fi
+          echo "::notice::Tag matches package.json version (${PKG_VERSION}) ✅"
+          echo "version=${PKG_VERSION}" >> "${GITHUB_OUTPUT}"
+
+      - name: Check npm for existing version
+        id: npm_check
+        run: |
+          VER="${{ steps.verify_version.outputs.version }}"
+          # npm view exits non-zero / prints empty when the version is not published; tolerate both.
+          PUBLISHED="$(npm view "mindforge-cc@${VER}" version 2>/dev/null || true)"
+          if [ -n "${PUBLISHED}" ]; then
+            echo "::notice::v${VER} already on npm — skipping publish"
+            echo "already_published=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "::notice::v${VER} not yet on npm — will publish"
+            echo "already_published=false" >> "${GITHUB_OUTPUT}"
+          fi
+
       - name: Generate CHANGELOG
         run: |
           # Use internal changelog fetcher if available, or generate from git
@@ -39,7 +69,27 @@ jobs:
         run: npm pack
 
       - name: Publish to npm
-        run: npm publish --access public
+        if: steps.npm_check.outputs.already_published != 'true'
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Standalone MCP server — published as its own public package (mindforge-mcp-server)
+      # so it can be listed on the official MCP Registry, Docker MCP Catalog, PulseMCP, etc.
+      # The same bundle is also vendored into the Claude Code plugin; this publish is additive.
+      - name: Publish standalone MCP server to npm
+        id: mcp_publish
+        working-directory: mcp-server
+        run: |
+          MCP_VER="$(node -p "require('./package.json').version")"
+          PUBLISHED="$(npm view "mindforge-mcp-server@${MCP_VER}" version 2>/dev/null || true)"
+          if [ -n "${PUBLISHED}" ]; then
+            echo "::notice::mindforge-mcp-server@${MCP_VER} already on npm — skipping"
+            exit 0
+          fi
+          npm install --no-audit --no-fund
+          npm run build
+          npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 

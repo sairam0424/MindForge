@@ -18,6 +18,7 @@ class RBACManager {
       'did:mindforge:researcher': ['knowledge-detective'],
       'did:mindforge:tool': ['system-operator']
     };
+    this.temporaryElevations = new Map(); // key: `${did}:${role}`, value: { timer, expiresAt }
   }
 
   /**
@@ -39,18 +40,26 @@ class RBACManager {
   }
 
   /**
-   * [HARDEN] Dynamically binds roles based on ZTAI trust tiers if no explicit role exists.
-   * Ensures high-trust agents automatically get architect-level visibility.
+   * [HARDEN] Dynamically binds roles based on ZTAI trust tiers on top of the
+   * agent's explicit/default roles. High-trust agents automatically gain
+   * architect-level visibility.
+   *
+   * ztai-manager is a SINGLETON instance (not a constructor), and exposes no
+   * getIdentity(); the agent's tier lives in the trust registry, read via
+   * getAgent(did). Fails SAFE: an unregistered/unknown DID has no resolvable
+   * tier, so it receives only its base roles (no tier-based elevation) rather
+   * than throwing. (Wave 6: the previous `new ztai().getIdentity()` threw on
+   * every call — "ztai is not a constructor".)
    */
   async getRolesByTier(did) {
-    const manager = new ztai();
-    const identity = await manager.getIdentity();
     const explicit = this.getRoles(did);
+    const agent = ztai.getAgent(did);
+    const tier = agent && typeof agent.tier === 'number' ? agent.tier : 0;
 
-    if (identity.tier >= 3) {
+    if (tier >= 3) {
       return [...new Set([...explicit, 'lead-architect'])];
     }
-    if (identity.tier >= 2) {
+    if (tier >= 2) {
       return [...new Set([...explicit, 'developer'])];
     }
     return explicit;
@@ -85,9 +94,71 @@ class RBACManager {
   }
 
   /**
+   * Temporarily elevates an agent to a role for a limited duration.
+   * The elevation auto-expires after ttlMs milliseconds.
+   * @param {string} did - Agent DID
+   * @param {string} role - Role to temporarily grant
+   * @param {number} ttlMs - Time-to-live in milliseconds (default: 1 hour)
+   */
+  elevateRole(did, role, ttlMs = 3600000) {
+    const key = `${did}:${role}`;
+
+    // Clear existing elevation if any
+    if (this.temporaryElevations.has(key)) {
+      clearTimeout(this.temporaryElevations.get(key).timer);
+    }
+
+    const timer = setTimeout(() => {
+      this.temporaryElevations.delete(key);
+    }, ttlMs);
+
+    // Prevent timer from keeping process alive
+    if (timer.unref) timer.unref();
+
+    this.temporaryElevations.set(key, {
+      timer,
+      expiresAt: Date.now() + ttlMs
+    });
+
+    return { did, role, expiresAt: Date.now() + ttlMs };
+  }
+
+  /**
+   * Checks if an agent currently has a temporary role elevation.
+   * @param {string} did - Agent DID
+   * @param {string} role - Role to check
+   */
+  hasTemporaryElevation(did, role) {
+    const key = `${did}:${role}`;
+    const elevation = this.temporaryElevations.get(key);
+    if (!elevation) return false;
+    if (Date.now() > elevation.expiresAt) {
+      clearTimeout(elevation.timer);
+      this.temporaryElevations.delete(key);
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Revokes a temporary elevation before its TTL expires.
+   * @param {string} did - Agent DID
+   * @param {string} role - Role to revoke
+   */
+  revokeElevation(did, role) {
+    const key = `${did}:${role}`;
+    const elevation = this.temporaryElevations.get(key);
+    if (elevation) {
+      clearTimeout(elevation.timer);
+      this.temporaryElevations.delete(key);
+    }
+  }
+
+  /**
    * Checks if an agent has a specific permission based on their roles.
-   * @param {string} did 
-   * @param {string} permission 
+   * Also checks temporary elevations.
+   * @param {string} did
+   * @param {string} permission
    */
   hasPermission(did, permission) {
     const roles = this.getRoles(did);
@@ -99,9 +170,18 @@ class RBACManager {
       'guest-agent':     ['read_src']
     };
 
+    // Check static roles first
     for (const role of roles) {
       if (PERMISSION_MAP[role]?.includes(permission)) return true;
     }
+
+    // Check temporary elevations
+    for (const [role, permissions] of Object.entries(PERMISSION_MAP)) {
+      if (permissions.includes(permission) && this.hasTemporaryElevation(did, role)) {
+        return true;
+      }
+    }
+
     return false;
   }
 }

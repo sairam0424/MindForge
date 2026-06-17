@@ -71,6 +71,19 @@ const SCHEMA_HISTORY = [
       'Plugin API version upgraded to 2.0.0',
     ],
   },
+  {
+    version: '11.0.0',
+    date: '2026-05-28',
+    description: 'v11.0.0 - Persona Expansion: temporal config, rate limiting, wave execution, audit archival',
+    handoff_fields_added: [],
+    handoff_fields_removed: [],
+    audit_fields_added: [],
+    breaking: [
+      'config.json gains temporal, rate_limiting, session, wave_execution sections',
+      'AUDIT.jsonl auto-archived if exceeding 5000 lines',
+      'MINDFORGE.md VERSION format drops suffix (was X.Y.Z-SUFFIX, now X.Y.Z)',
+    ],
+  },
 ];
 
 module.exports = { SCHEMA_HISTORY };

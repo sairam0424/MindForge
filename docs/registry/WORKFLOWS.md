@@ -1,4 +1,4 @@
-# MindForge — Workflow Registry (v6.2.0-alpha)
+# MindForge — Workflow Registry (v11.3.1)
 
 This registry catalogs the automated interaction flows available in the MindForge environment.
 

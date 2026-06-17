@@ -9,7 +9,14 @@
 const { spawnSync } = require('child_process');
 const path = require('path');
 
-const ARGS = process.argv.slice(2);
+const RAW_ARGS = process.argv.slice(2);
+
+// ── Parse global flags ────────────────────────────────────────────────────────
+if (RAW_ARGS.includes('--verbose') || RAW_ARGS.includes('-v')) {
+  process.env.MINDFORGE_VERBOSE = '1';
+}
+
+const ARGS = RAW_ARGS.filter(a => a !== '--verbose' && a !== '-v');
 const COMMAND = ARGS[0];
 const COMMAND_ARGS = ARGS.slice(1);
 
@@ -108,19 +115,7 @@ const COMMANDS = {
     script: 'bin/autonomous/mesh-self-healer.js',
     description: 'Auto-detect and repair reasoning drifts in the active swarm'
   },
-  'quantum-verify': {
-    script: 'bin/governance/quantum-crypto.js',
-    description: 'Verify framework integrity using post-quantum signatures',
-    defaultArgs: ['--verify', '.mindforge/engine/']
-  },
-  'sync-jira': {
-    script: 'bin/integrations/jira-sync.js',
-    description: 'Synchronize project state with Jira issues and milestones'
-  },
-  'sync-confluence': {
-    script: 'bin/integrations/confluence-sync.js',
-    description: 'Export architecture and roadmap to Confluence pages'
-  },
+  // Planned: jira-sync, confluence-sync (not yet implemented)
   'metrics': {
     script: 'bin/dashboard/metrics-aggregator.js',
     description: 'Display real-time velocity and quality metrics'
@@ -138,6 +133,10 @@ const COMMANDS = {
     script: 'bin/engine/learning-manager.js',
     description: 'Append a new Learning Entry to the Evolution Log',
     defaultArgs: ['record']
+  },
+  'verify': {
+    script: 'bin/engine/verify-cli.js',
+    description: 'Run unified verification (tests, lint, audit, typecheck) and write report'
   }
 };
 
@@ -148,8 +147,20 @@ if (!COMMAND || ARGS.includes('--help') || ARGS.includes('-h')) {
 
 const target = COMMANDS[COMMAND];
 if (!target) {
-  console.error(`❌ Unknown command: ${COMMAND}`);
-  console.error('Available commands: ' + Object.keys(COMMANDS).join(', '));
+  console.error(`Unknown command: ${COMMAND}`);
+
+  // Suggest similar commands using Levenshtein distance
+  const suggestions = Object.keys(COMMANDS)
+    .map(cmd => ({ cmd, dist: levenshtein(COMMAND, cmd) }))
+    .filter(s => s.dist <= 3)
+    .sort((a, b) => a.dist - b.dist)
+    .slice(0, 3);
+
+  if (suggestions.length > 0) {
+    console.error(`\nDid you mean: ${suggestions.map(s => s.cmd).join(', ')}?`);
+  } else {
+    console.error('Available commands: ' + Object.keys(COMMANDS).join(', '));
+  }
   process.exit(1);
 }
 
@@ -165,6 +176,30 @@ const result = spawnSync('node', [scriptPath, ...finalArgs], {
 });
 
 process.exit(result.status || 0);
+
+/**
+ * Levenshtein distance — dynamic programming edit distance between two strings.
+ */
+function levenshtein(a, b) {
+  const m = a.length;
+  const n = b.length;
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + cost
+      );
+    }
+  }
+  return dp[m][n];
+}
 
 function printUsage() {
   console.log('\n⚡ MindForge Enterprise CLI\n');
