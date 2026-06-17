@@ -4,10 +4,11 @@
 
 ---
 
-## Latest: v11.5.1
+## Latest: v11.6.0
 
-- **v11.5.1 — Standalone MCP server.** The MindForge MCP server now ships as its own npm package, `mindforge-mcp-server@11.5.1`, listed on the official MCP Registry as `io.github.sairam0424/mindforge`. Add it to Claude Code with one command (see [Use the MCP server](#-use-the-mcp-server-standalone)); it exposes 7 tools over stdio (6 read-only + 1 guarded write). `mindforge-cc` is also at 11.5.1.
-- **v11.3.1 — Packaging hotfix.** Restores the full published payload: every `npx mindforge-cc` install now delivers all 174 slash commands, 73 skills, 154 subagents, and the complete `.mindforge/` framework. (v11.3.0 shipped a too-narrow npm allowlist that silently dropped commands and skills — fixed here, with a tarball regression test so it cannot recur.)
+- **v11.6.0 — "Skill Forge".** Adds 80 community-sourced skills across 8 domains (software-development, github, devops, research, security, creative, data-science, note-taking) — 30 promoted to engine tier for automatic trigger-matching, 50 in the extended tier for explicit activation. Three new slash commands: `/mindforge:systematic-debug`, `/mindforge:skill-tdd`, `/mindforge:skills-index`. Total: 153 skills, 232 engine-tier entries, 177 commands.
+- **v11.5.1 — Standalone MCP server.** The MindForge MCP server now ships as its own npm package, `mindforge-mcp-server@11.5.1`, listed on the official MCP Registry as `io.github.sairam0424/mindforge`. Add it to Claude Code with one command (see [Use the MCP server](#-use-the-mcp-server-standalone)); it exposes 7 tools over stdio (6 read-only + 1 guarded write).
+- **v11.3.1 — Packaging hotfix.** Restores the full published payload: every `npx mindforge-cc` install now delivers all 177 slash commands, 153 skills, 154 subagents, and the complete `.mindforge/` framework.
 - **v11.3.0 — "Legion".** Imports 154 specialized Claude-Code-native subagents across 10 categories into `.claude/agents/`, fully rebranded and collision-safe. Additive and backward-compatible.
 
 See [CHANGELOG.md](./CHANGELOG.md) for full release history.
@@ -23,7 +24,7 @@ MindForge v11.0.0 "Sovereign Stability" is a production-hardening release focuse
 - **Production observability** — `/api/v1/system` health endpoint, P95 latency tracking, heap health monitoring, and real EIS client with retry logic.
 - **Graduated intelligence** — Adaptive tier escalation (+1/+2/MAX) with cost-awareness, 3-tier stuck detection, and adaptive context windows.
 
-This release ships 211 personas, 73 skills, 154 specialized subagents, 174 commands, 18 pillars, and 49 swarm templates across 12 engineering domains.
+This release ships 211 personas, 153 skills, 154 specialized subagents, 177 commands, 18 pillars, and 49 swarm templates across 12 engineering domains.
 
 
 ## Installation & Setup
@@ -380,6 +381,16 @@ See `.mindforge/production/token-optimiser.md`.
 - **Contributing:** `docs/contributing/CONTRIBUTING.md`
 
 ## 📜 Framework Evolution & Version History
+
+<details>
+<summary><b>v11.6.0 — Skill Forge (Core + Dev Skill Pack)</b></summary>
+
+- **80 new skills** across 8 domains: software-development, GitHub workflows, DevOps orchestration, research intelligence, security, creative tooling, data-science, and note-taking.
+- **Engine tier (auto-trigger):** 30 skills in `.mindforge/skills/` activated automatically by trigger-phrase matching — systematic debugging, TDD, kanban orchestration, OSINT investigation, web pentesting, concept diagram generation, research paper writing, and more.
+- **Extended tier (explicit):** 50 skills in `.agent/skills/` covering GitHub auth, docker management, DevOps watchers, 1Password, debuggers, pixel art, video orchestration, and more.
+- **3 new slash commands:** `/mindforge:systematic-debug` (4-phase RCA), `/mindforge:skill-tdd` (RED-GREEN-REFACTOR), `/mindforge:skills-index` (browseable skill catalog).
+- All skills cleanly integrated — zero external attribution in any committed file.
+</details>
 
 <details>
 <summary><b>v11.0.0 — Sovereign Stability (Production Hardening)</b></summary>
