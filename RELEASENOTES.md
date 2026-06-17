@@ -1,5 +1,60 @@
 # Release Notes
 
+## v11.6.0 — Skill Forge
+
+**Release Date**: 2026-06-17
+**Type**: Minor — additive skill pack expansion, no breaking changes
+**Upgrade Path**: `npx mindforge-cc@latest`
+
+---
+
+Largest single skill expansion in MindForge history. 80 new skills across 8 engineering domains — software development, GitHub workflows, DevOps orchestration, research intelligence, security, creative tooling, data-science, and note-taking. Zero breaking changes; fully backward-compatible.
+
+### Engine-tier skills (auto-trigger)
+
+30 skills in `.mindforge/skills/` now activate automatically when your task description matches their trigger phrases — no explicit invocation needed:
+
+- **Systematic debugging** — 4-phase root-cause methodology. The iron rule: no fix without a root cause investigation first.
+- **Test-driven development** — RED-GREEN-REFACTOR enforcement. Write the failing test first, always.
+- **Plan mode** — implementation planning before coding. Saves the plan to a markdown file.
+- **Kanban orchestration** — `kanban-orchestrator` decomposes work and routes to specialist agents; `kanban-worker` executes individual cards.
+- **GitHub workflows** — PR review, PR lifecycle, issue management, codebase inspection.
+- **OSINT investigation** — public-records cross-reference across SEC, OFAC, OpenCorporates, court records, Wayback Machine.
+- **Web pentesting** — authorized web application penetration testing with hard scope guardrails.
+- **Concept diagrams** — flat, minimal SVG educational diagrams with automatic dark mode.
+- **Research paper writing** — academic paper authoring with citation workflow and reviewer guidelines.
+- And 21 more across research, creative, security, data-science, and note-taking domains.
+
+### Extended-tier skills (explicit activation)
+
+50 skills in `.agent/skills/` for on-demand use: GitHub auth, docker management, DevOps watchers, 1Password CLI integration, debuggers (Node inspect, Python debugpy), creative tools (pixel art, video orchestration, comic creation), research tools (LLM wiki, polymarket, parallel CLI), and more.
+
+### New slash commands
+
+| Command | Purpose |
+|---|---|
+| `/mindforge:systematic-debug` | 4-phase root-cause debugging session |
+| `/mindforge:skill-tdd` | Strict TDD RED-GREEN-REFACTOR cycle |
+| `/mindforge:skills-index` | Browse all 153 skills by category |
+
+### Skill counts
+
+| Tier | Before | After |
+|---|---|---|
+| Engine tier (`.mindforge/skills/`) | 202 | 232 |
+| Extended tier (`.agent/skills/`) | 73 | 123 |
+| Slash commands | 174 | 177 |
+
+### Upgrade
+
+```bash
+npx mindforge-cc@latest --claude --global
+```
+
+No migration steps required. All new skills are additive.
+
+---
+
 ## v11.5.1 — Robustness + governance-gate patch
 
 **Release Date**: 2026-06-11
