@@ -1,5 +1,33 @@
 # Changelog
 
+## [11.7.0] - 2026-06-23 — Workflow Forge
+
+First Dynamic Workflow Library for MindForge. Adds 12 pre-built multi-agent workflow scripts that users trigger via `/mindforge:wf-*` commands. Each workflow uses Claude Code's `Workflow` tool primitives (`parallel()`, `pipeline()`, `phase()`, `agent()`) for true fan-out concurrent agent execution with structured synthesis. Architecture follows adversarially-verified best practices: three-tier progressive disclosure, one-workflow-per-domain, predefined (not open-ended) patterns.
+
+### Added
+
+- **Dynamic Workflow Library (`.mindforge/dynamic-workflows/`)** — 12 self-contained multi-agent workflow scripts:
+  - *Research tier:* `deep-research` (5× parallel searches → 3-vote adversarial verify → cited synthesis), `competitive-analysis` (5× parallel angles → SWOT → positioning), `tech-evaluation` (5× dimension agents → scored matrix → recommendation)
+  - *Dev tier:* `code-audit` (3× parallel auditors → adversarial verify → risk report), `feature-planner` (brief → PRD → architecture → user stories pipeline), `pr-review` (4× parallel reviewers → consensus verdict), `tdd-sprint` (Spec → Red → Green → Refactor loop), `refactor-plan` (debt scan → risk-sort → safe sequence → plan)
+  - *Ops tier:* `incident-response` (4× parallel investigation → mitigation → RCA → postmortem), `release-prep` (tests → changelog → version bump → PR → announcement)
+  - *Intelligence tier:* `onboard-codebase` (map → domain → architecture → guided tour), `perf-optimize` (profile → 4× parallel bottleneck hunt → fix plan → benchmarks)
+- **13 new slash commands** — `/mindforge:wf-catalog` (browseable index) + 12 `/mindforge:wf-<name>` workflow commands
+- **CLI workflow subcommand** — `node bin/mindforge-cli.js workflow list|info|run <name>` for discovery and metadata access
+- **Workflow registry** — `index.json` (machine-readable) + `REGISTRY.md` (human-readable catalog) with tier, description, phases, and command for each workflow
+- **`tests/workflow-registry.test.js`** — validates registry consistency, script meta exports, command mirror parity, and frontmatter schema for all workflow commands
+
+### Summary
+
+| Tier | Workflows | Commands |
+|------|-----------|----------|
+| Research | 3 | `wf-deep-research`, `wf-competitive-analysis`, `wf-tech-evaluation` |
+| Dev | 4 | `wf-code-audit`, `wf-feature-planner`, `wf-pr-review`, `wf-tdd-sprint`, `wf-refactor-plan` |
+| Ops | 2 | `wf-incident-response`, `wf-release-prep` |
+| Intelligence | 2 | `wf-onboard-codebase`, `wf-perf-optimize` |
+| **Total** | **12** | **13 (including wf-catalog)** |
+
+---
+
 ## [11.6.0] - 2026-06-17 — Skill Forge
 
 Largest single skill expansion in MindForge's history. Adds 80 community-sourced skills across 8 engineering domains with zero external attribution in any committed file. 30 skills are promoted to the engine tier for automatic trigger-matching; 50 live in the extended tier for explicit activation. Three new slash commands complete the discovery surface.
