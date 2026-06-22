@@ -23,6 +23,7 @@
     ".mindforge/schemas/",
     ".mindforge/personas/",
     ".mindforge/skills/",
+    ".mindforge/dynamic-workflows/",
     ".mindforge/governance/",
     ".mindforge/integrations/",
     ".mindforge/intelligence/",
