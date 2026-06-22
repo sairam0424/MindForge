@@ -194,4 +194,29 @@ mindforge <command> [options]
 | `tokens` | Analyze token consumption and cost efficiency |
 | `learning` | Consult or initialize the project agentic learning memory |
 | `record-learning` | Append a new Learning Entry to the Evolution Log |
+| `workflow list` | List all available dynamic workflows with descriptions |
+| `workflow info <name>` | Show phases and metadata for a specific workflow |
+| `workflow run <name> [args]` | Display invocation instructions for a workflow |
+
+---
+
+## 🚀 Dynamic Workflow Library
+
+Pre-built multi-agent workflow scripts triggered via `/mindforge:wf-*` commands. Each runs via Claude Code's `Workflow` tool with true parallel agent execution.
+
+| Command | Tier | Description |
+| :--- | :--- | :--- |
+| `/mindforge:wf-catalog` | — | Browse all 12 workflows grouped by tier |
+| `/mindforge:wf-deep-research` | research | Fan-out web research → adversarial verify → cited report |
+| `/mindforge:wf-competitive-analysis` | research | 5× parallel angles → SWOT → positioning |
+| `/mindforge:wf-tech-evaluation` | research | 5× dimensions → scored matrix → recommendation |
+| `/mindforge:wf-code-audit` | dev | 3× parallel auditors → verified findings → risk report |
+| `/mindforge:wf-feature-planner` | dev | Brief → PRD → architecture → user stories pipeline |
+| `/mindforge:wf-pr-review` | dev | 4× parallel reviewers → consensus verdict |
+| `/mindforge:wf-tdd-sprint` | dev | Spec → RED → GREEN → REFACTOR loop |
+| `/mindforge:wf-refactor-plan` | dev | Debt scan → risk-sort → safe sequence → plan |
+| `/mindforge:wf-incident-response` | ops | 4× parallel investigation → mitigate → RCA → postmortem |
+| `/mindforge:wf-release-prep` | ops | Tests → changelog → version bump → PR → announcement |
+| `/mindforge:wf-onboard-codebase` | intelligence | Map → domain → architecture → guided tour |
+| `/mindforge:wf-perf-optimize` | intelligence | Profile → 4× bottleneck hunt → prioritized fix plan |
 
