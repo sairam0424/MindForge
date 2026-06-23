@@ -1,5 +1,59 @@
 # Release Notes
 
+## v11.7.0 — Workflow Forge
+
+**Release Date**: 2026-06-23
+**Type**: Minor — new dynamic workflow library, no breaking changes
+**Upgrade Path**: `npx mindforge-cc@latest`
+
+---
+
+The first Dynamic Workflow Library for MindForge. Twelve pre-built multi-agent workflow scripts ship in the npm package and are immediately available to any user who installs MindForge. Each workflow runs via Claude Code's native `Workflow` tool for true parallel agent execution.
+
+### Dynamic Workflow Library
+
+12 workflows across 4 tiers, each backed by a full JS orchestration script in `.mindforge/dynamic-workflows/scripts/`:
+
+**Research tier** — fan-out parallel searches, adversarial claim verification, cited synthesis:
+- `deep-research` — Decompose → 5× parallel web search → fetch 15 sources → 3-vote verify → synthesize cited report
+- `competitive-analysis` — 5× angles (product/pricing/reviews/community/roadmap) → SWOT → positioning
+- `tech-evaluation` — 5× dimensions (DX/perf/security/ecosystem/community) → scored matrix → recommendation
+
+**Dev tier** — coding-assistant power workflows:
+- `code-audit` — 3× parallel auditors (security/quality/perf) → adversarial verify high-severity findings → risk report
+- `feature-planner` — Brief → PRD → Architecture → User stories (sequential pipeline)
+- `pr-review` — 4× parallel reviewers (correctness/security/perf/style) → consensus verdict
+- `tdd-sprint` — Spec → RED (failing test) → GREEN (minimal impl) → REFACTOR (clean up) loop
+- `refactor-plan` — Debt scan → risk-sort → sequence → safe implementation plan
+
+**Ops tier**:
+- `incident-response` — 4× parallel investigation (logs/metrics/traces/code) → mitigate → RCA → postmortem
+- `release-prep` — Tests → changelog → semver bump → PR body → announcement draft
+
+**Intelligence tier**:
+- `onboard-codebase` — Map → domain analysis → architecture → guided tour + onboarding docs
+- `perf-optimize` — Profile → 4× parallel bottleneck hunt (DB/network/CPU/memory) → prioritized fix plan → benchmarks
+
+### 13 new commands
+
+`/mindforge:wf-catalog` — browseable index of all 12 workflows grouped by tier
+`/mindforge:wf-<name>` — one command per workflow, each with usage and phase descriptions
+
+### CLI discovery
+
+```bash
+node bin/mindforge-cli.js workflow list          # print catalog
+node bin/mindforge-cli.js workflow info <name>   # show phases and description
+```
+
+### Upgrade steps
+
+1. `npx mindforge-cc@latest` — all 12 workflows and 13 commands install automatically
+2. Run `/mindforge:wf-catalog` to browse the library
+3. Try `/mindforge:wf-deep-research <your question>` for a first run
+
+---
+
 ## v11.6.0 — Skill Forge
 
 **Release Date**: 2026-06-17

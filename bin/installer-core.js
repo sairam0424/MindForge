@@ -527,9 +527,13 @@ async function install(runtime, scope, options = {}) {
   ];
 
   if (runtime === 'claude') {
-    // Claude Code specifically looks in .claude/commands/mindforge
+    // Claude Code looks in .claude/commands/mindforge. Use .agent/mindforge as the
+    // canonical source — it is always committed, while .claude/ is gitignored. The
+    // previous behaviour of reading from .claude/commands/mindforge/ (itself gitignored)
+    // left CI with an empty command set on a fresh checkout.
     cmdSources.length = 0;
-    cmdSources.push({ src: src('.claude', 'commands', 'mindforge'), namespace: 'mindforge' });
+    cmdSources.push({ src: src('.agent', 'mindforge'), namespace: 'mindforge' });
+    cmdSources.push({ src: src('.agent', 'forge'),     namespace: 'forge' });
   }
 
   let totalCount = 0;

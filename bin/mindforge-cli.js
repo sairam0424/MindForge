@@ -140,6 +140,13 @@ const COMMANDS = {
   }
 };
 
+// ── Workflow subcommand (non-script, handled inline) ─────────────────────────
+if (COMMAND === 'workflow') {
+  const workflowRunner = require('./workflows/workflow-runner');
+  workflowRunner.run(COMMAND_ARGS[0], COMMAND_ARGS.slice(1));
+  process.exit(0);
+}
+
 if (!COMMAND || ARGS.includes('--help') || ARGS.includes('-h')) {
   printUsage();
   process.exit(0);

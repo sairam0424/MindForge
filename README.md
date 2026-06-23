@@ -4,11 +4,11 @@
 
 ---
 
-## Latest: v11.6.0
+## Latest: v11.7.0
 
-- **v11.6.0 — "Skill Forge".** Adds 80 community-sourced skills across 8 domains (software-development, github, devops, research, security, creative, data-science, note-taking) — 30 promoted to engine tier for automatic trigger-matching, 50 in the extended tier for explicit activation. Three new slash commands: `/mindforge:systematic-debug`, `/mindforge:skill-tdd`, `/mindforge:skills-index`. Total: 153 skills, 232 engine-tier entries, 177 commands.
+- **v11.7.0 — "Workflow Forge".** Ships the first Dynamic Workflow Library — 12 pre-built multi-agent workflow scripts that run via Claude Code's `Workflow` tool with true parallel agent execution. Four tiers: Research (deep-research, competitive-analysis, tech-evaluation), Dev (code-audit, feature-planner, pr-review, tdd-sprint, refactor-plan), Ops (incident-response, release-prep), Intelligence (onboard-codebase, perf-optimize). 13 new `/mindforge:wf-*` commands. Total: 198 commands.
+- **v11.6.0 — "Skill Forge".** Adds 80 community-sourced skills across 8 domains (software-development, github, devops, research, security, creative, data-science, note-taking) — 30 promoted to engine tier for automatic trigger-matching, 50 in the extended tier for explicit activation. Three new slash commands: `/mindforge:systematic-debug`, `/mindforge:skill-tdd`, `/mindforge:skills-index`. Total: 153 skills, 232 engine-tier entries, 185 commands.
 - **v11.5.1 — Standalone MCP server.** The MindForge MCP server now ships as its own npm package, `mindforge-mcp-server@11.5.1`, listed on the official MCP Registry as `io.github.sairam0424/mindforge`. Add it to Claude Code with one command (see [Use the MCP server](#-use-the-mcp-server-standalone)); it exposes 7 tools over stdio (6 read-only + 1 guarded write).
-- **v11.3.1 — Packaging hotfix.** Restores the full published payload: every `npx mindforge-cc` install now delivers all 177 slash commands, 153 skills, 154 subagents, and the complete `.mindforge/` framework.
 - **v11.3.0 — "Legion".** Imports 154 specialized Claude-Code-native subagents across 10 categories into `.claude/agents/`, fully rebranded and collision-safe. Additive and backward-compatible.
 
 See [CHANGELOG.md](./CHANGELOG.md) for full release history.
@@ -24,7 +24,7 @@ MindForge v11.0.0 "Sovereign Stability" is a production-hardening release focuse
 - **Production observability** — `/api/v1/system` health endpoint, P95 latency tracking, heap health monitoring, and real EIS client with retry logic.
 - **Graduated intelligence** — Adaptive tier escalation (+1/+2/MAX) with cost-awareness, 3-tier stuck detection, and adaptive context windows.
 
-This release ships 211 personas, 153 skills, 154 specialized subagents, 177 commands, 18 pillars, and 49 swarm templates across 12 engineering domains.
+This release ships 211 personas, 153 skills, 154 specialized subagents, 198 commands, 18 pillars, and 49 swarm templates across 12 engineering domains.
 
 
 ## Installation & Setup
@@ -380,7 +380,40 @@ See `.mindforge/production/token-optimiser.md`.
 - **Architecture:** `docs/architecture/README.md`
 - **Contributing:** `docs/contributing/CONTRIBUTING.md`
 
+## 🚀 Dynamic Workflow Library
+
+12 pre-built multi-agent workflow scripts that run via Claude Code's `Workflow` tool. Each workflow fans out concurrent agents, synthesizes results, and returns structured output.
+
+**Discover:** `/mindforge:wf-catalog` or `node bin/mindforge-cli.js workflow list`
+
+| Tier | Command | What it does |
+|------|---------|-------------|
+| Research | `/mindforge:wf-deep-research` | Fan-out web research → adversarial verify → cited report |
+| Research | `/mindforge:wf-competitive-analysis` | 5× parallel angles → SWOT → positioning |
+| Research | `/mindforge:wf-tech-evaluation` | 5× dimensions → scored matrix → recommendation |
+| Dev | `/mindforge:wf-code-audit` | 3× parallel auditors → verified findings → risk report |
+| Dev | `/mindforge:wf-feature-planner` | Brief → PRD → architecture → user stories |
+| Dev | `/mindforge:wf-pr-review` | 4× parallel reviewers → consensus verdict |
+| Dev | `/mindforge:wf-tdd-sprint` | Spec → RED → GREEN → REFACTOR loop |
+| Dev | `/mindforge:wf-refactor-plan` | Debt scan → risk-sort → safe sequence → plan |
+| Ops | `/mindforge:wf-incident-response` | 4× parallel investigation → mitigate → RCA → postmortem |
+| Ops | `/mindforge:wf-release-prep` | Tests → changelog → version bump → PR → announcement |
+| Intelligence | `/mindforge:wf-onboard-codebase` | Map → domain → architecture → guided tour |
+| Intelligence | `/mindforge:wf-perf-optimize` | Profile → 4× bottleneck hunt → prioritized fix plan |
+
+---
+
 ## 📜 Framework Evolution & Version History
+
+<details>
+<summary><b>v11.7.0 — Workflow Forge (Dynamic Workflow Library)</b></summary>
+
+- **12 dynamic workflow scripts** in `.mindforge/dynamic-workflows/scripts/` — each runs via Claude Code's `Workflow` tool with true parallel agent execution, structured JSON schemas, and adversarial verification where appropriate.
+- **4 tiers:** Research (fan-out search + verify + synthesis), Dev (code-audit, feature-planner, pr-review, tdd-sprint, refactor-plan), Ops (incident-response, release-prep), Intelligence (onboard-codebase, perf-optimize).
+- **13 new commands:** `/mindforge:wf-catalog` discovery index + 12 workflow-specific commands.
+- **CLI discovery:** `node bin/mindforge-cli.js workflow list|info|run <name>`.
+- Architecture follows adversarially-verified best practices: one-workflow-per-domain, predefined (not open-ended) pipelines, fan-out + gated synthesis pattern.
+</details>
 
 <details>
 <summary><b>v11.6.0 — Skill Forge (Core + Dev Skill Pack)</b></summary>
