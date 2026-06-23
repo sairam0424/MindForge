@@ -54,7 +54,7 @@ function cmdInfo(name) {
   console.log(`  Description: ${wf.description}`);
   console.log(`  When to use: ${wf.whenToUse}`);
   console.log(`  Script:     ${wf.scriptPath}`);
-  console.log(`  Phases:`);
+  console.log('  Phases:');
   for (const p of wf.phases) {
     console.log(`    ${p.title.padEnd(16)} ${p.detail}`);
   }

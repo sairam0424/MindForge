@@ -144,6 +144,6 @@ for (const wf of registry) {
     `Workflow "${wf.name}" has invalid tier "${wf.tier}" (must be: ${[...VALID_TIERS].join(', ')})`
   );
 }
-console.log(`  All tier values are valid`);
+console.log('  All tier values are valid');
 
 console.log('\nworkflow-registry: all checks passed');
