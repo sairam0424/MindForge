@@ -115,6 +115,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
         () => agent(`Challenge this finding from an attacker's perspective — is it actually exploitable? Finding: [${f.severity.toUpperCase()}] ${f.title} — ${f.description}. Rate exploitability.`, { schema: VERDICT_SCHEMA, label: `v2:${f.title.slice(0, 25)}`, phase: 'Verify' }),
         () => agent(`Assess business impact of this finding being exploited. Is the severity rating accurate? Finding: [${f.severity.toUpperCase()}] ${f.title} — ${f.description}.`, { schema: VERDICT_SCHEMA, label: `v3:${f.title.slice(0, 25)}`, phase: 'Verify' }),
       ]).then(votes => {
+        if (!votes) return { ...f, confirmed: false };
         const realVotes = votes.filter(Boolean).filter(v => v.isReal).length;
         return { ...f, confirmed: realVotes >= 2 };
       })
