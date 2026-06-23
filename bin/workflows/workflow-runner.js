@@ -14,9 +14,25 @@ function loadRegistry() {
   return JSON.parse(fs.readFileSync(REGISTRY_PATH, 'utf8'));
 }
 
+/**
+ * getWorkflowByTier — Filter the registry by tier name.
+ *
+ * @param {string} tier  One of: 'research', 'dev', 'ops', 'intelligence', 'beast'
+ * @returns {Array<Object>}  Registry entries whose tier matches (case-insensitive).
+ *                          Returns an empty array when no entries match.
+ */
+function getWorkflowByTier(tier) {
+  if (typeof tier !== 'string' || tier.trim() === '') {
+    return [];
+  }
+  const normalised = tier.trim().toLowerCase();
+  const workflows = loadRegistry();
+  return workflows.filter(wf => (wf.tier || '').toLowerCase() === normalised);
+}
+
 function cmdList() {
   const workflows = loadRegistry();
-  const tiers = ['research', 'dev', 'ops', 'intelligence'];
+  const tiers = ['research', 'dev', 'ops', 'intelligence', 'beast'];
   const byTier = {};
   for (const wf of workflows) {
     (byTier[wf.tier] = byTier[wf.tier] || []).push(wf);
@@ -107,4 +123,4 @@ function run(subcommand, args) {
   }
 }
 
-module.exports = { run };
+module.exports = { run, getWorkflowByTier };
