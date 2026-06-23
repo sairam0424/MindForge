@@ -104,7 +104,6 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
   );
 
   const confirmedIssues = verified.filter(Boolean).filter(i => i.confirmed);
-  const lowerLevel = allIssues.filter(i => i.level === 'AAA');
   log(`${confirmedIssues.length}/${levelAandAA.length} Level A/AA issues confirmed`);
 
   phase('Spec');
