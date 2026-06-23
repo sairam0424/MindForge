@@ -101,30 +101,31 @@ for (const file of scriptFiles) {
 console.log(`  All ${scriptFiles.length} script files have valid meta exports`);
 
 // ── Test 5: every workflow has paired command files ───────────────────────────
+// .claude/ is gitignored and absent in CI — only validate .agent/mindforge/ in that case.
+const claudeDirExists = fs.existsSync(CLAUDE_CMD_DIR);
 for (const wf of registry) {
   const cmdName = wf.command.replace('/mindforge:', '') + '.md';
   const agentFile = path.join(AGENT_CMD_DIR, cmdName);
-  const claudeFile = path.join(CLAUDE_CMD_DIR, cmdName);
 
   assert.ok(
     fs.existsSync(agentFile),
     `Missing .agent/mindforge command: ${cmdName} (for workflow "${wf.name}")`
   );
-  assert.ok(
-    fs.existsSync(claudeFile),
-    `Missing .claude/commands/mindforge command: ${cmdName} (for workflow "${wf.name}")`
-  );
 
-  // Both files must be identical (mirror requirement)
-  const agentContent = fs.readFileSync(agentFile, 'utf8');
-  const claudeContent = fs.readFileSync(claudeFile, 'utf8');
-  assert.strictEqual(
-    agentContent,
-    claudeContent,
-    `Command mirrors differ: ${cmdName}`
-  );
+  if (claudeDirExists) {
+    const claudeFile = path.join(CLAUDE_CMD_DIR, cmdName);
+    assert.ok(
+      fs.existsSync(claudeFile),
+      `Missing .claude/commands/mindforge command: ${cmdName} (for workflow "${wf.name}")`
+    );
+    // Both files must be identical (mirror requirement)
+    const agentContent = fs.readFileSync(agentFile, 'utf8');
+    const claudeContent = fs.readFileSync(claudeFile, 'utf8');
+    assert.strictEqual(agentContent, claudeContent, `Command mirrors differ: ${cmdName}`);
+  }
 }
-console.log(`  All ${registry.length} workflows have paired mirrored command files`);
+const mirrorNote = claudeDirExists ? 'mirrored' : '.agent/ only (CI — .claude/ gitignored)';
+console.log(`  All ${registry.length} workflows have paired command files (${mirrorNote})`);
 
 // ── Test 6: all wf-* command files have "description:" frontmatter ───────────
 const wfCommandFiles = fs.readdirSync(AGENT_CMD_DIR).filter(f => f.startsWith('wf-'));
