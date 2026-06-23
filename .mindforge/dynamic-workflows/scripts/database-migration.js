@@ -107,6 +107,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Create a production deployment runbook for this ${diff.database} migration.\n\nChanges: ${diff.changes.map(c => `${c.type} on ${c.table}`).join(', ')}\nRisk: ${risks.overallRisk} — maintenance window required: ${risks.requiresMaintenanceWindow}\nTop risks: ${risks.risks.slice(0, 3).map(r => r.risk).join(', ')}\n\nInclude: pre-migration checks, numbered execution steps with exact commands and rollback conditions per step, post-migration verification, and complete rollback procedure.`,
     { schema: RUNBOOK_SCHEMA, label: 'runbook' }
   );
+  if (!runbook) { return { target, diff, risks, scripts, error: 'runbook-agent-null' }; }
 
   return { target, diff, risks, scripts, runbook };
 }

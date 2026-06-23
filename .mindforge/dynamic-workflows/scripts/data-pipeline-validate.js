@@ -63,6 +63,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
   phase('Report');
   const issueList = validations.filter(Boolean).flatMap(v => v.issues.map(i => `[${v.stage}/${i.severity}] ${i.description}`)).slice(0, 15);
   const report = await agent(`Create a data pipeline validation report for: "${target}"\n\nStage health scores: ${stageScores}\n\nIssues found:\n${issueList.join('\n')}\n\nDetermine overall pipeline health, list critical issues, and provide prioritized recommendations.`, { schema: REPORT_SCHEMA, label: 'report' });
+  if (!report) { return { target, pipelineMap, validations: validations.filter(Boolean), error: 'report-agent-null' }; }
 
   return { target, pipelineMap, validations: validations.filter(Boolean), report };
 }

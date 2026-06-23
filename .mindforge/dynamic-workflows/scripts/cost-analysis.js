@@ -101,6 +101,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Create a cost reduction plan for: "${target}"\n\nCost findings:\n${findingSummary}\n\nPrioritize by: P0=quick wins with high savings (low effort, >$500/mo), P1=high savings medium effort, P2=nice-to-have. For each item estimate monthly saving, implementation effort, and ROI timeframe. Calculate total estimated monthly saving.`,
     { schema: PLAN_SCHEMA, label: 'plan' }
   );
+  if (!plan) { return { target, scope, dimResults: dimResults.filter(Boolean), error: 'plan-agent-null' }; }
 
   return { target, scope, dimResults: dimResults.filter(Boolean), plan };
 }

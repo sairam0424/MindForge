@@ -150,6 +150,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Create a compatibility matrix for: "${changes.apiName}"\n\nChanges: ${changeSummary}\n\nVersioning: ${versioning.strategy}\nDeprecation policy: ${versioning.deprecationPolicy}\n\nFor typical client version groups (very-old, old, current, new), show compatibility with each API version and whether migration is required. Include support end date and overall recommendation.`,
     { schema: MATRIX_SCHEMA, label: 'matrix' }
   );
+  if (!matrix) { return { target, changes, versioning, guide, error: 'matrix-agent-null' }; }
 
   return { target, changes, versioning, guide, matrix };
 }

@@ -108,6 +108,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Compare the API specification against the implementation and identify contract violations.\n\nSPEC:\n${specText}\n\nIMPLEMENTATION:\n${implText}\n\nFor each violation: classify as breaking (response shape/auth differs) or non-breaking (extra fields, missing optional), state what the spec says vs what the impl does, and provide the exact fix.`,
     { schema: VIOLATION_SCHEMA, label: 'violations' }
   );
+  if (!report) { return { target, spec, impl, error: 'report-agent-null' }; }
 
   return { target, spec, impl, report };
 }

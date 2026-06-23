@@ -89,6 +89,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Create a prioritized test-writing plan for: "${target}"\n\nCoverage gaps:\n${gapSummary}\n\nFor each gap, write a concrete test description and skeleton code. Prioritize: P0=high-risk untested, P1=medium-risk gaps, P2=edge cases. Include the actual test skeleton (describe/it or test() blocks) for each.`,
     { schema: PLAN_SCHEMA, label: 'plan' }
   );
+  if (!plan) { return { target, modules, gaps, error: 'plan-agent-null' }; }
 
   return { target, modules, gaps, plan };
 }

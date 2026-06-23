@@ -46,6 +46,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
 
   phase('Scope');
   const criteria = await agent(`Define evaluation criteria and test prompts for this AI model use case: "${useCase}". Create 3-5 representative test prompts that reflect the actual workload. List evaluation priorities (quality/speed/cost/context-length/reasoning) in order of importance. Suggest which models to evaluate (e.g., claude-opus-4-8, claude-sonnet-4-6, claude-haiku-4-5, gpt-4o, gemini-2.0-flash).`, { schema: CRITERIA_SCHEMA, label: 'scope' });
+  if (!criteria) { return { useCase, error: 'criteria-agent-null' }; }
   log(`Evaluating ${criteria.modelsToEvaluate.length} models on ${criteria.priorities.length} dimensions`);
 
   phase('Benchmark');
@@ -75,6 +76,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
   phase('Recommend');
   const scoreText = Object.entries(modelScores).sort((a, b) => b[1] - a[1]).map(([m, s]) => `${m}: ${s} total`).join(', ');
   const recommendation = await agent(`Provide a model recommendation for: "${useCase}"\n\nScores: ${scoreText}\n\nPriorities: ${criteria.priorities.join(' > ')}\n\nRank all models, declare the winner with rationale, note the best model for each specific priority, and include a cost note for the top 2 models.`, { schema: RECOMMENDATION_SCHEMA, label: 'recommend' });
+  if (!recommendation) { return { useCase, criteria, evals: validEvals, modelScores, error: 'recommendation-agent-null' }; }
 
   return { useCase, criteria, evals: validEvals, modelScores, recommendation };
 }

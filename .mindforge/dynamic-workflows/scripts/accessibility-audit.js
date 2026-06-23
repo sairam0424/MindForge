@@ -113,6 +113,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Create an accessibility remediation spec for: "${target}"\n\nConfirmed WCAG issues:\n${issueSummary}\n\nFor each critical/blocker issue provide: WCAG reference, exact fix description, and a code example (HTML/ARIA/CSS) showing the corrected implementation. Determine the overall WCAG compliance level.`,
     { schema: REMEDIATION_SCHEMA, label: 'remediation-spec' }
   );
+  if (!remediation) { return { target, confirmedIssues, error: 'remediation-agent-null', stats: { total: allIssues.length, levelAAFailures: levelAandAA.length, confirmed: confirmedIssues.length } }; }
 
   return { target, audits: audits.filter(Boolean), confirmedIssues, remediation, stats: { total: allIssues.length, levelAAFailures: levelAandAA.length, confirmed: confirmedIssues.length } };
 }

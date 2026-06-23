@@ -105,6 +105,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Create a phased migration roadmap for: "${target}"\n\nTarget architecture: ${verdict.targetArchDescription}\n\nCurrent pain points: ${archMap.primaryPainPoints.join(', ')}\n\nSequence the work into migration phases with: specific work items, risk gates (conditions that must be true before proceeding), rollback checkpoints, and duration estimates. Ensure each phase is independently deployable.`,
     { schema: ROADMAP_SCHEMA, label: 'sequence' }
   );
+  if (!roadmap) { return { target, archMap, designs: designs.filter(Boolean), verdict, error: 'roadmap-agent-null' }; }
 
   return { target, archMap, designs: designs.filter(Boolean), verdict, roadmap };
 }

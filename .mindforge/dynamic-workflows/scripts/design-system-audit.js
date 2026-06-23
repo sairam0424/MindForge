@@ -109,6 +109,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Generate a design system health report for: "${target}"\n\nDimension scores:\n${dimSummary}\n\nTop violations:\n${allViolations}\n\nOverall consistency score: ${avgScore}/100\n\nProvide: executive summary, dimension score table with top issue each, top 5 priority fixes, and which values should be tokenized but aren't.`,
     { schema: REPORT_SCHEMA, label: 'report' }
   );
+  if (!report) { return { target, inventory, audits: validAudits, error: 'report-agent-null' }; }
 
   return { target, inventory, audits: validAudits, report };
 }

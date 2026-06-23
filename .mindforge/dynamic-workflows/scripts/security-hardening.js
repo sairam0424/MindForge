@@ -140,6 +140,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Create a prioritized security remediation roadmap for: "${target}"\n\nConfirmed findings (${allConfirmed.length} total):\n${findingSummary}\n\nSTRIDE threats:\n${threatSummary}\n\nGroup into 3 sprints by severity+effort. Sprint 1 = immediate (critical/high, low effort). Sprint 2 = short-term (high, higher effort + medium). Sprint 3 = long-term (medium/low). Include risk reduction estimate per sprint.`,
     { schema: ROADMAP_SCHEMA, label: 'roadmap', phase: 'Roadmap' }
   );
+  if (!roadmap) { return { target, threats: threatModel, error: 'roadmap-agent-null', stats: { total: allFindings.length, criticalHigh: criticalAndHigh.length, confirmed: confirmedHigh.length } }; }
 
   return {
     target,
