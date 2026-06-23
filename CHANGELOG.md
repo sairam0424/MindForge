@@ -1,5 +1,11 @@
 # Changelog
 
+## [11.7.1] - 2026-06-23 — Workflow Forge (patch)
+
+Patch release: adds `bin/parse-workflow-args.js` (slash command argument splitter, produced by the tdd-sprint E2E run) and resolves 2 high-severity npm vulnerabilities in the tmp/inquirer dependency chain. No feature changes; all 94 tests pass.
+
+---
+
 ## [11.7.0] - 2026-06-23 — Workflow Forge
 
 First Dynamic Workflow Library for MindForge. Adds 12 pre-built multi-agent workflow scripts that users trigger via `/mindforge:wf-*` commands. Each workflow uses Claude Code's `Workflow` tool primitives (`parallel()`, `pipeline()`, `phase()`, `agent()`) for true fan-out concurrent agent execution with structured synthesis. Architecture follows adversarially-verified best practices: three-tier progressive disclosure, one-workflow-per-domain, predefined (not open-ended) patterns.
