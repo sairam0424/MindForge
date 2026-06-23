@@ -74,6 +74,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Extract the complete dependency list from package manifests in: "${target}". Look for package.json, requirements.txt, Pipfile, go.mod, Gemfile, Cargo.toml, or similar. List each dependency with its current version and type (prod/dev/peer/optional). Identify the package manager used.`,
     { schema: INVENTORY_SCHEMA, label: 'inventory' }
   );
+  if (!inventory) { return { target, error: 'inventory-agent-null' }; }
   const allDeps = inventory.dependencies || [];
   log(`Found ${allDeps.length} dependencies (${inventory.packageManager})`);
 

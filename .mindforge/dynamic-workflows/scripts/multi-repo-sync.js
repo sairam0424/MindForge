@@ -43,6 +43,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
 
   phase('Discover');
   const discovery = await agent(`Discover all related repositories in: "${target}". List each repo's name, path, and role (primary/service/library/config). Identify the reference/canonical repo (if any) and what dimensions should be synchronized: dependencies, CI config, lint config, code conventions, shared utilities, test patterns.`, { schema: REPO_SCHEMA, label: 'discover' });
+  if (!discovery) { return { target, error: 'discovery-agent-null' }; }
   log(`Found ${discovery.repos.length} repos, ${discovery.syncDimensions.length} sync dimensions`);
 
   phase('Audit');

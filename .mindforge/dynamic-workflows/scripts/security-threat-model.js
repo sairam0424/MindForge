@@ -113,6 +113,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Inventory the security-relevant assets, data flows, and trust boundaries for: "${target}". Identify: (1) assets (data stores, services, credentials, infrastructure) with sensitivity level, (2) data flows between components, (3) trust boundaries (where data crosses privilege levels), (4) entry points (public APIs, user inputs, external integrations).`,
     { schema: ASSETS_SCHEMA, label: 'assets' }
   );
+  if (!assetModel) { return { target, error: 'assetModel-agent-null' }; }
   log(`${assetModel.assets.length} assets, ${assetModel.trustBoundaries.length} trust boundaries, ${assetModel.entryPoints.length} entry points`);
 
   const assetContext = `Assets: ${assetModel.assets.slice(0, 5).map(a => `${a.name}(${a.sensitivity})`).join(', ')}\nData flows: ${assetModel.dataFlows.slice(0, 3).join(', ')}\nTrust boundaries: ${assetModel.trustBoundaries.slice(0, 3).join(', ')}\nEntry points: ${assetModel.entryPoints.slice(0, 3).join(', ')}`;

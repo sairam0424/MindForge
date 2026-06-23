@@ -100,6 +100,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Analyze the source code in: "${target}" to identify mutable lines for mutation testing. Find: (1) conditional expressions (if/else, ternary, switch), (2) arithmetic/comparison operators (+, -, *, /, >, <, ==, !=), (3) return values in key functions, (4) boundary values (0, -1, +1, null checks), (5) boolean negations. Also identify source files and their test files. List the 15 most testable mutable lines.`,
     { schema: SOURCE_SCHEMA, label: 'analyze' }
   );
+  if (!sourceAnalysis) { return { target, error: 'sourceAnalysis-agent-null' }; }
   log(`Found ${sourceAnalysis.mutableLines.length} mutable lines across ${sourceAnalysis.sourceFiles.length} source files`);
 
   phase('Mutate');
@@ -108,6 +109,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Generate 10-15 specific mutations for testing the test suite quality of: "${target}"\n\nMutable lines:\n${mutableContext}\n\nFor each mutation: assign unique ID (M01, M02...), show original code, mutated code, mutation type, and plain-English description of what changed. Focus on mutations that SHOULD be caught by good tests — boundary off-by-ones, condition flips, operator swaps.`,
     { schema: MUTATIONS_SCHEMA, label: 'mutate' }
   );
+  if (!mutationSpec) { return { target, sourceAnalysis, error: 'mutationSpec-agent-null' }; }
   log(`Generated ${mutationSpec.mutations.length} mutations`);
 
   phase('Kill');
