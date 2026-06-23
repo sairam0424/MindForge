@@ -4,8 +4,9 @@
 
 ---
 
-## Latest: v11.7.0
+## Latest: v11.8.0
 
+- **v11.8.0 — "Workflow Forge II".** Expands the Dynamic Workflow Library from 12 to 33 workflows across 5 tiers — adds a new **Beast tier** for compound 5-phase adversarial workflows (security-hardening, accessibility-audit, security-threat-model), plus 18 more across Dev/Ops/Intelligence/Research. 21 new `/mindforge:wf-*` commands. Total: 219 commands.
 - **v11.7.0 — "Workflow Forge".** Ships the first Dynamic Workflow Library — 12 pre-built multi-agent workflow scripts that run via Claude Code's `Workflow` tool with true parallel agent execution. Four tiers: Research (deep-research, competitive-analysis, tech-evaluation), Dev (code-audit, feature-planner, pr-review, tdd-sprint, refactor-plan), Ops (incident-response, release-prep), Intelligence (onboard-codebase, perf-optimize). 13 new `/mindforge:wf-*` commands. Total: 198 commands.
 - **v11.6.0 — "Skill Forge".** Adds 80 community-sourced skills across 8 domains (software-development, github, devops, research, security, creative, data-science, note-taking) — 30 promoted to engine tier for automatic trigger-matching, 50 in the extended tier for explicit activation. Three new slash commands: `/mindforge:systematic-debug`, `/mindforge:skill-tdd`, `/mindforge:skills-index`. Total: 153 skills, 232 engine-tier entries, 185 commands.
 - **v11.5.1 — Standalone MCP server.** The MindForge MCP server now ships as its own npm package, `mindforge-mcp-server@11.5.1`, listed on the official MCP Registry as `io.github.sairam0424/mindforge`. Add it to Claude Code with one command (see [Use the MCP server](#-use-the-mcp-server-standalone)); it exposes 7 tools over stdio (6 read-only + 1 guarded write).
