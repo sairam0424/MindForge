@@ -45,6 +45,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
 
   phase('Map');
   const pipelineMap = await agent(`Map all stages of the data pipeline in: "${target}". Identify each stage by name, type (source/transform/enrich/filter/aggregate/sink), its input data source, and output. List them in execution order.`, { schema: PIPELINE_SCHEMA, label: 'map' });
+  if (!pipelineMap) { log('Warning: agent returned null for pipelineMap, skipping'); return { target, error: 'agent-null' }; }
   log(`Pipeline: ${pipelineMap.pipelineName} — ${pipelineMap.stages.length} stages`);
 
   phase('Validate');

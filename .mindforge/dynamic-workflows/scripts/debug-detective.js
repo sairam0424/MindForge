@@ -81,6 +81,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Analyze this bug report and extract structured information: "${bugReport}"\n\nIdentify: bug summary, specific symptoms observed, whether reproducible, affected components/files, any recent changes that might be related, and environment (prod/staging/dev, OS, browser, etc.).`,
     { schema: INTAKE_SCHEMA, label: 'intake' }
   );
+  if (!intake) { log('Warning: agent returned null for intake, skipping'); return { bugReport, error: 'agent-null' }; }
   log(`Bug: ${intake.bugSummary} | Affects: ${intake.affectedComponents.join(', ')}`);
 
   phase('Hypothesize');
@@ -109,6 +110,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Perform a scientific root cause analysis for: "${intake.bugSummary}"\n\nEvidence summary:\n${evidenceSummary}\n\nIdentify the root cause (the specific defect that, if fixed, would prevent the bug), the causal chain (how root cause leads to symptoms), contributing factors, and why it appeared now. Rate your confidence.`,
     { schema: RCA_SCHEMA, label: 'rca' }
   );
+  if (!rca) { log('Warning: agent returned null for rca, skipping'); return { bugReport, intake, hypotheses: validHypotheses, evidence: evidence.filter(Boolean), error: 'agent-null' }; }
   log(`RCA: ${rca.rootCause.slice(0, 80)} (confidence: ${rca.confidence})`);
 
   phase('Fix');
@@ -116,6 +118,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Design a targeted fix for this bug.\n\nRoot cause: ${rca.rootCause}\nCausal chain: ${rca.causalChain.join(' → ')}\nAffected components: ${intake.affectedComponents.join(', ')}\n\nProvide: exact fix description, which files to change, step-by-step implementation, a regression test specification that would catch this bug if reintroduced, and risk assessment of the fix.`,
     { schema: FIX_SCHEMA, label: 'fix' }
   );
+  if (!fix) { log('Warning: agent returned null for fix, skipping'); return { bugReport, intake, hypotheses: validHypotheses, evidence: evidence.filter(Boolean), rca, error: 'agent-null' }; }
 
   return { bugReport, intake, hypotheses: validHypotheses, evidence: evidence.filter(Boolean), rca, fix };
 }

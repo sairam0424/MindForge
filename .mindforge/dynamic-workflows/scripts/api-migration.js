@@ -123,6 +123,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Analyze the API changes in: "${target}". Compare old vs new API versions. Classify each change as: BREAKING (removed endpoints, renamed/removed fields, changed types, auth changes, status code changes) or NON-BREAKING (added endpoints, added optional fields, performance improvements, deprecation notices). Include the old and new version identifiers.`,
     { schema: CHANGES_SCHEMA, label: 'detect-changes' }
   );
+  if (!changes) { log('Warning: agent returned null for changes, skipping'); return { target, error: 'agent-null' }; }
   log(`API: ${changes.apiName} — ${changes.breakingChanges.length} breaking, ${changes.nonBreakingChanges.length} non-breaking changes`);
 
   phase('Version');
@@ -131,6 +132,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Propose a versioning strategy for: "${changes.apiName}" migrating from ${changes.oldVersion || 'v1'} to ${changes.newVersion || 'v2'}.\n\nBreaking changes:\n${breakingSummary}\n\nRecommend: URL versioning (/v1, /v2), header versioning (API-Version: 2), or semver package versioning. Include: rationale, deprecation policy, and sunset timeline for the old version.`,
     { schema: VERSIONING_SCHEMA, label: 'versioning' }
   );
+  if (!versioning) { log('Warning: agent returned null for versioning, skipping'); return { target, changes, error: 'agent-null' }; }
   log(`Strategy: ${versioning.strategy} — sunset: ${versioning.sunsetTimeline}`);
 
   phase('Guide');
@@ -138,6 +140,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Write a migration guide for consumers of: "${changes.apiName}" upgrading from ${changes.oldVersion || 'v1'} to ${changes.newVersion || 'v2'}.\n\nBreaking changes:\n${breakingSummary}\n\nVersioning: ${versioning.strategy} (${versioning.versionIdentifier})\n\nProvide: (1) executive summary of what changed and why, (2) numbered migration steps in order, each with description and code example, (3) search-and-replace patterns for automated migration (what to find and replace in client code).`,
     { schema: GUIDE_SCHEMA, label: 'guide' }
   );
+  if (!guide) { log('Warning: agent returned null for guide, skipping'); return { target, changes, versioning, error: 'agent-null' }; }
   log(`Migration guide: ${guide.migrationSteps.length} steps`);
 
   phase('Matrix');

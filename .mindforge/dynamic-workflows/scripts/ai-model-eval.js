@@ -69,7 +69,8 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
       return sum + (s ? s.score : 0);
     }, 0);
   });
-  log(`Scoring complete — top model: ${Object.entries(modelScores).sort((a, b) => b[1] - a[1])[0][0]}`);
+  const sorted = Object.entries(modelScores).sort((a, b) => b[1] - a[1]);
+  if (sorted.length > 0) log(`Scoring complete — top model: ${sorted[0][0]}`);
 
   phase('Recommend');
   const scoreText = Object.entries(modelScores).sort((a, b) => b[1] - a[1]).map(([m, s]) => `${m}: ${s} total`).join(', ');

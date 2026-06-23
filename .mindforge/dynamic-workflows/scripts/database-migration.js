@@ -86,6 +86,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Parse the database schema migration in: "${target}". Identify all schema changes: tables added/dropped, columns added/dropped/renamed, type changes, index changes, constraint changes. Identify the database type (PostgreSQL, MySQL, SQLite, etc.).`,
     { schema: DIFF_SCHEMA, label: 'schema-diff' }
   );
+  if (!diff) { log('Warning: agent returned null for diff, skipping'); return { target, error: 'agent-null' }; }
   log(`${diff.changes.length} schema changes in ${diff.database}`);
 
   phase('RiskAnalysis');
@@ -100,6 +101,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     ),
   ]);
 
+  if (!risks) { log('Warning: agent returned null for risks, skipping'); return { target, diff, error: 'agent-null' }; }
   phase('Runbook');
   const runbook = await agent(
     `Create a production deployment runbook for this ${diff.database} migration.\n\nChanges: ${diff.changes.map(c => `${c.type} on ${c.table}`).join(', ')}\nRisk: ${risks.overallRisk} — maintenance window required: ${risks.requiresMaintenanceWindow}\nTop risks: ${risks.risks.slice(0, 3).map(r => r.risk).join(', ')}\n\nInclude: pre-migration checks, numbered execution steps with exact commands and rollback conditions per step, post-migration verification, and complete rollback procedure.`,

@@ -98,6 +98,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Map the file structure of: "${target}". Identify: (1) entry points (main files, index files, CLI entry), (2) all major modules with their path and single-line responsibility, (3) the 5-10 most important files a new developer should read first, (4) key external dependencies. Focus on what's PUBLIC — exported functions, routes, APIs.`,
     { schema: STRUCTURE_SCHEMA, label: 'structure' }
   );
+  if (!structure) { log('Warning: agent returned null for structure, skipping'); return { target, error: 'agent-null' }; }
   log(`Found ${structure.modules.length} modules, ${structure.entryPoints.length} entry points`);
 
   phase('Domain');
@@ -106,6 +107,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Extract the domain concepts and business logic from: "${target}"\n\nModules:\n${moduleContext}\n\nIdentify: (1) core business concepts and their definitions (what is a "User", "Order", "Pipeline" etc. in THIS codebase), (2) key business rules (what must always be true), (3) the main data models and their relationships. Focus on the WHAT, not the HOW.`,
     { schema: DOMAIN_SCHEMA, label: 'domain' }
   );
+  if (!domain) { log('Warning: agent returned null for domain, skipping'); return { target, structure, error: 'agent-null' }; }
   log(`${domain.coreConcepts.length} core concepts, ${domain.businessRules.length} business rules identified`);
 
   phase('Architecture');
@@ -114,6 +116,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Identify the architectural patterns in: "${target}"\n\nDomain: ${domainContext}\n\nDescribe: (1) the overall architectural pattern (MVC, CQRS, event-driven, layered, etc.), (2) how data flows through the system end-to-end, (3) the top 3-5 key design decisions and WHY they were made, (4) integration points with external systems, (5) gotchas and non-obvious behaviors a new developer must know.`,
     { schema: ARCHITECTURE_SCHEMA, label: 'architecture' }
   );
+  if (!arch) { log('Warning: agent returned null for arch, skipping'); return { target, structure, domain, error: 'agent-null' }; }
   log(`Architecture: ${arch.pattern}`);
 
   phase('Tour');

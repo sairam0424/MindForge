@@ -132,6 +132,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Generate a STRIDE threat model for: "${target}"\n\nBased on these confirmed findings:\n${findingSummary}\n\nFor each STRIDE category (Spoofing, Tampering, Repudiation, InfoDisclosure, DoS, ElevationOfPrivilege) identify the top threat, likelihood, impact, and mitigation.`,
     { schema: THREAT_SCHEMA, label: 'threat-model', phase: 'ThreatModel' }
   );
+  if (!threatModel) { log('Warning: agent returned null for threatModel, skipping'); return { target, error: 'agent-null' }; }
 
   phase('Roadmap');
   const threatSummary = (threatModel.strideThreats || []).map(t => `[${t.stride}] ${t.threat} (${t.likelihood} likelihood, ${t.impact} impact) → ${t.mitigation}`).join('\n');

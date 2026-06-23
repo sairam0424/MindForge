@@ -65,7 +65,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     { schema: FILE_LIST_SCHEMA, label: 'scope' }
   );
 
-  const highAndMedium = (fileList.files || []).filter(f => f.priority === 'high' || f.priority === 'medium').slice(0, 15);
+  const highAndMedium = ((fileList || {}).files || []).filter(f => f.priority === 'high' || f.priority === 'medium').slice(0, 15);
   log(`Generating docs for ${highAndMedium.length} priority files`);
 
   phase('Generate');

@@ -97,6 +97,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
         () => agent(`Would a real assistive technology user (screen reader, keyboard-only, low-vision) actually encounter this issue? Issue: "${issue.description}" (${issue.wcagCriterion}). Be specific about which user group is affected.`, { schema: VERDICT_SCHEMA, label: `v2:${issue.wcagCriterion}`, phase: 'Verify' }),
         () => agent(`Is the WCAG criterion reference accurate for this issue? "${issue.description}" cited as ${issue.wcagCriterion} Level ${issue.level}. Confirm or correct the WCAG reference.`, { schema: VERDICT_SCHEMA, label: `v3:${issue.wcagCriterion}`, phase: 'Verify' }),
       ]).then(votes => {
+        if (!votes) return { ...issue, confirmed: false };
         const confirmed = votes.filter(Boolean).filter(v => v.isRealIssue).length;
         return { ...issue, confirmed: confirmed >= 2 };
       })

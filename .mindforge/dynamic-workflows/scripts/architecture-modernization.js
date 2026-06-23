@@ -79,6 +79,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Map the current architecture of: "${target}". Identify all major components, their responsibilities, coupling levels (tight/loose), and pain points. List the primary architectural pain points and technical debt items that motivate modernization.`,
     { schema: MAP_SCHEMA, label: 'arch-map' }
   );
+  if (!archMap) { log('Warning: agent returned null for archMap, skipping'); return { target, error: 'agent-null' }; }
   log(`Found ${archMap.components.length} components, ${archMap.primaryPainPoints.length} pain points`);
 
   phase('Design');
@@ -95,8 +96,10 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Select the best modernization architecture for: "${target}"\n\nThree options:\n${designsText}\n\nChoose the winner based on: migration risk, team capability, business continuity, long-term value. Suggest hybrid adjustments that take the best elements from runners-up. Describe the final target architecture.`,
     { schema: VERDICT_SCHEMA, label: 'design-select' }
   );
+  if (!verdict) { log('Warning: agent returned null for verdict, skipping'); return { target, archMap, designs: designs.filter(Boolean), error: 'agent-null' }; }
   log(`Selected: ${verdict.winner} — ${verdict.rationale.slice(0, 80)}`);
 
+  phase('Roadmap');
   phase('Sequence');
   const roadmap = await agent(
     `Create a phased migration roadmap for: "${target}"\n\nTarget architecture: ${verdict.targetArchDescription}\n\nCurrent pain points: ${archMap.primaryPainPoints.join(', ')}\n\nSequence the work into migration phases with: specific work items, risk gates (conditions that must be true before proceeding), rollback checkpoints, and duration estimates. Ensure each phase is independently deployable.`,

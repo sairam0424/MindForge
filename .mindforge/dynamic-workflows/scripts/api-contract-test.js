@@ -88,6 +88,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Read and extract the complete API contract from the spec file(s) in: "${target}". Look for OpenAPI/Swagger YAML, GraphQL schema files, Protobuf files, or API documentation. Extract every endpoint with its method, path, request/response schema, auth requirements, and error codes.`,
     { schema: SPEC_SCHEMA, label: 'read-spec' }
   );
+  if (!spec) { log('Warning: agent returned null for spec, skipping'); return { target, error: 'agent-null' }; }
   log(`Spec: ${spec.apiName} — ${spec.endpoints.length} endpoints`);
 
   phase('ReadImpl');
@@ -95,6 +96,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Read the actual API IMPLEMENTATION in: "${target}". Look for route handlers, controllers, resolvers, or gRPC handlers. For each endpoint extract the actual request handling logic, response shape being returned, and whether auth is checked. Do NOT read the spec — only the implementation code.`,
     { schema: IMPL_SCHEMA, label: 'read-impl' }
   );
+  if (!impl) { log('Warning: agent returned null for impl, skipping'); return { target, error: 'agent-null' }; }
   log(`Implementation: ${impl.implementedEndpoints.length} endpoints found`);
 
   phase('Diff');

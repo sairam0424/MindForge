@@ -109,6 +109,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Rank these UX violations by impact on user experience for: "${target}"\n\nViolations:\n${violationSummary}\n\nRank each by impact score (1-10), assign a rank number starting from 1 (most critical). Calculate an overall usability score (0-100) across all heuristics.`,
     { schema: RANK_SCHEMA, label: 'rank' }
   );
+  if (!ranked) { log('Warning: agent returned null for ranked, skipping'); return { target, error: 'agent-null' }; }
 
   phase('Brief');
   const topViolations = (ranked.rankedViolations || []).slice(0, 10).map(v => `[Rank ${v.rank}/${v.severity}] ${v.heuristic}: ${v.description}`).join('\n');

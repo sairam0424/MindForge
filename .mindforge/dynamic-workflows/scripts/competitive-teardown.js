@@ -99,6 +99,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Define the competitive landscape for: "${target}". Identify: (1) a concise description of the product/service being analyzed, (2) the top 3-5 direct competitors, (3) key evaluation dimensions for this market, (4) the target market and customer segment. If competitors are not specified in the input, infer them from the product description.`,
     { schema: SCOPE_SCHEMA, label: 'scope' }
   );
+  if (!scope) { log('Warning: agent returned null for scope, skipping'); return { target, error: 'agent-null' }; }
   log(`Analyzing ${scope.competitors.length} competitors: ${scope.competitors.join(', ')}`);
 
   const competitorList = scope.competitors.join(', ');
@@ -126,6 +127,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     { schema: ANALYSIS_SCHEMA, label: 'analyze' }
   );
 
+  if (!analysis) { log('Warning: agent returned null for analysis, skipping'); return { target, error: 'agent-null' }; }
   phase('Synthesis');
   const profileSummary = analysis.competitorProfiles.map(p => `${p.name} (threat=${p.threatLevel}): strengths=[${p.keyStrengths.slice(0, 2).join(', ')}] weaknesses=[${p.keyWeaknesses.slice(0, 2).join(', ')}]`).join('\n');
 

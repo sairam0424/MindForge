@@ -76,6 +76,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Inventory the design system foundations of: "${target}". Identify: (1) styling approach (CSS modules, Tailwind, styled-components, CSS-in-JS, etc.), (2) design token files (variables, theme files, constants), (3) component files (UI components, primitives), (4) which design system library is used if any (shadcn, MUI, Chakra, etc.).`,
     { schema: INVENTORY_SCHEMA, label: 'inventory' }
   );
+  if (!inventory) { log('Warning: agent returned null for inventory, skipping'); return { target, error: 'agent-null' }; }
   log(`Styling: ${inventory.stylingApproach}, ${inventory.componentFiles.length} component files`);
 
   phase('Audit');

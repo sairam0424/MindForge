@@ -68,7 +68,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Discover and list all testable modules in: "${target}". For each module identify its path and risk level (high=core business logic/auth/payment, medium=data processing, low=utilities/helpers). Focus on source files that should have tests.`,
     { schema: MODULE_SCHEMA, label: 'discover' }
   );
-  const modules = (discovery.modules || []).slice(0, 12);
+  const modules = ((discovery || {}).modules || []).slice(0, 12);
   log(`Found ${modules.length} modules to analyze`);
 
   phase('Analyze');

@@ -76,6 +76,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Identify the cost centers and technology stack for: "${target}". What cloud provider, databases, third-party APIs, and frontend framework are used? Estimate the primary monthly cost categories (infra, API calls, database, frontend delivery).`,
     { schema: SCOPE_SCHEMA, label: 'scope' }
   );
+  if (!scope) { log('Warning: agent returned null for scope, skipping'); return { target, error: 'agent-null' }; }
   log(`Cost centers: ${scope.costCenters.join(', ')}`);
 
   phase('Analyze');

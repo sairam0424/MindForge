@@ -54,6 +54,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `Implement this task in the current codebase: "${task}"\n\nWrite the complete implementation. After implementing, provide: (1) description of what you built, (2) list of files changed, (3) your implementation approach and key decisions, (4) a diff-style summary of changes (show old → new for key parts), (5) testing done or test commands to run.`,
     { schema: IMPL_SCHEMA, label: 'writer' }
   );
+  if (!implementation) { log('Warning: agent returned null for implementation, skipping'); return { task, error: 'agent-null' }; }
   log(`Writer: ${implementation.description} | Changed: ${implementation.filesChanged.join(', ')}`);
 
   phase('Review');
@@ -62,6 +63,7 @@ export default async function run({ agent, parallel, pipeline, phase, log, args,
     `You are a senior code reviewer. Review this code change with fresh eyes — you were NOT involved in the implementation.\n\n${diffContext}\n\nReview for: correctness (does it actually solve the task?), edge cases (null/empty/large inputs), security (injection, auth, secrets), performance (N+1, unbounded loops), maintainability (naming, complexity, DRY). Give a verdict: approve / request-changes / comment. For each issue: severity (blocker/major/minor/nit), exact location, what's wrong, specific suggestion.`,
     { schema: REVIEW_SCHEMA, label: 'reviewer' }
   );
+  if (!review) { log('Warning: agent returned null for review, skipping'); return { task, implementation, error: 'agent-null' }; }
   log(`Reviewer verdict: ${review.verdict} | ${review.issues.length} issues (${review.issues.filter(i => i.severity === 'blocker').length} blockers)`);
 
   phase('Verdict');
