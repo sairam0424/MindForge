@@ -84,7 +84,7 @@ MindForge uses a 4-pillar iterative cycle:
 
 ## 6. High-Performance Personas
 
-MindForge v10.0.1 provides 108 specialized personas. Each is a "digital twin" of a senior role.
+MindForge v11.8.0 ships 211 specialized personas. Each is a "digital twin" of a senior role.
 
 - To list all personas: `/mindforge:personas --list`
 - To switch persona: `/mindforge:personas --set executor`
