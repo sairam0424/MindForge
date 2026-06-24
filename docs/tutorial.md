@@ -1,4 +1,4 @@
-# MindForge v11.3.1 — Full Tutorial (Install → Advanced Usage)
+# MindForge v11.8.0 — Full Tutorial (Install → Advanced Usage)
 
 This tutorial walks a new user from installation to advanced usage. It is written for engineers who want to adopt MindForge in a real codebase.
 
@@ -84,7 +84,7 @@ MindForge uses a 4-pillar iterative cycle:
 
 ## 6. High-Performance Personas
 
-MindForge v10.0.1 provides 108 specialized personas. Each is a "digital twin" of a senior role.
+MindForge v11.8.0 ships 211 specialized personas. Each is a "digital twin" of a senior role.
 
 - To list all personas: `/mindforge:personas --list`
 - To switch persona: `/mindforge:personas --set executor`
@@ -155,7 +155,32 @@ If you hit issues, consult these specialized guides:
 
 ---
 
-## 13. Next Steps
+## 13. Using Dynamic Workflows
+
+MindForge v11.8.0 ships 33 pre-built multi-agent workflows. Browse them with `/mindforge:wf-catalog`.
+
+### Quick start — run a workflow
+
+```
+/mindforge:wf-deep-research What are the best practices for API versioning?
+/mindforge:wf-code-audit current git diff
+/mindforge:wf-security-hardening src/auth/
+/mindforge:wf-debug-detective Login form submits but users report being logged out immediately
+```
+
+Each workflow fans out multiple parallel agents, verifies findings adversarially, and synthesizes a structured report.
+
+### Beast tier workflows
+
+The Beast tier runs 5-phase compound workflows with 8+ agents and adversarial verification — suitable for security reviews, accessibility compliance, and threat modeling:
+
+- `/mindforge:wf-security-hardening` — Full OWASP scan with STRIDE threat model
+- `/mindforge:wf-accessibility-audit` — WCAG 2.2 compliance with 3-vote verification
+- `/mindforge:wf-security-threat-model` — STRIDE threat enumeration + CVSS scoring
+
+---
+
+## 14. Next Steps
 
 1. Configure your team preferences in `docs/Templates/Profile/user-profile.md`.
 2. Start your first Phase 1 planning.

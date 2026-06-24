@@ -1,4 +1,4 @@
-# MindForge User Guide (v11.3.1)
+# MindForge User Guide (v11.8.0)
 
 This guide gets you from install to productive, with the minimum needed to run MindForge in a real project.
 
@@ -89,6 +89,25 @@ MindForge uses a unified 4-pillar workflow, hardened by the **Neural Protocol Me
 /mindforge:execute-phase [N]  # parallel execution of task plans (Step 0: swarm-execution)
 /mindforge:verify-phase [N]   # UAT + automated validation (Step 0: verify-work)
 /mindforge:ship [N]           # generate changelog + create PR (Step 0: ship)
+```
+
+### Dynamic Workflow Library
+
+MindForge ships **33 pre-built workflow pipelines** across **219 commands**, organized into **5 tiers**:
+
+| Tier | Description |
+|------|-------------|
+| **T1 — Core** | Foundational commands: plan, execute, verify, ship, health |
+| **T2 — Engineering** | Development workflows: TDD, debug, refactor, code-review, PR |
+| **T3 — Governance** | Security, audit, compliance, AgRevOps, temporal steering |
+| **T4 — Intelligence** | Memory, knowledge-graph, skill-loading, persona switching |
+| **T5 — Autonomous** | Headless/walk-away execution, wave orchestration, swarm coordination |
+
+Discover all available workflows:
+
+```bash
+/mindforge:skills-index          # browse all skills and workflows
+/mindforge:status --workflows    # list active workflow pipelines
 ```
 
 ---

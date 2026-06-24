@@ -1,5 +1,41 @@
 # Release Notes
 
+## v11.8.0 — Workflow Forge II
+
+**Released:** 2026-06-24
+
+### What's New
+
+MindForge v11.8.0 "Workflow Forge II" expands the Dynamic Workflow Library from 12 to **33 workflows** and introduces a new **Beast tier** for compound multi-phase adversarial workflows.
+
+### Beast Tier (NEW)
+
+Three compound workflows with 5 phases and 8+ agents each, featuring adversarial verification:
+
+- `/mindforge:wf-security-hardening` — 5-angle OWASP parallel scout → 3-vote adversarial verification → STRIDE threat model → prioritized remediation roadmap
+- `/mindforge:wf-accessibility-audit` — WCAG 2.2 parallel per-criterion audit → 3-vote adversarial verify → remediation spec with exact ARIA/HTML fixes
+- `/mindforge:wf-security-threat-model` — Asset inventory → 6-parallel STRIDE threat agents → parallel mitigations → CVSS-style risk scoring matrix
+
+### 18 Additional New Workflows
+
+**Dev tier additions (7):** test-coverage-gap, api-contract-test, debug-detective, writer-reviewer, mutation-testing, code-explainer, design-system-audit
+
+**Ops tier additions (4):** database-migration, dependency-health, multi-repo-sync, cost-analysis
+
+**Intelligence tier additions (4):** architecture-modernization, documentation-gen, api-migration, data-pipeline-validate
+
+**Research tier additions (3):** ai-model-eval, ux-heuristic-audit, competitive-teardown
+
+### Stats
+
+- Workflows: 12 → **33** (across 5 tiers)
+- Commands: 198 → **219**
+- All 21 new scripts fully null-guarded on every sequential agent() return
+- workflow-runner.js CLI fixed for Node 24 compatibility
+- 4-pass adversarial E2E sign-off (138 agents) before merge
+
+---
+
 ## v11.7.0 — Workflow Forge
 
 **Release Date**: 2026-06-23
