@@ -202,21 +202,47 @@ mindforge <command> [options]
 
 ## 🚀 Dynamic Workflow Library
 
-Pre-built multi-agent workflow scripts triggered via `/mindforge:wf-*` commands. Each runs via Claude Code's `Workflow` tool with true parallel agent execution.
+Pre-built multi-agent workflow scripts triggered via `/mindforge:wf-*` commands. Each runs via Claude Code's `Workflow` tool with true parallel agent execution. 33 pre-built multi-agent workflows across 5 tiers.
 
 | Command | Tier | Description |
 | :--- | :--- | :--- |
-| `/mindforge:wf-catalog` | — | Browse all 12 workflows grouped by tier |
-| `/mindforge:wf-deep-research` | research | Fan-out web research → adversarial verify → cited report |
-| `/mindforge:wf-competitive-analysis` | research | 5× parallel angles → SWOT → positioning |
-| `/mindforge:wf-tech-evaluation` | research | 5× dimensions → scored matrix → recommendation |
-| `/mindforge:wf-code-audit` | dev | 3× parallel auditors → verified findings → risk report |
-| `/mindforge:wf-feature-planner` | dev | Brief → PRD → architecture → user stories pipeline |
-| `/mindforge:wf-pr-review` | dev | 4× parallel reviewers → consensus verdict |
-| `/mindforge:wf-tdd-sprint` | dev | Spec → RED → GREEN → REFACTOR loop |
-| `/mindforge:wf-refactor-plan` | dev | Debt scan → risk-sort → safe sequence → plan |
-| `/mindforge:wf-incident-response` | ops | 4× parallel investigation → mitigate → RCA → postmortem |
-| `/mindforge:wf-release-prep` | ops | Tests → changelog → version bump → PR → announcement |
-| `/mindforge:wf-onboard-codebase` | intelligence | Map → domain → architecture → guided tour |
-| `/mindforge:wf-perf-optimize` | intelligence | Profile → 4× bottleneck hunt → prioritized fix plan |
+| `/mindforge:wf-catalog` | — | Browse all 33 workflows grouped by tier |
+| **Research tier** | | |
+| `/mindforge:wf-deep-research` | research | Fan-out web research with adversarial claim verification and cited synthesis |
+| `/mindforge:wf-competitive-analysis` | research | Multi-angle competitive research producing a SWOT and positioning summary |
+| `/mindforge:wf-tech-evaluation` | research | Scored technology evaluation across DX, performance, security, ecosystem, and community |
+| `/mindforge:wf-ai-model-eval` | research | 4-parallel model benchmark agents → scoring matrix → cost/performance recommendation |
+| `/mindforge:wf-ux-heuristic-audit` | research | 10 Nielsen heuristics parallel audit → severity ranking → fix brief |
+| `/mindforge:wf-competitive-teardown` | research | 5 parallel competitor angle agents → pipeline synthesis into competitive positioning report |
+| **Dev tier** | | |
+| `/mindforge:wf-code-audit` | dev | Parallel security + quality + performance audit with adversarial finding verification |
+| `/mindforge:wf-feature-planner` | dev | Sequential pipeline: brief → PRD → architecture → user stories |
+| `/mindforge:wf-pr-review` | dev | 4-dimensional parallel PR review: correctness, security, performance, style → consensus verdict |
+| `/mindforge:wf-tdd-sprint` | dev | Strict Red-Green-Refactor TDD loop with spec-first discipline |
+| `/mindforge:wf-refactor-plan` | dev | Technical debt scan → risk-sorted sequence → safe refactor implementation plan |
+| `/mindforge:wf-test-coverage-gap` | dev | Parallel per-module coverage analysis → gap map → prioritized test-writing plan |
+| `/mindforge:wf-api-contract-test` | dev | Writer/Reviewer pattern: spec reader vs implementation reader → contract violation report |
+| `/mindforge:wf-debug-detective` | dev | 4-hypothesis parallel investigation → evidence gathering → scientific RCA |
+| `/mindforge:wf-writer-reviewer` | dev | Anthropic Writer/Reviewer pattern: implement in Context A → fresh Context B reviews the diff |
+| `/mindforge:wf-mutation-testing` | dev | Mutant generator → parallel kill-test agents → mutation score + survival report |
+| `/mindforge:wf-code-explainer` | dev | Structural map → domain extraction → architecture patterns → guided narrative tour for onboarding |
+| `/mindforge:wf-design-system-audit` | dev | 5 parallel dimension auditors (spacing/color/typography/icons/a11y) → consistency score |
+| **Ops tier** | | |
+| `/mindforge:wf-incident-response` | ops | Parallel investigation across logs, metrics, traces, and code → mitigation → RCA → postmortem |
+| `/mindforge:wf-release-prep` | ops | Automated release pipeline: tests → changelog → version bump → PR → announcement draft |
+| `/mindforge:wf-dependency-health` | ops | Parallel per-dependency audit (CVEs / licenses / staleness / maintenance) → risk matrix |
+| `/mindforge:wf-database-migration` | ops | Schema diff → risk analysis → migration scripts → rollback plan |
+| `/mindforge:wf-multi-repo-sync` | ops | Parallel per-repo audit → cross-repo divergence map → sync plan |
+| `/mindforge:wf-cost-analysis` | ops | Parallel infra/API/query/bundle cost agents → reduction plan with ROI estimates |
+| **Intelligence tier** | | |
+| `/mindforge:wf-onboard-codebase` | intelligence | Map structure → domain analysis → architecture → generate guided tour and onboarding docs |
+| `/mindforge:wf-perf-optimize` | intelligence | Profile → parallel bottleneck hunt across DB/network/CPU/memory → prioritized fix plan |
+| `/mindforge:wf-architecture-modernization` | intelligence | Legacy architecture map → target design → migration sequencing → risk gates |
+| `/mindforge:wf-documentation-gen` | intelligence | Parallel per-file doc generation → style normalization → publish-ready documentation |
+| `/mindforge:wf-api-migration` | intelligence | Breaking change detection → versioning strategy → migration guide → compatibility matrix |
+| `/mindforge:wf-data-pipeline-validate` | intelligence | Pipeline stage-by-stage validation → data quality gates → anomaly detection report |
+| **Beast tier** | | |
+| `/mindforge:wf-security-hardening` | beast | 5-angle OWASP parallel scout → 3-vote adversarial verification → threat model + remediation roadmap |
+| `/mindforge:wf-accessibility-audit` | beast | WCAG 2.2 parallel per-criterion audit → 3-vote adversarial verify failures → remediation spec |
+| `/mindforge:wf-security-threat-model` | beast | Asset inventory → STRIDE threat enumeration → parallel mitigations → CVSS-style score matrix |
 

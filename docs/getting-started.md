@@ -1,4 +1,4 @@
-# MindForge — Getting Started (v11.5.1)
+# MindForge — Getting Started (v11.8.0)
 
 This guide gets you from zero to a working MindForge project in under five minutes.
 
@@ -60,6 +60,18 @@ To build on top of MindForge programmatically, install the TypeScript SDK:
 ```bash
 npm i mindforge-sdk
 ```
+
+## Dynamic Workflow Library
+
+MindForge ships 33 pre-built multi-agent workflows across 5 tiers, triggerable via `/mindforge:wf-*` commands:
+
+- **Beast** — Compound adversarial workflows (security-hardening, accessibility-audit, security-threat-model)
+- **Intelligence** — Deep analysis (architecture-modernization, documentation-gen, api-migration, data-pipeline-validate)
+- **Ops** — Infrastructure (incident-response, release-prep, dependency-health, database-migration, multi-repo-sync, cost-analysis)
+- **Dev** — Coding assistant (code-audit, feature-planner, pr-review, tdd-sprint, refactor-plan + 7 more)
+- **Research** — Research & analysis (deep-research, competitive-analysis, tech-evaluation + 3 more)
+
+Browse with `/mindforge:wf-catalog`.
 
 ## Initialise Your Project
 

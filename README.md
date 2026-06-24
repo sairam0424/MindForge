@@ -383,7 +383,7 @@ See `.mindforge/production/token-optimiser.md`.
 
 ## 🚀 Dynamic Workflow Library
 
-12 pre-built multi-agent workflow scripts that run via Claude Code's `Workflow` tool. Each workflow fans out concurrent agents, synthesizes results, and returns structured output.
+33 pre-built multi-agent workflow scripts that run via Claude Code's `Workflow` tool. Each workflow fans out concurrent agents, synthesizes results, and returns structured output.
 
 **Discover:** `/mindforge:wf-catalog` or `node bin/mindforge-cli.js workflow list`
 
@@ -392,15 +392,36 @@ See `.mindforge/production/token-optimiser.md`.
 | Research | `/mindforge:wf-deep-research` | Fan-out web research → adversarial verify → cited report |
 | Research | `/mindforge:wf-competitive-analysis` | 5× parallel angles → SWOT → positioning |
 | Research | `/mindforge:wf-tech-evaluation` | 5× dimensions → scored matrix → recommendation |
+| Research | `/mindforge:wf-market-sizing` | TAM/SAM/SOM parallel model → triangulated estimate |
+| Research | `/mindforge:wf-literature-review` | Paper fan-out → claim extraction → synthesis matrix |
+| Research | `/mindforge:wf-patent-landscape` | Prior art search → novelty scoring → freedom-to-operate |
+| Research | `/mindforge:wf-persona-research` | Interview simulation × 5 → insight clustering → persona card |
 | Dev | `/mindforge:wf-code-audit` | 3× parallel auditors → verified findings → risk report |
 | Dev | `/mindforge:wf-feature-planner` | Brief → PRD → architecture → user stories |
 | Dev | `/mindforge:wf-pr-review` | 4× parallel reviewers → consensus verdict |
 | Dev | `/mindforge:wf-tdd-sprint` | Spec → RED → GREEN → REFACTOR loop |
 | Dev | `/mindforge:wf-refactor-plan` | Debt scan → risk-sort → safe sequence → plan |
+| Dev | `/mindforge:wf-api-design` | Domain model → OpenAPI spec → SDK skeleton → docs |
+| Dev | `/mindforge:wf-db-schema` | Requirements → ERD → migration scripts → seed data |
+| Dev | `/mindforge:wf-perf-regression` | Baseline benchmark → change → delta analysis → verdict |
+| Dev | `/mindforge:wf-dependency-audit` | License scan + CVE fan-out → risk matrix → upgrade plan |
+| Dev | `/mindforge:wf-test-coverage` | Coverage gap scan → test gen → mutation testing → report |
 | Ops | `/mindforge:wf-incident-response` | 4× parallel investigation → mitigate → RCA → postmortem |
 | Ops | `/mindforge:wf-release-prep` | Tests → changelog → version bump → PR → announcement |
+| Ops | `/mindforge:wf-cost-analysis` | Usage fan-out → cost model → optimization levers → plan |
+| Ops | `/mindforge:wf-capacity-plan` | Load model → bottleneck forecast → scaling roadmap |
+| Ops | `/mindforge:wf-runbook-gen` | Service map → failure modes → remediation steps → runbook |
 | Intelligence | `/mindforge:wf-onboard-codebase` | Map → domain → architecture → guided tour |
 | Intelligence | `/mindforge:wf-perf-optimize` | Profile → 4× bottleneck hunt → prioritized fix plan |
+| Intelligence | `/mindforge:wf-arch-review` | C4 model → 5× quality attributes → risk-ranked findings |
+| Intelligence | `/mindforge:wf-decision-analysis` | Options fan-out → criteria weighting → scored recommendation |
+| Intelligence | `/mindforge:wf-knowledge-graph` | Concept extraction → relationship map → gap analysis |
+| Intelligence | `/mindforge:wf-retrospective` | Data gather → 4× theme clusters → action items → timeline |
+| Intelligence | `/mindforge:wf-roadmap-prioritize` | Backlog fan-out → impact/effort scoring → sequenced roadmap |
+| Intelligence | `/mindforge:wf-tech-radar` | Adopt/Trial/Assess/Hold fan-out → consensus vote → radar chart |
+| Beast | `/mindforge:wf-security-hardening` | 5-angle OWASP parallel scout → STRIDE threat model → remediation roadmap |
+| Beast | `/mindforge:wf-accessibility-audit` | WCAG 2.2 parallel audit → 3-vote adversarial verify → remediation spec |
+| Beast | `/mindforge:wf-security-threat-model` | Asset inventory → STRIDE×6 → parallel mitigations → CVSS matrix |
 
 ---
 
@@ -409,9 +430,9 @@ See `.mindforge/production/token-optimiser.md`.
 <details>
 <summary><b>v11.7.0 — Workflow Forge (Dynamic Workflow Library)</b></summary>
 
-- **12 dynamic workflow scripts** in `.mindforge/dynamic-workflows/scripts/` — each runs via Claude Code's `Workflow` tool with true parallel agent execution, structured JSON schemas, and adversarial verification where appropriate.
-- **4 tiers:** Research (fan-out search + verify + synthesis), Dev (code-audit, feature-planner, pr-review, tdd-sprint, refactor-plan), Ops (incident-response, release-prep), Intelligence (onboard-codebase, perf-optimize).
-- **13 new commands:** `/mindforge:wf-catalog` discovery index + 12 workflow-specific commands.
+- **33 dynamic workflow scripts** in `.mindforge/dynamic-workflows/scripts/` — each runs via Claude Code's `Workflow` tool with true parallel agent execution, structured JSON schemas, and adversarial verification where appropriate.
+- **5 tiers:** Research (fan-out search + verify + synthesis), Dev (code-audit, feature-planner, pr-review, tdd-sprint, refactor-plan, api-design, db-schema, perf-regression, dependency-audit, test-coverage), Ops (incident-response, release-prep, cost-analysis, capacity-plan, runbook-gen), Intelligence (onboard-codebase, perf-optimize, arch-review, decision-analysis, knowledge-graph, retrospective, roadmap-prioritize, tech-radar), Beast (security-hardening, accessibility-audit, security-threat-model).
+- **34 /mindforge:wf-* commands total** (catalog + 33 workflows).
 - **CLI discovery:** `node bin/mindforge-cli.js workflow list|info|run <name>`.
 - Architecture follows adversarially-verified best practices: one-workflow-per-domain, predefined (not open-ended) pipelines, fan-out + gated synthesis pattern.
 </details>
