@@ -430,9 +430,9 @@ See `.mindforge/production/token-optimiser.md`.
 <details>
 <summary><b>v11.7.0 — Workflow Forge (Dynamic Workflow Library)</b></summary>
 
-- **33 dynamic workflow scripts** in `.mindforge/dynamic-workflows/scripts/` — each runs via Claude Code's `Workflow` tool with true parallel agent execution, structured JSON schemas, and adversarial verification where appropriate.
-- **5 tiers:** Research (fan-out search + verify + synthesis), Dev (code-audit, feature-planner, pr-review, tdd-sprint, refactor-plan, api-design, db-schema, perf-regression, dependency-audit, test-coverage), Ops (incident-response, release-prep, cost-analysis, capacity-plan, runbook-gen), Intelligence (onboard-codebase, perf-optimize, arch-review, decision-analysis, knowledge-graph, retrospective, roadmap-prioritize, tech-radar), Beast (security-hardening, accessibility-audit, security-threat-model).
-- **34 /mindforge:wf-* commands total** (catalog + 33 workflows).
+- **12 dynamic workflow scripts** in `.mindforge/dynamic-workflows/scripts/` — each runs via Claude Code's `Workflow` tool with true parallel agent execution, structured JSON schemas, and adversarial verification where appropriate.
+- **4 tiers:** Research (deep-research, competitive-analysis, tech-evaluation), Dev (code-audit, feature-planner, pr-review, tdd-sprint, refactor-plan), Ops (incident-response, release-prep), Intelligence (onboard-codebase, perf-optimize).
+- **13 /mindforge:wf-* commands** (wf-catalog + 12 workflows).
 - **CLI discovery:** `node bin/mindforge-cli.js workflow list|info|run <name>`.
 - Architecture follows adversarially-verified best practices: one-workflow-per-domain, predefined (not open-ended) pipelines, fan-out + gated synthesis pattern.
 </details>
