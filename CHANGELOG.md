@@ -1,5 +1,28 @@
 # Changelog
 
+## [11.8.0] - 2026-06-24 — Workflow Forge II
+
+Expands the Dynamic Workflow Library from 12 to 33 workflows across 5 tiers, adding a new **Beast tier** for compound multi-phase multi-agent workflows with adversarial verification. 21 new workflows added. 92/92 tests pass.
+
+### Added
+
+- **Beast tier** (3 compound workflows, 5 phases, 8+ agents): `security-hardening` (5-angle OWASP parallel scout + 3-vote adversarial verify + STRIDE threat model + remediation roadmap), `accessibility-audit` (WCAG 2.2 6-principle parallel audit + 3-vote verify + remediation spec), `security-threat-model` (asset inventory + 6-parallel STRIDE + mitigations + CVSS scoring)
+- **Dev tier additions** (7): `test-coverage-gap`, `api-contract-test`, `mutation-testing`, `debug-detective`, `writer-reviewer`, `code-explainer`, `design-system-audit`
+- **Ops tier additions** (4): `database-migration`, `dependency-health`, `multi-repo-sync`, `cost-analysis`
+- **Intelligence tier additions** (3): `architecture-modernization`, `documentation-gen`, `api-migration`, `data-pipeline-validate` (4 total)
+- **Research tier additions** (3): `ai-model-eval`, `ux-heuristic-audit`, `competitive-teardown`
+- 21 new `/mindforge:wf-*` slash command pairs
+- Updated `wf-catalog` listing all 33 workflows across 5 tiers
+- `tests/workflow-registry.test.js` — `beast` added to valid tier allowlist
+
+---
+
+## [11.7.1] - 2026-06-23 — Workflow Forge (patch)
+
+Patch release: adds `bin/parse-workflow-args.js` (slash command argument splitter, produced by the tdd-sprint E2E run) and resolves 2 high-severity npm vulnerabilities in the tmp/inquirer dependency chain. No feature changes; all 94 tests pass.
+
+---
+
 ## [11.7.0] - 2026-06-23 — Workflow Forge
 
 First Dynamic Workflow Library for MindForge. Adds 12 pre-built multi-agent workflow scripts that users trigger via `/mindforge:wf-*` commands. Each workflow uses Claude Code's `Workflow` tool primitives (`parallel()`, `pipeline()`, `phase()`, `agent()`) for true fan-out concurrent agent execution with structured synthesis. Architecture follows adversarially-verified best practices: three-tier progressive disclosure, one-workflow-per-domain, predefined (not open-ended) patterns.

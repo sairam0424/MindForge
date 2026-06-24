@@ -27,7 +27,7 @@ console.log('\nMindForge SDK Tests\n');
 
 // ── Version ──────────────────────────────────────────────────────────────────
 test('VERSION exports correctly', () => {
-  assert.strictEqual(VERSION, '11.6.0');
+  assert.strictEqual(VERSION, '11.7.1');
 });
 
 // ── Client instantiation ─────────────────────────────────────────────────────

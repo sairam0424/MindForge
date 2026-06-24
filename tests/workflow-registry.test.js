@@ -121,7 +121,7 @@ for (const file of wfCommandFiles) {
 console.log(`  All ${wfCommandFiles.length} wf-* command files have valid frontmatter`);
 
 // ── Test 7: tier values are valid ────────────────────────────────────────────
-const VALID_TIERS = new Set(['research', 'dev', 'ops', 'intelligence']);
+const VALID_TIERS = new Set(['research', 'dev', 'ops', 'intelligence', 'beast']);
 for (const wf of registry) {
   assert.ok(
     VALID_TIERS.has(wf.tier),

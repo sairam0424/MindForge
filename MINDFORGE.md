@@ -3,10 +3,10 @@
 ## 1. IDENTITY & VERSIONING
 
 [NAME]    = MindForge
-[VERSION] = 11.7.0
+[VERSION] = 11.8.0
 [STABLE]  = true
 [MODE]    = "Platform Sovereign"
-[REQUIRED_CORE_VERSION] = 11.7.0
+[REQUIRED_CORE_VERSION] = 11.8.0
 [SOVEREIGN_IDENTITY] = true
 [SRE_LAYER_ENABLED]  = true
 

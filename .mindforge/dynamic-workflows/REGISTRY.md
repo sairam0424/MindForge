@@ -1,65 +1,63 @@
 # MindForge Dynamic Workflow Registry
 
-Dynamic workflows are multi-agent JS orchestration scripts that run via Claude Code's `Workflow` tool. They use `parallel()`, `pipeline()`, `phase()`, and `agent()` primitives to fan out work across multiple concurrent subagents and synthesize results.
+33 pre-built multi-agent workflows across 5 tiers. Each runs via Claude Code's `Workflow` tool using `parallel()`, `pipeline()`, `phase()`, and `agent()` primitives to fan out work across concurrent subagents and synthesize results.
 
 **Trigger:** Use `/mindforge:wf-catalog` to browse interactively, or invoke any `/mindforge:wf-<name>` command directly.
 
-**Discovery:** `node bin/mindforge-cli.js workflow list`
+## Research tier — Fan-out search, adversarial verification, cited synthesis
 
----
+| Workflow | Command | Description | Best for |
+|----------|---------|-------------|----------|
+| deep-research | /mindforge:wf-deep-research | Fan-out web research with adversarial claim verification | Multi-source fact-checked research reports |
+| competitive-analysis | /mindforge:wf-competitive-analysis | SWOT and positioning from 5 research angles | Evaluating products/companies against competitors |
+| tech-evaluation | /mindforge:wf-tech-evaluation | Scored technology evaluation across 5 dimensions | Choosing frameworks, libraries, or platforms |
+| ai-model-eval | /mindforge:wf-ai-model-eval | 4-parallel model benchmark → scoring matrix | Choosing between AI models or providers |
+| ux-heuristic-audit | /mindforge:wf-ux-heuristic-audit | 10 Nielsen heuristics parallel audit → fix brief | UI usability review |
+| competitive-teardown | /mindforge:wf-competitive-teardown | 5 competitor angles → positioning report | Deep competitive intelligence |
 
-## Research Tier — Fan-out search, adversarial verification, cited output
+## Dev tier — Coding-assistant power workflows
 
-| Name | Command | Description | Phases |
-|------|---------|-------------|--------|
-| `deep-research` | `/mindforge:wf-deep-research` | Fan-out web research with adversarial claim verification and cited synthesis | Scope → Search → Fetch → Verify → Synthesize |
-| `competitive-analysis` | `/mindforge:wf-competitive-analysis` | Multi-angle competitive research producing a SWOT and positioning summary | Scope → Research → SWOT → Position |
-| `tech-evaluation` | `/mindforge:wf-tech-evaluation` | Scored technology evaluation across DX, performance, security, ecosystem, community | Scope → Evaluate → Score → Recommend |
+| Workflow | Command | Description | Best for |
+|----------|---------|-------------|----------|
+| code-audit | /mindforge:wf-code-audit | Parallel security + quality + performance audit | Pre-release or pre-pentest code review |
+| feature-planner | /mindforge:wf-feature-planner | Brief → PRD → architecture → user stories | Starting a new feature |
+| pr-review | /mindforge:wf-pr-review | 4-dimensional parallel PR review → verdict | Thorough pull request review |
+| tdd-sprint | /mindforge:wf-tdd-sprint | Strict Red-Green-Refactor TDD loop | Implementing with test-driven development |
+| refactor-plan | /mindforge:wf-refactor-plan | Debt scan → risk-sorted → safe refactor plan | Planning safe refactoring |
+| test-coverage-gap | /mindforge:wf-test-coverage-gap | Per-module coverage analysis → test-writing plan | Finding and fixing test gaps |
+| api-contract-test | /mindforge:wf-api-contract-test | Writer/Reviewer spec vs impl → violation report | API contract validation |
+| debug-detective | /mindforge:wf-debug-detective | 4-hypothesis parallel investigation → scientific RCA | Hard-to-reproduce bugs |
+| writer-reviewer | /mindforge:wf-writer-reviewer | Implement → fresh context review → verdict | Unbiased code review |
+| mutation-testing | /mindforge:wf-mutation-testing | Mutant generator → parallel kill-test → score | Test suite effectiveness |
+| code-explainer | /mindforge:wf-code-explainer | Structure → domain → architecture → narrative tour | Onboarding to unfamiliar codebases |
+| design-system-audit | /mindforge:wf-design-system-audit | 5-dimension parallel audit → consistency score | Design system health checks |
 
-## Dev Tier — Coding-assistant power workflows
+## Ops tier — Infrastructure and release workflows
 
-| Name | Command | Description | Phases |
-|------|---------|-------------|--------|
-| `code-audit` | `/mindforge:wf-code-audit` | Parallel security + quality + performance audit with adversarial finding verification | Scope → Audit → Verify → Report |
-| `feature-planner` | `/mindforge:wf-feature-planner` | Sequential pipeline: brief → PRD → architecture → user stories | Brief → PRD → Arch → Stories |
-| `pr-review` | `/mindforge:wf-pr-review` | 4-dimensional parallel PR review: correctness, security, performance, style → verdict | Scope → Review → Consensus → Verdict |
-| `tdd-sprint` | `/mindforge:wf-tdd-sprint` | Strict Red-Green-Refactor TDD loop with spec-first discipline | Spec → Red → Green → Refactor |
-| `refactor-plan` | `/mindforge:wf-refactor-plan` | Debt scan → risk-sorted sequence → safe refactor implementation plan | Scan → Prioritize → Sequence → Plan |
+| Workflow | Command | Description | Best for |
+|----------|---------|-------------|----------|
+| incident-response | /mindforge:wf-incident-response | Parallel investigation → mitigation → RCA → postmortem | Production incidents |
+| release-prep | /mindforge:wf-release-prep | Tests → changelog → version bump → PR | Preparing a production release |
+| dependency-health | /mindforge:wf-dependency-health | CVE + license + staleness audit → risk matrix | Pre-release dependency review |
+| database-migration | /mindforge:wf-database-migration | Schema diff → risk → scripts → runbook | Database schema migrations |
+| multi-repo-sync | /mindforge:wf-multi-repo-sync | Per-repo audit → divergence map → sync plan | Multi-repo consistency |
+| cost-analysis | /mindforge:wf-cost-analysis | Infra/API/query/bundle cost agents → ROI plan | Cloud and API cost reduction |
 
-## Ops Tier — Infrastructure and release workflows
+## Intelligence tier — Deep analysis and optimization
 
-| Name | Command | Description | Phases |
-|------|---------|-------------|--------|
-| `incident-response` | `/mindforge:wf-incident-response` | Parallel investigation: logs/metrics/traces/code → mitigation → RCA → postmortem | Alert → Investigate → Mitigate → RCA |
-| `release-prep` | `/mindforge:wf-release-prep` | Automated release pipeline: tests → changelog → version bump → PR → announcement | Check → Changelog → Bump → PR |
+| Workflow | Command | Description | Best for |
+|----------|---------|-------------|----------|
+| onboard-codebase | /mindforge:wf-onboard-codebase | Map → domain → architecture → guided tour | New team member onboarding |
+| perf-optimize | /mindforge:wf-perf-optimize | Profile → bottleneck hunt → prioritized fix plan | Performance bottleneck investigation |
+| architecture-modernization | /mindforge:wf-architecture-modernization | Legacy map → 3 designs → migration roadmap | Monolith-to-services, major rewrites |
+| documentation-gen | /mindforge:wf-documentation-gen | Parallel doc gen → normalize → publish-ready | Generating or refreshing docs |
+| api-migration | /mindforge:wf-api-migration | Breaking change detection → guide → compat matrix | API versioning and migration |
+| data-pipeline-validate | /mindforge:wf-data-pipeline-validate | Stage-by-stage validation → quality gates | Data pipeline correctness checks |
 
-## Intelligence Tier — Deep analysis and optimization
+## Beast tier — Compound workflows (5 phases, 8+ agents, adversarial verification)
 
-| Name | Command | Description | Phases |
-|------|---------|-------------|--------|
-| `onboard-codebase` | `/mindforge:wf-onboard-codebase` | Map structure → domain analysis → architecture → guided tour and onboarding docs | Map → Domain → Arch → Tour |
-| `perf-optimize` | `/mindforge:wf-perf-optimize` | Profile → parallel bottleneck hunt (DB/network/CPU/memory) → prioritized fix plan | Profile → Identify → Plan → Benchmark |
-
----
-
-## Schema
-
-Each workflow script at `.mindforge/dynamic-workflows/scripts/<name>.js` exports:
-
-```javascript
-export const meta = {
-  name: '<name>',          // matches filename (without .js)
-  description: '<string>', // shown in this catalog
-  whenToUse: '<string>',   // trigger conditions
-  phases: [{ title, detail }],
-}
-```
-
-Scripts use the Claude Code `Workflow` tool primitives: `agent()`, `parallel()`, `pipeline()`, `phase()`, `log()`, `args`, `budget`.
-
-## Adding a workflow
-
-1. Write `.mindforge/dynamic-workflows/scripts/<name>.js` with a valid `meta` export
-2. Add an entry to `index.json`
-3. Add paired command files to `.agent/mindforge/wf-<name>.md` and `.claude/commands/mindforge/wf-<name>.md`
-4. Run `npm test` — `tests/workflow-registry.test.js` validates all three steps
+| Workflow | Command | Description | Best for |
+|----------|---------|-------------|----------|
+| security-hardening | /mindforge:wf-security-hardening | 5-angle OWASP scout → 3-vote verify → STRIDE → roadmap | Pre-launch security hardening |
+| accessibility-audit | /mindforge:wf-accessibility-audit | WCAG 2.2 per-criterion → 3-vote verify → remediation spec | WCAG 2.2 compliance |
+| security-threat-model | /mindforge:wf-security-threat-model | Asset inventory → STRIDE x 6 → mitigations → CVSS matrix | Architecture threat modeling |
