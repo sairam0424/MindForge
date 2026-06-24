@@ -34,7 +34,7 @@ jobs:
           echo "- **Timestamp:** $(date -u)" >> $GITHUB_STEP_SUMMARY
 
       - name: Upload Reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: observability-report-${{ github.run_id }}
           path: .metrics/
