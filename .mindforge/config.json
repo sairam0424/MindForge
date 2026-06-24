@@ -5,7 +5,7 @@
     "drift_threshold": 0.75,
     "critical_drift_threshold": 0.5,
     "res_threshold": 0.8,
-    "active_did": "did:mindforge:a9c4b6ee-d674-4a4c-a055-261204b97e5f"
+    "active_did": "did:mindforge:c8b6dce3-0734-4e6f-854a-11117600aa8b"
   },
   "revops": {
     "market_registry": {
