@@ -59,7 +59,7 @@ jobs:
         # Only run when a review markdown was actually generated (keys present + engine ran).
         if: hashFiles('/tmp/mindforge-review.md') != ''
         continue-on-error: true
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');

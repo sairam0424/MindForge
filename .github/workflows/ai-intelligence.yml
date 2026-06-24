@@ -34,7 +34,7 @@ jobs:
           node bin/mindforge-cli.js cross-review --models claude,gpt4o --focus security,architecture --output markdown > /tmp/review-summary.md
 
       - name: Publish Review Comment
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');

@@ -22,7 +22,7 @@ jobs:
           fetch-depth: 0
 
       - name: Create PR if missing
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           BRANCH_NAME: ${{ github.ref_name }}
           # MindForge develops against `develop` (main is intentionally left behind), so
