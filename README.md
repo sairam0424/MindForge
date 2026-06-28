@@ -501,4 +501,3 @@ MindForge never stores credentials in files. Review:
 
 ## ⚖️ License
 MIT © 2026 MindForge Team
-eam
