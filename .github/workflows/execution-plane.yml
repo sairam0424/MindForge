@@ -24,7 +24,19 @@ jobs:
           cache: 'npm'
           
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          if [ -d "sdk" ]; then
+            cd sdk && npm install && cd ..
+          fi
+
+      - name: Build SDK
+        run: |
+          if [ -d "sdk" ] && [ -f "sdk/tsconfig.json" ]; then
+            cd sdk && npm run build && cd ..
+          else
+            echo "::notice::No SDK found - skipping build"
+          fi
 
       - name: Health Check
         run: node bin/mindforge-cli.js health --repair
