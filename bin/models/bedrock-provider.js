@@ -30,12 +30,30 @@ function resolveBedrockModelId(modelId) {
   return BEDROCK_MODEL_MAP[modelId] || modelId;
 }
 
+/**
+ * Transparently decode a credential value that may be stored as base64.
+ * If the value decodes to a printable single-line string it is returned decoded;
+ * otherwise the original value is returned unchanged.
+ * Mirrors Trelix's BedrockBackend._decode_credential() exactly.
+ */
+function decodeCredential(value) {
+  if (!value) return value;
+  try {
+    const decoded = Buffer.from(value, 'base64').toString('utf8');
+    // Accept only if printable and single-line (no newlines — real keys never have them)
+    if (decoded && /^[\x20-\x7E]+$/.test(decoded) && !decoded.includes('\n')) {
+      return decoded;
+    }
+  } catch (_) { /* not valid base64 — use original */ }
+  return value;
+}
+
 class BedrockProvider {
   constructor(opts = {}) {
-    this._region    = opts.region    || process.env.AWS_REGION    || 'us-east-1';
-    this._accessKey = opts.accessKey || process.env.AWS_ACCESS_KEY_ID;
-    this._secretKey = opts.secretKey || process.env.AWS_SECRET_ACCESS_KEY;
-    this._profile   = opts.profile   || process.env.AWS_PROFILE;
+    this._region    = decodeCredential(opts.region    || process.env.AWS_REGION    || 'us-east-1');
+    this._accessKey = decodeCredential(opts.accessKey || process.env.AWS_ACCESS_KEY_ID);
+    this._secretKey = decodeCredential(opts.secretKey || process.env.AWS_SECRET_ACCESS_KEY);
+    this._profile   = decodeCredential(opts.profile   || process.env.AWS_PROFILE);
     this._client    = null; // lazy-init on first call
   }
 
