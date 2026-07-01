@@ -75,6 +75,12 @@ function classify() {
     if (tier < 3) {
       if (diffFiles.length > 10 || diffFiles.some(f => f.endsWith('.js') || f.endsWith('.ts'))) {
         tier = 2; // Significant logic change
+        if (diffFiles.length > 10) {
+          reasons.push(`Large changeset: ${diffFiles.length} files modified`);
+        } else {
+          const jsFile = diffFiles.find(f => f.endsWith('.js') || f.endsWith('.ts'));
+          if (jsFile) reasons.push(`JavaScript/TypeScript file modified: ${jsFile}`);
+        }
       }
     }
 

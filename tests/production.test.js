@@ -9,6 +9,12 @@
 
 const fs   = require('fs');
 const assert = require('assert');
+
+if (!fs.existsSync(require('path').join(process.cwd(), 'bin/mindforge-cli.js'))) {
+  console.error('ERROR: Tests must be run from the MindForge project root: cd MindForge && npm test');
+  process.exit(1);
+}
+
 let passed = 0, failed = 0;
 
 function test(name, fn) {

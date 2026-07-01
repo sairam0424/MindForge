@@ -9,6 +9,8 @@ const configManager = require('./config-manager');
 
 const generateKeyPair = promisify(crypto.generateKeyPair);
 
+const SECURITY_TIER_3_SIMULATED = true;
+
 /**
  * Abstract Base Class for Key Providers
  */
@@ -61,6 +63,9 @@ class LocalKeyProvider extends KeyProvider {
 class SecureEnclaveProvider extends KeyProvider {
   constructor() {
     super();
+    console.warn('[ZTAI] WARNING: Tier-3 trust using simulated in-process key storage. ' +
+      'Key material resides in the Node.js heap — not hardware-isolated. ' +
+      'Do not use Tier-3 trust for production credential workflows in v1.0.');
     this.enclaveStore = new Map(); // DID -> { privateKey, metadata }
   }
 
@@ -141,11 +146,32 @@ class QuantumSafeKeyProvider extends KeyProvider {
 class ZTAIManager {
   constructor() {
     this.agentRegistry = new Map(); // DID -> { publicKey, persona, tier, providerType }
-    this.providers = {
-      local: new LocalKeyProvider(),
-      enclave: new SecureEnclaveProvider(),
-      quantum: new QuantumSafeKeyProvider()
-    };
+    this._providers = {}; // lazily populated — see _getProvider()
+  }
+
+  /**
+   * Returns the key provider for the given providerType, constructing it on
+   * first use.  This defers SecureEnclaveProvider (and its Tier-3 console
+   * warning) until a Tier-3+ agent is actually registered, and defers
+   * QuantumSafeKeyProvider (and its `require('./quantum-crypto')`) until PQC
+   * is explicitly requested — so unrelated commands stay warning-free.
+   *
+   * @param {'local'|'enclave'|'quantum'} providerType
+   * @returns {KeyProvider}
+   */
+  _getProvider(providerType) {
+    if (!this._providers[providerType]) {
+      if (providerType === 'local') {
+        this._providers[providerType] = new LocalKeyProvider();
+      } else if (providerType === 'enclave') {
+        this._providers[providerType] = new SecureEnclaveProvider();
+      } else if (providerType === 'quantum') {
+        this._providers[providerType] = new QuantumSafeKeyProvider();
+      } else {
+        throw new Error(`Unknown provider type: ${providerType}`);
+      }
+    }
+    return this._providers[providerType];
   }
 
   /**
@@ -187,7 +213,7 @@ class ZTAIManager {
     const did = `did:mindforge:${uuid}`;
 
     const providerType = this._selectProvider(tier);
-    const provider = this.providers[providerType];
+    const provider = this._getProvider(providerType);
 
     const publicKeyPEM = await provider.generate(did);
 
@@ -216,7 +242,7 @@ class ZTAIManager {
     const agent = this.agentRegistry.get(did);
     if (!agent) throw new Error(`Agent not registered: ${did}`);
     
-    const provider = this.providers[agent.providerType];
+    const provider = this._getProvider(agent.providerType);
     return await provider.sign(did, data);
   }
 
@@ -240,7 +266,7 @@ class ZTAIManager {
     const agent = this.agentRegistry.get(did);
     if (!agent) throw new Error(`Agent not found: ${did}`);
     
-    const provider = this.providers[agent.providerType];
+    const provider = this._getProvider(agent.providerType);
     agent.publicKey = await provider.rotate(did);
     agent.rotatedAt = new Date().toISOString();
     return true;
@@ -249,7 +275,7 @@ class ZTAIManager {
   revokeAgent(did) {
     const agent = this.agentRegistry.get(did);
     if (agent) {
-      this.providers[agent.providerType].delete(did);
+      this._getProvider(agent.providerType).delete(did);
       this.agentRegistry.delete(did);
     }
   }
@@ -307,3 +333,4 @@ class ZTAIManager {
 }
 
 module.exports = new ZTAIManager();
+module.exports.SECURITY_TIER_3_SIMULATED = SECURITY_TIER_3_SIMULATED;

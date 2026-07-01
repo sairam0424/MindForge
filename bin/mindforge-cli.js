@@ -147,6 +147,11 @@ if (COMMAND === 'workflow') {
   process.exit(0);
 }
 
+if (ARGS.includes('--version') || ARGS.includes('-V')) {
+  console.log(require('../package.json').version);
+  process.exit(0);
+}
+
 if (!COMMAND || ARGS.includes('--help') || ARGS.includes('-h')) {
   printUsage();
   process.exit(0);
@@ -182,7 +187,7 @@ const result = spawnSync('node', [scriptPath, ...finalArgs], {
   env: { ...process.env, MINDFORGE_CLI: 'true' }
 });
 
-process.exit(result.status || 0);
+process.exit(result.status != null ? result.status : (result.signal ? 1 : 0));
 
 /**
  * Levenshtein distance — dynamic programming edit distance between two strings.

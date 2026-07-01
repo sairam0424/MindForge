@@ -52,6 +52,18 @@ function getSkipReason(filePath) {
   return match ? match[1].trim() : null;
 }
 
+// ── Check timeout directive ───────────────────────────────────────────────────
+// A test file may override the default 60s timeout by placing the following
+// directive on its first line:
+//   // @timeout: <milliseconds>
+// e.g.  // @timeout: 90000
+
+function getTimeoutMs(filePath) {
+  const firstLine = fs.readFileSync(filePath, 'utf8').split('\n')[0];
+  const match = firstLine.match(/^\/\/\s*@timeout:\s*(\d+)/);
+  return match ? parseInt(match[1], 10) : 60000;
+}
+
 // ── Execute a single test file ───────────────────────────────────────────────
 
 function runTest(filePath) {
@@ -60,10 +72,12 @@ function runTest(filePath) {
   let stderr = '';
   let exitCode = 0;
 
+  const timeoutMs = getTimeoutMs(filePath);
+
   try {
     stdout = execFileSync('node', [filePath], {
       encoding: 'utf8',
-      timeout: 60000,
+      timeout: timeoutMs,
       cwd: path.join(__dirname, '..'),
       env: { ...process.env, NODE_ENV: 'test' },
       stdio: ['pipe', 'pipe', 'pipe'],

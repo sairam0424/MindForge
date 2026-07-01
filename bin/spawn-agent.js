@@ -25,7 +25,14 @@ const SAFE_NAME_PATTERN = /^[A-Za-z0-9-_]+$/;
 
 if (!MODE || !TARGET) {
   console.error('❌ Usage: node bin/spawn-agent.js <mode> <target> [--dry-run]');
-  console.error('   modes: identity | spawn | subagent');
+  console.error('');
+  console.error('   Modes:');
+  console.error('     identity  — resolve persona identity file [NOT IMPLEMENTED in v1.0]');
+  console.error('     spawn     — dispatch agent to Claude Code runtime [NOT IMPLEMENTED in v1.0]');
+  console.error('     subagent  — launch a fresh-context subagent (dry-run only)');
+  console.error('');
+  console.error('   Note: spawn and identity require Claude Code slash commands in v1.0.');
+  console.error('   Use /mindforge:auto or /mindforge:next to dispatch agents.');
   process.exit(1);
 }
 
@@ -99,6 +106,7 @@ async function run() {
     }
     console.log(`📡 Loading specialized identity: ${TARGET}`);
   } else if (MODE === 'spawn') {
+    assertSafeName(TARGET); // path-containment guard — mirrors subagent branch
     personaPath = path.join(ROOT, '.mindforge', 'personas', `${TARGET}.md`);
     if (!fs.existsSync(personaPath)) {
       console.error(`❌ Persona not found: ${personaPath}`);
@@ -125,13 +133,16 @@ async function run() {
     process.exit(0);
   }
 
-  // Future: Integration with Antigravity / Claude Code runtime
-  console.log('🛠️ Dispatching to agent runtime...');
-  // For now, we simulate the environment preparation
-  setTimeout(() => {
-    console.log('✅ Agent environment active.');
-    process.exit(0);
-  }, 500);
+  // Agent dispatch to Claude Code runtime is not yet implemented.
+  // Use Claude Code slash commands to dispatch agents instead.
+  console.error(
+    'Agent spawn dispatch not implemented in v1.0.\n' +
+    '  Use Claude Code slash commands instead:\n' +
+    '  /mindforge:auto  — reactive engine start\n' +
+    '  /mindforge:next  — primary auto-discovery\n' +
+    '  See docs/troubleshooting.md for details.'
+  );
+  process.exit(1);
 }
 
 run().catch(err => {

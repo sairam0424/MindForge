@@ -108,10 +108,13 @@ function decideRollback(config, hasCommitTracking = false) {
 
 class AutoRunner {
   constructor(options = {}) {
-    if (options.phase != null && !/^[a-zA-Z0-9_-]+$/.test(String(options.phase))) {
+    if (options.phase === null || options.phase === undefined) {
+      throw new TypeError('AutoRunner: phase must be a non-null string or number');
+    }
+    if (!/^[a-zA-Z0-9_-]+$/.test(String(options.phase))) {
       throw new Error('Invalid phase identifier — must be alphanumeric, hyphens, or underscores');
     }
-    this.phase = String(options.phase ?? 0);
+    this.phase = String(options.phase);
     this.isHeadless = options.headless || false;
     this.isPaused = false;
 
@@ -776,8 +779,14 @@ class AutoRunner {
       const mirrorPath = await this.mirror.replicate(incident);
       const decision = await this.adversary.runDebate(incident, mirrorPath);
       if (decision.verdict === 'APPROVED' || decision.verdict === 'AMENDED') {
-        const baseline = this.verifier.simulateShadowWave(false);
-        const postFix = this.verifier.simulateShadowWave(true);
+        let baseline, postFix;
+        try {
+          baseline = this.verifier.simulateShadowWave(false);
+          postFix  = this.verifier.simulateShadowWave(true);
+        } catch (e) {
+          this.writeAudit({ event: 'sre_sli_unavailable', rid: incident.remediation_id, reason: e.message });
+          return;
+        }
         const verification = await this.verifier.verify(baseline, postFix);
         if (verification.isHealthy) {
           this.writeAudit({ event: 'sre_remediation_applied', rid: incident.remediation_id, verdict: decision.verdict });

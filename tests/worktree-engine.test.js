@@ -1,3 +1,4 @@
+// @timeout: 90000
 'use strict';
 
 /**

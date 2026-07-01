@@ -94,4 +94,6 @@ function importFromBrowser(source) {
   );
 }
 
-module.exports = { saveSession, loadSession, importFromBrowser };
+const capabilities = { importFromBrowser: false };
+
+module.exports = { saveSession, loadSession, importFromBrowser, capabilities };
