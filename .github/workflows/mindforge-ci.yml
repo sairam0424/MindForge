@@ -115,6 +115,14 @@ jobs:
             cd sdk && npm install && cd ..
           fi
 
+      - name: Build SDK
+        run: |
+          if [ -d "sdk" ] && [ -f "sdk/tsconfig.json" ]; then
+            cd sdk && npm run build && cd ..
+          else
+            echo "::notice::No SDK found - skipping build"
+          fi
+
       - name: Type check
         run: |
           if [ -f "sdk/tsconfig.json" ]; then
