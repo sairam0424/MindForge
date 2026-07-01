@@ -1,11 +1,11 @@
 {
-  "version": "11.8.0",
+  "version": "11.8.3",
   "environment": "development",
   "governance": {
     "drift_threshold": 0.75,
     "critical_drift_threshold": 0.5,
     "res_threshold": 0.8,
-    "active_did": "did:mindforge:a9c4b6ee-d674-4a4c-a055-261204b97e5f"
+    "active_did": "did:mindforge:d8df13ed-4974-4a17-928e-d012f48ef2c9"
   },
   "revops": {
     "market_registry": {
@@ -70,6 +70,7 @@
     "pqc_demo": false
   },
   "mesh": {
+    "_node_id_note": "Set node_id to a unique value per node in multi-node deployments. auto = hostname-derived.",
     "node_id": "beta-node",
     "peers": []
   },

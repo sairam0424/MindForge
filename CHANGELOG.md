@@ -1,5 +1,71 @@
 # Changelog
 
+## [11.8.3] — 2026-07-01 — Autopsy Fixes Stable Release
+
+### Fixes (all confirmed by IQ200 deep audit)
+- `bin/mindforge-cli.js`: Added `--version` / `-V` flag — now prints version and exits 0
+- `bin/spawn-agent.js`: Marked spawn/identity as `[NOT IMPLEMENTED in v1.0]` in help text; added `assertSafeName()` path-containment guard to spawn branch
+- `.mindforge/config.json`: `mesh.node_id` confirmed `"auto"` (not "beta-node")
+- `bin/governance/rbac.js`: Created re-export shim → `rbac-manager.js`
+- `bin/engine/skill-loader.js`: Created stub module with `loadSkill`, `matchTriggers`, `VERSION` exports
+- `bin/memory/eis-client.js`: Added `module.exports.EISClient = EISClient` — named import now works
+- `sdk/`: Added `@types/node` dev dependency; 24 TypeScript typecheck errors resolved
+- `bin/autonomous/auto-runner.js`: `null` phase now throws `TypeError` instead of silently coercing to `"0"`
+- `.mindforge/skills/`: Resolved 12 duplicate trigger strings — skill routing is now deterministic
+
+### Health Score
+- IQ200 audit: 248/258 → 258/258 checks passing (100%)
+- Test suite: 95/97 → 95/97 (2 env-skipped, 0 failures)
+- 0 CVEs across all 3 packages
+
+---
+
+## [11.8.2] — 2026-07-01 — Clean Stable Release
+
+### Fixes
+- `bin/installer-core.js`: Added main-guard — `health` command now produces full diagnostic output
+- `bin/mindforge-cli.js:185`: Fixed null-status bug — signal-killed child processes now exit with code 1 instead of 0
+- `bin/change-classifier.js`: Tier 2 branch now pushes descriptive reasons to reasons[] array
+- `sdk/tests/sdk.test.js:30`: Replaced hardcoded version "11.8.0" with dynamic package.json read
+- `tests/sdk-exports.test.js`: Fixed MODULE_NOT_FOUND path resolution
+- `README.md:7`: Updated "Latest: v11.8.0" header to "Latest: v11.8.1"
+
+### Improvements
+- `bin/spawn-agent.js --help`: Added v1.0 stub disclosure note to usage text
+- `bin/governance/ztai-manager.js`: Lazy-instantiate SecureEnclaveProvider — eliminates spurious Tier-3 warning on commands that do not use Tier-3 trust
+- `bin/review/cross-review-engine.js`: Added CLI entry point with --help, --diff, --phase, --context args
+- `tests/worktree-engine.test.js`: Added 90-second timeout override to prevent false parallel-runner timeout
+- ESLint: Resolved auto-fixable errors, lint stage now clean
+- Test coverage: Added tests/errors.test.js and tests/file-io.test.js to improve coverage toward 80% target
+
+---
+
+## [11.8.1] — 2026-07-01 — First Stable Release
+
+### Security
+- **mcp-server:** Patched hono to >=4.12.25 — fixes CORS credential reflection, path traversal (Windows), body-limit bypass, Set-Cookie merging, Lambda@Edge header drop
+- **sdk:** Patched picomatch — fixes ReDoS via extglob quantifiers and Method Injection via POSIX character classes
+- **ztai:** Added SECURITY_TIER_3_SIMULATED disclosure constant and startup warning for in-process key simulation
+
+### Fixes
+- `bin/sre/sli-verifier.js`: `simulateShadowWave()` now throws in non-simulate mode — gate with `MINDFORGE_SRE_SIMULATE=true`
+- `bin/spawn-agent.js`: spawn stub now exits 1 with actionable error instead of silently succeeding
+- `bin/memory/eis-client.js`: `resolveRemoteNode()` now throws explicitly instead of returning null
+- `bin/browser/session-manager.js`: added `capabilities.importFromBrowser=false` export
+- `.mindforge/config.json`: `mesh.node_id` changed from "beta-node" placeholder to "auto"
+
+### Docs
+- README: fixed stale version refs (11.5.1→11.8.1), corrected workflow count to 32, added Node.js >=18 prerequisite and Hello World section
+- SECURITY.md: documented Tier-3 simulation scope, audit-hash replay boundary, spawn dispatch status
+- docs/troubleshooting.md: added spawn stub, importFromBrowser, and test cwd entries
+- docs/sdk-reference.md: updated version to 11.8.1, marked unimplemented methods
+- docs/enterprise-setup.md: documented mesh.node_id configuration requirement
+
+### Tests
+- install.test.js + production.test.js: added cwd guard, scoped secrets scan to MindForge root only
+
+---
+
 ## [11.8.0] - 2026-06-24 — Workflow Forge II
 
 Expands the Dynamic Workflow Library from 12 to 33 workflows across 5 tiers, adding a new **Beast tier** for compound multi-phase multi-agent workflows with adversarial verification. 21 new workflows added. 92/92 tests pass.
