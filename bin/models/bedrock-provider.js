@@ -75,13 +75,16 @@ class BedrockProvider {
     const clientConfig = { region: this._region };
 
     if (this._accessKey && this._secretKey) {
+      // Pass decoded credentials explicitly — mirrors Trelix BedrockBackend pattern.
+      // This prevents the SDK from falling through to its env-var credential chain,
+      // which would read the raw (still-base64) env vars and produce signature errors.
       clientConfig.credentials = {
         accessKeyId:     this._accessKey,
         secretAccessKey: this._secretKey,
       };
     }
-    // If neither key nor profile is set, the SDK uses the default credential
-    // chain (instance role, ~/.aws/credentials default profile, etc.)
+    // No explicit creds: SDK falls back to instance role / ~/.aws/credentials / env chain.
+    // In that case the env vars must already be plain-text (not base64).
 
     this._client = new AWS.BedrockRuntimeClient(clientConfig);
     this._AWS    = AWS;
