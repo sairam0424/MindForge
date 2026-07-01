@@ -71,10 +71,23 @@ jobs:
           # The SDK reads AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY directly from
           # the environment, bypassing our Node-level decodeCredential() function.
           # We decode here so both the SDK credential chain and our provider see plain values.
-          export AWS_ACCESS_KEY_ID=$(echo "$AWS_ACCESS_KEY_ID_B64" | tr -d '[:space:]' | base64 -d 2>/dev/null || echo "$AWS_ACCESS_KEY_ID_B64" | tr -d '[:space:]')
-          export AWS_SECRET_ACCESS_KEY=$(echo "$AWS_SECRET_ACCESS_KEY_B64" | tr -d '[:space:]' | base64 -d 2>/dev/null || echo "$AWS_SECRET_ACCESS_KEY_B64" | tr -d '[:space:]')
-          export AWS_REGION=$(echo "$AWS_REGION_B64" | tr -d '[:space:]' | base64 -d 2>/dev/null || echo "${AWS_REGION_B64:-us-east-1}" | tr -d '[:space:]')
-          echo "::notice::AWS_REGION resolved to: $AWS_REGION"
+          # Smart decode: attempt base64 -d, but VALIDATE the result looks like a real value.
+          # base64 -d exits 0 even on garbage — so we check the output, not the exit code.
+          _decode_if_b64() {
+            local raw="$(echo "$1" | tr -d '[:space:]')"
+            local decoded="$(echo "$raw" | base64 -d 2>/dev/null | tr -d '[:space:]')"
+            # Accept decoded only if it's pure printable ASCII (no control chars / replacement chars)
+            if echo "$decoded" | grep -qP '^[\x20-\x7E]+$' 2>/dev/null; then
+              echo "$decoded"
+            else
+              echo "$raw"
+            fi
+          }
+          export AWS_ACCESS_KEY_ID="$(_decode_if_b64 "$AWS_ACCESS_KEY_ID_B64")"
+          export AWS_SECRET_ACCESS_KEY="$(_decode_if_b64 "$AWS_SECRET_ACCESS_KEY_B64")"
+          # Region: never base64 — always plain text like "us-east-1"
+          export AWS_REGION="$(echo "${AWS_REGION_B64:-us-east-1}" | tr -d '[:space:]')"
+          echo "::notice::AWS_REGION: $AWS_REGION"
           echo "::notice::AWS_ACCESS_KEY_ID length: ${#AWS_ACCESS_KEY_ID}"
           node bin/mindforge-cli.js cross-review \
             --models claude,gpt4o \
