@@ -3,7 +3,7 @@ name: incident-response
 version: 1.0.0
 min_mindforge_version: 0.3.0
 status: stable
-triggers: incident, outage, downtime, alert, pagerduty, oncall, on-call, postmortem, post-mortem, runbook, degraded, unavailable, error rate, p0, P0, p1, P1, rollback, hotfix, revert, emergency, spike, anomaly, SLA, SLO, SLI
+triggers: incident, outage, downtime, alert, pagerduty, oncall, on-call, postmortem, post-mortem, runbook, degraded, unavailable, error rate, p0, p1, rollback, hotfix, revert, emergency, spike, anomaly, SLA, SLO, SLI
 ---
 
 # Skill — Incident Response Engineering

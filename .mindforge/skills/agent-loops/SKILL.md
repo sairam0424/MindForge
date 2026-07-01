@@ -3,7 +3,7 @@ name: agent-loops
 version: 1.0.0
 min_mindforge_version: 10.0.3
 status: stable
-triggers: loop, circuit breaker, retry, fallback, agent loop, orchestration, self-repair, recovery, sequential execution, iteration, backoff, provider fallback
+triggers: loop, circuit breaker, retry, fallback, agent loop, agent loop orchestration, self-repair, recovery, sequential execution, iteration, backoff, provider fallback
 ---
 
 # Skill — Agent Loops

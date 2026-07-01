@@ -1,9 +1,9 @@
 ---
-description: "Browse the MindForge dynamic workflow library — 33 pre-built multi-agent workflows across 5 tiers"
+description: "Browse the MindForge dynamic workflow library — 32 pre-built multi-agent workflows across 5 tiers"
 ---
 # /mindforge:wf-catalog
 
-Browse and discover the MindForge **Dynamic Workflow Library** — 33 pre-built multi-agent workflows that run via Claude Code's Workflow tool.
+Browse and discover the MindForge **Dynamic Workflow Library** — 32 pre-built multi-agent workflows that run via Claude Code's Workflow tool.
 
 ## Usage
 `/mindforge:wf-catalog` — show all workflows grouped by tier
@@ -11,7 +11,6 @@ Browse and discover the MindForge **Dynamic Workflow Library** — 33 pre-built 
 ## Tiers
 
 **Research** — Fan-out search, adversarial verification, cited synthesis
-- `/mindforge:wf-deep-research` — Multi-source fact-checked research report
 - `/mindforge:wf-competitive-analysis` — SWOT and positioning summary
 - `/mindforge:wf-tech-evaluation` — Scored technology comparison matrix
 - `/mindforge:wf-ai-model-eval` — Benchmark AI models → scoring matrix → recommendation
