@@ -38,6 +38,11 @@ jobs:
             echo "::notice::No SDK found - skipping build"
           fi
 
+      - name: Verification
+        run: |
+          npm test
+          npm run lint
+
       - name: Health Check
         run: node bin/mindforge-cli.js health --repair
 
@@ -46,11 +51,6 @@ jobs:
           DRY_FLAG=""
           if [ "${{ inputs.dry_run }}" == "true" ]; then DRY_FLAG="--dry-run"; fi
           node bin/mindforge-cli.js headless --phase ${{ inputs.phase }} $DRY_FLAG --output json > /tmp/headless-results.json
-
-      - name: Verification
-        run: |
-          npm test
-          npm run lint
 
       - name: Upload Artifacts
         if: always()
