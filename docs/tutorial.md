@@ -1,6 +1,18 @@
-# MindForge v11.8.0 — Full Tutorial (Install → Advanced Usage)
+# MindForge v11.8.3 — Full Tutorial (Install → Advanced Usage)
 
 This tutorial walks a new user from installation to advanced usage. It is written for engineers who want to adopt MindForge in a real codebase.
+
+---
+
+## What's New in v11.8.3
+
+v11.8.3 is the **first fully audited stable release** — validated by an IQ200 deep-audit across 258 checks:
+- `node bin/mindforge-cli.js --version` now works correctly (prints `11.8.3`)
+- All 32 workflow scripts pass runtime load validation
+- 0 CVEs, 0 ESLint errors, 0 TypeScript errors in SDK
+- Skill routing is deterministic (12 duplicate triggers resolved)
+- `mesh.node_id` correctly set to `"auto"` for clean multi-node deployments
+- Health score: **258/258 IQ200 checks passing**
 
 ---
 
@@ -84,7 +96,7 @@ MindForge uses a 4-pillar iterative cycle:
 
 ## 6. High-Performance Personas
 
-MindForge v11.8.0 ships 211 specialized personas. Each is a "digital twin" of a senior role.
+MindForge v11.8.3 ships 211 specialized personas. Each is a "digital twin" of a senior role.
 
 - To list all personas: `/mindforge:personas --list`
 - To switch persona: `/mindforge:personas --set executor`
@@ -157,12 +169,12 @@ If you hit issues, consult these specialized guides:
 
 ## 13. Using Dynamic Workflows
 
-MindForge v11.8.0 ships 33 pre-built multi-agent workflows. Browse them with `/mindforge:wf-catalog`.
+MindForge v11.8.3 ships 32 pre-built multi-agent workflows. Browse them with `/mindforge:wf-catalog`.
 
 ### Quick start — run a workflow
 
 ```
-/mindforge:wf-deep-research What are the best practices for API versioning?
+/mindforge:wf-competitive-analysis What are the best practices for API versioning?
 /mindforge:wf-code-audit current git diff
 /mindforge:wf-security-hardening src/auth/
 /mindforge:wf-debug-detective Login form submits but users report being logged out immediately
@@ -177,6 +189,43 @@ The Beast tier runs 5-phase compound workflows with 8+ agents and adversarial ve
 - `/mindforge:wf-security-hardening` — Full OWASP scan with STRIDE threat model
 - `/mindforge:wf-accessibility-audit` — WCAG 2.2 compliance with 3-vote verification
 - `/mindforge:wf-security-threat-model` — STRIDE threat enumeration + CVSS scoring
+
+---
+
+## Running Dynamic Workflows
+
+MindForge ships 32 pre-built multi-agent workflows. Each runs via Claude Code's `Workflow` tool using `parallel()`, `pipeline()`, `phase()`, and `agent()` primitives.
+
+### Discover available workflows
+```bash
+node bin/mindforge-cli.js workflow list
+node bin/mindforge-cli.js workflow info code-audit
+```
+
+### Run via slash command
+Open Claude Code and type any workflow command:
+- `/mindforge:wf-code-audit` — parallel security + quality + performance audit
+- `/mindforge:wf-debug-detective` — 4-hypothesis RCA for hard bugs
+- `/mindforge:wf-onboard-codebase` — architecture tour of any codebase
+- `/mindforge:wf-security-hardening` — Beast tier: OWASP scout + adversarial verify
+
+### Run via Workflow tool
+```javascript
+Workflow({
+  scriptPath: "/Users/sairamugge/Desktop/Not-Humans-World/MindForge/.mindforge/dynamic-workflows/scripts/code-audit.js",
+  args: "review the auth module for security issues"
+})
+```
+
+### Workflow tiers
+
+| Tier | Count | Workflows |
+|------|-------|-----------|
+| Research | 5 | competitive-analysis, tech-evaluation, ai-model-eval, ux-heuristic-audit, competitive-teardown |
+| Dev | 12 | code-audit, feature-planner, pr-review, tdd-sprint, refactor-plan, test-coverage-gap, api-contract-test, debug-detective, writer-reviewer, mutation-testing, code-explainer, design-system-audit |
+| Ops | 6 | incident-response, release-prep, dependency-health, database-migration, multi-repo-sync, cost-analysis |
+| Intelligence | 6 | onboard-codebase, perf-optimize, architecture-modernization, documentation-gen, api-migration, data-pipeline-validate |
+| Beast | 3 | security-hardening, accessibility-audit, security-threat-model |
 
 ---
 

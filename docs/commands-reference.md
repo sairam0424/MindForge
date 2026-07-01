@@ -142,7 +142,7 @@ High-fidelity behaviors ported from the Superpowers library and hardened for pro
 
 ---
 
-## 11. Council, Verification & Intelligence (v10.0.3)
+## 11. Council, Verification & Intelligence (v11.8.3)
 
 New commands introduced in the "Council Awakens" release for multi-voice decision-making, verification rigor, and self-evolving agent behavior.
 
@@ -183,8 +183,8 @@ mindforge <command> [options]
 | `remember` | Manage the long-term memory (knowledge graph) |
 | `learn-skill` | Ingest source and generate a validated SKILL.md |
 | `marketplace` | Search and install community skills |
-| `spawn` | Spawn a persona essence (e.g., mf-planner) |
-| `identity` | Invoke a specialized identity from /agents/ |
+| `spawn` | Spawn a persona essence (e.g., mf-planner) [v1.0: stub — dispatch not yet implemented] |
+| `identity` | Invoke a specialized identity from /agents/ [v1.0: stub — dispatch not yet implemented] |
 | `temporal` | Manage time-travel debugging and state history |
 | `hindsight` | Inject a fix into a past point and regenerate state |
 | `harvest` | Proactively harvest semantic intent from the intelligence mesh |
@@ -202,13 +202,12 @@ mindforge <command> [options]
 
 ## 🚀 Dynamic Workflow Library
 
-Pre-built multi-agent workflow scripts triggered via `/mindforge:wf-*` commands. Each runs via Claude Code's `Workflow` tool with true parallel agent execution. 33 pre-built multi-agent workflows across 5 tiers.
+Pre-built multi-agent workflow scripts triggered via `/mindforge:wf-*` commands. Each runs via Claude Code's `Workflow` tool with true parallel agent execution. **32 pre-built multi-agent workflows** across 5 tiers.
 
 | Command | Tier | Description |
 | :--- | :--- | :--- |
-| `/mindforge:wf-catalog` | — | Browse all 33 workflows grouped by tier |
+| `/mindforge:wf-catalog` | — | Browse all 32 workflows grouped by tier |
 | **Research tier** | | |
-| `/mindforge:wf-deep-research` | research | Fan-out web research with adversarial claim verification and cited synthesis |
 | `/mindforge:wf-competitive-analysis` | research | Multi-angle competitive research producing a SWOT and positioning summary |
 | `/mindforge:wf-tech-evaluation` | research | Scored technology evaluation across DX, performance, security, ecosystem, and community |
 | `/mindforge:wf-ai-model-eval` | research | 4-parallel model benchmark agents → scoring matrix → cost/performance recommendation |
@@ -246,3 +245,66 @@ Pre-built multi-agent workflow scripts triggered via `/mindforge:wf-*` commands.
 | `/mindforge:wf-accessibility-audit` | beast | WCAG 2.2 parallel per-criterion audit → 3-vote adversarial verify failures → remediation spec |
 | `/mindforge:wf-security-threat-model` | beast | Asset inventory → STRIDE threat enumeration → parallel mitigations → CVSS-style score matrix |
 
+---
+
+## Dynamic Workflow Library (32 workflows)
+
+All workflow commands follow the pattern `/mindforge:wf-<name>`.
+
+Invoke via CLI:
+```bash
+node bin/mindforge-cli.js workflow list              # browse all 32
+node bin/mindforge-cli.js workflow info <name>       # phases + description
+```
+
+### Research Tier (5 workflows)
+| Command | Description |
+|---------|-------------|
+| `/mindforge:wf-competitive-analysis` | SWOT and positioning from 5 parallel research angles |
+| `/mindforge:wf-tech-evaluation` | Scored technology evaluation across 5 dimensions |
+| `/mindforge:wf-ai-model-eval` | Benchmark AI models → scoring matrix → recommendation |
+| `/mindforge:wf-ux-heuristic-audit` | 10 Nielsen heuristics parallel audit → fix brief |
+| `/mindforge:wf-competitive-teardown` | 5 competitor angles → positioning report |
+
+### Dev Tier (12 workflows)
+| Command | Description |
+|---------|-------------|
+| `/mindforge:wf-code-audit` | Parallel security + quality + performance audit |
+| `/mindforge:wf-feature-planner` | Brief → PRD → architecture → user stories |
+| `/mindforge:wf-pr-review` | 4-dimensional parallel PR review → verdict |
+| `/mindforge:wf-tdd-sprint` | Strict Red-Green-Refactor TDD loop |
+| `/mindforge:wf-refactor-plan` | Technical debt scan → risk-sorted refactor plan |
+| `/mindforge:wf-test-coverage-gap` | Per-module coverage analysis → test-writing plan |
+| `/mindforge:wf-api-contract-test` | Spec vs impl Writer/Reviewer → violation report |
+| `/mindforge:wf-debug-detective` | 4-hypothesis parallel investigation → scientific RCA |
+| `/mindforge:wf-writer-reviewer` | Implement → fresh context review → verdict |
+| `/mindforge:wf-mutation-testing` | Mutant generator → parallel kill-test → score |
+| `/mindforge:wf-code-explainer` | Structure → domain → architecture → narrative tour |
+| `/mindforge:wf-design-system-audit` | 5-dimension parallel audit → consistency score |
+
+### Ops Tier (6 workflows)
+| Command | Description |
+|---------|-------------|
+| `/mindforge:wf-incident-response` | Parallel investigation → RCA → postmortem |
+| `/mindforge:wf-release-prep` | Tests → changelog → version bump → PR |
+| `/mindforge:wf-dependency-health` | CVE + license + staleness audit → risk matrix |
+| `/mindforge:wf-database-migration` | Schema diff → risk → scripts → runbook |
+| `/mindforge:wf-multi-repo-sync` | Per-repo audit → divergence map → sync plan |
+| `/mindforge:wf-cost-analysis` | Infra/API/query/bundle cost agents → ROI plan |
+
+### Intelligence Tier (6 workflows)
+| Command | Description |
+|---------|-------------|
+| `/mindforge:wf-onboard-codebase` | Map → domain → architecture → guided tour |
+| `/mindforge:wf-perf-optimize` | Profile → bottleneck hunt → prioritized fix plan |
+| `/mindforge:wf-architecture-modernization` | Legacy map → 3 designs → migration roadmap |
+| `/mindforge:wf-documentation-gen` | Parallel doc gen → normalize → publish-ready |
+| `/mindforge:wf-api-migration` | Breaking change detection → guide → compat matrix |
+| `/mindforge:wf-data-pipeline-validate` | Stage-by-stage validation → quality gates |
+
+### Beast Tier (3 workflows — 5 phases, 8+ agents, adversarial 3-vote verification)
+| Command | Description |
+|---------|-------------|
+| `/mindforge:wf-security-hardening` | 5-angle OWASP scout → 3-vote verify → STRIDE → roadmap |
+| `/mindforge:wf-accessibility-audit` | WCAG 2.2 per-criterion → 3-vote verify → remediation spec |
+| `/mindforge:wf-security-threat-model` | Asset inventory → STRIDE x6 → mitigations → CVSS matrix |

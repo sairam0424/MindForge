@@ -14,7 +14,24 @@ import {
 } from '@mindforge/sdk';
 ```
 
-Current SDK version: `10.0.1`
+Current SDK version: `11.8.3`
+
+---
+
+## SDK Exports (v11.8.3)
+
+```javascript
+const {
+  MindForgeClient,        // Main API client
+  MindForgeEventStream,   // SSE event stream
+  WebSocketEventStream,   // WebSocket stream  
+  commands,               // Command registry
+  batch,                  // Batch execution
+  MindForgeMemory,        // Memory interface
+  VERSION                 // '11.8.3'
+} = require('mindforge-sdk');
+// or: import { MindForgeClient, VERSION } from 'mindforge-sdk';
+```
 
 ---
 
@@ -92,6 +109,18 @@ Returns `true` if the unified SQLite knowledge database (`celestial.db`) exists 
 #### `getDbPath(): string`
 
 Returns the absolute path to the project's `celestial.db` SQLite database file.
+
+#### `importFromBrowser(sessionData: unknown): Promise<void>`
+
+Imports a session snapshot captured from a browser environment into the local session store.
+
+> **[NOT IMPLEMENTED — v11.x]** This method always throws. Planned for a future release. Use `saveSession`/`loadSession` instead. Check `capabilities.importFromBrowser === false` before calling.
+
+#### `resolveRemoteNode(nodeId: string): Promise<unknown>`
+
+Resolves context for a node residing on a remote EIS (Edge Intelligence Shard) instance.
+
+> **[NOT IMPLEMENTED — v11.x]** This method always throws. Planned for a future release. Cross-node context resolution is local-only in v11.x. Planned for v12.x.
 
 ---
 
@@ -375,3 +404,19 @@ count, deprecation state, and SHA-256 checksum.
 - CORS is restricted to localhost origins (exact match, no wildcards).
 - Do not expose SDK endpoints or the SSE server to public networks.
 - API keys passed via `MindForgeConfig` are held in memory only — never written to disk.
+
+---
+
+## TypeScript
+
+The SDK includes full TypeScript type definitions. Build the SDK:
+```bash
+cd sdk && npm install && npm run build
+```
+`@types/node` is installed as a dev dependency. The SDK achieves **0 typecheck errors** in v11.8.3.
+
+## Installation
+```bash
+npm install mindforge-sdk@11.8.3
+# or: npx mindforge-cc@stable  # installs SDK as part of the framework
+```

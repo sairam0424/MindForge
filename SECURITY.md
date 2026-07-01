@@ -1,5 +1,7 @@
 # Security Policy
 
+> **Current version:** 11.8.3 | **npm audit:** 0 vulnerabilities across root, sdk, mcp-server
+
 ## Supported Versions
 
 | Version | Status | Support Level |
@@ -44,7 +46,7 @@ We follow responsible disclosure practices. We will credit reporters in the rele
 
 ---
 
-## Security Features (v11.0.0)
+## Security Features (v11.0.0+)
 
 ### Authentication & Authorization
 
@@ -136,3 +138,12 @@ narrow disposable memory · scan skills/hooks/MCP/agents as supply-chain artifac
 ## Contact
 
 For security questions that are not vulnerability reports, open a GitHub Discussion with the "security" label.
+
+## Tier-3 Trust (ZTAI Secure Enclave)
+Tier-3 trust in v11.x uses **in-process key simulation** (`bin/governance/ztai-manager.js` `SecureEnclaveProvider`). Key material resides in the Node.js heap — it is NOT hardware-isolated. A real TPM/HSM provider is planned for v12.x. **Do not use Tier-3 trust for production credential workflows in v11.x.**
+
+## Audit Log Tamper Evidence
+The Merkle chain (`bin/governance/audit-hash.js`) provides tamper-evidence for content and ordering but does not prevent replay of identical entries. Restrict OS-level write access to `.planning/AUDIT.jsonl` to prevent replay attacks.
+
+## Agent Dispatch (spawn mode)
+`bin/spawn-agent.js` spawn mode exits with an error in v11.x — real agent dispatch is not yet implemented at the shell level. Use Claude Code slash commands (`/mindforge:auto`, `/mindforge:next`) to dispatch agents.

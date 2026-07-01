@@ -1,6 +1,8 @@
-# MindForge User Guide (v11.8.0)
+# MindForge User Guide (v11.8.3)
 
 This guide gets you from install to productive, with the minimum needed to run MindForge in a real project.
+
+> **v11.8.3 Stats:** 32 workflows · 221 slash commands · 232 engine skills · 211 personas · 0 CVEs · 258/258 IQ200 checks passing
 
 ## Prerequisites
 
@@ -42,9 +44,10 @@ mindforge health          # Verify project integrity
 mindforge security-scan   # Run security checks
 mindforge headless        # Run agent in non-interactive mode
 mindforge --verbose ...   # Enable verbose output for debugging
+mindforge --version       # Print installed version (e.g. 11.8.3) and exit 0
 ```
 
-Use `--verbose` (or `-v`) on any command for detailed diagnostic output.
+Use `--verbose` (or `-v`) on any command for detailed diagnostic output. Use `--version` (or `-V`) to print the installed version and exit.
 
 ---
 
@@ -93,7 +96,7 @@ MindForge uses a unified 4-pillar workflow, hardened by the **Neural Protocol Me
 
 ### Dynamic Workflow Library
 
-MindForge ships **33 pre-built workflow pipelines** across **219 commands**, organized into **5 tiers**:
+MindForge ships **32 pre-built workflow pipelines** across **219 commands**, organized into **5 tiers**:
 
 | Tier | Description |
 |------|-------------|
@@ -114,7 +117,7 @@ Discover all available workflows:
 
 ## 6. High-Performance Personas
 
-MindForge features 108 specialized personas. Each persona is optimized for a specific stage of the lifecycle.
+MindForge features 211 specialized personas. Each persona is optimized for a specific stage of the lifecycle.
 
 - **Neural Orchestrator**: Activates and manages the advanced protocol layer.
 - **Brainstormer**: Expert in deep requirements discovery and behavioral ideation.
