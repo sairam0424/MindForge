@@ -38,14 +38,16 @@ function resolveBedrockModelId(modelId) {
  */
 function decodeCredential(value) {
   if (!value) return value;
+  // Trim surrounding whitespace first — GitHub Secrets copy-paste often adds trailing newlines
+  const trimmed = value.trim();
   try {
-    const decoded = Buffer.from(value, 'base64').toString('utf8');
-    // Accept only if printable and single-line (no newlines — real keys never have them)
+    const decoded = Buffer.from(trimmed, 'base64').toString('utf8').trim();
+    // Accept only if printable ASCII and single-line (real AWS keys are always [A-Za-z0-9/+=])
     if (decoded && /^[\x20-\x7E]+$/.test(decoded) && !decoded.includes('\n')) {
       return decoded;
     }
-  } catch (_) { /* not valid base64 — use original */ }
-  return value;
+  } catch (_) { /* not valid base64 — fall through */ }
+  return trimmed;
 }
 
 class BedrockProvider {
