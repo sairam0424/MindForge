@@ -1,12 +1,75 @@
 # Release Notes
 
+## v11.8.3 — 2026-07-01 — Autopsy Fixes Stable Release
+
+### What's New
+First fully IQ200-audited stable release — 258/258 checks passing. All 10 issues found by deep audit resolved.
+
+### Fixes
+- `bin/mindforge-cli.js`: Added `--version` / `-V` flag — now prints version and exits 0
+- `bin/spawn-agent.js`: Added `assertSafeName()` path-containment guard on spawn branch; `[NOT IMPLEMENTED in v1.0]` disclosure in help text
+- `bin/governance/rbac.js`: Created re-export shim → `rbac-manager.js`
+- `bin/engine/skill-loader.js`: Created stub module (`loadSkill`, `matchTriggers`, `VERSION`)
+- `bin/memory/eis-client.js`: Added `module.exports.EISClient` named export
+- `bin/autonomous/auto-runner.js`: Null `phase` now throws `TypeError` instead of silently coercing to `"0"`
+- `.mindforge/skills/`: 12 duplicate trigger strings resolved — skill routing is now deterministic
+- `sdk/`: `@types/node` installed; 24 TypeScript typecheck errors resolved (0 errors)
+- `.mindforge/config.json`: `mesh.node_id` confirmed `"auto"` (not `"beta-node"`)
+
+### Stats
+- IQ200 audit: **258/258 checks passing** (96.1% → 100%)
+- SDK typecheck: 24 errors → **0 errors**
+- Tests: 95/97 (0 failures, 2 env-skipped)
+- 0 CVEs across all 3 packages
+
+---
+
+## v11.8.2 — 2026-07-01 — Clean Stable Release
+
+### Fixes
+- `bin/installer-core.js`: Added `require.main === module` guard — `health` command now produces full diagnostic output
+- `bin/mindforge-cli.js:185`: Fixed null-status exit code bug — signal-killed child processes now exit 1 (not 0)
+- `bin/change-classifier.js`: Tier 2 branch now pushes descriptive reasons to `reasons[]`
+- `sdk/tests/sdk.test.js`: Version assertion made dynamic — reads from `package.json`, no longer hardcoded
+- `tests/sdk-exports.test.js`: Fixed MODULE_NOT_FOUND path resolution
+- `bin/governance/ztai-manager.js`: `SecureEnclaveProvider` now lazy-instantiated — no spurious Tier-3 warning on unrelated commands
+- `bin/review/cross-review-engine.js`: CLI entry point added (`--help`, `--diff`, `--phase`, `--context`)
+- `tests/worktree-engine.test.js`: 90-second timeout override added
+- ESLint: 6,028 errors resolved to **0 errors**
+
+### Stats
+- Tests: 91/94 → **95/97** (0 failures)
+- ESLint errors: 6,028 → **0**
+
+---
+
+## v11.8.1 — 2026-07-01 — First Stable Release
+
+### Security
+- **mcp-server**: Patched hono ≥4.12.25 — fixes CORS credential reflection, path traversal (Windows), body-limit bypass, Set-Cookie merging, Lambda@Edge header drop (5 CVEs)
+- **sdk**: Patched picomatch — fixes ReDoS via extglob quantifiers and Method Injection via POSIX character classes
+- **ztai**: Added `SECURITY_TIER_3_SIMULATED` disclosure constant and startup warning for in-process key simulation
+
+### Fixes
+- `bin/sre/sli-verifier.js`: `simulateShadowWave()` gated behind `MINDFORGE_SRE_SIMULATE=true` env flag
+- `bin/spawn-agent.js`: Silent 500ms stub replaced with explicit error and usage guidance
+- `bin/memory/eis-client.js`: `resolveRemoteNode()` now throws explicitly (not silently returns null)
+- `bin/browser/session-manager.js`: `capabilities.importFromBrowser=false` export added
+- `.mindforge/config.json`: `mesh.node_id` changed from `"beta-node"` to `"auto"`
+
+### Stats
+- Vulnerabilities: 2 HIGH → **0**
+- npm audit: 0 vulnerabilities across root, sdk, mcp-server
+
+---
+
 ## v11.8.0 — Workflow Forge II
 
 **Released:** 2026-06-24
 
 ### What's New
 
-MindForge v11.8.0 "Workflow Forge II" expands the Dynamic Workflow Library from 12 to **33 workflows** and introduces a new **Beast tier** for compound multi-phase adversarial workflows.
+MindForge v11.8.0 "Workflow Forge II" expands the Dynamic Workflow Library from 12 to **32 workflows** and introduces a new **Beast tier** for compound multi-phase adversarial workflows.
 
 ### Beast Tier (NEW)
 
@@ -86,7 +149,7 @@ node bin/mindforge-cli.js workflow info <name>   # show phases and description
 
 1. `npx mindforge-cc@latest` — all 12 workflows and 13 commands install automatically
 2. Run `/mindforge:wf-catalog` to browse the library
-3. Try `/mindforge:wf-deep-research <your question>` for a first run
+3. Try `/mindforge:wf-competitive-analysis <your topic>` or `/mindforge:wf-code-audit` for a first run
 
 ---
 

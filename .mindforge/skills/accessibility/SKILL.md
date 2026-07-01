@@ -3,7 +3,7 @@ name: accessibility
 version: 1.0.0
 min_mindforge_version: 0.3.0
 status: stable
-triggers: accessibility, a11y, aria, ARIA, wcag, WCAG, screen reader, keyboard, focus, tab order, colour contrast, color contrast, alt text, semantic HTML, form label, button, interactive, disabled, skip link, heading hierarchy, landmark, live region, modal, dialog, tooltip, dropdown, combobox
+triggers: accessibility, a11y, aria, wcag, screen reader, keyboard, focus, tab order, colour contrast, color contrast, alt text, semantic HTML, form label, button, interactive, disabled, skip link, heading hierarchy, landmark, live region, modal, dialog, tooltip, dropdown, combobox
 ---
 
 # Skill — Accessibility Engineering

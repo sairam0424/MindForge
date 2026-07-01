@@ -66,9 +66,17 @@ class SLIVerifier {
 
   /**
    * Heuristic simulation of a "Shadow Wave" to generate metrics.
+   * Gated behind MINDFORGE_SRE_SIMULATE=true — must not run in production
+   * without explicit opt-in.
    */
   simulateShadowWave(isFixApplied = false) {
-    // Generate jittery but realistic metrics
+    if (process.env.MINDFORGE_SRE_SIMULATE !== 'true') {
+      throw new Error(
+        '[SRE] simulateShadowWave() called outside simulate mode. ' +
+        'Set MINDFORGE_SRE_SIMULATE=true to enable SLI simulation, ' +
+        'or implement real metric collection from /api/v1/system.'
+      );
+    }
     return {
       latency: 120 + (Math.random() * 20),
       error_rate: isFixApplied ? 0.001 : 0.05,

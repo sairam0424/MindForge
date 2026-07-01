@@ -4,6 +4,37 @@ This guide covers upgrades across all major MindForge versions.
 
 ---
 
+## Upgrading to v11.8.3 (from any v11.8.x)
+
+v11.8.3 is a drop-in patch — no breaking changes from v11.8.0 or later.
+
+```bash
+# Upgrade via npx:
+npx mindforge-cc@latest install
+
+# Verify:
+node bin/mindforge-cli.js --version   # should print 11.8.3
+node bin/mindforge-cli.js health      # should show all green
+```
+
+### What changed in the v11.8.x patch series
+
+| Version | Date | Key changes |
+|---------|------|-------------|
+| v11.8.3 | 2026-07-01 | --version flag, EISClient named import, rbac shim, skill-loader, null-phase guard, 12 trigger dupes resolved, SDK 0 TS errors |
+| v11.8.2 | 2026-07-01 | ESLint 0 errors, health output fixed, ZTAI lazy load, pr-review CLI entry point, worktree timeout |
+| v11.8.1 | 2026-07-01 | hono+picomatch CVEs patched (0 vulns), SRE gate, spawn stub disclosure, EIS/browser/ZTAI guards |
+| v11.8.0 | 2026-06-24 | 32 dynamic workflows across 5 tiers (Research/Dev/Ops/Intelligence/Beast) |
+
+### If upgrading from v11.7.x
+v11.8.0 added 20 new workflow scripts. No config migration required.
+Run `node bin/mindforge-cli.js health` after upgrade — it will flag any drift.
+
+### If upgrading from v11.6.x or earlier
+Follow the v11.7.0 upgrade guide below, then re-run `npx mindforge-cc@latest install`.
+
+---
+
 ## Upgrading to v11.3.1 (from any v11.x)
 
 No migration script and no breaking changes — v11.3.x is additive. Just reinstall:

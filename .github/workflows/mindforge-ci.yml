@@ -23,7 +23,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
@@ -61,7 +61,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -104,7 +104,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -113,6 +113,14 @@ jobs:
           npm ci
           if [ -d "sdk" ]; then
             cd sdk && npm install && cd ..
+          fi
+
+      - name: Build SDK
+        run: |
+          if [ -d "sdk" ] && [ -f "sdk/tsconfig.json" ]; then
+            cd sdk && npm run build && cd ..
+          else
+            echo "::notice::No SDK found - skipping build"
           fi
 
       - name: Type check
@@ -176,7 +184,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -200,7 +208,7 @@ jobs:
           "
 
       - name: Post review as PR comment
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');

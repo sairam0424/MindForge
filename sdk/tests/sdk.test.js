@@ -27,7 +27,8 @@ console.log('\nMindForge SDK Tests\n');
 
 // ── Version ──────────────────────────────────────────────────────────────────
 test('VERSION exports correctly', () => {
-  assert.strictEqual(VERSION, '11.8.0');
+  const { version: expectedVersion } = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '..', 'package.json'), 'utf8'));
+  assert.strictEqual(VERSION, expectedVersion);
 });
 
 // ── Client instantiation ─────────────────────────────────────────────────────

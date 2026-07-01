@@ -4,15 +4,21 @@
 
 ---
 
-## Latest: v11.8.0
+## Latest: v11.8.3
 
-- **v11.8.0 — "Workflow Forge II".** Expands the Dynamic Workflow Library from 12 to 33 workflows across 5 tiers — adds a new **Beast tier** for compound 5-phase adversarial workflows (security-hardening, accessibility-audit, security-threat-model), plus 18 more across Dev/Ops/Intelligence/Research. 21 new `/mindforge:wf-*` commands. Total: 219 commands.
+- **v11.8.3** (2026-07-01) — Autopsy Fixes Stable — 258/258 IQ200 checks passing; `--version` flag, EISClient named import, rbac shim, skill-loader stub, null-phase guard, 12 duplicate triggers resolved, SDK 0 typecheck errors, path-containment guard on spawn
+- **v11.8.2** (2026-07-01) — Clean Stable — ESLint 0 errors, health command output fixed, ZTAI lazy instantiation, pr-review CLI entry point, worktree timeout fix
+- **v11.8.1** (2026-07-01) — First Stable — hono+picomatch CVEs patched (0 vulnerabilities), SRE simulator gated, spawn stub disclosure, EIS/browser/ZTAI guards added
+- **v11.8.0 — "Workflow Forge II".** Expands the Dynamic Workflow Library from 12 to 32 workflows across 5 tiers — adds a new **Beast tier** for compound 5-phase adversarial workflows (security-hardening, accessibility-audit, security-threat-model), plus 18 more across Dev/Ops/Intelligence/Research. 21 new `/mindforge:wf-*` commands. Total: 219 commands.
 - **v11.7.0 — "Workflow Forge".** Ships the first Dynamic Workflow Library — 12 pre-built multi-agent workflow scripts that run via Claude Code's `Workflow` tool with true parallel agent execution. Four tiers: Research (deep-research, competitive-analysis, tech-evaluation), Dev (code-audit, feature-planner, pr-review, tdd-sprint, refactor-plan), Ops (incident-response, release-prep), Intelligence (onboard-codebase, perf-optimize). 13 new `/mindforge:wf-*` commands. Total: 198 commands.
 - **v11.6.0 — "Skill Forge".** Adds 80 community-sourced skills across 8 domains (software-development, github, devops, research, security, creative, data-science, note-taking) — 30 promoted to engine tier for automatic trigger-matching, 50 in the extended tier for explicit activation. Three new slash commands: `/mindforge:systematic-debug`, `/mindforge:skill-tdd`, `/mindforge:skills-index`. Total: 153 skills, 232 engine-tier entries, 185 commands.
 - **v11.5.1 — Standalone MCP server.** The MindForge MCP server now ships as its own npm package, `mindforge-mcp-server@11.5.1`, listed on the official MCP Registry as `io.github.sairam0424/mindforge`. Add it to Claude Code with one command (see [Use the MCP server](#-use-the-mcp-server-standalone)); it exposes 7 tools over stdio (6 read-only + 1 guarded write).
 - **v11.3.0 — "Legion".** Imports 154 specialized Claude-Code-native subagents across 10 categories into `.claude/agents/`, fully rebranded and collision-safe. Additive and backward-compatible.
 
 See [CHANGELOG.md](./CHANGELOG.md) for full release history.
+
+<details>
+<summary>v11.0.0 — Sovereign Stability highlights</summary>
 
 ## v11.0.0 — Sovereign Stability
 
@@ -26,6 +32,8 @@ MindForge v11.0.0 "Sovereign Stability" is a production-hardening release focuse
 - **Graduated intelligence** — Adaptive tier escalation (+1/+2/MAX) with cost-awareness, 3-tier stuck detection, and adaptive context windows.
 
 This release ships 211 personas, 153 skills, 154 specialized subagents, 198 commands, 18 pillars, and 49 swarm templates across 12 engineering domains.
+
+</details>
 
 
 ## Installation & Setup
@@ -45,6 +53,8 @@ Prefer just a slice (e.g. Python agents)? Install a focused pack like
 for all 11 plugins, token-budget guidance, and team setup.
 
 ### 🚀 Quick Start (npx — full framework engine)
+
+**Prerequisites:** Node.js >= 18.0.0
 
 The npx installer also writes the complete `.mindforge/` engine (governance, memory,
 planning) into your project:
@@ -80,7 +90,7 @@ npx mindforge-cc@latest --antigravity --local
 ### 🔗 Use the MCP server (standalone)
 
 The MindForge MCP server is published as its own npm package,
-**`mindforge-mcp-server`** (`11.5.1`), and is listed on the official
+**`mindforge-mcp-server`** (`11.8.3`), and is listed on the official
 [MCP Registry](https://registry.modelcontextprotocol.io) as
 `io.github.sairam0424/mindforge`. Wire it into Claude Code with one command:
 
@@ -99,6 +109,15 @@ It exposes **7 tools over stdio** — 6 read-only plus 1 guarded write:
 | `mindforge_memory_find_related` | Find related knowledge entries |
 | `mindforge_audit_log` | Read the append-only audit trail |
 | `mindforge_memory_remember` | Persist a memory (guarded write) |
+
+---
+
+## Quick Verification
+
+After install, open Claude Code and type:
+- `/mindforge:status` — verify installation and show project health
+- `/mindforge:next` — auto-discover your first task
+- `node bin/mindforge-cli.js --version` — prints `11.8.3`
 
 ---
 
@@ -383,19 +402,17 @@ See `.mindforge/production/token-optimiser.md`.
 
 ## 🚀 Dynamic Workflow Library
 
-33 pre-built multi-agent workflow scripts that run via Claude Code's `Workflow` tool. Each workflow fans out concurrent agents, synthesizes results, and returns structured output.
+32 pre-built multi-agent workflow scripts that run via Claude Code's `Workflow` tool. Each workflow fans out concurrent agents, synthesizes results, and returns structured output.
 
 **Discover:** `/mindforge:wf-catalog` or `node bin/mindforge-cli.js workflow list`
 
 | Tier | Command | What it does |
 |------|---------|-------------|
-| Research | `/mindforge:wf-deep-research` | Fan-out web research → adversarial verify → cited report |
 | Research | `/mindforge:wf-competitive-analysis` | 5× parallel angles → SWOT → positioning |
 | Research | `/mindforge:wf-tech-evaluation` | 5× dimensions → scored matrix → recommendation |
-| Research | `/mindforge:wf-market-sizing` | TAM/SAM/SOM parallel model → triangulated estimate |
-| Research | `/mindforge:wf-literature-review` | Paper fan-out → claim extraction → synthesis matrix |
-| Research | `/mindforge:wf-patent-landscape` | Prior art search → novelty scoring → freedom-to-operate |
-| Research | `/mindforge:wf-persona-research` | Interview simulation × 5 → insight clustering → persona card |
+| Research | `/mindforge:wf-ai-model-eval` | Model benchmark → scoring matrix → recommendation |
+| Research | `/mindforge:wf-ux-heuristic-audit` | 10 Nielsen heuristics → severity ranking → fix brief |
+| Research | `/mindforge:wf-competitive-teardown` | 5 competitor angles → positioning report |
 | Dev | `/mindforge:wf-code-audit` | 3× parallel auditors → verified findings → risk report |
 | Dev | `/mindforge:wf-feature-planner` | Brief → PRD → architecture → user stories |
 | Dev | `/mindforge:wf-pr-review` | 4× parallel reviewers → consensus verdict |

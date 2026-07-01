@@ -4,7 +4,7 @@
  * Kahn topological sort + cycle detection.
  * Ported from the previously test-only implementation into the real engine.
  *
- * TODO(UC-xx): same-wave file-conflict detection once tasks carry file lists.
+ * TODO(UC-xx): same-wave file-conflict detection — deferred until handoff schema carries per-task file lists. See docs/architecture/ for scope.
  *   Handoff tasks (see normalizeTask in wave-executor.js and validateHandoff in
  *   state-manager.js) currently expose only id/name/plan/depends_on — there is
  *   no `files` field to compare. A `findFileConflicts(plans)` check (two tasks

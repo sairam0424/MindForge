@@ -2,6 +2,11 @@ name: MindForge AI Intelligence
 
 on:
   workflow_call:
+    inputs:
+      llm_provider:
+        description: "LLM provider to use: 'anthropic' or 'bedrock' (default: bedrock)"
+        type: string
+        default: 'bedrock'
 
 permissions:
   contents: read
@@ -15,41 +20,112 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: 'npm'
-          
-      - name: Install dependencies
-        run: npm ci
 
-      - name: Cross-Model Review
+      - name: Install dependencies
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          LLM_PROVIDER: ${{ inputs.llm_provider }}
+        run: |
+          npm ci
+          # Install Bedrock SDK if provider is bedrock (or if no Anthropic key is set)
+          if [ "$LLM_PROVIDER" = "bedrock" ] || [ -z "$ANTHROPIC_API_KEY" ]; then
+            npm install @aws-sdk/client-bedrock-runtime --no-save
+          fi
+
+      - name: Detect active LLM provider
+        id: detect_provider
+        env:
+          LLM_PROVIDER: ${{ inputs.llm_provider }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        run: |
+          # Auto-detect: use explicit input, then fall back to credential presence
+          if [ "$LLM_PROVIDER" = "bedrock" ] || { [ -z "$ANTHROPIC_API_KEY" ] && [ -n "$AWS_ACCESS_KEY_ID" ]; }; then
+            echo "provider=bedrock" >> "$GITHUB_OUTPUT"
+            echo "::notice::Using AWS Bedrock (us.anthropic.claude-sonnet-4-6)"
+          elif [ -n "$ANTHROPIC_API_KEY" ]; then
+            echo "provider=anthropic" >> "$GITHUB_OUTPUT"
+            echo "::notice::Using Anthropic direct API"
+          else
+            echo "provider=none" >> "$GITHUB_OUTPUT"
+            echo "::warning::No LLM credentials found — set ANTHROPIC_API_KEY or AWS Bedrock secrets"
+          fi
+
+      - name: Cross-Model Review (Bedrock)
+        if: steps.detect_provider.outputs.provider == 'bedrock'
+        env:
+          MINDFORGE_LLM_PROVIDER: bedrock
+          AWS_ACCESS_KEY_ID_B64: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY_B64: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION_B64: ${{ secrets.AWS_REGION }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Decode base64-encoded secrets before passing to AWS SDK.
+          # The SDK reads AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY directly from
+          # the environment, bypassing our Node-level decodeCredential() function.
+          # We decode here so both the SDK credential chain and our provider see plain values.
+          export AWS_ACCESS_KEY_ID=$(echo "$AWS_ACCESS_KEY_ID_B64" | tr -d '[:space:]' | base64 -d 2>/dev/null || echo "$AWS_ACCESS_KEY_ID_B64" | tr -d '[:space:]')
+          export AWS_SECRET_ACCESS_KEY=$(echo "$AWS_SECRET_ACCESS_KEY_B64" | tr -d '[:space:]' | base64 -d 2>/dev/null || echo "$AWS_SECRET_ACCESS_KEY_B64" | tr -d '[:space:]')
+          export AWS_REGION=$(echo "$AWS_REGION_B64" | tr -d '[:space:]' | base64 -d 2>/dev/null || echo "${AWS_REGION_B64:-us-east-1}" | tr -d '[:space:]')
+          echo "::notice::AWS_REGION resolved to: $AWS_REGION"
+          echo "::notice::AWS_ACCESS_KEY_ID length: ${#AWS_ACCESS_KEY_ID}"
+          node bin/mindforge-cli.js cross-review \
+            --models claude,gpt4o \
+            --focus security,architecture \
+            --output markdown > /tmp/review-summary.md
+
+      - name: Cross-Model Review (Anthropic)
+        if: steps.detect_provider.outputs.provider == 'anthropic'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          node bin/mindforge-cli.js cross-review --models claude,gpt4o --focus security,architecture --output markdown > /tmp/review-summary.md
+          node bin/mindforge-cli.js cross-review \
+            --models claude,gpt4o \
+            --focus security,architecture \
+            --output markdown > /tmp/review-summary.md
+
+      - name: Skip — no LLM credentials
+        if: steps.detect_provider.outputs.provider == 'none'
+        run: |
+          echo "## ⚠️ AI Review Skipped" > /tmp/review-summary.md
+          echo "" >> /tmp/review-summary.md
+          echo "No LLM credentials configured. To enable AI review, add one of:" >> /tmp/review-summary.md
+          echo "- **Anthropic**: set \`ANTHROPIC_API_KEY\` in GitHub Secrets" >> /tmp/review-summary.md
+          echo "- **AWS Bedrock**: set \`AWS_ACCESS_KEY_ID\`, \`AWS_SECRET_ACCESS_KEY\`, \`AWS_REGION\` in GitHub Secrets" >> /tmp/review-summary.md
+          echo "" >> /tmp/review-summary.md
+          echo "See \`docs/enterprise-setup.md\` for configuration details." >> /tmp/review-summary.md
 
       - name: Publish Review Comment
-        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
+            if (!fs.existsSync('/tmp/review-summary.md')) process.exit(0);
             const body = fs.readFileSync('/tmp/review-summary.md', 'utf8');
+            if (!body.trim()) process.exit(0);
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: body
+              body
             });
 
       - name: Upload Review Artifacts
-        uses: actions/upload-artifact@v4
+        if: always()
+        uses: actions/upload-artifact@v7
         with:
           name: ai-review-reports
           path: |
             CODE-REVIEW.md
             CROSS-REVIEW.md
+            /tmp/review-summary.md

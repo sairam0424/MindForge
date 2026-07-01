@@ -29,7 +29,7 @@ node bin/mindforge-cli.js dashboard      # start Express dashboard at localhost:
 node bin/mindforge-cli.js headless       # run agent in headless/walk-away mode
 node bin/mindforge-cli.js pr-review      # cross-model PR review
 node bin/mindforge-cli.js classify       # classify changes into governance tiers
-node bin/mindforge-cli.js spawn <persona> # scripted agent spawn
+node bin/mindforge-cli.js spawn <persona> # scripted agent spawn — NOTE: spawn dispatch is a v1.0 stub — use /mindforge:auto instead
 node bin/mindforge-cli.js temporal       # temporal hindsight CLI
 ```
 

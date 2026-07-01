@@ -952,3 +952,8 @@ async function run(args) {
 }
 
 module.exports = { run, install, uninstall, RUNTIMES, generateEntryContent, SENSITIVE_EXCLUDE, MINDFORGE_DEV_EXCLUDE };
+
+if (require.main === module) {
+  const args = process.argv.slice(2);
+  run(args).catch(err => { console.error(err.message); process.exit(1); });
+}

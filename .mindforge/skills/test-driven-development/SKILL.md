@@ -4,7 +4,7 @@ description: "TDD: enforce RED-GREEN-REFACTOR, tests before code."
 version: 1.1.0
 status: stable
 min_mindforge_version: 11.5.1
-triggers: test driven development, tdd methodology, red green refactor, write test first, test before code, failing test first, tdd cycle, write failing test, make test pass, red-green-refactor, tdd methodology, test first approach
+triggers: test driven development, tdd methodology, red green refactor, write test first, test before code, failing test first, tdd cycle, write failing test, make test pass, red-green-refactor, test first approach
 ---
 
 # Test-Driven Development (TDD)

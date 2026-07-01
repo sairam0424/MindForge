@@ -7,6 +7,7 @@
 const Router = require('./model-router');
 const CostTracker = require('./cost-tracker');
 const AnthropicProvider = require('./anthropic-provider');
+const BedrockProvider   = require('./bedrock-provider');
 const OpenAIProvider = require('./openai-provider');
 const GeminiProvider = require('./gemini-provider');
 const OllamaProvider = require('./ollama-provider');
@@ -131,6 +132,24 @@ class ModelClient {
     // built-in prefix routing when nothing is registered.
     const registered = resolveProvider(modelId);
     if (registered) return registered;
+
+    // Bedrock: explicit opt-in via MINDFORGE_LLM_PROVIDER=bedrock OR
+    // when ANTHROPIC_API_KEY is absent but AWS credentials are present.
+    // Supports both short IDs (claude-sonnet-4-6) and native Bedrock IDs
+    // (us.anthropic.*, anthropic.claude-*).
+    const bedrockModelPrefixes = modelId.startsWith('us.anthropic.') || modelId.startsWith('anthropic.claude');
+    const useBedrockExplicit   = process.env.MINDFORGE_LLM_PROVIDER === 'bedrock';
+    const awsCredsPresent      = !!(process.env.AWS_ACCESS_KEY_ID || process.env.AWS_PROFILE);
+    const anthropicKeyAbsent   = !process.env.ANTHROPIC_API_KEY;
+
+    if (bedrockModelPrefixes || useBedrockExplicit || (anthropicKeyAbsent && awsCredsPresent && modelId.startsWith('claude'))) {
+      return new BedrockProvider({
+        region:    process.env.AWS_REGION,
+        accessKey: process.env.AWS_ACCESS_KEY_ID,
+        secretKey: process.env.AWS_SECRET_ACCESS_KEY,
+        profile:   process.env.AWS_PROFILE,
+      });
+    }
 
     if (modelId.startsWith('claude') || modelId.startsWith('anthropic.claude')) {
       if (!process.env.ANTHROPIC_API_KEY) return null;

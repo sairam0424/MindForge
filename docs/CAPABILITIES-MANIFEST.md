@@ -53,6 +53,9 @@ Specialized agent essences available via `node bin/spawn-agent.js`.
 - **Quality**: `mf-reviewer`, `nyquist-auditor`, `security-reviewer`.
 - **Specialized**: `debug-specialist`, `research-synthesizer`, `user-profiler`.
 
+> **v1.0 Note:** `spawn` and `identity` modes are stubs — dispatch is not yet implemented.
+> Use `/mindforge:auto` or `/mindforge:next` to invoke personas via Claude Code slash commands.
+
 ## 🤖 7. Subagent Library (154 Claude-Code-native agents)
 Imported "Legion" collection (v11.3.0), installed into `.claude/agents/` and resolvable
 via `node bin/spawn-agent.js subagent <name>`. 10 categories spanning core development,

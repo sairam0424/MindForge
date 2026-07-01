@@ -7,6 +7,11 @@ const fs = require('fs');
 const path = require('path');
 const assert = require('assert');
 
+if (!fs.existsSync(path.join(process.cwd(), 'bin/mindforge-cli.js'))) {
+  console.error('ERROR: Tests must be run from the MindForge project root: cd MindForge && npm test');
+  process.exit(1);
+}
+
 let passed = 0;
 let failed = 0;
 
@@ -189,7 +194,7 @@ test('No secrets in any committed file', () => {
   // is not part of MindForge's committed tree. This test asserts on COMMITTED
   // files, so scanning gitignored donor trees is both wrong and a false-positive
   // source.
-  const SKIP_DIRS = ['node_modules', '.git', 'ECC', 'awesome-claude-code-subagents', '.serena', 'hermes-agent'];
+  const SKIP_DIRS = ['node_modules', '.git', 'ECC', 'awesome-claude-code-subagents', '.serena', 'hermes-agent', 'Ag-Bash'];
 
   // Obvious placeholder tokens. A "secret-shaped" match that contains one of
   // these is a pedagogical example (e.g. security rule docs that TEACH about

@@ -1,6 +1,6 @@
 # MindForge Dynamic Workflow Registry
 
-33 pre-built multi-agent workflows across 5 tiers. Each runs via Claude Code's `Workflow` tool using `parallel()`, `pipeline()`, `phase()`, and `agent()` primitives to fan out work across concurrent subagents and synthesize results.
+32 pre-built multi-agent workflows across 5 tiers. Each runs via Claude Code's `Workflow` tool using `parallel()`, `pipeline()`, `phase()`, and `agent()` primitives to fan out work across concurrent subagents and synthesize results.
 
 **Trigger:** Use `/mindforge:wf-catalog` to browse interactively, or invoke any `/mindforge:wf-<name>` command directly.
 
@@ -8,7 +8,6 @@
 
 | Workflow | Command | Description | Best for |
 |----------|---------|-------------|----------|
-| deep-research | /mindforge:wf-deep-research | Fan-out web research with adversarial claim verification | Multi-source fact-checked research reports |
 | competitive-analysis | /mindforge:wf-competitive-analysis | SWOT and positioning from 5 research angles | Evaluating products/companies against competitors |
 | tech-evaluation | /mindforge:wf-tech-evaluation | Scored technology evaluation across 5 dimensions | Choosing frameworks, libraries, or platforms |
 | ai-model-eval | /mindforge:wf-ai-model-eval | 4-parallel model benchmark → scoring matrix | Choosing between AI models or providers |

@@ -18,13 +18,30 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: 'npm'
           
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          if [ -d "sdk" ]; then
+            cd sdk && npm install && cd ..
+          fi
+
+      - name: Build SDK
+        run: |
+          if [ -d "sdk" ] && [ -f "sdk/tsconfig.json" ]; then
+            cd sdk && npm run build && cd ..
+          else
+            echo "::notice::No SDK found - skipping build"
+          fi
+
+      - name: Verification
+        run: |
+          npm test
+          npm run lint
 
       - name: Health Check
         run: node bin/mindforge-cli.js health --repair
@@ -35,14 +52,9 @@ jobs:
           if [ "${{ inputs.dry_run }}" == "true" ]; then DRY_FLAG="--dry-run"; fi
           node bin/mindforge-cli.js headless --phase ${{ inputs.phase }} $DRY_FLAG --output json > /tmp/headless-results.json
 
-      - name: Verification
-        run: |
-          npm test
-          npm run lint
-
       - name: Upload Artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: execution-artifacts-${{ github.run_id }}
           path: |

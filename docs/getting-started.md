@@ -1,11 +1,12 @@
-# MindForge — Getting Started (v11.8.0)
+# MindForge — Getting Started (v11.8.3)
 
 This guide gets you from zero to a working MindForge project in under five minutes.
 
 ## Prerequisites
 
-- **Node.js 18+** (LTS recommended)
-- No native build tools required — MindForge uses sql.js (pure WASM) for all database operations
+- **Node.js** >= 18.0.0 (`node --version` to check)
+- **Claude Code** CLI installed and authenticated (`claude --version`)
+- Git (recommended for project-level install)
 
 ## Install
 
@@ -45,7 +46,7 @@ Run the MindForge MCP server (`mindforge-mcp-server`) over stdio — it exposes 
 claude mcp add mindforge -- npx -y mindforge-mcp-server
 ```
 
-This server is also published to the [MCP Registry](https://registry.modelcontextprotocol.io) as `io.github.sairam0424/mindforge` (currently `11.5.1`, marked latest).
+This server is also published to the [MCP Registry](https://registry.modelcontextprotocol.io) as `io.github.sairam0424/mindforge` (currently `11.8.3`, marked latest).
 
 ### 4. Homebrew
 
@@ -61,17 +62,31 @@ To build on top of MindForge programmatically, install the TypeScript SDK:
 npm i mindforge-sdk
 ```
 
-## Dynamic Workflow Library
+## Dynamic Workflow Library (32 workflows across 5 tiers)
 
-MindForge ships 33 pre-built multi-agent workflows across 5 tiers, triggerable via `/mindforge:wf-*` commands:
 
-- **Beast** — Compound adversarial workflows (security-hardening, accessibility-audit, security-threat-model)
-- **Intelligence** — Deep analysis (architecture-modernization, documentation-gen, api-migration, data-pipeline-validate)
-- **Ops** — Infrastructure (incident-response, release-prep, dependency-health, database-migration, multi-repo-sync, cost-analysis)
-- **Dev** — Coding assistant (code-audit, feature-planner, pr-review, tdd-sprint, refactor-plan + 7 more)
-- **Research** — Research & analysis (deep-research, competitive-analysis, tech-evaluation + 3 more)
+| Tier | Count | Workflows |
+|------|-------|-----------|
+| Research | 5 | competitive-analysis, tech-evaluation, ai-model-eval, ux-heuristic-audit, competitive-teardown |
+| Dev | 12 | code-audit, feature-planner, pr-review, tdd-sprint, refactor-plan, test-coverage-gap, api-contract-test, debug-detective, writer-reviewer, mutation-testing, code-explainer, design-system-audit |
+| Ops | 6 | incident-response, release-prep, dependency-health, database-migration, multi-repo-sync, cost-analysis |
+| Intelligence | 6 | onboard-codebase, perf-optimize, architecture-modernization, documentation-gen, api-migration, data-pipeline-validate |
+| Beast | 3 | security-hardening, accessibility-audit, security-threat-model |
 
-Browse with `/mindforge:wf-catalog`.
+**Run any workflow:**
+```bash
+node bin/mindforge-cli.js workflow list              # browse all 32
+node bin/mindforge-cli.js workflow info code-audit   # details + phases
+```
+Or use slash commands: `/mindforge:wf-code-audit`
+
+## Your First 5 Minutes with MindForge
+
+1. **Verify install:** `node bin/mindforge-cli.js health`
+2. **Check version:** `node bin/mindforge-cli.js --version` (should print `11.8.3`)
+3. **List workflows:** `node bin/mindforge-cli.js workflow list`
+4. **Run first slash command:** Open Claude Code → `/mindforge:status`
+5. **Onboard your codebase:** Open Claude Code → `/mindforge:wf-onboard-codebase`
 
 ## Initialise Your Project
 

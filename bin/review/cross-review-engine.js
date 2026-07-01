@@ -90,3 +90,22 @@ async function runCrossReview(params) {
 }
 
 module.exports = { runCrossReview, parseFindings: synthesizeFindings.parseFindings, extractVerdict };
+
+if (require.main === module) {
+  const args = process.argv.slice(2);
+  const phase = args.find(a => a.startsWith('--phase='))?.split('=')[1] || 'full';
+  const diff = args.find(a => a.startsWith('--diff='))?.split('=')[1] || 'HEAD';
+  const context = args.find(a => a.startsWith('--context='))?.split('=')[1] || '';
+  if (args.includes('--help') || args.length === 0) {
+    console.log('MindForge PR Review — Cross-model review engine');
+    console.log('Usage: node bin/review/cross-review-engine.js [--diff=HEAD] [--phase=full] [--context=...]');
+    console.log('  --diff     Git ref or diff target (default: HEAD)');
+    console.log('  --phase    Review phase: full|security|quality|performance (default: full)');
+    console.log('  --context  Additional context string for the review');
+    process.exit(0);
+  }
+  console.log(`[MindForge PR Review] Starting ${phase} review of ${diff}...`);
+  runCrossReview({ phaseNum: phase, diff, context })
+    .then(result => { console.log(JSON.stringify(result, null, 2)); process.exit(0); })
+    .catch(err => { console.error('Review failed:', err.message); process.exit(1); });
+}

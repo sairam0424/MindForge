@@ -144,9 +144,13 @@ class EISClient {
     }
   }
 
-  // TODO: implement when remote nodes are available
+  // TODO(EIS-remote): implement cross-node context resolution in v1.1
   async resolveRemoteNode(nodeId) {
-    return null;
+    // TODO(EIS-remote): implement cross-node context resolution in v1.1
+    throw new Error(
+      `EIS remote node resolution not implemented (nodeId: ${nodeId}). ` +
+      'Cross-node context is local-only in v1.0.'
+    );
   }
 
   /**
@@ -192,3 +196,4 @@ class EISClient {
 }
 
 module.exports = EISClient;
+module.exports.EISClient = EISClient;
