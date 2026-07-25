@@ -1,842 +1,912 @@
 [
-  {
-    "name": "competitive-analysis",
-    "description": "Multi-angle competitive research producing a SWOT and positioning summary",
-    "whenToUse": "When evaluating a product, company, or technology against competitors",
-    "tier": "research",
-    "command": "/mindforge:wf-competitive-analysis",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/competitive-analysis.js",
-    "phases": [
-      {
-        "title": "Scope",
-        "detail": "Define target and 5 research angles"
-      },
-      {
-        "title": "Research",
-        "detail": "Parallel research: product / pricing / reviews / community / roadmap"
-      },
-      {
-        "title": "SWOT",
-        "detail": "Synthesize strengths, weaknesses, opportunities, threats"
-      },
-      {
-        "title": "Position",
-        "detail": "Produce positioning recommendations"
-      }
-    ]
-  },
-  {
-    "name": "tech-evaluation",
-    "description": "Scored technology evaluation across DX, performance, security, ecosystem, and community",
-    "whenToUse": "When choosing between technologies, frameworks, or libraries for a project",
-    "tier": "research",
-    "command": "/mindforge:wf-tech-evaluation",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/tech-evaluation.js",
-    "phases": [
-      {
-        "title": "Scope",
-        "detail": "Define candidates and evaluation criteria"
-      },
-      {
-        "title": "Evaluate",
-        "detail": "5 parallel dimension agents per candidate"
-      },
-      {
-        "title": "Score",
-        "detail": "Build weighted scoring matrix"
-      },
-      {
-        "title": "Recommend",
-        "detail": "Produce ranked recommendation with trade-offs"
-      }
-    ]
-  },
-  {
-    "name": "ai-model-eval",
-    "description": "4-parallel model benchmark agents → scoring matrix → cost/performance recommendation",
-    "whenToUse": "When choosing between AI models or providers for a use case",
-    "tier": "research",
-    "command": "/mindforge:wf-ai-model-eval",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/ai-model-eval.js",
-    "phases": [
-      {
-        "title": "Scope",
-        "detail": "Define evaluation criteria and test prompts for the use case"
-      },
-      {
-        "title": "Benchmark",
-        "detail": "4 parallel model evaluators (quality / reasoning / speed / cost)"
-      },
-      {
-        "title": "Score",
-        "detail": "Scoring matrix across all dimensions"
-      },
-      {
-        "title": "Recommend",
-        "detail": "Ranked recommendation with break-even cost analysis"
-      }
-    ]
-  },
-  {
-    "name": "ux-heuristic-audit",
-    "description": "10 Nielsen heuristics parallel audit → severity ranking → fix brief",
-    "whenToUse": "When auditing a UI for usability issues using Nielsen's 10 heuristics",
-    "tier": "research",
-    "command": "/mindforge:wf-ux-heuristic-audit",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/ux-heuristic-audit.js",
-    "phases": [
-      {
-        "title": "Scope",
-        "detail": "Define target UI and identify key user flows to audit"
-      },
-      {
-        "title": "Audit",
-        "detail": "10 parallel heuristic evaluators — one per Nielsen heuristic"
-      },
-      {
-        "title": "Rank",
-        "detail": "Severity ranking of all violations by impact on user experience"
-      },
-      {
-        "title": "Brief",
-        "detail": "Prioritized fix brief with specific design recommendations"
-      }
-    ]
-  },
-  {
-    "name": "competitive-teardown",
-    "description": "5 parallel competitor angle agents → pipeline synthesis into competitive positioning report",
-    "whenToUse": "When doing a deep competitive teardown across product, tech, pricing, hiring, and community",
-    "tier": "research",
-    "command": "/mindforge:wf-competitive-teardown",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/competitive-teardown.js",
-    "phases": [
-      {
-        "title": "Scope",
-        "detail": "Identify competitors and define evaluation framework"
-      },
-      {
-        "title": "Research",
-        "detail": "5 parallel competitor angle agents: product/tech/pricing/hiring/community"
-      },
-      {
-        "title": "Analyze",
-        "detail": "Synthesize competitive landscape from all angles"
-      },
-      {
-        "title": "Synthesis",
-        "detail": "Competitive positioning report with differentiation opportunities"
-      }
-    ]
-  },
-  {
-    "name": "code-audit",
-    "description": "Parallel security + quality + performance audit with adversarial finding verification",
-    "whenToUse": "When you need a comprehensive code review before a release or security review",
-    "tier": "dev",
-    "command": "/mindforge:wf-code-audit",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/code-audit.js",
-    "phases": [
-      {
-        "title": "Scope",
-        "detail": "Build file list from git diff or path argument"
-      },
-      {
-        "title": "Audit",
-        "detail": "3 parallel auditors: security / quality / performance"
-      },
-      {
-        "title": "Verify",
-        "detail": "Adversarial verification of high-severity findings"
-      },
-      {
-        "title": "Report",
-        "detail": "Risk-ranked report with actionable remediation"
-      }
-    ]
-  },
-  {
-    "name": "feature-planner",
-    "description": "Sequential pipeline: brief → PRD → architecture → user stories",
-    "whenToUse": "When starting a new feature and need a complete specification before coding",
-    "tier": "dev",
-    "command": "/mindforge:wf-feature-planner",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/feature-planner.js",
-    "phases": [
-      {
-        "title": "Brief",
-        "detail": "Clarify goals, users, success criteria"
-      },
-      {
-        "title": "PRD",
-        "detail": "Generate product requirements document"
-      },
-      {
-        "title": "Architecture",
-        "detail": "Design technical architecture and data flow"
-      },
-      {
-        "title": "Stories",
-        "detail": "Break into implementation user stories"
-      }
-    ]
-  },
-  {
-    "name": "pr-review",
-    "description": "4-dimensional parallel PR review: correctness, security, performance, style → consensus verdict",
-    "whenToUse": "When you want a thorough multi-perspective review of a pull request or diff",
-    "tier": "dev",
-    "command": "/mindforge:wf-pr-review",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/pr-review.js",
-    "phases": [
-      {
-        "title": "Scope",
-        "detail": "Read diff and build review context"
-      },
-      {
-        "title": "Review",
-        "detail": "4 parallel reviewers: correctness / security / performance / style"
-      },
-      {
-        "title": "Consensus",
-        "detail": "Merge findings, deduplicate, score severity"
-      },
-      {
-        "title": "Verdict",
-        "detail": "Produce APPROVED / CHANGES REQUIRED verdict with findings"
-      }
-    ]
-  },
-  {
-    "name": "tdd-sprint",
-    "description": "Strict Red-Green-Refactor TDD loop with spec-first discipline",
-    "whenToUse": "When implementing a feature or fix using test-driven development methodology",
-    "tier": "dev",
-    "command": "/mindforge:wf-tdd-sprint",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/tdd-sprint.js",
-    "phases": [
-      {
-        "title": "Spec",
-        "detail": "Define behavior requirements and acceptance criteria"
-      },
-      {
-        "title": "Red",
-        "detail": "Write failing test that captures the requirement"
-      },
-      {
-        "title": "Green",
-        "detail": "Write minimal code to make the test pass"
-      },
-      {
-        "title": "Refactor",
-        "detail": "Clean up while keeping tests green, verify all pass"
-      }
-    ]
-  },
-  {
-    "name": "refactor-plan",
-    "description": "Technical debt scan → risk-sorted sequence → safe refactor implementation plan",
-    "whenToUse": "When you need to plan a refactoring safely without breaking existing behavior",
-    "tier": "dev",
-    "command": "/mindforge:wf-refactor-plan",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/refactor-plan.js",
-    "phases": [
-      {
-        "title": "Scan",
-        "detail": "Identify technical debt, complexity hotspots, dead code"
-      },
-      {
-        "title": "Prioritize",
-        "detail": "Risk-sort by blast radius and test coverage"
-      },
-      {
-        "title": "Sequence",
-        "detail": "Order changes to minimize merge conflicts"
-      },
-      {
-        "title": "Plan",
-        "detail": "Produce step-by-step refactor plan with verification gates"
-      }
-    ]
-  },
-  {
-    "name": "test-coverage-gap",
-    "description": "Parallel per-module coverage analysis → gap map → prioritized test-writing plan",
-    "whenToUse": "When you need to find and fix test coverage gaps across a codebase or module",
-    "tier": "dev",
-    "command": "/mindforge:wf-test-coverage-gap",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/test-coverage-gap.js",
-    "phases": [
-      {
-        "title": "Discover",
-        "detail": "Map modules and identify testable units"
-      },
-      {
-        "title": "Analyze",
-        "detail": "Parallel coverage analysis per module"
-      },
-      {
-        "title": "GapMap",
-        "detail": "Synthesize gaps by severity and risk"
-      },
-      {
-        "title": "Plan",
-        "detail": "Prioritized test-writing plan with concrete test cases"
-      }
-    ]
-  },
-  {
-    "name": "api-contract-test",
-    "description": "Writer/Reviewer pattern: spec reader vs implementation reader → contract violation report",
-    "whenToUse": "When validating that an API implementation matches its OpenAPI/GraphQL/Protobuf spec",
-    "tier": "dev",
-    "command": "/mindforge:wf-api-contract-test",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/api-contract-test.js",
-    "phases": [
-      {
-        "title": "ReadSpec",
-        "detail": "Parse the API specification (OpenAPI/GraphQL/Protobuf/docs)"
-      },
-      {
-        "title": "ReadImpl",
-        "detail": "Read the actual implementation in a fresh context"
-      },
-      {
-        "title": "Diff",
-        "detail": "Cross-reference spec contracts vs implementation"
-      },
-      {
-        "title": "Report",
-        "detail": "Violation report with severity and fix instructions"
-      }
-    ]
-  },
-  {
-    "name": "debug-detective",
-    "description": "4-hypothesis parallel investigation → evidence gathering → scientific RCA",
-    "whenToUse": "When debugging a hard-to-reproduce bug or production issue with unclear root cause",
-    "tier": "dev",
-    "command": "/mindforge:wf-debug-detective",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/debug-detective.js",
-    "phases": [
-      {
-        "title": "Intake",
-        "detail": "Document symptoms, context, and reproduction steps"
-      },
-      {
-        "title": "Hypothesize",
-        "detail": "4 parallel hypothesis agents from different angles"
-      },
-      {
-        "title": "Evidence",
-        "detail": "Parallel evidence gathering per hypothesis"
-      },
-      {
-        "title": "RCA",
-        "detail": "Scientific root cause analysis from evidence"
-      },
-      {
-        "title": "Fix",
-        "detail": "Targeted fix plan with regression test spec"
-      }
-    ]
-  },
-  {
-    "name": "writer-reviewer",
-    "description": "Anthropic Writer/Reviewer pattern: implement in Context A → fresh Context B reviews the diff",
-    "whenToUse": "When you want unbiased code review — a fresh context reviewer has no bias toward code it did not write",
-    "tier": "dev",
-    "command": "/mindforge:wf-writer-reviewer",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/writer-reviewer.js",
-    "phases": [
-      {
-        "title": "Implement",
-        "detail": "Writer agent implements the requested change"
-      },
-      {
-        "title": "Review",
-        "detail": "Fresh reviewer agent inspects only the diff without implementation context"
-      },
-      {
-        "title": "Verdict",
-        "detail": "Accept / request-changes verdict with specific actionable feedback"
-      }
-    ]
-  },
-  {
-    "name": "mutation-testing",
-    "description": "Mutant generator → parallel kill-test agents → mutation score + survival report",
-    "whenToUse": "When evaluating test suite effectiveness by checking if tests catch deliberate code mutations",
-    "tier": "dev",
-    "command": "/mindforge:wf-mutation-testing",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/mutation-testing.js",
-    "phases": [
-      {
-        "title": "Analyze",
-        "detail": "Identify mutable source lines: conditions, operators, return values"
-      },
-      {
-        "title": "Mutate",
-        "detail": "Generate 10-15 specific mutation descriptions"
-      },
-      {
-        "title": "Kill",
-        "detail": "Parallel kill-test per mutation — would existing tests catch it?"
-      },
-      {
-        "title": "Report",
-        "detail": "Mutation score report with killed/survived/timeout breakdown"
-      }
-    ]
-  },
-  {
-    "name": "code-explainer",
-    "description": "Structural map → domain extraction → architecture patterns → guided narrative tour for onboarding",
-    "whenToUse": "When onboarding to an unfamiliar codebase or explaining a complex module to a new developer",
-    "tier": "dev",
-    "command": "/mindforge:wf-code-explainer",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/code-explainer.js",
-    "phases": [
-      {
-        "title": "Structure",
-        "detail": "Map file structure, entry points, and module boundaries"
-      },
-      {
-        "title": "Domain",
-        "detail": "Extract domain concepts, business logic, and key abstractions"
-      },
-      {
-        "title": "Architecture",
-        "detail": "Identify architectural patterns, data flow, and design decisions"
-      },
-      {
-        "title": "Tour",
-        "detail": "Synthesize a guided narrative tour for a new developer"
-      }
-    ]
-  },
-  {
-    "name": "design-system-audit",
-    "description": "5 parallel dimension auditors (spacing/color/typography/icons/a11y) → consistency score",
-    "whenToUse": "When auditing a frontend codebase for design system consistency and token usage",
-    "tier": "dev",
-    "command": "/mindforge:wf-design-system-audit",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/design-system-audit.js",
-    "phases": [
-      {
-        "title": "Inventory",
-        "detail": "Discover design tokens, component files, and styling approach"
-      },
-      {
-        "title": "Audit",
-        "detail": "5 parallel dimension auditors: spacing, color, typography, icons, accessibility"
-      },
-      {
-        "title": "Score",
-        "detail": "Aggregate consistency scores per dimension and overall"
-      },
-      {
-        "title": "Report",
-        "detail": "Design system health report with specific violation fixes"
-      }
-    ]
-  },
-  {
-    "name": "incident-response",
-    "description": "Parallel investigation across logs, metrics, traces, and code → mitigation → RCA → postmortem",
-    "whenToUse": "When responding to a production incident or unexpected system failure",
-    "tier": "ops",
-    "command": "/mindforge:wf-incident-response",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/incident-response.js",
-    "phases": [
-      {
-        "title": "Alert",
-        "detail": "Characterize the incident: impact, scope, timeline"
-      },
-      {
-        "title": "Investigate",
-        "detail": "4 parallel agents: logs / metrics / traces / code changes"
-      },
-      {
-        "title": "Mitigate",
-        "detail": "Identify and apply immediate mitigation steps"
-      },
-      {
-        "title": "RCA",
-        "detail": "Root cause analysis and postmortem document"
-      }
-    ]
-  },
-  {
-    "name": "release-prep",
-    "description": "Automated release pipeline: tests → changelog → version bump → PR → announcement draft",
-    "whenToUse": "When preparing a production release and need all release artifacts generated",
-    "tier": "ops",
-    "command": "/mindforge:wf-release-prep",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/release-prep.js",
-    "phases": [
-      {
-        "title": "Check",
-        "detail": "Run tests, verify no uncommitted changes, check CI status"
-      },
-      {
-        "title": "Changelog",
-        "detail": "Generate changelog from commits since last release"
-      },
-      {
-        "title": "Bump",
-        "detail": "Update version in all required files"
-      },
-      {
-        "title": "PR",
-        "detail": "Create release PR and draft announcement"
-      }
-    ]
-  },
-  {
-    "name": "dependency-health",
-    "description": "Parallel per-dependency audit (CVEs / licenses / staleness / maintenance) → risk matrix",
-    "whenToUse": "When auditing dependencies before a release, security review, or due diligence",
-    "tier": "ops",
-    "command": "/mindforge:wf-dependency-health",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/dependency-health.js",
-    "phases": [
-      {
-        "title": "Inventory",
-        "detail": "Extract full dependency tree from package manifests"
-      },
-      {
-        "title": "Audit",
-        "detail": "Parallel audit per batch: CVEs, license risk, staleness, maintenance status"
-      },
-      {
-        "title": "RiskMatrix",
-        "detail": "Consolidate into risk matrix with severity tiers"
-      },
-      {
-        "title": "Action",
-        "detail": "Prioritized upgrade / replace / accept recommendations"
-      }
-    ]
-  },
-  {
-    "name": "database-migration",
-    "description": "Schema diff → risk analysis → migration scripts → rollback plan",
-    "whenToUse": "When planning or reviewing a database schema migration",
-    "tier": "ops",
-    "command": "/mindforge:wf-database-migration",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/database-migration.js",
-    "phases": [
-      {
-        "title": "SchemaDiff",
-        "detail": "Parse current and target schema, compute structural diff"
-      },
-      {
-        "title": "RiskAnalysis",
-        "detail": "Assess data loss risk, locking impact, and rollback complexity"
-      },
-      {
-        "title": "Scripts",
-        "detail": "Generate forward migration + rollback scripts"
-      },
-      {
-        "title": "Runbook",
-        "detail": "Step-by-step production runbook with verification checks"
-      }
-    ]
-  },
-  {
-    "name": "multi-repo-sync",
-    "description": "Parallel per-repo audit → cross-repo divergence map → sync plan",
-    "whenToUse": "When managing multiple related repos and need to find/fix divergence in shared config, deps, or conventions",
-    "tier": "ops",
-    "command": "/mindforge:wf-multi-repo-sync",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/multi-repo-sync.js",
-    "phases": [
-      {
-        "title": "Discover",
-        "detail": "List target repos and their relationships"
-      },
-      {
-        "title": "Audit",
-        "detail": "Parallel audit per repo for divergence from the reference"
-      },
-      {
-        "title": "DivergenceMap",
-        "detail": "Cross-repo divergence map with severity"
-      },
-      {
-        "title": "SyncPlan",
-        "detail": "Prioritized sync plan — what to align and how"
-      }
-    ]
-  },
-  {
-    "name": "cost-analysis",
-    "description": "Parallel infra/API/query/bundle cost agents → reduction plan with ROI estimates",
-    "whenToUse": "When analyzing and reducing infrastructure, API, database, or bundle costs",
-    "tier": "ops",
-    "command": "/mindforge:wf-cost-analysis",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/cost-analysis.js",
-    "phases": [
-      {
-        "title": "Scope",
-        "detail": "Identify cost centers and establish current baseline"
-      },
-      {
-        "title": "Analyze",
-        "detail": "4 parallel cost dimension agents: infra / API / database / bundle"
-      },
-      {
-        "title": "Model",
-        "detail": "Cost model with reduction opportunities and ROI estimates"
-      },
-      {
-        "title": "Plan",
-        "detail": "Prioritized cost reduction plan with implementation steps"
-      }
-    ]
-  },
-  {
-    "name": "onboard-codebase",
-    "description": "Map structure → domain analysis → architecture → generate guided tour and onboarding docs",
-    "whenToUse": "When joining a new codebase or onboarding a team member to an existing repo",
-    "tier": "intelligence",
-    "command": "/mindforge:wf-onboard-codebase",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/onboard-codebase.js",
-    "phases": [
-      {
-        "title": "Map",
-        "detail": "Discover file structure, languages, entry points"
-      },
-      {
-        "title": "Domain",
-        "detail": "Identify business domains and core abstractions"
-      },
-      {
-        "title": "Architecture",
-        "detail": "Map layers, data flow, and key patterns"
-      },
-      {
-        "title": "Tour",
-        "detail": "Generate guided tour and onboarding documentation"
-      }
-    ]
-  },
-  {
-    "name": "perf-optimize",
-    "description": "Profile → parallel bottleneck hunt across DB/network/CPU/memory → prioritized fix plan",
-    "whenToUse": "When an application is slow and you need to find and fix performance bottlenecks",
-    "tier": "intelligence",
-    "command": "/mindforge:wf-perf-optimize",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/perf-optimize.js",
-    "phases": [
-      {
-        "title": "Profile",
-        "detail": "Establish baseline metrics and identify slow paths"
-      },
-      {
-        "title": "Identify",
-        "detail": "4 parallel agents: DB queries / network / CPU / memory"
-      },
-      {
-        "title": "Plan",
-        "detail": "Prioritize fixes by impact-to-effort ratio"
-      },
-      {
-        "title": "Benchmark",
-        "detail": "Define verification benchmarks for each fix"
-      }
-    ]
-  },
-  {
-    "name": "architecture-modernization",
-    "description": "Legacy architecture map → target design → migration sequencing → risk gates",
-    "whenToUse": "When planning a major architecture overhaul: monolith-to-services, framework upgrade, or platform migration",
-    "tier": "intelligence",
-    "command": "/mindforge:wf-architecture-modernization",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/architecture-modernization.js",
-    "phases": [
-      {
-        "title": "Map",
-        "detail": "Map current architecture: components, dependencies, coupling, pain points"
-      },
-      {
-        "title": "Design",
-        "detail": "3 parallel target architecture proposals with trade-off analysis"
-      },
-      {
-        "title": "Select",
-        "detail": "Judge panel selects best design, synthesizes hybrid"
-      },
-      {
-        "title": "Sequence",
-        "detail": "Migration sequencing with risk gates and rollback checkpoints"
-      },
-      {
-        "title": "Roadmap",
-        "detail": "Sprint-by-sprint modernization roadmap"
-      }
-    ]
-  },
-  {
-    "name": "documentation-gen",
-    "description": "Parallel per-file doc generation → style normalization → publish-ready documentation",
-    "whenToUse": "When generating or refreshing documentation for a codebase, API, or module",
-    "tier": "intelligence",
-    "command": "/mindforge:wf-documentation-gen",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/documentation-gen.js",
-    "phases": [
-      {
-        "title": "Scope",
-        "detail": "Discover files needing documentation"
-      },
-      {
-        "title": "Generate",
-        "detail": "Parallel doc generation per file/module"
-      },
-      {
-        "title": "Normalize",
-        "detail": "Style consistency pass across all generated docs"
-      },
-      {
-        "title": "Publish",
-        "detail": "Assemble README, API reference, and changelog entries"
-      }
-    ]
-  },
-  {
-    "name": "api-migration",
-    "description": "Breaking change detection → versioning strategy → migration guide → compatibility matrix",
-    "whenToUse": "When planning or communicating an API version migration to consumers",
-    "tier": "intelligence",
-    "command": "/mindforge:wf-api-migration",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/api-migration.js",
-    "phases": [
-      {
-        "title": "Detect",
-        "detail": "Detect breaking vs non-breaking changes between old and new API versions"
-      },
-      {
-        "title": "Version",
-        "detail": "Propose versioning strategy: semver, URL versioning, or header versioning"
-      },
-      {
-        "title": "Guide",
-        "detail": "Generate migration guide for API consumers"
-      },
-      {
-        "title": "Matrix",
-        "detail": "Compatibility matrix: which client versions work with which API versions"
-      }
-    ]
-  },
-  {
-    "name": "data-pipeline-validate",
-    "description": "Pipeline stage-by-stage validation → data quality gates → anomaly detection report",
-    "whenToUse": "When validating a data pipeline for correctness, completeness, and quality before production use",
-    "tier": "intelligence",
-    "command": "/mindforge:wf-data-pipeline-validate",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/data-pipeline-validate.js",
-    "phases": [
-      {
-        "title": "Map",
-        "detail": "Map all pipeline stages from source to sink"
-      },
-      {
-        "title": "Validate",
-        "detail": "Parallel validation per stage (schema / completeness / transforms / outputs)"
-      },
-      {
-        "title": "Quality",
-        "detail": "Data quality gate assessment — freshness, completeness, consistency"
-      },
-      {
-        "title": "Report",
-        "detail": "Validation report with stage health scores and fix recommendations"
-      }
-    ]
-  },
-  {
-    "name": "security-hardening",
-    "description": "5-angle OWASP parallel scout → 3-vote adversarial verification → threat model + remediation roadmap",
-    "whenToUse": "When hardening a codebase before a security review, pentest, or production launch",
-    "tier": "beast",
-    "command": "/mindforge:wf-security-hardening",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/security-hardening.js",
-    "phases": [
-      {
-        "title": "Scope",
-        "detail": "Define attack surface and target context"
-      },
-      {
-        "title": "Scout",
-        "detail": "5 parallel OWASP/CWE dimension scouts"
-      },
-      {
-        "title": "Verify",
-        "detail": "3-vote adversarial verification per critical finding"
-      },
-      {
-        "title": "ThreatModel",
-        "detail": "STRIDE threat model from confirmed findings"
-      },
-      {
-        "title": "Roadmap",
-        "detail": "Prioritized remediation roadmap with severity/effort matrix"
-      }
-    ]
-  },
-  {
-    "name": "accessibility-audit",
-    "description": "WCAG 2.2 parallel per-criterion audit → 3-vote adversarial verify failures → remediation spec",
-    "whenToUse": "When auditing a UI for WCAG 2.2 compliance before launch, legal review, or accessibility certification",
-    "tier": "beast",
-    "command": "/mindforge:wf-accessibility-audit",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/accessibility-audit.js",
-    "phases": [
-      {
-        "title": "Scope",
-        "detail": "Define target UI and map components/pages to audit"
-      },
-      {
-        "title": "Audit",
-        "detail": "6 parallel WCAG principle auditors (Perceivable/Operable/Understandable/Robust + ARIA + Keyboard)"
-      },
-      {
-        "title": "Verify",
-        "detail": "3-vote adversarial verification of all Level A and AA failures"
-      },
-      {
-        "title": "Spec",
-        "detail": "Remediation spec with exact ARIA attributes, HTML fixes, and WCAG references"
-      }
-    ]
-  },
-  {
-    "name": "security-threat-model",
-    "description": "Asset inventory → STRIDE threat enumeration → parallel mitigations → CVSS-style score matrix",
-    "whenToUse": "When threat modeling a system architecture, API, or new feature before building",
-    "tier": "beast",
-    "command": "/mindforge:wf-security-threat-model",
-    "scriptPath": ".mindforge/dynamic-workflows/scripts/security-threat-model.js",
-    "phases": [
-      {
-        "title": "Assets",
-        "detail": "Inventory system assets, data flows, and trust boundaries"
-      },
-      {
-        "title": "STRIDE",
-        "detail": "6 parallel STRIDE threat agents — one per threat category"
-      },
-      {
-        "title": "Mitigate",
-        "detail": "Parallel mitigation agent per identified threat"
-      },
-      {
-        "title": "Score",
-        "detail": "CVSS-style risk score matrix with remediation priority"
-      }
-    ]
-  }
+    {
+        "name": "competitive-analysis",
+        "description": "Multi-angle competitive research producing a SWOT and positioning summary",
+        "whenToUse": "When evaluating a product, company, or technology against competitors",
+        "tier": "research",
+        "command": "/mindforge:wf-competitive-analysis",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/competitive-analysis.js",
+        "phases": [
+            {
+                "title": "Scope",
+                "detail": "Define target and 5 research angles"
+            },
+            {
+                "title": "Research",
+                "detail": "Parallel research: product / pricing / reviews / community / roadmap"
+            },
+            {
+                "title": "SWOT",
+                "detail": "Synthesize strengths, weaknesses, opportunities, threats"
+            },
+            {
+                "title": "Position",
+                "detail": "Produce positioning recommendations"
+            }
+        ]
+    },
+    {
+        "name": "tech-evaluation",
+        "description": "Scored technology evaluation across DX, performance, security, ecosystem, and community",
+        "whenToUse": "When choosing between technologies, frameworks, or libraries for a project",
+        "tier": "research",
+        "command": "/mindforge:wf-tech-evaluation",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/tech-evaluation.js",
+        "phases": [
+            {
+                "title": "Scope",
+                "detail": "Define candidates and evaluation criteria"
+            },
+            {
+                "title": "Evaluate",
+                "detail": "5 parallel dimension agents per candidate"
+            },
+            {
+                "title": "Score",
+                "detail": "Build weighted scoring matrix"
+            },
+            {
+                "title": "Recommend",
+                "detail": "Produce ranked recommendation with trade-offs"
+            }
+        ]
+    },
+    {
+        "name": "ai-model-eval",
+        "description": "4-parallel model benchmark agents → scoring matrix → cost/performance recommendation",
+        "whenToUse": "When choosing between AI models or providers for a use case",
+        "tier": "research",
+        "command": "/mindforge:wf-ai-model-eval",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/ai-model-eval.js",
+        "phases": [
+            {
+                "title": "Scope",
+                "detail": "Define evaluation criteria and test prompts for the use case"
+            },
+            {
+                "title": "Benchmark",
+                "detail": "4 parallel model evaluators (quality / reasoning / speed / cost)"
+            },
+            {
+                "title": "Score",
+                "detail": "Scoring matrix across all dimensions"
+            },
+            {
+                "title": "Recommend",
+                "detail": "Ranked recommendation with break-even cost analysis"
+            }
+        ]
+    },
+    {
+        "name": "ux-heuristic-audit",
+        "description": "10 Nielsen heuristics parallel audit → severity ranking → fix brief",
+        "whenToUse": "When auditing a UI for usability issues using Nielsen's 10 heuristics",
+        "tier": "research",
+        "command": "/mindforge:wf-ux-heuristic-audit",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/ux-heuristic-audit.js",
+        "phases": [
+            {
+                "title": "Scope",
+                "detail": "Define target UI and identify key user flows to audit"
+            },
+            {
+                "title": "Audit",
+                "detail": "10 parallel heuristic evaluators — one per Nielsen heuristic"
+            },
+            {
+                "title": "Rank",
+                "detail": "Severity ranking of all violations by impact on user experience"
+            },
+            {
+                "title": "Brief",
+                "detail": "Prioritized fix brief with specific design recommendations"
+            }
+        ]
+    },
+    {
+        "name": "competitive-teardown",
+        "description": "5 parallel competitor angle agents → pipeline synthesis into competitive positioning report",
+        "whenToUse": "When doing a deep competitive teardown across product, tech, pricing, hiring, and community",
+        "tier": "research",
+        "command": "/mindforge:wf-competitive-teardown",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/competitive-teardown.js",
+        "phases": [
+            {
+                "title": "Scope",
+                "detail": "Identify competitors and define evaluation framework"
+            },
+            {
+                "title": "Research",
+                "detail": "5 parallel competitor angle agents: product/tech/pricing/hiring/community"
+            },
+            {
+                "title": "Analyze",
+                "detail": "Synthesize competitive landscape from all angles"
+            },
+            {
+                "title": "Synthesis",
+                "detail": "Competitive positioning report with differentiation opportunities"
+            }
+        ]
+    },
+    {
+        "name": "code-audit",
+        "description": "Parallel security + quality + performance audit with adversarial finding verification",
+        "whenToUse": "When you need a comprehensive code review before a release or security review",
+        "tier": "dev",
+        "command": "/mindforge:wf-code-audit",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/code-audit.js",
+        "phases": [
+            {
+                "title": "Scope",
+                "detail": "Build file list from git diff or path argument"
+            },
+            {
+                "title": "Audit",
+                "detail": "3 parallel auditors: security / quality / performance"
+            },
+            {
+                "title": "Verify",
+                "detail": "Adversarial verification of high-severity findings"
+            },
+            {
+                "title": "Report",
+                "detail": "Risk-ranked report with actionable remediation"
+            }
+        ]
+    },
+    {
+        "name": "feature-planner",
+        "description": "Sequential pipeline: brief → PRD → architecture → user stories",
+        "whenToUse": "When starting a new feature and need a complete specification before coding",
+        "tier": "dev",
+        "command": "/mindforge:wf-feature-planner",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/feature-planner.js",
+        "phases": [
+            {
+                "title": "Brief",
+                "detail": "Clarify goals, users, success criteria"
+            },
+            {
+                "title": "PRD",
+                "detail": "Generate product requirements document"
+            },
+            {
+                "title": "Architecture",
+                "detail": "Design technical architecture and data flow"
+            },
+            {
+                "title": "Stories",
+                "detail": "Break into implementation user stories"
+            }
+        ]
+    },
+    {
+        "name": "pr-review",
+        "description": "4-dimensional parallel PR review: correctness, security, performance, style → consensus verdict",
+        "whenToUse": "When you want a thorough multi-perspective review of a pull request or diff",
+        "tier": "dev",
+        "command": "/mindforge:wf-pr-review",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/pr-review.js",
+        "phases": [
+            {
+                "title": "Scope",
+                "detail": "Read diff and build review context"
+            },
+            {
+                "title": "Review",
+                "detail": "4 parallel reviewers: correctness / security / performance / style"
+            },
+            {
+                "title": "Consensus",
+                "detail": "Merge findings, deduplicate, score severity"
+            },
+            {
+                "title": "Verdict",
+                "detail": "Produce APPROVED / CHANGES REQUIRED verdict with findings"
+            }
+        ]
+    },
+    {
+        "name": "tdd-sprint",
+        "description": "Strict Red-Green-Refactor TDD loop with spec-first discipline",
+        "whenToUse": "When implementing a feature or fix using test-driven development methodology",
+        "tier": "dev",
+        "command": "/mindforge:wf-tdd-sprint",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/tdd-sprint.js",
+        "phases": [
+            {
+                "title": "Spec",
+                "detail": "Define behavior requirements and acceptance criteria"
+            },
+            {
+                "title": "Red",
+                "detail": "Write failing test that captures the requirement"
+            },
+            {
+                "title": "Green",
+                "detail": "Write minimal code to make the test pass"
+            },
+            {
+                "title": "Refactor",
+                "detail": "Clean up while keeping tests green, verify all pass"
+            }
+        ]
+    },
+    {
+        "name": "refactor-plan",
+        "description": "Technical debt scan → risk-sorted sequence → safe refactor implementation plan",
+        "whenToUse": "When you need to plan a refactoring safely without breaking existing behavior",
+        "tier": "dev",
+        "command": "/mindforge:wf-refactor-plan",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/refactor-plan.js",
+        "phases": [
+            {
+                "title": "Scan",
+                "detail": "Identify technical debt, complexity hotspots, dead code"
+            },
+            {
+                "title": "Prioritize",
+                "detail": "Risk-sort by blast radius and test coverage"
+            },
+            {
+                "title": "Sequence",
+                "detail": "Order changes to minimize merge conflicts"
+            },
+            {
+                "title": "Plan",
+                "detail": "Produce step-by-step refactor plan with verification gates"
+            }
+        ]
+    },
+    {
+        "name": "test-coverage-gap",
+        "description": "Parallel per-module coverage analysis → gap map → prioritized test-writing plan",
+        "whenToUse": "When you need to find and fix test coverage gaps across a codebase or module",
+        "tier": "dev",
+        "command": "/mindforge:wf-test-coverage-gap",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/test-coverage-gap.js",
+        "phases": [
+            {
+                "title": "Discover",
+                "detail": "Map modules and identify testable units"
+            },
+            {
+                "title": "Analyze",
+                "detail": "Parallel coverage analysis per module"
+            },
+            {
+                "title": "GapMap",
+                "detail": "Synthesize gaps by severity and risk"
+            },
+            {
+                "title": "Plan",
+                "detail": "Prioritized test-writing plan with concrete test cases"
+            }
+        ]
+    },
+    {
+        "name": "api-contract-test",
+        "description": "Writer/Reviewer pattern: spec reader vs implementation reader → contract violation report",
+        "whenToUse": "When validating that an API implementation matches its OpenAPI/GraphQL/Protobuf spec",
+        "tier": "dev",
+        "command": "/mindforge:wf-api-contract-test",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/api-contract-test.js",
+        "phases": [
+            {
+                "title": "ReadSpec",
+                "detail": "Parse the API specification (OpenAPI/GraphQL/Protobuf/docs)"
+            },
+            {
+                "title": "ReadImpl",
+                "detail": "Read the actual implementation in a fresh context"
+            },
+            {
+                "title": "Diff",
+                "detail": "Cross-reference spec contracts vs implementation"
+            },
+            {
+                "title": "Report",
+                "detail": "Violation report with severity and fix instructions"
+            }
+        ]
+    },
+    {
+        "name": "debug-detective",
+        "description": "4-hypothesis parallel investigation → evidence gathering → scientific RCA",
+        "whenToUse": "When debugging a hard-to-reproduce bug or production issue with unclear root cause",
+        "tier": "dev",
+        "command": "/mindforge:wf-debug-detective",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/debug-detective.js",
+        "phases": [
+            {
+                "title": "Intake",
+                "detail": "Document symptoms, context, and reproduction steps"
+            },
+            {
+                "title": "Hypothesize",
+                "detail": "4 parallel hypothesis agents from different angles"
+            },
+            {
+                "title": "Evidence",
+                "detail": "Parallel evidence gathering per hypothesis"
+            },
+            {
+                "title": "RCA",
+                "detail": "Scientific root cause analysis from evidence"
+            },
+            {
+                "title": "Fix",
+                "detail": "Targeted fix plan with regression test spec"
+            }
+        ]
+    },
+    {
+        "name": "writer-reviewer",
+        "description": "Anthropic Writer/Reviewer pattern: implement in Context A → fresh Context B reviews the diff",
+        "whenToUse": "When you want unbiased code review — a fresh context reviewer has no bias toward code it did not write",
+        "tier": "dev",
+        "command": "/mindforge:wf-writer-reviewer",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/writer-reviewer.js",
+        "phases": [
+            {
+                "title": "Implement",
+                "detail": "Writer agent implements the requested change"
+            },
+            {
+                "title": "Review",
+                "detail": "Fresh reviewer agent inspects only the diff without implementation context"
+            },
+            {
+                "title": "Verdict",
+                "detail": "Accept / request-changes verdict with specific actionable feedback"
+            }
+        ]
+    },
+    {
+        "name": "mutation-testing",
+        "description": "Mutant generator → parallel kill-test agents → mutation score + survival report",
+        "whenToUse": "When evaluating test suite effectiveness by checking if tests catch deliberate code mutations",
+        "tier": "dev",
+        "command": "/mindforge:wf-mutation-testing",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/mutation-testing.js",
+        "phases": [
+            {
+                "title": "Analyze",
+                "detail": "Identify mutable source lines: conditions, operators, return values"
+            },
+            {
+                "title": "Mutate",
+                "detail": "Generate 10-15 specific mutation descriptions"
+            },
+            {
+                "title": "Kill",
+                "detail": "Parallel kill-test per mutation — would existing tests catch it?"
+            },
+            {
+                "title": "Report",
+                "detail": "Mutation score report with killed/survived/timeout breakdown"
+            }
+        ]
+    },
+    {
+        "name": "code-explainer",
+        "description": "Structural map → domain extraction → architecture patterns → guided narrative tour for onboarding",
+        "whenToUse": "When onboarding to an unfamiliar codebase or explaining a complex module to a new developer",
+        "tier": "dev",
+        "command": "/mindforge:wf-code-explainer",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/code-explainer.js",
+        "phases": [
+            {
+                "title": "Structure",
+                "detail": "Map file structure, entry points, and module boundaries"
+            },
+            {
+                "title": "Domain",
+                "detail": "Extract domain concepts, business logic, and key abstractions"
+            },
+            {
+                "title": "Architecture",
+                "detail": "Identify architectural patterns, data flow, and design decisions"
+            },
+            {
+                "title": "Tour",
+                "detail": "Synthesize a guided narrative tour for a new developer"
+            }
+        ]
+    },
+    {
+        "name": "design-system-audit",
+        "description": "5 parallel dimension auditors (spacing/color/typography/icons/a11y) → consistency score",
+        "whenToUse": "When auditing a frontend codebase for design system consistency and token usage",
+        "tier": "dev",
+        "command": "/mindforge:wf-design-system-audit",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/design-system-audit.js",
+        "phases": [
+            {
+                "title": "Inventory",
+                "detail": "Discover design tokens, component files, and styling approach"
+            },
+            {
+                "title": "Audit",
+                "detail": "5 parallel dimension auditors: spacing, color, typography, icons, accessibility"
+            },
+            {
+                "title": "Score",
+                "detail": "Aggregate consistency scores per dimension and overall"
+            },
+            {
+                "title": "Report",
+                "detail": "Design system health report with specific violation fixes"
+            }
+        ]
+    },
+    {
+        "name": "incident-response",
+        "description": "Parallel investigation across logs, metrics, traces, and code → mitigation → RCA → postmortem",
+        "whenToUse": "When responding to a production incident or unexpected system failure",
+        "tier": "ops",
+        "command": "/mindforge:wf-incident-response",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/incident-response.js",
+        "phases": [
+            {
+                "title": "Alert",
+                "detail": "Characterize the incident: impact, scope, timeline"
+            },
+            {
+                "title": "Investigate",
+                "detail": "4 parallel agents: logs / metrics / traces / code changes"
+            },
+            {
+                "title": "Mitigate",
+                "detail": "Identify and apply immediate mitigation steps"
+            },
+            {
+                "title": "RCA",
+                "detail": "Root cause analysis and postmortem document"
+            }
+        ]
+    },
+    {
+        "name": "release-prep",
+        "description": "Automated release pipeline: tests → changelog → version bump → PR → announcement draft",
+        "whenToUse": "When preparing a production release and need all release artifacts generated",
+        "tier": "ops",
+        "command": "/mindforge:wf-release-prep",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/release-prep.js",
+        "phases": [
+            {
+                "title": "Check",
+                "detail": "Run tests, verify no uncommitted changes, check CI status"
+            },
+            {
+                "title": "Changelog",
+                "detail": "Generate changelog from commits since last release"
+            },
+            {
+                "title": "Bump",
+                "detail": "Update version in all required files"
+            },
+            {
+                "title": "PR",
+                "detail": "Create release PR and draft announcement"
+            }
+        ]
+    },
+    {
+        "name": "dependency-health",
+        "description": "Parallel per-dependency audit (CVEs / licenses / staleness / maintenance) → risk matrix",
+        "whenToUse": "When auditing dependencies before a release, security review, or due diligence",
+        "tier": "ops",
+        "command": "/mindforge:wf-dependency-health",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/dependency-health.js",
+        "phases": [
+            {
+                "title": "Inventory",
+                "detail": "Extract full dependency tree from package manifests"
+            },
+            {
+                "title": "Audit",
+                "detail": "Parallel audit per batch: CVEs, license risk, staleness, maintenance status"
+            },
+            {
+                "title": "RiskMatrix",
+                "detail": "Consolidate into risk matrix with severity tiers"
+            },
+            {
+                "title": "Action",
+                "detail": "Prioritized upgrade / replace / accept recommendations"
+            }
+        ]
+    },
+    {
+        "name": "database-migration",
+        "description": "Schema diff → risk analysis → migration scripts → rollback plan",
+        "whenToUse": "When planning or reviewing a database schema migration",
+        "tier": "ops",
+        "command": "/mindforge:wf-database-migration",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/database-migration.js",
+        "phases": [
+            {
+                "title": "SchemaDiff",
+                "detail": "Parse current and target schema, compute structural diff"
+            },
+            {
+                "title": "RiskAnalysis",
+                "detail": "Assess data loss risk, locking impact, and rollback complexity"
+            },
+            {
+                "title": "Scripts",
+                "detail": "Generate forward migration + rollback scripts"
+            },
+            {
+                "title": "Runbook",
+                "detail": "Step-by-step production runbook with verification checks"
+            }
+        ]
+    },
+    {
+        "name": "multi-repo-sync",
+        "description": "Parallel per-repo audit → cross-repo divergence map → sync plan",
+        "whenToUse": "When managing multiple related repos and need to find/fix divergence in shared config, deps, or conventions",
+        "tier": "ops",
+        "command": "/mindforge:wf-multi-repo-sync",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/multi-repo-sync.js",
+        "phases": [
+            {
+                "title": "Discover",
+                "detail": "List target repos and their relationships"
+            },
+            {
+                "title": "Audit",
+                "detail": "Parallel audit per repo for divergence from the reference"
+            },
+            {
+                "title": "DivergenceMap",
+                "detail": "Cross-repo divergence map with severity"
+            },
+            {
+                "title": "SyncPlan",
+                "detail": "Prioritized sync plan — what to align and how"
+            }
+        ]
+    },
+    {
+        "name": "cost-analysis",
+        "description": "Parallel infra/API/query/bundle cost agents → reduction plan with ROI estimates",
+        "whenToUse": "When analyzing and reducing infrastructure, API, database, or bundle costs",
+        "tier": "ops",
+        "command": "/mindforge:wf-cost-analysis",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/cost-analysis.js",
+        "phases": [
+            {
+                "title": "Scope",
+                "detail": "Identify cost centers and establish current baseline"
+            },
+            {
+                "title": "Analyze",
+                "detail": "4 parallel cost dimension agents: infra / API / database / bundle"
+            },
+            {
+                "title": "Model",
+                "detail": "Cost model with reduction opportunities and ROI estimates"
+            },
+            {
+                "title": "Plan",
+                "detail": "Prioritized cost reduction plan with implementation steps"
+            }
+        ]
+    },
+    {
+        "name": "onboard-codebase",
+        "description": "Map structure → domain analysis → architecture → generate guided tour and onboarding docs",
+        "whenToUse": "When joining a new codebase or onboarding a team member to an existing repo",
+        "tier": "intelligence",
+        "command": "/mindforge:wf-onboard-codebase",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/onboard-codebase.js",
+        "phases": [
+            {
+                "title": "Map",
+                "detail": "Discover file structure, languages, entry points"
+            },
+            {
+                "title": "Domain",
+                "detail": "Identify business domains and core abstractions"
+            },
+            {
+                "title": "Architecture",
+                "detail": "Map layers, data flow, and key patterns"
+            },
+            {
+                "title": "Tour",
+                "detail": "Generate guided tour and onboarding documentation"
+            }
+        ]
+    },
+    {
+        "name": "perf-optimize",
+        "description": "Profile → parallel bottleneck hunt across DB/network/CPU/memory → prioritized fix plan",
+        "whenToUse": "When an application is slow and you need to find and fix performance bottlenecks",
+        "tier": "intelligence",
+        "command": "/mindforge:wf-perf-optimize",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/perf-optimize.js",
+        "phases": [
+            {
+                "title": "Profile",
+                "detail": "Establish baseline metrics and identify slow paths"
+            },
+            {
+                "title": "Identify",
+                "detail": "4 parallel agents: DB queries / network / CPU / memory"
+            },
+            {
+                "title": "Plan",
+                "detail": "Prioritize fixes by impact-to-effort ratio"
+            },
+            {
+                "title": "Benchmark",
+                "detail": "Define verification benchmarks for each fix"
+            }
+        ]
+    },
+    {
+        "name": "architecture-modernization",
+        "description": "Legacy architecture map → target design → migration sequencing → risk gates",
+        "whenToUse": "When planning a major architecture overhaul: monolith-to-services, framework upgrade, or platform migration",
+        "tier": "intelligence",
+        "command": "/mindforge:wf-architecture-modernization",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/architecture-modernization.js",
+        "phases": [
+            {
+                "title": "Map",
+                "detail": "Map current architecture: components, dependencies, coupling, pain points"
+            },
+            {
+                "title": "Design",
+                "detail": "3 parallel target architecture proposals with trade-off analysis"
+            },
+            {
+                "title": "Select",
+                "detail": "Judge panel selects best design, synthesizes hybrid"
+            },
+            {
+                "title": "Sequence",
+                "detail": "Migration sequencing with risk gates and rollback checkpoints"
+            },
+            {
+                "title": "Roadmap",
+                "detail": "Sprint-by-sprint modernization roadmap"
+            }
+        ]
+    },
+    {
+        "name": "documentation-gen",
+        "description": "Parallel per-file doc generation → style normalization → publish-ready documentation",
+        "whenToUse": "When generating or refreshing documentation for a codebase, API, or module",
+        "tier": "intelligence",
+        "command": "/mindforge:wf-documentation-gen",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/documentation-gen.js",
+        "phases": [
+            {
+                "title": "Scope",
+                "detail": "Discover files needing documentation"
+            },
+            {
+                "title": "Generate",
+                "detail": "Parallel doc generation per file/module"
+            },
+            {
+                "title": "Normalize",
+                "detail": "Style consistency pass across all generated docs"
+            },
+            {
+                "title": "Publish",
+                "detail": "Assemble README, API reference, and changelog entries"
+            }
+        ]
+    },
+    {
+        "name": "api-migration",
+        "description": "Breaking change detection → versioning strategy → migration guide → compatibility matrix",
+        "whenToUse": "When planning or communicating an API version migration to consumers",
+        "tier": "intelligence",
+        "command": "/mindforge:wf-api-migration",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/api-migration.js",
+        "phases": [
+            {
+                "title": "Detect",
+                "detail": "Detect breaking vs non-breaking changes between old and new API versions"
+            },
+            {
+                "title": "Version",
+                "detail": "Propose versioning strategy: semver, URL versioning, or header versioning"
+            },
+            {
+                "title": "Guide",
+                "detail": "Generate migration guide for API consumers"
+            },
+            {
+                "title": "Matrix",
+                "detail": "Compatibility matrix: which client versions work with which API versions"
+            }
+        ]
+    },
+    {
+        "name": "data-pipeline-validate",
+        "description": "Pipeline stage-by-stage validation → data quality gates → anomaly detection report",
+        "whenToUse": "When validating a data pipeline for correctness, completeness, and quality before production use",
+        "tier": "intelligence",
+        "command": "/mindforge:wf-data-pipeline-validate",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/data-pipeline-validate.js",
+        "phases": [
+            {
+                "title": "Map",
+                "detail": "Map all pipeline stages from source to sink"
+            },
+            {
+                "title": "Validate",
+                "detail": "Parallel validation per stage (schema / completeness / transforms / outputs)"
+            },
+            {
+                "title": "Quality",
+                "detail": "Data quality gate assessment — freshness, completeness, consistency"
+            },
+            {
+                "title": "Report",
+                "detail": "Validation report with stage health scores and fix recommendations"
+            }
+        ]
+    },
+    {
+        "name": "security-hardening",
+        "description": "5-angle OWASP parallel scout → 3-vote adversarial verification → threat model + remediation roadmap",
+        "whenToUse": "When hardening a codebase before a security review, pentest, or production launch",
+        "tier": "beast",
+        "command": "/mindforge:wf-security-hardening",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/security-hardening.js",
+        "phases": [
+            {
+                "title": "Scope",
+                "detail": "Define attack surface and target context"
+            },
+            {
+                "title": "Scout",
+                "detail": "5 parallel OWASP/CWE dimension scouts"
+            },
+            {
+                "title": "Verify",
+                "detail": "3-vote adversarial verification per critical finding"
+            },
+            {
+                "title": "ThreatModel",
+                "detail": "STRIDE threat model from confirmed findings"
+            },
+            {
+                "title": "Roadmap",
+                "detail": "Prioritized remediation roadmap with severity/effort matrix"
+            }
+        ]
+    },
+    {
+        "name": "accessibility-audit",
+        "description": "WCAG 2.2 parallel per-criterion audit → 3-vote adversarial verify failures → remediation spec",
+        "whenToUse": "When auditing a UI for WCAG 2.2 compliance before launch, legal review, or accessibility certification",
+        "tier": "beast",
+        "command": "/mindforge:wf-accessibility-audit",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/accessibility-audit.js",
+        "phases": [
+            {
+                "title": "Scope",
+                "detail": "Define target UI and map components/pages to audit"
+            },
+            {
+                "title": "Audit",
+                "detail": "6 parallel WCAG principle auditors (Perceivable/Operable/Understandable/Robust + ARIA + Keyboard)"
+            },
+            {
+                "title": "Verify",
+                "detail": "3-vote adversarial verification of all Level A and AA failures"
+            },
+            {
+                "title": "Spec",
+                "detail": "Remediation spec with exact ARIA attributes, HTML fixes, and WCAG references"
+            }
+        ]
+    },
+    {
+        "name": "security-threat-model",
+        "description": "Asset inventory → STRIDE threat enumeration → parallel mitigations → CVSS-style score matrix",
+        "whenToUse": "When threat modeling a system architecture, API, or new feature before building",
+        "tier": "beast",
+        "command": "/mindforge:wf-security-threat-model",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/security-threat-model.js",
+        "phases": [
+            {
+                "title": "Assets",
+                "detail": "Inventory system assets, data flows, and trust boundaries"
+            },
+            {
+                "title": "STRIDE",
+                "detail": "6 parallel STRIDE threat agents — one per threat category"
+            },
+            {
+                "title": "Mitigate",
+                "detail": "Parallel mitigation agent per identified threat"
+            },
+            {
+                "title": "Score",
+                "detail": "CVSS-style risk score matrix with remediation priority"
+            }
+        ]
+    },
+    {
+        "name": "orchestrate-review",
+        "description": "4-lens parallel review — factual, domain, safety, style — coordinated as one panel and merged into a single verdict",
+        "whenToUse": "When reviewing content or a decision where correctness/security/performance is the wrong axis split — e.g. a document, a policy, a plan, an AI-generated artifact, anything where you want independent factual-accuracy, domain-expert, safety, and voice/style perspectives rather than code-review dimensions",
+        "tier": "dev",
+        "command": "/mindforge:wf-orchestrate-review",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/orchestrate-review.js",
+        "phases": [
+            {
+                "title": "Scope",
+                "detail": "pin the target and any domain context"
+            },
+            {
+                "title": "Panel",
+                "detail": "4 parallel lenses: factual / domain / safety / style"
+            },
+            {
+                "title": "Consensus",
+                "detail": "merge findings, deduplicate, score severity"
+            },
+            {
+                "title": "Verdict",
+                "detail": "single panel verdict with findings by lens"
+            }
+        ]
+    },
+    {
+        "name": "verification-loop",
+        "description": "Implementer vs. scorer loop: one agent revises an artifact each round, a separate agent scores it against a fixed metric, and the implementer keeps re-attempting until the score is maxed or a round cap is hit",
+        "whenToUse": "When a task has a single well-defined quality metric worth pushing as high as possible, rather than a single fixed-count review pass — e.g. tightening a prompt, hardening a config, polishing a spec, or any \"keep improving this until the score stops moving\" task",
+        "tier": "dev",
+        "command": "/mindforge:wf-verification-loop",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/verification-loop.js",
+        "phases": [
+            {
+                "title": "Scope",
+                "detail": "pin the artifact, the metric, and the target/max-round cap"
+            },
+            {
+                "title": "Round",
+                "detail": "implementer revises, scorer grades — repeats until target hit, score plateaus, or cap reached"
+            },
+            {
+                "title": "Report",
+                "detail": "round-by-round score history and the final artifact"
+            }
+        ]
+    },
+    {
+        "name": "workflow-optimizer",
+        "description": "Builder + scorer + a distinct process-optimizer role: each round scores the OUTPUT, but a separate optimizer agent reviews the round and proposes structural changes to the PROCESS itself (extra phases, different builder count, a corrected rubric) — the next round runs under the revised process, so the comparison is whether the workflow is getting better at producing good outputs, not just whether one artifact beat another",
+        "whenToUse": "When you want to improve a repeatable PROCESS across attempts, not just polish one output — e.g. \"this review workflow keeps missing X, fix the workflow, not just this one review\" or tuning how a builder+scorer pipeline should be structured before locking it in as a reusable workflow",
+        "tier": "intelligence",
+        "command": "/mindforge:wf-workflow-optimizer",
+        "scriptPath": ".mindforge/dynamic-workflows/scripts/workflow-optimizer.js",
+        "phases": [
+            {
+                "title": "Scope",
+                "detail": "pin the task family, the outcome metric, and any prior round history supplied by the caller"
+            },
+            {
+                "title": "Cycle",
+                "detail": "builder runs under the current process -> scorer grades the output -> a separate process-optimizer proposes structural changes to the process for next round"
+            },
+            {
+                "title": "Report",
+                "detail": "process-change history alongside the score trend, so a rising score can be attributed to real structural improvements"
+            }
+        ]
+    }
 ]
