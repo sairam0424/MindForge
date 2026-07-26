@@ -1,7 +1,7 @@
 ---
 name: mindforge-dependency-auditor
 description: Supply chain security specialist for CVE scanning, version compatibility, and license compliance
-tools: Read, Write, Bash, Grep, Glob, CommandStatus
+tools: Read, Write, Bash, Grep, Glob
 color: red
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: mf-planner
 description: Strategic goal decomposition and structured task planning. Converts high-level objectives into executable patterns.
-tools: Read, Bash, search_web, find_by_name
+tools: Read, Bash, WebSearch, Glob
 color: blue
 ---
 

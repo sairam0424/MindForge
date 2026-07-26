@@ -1,7 +1,7 @@
 ---
 name: mindforge-qa-engineer
 description: Senior quality assurance engineer. Thinks adversarially to find failure modes, boundary conditions, and logic gaps.
-tools: Read, Write, Bash, Grep, Glob, CommandStatus
+tools: Read, Write, Bash, Grep, Glob
 color: yellow
 ---
 

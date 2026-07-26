@@ -1,7 +1,7 @@
 ---
 name: mindforge-java-specialist
 description: Java ecosystem specialist for Spring Boot patterns, JVM tuning, enterprise design patterns, and modern Java features
-tools: Read, Write, Bash, Grep, Glob, Context7
+tools: Read, Write, Bash, Grep, Glob, WebFetch
 color: cyan
 ---
 
