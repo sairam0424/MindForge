@@ -1,7 +1,7 @@
 ---
 name: mindforge-api-load-tester
 description: Load testing and capacity planning specialist for performance benchmarking, stress testing, and SLA validation
-tools: Read, Write, Bash, Grep, Glob, CommandStatus
+tools: Read, Write, Bash, Grep, Glob
 color: orange
 ---
 
