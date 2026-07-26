@@ -1,5 +1,5 @@
 ---
-name: "using-mindforge"
+name: "mindforge-neural-orchestrator"
 description: "Use when starting any conversation - establishes how to find and use skills, requiring MindForge Skill tool invocation before ANY response including clarifying questions"
 ---
 

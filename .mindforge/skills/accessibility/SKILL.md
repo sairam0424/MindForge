@@ -78,7 +78,7 @@ Level AAA elements (where achievable without design compromise) are recommended.
 ### Testing protocol
 ```bash
 # Automated testing (catches ~30-40% of issues)
-npx axe-cli https://localhost:3000
+npx @axe-core/cli https://localhost:3000
 
 # Keyboard testing (manual — must be done for every interactive component)
 # 1. Tab through every interactive element — order must be logical
@@ -98,7 +98,7 @@ npx axe-cli https://localhost:3000
 ```
 
 ## Self-check before task completion
-- [ ] Ran `axe-cli` — zero violations
+- [ ] Ran `@axe-core/cli` — zero violations
 - [ ] Keyboard navigation tested manually
 - [ ] All interactive elements have accessible names
 - [ ] Colour contrast meets 4.5:1 for text

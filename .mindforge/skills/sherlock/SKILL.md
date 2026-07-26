@@ -71,7 +71,7 @@ sherlock --print-found --no-color "<username>" --timeout 90
 
 ### 4. Execute Search
 
-Run via the `terminal` tool. The command typically takes 30-120 seconds depending on network conditions and site count.
+Run via the `Bash` tool. The command typically takes 30-120 seconds depending on network conditions and site count.
 
 **Example terminal call:**
 ```json

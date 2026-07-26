@@ -120,13 +120,13 @@ Quick scan before dispatching the reviewer:
 
 ## Step 5 — Independent reviewer subagent
 
-Call `delegate_task` directly — it is NOT available inside execute_code or scripts.
+Call `Agent` directly — it is NOT available inside Bash or scripts.
 
 The reviewer gets ONLY the diff and static scan results. No shared context with
 the implementer. Fail-closed: unparseable response = fail.
 
 ```python
-delegate_task(
+Agent(
     goal="""You are an independent code reviewer. You have no context about how
 these changes were made. Review the git diff and return ONLY valid JSON.
 
@@ -165,7 +165,6 @@ Return ONLY this JSON:
   "summary": "one sentence verdict"
 }""",
     context="Independent code review. Return only JSON verdict.",
-    toolsets=["terminal"]
 )
 ```
 
@@ -195,7 +194,7 @@ Spawn a THIRD agent context — not you (the implementer), not the reviewer.
 It fixes ONLY the reported issues:
 
 ```python
-delegate_task(
+Agent(
     goal="""You are a code fix agent. Fix ONLY the specific issues listed below.
 Do NOT refactor, rename, or change anything else. Do NOT add features.
 
@@ -211,7 +210,6 @@ Current diff for context:
 
 Fix each issue precisely. Describe what you changed and why.""",
     context="Fix only the reported issues. Do not change anything else.",
-    toolsets=["terminal", "file"]
 )
 ```
 
@@ -269,7 +267,7 @@ tests exist, tests pass, no regressions.
 - **Empty diff** — check `git status`, tell user nothing to verify
 - **Not a git repo** — skip and tell user
 - **Large diff (>15k chars)** — split by file, review each separately
-- **delegate_task returns non-JSON** — retry once with stricter prompt, then treat as FAIL
+- **Agent returns non-JSON** — retry once with stricter prompt, then treat as FAIL
 - **False positives** — if reviewer flags something intentional, note it in fix prompt
 - **No test framework found** — skip regression check, reviewer verdict still runs
 - **Lint tools not installed** — skip that check silently, don't fail

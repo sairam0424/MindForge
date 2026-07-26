@@ -1,7 +1,7 @@
 ---
 name: mindforge-logging-architect
 description: Logging architecture specialist for structured logging standards, correlation ID propagation, log pipeline design, and PII redaction
-tools: Read, Write, Bash, Grep, Glob, CommandStatus
+tools: Read, Write, Bash, Grep, Glob
 color: green
 ---
 

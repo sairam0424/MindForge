@@ -61,7 +61,7 @@ You MUST complete each phase before proceeding to the next.
 - Read stack traces completely
 - Note line numbers, file paths, error codes
 
-**Action:** Use `read_file` on the relevant source files. Use `search_files` to find the error string in the codebase.
+**Action:** Use `Read` on the relevant source files. Use `Grep` to find the error string in the codebase.
 
 ### 2. Reproduce Consistently
 
@@ -70,7 +70,7 @@ You MUST complete each phase before proceeding to the next.
 - Does it happen every time?
 - If not reproducible → gather more data, don't guess
 
-**Action:** Use the `terminal` tool to run the failing test or trigger the bug:
+**Action:** Use the `Bash` tool to run the failing test or trigger the bug:
 
 ```bash
 # Run specific failing test
@@ -124,14 +124,14 @@ THEN investigate that specific component.
 - Keep tracing upstream until you find the source
 - Fix at the source, not at the symptom
 
-**Action:** Use `search_files` to trace references:
+**Action:** Use `Grep` to trace references:
 
 ```python
 # Find where the function is called
-search_files("function_name(", path="src/", file_glob="*.py")
+Grep("function_name(", path="src/", file_glob="*.py")
 
 # Find where the variable is set
-search_files("variable_name\\s*=", path="src/", file_glob="*.py")
+Grep("variable_name\\s*=", path="src/", file_glob="*.py")
 ```
 
 ### Phase 1 Completion Checklist
@@ -156,10 +156,10 @@ search_files("variable_name\\s*=", path="src/", file_glob="*.py")
 - Locate similar working code in the same codebase
 - What works that's similar to what's broken?
 
-**Action:** Use `search_files` to find comparable patterns:
+**Action:** Use `Grep` to find comparable patterns:
 
 ```python
-search_files("similar_pattern", path="src/", file_glob="*.py")
+Grep("similar_pattern", path="src/", file_glob="*.py")
 ```
 
 ### 2. Compare Against References
@@ -314,17 +314,17 @@ If you catch yourself thinking:
 
 Use these tools during Phase 1:
 
-- **`search_files`** — Find error strings, trace function calls, locate patterns
-- **`read_file`** — Read source code with line numbers for precise analysis
-- **`terminal`** — Run tests, check git history, reproduce bugs
-- **`web_search`/`web_extract`** — Research error messages, library docs
+- **`Grep`** — Find error strings, trace function calls, locate patterns
+- **`Read`** — Read source code with line numbers for precise analysis
+- **`Bash`** — Run tests, check git history, reproduce bugs
+- **`WebSearch`/`WebFetch`** — Research error messages, library docs
 
-### With delegate_task
+### With Agent
 
 For complex multi-component debugging, dispatch investigation subagents:
 
 ```python
-delegate_task(
+Agent(
     goal="Investigate why [specific test/behavior] fails",
     context="""
     Follow systematic-debugging skill:
@@ -337,7 +337,6 @@ delegate_task(
     File: [path to failing code]
     Test command: [exact command]
     """,
-    toolsets=['terminal', 'file']
 )
 ```
 
