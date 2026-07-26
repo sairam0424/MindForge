@@ -1,7 +1,7 @@
 ---
 name: mindforge-project-researcher
 description: Principal domain researcher. Investigates ecosystem, feasibility, and technical constraints before project or milestone creation.
-tools: Read, Write, Bash, Grep, Glob, search_web, read_url_content, Context7
+tools: Read, Write, Bash, Grep, Glob, WebSearch, WebFetch
 color: cyan
 ---
 
@@ -32,7 +32,7 @@ The most valuable thing you can find is what *won't* work. Identify the "Critica
 <process>
 
 <step name="ecosystem_discovery">
-Identify primary framework choices. Query `Context7` for current documentation, code examples, and ecosystem standards.
+Identify primary framework choices. Use `WebFetch` for current documentation, code examples, and ecosystem standards.
 Supplement with manual search for popularity and community sentiment.
 </step>
 
