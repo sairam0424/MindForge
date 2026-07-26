@@ -14,11 +14,11 @@ import {
 } from '@mindforge/sdk';
 ```
 
-Current SDK version: `11.8.3`
+Current SDK version: `11.9.0`
 
 ---
 
-## SDK Exports (v11.8.3)
+## SDK Exports (v11.9.0)
 
 ```javascript
 const {
@@ -28,7 +28,7 @@ const {
   commands,               // Command registry
   batch,                  // Batch execution
   MindForgeMemory,        // Memory interface
-  VERSION                 // '11.8.3'
+  VERSION                 // '11.9.0'
 } = require('mindforge-sdk');
 // or: import { MindForgeClient, VERSION } from 'mindforge-sdk';
 ```
@@ -413,10 +413,10 @@ The SDK includes full TypeScript type definitions. Build the SDK:
 ```bash
 cd sdk && npm install && npm run build
 ```
-`@types/node` is installed as a dev dependency. The SDK achieves **0 typecheck errors** in v11.8.3.
+`@types/node` is installed as a dev dependency. The SDK achieves **0 typecheck errors** in v11.9.0.
 
 ## Installation
 ```bash
-npm install mindforge-sdk@11.8.3
+npm install mindforge-sdk@11.9.0
 # or: npx mindforge-cc@stable  # installs SDK as part of the framework
 ```

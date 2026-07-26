@@ -1,4 +1,4 @@
-# MindForge FAQ (v11.8.3)
+# MindForge FAQ (v11.9.0)
 
 ## Is MindForge tied to Claude only?
 No. MindForge supports Claude Code and Antigravity. Install with `--claude`,
@@ -39,7 +39,7 @@ Plugins are preferred for sharing and versioning.
 
 ## Dynamic Workflows
 
-**Q: How many workflows does MindForge v11.8.3 include?**
+**Q: How many workflows does MindForge v11.9.0 include?**
 32 pre-built multi-agent workflows across 5 tiers: Research (5), Dev (12), Ops (6), Intelligence (6), Beast (3).
 
 **Q: How do I run a workflow?**
@@ -55,21 +55,21 @@ The `deep-research` workflow was removed before the v11.8.0 release (the superpo
 ## Version & Stability
 
 **Q: What version is current?**
-v11.8.3 — verify with `node bin/mindforge-cli.js --version`
+v11.9.0 — verify with `node bin/mindforge-cli.js --version`
 
-**Q: Is v11.8.3 production-stable?**
+**Q: Is v11.9.0 production-stable?**
 Yes. The IQ200 deep-audit (258 discrete checks across 14 dimensions) shows 258/258 passing. 0 CVEs, 0 test failures, 0 ESLint errors, 0 TypeScript errors.
 
-**Q: What npm dist-tags point to v11.8.3?**
+**Q: What npm dist-tags point to v11.9.0?**
 Both `latest` and `stable`: `npx mindforge-cc@stable` or `npx mindforge-cc@latest`
 
 ## Known Limitations
 
 **Q: Why does `spawn architect` exit with an error?**
-Spawn dispatch is not yet implemented in v11.8.3. Use `/mindforge:auto` or `/mindforge:next` from Claude Code instead.
+Spawn dispatch is not yet implemented in v11.9.0. Use `/mindforge:auto` or `/mindforge:next` from Claude Code instead.
 
 **Q: Why does ZTAI show a Tier-3 warning?**
-Tier-3 trust uses in-process key simulation in v11.8.3 — this is intentional and safe. `SECURITY_TIER_3_SIMULATED = true` is the documented v11.x behavior. Hardware TPM/HSM is planned for v12.x.
+Tier-3 trust uses in-process key simulation in v11.9.0 — this is intentional and safe. `SECURITY_TIER_3_SIMULATED = true` is the documented v11.x behavior. Hardware TPM/HSM is planned for v12.x.
 
 **Q: What is the test coverage?**
 95/97 tests passing (0 failures, 2 permanently env-skipped). Line coverage ~66% — gaps are in `bin/source-loader.js` and `scripts/ci/validate-assets.js`. Target is 80% for v11.9.0.
