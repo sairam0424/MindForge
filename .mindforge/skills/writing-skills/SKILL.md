@@ -169,11 +169,12 @@ criteria that must be true before the agent considers the task complete.]
    Flag any overlap and resolve per the rules above.
 4. **Register in MANIFEST.md** (if the project maintains one). Add the skill entry
    with name, version, status, and trigger count.
-5. **Test via eval harness** (if available):
+5. **Validate the skill file**:
    ```bash
-   mindforge eval-skill --skill=new-skill-name --prompts=20
+   node bin/mindforge-cli.js validate-skill path/to/SKILL.md
    ```
-   Verify activation precision > 90% and recall > 85%.
+   Then manually test trigger activation with a handful of representative prompts
+   to confirm it fires on-topic and doesn't fire on unrelated tasks.
 
 ## Skill review checklist (for reviewing others' skills)
 
