@@ -1,7 +1,7 @@
 ---
 name: mf-researcher
 description: Knowledge gathering and deep analysis of approaches, benchmarks, and best practices.
-tools: search_web, read_url_content, read_browser_page
+tools: WebSearch, WebFetch
 color: purple
 ---
 
