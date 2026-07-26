@@ -108,7 +108,7 @@ Each phase delegates — it does not do the work inline.
 - **0. Intake** — restate the request in one line. For `orch-build-mvp`, read the
   spec/design doc and extract scope, locked decisions, and a feature list.
 - **1. Research & Reuse** — Search-Before-Building (Builder Ethos): `gh search
-  repos` / `gh search code`, then Context7 / vendor docs, then package registries,
+  repos` / `gh search code`, then WebFetch / vendor docs, then package registries,
   then Exa / web search. Prefer adopting a proven implementation over net-new
   code. Use `/mindforge:research` for a focused research subagent when the task
   involves unfamiliar libraries.
@@ -177,7 +177,7 @@ Everything between the gates flows without stopping.
 | Phase | Primary (MindForge) | Fallback / escalation |
 |-------|---------------------|-----------------------|
 | Intake / understand | `/mindforge:map-codebase` / `/mindforge:code-tour` | trace existing paths before a tweak, fix, or refactor |
-| Research | `/mindforge:research` | Context7 / vendor docs / package registries / Exa |
+| Research | `/mindforge:research` | WebFetch / vendor docs / package registries / Exa |
 | Plan | `writing-plans` skill via `/mindforge:plan-write` | `/mindforge:system-design`, `/mindforge:rfc` for structural calls |
 | Implement | `mindforge-tdd_extended` protocol (Red-Green-Refactor) | `/mindforge:debug` on build/test breaks |
 | Implement (large/swarm) | `WaveExecutor` / `mindforge-swarm-execution` protocol | `SwarmController` cluster selection (`.mindforge/engine/swarm-controller.md`) |
