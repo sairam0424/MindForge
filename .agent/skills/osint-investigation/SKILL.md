@@ -17,6 +17,7 @@ chains.
 sources work with no API key (OpenCorporates has an optional free token
 that raises rate limits).
 
+Adapted from the MIT-licensed ShinMegamiBoson/OpenPlanter project; expanded
 to cover identity / property / litigation / archives / news sources that
 the original didn't address.
 
@@ -40,7 +41,7 @@ Use when the user asks for:
 
 Do NOT use this skill for:
 
-- general web research → `web_search` / `web_extract`
+- general web research → `WebSearch` / `WebFetch`
 - domain/infrastructure OSINT → `domain-intel` skill
 - academic literature → `arxiv` skill
 - social-media profile discovery → `sherlock` skill (optional)
@@ -51,7 +52,7 @@ Do NOT use this skill for:
 
 ## Workflow
 
-The agent runs scripts via the `terminal` tool. `SKILL_DIR` is the directory
+The agent runs scripts via the `Bash` tool. `SKILL_DIR` is the directory
 holding this SKILL.md.
 
 ### 1. Identify which sources apply
