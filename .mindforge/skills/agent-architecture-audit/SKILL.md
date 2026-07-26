@@ -22,6 +22,17 @@ timeout, hallucination); this skill audits the whole stack for the systemic
 wrapper-layer causes behind those failures. Invoke via `/mindforge:introspect`
 when a single-failure debug keeps recurring or points at a structural cause.
 
+**Component-name note:** `PersonaFactory`, `soul-engine`, and `hooks_route`
+below describe MindForge's *aspirational* multi-agent protocol (per
+`.claude/CLAUDE.md`) and are NOT implemented anywhere in `bin/` — grep for
+these names before treating a "missing" one as a real finding. The actual
+ground-truth implementations are: `bin/engine/nexus-tracer.js` (NexusTracer),
+`bin/autonomous/wave-executor.js` (WaveExecutor), and `bin/shard-helper.js`
+(the real file behind the `shard-controller` concept). When auditing a real
+MindForge instance, map findings to these actual files, not the aspirational
+names — treat every table entry below as a *conceptual* layer, not a
+confirmed component.
+
 ## When this skill activates
 
 **MANDATORY for:**
