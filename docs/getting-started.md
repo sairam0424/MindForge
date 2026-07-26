@@ -1,4 +1,4 @@
-# MindForge — Getting Started (v11.8.3)
+# MindForge — Getting Started (v11.9.0)
 
 This guide gets you from zero to a working MindForge project in under five minutes.
 
@@ -46,7 +46,7 @@ Run the MindForge MCP server (`mindforge-mcp-server`) over stdio — it exposes 
 claude mcp add mindforge -- npx -y mindforge-mcp-server
 ```
 
-This server is also published to the [MCP Registry](https://registry.modelcontextprotocol.io) as `io.github.sairam0424/mindforge` (currently `11.8.3`, marked latest).
+This server is also published to the [MCP Registry](https://registry.modelcontextprotocol.io) as `io.github.sairam0424/mindforge` (currently `11.9.0`, marked latest).
 
 ### 4. Homebrew
 
@@ -83,7 +83,7 @@ Or use slash commands: `/mindforge:wf-code-audit`
 ## Your First 5 Minutes with MindForge
 
 1. **Verify install:** `node bin/mindforge-cli.js health`
-2. **Check version:** `node bin/mindforge-cli.js --version` (should print `11.8.3`)
+2. **Check version:** `node bin/mindforge-cli.js --version` (should print `11.9.0`)
 3. **List workflows:** `node bin/mindforge-cli.js workflow list`
 4. **Run first slash command:** Open Claude Code → `/mindforge:status`
 5. **Onboard your codebase:** Open Claude Code → `/mindforge:wf-onboard-codebase`

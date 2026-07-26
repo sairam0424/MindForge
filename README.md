@@ -4,9 +4,9 @@
 
 ---
 
-## Latest: v11.8.3
+## Latest: v11.9.0
 
-- **v11.8.3** (2026-07-01) — Autopsy Fixes Stable — 258/258 IQ200 checks passing; `--version` flag, EISClient named import, rbac shim, skill-loader stub, null-phase guard, 12 duplicate triggers resolved, SDK 0 typecheck errors, path-containment guard on spawn
+- **v11.9.0** (2026-07-01) — Autopsy Fixes Stable — 258/258 IQ200 checks passing; `--version` flag, EISClient named import, rbac shim, skill-loader stub, null-phase guard, 12 duplicate triggers resolved, SDK 0 typecheck errors, path-containment guard on spawn
 - **v11.8.2** (2026-07-01) — Clean Stable — ESLint 0 errors, health command output fixed, ZTAI lazy instantiation, pr-review CLI entry point, worktree timeout fix
 - **v11.8.1** (2026-07-01) — First Stable — hono+picomatch CVEs patched (0 vulnerabilities), SRE simulator gated, spawn stub disclosure, EIS/browser/ZTAI guards added
 - **v11.8.0 — "Workflow Forge II".** Expands the Dynamic Workflow Library from 12 to 32 workflows across 5 tiers — adds a new **Beast tier** for compound 5-phase adversarial workflows (security-hardening, accessibility-audit, security-threat-model), plus 18 more across Dev/Ops/Intelligence/Research. 21 new `/mindforge:wf-*` commands. Total: 219 commands.
@@ -90,7 +90,7 @@ npx mindforge-cc@latest --antigravity --local
 ### 🔗 Use the MCP server (standalone)
 
 The MindForge MCP server is published as its own npm package,
-**`mindforge-mcp-server`** (`11.8.3`), and is listed on the official
+**`mindforge-mcp-server`** (`11.9.0`), and is listed on the official
 [MCP Registry](https://registry.modelcontextprotocol.io) as
 `io.github.sairam0424/mindforge`. Wire it into Claude Code with one command:
 
@@ -117,7 +117,7 @@ It exposes **7 tools over stdio** — 6 read-only plus 1 guarded write:
 After install, open Claude Code and type:
 - `/mindforge:status` — verify installation and show project health
 - `/mindforge:next` — auto-discover your first task
-- `node bin/mindforge-cli.js --version` — prints `11.8.3`
+- `node bin/mindforge-cli.js --version` — prints `11.9.0`
 
 ---
 

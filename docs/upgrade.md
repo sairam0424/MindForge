@@ -4,6 +4,25 @@ This guide covers upgrades across all major MindForge versions.
 
 ---
 
+## Upgrading to v11.9.0 (from any v11.8.x)
+
+v11.9.0 is a minor release — new AWS Bedrock provider, no breaking changes from v11.8.x.
+
+```bash
+# Upgrade via npx:
+npx mindforge-cc@latest install
+
+# Verify:
+node bin/mindforge-cli.js --version   # should print 11.9.0
+node bin/mindforge-cli.js health      # should show all green
+```
+
+### What changed in v11.9.0
+
+| Version | Date | Key changes |
+|---------|------|-------------|
+| v11.9.0 | 2026-07-27 | AWS Bedrock provider; full dry-run audit of all commands/personas/skills — resolved phantom-tool references and broken asset paths across 40 personas and 66 skills |
+
 ## Upgrading to v11.8.3 (from any v11.8.x)
 
 v11.8.3 is a drop-in patch — no breaking changes from v11.8.0 or later.

@@ -142,7 +142,7 @@ High-fidelity behaviors ported from the Superpowers library and hardened for pro
 
 ---
 
-## 11. Council, Verification & Intelligence (v11.8.3)
+## 11. Council, Verification & Intelligence (v11.9.0)
 
 New commands introduced in the "Council Awakens" release for multi-voice decision-making, verification rigor, and self-evolving agent behavior.
 

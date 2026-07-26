@@ -281,9 +281,10 @@ async function main() {
   // ── SDK Sync ───────────────────────────────────────────────────────────────
   console.log('\nSDK Sync:');
 
-  test('SDK VERSION matches 11.8.3', () => {
+  test('SDK VERSION matches package.json', () => {
+    const { version } = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     const src = fs.readFileSync(path.join(__dirname, '..', 'sdk', 'src', 'index.ts'), 'utf8');
-    assert.ok(src.includes('VERSION = \'11.8.3\''));
+    assert.ok(src.includes(`VERSION = '${version}'`));
   });
 
   test('SDK exports WaveExecutionResult and MigrationResult', () => {
@@ -298,22 +299,24 @@ async function main() {
     assert.ok(src.includes('isDatabaseInitialized'));
   });
 
-  test('SDK package.json version is 11.8.3', () => {
+  test('SDK package.json version matches root package.json', () => {
+    const { version } = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'sdk', 'package.json'), 'utf8'));
-    assert.strictEqual(pkg.version, '11.8.3');
+    assert.strictEqual(pkg.version, version);
   });
 
   // ── Package Metadata ───────────────────────────────────────────────────────
   console.log('\nPackage Metadata:');
 
-  test('package.json version is 11.8.3', () => {
+  test('package.json has a valid semver version', () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
-    assert.strictEqual(pkg.version, '11.8.3');
+    assert.ok(/^\d+\.\d+\.\d+$/.test(pkg.version), `package.json version "${pkg.version}" is not valid semver`);
   });
 
-  test('MINDFORGE.md version is 11.8.3', () => {
+  test('MINDFORGE.md version matches package.json', () => {
+    const { version } = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     const md = fs.readFileSync(path.join(__dirname, '..', 'MINDFORGE.md'), 'utf8');
-    assert.ok(md.includes('11.8.3'));
+    assert.ok(md.includes(version), `MINDFORGE.md does not contain current version ${version}`);
   });
 
   // ── Summary ────────────────────────────────────────────────────────────────
