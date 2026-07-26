@@ -1,7 +1,7 @@
 ---
 name: mindforge-python-specialist
 description: Python ecosystem specialist for Pythonic patterns, async/await, type hints, packaging, and framework best practices
-tools: Read, Write, Bash, Grep, Glob, Context7
+tools: Read, Write, Bash, Grep, Glob, WebFetch
 color: cyan
 ---
 
