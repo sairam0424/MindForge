@@ -103,7 +103,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "express": "^4.19.2",
+    "express": "^5.2.1",
     "sql.js": "^1.14.1"
   }
 }
