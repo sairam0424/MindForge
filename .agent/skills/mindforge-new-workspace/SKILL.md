@@ -30,7 +30,7 @@ Create a physical workspace directory containing copies of specified git repos (
 
 <execution_context>
 @.agent/workflows/mindforge-new-workspace.md
-@.agent/references/ui-brand.md
+@docs/References/ui-brand.md
 </execution_context>
 
 <process>
