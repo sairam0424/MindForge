@@ -1,13 +1,13 @@
-# MindForge v11.8.3 — Full Tutorial (Install → Advanced Usage)
+# MindForge v11.9.0 — Full Tutorial (Install → Advanced Usage)
 
 This tutorial walks a new user from installation to advanced usage. It is written for engineers who want to adopt MindForge in a real codebase.
 
 ---
 
-## What's New in v11.8.3
+## What's New in v11.9.0
 
-v11.8.3 is the **first fully audited stable release** — validated by an IQ200 deep-audit across 258 checks:
-- `node bin/mindforge-cli.js --version` now works correctly (prints `11.8.3`)
+v11.9.0 is the **first fully audited stable release** — validated by an IQ200 deep-audit across 258 checks:
+- `node bin/mindforge-cli.js --version` now works correctly (prints `11.9.0`)
 - All 32 workflow scripts pass runtime load validation
 - 0 CVEs, 0 ESLint errors, 0 TypeScript errors in SDK
 - Skill routing is deterministic (12 duplicate triggers resolved)
@@ -96,7 +96,7 @@ MindForge uses a 4-pillar iterative cycle:
 
 ## 6. High-Performance Personas
 
-MindForge v11.8.3 ships 211 specialized personas. Each is a "digital twin" of a senior role.
+MindForge v11.9.0 ships 211 specialized personas. Each is a "digital twin" of a senior role.
 
 - To list all personas: `/mindforge:personas --list`
 - To switch persona: `/mindforge:personas --set executor`
@@ -169,7 +169,7 @@ If you hit issues, consult these specialized guides:
 
 ## 13. Using Dynamic Workflows
 
-MindForge v11.8.3 ships 32 pre-built multi-agent workflows. Browse them with `/mindforge:wf-catalog`.
+MindForge v11.9.0 ships 32 pre-built multi-agent workflows. Browse them with `/mindforge:wf-catalog`.
 
 ### Quick start — run a workflow
 

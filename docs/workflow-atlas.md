@@ -58,7 +58,7 @@ These are existing workflows that provide secondary check-points or manual contr
 
 ---
 
-## Complete Workflow Reference (v11.8.3)
+## Complete Workflow Reference (v11.9.0)
 
 MindForge ships **35 pre-built dynamic workflows** across 5 tiers. Each runs via the Claude Code `Workflow` tool using `parallel()`, `pipeline()`, `phase()`, and `agent()` primitives.
 

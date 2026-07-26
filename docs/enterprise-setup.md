@@ -27,7 +27,7 @@ Configure Jira, Confluence, Slack, and SCM governance safely without storing
 ## Mesh Node Identity
 Set `mesh.node_id` in `.mindforge/config.json` to a unique string per deployment node. The default value `"auto"` is used if not customized, but multi-node deployments must assign explicit unique IDs to avoid identity collisions. Example: `"node_id": "prod-us-east-1-node-01"`
 
-## v11.8.3 Enterprise Notes
+## v11.9.0 Enterprise Notes
 
 ### Mesh Node Identity
 Set `mesh.node_id` in `.mindforge/config.json` to a unique string per deployment node.
@@ -43,25 +43,25 @@ Multi-node deployments **must** set explicit unique IDs to avoid routing collisi
 ```
 
 ### SRE Simulation Gate
-`simulateShadowWave()` requires `MINDFORGE_SRE_SIMULATE=true` env flag in v11.8.3.
+`simulateShadowWave()` requires `MINDFORGE_SRE_SIMULATE=true` env flag in v11.9.0.
 For production metric collection, implement real SLI collection from `/api/v1/system` endpoint.
 ```bash
 MINDFORGE_SRE_SIMULATE=true node bin/mindforge-cli.js headless  # enable simulation
 ```
 
 ### Tier-3 Trust Posture
-Tier-3 ZTAI trust uses in-process key simulation in v11.8.3 (`SECURITY_TIER_3_SIMULATED = true`).
+Tier-3 ZTAI trust uses in-process key simulation in v11.9.0 (`SECURITY_TIER_3_SIMULATED = true`).
 Hardware TPM/HSM provider is planned for v12.x.
 Set `experimental.pqc_demo = false` (default) for standard enterprise deployments.
 
-### Skill Routing (v11.8.3)
+### Skill Routing (v11.9.0)
 All 232 engine-tier skills now have unique trigger strings — no routing ambiguity.
-12 duplicate trigger strings were resolved in v11.8.3.
+12 duplicate trigger strings were resolved in v11.9.0.
 Verify skill routing determinism: `node tests/skills-platform.test.js` (1652/1652 assertions).
 
 ### Version Verification
 ```bash
-node bin/mindforge-cli.js --version    # 11.8.3
+node bin/mindforge-cli.js --version    # 11.9.0
 node bin/mindforge-cli.js health       # all green
 npm audit --audit-level=high           # 0 vulnerabilities
 npm test                               # 95/97 passing, 0 failures

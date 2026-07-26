@@ -1,4 +1,4 @@
-# MindForge Troubleshooting (v11.8.3)
+# MindForge Troubleshooting (v11.9.0)
 
 This page lists common issues and fast fixes. If you get stuck, start with
 `/mindforge:health`.
@@ -193,7 +193,7 @@ All tests must be run from the MindForge project root: `cd /path/to/MindForge &&
 
 **Symptom:** `[ZTAI] WARNING: Tier-3 trust using simulated in-process key storage` appears on commands like `pr-review`.
 
-**Cause:** Tier-3 trust uses in-process key simulation in v11.8.3. This is expected and safe — `SECURITY_TIER_3_SIMULATED = true` is the documented behavior.
+**Cause:** Tier-3 trust uses in-process key simulation in v11.9.0. This is expected and safe — `SECURITY_TIER_3_SIMULATED = true` is the documented behavior.
 
 **Fix:** No action required. See `SECURITY.md` for full disclosure. This is not a security vulnerability.
 
@@ -201,6 +201,6 @@ All tests must be run from the MindForge project root: `cd /path/to/MindForge &&
 
 ## `node bin/mindforge-cli.js --version` exits 1 (older installs)
 
-**Symptom:** `--version` flag reports "Unknown command" on installs older than v11.8.3.
+**Symptom:** `--version` flag reports "Unknown command" on installs older than v11.9.0.
 
-**Fix:** Upgrade to v11.8.3: `npx mindforge-cc@latest install`
+**Fix:** Upgrade to v11.9.0: `npx mindforge-cc@latest install`
