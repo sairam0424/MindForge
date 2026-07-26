@@ -1,7 +1,7 @@
 ---
 name: mf-reviewer
 description: Quality assurance and critical review of implementation against project goals and security standards.
-tools: Read, grep_search, find_by_name
+tools: Read, Grep, Glob
 color: red
 ---
 
