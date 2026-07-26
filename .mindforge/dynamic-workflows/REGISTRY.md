@@ -1,6 +1,6 @@
 # MindForge Dynamic Workflow Registry
 
-32 pre-built multi-agent workflows across 5 tiers. Each runs via Claude Code's `Workflow` tool using `parallel()`, `pipeline()`, `phase()`, and `agent()` primitives to fan out work across concurrent subagents and synthesize results.
+35 pre-built multi-agent workflows across 5 tiers. Each runs via Claude Code's `Workflow` tool using `parallel()`, `pipeline()`, `phase()`, and `agent()` primitives to fan out work across concurrent subagents and synthesize results.
 
 **Trigger:** Use `/mindforge:wf-catalog` to browse interactively, or invoke any `/mindforge:wf-<name>` command directly.
 
@@ -28,6 +28,8 @@
 | debug-detective | /mindforge:wf-debug-detective | 4-hypothesis parallel investigation → scientific RCA | Hard-to-reproduce bugs |
 | writer-reviewer | /mindforge:wf-writer-reviewer | Implement → fresh context review → verdict | Unbiased code review |
 | mutation-testing | /mindforge:wf-mutation-testing | Mutant generator → parallel kill-test → score | Test suite effectiveness |
+| orchestrate-review | /mindforge:wf-orchestrate-review | 4-lens parallel review: factual/domain/safety/style → verdict | Reviewing content/decisions, not code — docs, policies, plans |
+| verification-loop | /mindforge:wf-verification-loop | Implementer vs. scorer, iterate rounds until score maxed | Pushing a single metric as high as possible, not a fixed-pass audit |
 | code-explainer | /mindforge:wf-code-explainer | Structure → domain → architecture → narrative tour | Onboarding to unfamiliar codebases |
 | design-system-audit | /mindforge:wf-design-system-audit | 5-dimension parallel audit → consistency score | Design system health checks |
 
@@ -52,6 +54,7 @@
 | documentation-gen | /mindforge:wf-documentation-gen | Parallel doc gen → normalize → publish-ready | Generating or refreshing docs |
 | api-migration | /mindforge:wf-api-migration | Breaking change detection → guide → compat matrix | API versioning and migration |
 | data-pipeline-validate | /mindforge:wf-data-pipeline-validate | Stage-by-stage validation → quality gates | Data pipeline correctness checks |
+| workflow-optimizer | /mindforge:wf-workflow-optimizer | Builder → scorer → distinct process-optimizer, rounds evolve the process itself | Improving a repeatable process across attempts, not one output |
 
 ## Beast tier — Compound workflows (5 phases, 8+ agents, adversarial verification)
 

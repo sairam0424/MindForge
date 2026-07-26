@@ -60,7 +60,7 @@ These are existing workflows that provide secondary check-points or manual contr
 
 ## Complete Workflow Reference (v11.8.3)
 
-MindForge ships **32 pre-built dynamic workflows** across 5 tiers. Each runs via the Claude Code `Workflow` tool using `parallel()`, `pipeline()`, `phase()`, and `agent()` primitives.
+MindForge ships **35 pre-built dynamic workflows** across 5 tiers. Each runs via the Claude Code `Workflow` tool using `parallel()`, `pipeline()`, `phase()`, and `agent()` primitives.
 
 ### How to run any workflow
 ```bash
@@ -99,6 +99,8 @@ Workflow({ name: "code-audit", args: "target: auth module" })
 | `mutation-testing` | Generate->Kill->Score->Report | Test suite effectiveness |
 | `code-explainer` | Structure->Domain->Arch->Tour | Onboarding unfamiliar codebases |
 | `design-system-audit` | Scan->Audit->Score->Recommendations | Design system health |
+| `orchestrate-review` | Scope->Panel->Consensus->Verdict | 4-lens review (factual/domain/safety/style) of content, not code |
+| `verification-loop` | Scope->Round->Report | Implementer vs. scorer, iterate until a metric maxes out |
 
 ### Ops Tier — Infrastructure and release workflows
 | Workflow | Phases | Best for |
@@ -119,6 +121,7 @@ Workflow({ name: "code-audit", args: "target: auth module" })
 | `documentation-gen` | Scan->Generate->Normalise->Publish | Generating or refreshing docs |
 | `api-migration` | Detect->Guide->Compat->Validate | API versioning and migration |
 | `data-pipeline-validate` | Stage->Validate->Gate->Report | Data pipeline correctness |
+| `workflow-optimizer` | Scope->Cycle->Report | Builder+scorer+process-optimizer improving a repeatable process across rounds |
 
 ### Beast Tier — Compound workflows (5 phases, 8+ agents, adversarial 3-vote verification)
 | Workflow | Phases | Best for |
