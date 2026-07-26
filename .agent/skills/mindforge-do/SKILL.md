@@ -13,7 +13,7 @@ Use when you know what you want but don't know which `/mindforge-*` command to r
 
 <execution_context>
 @.agent/workflows/mindforge-do.md
-@.agent/references/ui-brand.md
+@docs/References/ui-brand.md
 </execution_context>
 
 <context>
