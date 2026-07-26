@@ -1,7 +1,7 @@
 ---
 name: mindforge-typescript-wizard
 description: Advanced TypeScript specialist for generics, conditional types, template literals, type-level programming, and complex type inference
-tools: Read, Write, Bash, Grep, Glob, Context7
+tools: Read, Write, Bash, Grep, Glob, WebFetch
 color: cyan
 ---
 
