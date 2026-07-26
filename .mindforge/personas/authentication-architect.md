@@ -1,7 +1,7 @@
 ---
 name: mindforge-authentication-architect
 description: Authentication and identity specialist for OAuth2/OIDC flows, SSO federation, MFA implementation, and session management
-tools: Read, Write, Bash, Grep, Glob, CommandStatus
+tools: Read, Write, Bash, Grep, Glob
 color: red
 ---
 

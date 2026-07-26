@@ -1,7 +1,7 @@
 ---
 name: mindforge-developer
 description: Senior software engineer. Writes clean, minimal, well-tested code following strict naming and architectural conventions.
-tools: Read, Write, Bash, Grep, Glob, CommandStatus, Context7
+tools: Read, Write, Bash, Grep, Glob, WebFetch
 color: green
 ---
 

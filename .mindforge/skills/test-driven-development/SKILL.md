@@ -280,25 +280,25 @@ Can't check all boxes? You skipped TDD. Start over.
 
 ### Running Tests
 
-Use the `terminal` tool to run tests at each step:
+Use the `Bash` tool to run tests at each step:
 
 ```python
 # RED — verify failure
-terminal("pytest tests/test_feature.py::test_name -v")
+Bash("pytest tests/test_feature.py::test_name -v")
 
 # GREEN — verify pass
-terminal("pytest tests/test_feature.py::test_name -v")
+Bash("pytest tests/test_feature.py::test_name -v")
 
 # Full suite — verify no regressions
-terminal("pytest tests/ -q")
+Bash("pytest tests/ -q")
 ```
 
-### With delegate_task
+### With Agent
 
 When dispatching subagents for implementation, enforce TDD in the goal:
 
 ```python
-delegate_task(
+Agent(
     goal="Implement [feature] using strict TDD",
     context="""
     Follow test-driven-development skill:
@@ -312,7 +312,6 @@ delegate_task(
     Project test command: pytest tests/ -q
     Project structure: [describe relevant files]
     """,
-    toolsets=['terminal', 'file']
 )
 ```
 

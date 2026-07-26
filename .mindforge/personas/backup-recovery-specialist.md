@@ -1,7 +1,7 @@
 ---
 name: mindforge-backup-recovery-specialist
 description: Backup and disaster recovery specialist for backup strategy, restoration testing, RPO/RTO enforcement, and data protection
-tools: Read, Write, Bash, Grep, Glob, CommandStatus
+tools: Read, Write, Bash, Grep, Glob
 color: green
 ---
 

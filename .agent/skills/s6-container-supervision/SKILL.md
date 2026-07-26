@@ -1,5 +1,5 @@
 ---
-name: hermes-s6-container-supervision
+name: s6-container-supervision
 description: Modify, debug, or extend the s6-overlay supervision tree inside the 
 version: 1.0.0
 environments: [s6]

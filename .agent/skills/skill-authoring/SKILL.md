@@ -103,7 +103,7 @@ Pick the closest existing category. Don't invent new top-level categories casual
    ```
    Read 2-3 peer SKILL.md files to match tone and structure.
 2. **Check validator constraints** in `tools/skill_manager_tool.py` if unsure.
-3. **Draft** with `write_file` to `skills/<category>/<name>/SKILL.md`.
+3. **Draft** with `Write` to `skills/<category>/<name>/SKILL.md`.
 4. **Validate locally**:
    ```python
    import yaml, re, pathlib
@@ -125,13 +125,13 @@ Pick the closest existing category. Don't invent new top-level categories casual
 ## Editing Existing In-Repo Skills
 
 - **Small fix (typo, added pitfall, tightened trigger):** `skill_manage(action='patch', name=..., old_string=..., new_string=...)` works fine on in-repo skills.
-- **Major rewrite:** `write_file` the whole SKILL.md. `skill_manage(action='edit')` also works but requires supplying the full new content.
-- **Adding supporting files:** `write_file` to `skills/<category>/<name>/references/<file>.md`, `templates/<file>`, or `scripts/<file>`. `skill_manage(action='write_file')` also works and enforces the references/templates/scripts/assets subdir allowlist.
+- **Major rewrite:** `Write` the whole SKILL.md. `skill_manage(action='edit')` also works but requires supplying the full new content.
+- **Adding supporting files:** `Write` to `skills/<category>/<name>/references/<file>.md`, `templates/<file>`, or `scripts/<file>`. `skill_manage(action='write_file')` also works and enforces the references/templates/scripts/assets subdir allowlist.
 - **Always commit** the edit — in-repo skills are source, not runtime state.
 
 ## Common Pitfalls
 
-1. **Using `skill_manage(action='create')` for an in-repo skill.** It writes to `~/.agent/skills/`, not the repo tree. Use `write_file` for in-repo creation.
+1. **Using `skill_manage(action='create')` for an in-repo skill.** It writes to `~/.agent/skills/`, not the repo tree. Use `Write` for in-repo creation.
 
 2. **Leading whitespace before `---`.** The validator checks `content.startswith("---")`; any leading blank line or BOM fails validation.
 

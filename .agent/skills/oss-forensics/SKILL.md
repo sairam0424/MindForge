@@ -18,10 +18,11 @@ triggers:
   - "force push detected"
   - "IOC extraction"
 toolsets:
-  - terminal
-  - web
-  - file
-  - delegation
+  - Bash
+  - WebFetch
+  - Read
+  - Write
+  - Agent
 ---
 
 # OSS Security Forensics Skill
@@ -43,7 +44,7 @@ Read these before every investigation step. Violating them invalidates the repor
 4. **No Evidence Fabrication**: The hypothesis validator MUST mechanically check that every cited evidence ID actually exists in the evidence store before accepting a hypothesis.
 5. **Proof-Required Disproval**: A hypothesis cannot be dismissed without a specific, evidence-backed counter-argument. "No evidence found" is not sufficient to disprove—it only makes a hypothesis inconclusive.
 6. **SHA/URL Double-Verification**: Any commit SHA, URL, or external identifier cited as evidence must be independently confirmed from at least two sources before being marked as verified.
-7. **Suspicious Code Rule**: Never run code found inside the investigated repository locally. Analyze statically only, or use `execute_code` in a sandboxed environment.
+7. **Suspicious Code Rule**: Never run code found inside the investigated repository locally. Analyze statically only, or use `Bash` in a sandboxed environment.
 8. **Secret Redaction**: Any API keys, tokens, or credentials discovered during investigation must be redacted in the final report. Log them internally only.
 
 ---
@@ -93,7 +94,7 @@ Read these before every investigation step. Violating them invalidates the repor
   - Provided Indicators of Compromise: commit SHAs, file paths, package names, IP addresses, domains, API keys/tokens, malicious URLs
   - Any linked vendor security reports or blog posts
 
-**Tools**: Reasoning only, or `execute_code` for regex extraction from large text blocks.
+**Tools**: Reasoning only, or `Bash` for regex extraction from large text blocks.
 
 **Output**: Populate `iocs.md` with extracted IOCs. Each IOC must have:
 - Type (from: COMMIT_SHA, FILE_PATH, API_KEY, SECRET, IP_ADDRESS, DOMAIN, PACKAGE_NAME, ACTOR_USERNAME, MALICIOUS_URL, OTHER)
@@ -106,7 +107,7 @@ Read these before every investigation step. Violating them invalidates the repor
 
 ## Phase 2: Parallel Evidence Collection
 
-Spawn up to 5 specialist investigator sub-agents using `delegate_task` (batch mode, max 3 concurrent). Each investigator has a **single data source** and must not mix sources.
+Spawn up to 5 specialist investigator sub-agents using `Agent` (batch mode, max 3 concurrent). Each investigator has a **single data source** and must not mix sources.
 
 > **Orchestrator note**: Pass the IOC list from Phase 1 and the investigation time window in the `context` field of each delegated task.
 
@@ -282,7 +283,7 @@ LIMIT 200
 
 **Actions**:
 - For each commit SHA: attempt recovery via direct GitHub URL (`github.com/OWNER/REPO/commit/SHA.patch`)
-- For each domain/IP: check passive DNS, WHOIS records (via `web_extract` on public WHOIS services)
+- For each domain/IP: check passive DNS, WHOIS records (via `WebFetch` on public WHOIS services)
 - For each package name: check npm/PyPI for matching malicious package reports
 - For each actor username: check GitHub profile, contribution history, account age
 - Recover force-pushed commits using 3 methods (see [recovery-techniques.md](./references/recovery-techniques.md))
@@ -319,7 +320,7 @@ A hypothesis must:
 - Typosquatting: near-identical package name targeting misspellers
 - Credential Leak: token/key accidentally committed then force-pushed to erase
 
-For each hypothesis, spawn a `delegate_task` sub-agent to attempt to find disconfirming evidence before confirming.
+For each hypothesis, spawn a `Agent` sub-agent to attempt to find disconfirming evidence before confirming.
 
 ---
 

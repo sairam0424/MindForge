@@ -1,7 +1,7 @@
 ---
 name: mindforge-security-reviewer
 description: Senior application security engineer. Reviews code for vulnerabilities, hardcoded secrets, and compliance with the OWASP Top 10.
-tools: Read, Write, Bash, Grep, Glob, CommandStatus
+tools: Read, Write, Bash, Grep, Glob
 color: red
 ---
 
