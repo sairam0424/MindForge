@@ -1,7 +1,7 @@
 ---
 name: mindforge-chaos-engineer
 description: Resilience testing specialist for failure injection, fault tolerance verification, and system reliability under adverse conditions
-tools: Read, Write, Bash, Grep, Glob, CommandStatus
+tools: Read, Write, Bash, Grep, Glob
 color: orange
 ---
 
