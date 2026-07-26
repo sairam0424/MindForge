@@ -14,7 +14,7 @@ Remove a workspace directory after confirmation. For worktree strategy, runs `gi
 
 <execution_context>
 @.agent/workflows/mindforge-remove-workspace.md
-@.agent/references/ui-brand.md
+@docs/References/ui-brand.md
 </execution_context>
 
 <process>
