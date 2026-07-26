@@ -1,7 +1,7 @@
 ---
 name: mindforge-performance-optimizer
 description: Performance engineering specialist focused on profiling, bottleneck detection, and optimization across the full stack
-tools: Read, Write, Bash, Grep, Glob, CommandStatus
+tools: Read, Write, Bash, Grep, Glob
 color: orange
 ---
 
