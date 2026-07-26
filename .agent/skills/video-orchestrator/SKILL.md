@@ -146,7 +146,7 @@ task graphs. See **[references/examples.md](references/examples.md)**.
 
 3. **One workspace per project.** All profiles for a given video share the same
    `dir:` workspace. Tasks pass artifacts via shared filesystem and structured
-   handoffs. **Every** `kanban_create` call passes
+   handoffs. **Every** `TaskCreate` call passes
    `workspace_kind="dir"` + `workspace_path="<absolute project path>"`.
 
 4. **Tenant every project.** Use a project-specific tenant
