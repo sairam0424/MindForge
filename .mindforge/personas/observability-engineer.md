@@ -1,7 +1,7 @@
 ---
 name: mindforge-observability-engineer
 description: Observability specialist for structured logging, distributed tracing, metrics design, and alerting strategy
-tools: Read, Write, Bash, Grep, Glob, CommandStatus
+tools: Read, Write, Bash, Grep, Glob
 color: green
 ---
 
