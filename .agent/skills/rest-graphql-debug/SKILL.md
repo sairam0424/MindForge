@@ -6,7 +6,7 @@ version: 1.2.0
 
 # API Testing & Debugging
 
-Drive REST and GraphQL diagnosis through tools — `terminal` for `curl`, `execute_code` for Python `requests`, `web_extract` for vendor docs. Isolate the failing layer before guessing at the fix.
+Drive REST and GraphQL diagnosis through tools — `Bash` for `curl`, `Bash` for Python `requests`, `WebFetch` for vendor docs. Isolate the failing layer before guessing at the fix.
 
 ## When to Use
 
@@ -39,25 +39,25 @@ Skip for UI rendering, DB query tuning, or DNS/firewall infra (escalate).
 
 ```python
 # Verbose request/response exchange
-terminal('curl -v https://api.example.com/users/1')
+Bash('curl -v https://api.example.com/users/1')
 
 # POST with JSON
-terminal("""curl -X POST https://api.example.com/users \\
+Bash("""curl -X POST https://api.example.com/users \\
   -H 'Content-Type: application/json' \\
   -H "Authorization: Bearer $TOKEN" \\
   -d '{"name":"test","email":"test@example.com"}'""")
 
 # Headers only
-terminal('curl -sI https://api.example.com/health')
+Bash('curl -sI https://api.example.com/health')
 
 # Pretty-print JSON
-terminal('curl -s https://api.example.com/users | python3 -m json.tool')
+Bash('curl -s https://api.example.com/users | python3 -m json.tool')
 ```
 
 ### GraphQL via terminal
 
 ```python
-terminal("""curl -X POST https://api.example.com/graphql \\
+Bash("""curl -X POST https://api.example.com/graphql \\
   -H 'Content-Type: application/json' \\
   -H "Authorization: Bearer $TOKEN" \\
   -d '{"query":"{ user(id: 1) { name email } }"}'""")
@@ -66,7 +66,7 @@ terminal("""curl -X POST https://api.example.com/graphql \\
 **GraphQL gotcha:** servers often return HTTP 200 even when the query failed. Always inspect the `errors` field regardless of status code:
 
 ```python
-execute_code('''
+Bash('''
 import os, requests
 resp = requests.post(
     "https://api.example.com/graphql",
@@ -82,10 +82,10 @@ print(data.get("data"))
 ''')
 ```
 
-### Python (requests) via execute_code
+### Python (requests) via Bash
 
 ```python
-execute_code('''
+Bash('''
 import requests
 resp = requests.get(
     "https://api.example.com/users/1",
@@ -102,8 +102,8 @@ print(resp.text[:500])
 ### Step 1 — Connectivity
 
 ```python
-terminal('nslookup api.example.com')
-terminal('curl -v --connect-timeout 5 https://api.example.com/health')
+Bash('nslookup api.example.com')
+Bash('curl -v --connect-timeout 5 https://api.example.com/health')
 ```
 
 Failures: DNS not resolving, firewall, VPN required, proxy missing.
@@ -113,14 +113,14 @@ Failures: DNS not resolving, firewall, VPN required, proxy missing.
 Distinguish *can't reach* from *reaches but slow*:
 
 ```python
-terminal('''curl -w "dns:%{time_namelookup}s connect:%{time_connect}s tls:%{time_appconnect}s ttfb:%{time_starttransfer}s total:%{time_total}s\\n" \\
+Bash('''curl -w "dns:%{time_namelookup}s connect:%{time_connect}s tls:%{time_appconnect}s ttfb:%{time_starttransfer}s total:%{time_total}s\\n" \\
   -o /dev/null -s https://api.example.com/endpoint''')
 ```
 
 In Python, always pass a tuple timeout — `requests` has no default and will hang forever:
 
 ```python
-execute_code('''
+Bash('''
 import requests
 from requests.exceptions import ConnectTimeout, ReadTimeout
 try:
@@ -137,7 +137,7 @@ Diagnosis: high `time_connect` is network/firewall; high `time_starttransfer` wi
 ### Step 2 — TLS/SSL
 
 ```python
-terminal('curl -vI https://api.example.com 2>&1 | grep -E "SSL|subject|expire|issuer"')
+Bash('curl -vI https://api.example.com 2>&1 | grep -E "SSL|subject|expire|issuer"')
 ```
 
 Failures: expired cert, self-signed, hostname mismatch, missing CA bundle. Use `-k` only for ad-hoc debug, never in code.
@@ -146,10 +146,10 @@ Failures: expired cert, self-signed, hostname mismatch, missing CA bundle. Use `
 
 ```python
 # Token validity check
-terminal('curl -s -o /dev/null -w "%{http_code}\\n" -H "Authorization: Bearer $TOKEN" https://api.example.com/me')
+Bash('curl -s -o /dev/null -w "%{http_code}\\n" -H "Authorization: Bearer $TOKEN" https://api.example.com/me')
 
 # Decode JWT exp claim — handles base64url padding correctly
-execute_code('''
+Bash('''
 import json, base64, os
 tok = os.environ["TOKEN"]
 payload = tok.split(".")[1]
@@ -167,7 +167,7 @@ Checklist:
 ### Step 4 — Request Format
 
 ```python
-terminal("""curl -v -X POST https://api.example.com/endpoint \\
+Bash("""curl -v -X POST https://api.example.com/endpoint \\
   -H 'Content-Type: application/json' \\
   -d '{"key":"value"}' 2>&1""")
 ```
@@ -195,7 +195,7 @@ Common: form-encoded vs JSON, missing required fields, wrong HTTP method, unenco
 Always inspect content-type before calling `.json()`:
 
 ```python
-execute_code('''
+Bash('''
 import requests
 resp = requests.post(url, json=payload, timeout=10)
 print(f"status={resp.status_code}")
@@ -260,7 +260,7 @@ The error body usually names the bad fields. Check:
 Check `Retry-After` and `X-RateLimit-*` headers. Exponential backoff:
 
 ```python
-execute_code('''
+Bash('''
 import time, requests
 
 def with_backoff(method, url, **kwargs):
@@ -296,7 +296,7 @@ For all 5xx: backoff with jitter, alert on persistence.
 Catch schema drift before it hits production:
 
 ```python
-execute_code('''
+Bash('''
 import requests
 
 def validate_user(data: dict) -> list[str]:
@@ -323,7 +323,7 @@ Run after API upgrades, when integrating new third parties, or in CI smoke tests
 Always capture the provider's request ID — fastest path to vendor support:
 
 ```python
-execute_code('''
+Bash('''
 import requests
 resp = requests.post(url, json=payload, headers=headers, timeout=10)
 request_id = (
@@ -350,7 +350,7 @@ Repro:       curl -X POST … (auth: <REDACTED>)
 
 ## Regression Test Template
 
-Drop this into `tests/` and run via `terminal('pytest tests/test_api_smoke.py -v')`:
+Drop this into `tests/` and run via `Bash('pytest tests/test_api_smoke.py -v')`:
 
 ```python
 import os, requests, pytest
@@ -415,16 +415,16 @@ def redact_auth(headers: dict) -> dict:
 ### terminal — for curl, dig, openssl
 
 ```python
-terminal('curl -sI https://api.example.com')
-terminal('openssl s_client -connect api.example.com:443 -servername api.example.com </dev/null 2>/dev/null | openssl x509 -noout -dates')
+Bash('curl -sI https://api.example.com')
+Bash('openssl s_client -connect api.example.com:443 -servername api.example.com </dev/null 2>/dev/null | openssl x509 -noout -dates')
 ```
 
-### execute_code — for multi-step Python flows
+### Bash — for multi-step Python flows
 
-When debugging spans auth → fetch → paginate → validate, use `execute_code`. Variables persist for the script, results print to stdout, no risk of token spam in your context:
+When debugging spans auth → fetch → paginate → validate, use `Bash`. Variables persist for the script, results print to stdout, no risk of token spam in your context:
 
 ```python
-execute_code('''
+Bash('''
 import os, requests
 
 token = os.environ["API_TOKEN"]
@@ -449,18 +449,18 @@ print(f"users={len(all_users)}")
 ''')
 ```
 
-### web_extract — for vendor API docs
+### WebFetch — for vendor API docs
 
 Pull the spec for the endpoint you're debugging instead of guessing:
 
 ```python
-web_extract(urls=["https://docs.example.com/api/v1/users"])
+WebFetch(urls=["https://docs.example.com/api/v1/users"])
 ```
 
-### delegate_task — for full CRUD test sweeps
+### Agent — for full CRUD test sweeps
 
 ```python
-delegate_task(
+Agent(
     goal="Test all CRUD endpoints for /api/v1/users",
     context="""
 Follow the rest-graphql-debug skill (optional-skills/software-development/rest-graphql-debug).
@@ -474,7 +474,6 @@ For each verb (POST, GET, PATCH, DELETE):
 
 Output: pass/fail per endpoint + correlation IDs for failures.
 """,
-    toolsets=["terminal", "file"],
 )
 ```
 
