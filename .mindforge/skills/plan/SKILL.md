@@ -1,6 +1,6 @@
 ---
 name: plan
-description: "Plan mode: write an actionable markdown plan to .planning/plans/, no execution. Bite-sized tasks, exact paths, complete code."
+description: "Plan mode: write an actionable markdown plan to .hermes/plans/, no execution. Bite-sized tasks, exact paths, complete code."
 version: 2.0.0
 status: stable
 min_mindforge_version: 11.5.1
@@ -19,7 +19,7 @@ For this turn, you are planning only.
 - Do not edit project files except the plan markdown file.
 - Do not run mutating terminal commands, commit, push, or perform external actions.
 - You may inspect the repo or other context with read-only commands/tools when needed.
-- Your deliverable is a markdown plan saved inside the active workspace under `.planning/plans/`.
+- Your deliverable is a markdown plan saved inside the active workspace under `.hermes/plans/`.
 
 ## Output requirements
 
@@ -38,13 +38,13 @@ If the task is code-related, include exact file paths, likely test targets, and 
 
 ## Save location
 
-Save the plan with `Write` under:
-- `.planning/plans/YYYY-MM-DD_HHMMSS-<slug>.md`
+Save the plan with `write_file` under:
+- `.hermes/plans/YYYY-MM-DD_HHMMSS-<slug>.md`
 
 Treat that as relative to the active working directory / backend workspace. file tools are backend-aware, so using this relative path keeps the plan with the workspace on local, docker, ssh, modal, and daytona backends.
 
 If the runtime provides a specific target path, use that exact path.
-If not, create a sensible timestamped filename yourself under `.planning/plans/`.
+If not, create a sensible timestamped filename yourself under `.hermes/plans/`.
 
 ## Interaction style
 
@@ -191,16 +191,16 @@ Use available tools to understand the project:
 
 ```python
 # Understand project structure
-Grep("*.py", target="files", path="src/")
+search_files("*.py", target="files", path="src/")
 
 # Look at similar features
-Grep("similar_pattern", path="src/", file_glob="*.py")
+search_files("similar_pattern", path="src/", file_glob="*.py")
 
 # Check existing tests
-Grep("*.py", target="files", path="tests/")
+search_files("*.py", target="files", path="tests/")
 
 # Read key files
-Read("src/app.py")
+read_file("src/app.py")
 ```
 
 ### Step 3: Design Approach
@@ -314,7 +314,7 @@ After saving the plan, offer the execution approach:
 **"Plan complete and saved. Ready to execute using subagent-driven-development — I'll dispatch a fresh subagent per task with two-stage review (spec compliance then code quality). Shall I proceed?"**
 
 When executing, use the `subagent-driven-development` skill:
-- Fresh `Agent` per task with full context
+- Fresh `delegate_task` per task with full context
 - Spec compliance review after each task
 - Code quality review after spec passes
 - Proceed only when both reviews approve

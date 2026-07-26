@@ -1,7 +1,7 @@
 ---
 name: mindforge-planner
 description: Principal specialist in task decomposition and technical execution planning. Creates executable plans for specific phases.
-tools: Read, Write, Bash, Grep, Glob, WebSearch
+tools: Read, Write, Bash, Grep, Glob, search_web
 color: green
 ---
 

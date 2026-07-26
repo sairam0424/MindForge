@@ -24,10 +24,10 @@ Initialize a new project through unified flow: questioning → research (optiona
 
 <execution_context>
 @.agent/workflows/mindforge-new-project.md
-@docs/References/questioning.md
-@docs/References/ui-brand.md
-@docs/Templates/Project/PROJECT.md
-@docs/Templates/Project/REQUIREMENTS.md
+@.agent/references/questioning.md
+@.agent/references/ui-brand.md
+@.agent/templates/project.md
+@.agent/templates/requirements.md
 </execution_context>
 
 <process>

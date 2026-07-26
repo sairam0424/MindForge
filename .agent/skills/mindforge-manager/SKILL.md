@@ -17,7 +17,7 @@ Designed for power users who want to parallelize work across phases from one ter
 
 <execution_context>
 @.agent/workflows/mindforge-manager.md
-@docs/References/ui-brand.md
+@.agent/references/ui-brand.md
 </execution_context>
 
 <context>

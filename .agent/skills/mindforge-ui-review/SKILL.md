@@ -11,7 +11,7 @@ Output: {phase_num}-UI-REVIEW.md
 
 <execution_context>
 @.agent/workflows/mindforge-ui-review.md
-@docs/References/ui-brand.md
+@.agent/references/ui-brand.md
 </execution_context>
 
 <context>

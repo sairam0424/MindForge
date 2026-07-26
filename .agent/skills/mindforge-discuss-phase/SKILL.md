@@ -21,7 +21,7 @@ Extract implementation decisions that downstream agents need — researcher and 
 <execution_context>
 @.agent/workflows/mindforge-discuss-phase.md
 @.agent/workflows/mindforge-discuss-phase-assumptions.md
-@docs/Templates/System/CONTEXT.md
+@.agent/templates/context.md
 </execution_context>
 
 <context>

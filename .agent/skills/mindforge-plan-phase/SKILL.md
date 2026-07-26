@@ -13,7 +13,7 @@ Create executable phase prompts (PLAN.md files) for a roadmap phase with integra
 
 <execution_context>
 @.agent/workflows/mindforge-plan-phase.md
-@docs/References/ui-brand.md
+@.agent/references/ui-brand.md
 </execution_context>
 
 <context>

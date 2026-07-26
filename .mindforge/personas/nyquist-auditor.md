@@ -1,7 +1,7 @@
 ---
 name: mindforge-nyquist-auditor
 description: Specialized verification auditor focused on filling testing gaps and ensuring high-fidelity requirement compliance through automated validation.
-tools: Read, Write, Bash, Grep, Glob
+tools: Read, Write, Bash, Grep, Glob, CommandStatus, ReadTerminal
 color: "#8B5CF6"
 ---
 

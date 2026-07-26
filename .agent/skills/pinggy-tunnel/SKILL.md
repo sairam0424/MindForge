@@ -63,7 +63,7 @@ ssh -p 443 -o StrictHostKeyChecking=no -R0:localhost:8000 "$PINGGY_TOKEN+a.pingg
 
 ## Procedure — Start a Tunnel and Get the URL
 
-The model SHOULD use the `Bash` tool. The tunnel must stay alive for the duration of the share, so run it as a background process and parse the public URL from stdout.
+The model SHOULD use the `terminal` tool. The tunnel must stay alive for the duration of the share, so run it as a background process and parse the public URL from stdout.
 
 ### 1. Confirm a local origin is up
 
@@ -76,7 +76,7 @@ If nothing is listening yet, start it first (e.g. `python3 -m http.server 8000 -
 
 ### 2. Launch the tunnel as a background process
 
-Use `Bash(background=True)` and capture output to a logfile (Pinggy prints the URLs on stdout, then keeps the connection open):
+Use `terminal(background=True)` and capture output to a logfile (Pinggy prints the URLs on stdout, then keeps the connection open):
 
 ```bash
 LOG=/tmp/pinggy-8000.log
@@ -127,7 +127,7 @@ kill "$(cat /tmp/pinggy-8000.pid)"
 pkill -f 'ssh -p 443 .* free@a\.pinggy\.io'
 ```
 
-If you have a session_id from `Bash(background=True)`, prefer `process(action='kill', session_id=...)`.
+If you have a session_id from `terminal(background=True)`, prefer `process(action='kill', session_id=...)`.
 
 ## Access Control via Username Keywords
 

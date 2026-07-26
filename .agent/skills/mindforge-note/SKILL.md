@@ -16,7 +16,7 @@ Runs inline — no Task, no AskUserQuestion, no Bash.
 
 <execution_context>
 @.agent/workflows/mindforge-note.md
-@docs/References/ui-brand.md
+@.agent/references/ui-brand.md
 </execution_context>
 
 <context>

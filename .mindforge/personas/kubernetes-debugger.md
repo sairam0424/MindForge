@@ -1,7 +1,7 @@
 ---
 name: mindforge-kubernetes-debugger
 description: Kubernetes troubleshooting specialist for pod failures, networking issues, RBAC problems, and resource exhaustion
-tools: Read, Write, Bash, Grep, Glob
+tools: Read, Write, Bash, Grep, Glob, CommandStatus
 color: green
 ---
 

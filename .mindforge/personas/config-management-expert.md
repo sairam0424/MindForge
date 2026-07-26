@@ -1,7 +1,7 @@
 ---
 name: mindforge-config-management-expert
 description: Configuration management specialist for feature flags, environment config, secrets rotation, and config drift detection
-tools: Read, Write, Bash, Grep, Glob
+tools: Read, Write, Bash, Grep, Glob, CommandStatus
 color: green
 ---
 

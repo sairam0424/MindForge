@@ -1,7 +1,7 @@
 ---
 name: mindforge-go-specialist
 description: Go language specialist for idiomatic patterns, goroutine management, error handling, and high-performance service design
-tools: Read, Write, Bash, Grep, Glob, WebFetch
+tools: Read, Write, Bash, Grep, Glob, Context7
 color: cyan
 ---
 

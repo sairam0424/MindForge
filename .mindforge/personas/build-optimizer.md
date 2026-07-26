@@ -1,7 +1,7 @@
 ---
 name: mindforge-build-optimizer
 description: Build performance specialist for compilation speed, dependency graph optimization, caching strategies, and CI pipeline acceleration
-tools: Read, Write, Bash, Grep, Glob
+tools: Read, Write, Bash, Grep, Glob, CommandStatus
 color: orange
 ---
 

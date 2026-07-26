@@ -9,7 +9,7 @@ Scan `~/mindforge-workspaces/` for workspace directories containing `WORKSPACE.m
 
 <execution_context>
 @.agent/workflows/mindforge-list-workspaces.md
-@docs/References/ui-brand.md
+@.agent/references/ui-brand.md
 </execution_context>
 
 <process>

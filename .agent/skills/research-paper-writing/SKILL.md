@@ -236,17 +236,17 @@ find . -name "*.bib"
 
 ### Step 1.2: Search for Related Work
 
-**Load the `arxiv` skill** for structured paper discovery: `Skill(skill="arxiv")`. It provides arXiv REST API search, Semantic Scholar citation graphs, author profiles, and BibTeX generation.
+**Load the `arxiv` skill** for structured paper discovery: `skill_view("arxiv")`. It provides arXiv REST API search, Semantic Scholar citation graphs, author profiles, and BibTeX generation.
 
-Use `WebSearch` for broad discovery, `WebFetch` for fetching specific papers:
+Use `web_search` for broad discovery, `web_extract` for fetching specific papers:
 
 ```
-# Via WebSearch:
-WebSearch("[main technique] + [application domain] site:arxiv.org")
-WebSearch("[baseline method] comparison ICML NeurIPS 2024")
+# Via web_search:
+web_search("[main technique] + [application domain] site:arxiv.org")
+web_search("[baseline method] comparison ICML NeurIPS 2024")
 
-# Via WebFetch (for specific papers):
-WebFetch("https://arxiv.org/abs/2303.17651")
+# Via web_extract (for specific papers):
+web_extract("https://arxiv.org/abs/2303.17651")
 ```
 
 Additional search queries to try:
@@ -293,7 +293,7 @@ Round 3 (Targeted): Fill specific gaps
 
 **When to stop**: If a round returns >80% papers already in your collection, the search is saturated. Typically 2-3 rounds suffice. For survey papers, expect 4-5 rounds.
 
-**For agent-based workflows**: Delegate each round's queries in parallel via `Agent`. Collect results, deduplicate, then generate the next round's queries from the combined learnings.
+**For agent-based workflows**: Delegate each round's queries in parallel via `delegate_task`. Collect results, deduplicate, then generate the next round's queries from the combined learnings.
 
 ### Step 1.3: Verify Every Citation
 
@@ -2114,12 +2114,12 @@ Compose this skill with other skills for specific phases:
 
 | Skill | When to Use | How to Load |
 |-------|-------------|-------------|
-| **arxiv** | Phase 1 (Literature Review): searching arXiv, generating BibTeX, finding related papers via Semantic Scholar | `Skill(skill="arxiv")` |
-| **subagent-driven-development** | Phase 5 (Drafting): parallel section writing with 2-stage review (spec compliance then quality) | `Skill(skill="subagent-driven-development")` |
-| **plan** | Phase 0 (Setup): creating structured plans before execution. Writes to `.planning/plans/` | `Skill(skill="plan")` |
+| **arxiv** | Phase 1 (Literature Review): searching arXiv, generating BibTeX, finding related papers via Semantic Scholar | `skill_view("arxiv")` |
+| **subagent-driven-development** | Phase 5 (Drafting): parallel section writing with 2-stage review (spec compliance then quality) | `skill_view("subagent-driven-development")` |
+| **plan** | Phase 0 (Setup): creating structured plans before execution. Writes to `.hermes/plans/` | `skill_view("plan")` |
 | **qmd** | Phase 1 (Literature): searching local knowledge bases (notes, transcripts, docs) via hybrid BM25+vector search | Install: `skill_manage("install", "qmd")` |
-| **concept-diagrams** | Phase 4-5: creating Excalidraw-based figures and architecture diagrams | `Skill(skill="concept-diagrams")` |
-| **jupyter-live-kernel** | Phase 4 (Analysis): Jupyter live kernel for interactive analysis and visualization | `Skill(skill="jupyter-live-kernel")` |
+| **diagramming** | Phase 4-5: creating Excalidraw-based figures and architecture diagrams | `skill_view("diagramming")` |
+| **data-science** | Phase 4 (Analysis): Jupyter live kernel for interactive analysis and visualization | `skill_view("data-science")` |
 
 **This skill supersedes `ml-paper-writing`** — it contains all of ml-paper-writing's content plus the full experiment/analysis pipeline and autoreason methodology.
 
@@ -2127,13 +2127,13 @@ Compose this skill with other skills for specific phases:
 
 | Tool | Usage in This Pipeline |
 |------|----------------------|
-| **`Bash`** | LaTeX compilation (`latexmk -pdf`), git operations, launching experiments (`nohup python run.py &`), process checks |
+| **`terminal`** | LaTeX compilation (`latexmk -pdf`), git operations, launching experiments (`nohup python run.py &`), process checks |
 | **`process`** | Background experiment management: `process("start", ...)`, `process("poll", pid)`, `process("log", pid)`, `process("kill", pid)` |
-| **`Bash`** | Run Python for citation verification, statistical analysis, data aggregation. Has tool access via RPC. |
-| **`Read`** / **`Write`** / **`Edit`** | Paper editing, experiment scripts, result files. Use `Edit` for targeted edits to large .tex files. |
-| **`WebSearch`** | Literature discovery: `WebSearch("transformer attention mechanism 2024")` |
-| **`WebFetch`** | Fetch paper content, verify citations: `WebFetch("https://arxiv.org/abs/2303.17651")` |
-| **`Agent`** | **Parallel section drafting** — spawn isolated subagents for each section. Also for concurrent citation verification. |
+| **`execute_code`** | Run Python for citation verification, statistical analysis, data aggregation. Has tool access via RPC. |
+| **`read_file`** / **`write_file`** / **`patch`** | Paper editing, experiment scripts, result files. Use `patch` for targeted edits to large .tex files. |
+| **`web_search`** | Literature discovery: `web_search("transformer attention mechanism 2024")` |
+| **`web_extract`** | Fetch paper content, verify citations: `web_extract("https://arxiv.org/abs/2303.17651")` |
+| **`delegate_task`** | **Parallel section drafting** — spawn isolated subagents for each section. Also for concurrent citation verification. |
 | **`todo`** | Primary state tracker across sessions. Update after every phase transition. |
 | **`memory`** | Persist key decisions across sessions: contribution framing, venue choice, reviewer feedback. |
 | **`cronjob`** | Schedule experiment monitoring, deadline countdowns, automated arXiv checks. |
@@ -2144,32 +2144,32 @@ Compose this skill with other skills for specific phases:
 
 **Experiment monitoring** (most common):
 ```
-Bash("ps aux | grep <pattern>")
-→ Bash("tail -30 <logfile>")
-→ Bash("ls results/")
-→ Bash("analyze results JSON, compute metrics")
-→ Bash("git add -A && git commit -m '<descriptive message>' && git push")
+terminal("ps aux | grep <pattern>")
+→ terminal("tail -30 <logfile>")
+→ terminal("ls results/")
+→ execute_code("analyze results JSON, compute metrics")
+→ terminal("git add -A && git commit -m '<descriptive message>' && git push")
 → send_message("Experiment complete: <summary>")
 ```
 
 **Parallel section drafting** (using delegation):
 ```
-Agent("Draft the Methods section based on these experiment scripts and configs. 
+delegate_task("Draft the Methods section based on these experiment scripts and configs. 
   Include: pseudocode, all hyperparameters, architectural details sufficient for 
   reproduction. Write in LaTeX using the neurips2025 template conventions.")
 
-Agent("Draft the Related Work section. Use WebSearch and WebFetch to 
+delegate_task("Draft the Related Work section. Use web_search and web_extract to 
   find papers. Verify every citation via Semantic Scholar. Group by methodology.")
 
-Agent("Draft the Experiments section. Read all result files in results/. 
+delegate_task("Draft the Experiments section. Read all result files in results/. 
   State which claim each experiment supports. Include error bars and significance.")
 ```
 
 Each delegate runs as a **fresh subagent** with no shared context — provide all necessary information in the prompt. Collect outputs and integrate.
 
-**Citation verification** (using Bash):
+**Citation verification** (using execute_code):
 ```python
-# In Bash:
+# In execute_code:
 from semanticscholar import SemanticScholar
 import requests
 
@@ -2210,9 +2210,9 @@ todo("update", id=1, status="completed")
 ```
 1. todo("list")                           # Check current task list
 2. memory("read")                         # Recall key decisions
-3. Bash("git log --oneline -10")      # Check recent commits
-4. Bash("ps aux | grep python")       # Check running experiments
-5. Bash("ls results/ | tail -20")     # Check for new results
+3. terminal("git log --oneline -10")      # Check recent commits
+4. terminal("ps aux | grep python")       # Check running experiments
+5. terminal("ls results/ | tail -20")     # Check for new results
 6. Report status to user, ask for direction
 ```
 

@@ -9,7 +9,7 @@ triggers: kanban orchestrator, multi-agent kanban, decompose and route, orchestr
 
 # Kanban Orchestrator — Decomposition Playbook
 
-> The **core worker lifecycle** (including the `TaskCreate` fan-out pattern and the "decompose, don't execute" rule) is auto-injected into every kanban process via the `KANBAN_GUIDANCE` system-prompt block. This skill is the deeper playbook when you're an orchestrator profile whose whole job is routing.
+> The **core worker lifecycle** (including the `kanban_create` fan-out pattern and the "decompose, don't execute" rule) is auto-injected into every kanban process via the `KANBAN_GUIDANCE` system-prompt block. This skill is the deeper playbook when you're an orchestrator profile whose whole job is routing.
 
 ## Profiles are user-configured — not a fixed roster
 
@@ -38,7 +38,7 @@ Create Kanban tasks when any of these are true:
 5. **Review / iteration is expected.** A reviewer profile loops on drafter output.
 6. **The audit trail matters.** Board rows persist in SQLite forever.
 
-If *none* of those apply — it's a small one-shot reasoning task — use `Agent` instead or answer the user directly.
+If *none* of those apply — it's a small one-shot reasoning task — use `delegate_task` instead or answer the user directly.
 
 ## The anti-temptation rules
 
@@ -48,7 +48,7 @@ Your job description says "route, don't execute." The rules that enforce that:
 - **For any concrete task, create a Kanban task and assign it.** Every single time.
 - **Split multi-lane requests before creating cards.** A user prompt can contain several independent workstreams. Extract those lanes first, then create one card per lane instead of bundling unrelated work into a single implementer card.
 - **Run independent lanes in parallel.** If two cards do not need each other's output, leave them unlinked so the dispatcher can fan them out. Link only true data dependencies.
-- **Never create dependent work as independent ready cards.** If a card must wait for another card, pass `parents=[...]` in the original `TaskCreate` call. Do not create it first and link it later, and do not rely on prose like "wait for T1" inside the body.
+- **Never create dependent work as independent ready cards.** If a card must wait for another card, pass `parents=[...]` in the original `kanban_create` call. Do not create it first and link it later, and do not rely on prose like "wait for T1" inside the body.
 - **If no specialist fits the available profiles, ask the user which profile to create or which existing profile to use.** Do not invent profile names; the dispatcher will silently drop unknown assignees.
 - **Decompose, route, and summarize — that's the whole job.**
 
@@ -84,27 +84,27 @@ Show the graph to the user before creating cards. Let them correct it — includ
 Use the profile names from Step 0. The example below uses placeholders `<profile-A>`, `<profile-B>`, `<profile-C>` — replace them with what the user actually has.
 
 ```python
-t1 = TaskCreate(
+t1 = kanban_create(
     title="research: Postgres cost vs current",
     assignee="<profile-A>",  # whichever profile handles research on this setup
     body="Compare estimated infrastructure costs, migration costs, and ongoing ops costs over a 3-year window. Sources: AWS/GCP pricing, team time estimates, current Postgres bills from peers.",
     tenant=os.environ.get("HERMES_TENANT"),
 )["task_id"]
 
-t2 = TaskCreate(
+t2 = kanban_create(
     title="research: Postgres performance vs current",
     assignee="<profile-A>",  # same profile, run in parallel
     body="Compare query latency, throughput, and scaling characteristics at our expected data volume (~500GB, 10k QPS peak). Sources: benchmark papers, public case studies, pgbench results if easy.",
 )["task_id"]
 
-t3 = TaskCreate(
+t3 = kanban_create(
     title="synthesize migration recommendation",
     assignee="<profile-B>",  # whichever profile does synthesis/analysis
     body="Read the findings from T1 (cost) and T2 (performance). Produce a 1-page recommendation with explicit trade-offs and a go/no-go call.",
     parents=[t1, t2],
 )["task_id"]
 
-t4 = TaskCreate(
+t4 = kanban_create(
     title="draft decision memo",
     assignee="<profile-C>",  # whichever profile drafts user-facing prose
     body="Turn the analyst's recommendation into a 2-page memo for the CTO. Match the tone of previous decision memos in the team's knowledge base.",
@@ -114,7 +114,7 @@ t4 = TaskCreate(
 
 `parents=[...]` gates promotion — children stay in `todo` until every parent reaches `done`, then auto-promote to `ready`. No manual coordination needed; the dispatcher and dependency engine handle it.
 
-If the task graph has dependencies, create the parent cards first, capture their returned ids, and include those ids in the child card's `parents` list during the child `TaskCreate` call. Avoid creating all cards in parallel and linking them afterward; that creates a window where the dispatcher can claim a child before its inputs exist.
+If the task graph has dependencies, create the parent cards first, capture their returned ids, and include those ids in the child card's `parents` list during the child `kanban_create` call. Avoid creating all cards in parallel and linking them afterward; that creates a window where the dispatcher can claim a child before its inputs exist.
 
 ### Step 4 — Complete your own task
 
@@ -174,14 +174,14 @@ Tell them what you created in plain prose, naming the actual profiles you used:
 
 **Don't pre-create the whole graph if the shape depends on intermediate findings.** If T3's structure depends on what T1 and T2 find, let T3 exist as a "synthesize findings" task whose own first step is to read parent handoffs and plan the rest. Orchestrators can spawn orchestrators.
 
-**Tenant inheritance.** If `HERMES_TENANT` is set in your env, pass `tenant=os.environ.get("HERMES_TENANT")` on every `TaskCreate` call so child tasks stay in the same namespace.
+**Tenant inheritance.** If `HERMES_TENANT` is set in your env, pass `tenant=os.environ.get("HERMES_TENANT")` on every `kanban_create` call so child tasks stay in the same namespace.
 
 ## Goal-mode cards (persistent workers)
 
 By default a dispatched worker gets **one shot** at its card: it does its work, calls `kanban_complete`/`kanban_block`, and exits. For open-ended cards where one turn rarely finishes the job, pass `goal_mode=True` to wrap that worker in a Ralph-style goal loop — the same engine behind the `/goal` slash command:
 
 ```python
-TaskCreate(
+kanban_create(
     title="Translate the full docs site to French",
     body="Acceptance: every page translated, no English left, links intact.",
     assignee="<translator-profile>",

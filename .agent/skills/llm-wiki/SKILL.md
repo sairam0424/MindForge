@@ -83,7 +83,7 @@ Only after orientation should you ingest, query, or lint. This prevents:
 - Contradicting the schema's conventions
 - Repeating work already logged
 
-For large wikis (100+ pages), also run a quick `Grep` for the topic
+For large wikis (100+ pages), also run a quick `search_files` for the topic
 at hand before creating anything new.
 
 ## Initializing a New Wiki
@@ -251,8 +251,8 @@ a `_meta/topic-map.md` that groups pages by theme for faster navigation.
 When the user provides a source (URL, file, paste), integrate it into the wiki:
 
 ① **Capture the raw source:**
-   - URL → use `WebFetch` to get markdown, save to `raw/articles/`
-   - PDF → use `WebFetch` (handles PDFs), save to `raw/papers/`
+   - URL → use `web_extract` to get markdown, save to `raw/articles/`
+   - PDF → use `web_extract` (handles PDFs), save to `raw/papers/`
    - Pasted text → save to appropriate `raw/` subdirectory
    - Name the file descriptively: `raw/articles/karpathy-llm-wiki-2026.md`
    - **Add raw frontmatter** (`source_url`, `ingested`, `sha256` of the body).
@@ -263,7 +263,7 @@ When the user provides a source (URL, file, paste), integrate it into the wiki:
 ② **Discuss takeaways** with the user — what's interesting, what matters for
    the domain. (Skip this in automated/cron contexts — proceed directly.)
 
-③ **Check what already exists** — search index.md and use `Grep` to find
+③ **Check what already exists** — search index.md and use `search_files` to find
    existing pages for mentioned entities/concepts. This is the difference between
    a growing wiki and a pile of duplicates.
 
@@ -297,9 +297,9 @@ and desired — it's the compounding effect.
 When the user asks a question about the wiki's domain:
 
 ① **Read `index.md`** to identify relevant pages.
-② **For wikis with 100+ pages**, also `Grep` across all `.md` files
+② **For wikis with 100+ pages**, also `search_files` across all `.md` files
    for key terms — the index alone may miss relevant content.
-③ **Read the relevant pages** using `Read`.
+③ **Read the relevant pages** using `read_file`.
 ④ **Synthesize an answer** from the compiled knowledge. Cite the wiki pages
    you drew from: "Based on [[page-a]] and [[page-b]]..."
 ⑤ **File valuable answers back** — if the answer is a substantial comparison,
@@ -313,7 +313,7 @@ When the user asks to lint, health-check, or audit the wiki:
 
 ① **Orphan pages:** Find pages with no inbound `[[wikilinks]]` from other pages.
 ```python
-# Use Bash for this — programmatic scan across all wiki pages
+# Use execute_code for this — programmatic scan across all wiki pages
 import os, re
 from collections import defaultdict
 wiki = "<WIKI_PATH>"

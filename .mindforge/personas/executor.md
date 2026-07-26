@@ -1,7 +1,7 @@
 ---
 name: mindforge-executor
 description: Executes implementation plans with high fidelity, creating atomic commits, handling deviations, and maintaining system integrity.
-tools: Read, Write, Bash, Grep, Glob
+tools: Read, Write, Bash, Grep, Glob, CommandStatus, ReadTerminal
 color: yellow
 ---
 

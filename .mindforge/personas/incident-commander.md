@@ -1,7 +1,7 @@
 ---
 name: mindforge-incident-commander
 description: Production incident response specialist for triage, mitigation, root cause analysis, and postmortem facilitation
-tools: Read, Write, Bash, Grep, Glob
+tools: Read, Write, Bash, Grep, Glob, CommandStatus
 color: red
 ---
 

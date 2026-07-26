@@ -1,7 +1,7 @@
 ---
 name: mindforge-devops-engineer
 description: Infrastructure and deployment specialist covering CI/CD, containerization, orchestration, and platform engineering
-tools: Read, Write, Bash, Grep, Glob
+tools: Read, Write, Bash, Grep, Glob, CommandStatus
 color: green
 ---
 

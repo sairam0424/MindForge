@@ -38,9 +38,9 @@ If a more specialized skill is available for the subject, prefer that. If none f
 
 Optional: if the user wants a browsable gallery of multiple diagrams, see "Local Preview Server" at the bottom.
 
-Load the HTML template with `Read` (path relative to this skill's own directory):
+Load the HTML template:
 ```
-Read(".agent/skills/concept-diagrams/templates/template.html")
+skill_view(name="concept-diagrams", file_path="templates/template.html")
 ```
 
 The template embeds the full CSS design system (`c-*` color classes, text classes, light/dark variables, arrow marker styles). The SVG you generate relies on these classes being present on the hosting page.
@@ -252,7 +252,7 @@ Write a single `.html` file the user can open directly. No server, no dependenci
 
 ```python
 # 1. Load the template
-template = Read(".agent/skills/concept-diagrams/templates/template.html")
+template = skill_view("concept-diagrams", "templates/template.html")
 
 # 2. Fill in title, subtitle, and paste your SVG
 html = template.replace(
@@ -264,7 +264,7 @@ html = template.replace(
 )
 
 # 3. Write to a user-chosen path (or ./ by default)
-Write("./sn2-mechanism.html", html)
+write_file("./sn2-mechanism.html", html)
 ```
 
 Tell the user how to open it:
@@ -327,9 +327,9 @@ The `examples/` directory ships 15 complete, tested diagrams. Browse them for wo
 | `electricity-grid-flow.md` | Multi-stage flow | Voltage hierarchy, flow markers |
 | `ml-benchmark-grouped-bar-chart.md` | Chart | Grouped bars, dual axis |
 
-Load any example with `Read`:
+Load any example with:
 ```
-Read(".agent/skills/concept-diagrams/examples/<filename>")
+skill_view(name="concept-diagrams", file_path="examples/<filename>")
 ```
 
 ---

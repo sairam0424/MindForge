@@ -1,7 +1,7 @@
 ---
 name: mindforge-caching-strategist
 description: Caching architecture specialist for cache invalidation, CDN strategy, multi-layer caching, and consistency patterns
-tools: Read, Write, Bash, Grep, Glob
+tools: Read, Write, Bash, Grep, Glob, CommandStatus
 color: orange
 ---
 

@@ -55,7 +55,7 @@ stop, building understanding progressively.
 
 **Stop format (mandatory for each stop):**
 
-````markdown
+```markdown
 ## Stop N: [Descriptive Title]
 
 **File:** `src/path/to/file.ts` (lines 42-87)
@@ -81,7 +81,7 @@ function handleRequest(ctx: Context) {
 **Checkpoint:** After this stop, you should understand:
 - [Concrete understanding goal 1]
 - [Concrete understanding goal 2]
-````
+```
 
 **Progressive complexity rules:**
 - Stop 1-3: Configuration, entry points, "what runs when the app starts"

@@ -1,7 +1,7 @@
 ---
 name: mindforge-rust-specialist
 description: Rust language specialist for ownership patterns, lifetime management, unsafe code review, and systems programming best practices
-tools: Read, Write, Bash, Grep, Glob, WebFetch
+tools: Read, Write, Bash, Grep, Glob, Context7
 color: cyan
 ---
 

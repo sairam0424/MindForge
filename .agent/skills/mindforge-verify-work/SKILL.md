@@ -13,7 +13,7 @@ Output: {phase_num}-UAT.md tracking all test results. If issues found: diagnosed
 
 <execution_context>
 @.agent/workflows/mindforge-verify-work.md
-@docs/Templates/Quality/UAT.md
+@.agent/templates/UAT.md
 </execution_context>
 
 <context>

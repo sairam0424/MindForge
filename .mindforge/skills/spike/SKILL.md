@@ -74,11 +74,11 @@ Spikes are not research-free — you research enough to pick the right approach,
 
 Use available tools for the research step:
 
-- `WebSearch("python websocket streaming libraries 2025")` — find candidates
-- `WebFetch(urls=["https://websockets.readthedocs.io/..."])` — read the actual docs (returns markdown)
-- `Bash("pip show websockets | grep Version")` — check what's installed in the project's venv
+- `web_search("python websocket streaming libraries 2025")` — find candidates
+- `web_extract(urls=["https://websockets.readthedocs.io/..."])` — read the actual docs (returns markdown)
+- `terminal("pip show websockets | grep Version")` — check what's installed in the project's venv
 
-For libraries without docs pages, clone and read their `README.md` / `examples/` via `Read`. WebFetch MCP (if the user has it configured) is also a good source — `mcp_*_resolve-library-id` then `mcp_*_query-docs`.
+For libraries without docs pages, clone and read their `README.md` / `examples/` via `read_file`. Context7 MCP (if the user has it configured) is also a good source — `mcp_*_resolve-library-id` then `mcp_*_query-docs`.
 
 ### 4. Build
 
@@ -111,18 +111,20 @@ spikes/
 **Building one spike** — a typical tool sequence:
 
 ```
-Bash("mkdir -p spikes/001-websocket-streaming")
-Write("spikes/001-websocket-streaming/README.md", "# 001: websocket-streaming\n\n...")
-Write("spikes/001-websocket-streaming/main.py", "...")
-Bash("cd spikes/001-websocket-streaming && python3 main.py")
+terminal("mkdir -p spikes/001-websocket-streaming")
+write_file("spikes/001-websocket-streaming/README.md", "# 001: websocket-streaming\n\n...")
+write_file("spikes/001-websocket-streaming/main.py", "...")
+terminal("cd spikes/001-websocket-streaming && python3 main.py")
 # Observe output, iterate.
 ```
 
-**Parallel comparison spikes (002a / 002b) — delegate.** When two approaches can run in parallel and both need real engineering (not 10-line prototypes), fan out with two `Agent` tool calls in the same response:
+**Parallel comparison spikes (002a / 002b) — delegate.** When two approaches can run in parallel and both need real engineering (not 10-line prototypes), fan out with `delegate_task`:
 
 ```
-Agent(prompt="Build 002a-pdf-parse-pdfjs: ...")
-Agent(prompt="Build 002b-pdf-parse-camelot: ...")
+delegate_task(tasks=[
+    {"goal": "Build 002a-pdf-parse-pdfjs: ...", "toolsets": ["terminal", "file", "web"]},
+    {"goal": "Build 002b-pdf-parse-camelot: ...", "toolsets": ["terminal", "file", "web"]},
+])
 ```
 
 Each subagent returns its own verdict; you write the head-to-head.

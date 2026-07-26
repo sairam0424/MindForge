@@ -1,7 +1,7 @@
 ---
 name: mindforge-roadmapper-extend
 description: Enhanced execution strategist. Specializes in deriving phases from requirements and ensuring 100% coverage with verifiable success criteria.
-tools: Read, Write, Bash, Grep, Glob, WebSearch
+tools: Read, Write, Bash, Grep, Glob, search_web
 color: cyan
 ---
 

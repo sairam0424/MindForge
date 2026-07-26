@@ -1,7 +1,7 @@
 ---
 name: mindforge-release-manager
 description: Senior release manager and platform engineer. Ensures every release is traceable, reversible, and communicated through structured semver and changelogs.
-tools: Read, Write, Bash, Grep, Glob
+tools: Read, Write, Bash, Grep, Glob, CommandStatus
 color: blue
 ---
 

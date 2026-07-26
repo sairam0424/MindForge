@@ -99,12 +99,12 @@ Shape `metadata` so downstream parsers (reviewers, aggregators, schedulers) can 
 
 ## Claiming cards you actually created
 
-If your run produced new kanban tasks (via `TaskCreate`), pass the ids in `created_cards` on `kanban_complete`. The kernel verifies each id exists and was created by your profile; any phantom id blocks the completion with an error listing what went wrong, and the rejected attempt is permanently recorded on the task's event log. **Only list ids you captured from a successful `TaskCreate` return value — never invent ids from prose, never paste ids from earlier runs, never claim cards another worker created.**
+If your run produced new kanban tasks (via `kanban_create`), pass the ids in `created_cards` on `kanban_complete`. The kernel verifies each id exists and was created by your profile; any phantom id blocks the completion with an error listing what went wrong, and the rejected attempt is permanently recorded on the task's event log. **Only list ids you captured from a successful `kanban_create` return value — never invent ids from prose, never paste ids from earlier runs, never claim cards another worker created.**
 
 ```python
 # GOOD — capture return values, then claim them.
-c1 = TaskCreate(title="remediate SQL injection", assignee="security-worker")
-c2 = TaskCreate(title="fix CSRF middleware", assignee="web-worker")
+c1 = kanban_create(title="remediate SQL injection", assignee="security-worker")
+c2 = kanban_create(title="fix CSRF middleware", assignee="web-worker")
 
 kanban_complete(
     summary="Review done; spawned remediations for both findings.",
@@ -121,7 +121,7 @@ kanban_complete(
 )
 ```
 
-If a `TaskCreate` call fails (exception, tool_error), the card was NOT created — do not include a phantom id for it. Retry the create, or omit the id and mention the failure in your summary. The prose-scan pass also catches `t_<hex>` references in your free-form summary that don't resolve; these don't block the completion but show up as advisory warnings on the task in the dashboard.
+If a `kanban_create` call fails (exception, tool_error), the card was NOT created — do not include a phantom id for it. Retry the create, or omit the id and mention the failure in your summary. The prose-scan pass also catches `t_<hex>` references in your free-form summary that don't resolve; these don't block the completion but show up as advisory warnings on the task in the dashboard.
 
 ## Block reasons that get answered fast
 
@@ -164,7 +164,7 @@ You can configure the gateway to receive cross-profile Kanban task notifications
 
 ## Do NOT
 
-- Call `Agent` as a substitute for `TaskCreate`. `Agent` is for short reasoning subtasks inside YOUR run; `TaskCreate` is for cross-agent handoffs that outlive one API loop.
+- Call `delegate_task` as a substitute for `kanban_create`. `delegate_task` is for short reasoning subtasks inside YOUR run; `kanban_create` is for cross-agent handoffs that outlive one API loop.
 - Call `clarify` to ask the human a question. You are running headless — there is no live user to answer. The call will time out (default ~120s) and the task will sit silently in `running` with no signal that it needs input. Use `kanban_comment` (context) + `kanban_block(reason=...)` (decision needed) instead — the task surfaces on the board as blocked, the operator sees it, unblocks with their answer in a comment, and you respawn with the thread.
 - Modify files outside `$HERMES_KANBAN_WORKSPACE` unless the task body says to.
 - Create follow-up tasks assigned to yourself — assign to the right specialist.
@@ -184,7 +184,7 @@ Every tool has a CLI equivalent for human operators and scripts:
 - `kanban_show` ↔ `hermes kanban show <id> --json`
 - `kanban_complete` ↔ `hermes kanban complete <id> --summary "..." --metadata '{...}'`
 - `kanban_block` ↔ `hermes kanban block <id> "reason"`
-- `TaskCreate` ↔ `hermes kanban create "title" --assignee <profile> [--parent <id>]`
+- `kanban_create` ↔ `hermes kanban create "title" --assignee <profile> [--parent <id>]`
 - etc.
 
 Use the tools from inside an agent; the CLI exists for the human at the terminal.

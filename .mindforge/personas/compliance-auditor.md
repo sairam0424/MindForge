@@ -1,7 +1,7 @@
 ---
 name: mindforge-compliance-auditor
 description: Regulatory compliance specialist for GDPR, HIPAA, SOC2, PCI-DSS, and data privacy requirements
-tools: Read, Write, Bash, Grep, Glob
+tools: Read, Write, Bash, Grep, Glob, CommandStatus
 color: red
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: subagent-driven-development
-description: "Execute plans via Agent subagents (2-stage review)."
+description: "Execute plans via delegate_task subagents (2-stage review)."
 version: 1.1.0
 ---
 
@@ -34,7 +34,7 @@ Read the plan file. Extract ALL tasks with their full text and context upfront. 
 
 ```python
 # Read the plan
-Read("docs/plans/feature-plan.md")
+read_file("docs/plans/feature-plan.md")
 
 # Create todo list with all tasks
 todo([
@@ -52,10 +52,10 @@ For EACH task in the plan:
 
 #### Step 1: Dispatch Implementer Subagent
 
-Use `Agent` with complete context:
+Use `delegate_task` with complete context:
 
 ```python
-Agent(
+delegate_task(
     goal="Implement Task 1: Create User model with email and password_hash fields",
     context="""
     TASK FROM PLAN:
@@ -78,6 +78,7 @@ Agent(
     - Tests use pytest, run from project root
     - bcrypt already in requirements.txt
     """,
+    toolsets=['terminal', 'file']
 )
 ```
 
@@ -86,7 +87,7 @@ Agent(
 After the implementer completes, verify against the original spec:
 
 ```python
-Agent(
+delegate_task(
     goal="Review if implementation matches the spec from the plan",
     context="""
     ORIGINAL TASK SPEC:
@@ -104,6 +105,7 @@ Agent(
 
     OUTPUT: PASS or list of specific spec gaps to fix.
     """,
+    toolsets=['file']
 )
 ```
 
@@ -114,7 +116,7 @@ Agent(
 After spec compliance passes:
 
 ```python
-Agent(
+delegate_task(
     goal="Review code quality for Task 1 implementation",
     context="""
     FILES TO REVIEW:
@@ -135,6 +137,7 @@ Agent(
     - Minor Issues: [optional]
     - Verdict: APPROVED or REQUEST_CHANGES
     """,
+    toolsets=['file']
 )
 ```
 
@@ -151,7 +154,7 @@ todo([{"id": "task-1", "content": "Create User model with email field", "status"
 After ALL tasks are complete, dispatch a final integration reviewer:
 
 ```python
-Agent(
+delegate_task(
     goal="Review the entire implementation for consistency and integration issues",
     context="""
     All tasks from the plan are complete. Review the full implementation:
@@ -160,6 +163,7 @@ Agent(
     - All tests passing?
     - Ready for merge?
     """,
+    toolsets=['terminal', 'file']
 )
 ```
 

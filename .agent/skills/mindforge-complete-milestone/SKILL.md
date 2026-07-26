@@ -15,7 +15,7 @@ Output: Milestone archived (roadmap + requirements), PROJECT.md evolved, git tag
 **Load these files NOW (before proceeding):**
 
 - @.agent/workflows/mindforge-complete-milestone.md (main workflow)
-- @docs/Templates/Project/MILESTONE-ARCHIVE.md (archive template)
+- @.agent/templates/milestone-archive.md (archive template)
   </execution_context>
 
 <context>

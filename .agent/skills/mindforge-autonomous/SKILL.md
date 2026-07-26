@@ -18,7 +18,7 @@ Uses ROADMAP.md phase discovery and Skill() flat invocations for each phase comm
 
 <execution_context>
 @.agent/workflows/mindforge-autonomous.md
-@docs/References/ui-brand.md
+@.agent/references/ui-brand.md
 </execution_context>
 
 <context>

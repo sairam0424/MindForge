@@ -18,7 +18,7 @@ prerequisites:
 - Scraping JS-rendered pages that need a real browser
 - Bypassing Cloudflare Turnstile or bot detection
 - Crawling multiple pages with a spider
-- When the built-in `WebFetch` tool does not return the data you need
+- When the built-in `web_extract` tool does not return the data you need
 
 ## Installation
 

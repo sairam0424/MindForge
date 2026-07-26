@@ -12,7 +12,7 @@ Routes to the profile-user workflow which orchestrates the full flow: consent ga
 
 <execution_context>
 @.agent/workflows/mindforge-profile-user.md
-@docs/References/ui-brand.md
+@.agent/references/ui-brand.md
 </execution_context>
 
 <context>
