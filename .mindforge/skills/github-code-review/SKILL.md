@@ -69,7 +69,7 @@ git diff main...HEAD --stat
 git log main..HEAD --oneline
 ```
 
-2. **Review file by file** — use `read_file` on changed files for full context, and the diff to see what changed:
+2. **Review file by file** — use `Read` on changed files for full context, and the diff to see what changed:
 
 ```bash
 git diff main...HEAD -- src/auth/login.py
@@ -258,7 +258,7 @@ curl -s -X POST \
   -d "{
     \"commit_id\": \"$HEAD_SHA\",
     \"event\": \"COMMENT\",
-    \"body\": \"Code review from 
+    \"body\": \"Automated code review — see inline comments.\",
     \"comments\": [
       {\"path\": \"src/auth.py\", \"line\": 45, \"body\": \"Use parameterized queries to prevent SQL injection.\"},
       {\"path\": \"src/models/user.py\", \"line\": 23, \"body\": \"Hash passwords with bcrypt before storing.\"},
@@ -317,7 +317,7 @@ When the user asks you to "review the code" or "check before pushing":
 
 1. `git diff main...HEAD --stat` — see scope of changes
 2. `git diff main...HEAD` — read the full diff
-3. For each changed file, use `read_file` if you need more context
+3. For each changed file, use `Read` if you need more context
 4. Apply the checklist above
 5. Present findings in the structured format (Critical / Warnings / Suggestions / Looks Good)
 6. If critical issues found, offer to fix them before the user pushes
@@ -331,7 +331,7 @@ When the user asks you to "review PR #N", "look at this PR", or gives you a PR U
 ### Step 1: Set up environment
 
 ```bash
-source "${AGENT_HOME:-$HOME/.agent}/skills/github/github-auth/scripts/gh-env.sh"
+source "${AGENT_HOME:-$HOME/.agent}/skills/github-auth/scripts/gh-env.sh"
 # Or run the inline setup block from the top of this skill
 ```
 
@@ -361,7 +361,7 @@ curl -s -H "Authorization: token $GITHUB_TOKEN" \
 
 ### Step 3: Check out the PR locally
 
-This gives you full access to `read_file`, `search_files`, and the ability to run tests.
+This gives you full access to `Read`, `Grep`, and the ability to run tests.
 
 ```bash
 git fetch origin pull/$PR_NUMBER/head:pr-$PR_NUMBER
@@ -380,7 +380,7 @@ git diff main...HEAD --name-only
 git diff main...HEAD -- path/to/file.py
 ```
 
-For each changed file, use `read_file` to see full context around the changes — diffs alone can miss issues visible only with surrounding code.
+For each changed file, use `Read` to see full context around the changes — diffs alone can miss issues visible only with surrounding code.
 
 ### Step 5: Run automated checks locally (if applicable)
 
@@ -405,7 +405,7 @@ Collect your findings and submit them as a formal review with inline comments.
 **With gh:**
 ```bash
 # If no issues — approve
-gh pr review $PR_NUMBER --approve --body "Reviewed by 
+gh pr review $PR_NUMBER --approve --body "Reviewed — no blocking issues found."
 
 # If issues found — request changes with inline comments
 gh pr review $PR_NUMBER --request-changes --body "Found a few issues — see inline comments."
@@ -424,7 +424,7 @@ curl -s -X POST \
   -d "{
     \"commit_id\": \"$HEAD_SHA\",
     \"event\": \"REQUEST_CHANGES\",
-    \"body\": \"## 
+    \"body\": \"## Code Review — Changes Requested\",
     \"comments\": [
       {\"path\": \"src/auth.py\", \"line\": 45, \"body\": \"🔴 **Critical:** User input passed directly to SQL query — use parameterized queries.\"},
       {\"path\": \"src/models.py\", \"line\": 23, \"body\": \"⚠️ **Warning:** Password stored without hashing.\"},
@@ -458,7 +458,7 @@ gh pr comment $PR_NUMBER --body "$(cat <<'EOF'
 - Good error handling in the middleware layer
 
 ---
-*Reviewed by 
+*Automated code review*
 EOF
 )"
 ```
