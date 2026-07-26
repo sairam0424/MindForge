@@ -68,15 +68,13 @@ before proceeding.
 
 ### Phase 2 — Launch three reviewers in parallel
 
-Use `delegate_task` **batch mode** — pass all three tasks in one `tasks`
-array so they run concurrently. Three is the right fan-out for this pattern;
-it's well within the `delegation.max_concurrent_children` budget on any
-default install.
+Make three separate `Agent` tool calls **in the same response** so they run
+concurrently. Three is the right fan-out for this pattern.
 
 Give **every** reviewer the **complete diff** (not fragments — cross-file
 issues hide in the gaps) plus the absolute repo path so they can search the
-wider codebase. Each reviewer gets `terminal`, `file`, and `search`
-toolsets (so they can `git`, `read_file`, and `search_files`/grep).
+wider codebase. Each reviewer gets `Bash` (for `git`), `Read`, and `Grep`
+so they can inspect the full diff and the wider codebase.
 
 Tell each reviewer to:
 - Search the existing codebase for evidence (don't reason from the diff alone).
@@ -131,7 +129,7 @@ Wait for all three to return (batch mode returns them together).
    Don't apply a perf "fix" that hurts clarity unless the path is genuinely
    hot. When two suggestions are mutually exclusive and both defensible, pick
    the one that touches less code and note the alternative.
-4. **Apply** the surviving fixes directly with `patch` / `write_file` — unless
+4. **Apply** the surviving fixes directly with `Edit` / `Write` — unless
    the user asked for a dry run, in which case present the list and ask first.
 5. **Verify** you didn't break anything: run the project's targeted tests for
    the touched files (not the full suite), and re-run any linter/type check the
