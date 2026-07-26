@@ -99,12 +99,16 @@ if (!impl) { log('Warning: agent returned null for impl, skipping'); return { ta
 log(`Implementation: ${impl.implementedEndpoints.length} endpoints found`);
 
 phase('Diff');
-const specText = spec.endpoints.map(e => `${e.method} ${e.path}: response=${e.responseSchema}, auth=${e.authRequired}, errors=${(e.errorCodes || []).join(',')}`).join('\n');
-const implText = impl.implementedEndpoints.map(e => `${e.method} ${e.path}: response=${e.actualResponseShape}, auth=${e.authImplemented}`).join('\n');
+const specText = spec.endpoints.length
+  ? spec.endpoints.map(e => `${e.method} ${e.path}: response=${e.responseSchema}, auth=${e.authRequired}, errors=${(e.errorCodes || []).join(',')}`).join('\n')
+  : `(no endpoints extracted — spec agent's own summary: ${spec.apiName})`;
+const implText = impl.implementedEndpoints.length
+  ? impl.implementedEndpoints.map(e => `${e.method} ${e.path}: response=${e.actualResponseShape}, auth=${e.authImplemented}`).join('\n')
+  : '(no implemented endpoints found)';
 
 phase('Report');
 const report = await agent(
-  `Compare the API specification against the implementation and identify contract violations.\n\nSPEC:\n${specText}\n\nIMPLEMENTATION:\n${implText}\n\nFor each violation: classify as breaking (response shape/auth differs) or non-breaking (extra fields, missing optional), state what the spec says vs what the impl does, and provide the exact fix.`,
+  `Compare the API specification against the implementation and identify contract violations.\n\nSPEC (apiName: ${spec.apiName}):\n${specText}\n\nIMPLEMENTATION:\n${implText}\n\nIf the target has no real endpoints to compare (e.g. it isn't an API at all — a plain library, a CLI, a single function), say so plainly using the spec agent's own summary above rather than reporting the sections as empty/unsupplied — the spec agent DID analyze the target, it just found no formal endpoint contract. For each real violation: classify as breaking (response shape/auth differs) or non-breaking (extra fields, missing optional), state what the spec says vs what the impl does, and provide the exact fix.`,
   { schema: VIOLATION_SCHEMA, label: 'violations' }
 );
 if (!report) { return { target, spec, impl, error: 'report-agent-null' }; }
