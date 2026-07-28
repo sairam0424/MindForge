@@ -109,10 +109,10 @@ function releaseReadinessChecks(root) {
     },
     {
       id: 'changelog',
-      label: 'CHANGELOG.md present',
+      label: 'CHANGELOG.md present and has an entry for the current version',
       points: 2,
-      pass: fileExists(root, 'CHANGELOG.md'),
-      fix: 'Add/update CHANGELOG.md.',
+      pass: fileExists(root, 'CHANGELOG.md') && Boolean(pkgVersion) && safeRead(root, 'CHANGELOG.md').includes(pkgVersion),
+      fix: `Add/update CHANGELOG.md — no entry found for version ${pkgVersion || '?'} in its rolling window. If this version has aged out of the root file, ensure changelogs/v${pkgVersion || '?'}.md exists and was prepended to CHANGELOG.md's rolling window before release.`,
     },
     {
       id: 'security-policy',

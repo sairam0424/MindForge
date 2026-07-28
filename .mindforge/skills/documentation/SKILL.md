@@ -75,7 +75,10 @@ export function verifyAccessToken(token: string): TokenPayload { ... }
 ```
 
 ## Changelog discipline
-Every user-visible change must appear in CHANGELOG.md before release.
+Every user-visible change must appear in the changelog before release: create
+`changelogs/vX.Y.Z.md` for the new release, then prepend the same entry (or a
+one-line summary + link) into root `CHANGELOG.md`'s rolling window, dropping
+the oldest entry if the window exceeds 10 versions.
 Format follows Keep a Changelog (keepachangelog.com).
 Categories: Added, Changed, Deprecated, Removed, Fixed, Security.
 

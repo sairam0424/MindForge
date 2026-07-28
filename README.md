@@ -4,212 +4,43 @@
 
 ---
 
-## Latest: v11.9.0
+## Latest release
 
-- **v11.9.0** (2026-07-01) — Autopsy Fixes Stable — 258/258 IQ200 checks passing; `--version` flag, EISClient named import, rbac shim, skill-loader stub, null-phase guard, 12 duplicate triggers resolved, SDK 0 typecheck errors, path-containment guard on spawn
-- **v11.8.2** (2026-07-01) — Clean Stable — ESLint 0 errors, health command output fixed, ZTAI lazy instantiation, pr-review CLI entry point, worktree timeout fix
-- **v11.8.1** (2026-07-01) — First Stable — hono+picomatch CVEs patched (0 vulnerabilities), SRE simulator gated, spawn stub disclosure, EIS/browser/ZTAI guards added
-- **v11.8.0 — "Workflow Forge II".** Expands the Dynamic Workflow Library from 12 to 32 workflows across 5 tiers — adds a new **Beast tier** for compound 5-phase adversarial workflows (security-hardening, accessibility-audit, security-threat-model), plus 18 more across Dev/Ops/Intelligence/Research. 21 new `/mindforge:wf-*` commands. Total: 219 commands.
-- **v11.7.0 — "Workflow Forge".** Ships the first Dynamic Workflow Library — 12 pre-built multi-agent workflow scripts that run via Claude Code's `Workflow` tool with true parallel agent execution. Four tiers: Research (deep-research, competitive-analysis, tech-evaluation), Dev (code-audit, feature-planner, pr-review, tdd-sprint, refactor-plan), Ops (incident-response, release-prep), Intelligence (onboard-codebase, perf-optimize). 13 new `/mindforge:wf-*` commands. Total: 198 commands.
-- **v11.6.0 — "Skill Forge".** Adds 80 community-sourced skills across 8 domains (software-development, github, devops, research, security, creative, data-science, note-taking) — 30 promoted to engine tier for automatic trigger-matching, 50 in the extended tier for explicit activation. Three new slash commands: `/mindforge:systematic-debug`, `/mindforge:skill-tdd`, `/mindforge:skills-index`. Total: 153 skills, 232 engine-tier entries, 185 commands.
-- **v11.5.1 — Standalone MCP server.** The MindForge MCP server now ships as its own npm package, `mindforge-mcp-server@11.5.1`, listed on the official MCP Registry as `io.github.sairam0424/mindforge`. Add it to Claude Code with one command (see [Use the MCP server](#-use-the-mcp-server-standalone)); it exposes 7 tools over stdio (6 read-only + 1 guarded write).
-- **v11.3.0 — "Legion".** Imports 154 specialized Claude-Code-native subagents across 10 categories into `.claude/agents/`, fully rebranded and collision-safe. Additive and backward-compatible.
+**v11.9.0** (2026-07-27) — Bedrock provider + full dry-run audit. See [CHANGELOG.md](./CHANGELOG.md) for full history, or [RELEASENOTES.md](./RELEASENOTES.md) for human-readable notes.
 
-See [CHANGELOG.md](./CHANGELOG.md) for full release history.
+---
 
-<details>
-<summary>v11.0.0 — Sovereign Stability highlights</summary>
+## Install
 
-## v11.0.0 — Sovereign Stability
-
-MindForge v11.0.0 "Sovereign Stability" is a production-hardening release focused on reliability, performance, and real-world deployment readiness. Key highlights:
-
-- **Memory-safe operations** — LRU-bounded caches, atomic writes, log rotation, and snapshot garbage collection eliminate resource leaks in long-running sessions.
-- **True wave parallelism** — Semaphore-based concurrent execution with configurable max concurrency replaces sequential task dispatch.
-- **Streaming SDK** — WebSocket event streaming, `streamExecution()` with AsyncIterable, and `batchExecute()` for high-throughput integrations.
-- **Hardened security** — Ephemeral enclave keys, session-scoped agent isolation, time-limited RBAC elevation, dashboard rate limiting, and structured ZK proof returns.
-- **Production observability** — `/api/v1/system` health endpoint, P95 latency tracking, heap health monitoring, and real EIS client with retry logic.
-- **Graduated intelligence** — Adaptive tier escalation (+1/+2/MAX) with cost-awareness, 3-tier stuck detection, and adaptive context windows.
-
-This release ships 211 personas, 153 skills, 154 specialized subagents, 198 commands, 18 pillars, and 49 swarm templates across 12 engineering domains.
-
-</details>
-
-
-## Installation & Setup
-
-### 🔌 Claude Code Plugin (fastest)
-
-Install MindForge's commands, subagents, and skills directly from the marketplace —
-no project files written:
+Fastest path — Claude Code plugin marketplace (no project files written):
 
 ```bash
 /plugin marketplace add sairam0424/MindForge
 /plugin install mindforge@mindforge
 ```
 
-Prefer just a slice (e.g. Python agents)? Install a focused pack like
-`mindforge-lang@mindforge` instead. See [docs/plugin-installation.md](docs/plugin-installation.md)
-for all 11 plugins, token-budget guidance, and team setup.
-
-### 🚀 Quick Start (npx — full framework engine)
-
-**Prerequisites:** Node.js >= 18.0.0
-
-The npx installer also writes the complete `.mindforge/` engine (governance, memory,
-planning) into your project:
+Or the full framework engine via `npx` (writes `.mindforge/` governance, memory, and planning into your project):
 
 ```bash
-# For Claude Code
-npx mindforge-cc@latest --claude --global
-
-# For Antigravity
-npx mindforge-cc@latest --antigravity --global
-```
-
-### 🌍 Global Installation
-
-Enable system-wide `/mindforge` commands for your primary AI coding runtime:
-
-```bash
-npm install -g mindforge-cc@latest
-```
-
-### 📂 Local Project Setup
-
-Initialize MindForge in an existing repository with specialized agent identities:
-
-```bash
-# For Claude Code
 npx mindforge-cc@latest --claude --local
-
-# For Antigravity
-npx mindforge-cc@latest --antigravity --local
 ```
 
-### 🔗 Use the MCP server (standalone)
-
-The MindForge MCP server is published as its own npm package,
-**`mindforge-mcp-server`** (`11.9.0`), and is listed on the official
-[MCP Registry](https://registry.modelcontextprotocol.io) as
-`io.github.sairam0424/mindforge`. Wire it into Claude Code with one command:
-
-```bash
-claude mcp add mindforge -- npx -y mindforge-mcp-server
-```
-
-It exposes **7 tools over stdio** — 6 read-only plus 1 guarded write:
-
-| Tool | Purpose |
-| :--- | :--- |
-| `mindforge_health` | Framework health check |
-| `mindforge_status` | Project status snapshot |
-| `mindforge_memory_query` | Query the knowledge graph |
-| `mindforge_memory_stats` | Knowledge graph statistics |
-| `mindforge_memory_find_related` | Find related knowledge entries |
-| `mindforge_audit_log` | Read the append-only audit trail |
-| `mindforge_memory_remember` | Persist a memory (guarded write) |
+All install channels (global, local, Antigravity, Cursor, Copilot, Gemini CLI, MCP server, combined runtimes, `--minimal`): see [docs/getting-started.md](docs/getting-started.md).
 
 ---
-
-## Quick Verification
-
-After install, open Claude Code and type:
-- `/mindforge:status` — verify installation and show project health
-- `/mindforge:next` — auto-discover your first task
-- `node bin/mindforge-cli.js --version` — prints `11.9.0`
-
----
-
-- **Production Hardening (v11.0.0)** — LRU caches, atomic JSON writes, log rotation, HANDOFF validation, and temporal snapshot GC for crash-safe long-running sessions.
-- **True Wave Parallelism (v11.0.0)** — Semaphore-based concurrent wave execution with configurable max concurrency replaces sequential dispatch.
-- **Streaming SDK (v11.0.0)** — WebSocket event streaming, `streamExecution()` AsyncIterable, `batchExecute()`, model streaming across Anthropic/OpenAI/Gemini providers.
-- **Graduated Intelligence (v11.0.0)** — Adaptive tier escalation (+1/+2/MAX) with cost-awareness, 3-tier stuck detection, and adaptive context windows (10/20/30).
-- **Security Hardening (v11.0.0)** — Ephemeral enclave keys, session-scoped ZTAI, time-limited RBAC elevation, dashboard rate limiting (100 req/min/IP), token expiration.
-- **Observability (v11.0.0)** — `/api/v1/system` health endpoint, P95 latency ring buffer, heap health monitoring, real EIS client with exponential backoff.
-- **Grounded Wave Execution (v9.0.0)** — AutoRunner reads HANDOFF.json wave groups, dispatches tasks with audit tracing, persists progress, and resumes on restart (Pillar XXIV).
-- **Model Topology Modernization (v9.0.0)** — All model references updated to the Claude 4.x family: claude-opus-4-7, claude-sonnet-4-6, claude-haiku-4-5 (Pillar XXV).
-- **Unified Memory Architecture (v9.0.0)** — Knowledge and graph edges consolidated into SQLite (celestial.db) with FTS5 search. Four JSONL stores replaced by one queryable store (Pillar XXVI).
-- **Schema Migration Engine (v9.0.0)** — `_migrations` table with versioned migration tracking and transaction-wrapped bulk imports (Pillar XXVII).
-- **Integration Test Chain (v9.0.0)** — 27-assertion end-to-end test suite validating the full execution pipeline (Pillar XXVIII).
-- **Sovereign Identity Synthesis (v8.1.1)** — Autonomous `SOUL.md` generation derived from reasoning traces and interaction sentiment (Pillar XIX).
-- **Autonomous SRE Layer (v8.2.0)** — Self-healing production reliability engine with reactive sentinel observability and adversarial remediation auditing (Pillars XX-XXIII).
-- **Unified Persistence Layer (v8.0)** — Centralized SQLite/FTS5 engine for sub-millisecond reasoning audits and semantic reasoning (Pillar XV).
-- **Federated Mesh Synthesis (v8.0)** — Signed knowledge handoffs via MindForge Bundles (`.mfb`) and federated intelligence synchronization (Pillar XVI).
-- **Autonomous Skill Evolution (v8.0)** — Self-generating persistent skills from reasoning traces with logic-drift mining (Pillar XVII).
-- **Orbital Governance (v8.0)** — Hardware-bound (HSM/Biometric) attestation for high-blast-radius security gates (Pillar XVIII).
-- **Post-Quantum Agentic Security (v7.0)** — Lattice-based (Dilithium-5) signatures and ZK-Proof bypasses (Pillar XI).
-- **Proactive Semantic Homing (v7.0)** — Autonomous "Intent Hunting" and peer-healing mesh behavior (Pillar XII).
-- **Autonomous Resource Harvesting (v7.0)** — Real-time token arbitrage and dynamic task routing (Pillar IX).
-- **Neural Drift Remediation (v7.0)** — Semantic density heuristics and automated reasoning recovery (Pillar X).
-- **Interactive Temporal Steering (v5.10)** — Full history scrubbing, hindsight state repair, and real-time temporal slider navigation (Pillar VII).
-- **AgRevOps Hub (v6.0)** — Dynamic ROI tracking ($100/hr mapping), Milestone Velocity forecasting, and Governance Debt monitoring (Pillar VIII).
-- **Sovereign Reason Enclave (v5.8)** — TEE-simulated reasoning isolation with Zero-Knowledge (ZK) Audit Trails (Pillar VI).
-- **Multi-Cloud Arbitrage (v5.7)** — Dynamic routing across Vertex AI, Bedrock, and Azure with intelligence-first task affinity (Pillar V).
-- **Sentinel Execution (v5.6)** — JIT Binary Runtime Attestation and Zero-Trust Skill Enforcement (Pillar IV).
-- **Predictive Agentic Reliability (v5.5)** — Advanced loop detection and self-healing resonance (Pillar III).
-- **Dynamic Blast Radius (v5.3)** — Real-time impact analysis and circuit-breaker safety in the federated sync (Pillar II).
-- **Semantic Vector Consensus (v5.2)** — FIM v2 with cosine-similarity conflict resolution (Pillar I).
-- **Human-Agent Handover (v5.0)** — Nexus State Bundles and mid-wave steering injection.
-- **Autonomous FinOps (v4.3)** — Dynamic **C2C** (Confidence-to-Cost) routing.
-- **Proactive Equilibrium (v4.3)** — Real-time **Wave Divergence** monitoring and autonomous state recovery.
-- **MindForge Nexus (v4.1)** — High-fidelity **ART** (Agentic Reasoning Tracing).
-- **Zero-Trust Identity (v4.2)** — DID-signed non-repudiable audit logs with HSM/Enclave support.
-- **Global Intelligence Mesh (v4.2)** — Cross-repo knowledge sharing and Ghost Pattern Detection.
-- **Context Sharding (v3)** — relevance-dense memory management (40% token savings)
-- **Adversarial Synthesis (v3)** — zero-drift logic through red/blue model debate
-- **RAG 2.0 (v3)** — automatic semantic shadowing for background pattern retrieval
-- **Role personas** — specialised agent modes for each task type
-- **Specialized Identities** — custom `/agents/` workspace with enriched `IDENTITY.md` protocols
-- **Skills** — just-in-time domain knowledge loaded on demand
-- **Wave execution** — parallelism with dependency safety
-- **Autonomous Engine** — walk-away execution with steerability
-- **Real-time Dashboard** — web-based observability with Temporal Slider
-- **Browser Runtime** — headful/headless visual QA and sessions
-
-- **Multi-Model Intelligence** — dynamic routing, adversarial reviews, and deep research (v2)
-- **Persistent Knowledge Graph** — long-term memory across all engineering sessions (v2)
-- **Self-Building Skills** — automatically capture knowledge from any source into reusable skills (v2)
-- **Quality gates** — compliance and security are non-bypassable
-- **Audit trail** — append-only history of every action
-
----
-
-## 🛠️ Configuration & Runtimes
-
-MindForge adapts to your existing engineering environment via runtime flags:
-
-| Runtime | Global Command | Local Setup |
-| :--- | :--- | :--- |
-| **Claude Code** | `mindforge-cc --claude --global` | `mindforge-cc --claude --local` |
-| **Antigravity** | `mindforge-cc --antigravity --global` | `mindforge-cc --antigravity --local` |
-| **Cursor** | `mindforge-cc --cursor --global` | `mindforge-cc --cursor --local` |
-| **GitHub Copilot** | `mindforge-cc --copilot --global` | `mindforge-cc --copilot --local` |
-| **Gemini CLI** | `mindforge-cc --gemini --global` | `mindforge-cc --gemini --local` |
-
-### Advanced Setup Options
-- **Combined Runtimes**: `mindforge-cc --runtime claude,cursor --local`
-- **With Utilities**: `mindforge-cc --local --with-utils` (Installs specialized bin scripts)
-- **Minimalist**: `mindforge-cc --local --minimal` (Only basic protocols, no persona library)
-
----
-
 
 ## Verify
 
-Open Claude Code or Antigravity in your project directory and run:
-
 ```bash
-/mindforge:health
+/mindforge:health              # framework + installation health check
+/mindforge:health --repair     # fix anything the health check flags
+/mindforge:status              # project status snapshot
+/mindforge:next                # auto-discover your first task
 ```
 
-If issues are found, run:
-```bash
-/mindforge:health --repair
-```
+Full verification walkthrough: [docs/quick-verify.md](docs/quick-verify.md).
 
 ---
-
 
 ## Quick start (new project)
 
@@ -221,7 +52,6 @@ If issues are found, run:
 /mindforge:ship 1
 ```
 
-
 ## Quick start (existing codebase)
 
 ```bash
@@ -232,111 +62,56 @@ If issues are found, run:
 
 ---
 
+## Documentation
+
+- **User Guide:** [docs/user-guide.md](docs/user-guide.md)
+- **Getting started:** [docs/getting-started.md](docs/getting-started.md)
+- **Quick verify:** [docs/quick-verify.md](docs/quick-verify.md)
+- **Troubleshooting:** [docs/troubleshooting.md](docs/troubleshooting.md)
+- **FAQ:** [docs/faq.md](docs/faq.md)
+- **Full tutorial:** [docs/tutorial.md](docs/tutorial.md)
+- **Commands reference (full):** [docs/commands-reference.md](docs/commands-reference.md)
+- **Commands (quick):** [docs/References/commands.md](docs/References/commands.md)
+- **Config reference:** [docs/References/config-reference.md](docs/References/config-reference.md)
+- **SDK:** [docs/References/sdk-api.md](docs/References/sdk-api.md)
+- **Skills:** [docs/References/skills-api.md](docs/References/skills-api.md)
+- **Audit events:** [docs/References/audit-events.md](docs/References/audit-events.md)
+- **Upgrade guide:** [docs/upgrade.md](docs/upgrade.md)
+- **Workflow atlas:** [docs/workflow-atlas.md](docs/workflow-atlas.md)
+- **Security:** [docs/security/SECURITY.md](docs/security/SECURITY.md) (MindForge never stores credentials in files)
+- **Threat model:** [docs/security/threat-model.md](docs/security/threat-model.md)
+- **Architecture:** [docs/architecture/README.md](docs/architecture/README.md)
+- **Contributing:** [docs/contributing/CONTRIBUTING.md](docs/contributing/CONTRIBUTING.md)
+- **Release notes:** [RELEASENOTES.md](RELEASENOTES.md)
+- **CI quickstart:** [docs/ci-quickstart.md](docs/ci-quickstart.md)
+- **Requirements:** [docs/requirements.md](docs/requirements.md)
+- **Release checklist guide:** [docs/release-checklist-guide.md](docs/release-checklist-guide.md)
+- **USPs and features:** [docs/usp-features.md](docs/usp-features.md)
+
+---
 
 ## Core workflow
 
-```bash
-/mindforge:init-project
-    → Requirements interview
-    → Creates PROJECT.md, REQUIREMENTS.md, STATE.md
+| Command | What it does |
+| :--- | :--- |
+| `/mindforge:init-project` | Requirements interview → creates `PROJECT.md`, `REQUIREMENTS.md`, `STATE.md` |
+| `/mindforge:plan-phase 1 [--ads]` | Discuss scope, research the domain in parallel, create atomic XML task plans |
+| `/mindforge:execute-phase 1` | Wave-based parallel execution, one commit per task, automated verification |
+| `/mindforge:verify-phase 1` | Human acceptance testing, debug agent on failures, UAT sign-off |
+| `/mindforge:ship 1` | Changelog generation, final quality gates, PR creation |
+| `/mindforge:auto --phase 1` | Walk-away autonomous execution with stuck detection and steering |
 
-/mindforge:do <text>
-    → Smart natural language dispatcher (v2)
+Full command list: [docs/commands-reference.md](docs/commands-reference.md).
 
-/mindforge:note <text>
-    → Zero-friction idea capture and todo promotion (v2)
+---
 
-/mindforge:ui-phase 1
-    → Create UI design contract (UI-SPEC.md) (v2)
+## Dynamic Workflow Library
 
-/mindforge:plan-phase 1 [--ads]
-    → Discuss scope and decisions
-    → Research domain (parallel)
-    → Create atomic XML task plans
-    → (Optional) Run Adversarial Decision Synthesis (ADS) loop
+35 pre-built multi-agent workflow scripts that run via Claude Code's `Workflow` tool. Each fans out concurrent agents, synthesizes results, and returns structured output across 5 tiers (Research, Dev, Ops, Intelligence, Beast).
 
-/mindforge:execute-phase 1
-    → Wave-based parallel execution
-    → One commit per task
-    → Automated verification
+**Discover:** `/mindforge:wf-catalog` or `node bin/mindforge-cli.js workflow list`
 
-/mindforge:ui-review 1
-    → Retroactive 6-pillar visual audit (v2)
-
-/mindforge:validate-phase 1
-    → Requirement coverage and test gap audit (v2)
-
-/mindforge:session-report
-    → Automated post-session stakeholder summary (v2)
-
-/mindforge:add-backlog <desc>
-    → Park ideas in 999.x "parking lot" (v2)
-
-/mindforge:review-backlog
-    → Review and promote backlog items (v2)
-
-/mindforge:plant-seed <idea>
-    → Capture speculative ideas with triggers (v2)
-
-/mindforge:workstreams
-    → Parallel feature tracks with isolated state (v2)
-
-/mindforge:execute-phase 1
-    → Wave-based parallel execution
-    → One commit per task
-    → Automated verification
-
-/mindforge:verify-phase 1
-    → Human acceptance testing
-    → Debug agent on failures
-    → UAT sign-off
-
-/mindforge:ship 1
-    → Changelog generation
-    → Final quality gates
-    → PR creation
-
-/mindforge:auto --phase 1
-    → Walk-away autonomous execution (v2)
-    → Intelligent stuck detection and node repair
-    → External steering via steering-queue
-
-/mindforge:qa
-    → Systematic visual verification of UI changes (v2)
-    → Automated regression test generation
-    → Persistent browser sessions and daemon
-
-/mindforge:cross-review
-    → Adversarial multi-model code review and synthesis (v2)
-    → Consensus detection and severity normalization
-
-/mindforge:research
-    → Deep research using Gemini 1.5 Pro 1M context (v2)
-    → Codebase-wide context packaging and SSRF protection
-
-/mindforge:costs
-    → Real-time token usage and cost profiling (v2)
-    → Daily budget tracking across all providers
-
-/mindforge:remember
-    → Manual knowledge management and search (v2)
-    → Persistent knowledge graph retrieval and promotion
-
-/mindforge:dashboard
-    → Real-time web observability and governance at localhost:7339 (v2)
-    → Live audit logs, metrics, activity, and team feed
-
-/mindforge:learn
-    → Automatically capture skills from Docs, Sessions, or npm (v2)
-    → 7-dimension quality scoring and injection protection
-
-/mindforge:marketplace
-    → Search, install, and publish community skills (v2)
-    → Verified installation via npm-based registry
-
-/mindforge:new-runtime
-    → Scaffold custom runtime configurations for any AI agent (v2)
-```
+Full, verified 35-workflow table by tier: [docs/workflow-atlas.md](docs/workflow-atlas.md).
 
 ---
 
@@ -345,21 +120,19 @@ If issues are found, run:
 MindForge supports multiple interaction models to fit your engineering workflow:
 
 - **In-IDE Orchestration**: Use `/mindforge:agent <persona>` for real-time delegation.
-- **Enterprise Workflows**: Specialized commands like `/mindforge:tdd`, `/mindforge:architecture`, and `/mindforge:planner`.
+- **Enterprise Workflows**: Specialized commands like `/mindforge:wf-tdd-sprint` and `/mindforge:plan-phase`.
 - **CLI Automation**: Run `node bin/mindforge-cli.js spawn <persona>` for scripted tasks.
 
 ---
 
 ## Updates and migrations
-```bash
-/mindforge:update
-/mindforge:update --apply
-/mindforge:migrate --from v10.7.0 --to v11.0.0
-```
+
+Run `/mindforge:update` (add `--apply` to install) — see [docs/upgrade.md](docs/upgrade.md) for the full upgrade guide and fallback steps.
 
 ---
 
 ## Plugin system (v1.0.0)
+
 Plugins extend MindForge via the `mindforge-plugin-*` namespace.
 
 ```
@@ -371,6 +144,7 @@ Plugins extend MindForge via the `mindforge-plugin-*` namespace.
 ---
 
 ## Token usage profiling
+
 ```
 /mindforge:tokens --profile
 ```
@@ -378,234 +152,6 @@ See `.mindforge/production/token-optimiser.md`.
 
 ---
 
-## Documentation
-- **User Guide:** `docs/user-guide.md`
-- **Troubleshooting:** `docs/troubleshooting.md`
-- **CI Quickstart:** `docs/ci-quickstart.md`
-- **Requirements:** `docs/requirements.md`
-- **Quick verify:** `docs/quick-verify.md`
-- **Upgrade guide:** `docs/upgrade.md`
-- **FAQ:** `docs/faq.md`
-- **Release notes:** `RELEASENOTES.md`
-- **Release checklist guide:** `docs/release-checklist-guide.md`
-- **USPs and features:** `docs/usp-features.md`
-- **Full tutorial:** `docs/tutorial.md`
-- **Commands:** `docs/reference/commands.md`
-- **Config reference:** `docs/reference/config-reference.md`
-- **SDK:** `docs/reference/sdk-api.md`
-- **Skills:** `docs/reference/skills-api.md`
-- **Audit events:** `docs/reference/audit-events.md`
-- **Security:** `docs/security/SECURITY.md`
-- **Threat model:** `docs/security/threat-model.md`
-- **Architecture:** `docs/architecture/README.md`
-- **Contributing:** `docs/contributing/CONTRIBUTING.md`
+## License
 
-## 🚀 Dynamic Workflow Library
-
-32 pre-built multi-agent workflow scripts that run via Claude Code's `Workflow` tool. Each workflow fans out concurrent agents, synthesizes results, and returns structured output.
-
-**Discover:** `/mindforge:wf-catalog` or `node bin/mindforge-cli.js workflow list`
-
-| Tier | Command | What it does |
-|------|---------|-------------|
-| Research | `/mindforge:wf-competitive-analysis` | 5× parallel angles → SWOT → positioning |
-| Research | `/mindforge:wf-tech-evaluation` | 5× dimensions → scored matrix → recommendation |
-| Research | `/mindforge:wf-ai-model-eval` | Model benchmark → scoring matrix → recommendation |
-| Research | `/mindforge:wf-ux-heuristic-audit` | 10 Nielsen heuristics → severity ranking → fix brief |
-| Research | `/mindforge:wf-competitive-teardown` | 5 competitor angles → positioning report |
-| Dev | `/mindforge:wf-code-audit` | 3× parallel auditors → verified findings → risk report |
-| Dev | `/mindforge:wf-feature-planner` | Brief → PRD → architecture → user stories |
-| Dev | `/mindforge:wf-pr-review` | 4× parallel reviewers → consensus verdict |
-| Dev | `/mindforge:wf-tdd-sprint` | Spec → RED → GREEN → REFACTOR loop |
-| Dev | `/mindforge:wf-refactor-plan` | Debt scan → risk-sort → safe sequence → plan |
-| Dev | `/mindforge:wf-api-design` | Domain model → OpenAPI spec → SDK skeleton → docs |
-| Dev | `/mindforge:wf-db-schema` | Requirements → ERD → migration scripts → seed data |
-| Dev | `/mindforge:wf-perf-regression` | Baseline benchmark → change → delta analysis → verdict |
-| Dev | `/mindforge:wf-dependency-audit` | License scan + CVE fan-out → risk matrix → upgrade plan |
-| Dev | `/mindforge:wf-test-coverage` | Coverage gap scan → test gen → mutation testing → report |
-| Ops | `/mindforge:wf-incident-response` | 4× parallel investigation → mitigate → RCA → postmortem |
-| Ops | `/mindforge:wf-release-prep` | Tests → changelog → version bump → PR → announcement |
-| Ops | `/mindforge:wf-cost-analysis` | Usage fan-out → cost model → optimization levers → plan |
-| Ops | `/mindforge:wf-capacity-plan` | Load model → bottleneck forecast → scaling roadmap |
-| Ops | `/mindforge:wf-runbook-gen` | Service map → failure modes → remediation steps → runbook |
-| Intelligence | `/mindforge:wf-onboard-codebase` | Map → domain → architecture → guided tour |
-| Intelligence | `/mindforge:wf-perf-optimize` | Profile → 4× bottleneck hunt → prioritized fix plan |
-| Intelligence | `/mindforge:wf-arch-review` | C4 model → 5× quality attributes → risk-ranked findings |
-| Intelligence | `/mindforge:wf-decision-analysis` | Options fan-out → criteria weighting → scored recommendation |
-| Intelligence | `/mindforge:wf-knowledge-graph` | Concept extraction → relationship map → gap analysis |
-| Intelligence | `/mindforge:wf-retrospective` | Data gather → 4× theme clusters → action items → timeline |
-| Intelligence | `/mindforge:wf-roadmap-prioritize` | Backlog fan-out → impact/effort scoring → sequenced roadmap |
-| Intelligence | `/mindforge:wf-tech-radar` | Adopt/Trial/Assess/Hold fan-out → consensus vote → radar chart |
-| Beast | `/mindforge:wf-security-hardening` | 5-angle OWASP parallel scout → STRIDE threat model → remediation roadmap |
-| Beast | `/mindforge:wf-accessibility-audit` | WCAG 2.2 parallel audit → 3-vote adversarial verify → remediation spec |
-| Beast | `/mindforge:wf-security-threat-model` | Asset inventory → STRIDE×6 → parallel mitigations → CVSS matrix |
-
----
-
-## 📜 Framework Evolution & Version History
-
-<details>
-<summary><b>v11.7.0 — Workflow Forge (Dynamic Workflow Library)</b></summary>
-
-- **12 dynamic workflow scripts** in `.mindforge/dynamic-workflows/scripts/` — each runs via Claude Code's `Workflow` tool with true parallel agent execution, structured JSON schemas, and adversarial verification where appropriate.
-- **4 tiers:** Research (deep-research, competitive-analysis, tech-evaluation), Dev (code-audit, feature-planner, pr-review, tdd-sprint, refactor-plan), Ops (incident-response, release-prep), Intelligence (onboard-codebase, perf-optimize).
-- **13 /mindforge:wf-* commands** (wf-catalog + 12 workflows).
-- **CLI discovery:** `node bin/mindforge-cli.js workflow list|info|run <name>`.
-- Architecture follows adversarially-verified best practices: one-workflow-per-domain, predefined (not open-ended) pipelines, fan-out + gated synthesis pattern.
-</details>
-
-<details>
-<summary><b>v11.6.0 — Skill Forge (Core + Dev Skill Pack)</b></summary>
-
-- **80 new skills** across 8 domains: software-development, GitHub workflows, DevOps orchestration, research intelligence, security, creative tooling, data-science, and note-taking.
-- **Engine tier (auto-trigger):** 30 skills in `.mindforge/skills/` activated automatically by trigger-phrase matching — systematic debugging, TDD, kanban orchestration, OSINT investigation, web pentesting, concept diagram generation, research paper writing, and more.
-- **Extended tier (explicit):** 50 skills in `.agent/skills/` covering GitHub auth, docker management, DevOps watchers, 1Password, debuggers, pixel art, video orchestration, and more.
-- **3 new slash commands:** `/mindforge:systematic-debug` (4-phase RCA), `/mindforge:skill-tdd` (RED-GREEN-REFACTOR), `/mindforge:skills-index` (browseable skill catalog).
-- All skills cleanly integrated — zero external attribution in any committed file.
-</details>
-
-<details>
-<summary><b>v11.0.0 — Sovereign Stability (Production Hardening)</b></summary>
-
-- **Phase 1: Foundation** — LRU-bounded caches, atomic JSON writes, AUDIT.jsonl log rotation, HANDOFF.json structural validation, temporal snapshot garbage collection.
-- **Phase 2: Intelligence** — BM25 scoring with document-length normalization, full remediation strategy implementations, graduated intelligence interlock (+1/+2/MAX), 3-tier stuck detection, adaptive context windows.
-- **Phase 3: Security** — Structured ZK proof returns, ephemeral SRE enclave keys, session-scoped ZTAI agent registry, time-limited RBAC elevation, dashboard rate limiting and token expiration, optional GPG approval verification.
-- **Phase 4: Observability** — Async temporal I/O, `/api/v1/system` health endpoint, P95 latency ring buffer, heap health monitoring, EIS client de-stub with real fetch and retry logic.
-- **Phase 5: SDK/Distributed** — Semaphore-based wave parallelism, WebSocket event streaming with auto-reconnect, `batchExecute()`, model streaming (Anthropic/OpenAI/Gemini), migration script from v10.7.0.
-</details>
-
-<details>
-<summary><b>v10.x — The 200-Skills Expansion (Council → Platform Sovereign)</b></summary>
-
-- **Council Awakens (v10.0.3)**: Council decision framework, Instinct Engine, Cost-Aware Routing, 6-phase Verification Loop, Multi-LLM Consult.
-- **Skills Expansion (v10.0.4–v10.7.0)**: From 20 to 200+ core skills across 12 domains — AI/ML, data engineering, platform engineering, mobile, leadership, industry verticals, and more.
-- **400+ Personas**: Comprehensive specialist coverage with domain-expert identity protocols.
-- **49 Swarm Templates**: Task-aware parallel specialist clusters covering every engineering discipline.
-</details>
-
-<details>
-<summary><b>v9.x — Grounded Execution & SQLite Persistence</b></summary>
-
-- **Grounded Wave Execution (Pillar XXIV)**: AutoRunner reads HANDOFF.json wave groups with audit tracing and restart persistence.
-- **Model Topology Modernization (Pillar XXV)**: Claude 4.x family (opus-4-7, sonnet-4-6, haiku-4-5).
-- **Unified Memory Architecture (Pillar XXVI)**: SQLite (celestial.db) with FTS5 search replacing JSONL stores.
-- **Schema Migration Engine (Pillar XXVII)**: Versioned migration tracking with transaction-wrapped imports.
-- **Integration Test Chain (Pillar XXVIII)**: 27-assertion end-to-end pipeline validation.
-</details>
-
-<details>
-<summary><b>v8.1.x — Sovereign Identity (Pillar XIX)</b></summary>
-
-- **Pillar XIX: Sovereign Identity Synthesis**: Autonomous creation and evolution of `SOUL.md` from execution traces.
-- **Soul Mirroring**: Agent personality and decision-heuristics that self-adapt based on persistent user interaction sentiment.
-- **Identity Enforcement**: Mandatory alignment of subagents with the instance's unique Sovereign Identity.
-</details>
-
-<details>
-<summary><b>v8.0.x — Celestial Orchestration (SQLite & FMS)</b></summary>
-
-- **Pillar XV: Unified Persistence Layer**: Transition from file-based JSONL state to a high-performance SQLite engine with FTS5 semantic search.
-- **Pillar XVI: Federated Mesh Synthesis (FMS)**: Inter-project knowledge sharing via cryptographically signed `.mfb` (MindForge Bundles).
-- **Pillar XVII: Autonomous Skill Evolution (ASE)**: Automated mining of "Golden Traces" to synthesize reusable `.skill.md` artifacts.
-- **Pillar XVIII: Orbital Governance**: Hardware-locked security gates requiring HSM/Biometric attestation for high-impact mutations (>95).
-</details>
-
-<details>
-<summary><b>v7.x — Sovereign Intelligence (PQAS & Homing)</b></summary>
-
-- **Pillar XI: Post-Quantum Agentic Security (PQAS)**: Lattice-based (Dilithium-5) signatures and ZK-Proof bypasses for Tier 4 agent identities.
-- **Pillar XII: Proactive Semantic Homing**: Autonomous "Intent Hunting" where agents proactively claim tasks and peer-heal logic drift (>80) in the mesh.
-- **Pillar IX: Autonomous Resource Harvesting (ARH)**: Real-time token arbitrage and dynamic task routing based on MIR (Min-Intelligence-Requirement).
-- **Pillar X: Neural Drift Remediation (NDR)**: Semantic density heuristics and automated reasoning recovery to break logic loops and hallucinations.
-- **Agentic Learning Loop**: Mandatory "Read Before, Record After" protocol for all agentic actions, ensuring a persistent, self-improving engineering memory.
-</details>
-
-<details>
-<summary><b>v6.x — AgRevOps & Stability Patterns</b></summary>
-
-- **AgRevOps ROI Engine (Pillar VIII)**: Real-time value attribution ($100/hr dev saving mapping) for every autonomous reasoning cycle.
-- **FIM Expansion**: Aggregation of collective project health metrics via `PillarHealthTracker`.
-- **CADIA Optimizer (Pillar II Upgrade)**: Dynamic risk scoring (0-100) and session entropy guardrails to prevent rogue behaviors.
-- **Homing Signal Injection**: Automated capture of high-efficacy SCS homing instructions as durable, sharable knowledge.
-</details>
-
-<details>
-<summary><b>v5.10.x — Nexus Steering & AgRevOps</b></summary>
-
-- **Interactive Temporal Steering (Pillar VII)**: Hindsight injection and temporal slider navigation via the Nexus Dashboard.
-- **ROI Engine (Pillar VIII)**: Automated financial governance and cumulative agentic ROI tracking.
-- **Velocity Forecaster**: Statistical ETA prediction for milestones based on live telemetry.
-</details>
-
-<details>
-<summary><b>v5.9.x — Enterprise Level Hardening</b></summary>
-
-- **Unified NexusTracer**: Single, high-fidelity ART protocol singleton with a core asynchronous drive.
-- **Merkle-Style Audit Integrity**: Hardened SRE and ZTAI logs with cumulative Merkle-hash chains.
-- **MCA Circuit Breakers**: Stateful provider blacklisting in the `CloudBroker` with automated failure remediation.
-</details>
-
-<details>
-<summary><b>v5.7.x - v5.8.x — SRE & MCA Protocols</b></summary>
-
-- **Sovereign Reason Enclaves (v5.8)**: ZK-Proof compliance certificates for confidential reasoning cycles.
-- **Multi-Cloud Arbitrage (v5.7)**: Intelligence-first routing using persistent Task-to-Model success matrices.
-</details>
-
-<details>
-<summary><b>v5.1.x - v5.6.x — The "Enterprise" Era (Protocols & Trust)</b></summary>
-
-- **Sentinel Execution (v5.6)**: Binary Runtime Attestation and Reasoning Entropy Scoring (RES).
-- **Predictive Agentic Reliability (v5.5)**: Advanced loop detection (Semantic Mirroring) and self-healing triggers.
-- **Dynamic Blast Radius (v5.3/v5.4)**: Real-time impact analysis and circuit-breaker safety in the federated sync.
-- **Semantic Vector Consensus (v5.2)**: FIM v2 with cosine-similarity conflict resolution.
-- **Enterprise Edition Protocols (v5.1)**: 14 advanced agentic protocols (Brainstorming, Swarm, Parallel Mesh) integrated from Superpowers.
-</details>
-
-<details>
-<summary><b>v4.x — The Mesh & Nexus Revolution</b></summary>
-
-- **Enterprise Mesh (v4.3)**: Autonomous FinOps and Proactive Equilibrium (Wave Monitoring).
-- **Identity & Memory (v4.2)**: Zero-Trust Agentic Identity (ZTAI) with Ed25519 signing.
-- **MindForge Nexus (v4.1)**: Hierarchical ART tracing and trace context propagation.
-- **Mesh Dynamic Swarms (v4.0)**: Parallel, task-aware specialist clusters and micro-persona factory.
-</details>
-
-<details>
-<summary><b>v3.x — Reactive Autonomous Intelligence</b></summary>
-
-- **Context Sharding (SRD)**: 40% reduction in token waste via relevance-dense Hot/Warm/Cold context tiers.
-- **Adversarial Decision Synthesis (ADS)**: Zero-drift architectural logic through Red-Blue model debate.
-- **Temporal Vision**: Full-fidelity history navigation, hindsight injection, and automated state repair.
-- **RAG 2.0 (Auto-Shadowing)**: Background pattern retrieval from the local knowledge graph.
-</details>
-
-<details>
-<summary><b>v2.x — The Autonomous Enterprise & Knowledge Graph</b></summary>
-
-- **Multi-Runtime Support**: Official adapters for Claude Code, Antigravity, Cursor, Gemini, and Copilot.
-- **RAG 2.0**: Typed-edge Local Knowledge Graph with proactive context shadowing and TF-IDF search.
-- **Temporal Vision**: Full-fidelity history navigation, state snapshotting, and hindsight injection.
-- **Self-Building Skills**: Automated skill capture from documentation and phase outputs via `/mindforge:learn`.
-</details>
-
-<details>
-<summary><b>v1.x — Framework Foundation & Core Protocols</b></summary>
-
-- **Unified 4-Pillar Workflow**: Standardized `plan` → `execute` → `verify` → `ship` lifecycle.
-- **Specialized Persona Library**: 32+ high-performance engineering agents with defined capability matrices.
-- **Zero-Trust Logic**: Initial protocol enforcement and audit-trail persistence.
-</details>
-
----
-
-## Security
-MindForge never stores credentials in files. Review:
-- `docs/security/SECURITY.md`
-- `docs/security/threat-model.md`
-
----
-
-## ⚖️ License
 MIT © 2026 MindForge Team
-eam

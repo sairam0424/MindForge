@@ -35,7 +35,7 @@ updates every time code changes, it needs automation or deletion.
 <process>
 <step name="inventory">
 Identify all documentation files in the project:
-- README.md, CONTRIBUTING.md, CHANGELOG.md
+- README.md, CONTRIBUTING.md, CHANGELOG.md (rolling window), changelogs/ (full archive + README.md index)
 - docs/ directory (all files)
 - Inline API documentation (JSDoc, docstrings)
 - Architecture decision records (ADRs)

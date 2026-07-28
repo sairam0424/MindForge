@@ -33,7 +33,7 @@ Generate a CHANGELOG.md entry following Keep a Changelog format:
 - [Security improvements]
 ```
 
-Prepend this to CHANGELOG.md.
+Create changelogs/vX.Y.Z.md with the full entry. Prepend a matching entry to root CHANGELOG.md (trim oldest if rolling window > 10 entries).
 
 ## Step 2 — Run final quality gates
 Run all of the following and report results:
@@ -90,7 +90,7 @@ Generate a complete PR description:
 
 ## Step 4 — Commit and tag
 ```bash
-git add CHANGELOG.md
+git add changelogs/vX.Y.Z.md CHANGELOG.md
 git commit -m "docs(changelog): add Phase [N] release notes"
 git push origin feat/mindforge-core-scaffold
 ```

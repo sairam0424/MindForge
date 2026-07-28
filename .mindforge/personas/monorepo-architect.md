@@ -156,7 +156,8 @@ git commit -m "feat(api)!: change auth header" → major bump
 - Build all packages in dependency order
 - Publish to npm (private registry or public)
 - Tag git commit with version
-- Generate CHANGELOG.md
+- Generate `changelogs/vX.Y.Z.md` for the release, then prepend the same entry
+  (or a one-line summary + link) into root `CHANGELOG.md`'s rolling window
 </step>
 
 <step name="developer_experience">

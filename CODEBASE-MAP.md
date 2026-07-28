@@ -104,8 +104,9 @@ MindForge/
 │   ├── adr/                   # 4 Architecture Decision Records
 │   └── [guides]              # getting-started, user-guide, sdk-reference, etc.
 ├── examples/                  # Starter projects
+├── changelogs/                # One file per version, v0.1.0 through the latest (archive)
 ├── tests/                     # 43 test files (Node.js assert, no framework)
-└── [root files]              # package.json, MINDFORGE.md, CHANGELOG.md, etc.
+└── [root files]              # package.json, MINDFORGE.md, CHANGELOG.md (rolling window), etc.
 ```
 
 ---

@@ -229,6 +229,110 @@ Workflow({
 
 ---
 
+## Full command walkthrough
+
+The 4-pillar lifecycle (`plan-phase` → `execute-phase` → `verify-phase` → `ship`) covers the core loop. MindForge also ships a wider set of commands for day-to-day project work — this is the complete walkthrough, in the order you're likely to reach for them:
+
+```bash
+/mindforge:init-project
+    → Requirements interview
+    → Creates PROJECT.md, REQUIREMENTS.md, STATE.md
+
+/mindforge:do <text>
+    → Smart natural language dispatcher (v2)
+
+/mindforge:note <text>
+    → Zero-friction idea capture and todo promotion (v2)
+
+/mindforge:ui-phase 1
+    → Create UI design contract (UI-SPEC.md) (v2)
+
+/mindforge:plan-phase 1 [--ads]
+    → Discuss scope and decisions
+    → Research domain (parallel)
+    → Create atomic XML task plans
+    → (Optional) Run Adversarial Decision Synthesis (ADS) loop
+
+/mindforge:execute-phase 1
+    → Wave-based parallel execution
+    → One commit per task
+    → Automated verification
+
+/mindforge:ui-review 1
+    → Retroactive 6-pillar visual audit (v2)
+
+/mindforge:validate-phase 1
+    → Requirement coverage and test gap audit (v2)
+
+/mindforge:session-report
+    → Automated post-session stakeholder summary (v2)
+
+/mindforge:add-backlog <desc>
+    → Park ideas in 999.x "parking lot" (v2)
+
+/mindforge:review-backlog
+    → Review and promote backlog items (v2)
+
+/mindforge:plant-seed <idea>
+    → Capture speculative ideas with triggers (v2)
+
+/mindforge:workstreams
+    → Parallel feature tracks with isolated state (v2)
+
+/mindforge:verify-phase 1
+    → Human acceptance testing
+    → Debug agent on failures
+    → UAT sign-off
+
+/mindforge:ship 1
+    → Changelog generation
+    → Final quality gates
+    → PR creation
+
+/mindforge:auto --phase 1
+    → Walk-away autonomous execution (v2)
+    → Intelligent stuck detection and node repair
+    → External steering via steering-queue
+
+/mindforge:qa
+    → Systematic visual verification of UI changes (v2)
+    → Automated regression test generation
+    → Persistent browser sessions and daemon
+
+/mindforge:cross-review
+    → Adversarial multi-model code review and synthesis (v2)
+    → Consensus detection and severity normalization
+
+/mindforge:research
+    → Deep research using Gemini 1.5 Pro 1M context (v2)
+    → Codebase-wide context packaging and SSRF protection
+
+/mindforge:costs
+    → Real-time token usage and cost profiling (v2)
+    → Daily budget tracking across all providers
+
+/mindforge:remember
+    → Manual knowledge management and search (v2)
+    → Persistent knowledge graph retrieval and promotion
+
+/mindforge:dashboard
+    → Real-time web observability and governance at localhost:7339 (v2)
+    → Live audit logs, metrics, activity, and team feed
+
+/mindforge:learn
+    → Automatically capture skills from Docs, Sessions, or npm (v2)
+    → 7-dimension quality scoring and injection protection
+
+/mindforge:marketplace
+    → Search, install, and publish community skills (v2)
+    → Verified installation via npm-based registry
+
+/mindforge:new-runtime
+    → Scaffold custom runtime configurations for any AI agent (v2)
+```
+
+---
+
 ## 14. Next Steps
 
 1. Configure your team preferences in `docs/Templates/Profile/user-profile.md`.
