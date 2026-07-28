@@ -36,4 +36,5 @@ Plugin compatibility is enforced at install/validate time:
 
 ## Version policy
 - Backwards-incompatible changes require a MAJOR bump (ADR-020).
-- Additive changes must be documented in CHANGELOG.md and reference docs.
+- Additive changes must be documented in `changelogs/vX.Y.Z.md` (full entry) plus a
+  matching prepend to root `CHANGELOG.md`'s rolling window, and reference docs.
