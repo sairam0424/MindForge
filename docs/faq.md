@@ -40,7 +40,7 @@ Plugins are preferred for sharing and versioning.
 ## Dynamic Workflows
 
 **Q: How many workflows does MindForge v11.9.0 include?**
-32 pre-built multi-agent workflows across 5 tiers: Research (5), Dev (12), Ops (6), Intelligence (6), Beast (3).
+35 pre-built multi-agent workflows across 5 tiers: Research (5), Dev (14), Ops (6), Intelligence (7), Beast (3).
 
 **Q: How do I run a workflow?**
 Via Claude Code slash command: `/mindforge:wf-code-audit`
@@ -49,8 +49,8 @@ Via CLI: `node bin/mindforge-cli.js workflow list` to browse, then `workflow inf
 **Q: What is the Beast tier?**
 Beast tier workflows run 5 phases with 8+ concurrent agents and adversarial 3-vote verification. Included: `security-hardening`, `accessibility-audit`, `security-threat-model`.
 
-**Q: Why are there only 32 workflows when some docs say 33?**
-The `deep-research` workflow was removed before the v11.8.0 release (the superpowers built-in `/deep-research` covers this better). The correct count is 32.
+**Q: Why are there only 35 workflows when some docs say 33?**
+The `deep-research` workflow was removed before the v11.8.0 release (the superpowers built-in `/deep-research` covers this better). The correct count is 35.
 
 ## Version & Stability
 
