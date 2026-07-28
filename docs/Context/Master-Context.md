@@ -8,7 +8,7 @@
 
 **Name:** MindForge (`mindforge-cc` on npm)
 **Tagline:** Enterprise Agentic Framework — the best agentic framework
-**Repository:** `github.com/mindforge-dev/mindforge` (conceptual)
+**Repository:** `github.com/sairam0424/MindForge`
 **npm package:** `npx mindforge-cc@latest`
 **Current version:** v9.0.0 (Bedrock Meridian Era)
 **Runtimes supported:** Claude Code (`.claude/`) and Antigravity (`.agent/`)
@@ -421,7 +421,8 @@ mindforge-cc/                         ← npm package root
 │           └── UAT-N.md
 │
 ├── MINDFORGE.md                      ← Project constitution (project root)
-├── CHANGELOG.md                      ← v0.1.0 → v1.0.0 history
+├── CHANGELOG.md                      ← rolling window, newest ~10 versions
+├── changelogs/                       ← full archive, one file per version, v0.1.0 -> latest
 ├── SECURITY.md                       ← Security policy
 ├── package.json                      ← version: "1.0.0"
 │
