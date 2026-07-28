@@ -1,4 +1,4 @@
-# MindForge — Documentation Registry Hub (v11.3.1)
+# MindForge — Documentation Registry Hub (v11.9.0)
 
 Welcome to the central high-fidelity registry for the MindForge framework. This hub provides 100% transparency into the specialized assets, cognitive patterns, and automated guards that power the environment.
 

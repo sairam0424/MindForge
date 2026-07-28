@@ -1,4 +1,4 @@
-# MindForge Governance Guide (v9.0.0)
+# MindForge Governance Guide (v11.9.0)
 
 Autonomous Site Reliability & Self-Healing Governance
 

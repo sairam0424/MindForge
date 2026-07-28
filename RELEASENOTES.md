@@ -1,5 +1,27 @@
 # Release Notes
 
+## v11.9.0 — 2026-07-27 — Bedrock Provider + Full Dry-Run Audit
+
+### What's New
+Added an AWS Bedrock provider and completed a full exhaustive dry-run audit of all 224 commands, 216 personas, and 355 skills.
+
+### Fixes
+- `bin/models/bedrock-provider.js`: AWS Bedrock provider with Anthropic/Bedrock config switch and base64 credential decoding
+- Resolved phantom-tool references ported unmodified from a different agent harness across 40 personas and ~40 skills (`Context7`/`search_web`/`read_url_content` → `WebFetch`/`WebSearch`; `CommandStatus`/`ReadTerminal`/`terminal`/`read_file`/`write_file`/`search_files`/`patch` → real Claude Code tool names; `delegate_task` → `Agent`; `kanban_create` → `TaskCreate`)
+- Repointed 21 broken `@.agent/references/` and `@.agent/templates/` path references to their real `docs/References/` and `docs/Templates/*/` locations
+- Copied in missing companion `scripts/`/`references/`/`templates/` assets for 17 skills that referenced files never carried over during porting
+- Fixed hardcoded broken paths (`~/.hermes/skills`, `/home/teknium/...`, `HERMES_HOME`)
+- Fixed a markdown fence-nesting bug in `code-tour` and 4 truncated heredoc strings in `github-code-review`
+- Removed banned single-word triggers (`test`, `tests`) from `testing-standards`
+- CI: build SDK before test suite; run Verification before Health Check in execution-plane
+- Security: patched hono and picomatch HIGH-severity vulnerabilities
+
+### Stats
+- Dry-run audit: 224 commands, 216 personas, 355 skills reviewed
+- Phantom-tool references resolved: 40 personas, ~40 skills
+
+---
+
 ## v11.8.3 — 2026-07-01 — Autopsy Fixes Stable Release
 
 ### What's New

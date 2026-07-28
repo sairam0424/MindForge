@@ -1,4 +1,4 @@
-# MindForge Codebase Map (v11.0.0 — "Sovereign Stability")
+# MindForge Codebase Map (v11.9.0 — "Sovereign Stability")
 
 > Generated: 2026-05-28 | Total: ~19.1K LOC across 350 published files
 

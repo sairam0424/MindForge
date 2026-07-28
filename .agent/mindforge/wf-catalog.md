@@ -1,9 +1,9 @@
 ---
-description: "Browse the MindForge dynamic workflow library — 32 pre-built multi-agent workflows across 5 tiers"
+description: "Browse the MindForge dynamic workflow library — 35 pre-built multi-agent workflows across 5 tiers"
 ---
 # /mindforge:wf-catalog
 
-Browse and discover the MindForge **Dynamic Workflow Library** — 32 pre-built multi-agent workflows that run via Claude Code's Workflow tool.
+Browse and discover the MindForge **Dynamic Workflow Library** — 35 pre-built multi-agent workflows that run via Claude Code's Workflow tool.
 
 ## Usage
 `/mindforge:wf-catalog` — show all workflows grouped by tier
@@ -30,6 +30,8 @@ Browse and discover the MindForge **Dynamic Workflow Library** — 32 pre-built 
 - `/mindforge:wf-mutation-testing` — Mutant generator → parallel kill-test → score
 - `/mindforge:wf-code-explainer` — Structure → domain → architecture → narrative tour
 - `/mindforge:wf-design-system-audit` — 5-dimension parallel audit → consistency score
+- `/mindforge:wf-orchestrate-review` — 4-lens panel (factual/domain/safety/style) → merged verdict
+- `/mindforge:wf-verification-loop` — Implementer vs. scorer loop → re-attempts until score maxed
 
 **Ops** — Infrastructure and release workflows
 - `/mindforge:wf-incident-response` — Parallel investigation → RCA → postmortem
@@ -46,6 +48,7 @@ Browse and discover the MindForge **Dynamic Workflow Library** — 32 pre-built 
 - `/mindforge:wf-documentation-gen` — Parallel doc gen → normalize → publish-ready
 - `/mindforge:wf-api-migration` — Breaking change detection → guide → compat matrix
 - `/mindforge:wf-data-pipeline-validate` — Stage-by-stage validation → quality gates
+- `/mindforge:wf-workflow-optimizer` — Builder + scorer + optimizer → revises the process itself
 
 **Beast** — Compound workflows (5 phases, 8+ agents, adversarial verification)
 - `/mindforge:wf-security-hardening` — 5-angle OWASP scout → 3-vote verify → STRIDE → roadmap

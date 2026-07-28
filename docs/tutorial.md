@@ -8,7 +8,7 @@ This tutorial walks a new user from installation to advanced usage. It is writte
 
 v11.9.0 is the **first fully audited stable release** — validated by an IQ200 deep-audit across 258 checks:
 - `node bin/mindforge-cli.js --version` now works correctly (prints `11.9.0`)
-- All 32 workflow scripts pass runtime load validation
+- All 35 workflow scripts pass runtime load validation
 - 0 CVEs, 0 ESLint errors, 0 TypeScript errors in SDK
 - Skill routing is deterministic (12 duplicate triggers resolved)
 - `mesh.node_id` correctly set to `"auto"` for clean multi-node deployments
@@ -169,7 +169,7 @@ If you hit issues, consult these specialized guides:
 
 ## 13. Using Dynamic Workflows
 
-MindForge v11.9.0 ships 32 pre-built multi-agent workflows. Browse them with `/mindforge:wf-catalog`.
+MindForge v11.9.0 ships 35 pre-built multi-agent workflows. Browse them with `/mindforge:wf-catalog`.
 
 ### Quick start — run a workflow
 
@@ -194,7 +194,7 @@ The Beast tier runs 5-phase compound workflows with 8+ agents and adversarial ve
 
 ## Running Dynamic Workflows
 
-MindForge ships 32 pre-built multi-agent workflows. Each runs via Claude Code's `Workflow` tool using `parallel()`, `pipeline()`, `phase()`, and `agent()` primitives.
+MindForge ships 35 pre-built multi-agent workflows. Each runs via Claude Code's `Workflow` tool using `parallel()`, `pipeline()`, `phase()`, and `agent()` primitives.
 
 ### Discover available workflows
 ```bash
@@ -222,9 +222,9 @@ Workflow({
 | Tier | Count | Workflows |
 |------|-------|-----------|
 | Research | 5 | competitive-analysis, tech-evaluation, ai-model-eval, ux-heuristic-audit, competitive-teardown |
-| Dev | 12 | code-audit, feature-planner, pr-review, tdd-sprint, refactor-plan, test-coverage-gap, api-contract-test, debug-detective, writer-reviewer, mutation-testing, code-explainer, design-system-audit |
+| Dev | 14 | code-audit, feature-planner, pr-review, tdd-sprint, refactor-plan, test-coverage-gap, api-contract-test, debug-detective, writer-reviewer, mutation-testing, code-explainer, design-system-audit, orchestrate-review, verification-loop |
 | Ops | 6 | incident-response, release-prep, dependency-health, database-migration, multi-repo-sync, cost-analysis |
-| Intelligence | 6 | onboard-codebase, perf-optimize, architecture-modernization, documentation-gen, api-migration, data-pipeline-validate |
+| Intelligence | 7 | onboard-codebase, perf-optimize, architecture-modernization, documentation-gen, api-migration, data-pipeline-validate, workflow-optimizer |
 | Beast | 3 | security-hardening, accessibility-audit, security-threat-model |
 
 ---

@@ -93,9 +93,9 @@ MindForge adapts to your existing engineering environment via runtime flags:
 | Tier | Count | Workflows |
 |------|-------|-----------|
 | Research | 5 | competitive-analysis, tech-evaluation, ai-model-eval, ux-heuristic-audit, competitive-teardown |
-| Dev | 12 | code-audit, feature-planner, pr-review, tdd-sprint, refactor-plan, test-coverage-gap, api-contract-test, debug-detective, writer-reviewer, mutation-testing, code-explainer, design-system-audit |
+| Dev | 14 | code-audit, feature-planner, pr-review, tdd-sprint, refactor-plan, test-coverage-gap, api-contract-test, debug-detective, writer-reviewer, mutation-testing, code-explainer, design-system-audit, orchestrate-review, verification-loop |
 | Ops | 6 | incident-response, release-prep, dependency-health, database-migration, multi-repo-sync, cost-analysis |
-| Intelligence | 6 | onboard-codebase, perf-optimize, architecture-modernization, documentation-gen, api-migration, data-pipeline-validate |
+| Intelligence | 7 | onboard-codebase, perf-optimize, architecture-modernization, documentation-gen, api-migration, data-pipeline-validate, workflow-optimizer |
 | Beast | 3 | security-hardening, accessibility-audit, security-threat-model |
 
 **Run any workflow:**
