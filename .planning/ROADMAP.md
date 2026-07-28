@@ -49,7 +49,7 @@
 - [x] Fixed docs/References + docs/Templates case-sensitivity (Linux/npm)
 - [x] `tests/packaging-allowlist.test.js` — packs the real tarball, asserts full payload ships
 
-### v11.4.0 — Measured Routing + Coverage (next)
+### v11.4.0 — Measured Routing + Coverage (STALE — superseded; v11.4.0 through v11.8.3 have since shipped, latest is v11.9.0 as of 2026-07-27)
 **Goal:** Flip difficulty routing from shadow to active (after eval validates), enforce coverage ratchet.
 **Depends on:** v11.2.0 eval harness proving routing quality
 **Plans:**

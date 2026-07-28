@@ -1,4 +1,4 @@
-# Core Requirements Registry (MindForge v9.0.0)
+# Core Requirements Registry (MindForge v11.9.0)
 
 This registry contains the canonical requirements that all autonomous reasoning waves must align with. This file is parsed by the `ReasonSourceAligner` (RSA).
 

@@ -1,7 +1,7 @@
 # MindForge — Project State
 
 ## Status
-🟢 Active — v11.3.1 (Packaging hotfix) — PUBLISHED to npm (latest = 11.3.1)
+🟢 Active — v11.9.0 (Bedrock Provider + Full Dry-Run Audit) — PUBLISHED to npm (latest = 11.9.0)
 
 ## IMPORTANT
 HANDOFF.json is committed to git. Never write secrets or credentials into it.

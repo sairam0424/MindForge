@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-MindForge (`mindforge-cc`, v11.5.1) is an agentic-intelligence framework for Claude Code / Antigravity: it installs slash commands, subagents, skills, hooks, and a Node runtime that add governance, memory, cost-aware model routing, and autonomous wave execution to AI-driven development. It ships as an npm package (`npx mindforge-cc@latest`) and a Claude Code plugin marketplace. Pure JS runtime + a separate TypeScript SDK; **zero native deps** (persistence is sql.js / WASM SQLite).
+MindForge (`mindforge-cc`, v11.9.0) is an agentic-intelligence framework for Claude Code / Antigravity: it installs slash commands, subagents, skills, hooks, and a Node runtime that add governance, memory, cost-aware model routing, and autonomous wave execution to AI-driven development. It ships as an npm package (`npx mindforge-cc@latest`) and a Claude Code plugin marketplace. Pure JS runtime + a separate TypeScript SDK; **zero native deps** (persistence is sql.js / WASM SQLite).
 
 ## Commands
 
@@ -56,8 +56,8 @@ To skip a test, make its **first line** `// @skip: reason`. There is no Jest/Moc
 
 Four layers, top to bottom — understand the flow, not individual files:
 
-1. **Interface (`.claude/`, `.agent/`)** — `.claude/commands/mindforge/*.md` are the `/mindforge:*` slash commands (~174). `.agent/` is the Gemini-CLI/Antigravity mirror with hooks, skills, and ~130 workflow pipelines. The two hook configs (`.claude/settings.json` real Claude events `PreToolUse`/`PostToolUse`/`SessionStart`, vs `.agent/settings.json` Gemini `BeforeTool`/`AfterTool`) **must be kept in sync** — `bin/hooks/mindforge-context-monitor.js` switches event names when `GEMINI_API_KEY` is set.
-2. **Engine specs (`.mindforge/`)** — declarative config + content published in the npm package: `engine/` (25 spec docs), `skills/` (20 core SKILL.md), `personas/` (117), `config.json` (the runtime knobs: governance/revops/security/instincts/council/cost_routing/temporal). Edit behavior here, not in code, where possible.
+1. **Interface (`.claude/`, `.agent/`)** — `.claude/commands/mindforge/*.md` are the `/mindforge:*` slash commands (221). `.agent/` is the Gemini-CLI/Antigravity mirror with hooks, skills, and ~130 workflow pipelines. The two hook configs (`.claude/settings.json` real Claude events `PreToolUse`/`PostToolUse`/`SessionStart`, vs `.agent/settings.json` Gemini `BeforeTool`/`AfterTool`) **must be kept in sync** — `bin/hooks/mindforge-context-monitor.js` switches event names when `GEMINI_API_KEY` is set.
+2. **Engine specs (`.mindforge/`)** — declarative config + content published in the npm package: `engine/` (12 spec docs), `skills/` (232 core SKILL.md), `personas/` (216), `config.json` (the runtime knobs: governance/revops/security/instincts/council/cost_routing/temporal). Edit behavior here, not in code, where possible.
 3. **Execution (`bin/`, ~22K LOC)** — the actual Node runtime, organized by domain: `autonomous/` (wave executor, auto-runner, repair, stuck-monitor), `engine/` (council-runtime, nexus-tracer, verification-runner, temporal-hindsight, otel-exporter), `memory/` (knowledge-graph, vector-hub, RRF fusion, embedding), `governance/` (policy-engine, audit, rbac, quantum-crypto), `models/` (provider clients + pricing), `dashboard/` (Express + SSE, port 7339), `security/`, `browser/` (Playwright QA), `eval/`.
 4. **Persistence (`.planning/`)** — execution state: `STATE.md`, `HANDOFF.json` (resumable), `AUDIT.jsonl` (tamper-evident, gitignored), `history/` snapshots. Plus sql.js DB at `.mindforge/celestial.db`.
 

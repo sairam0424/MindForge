@@ -1,4 +1,4 @@
-# MindForge v11.3.1 — Capabilities Manifest
+# MindForge v11.9.0 — Capabilities Manifest
 
 This manifest provides a line-item inventory of every engine, protocol, and feature available in the MindForge "Enterprise-Grade" installation.
 
@@ -74,4 +74,4 @@ Enterprise-grade skill packs installed into `<runtime>/skills/`, covering planni
 execution, debugging, TDD, shipping, verification, and domain-specific workflows.
 
 ---
-*MindForge v11.3.1 — Empowering the Autonomous Enterprise.*
+*MindForge v11.9.0 — Empowering the Autonomous Enterprise.*
