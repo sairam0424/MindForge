@@ -1,6 +1,6 @@
 # MindForge Changelog Archive
 
-Complete, unabridged version history for MindForge — every release from [v0.1.0](./v0.1.0.md) through [v11.9.0](./v11.9.0.md), one file per version.
+Complete, unabridged version history for MindForge — every release from [v0.1.0](./v0.1.0.md) through [v11.9.1](./v11.9.1.md), one file per version.
 
 The root [CHANGELOG.md](../CHANGELOG.md) keeps only the newest versions inline as a rolling-window aggregator (for `bin/updater/changelog-fetcher.js` regex compatibility); this index is the full historical record.
 
@@ -8,6 +8,7 @@ The root [CHANGELOG.md](../CHANGELOG.md) keeps only the newest versions inline a
 
 | Version | Summary |
 |---|---|
+| [v11.9.1](./v11.9.1.md) | Packaging Fix: Restore Missing Workflow Commands |
 | [v11.9.0](./v11.9.0.md) | Bedrock Provider + Full Dry-Run Audit |
 | [v11.8.3](./v11.8.3.md) | Autopsy Fixes Stable Release |
 | [v11.8.2](./v11.8.2.md) | Clean Stable Release |
