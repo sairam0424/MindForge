@@ -30,6 +30,12 @@ const PREAMBLE = '# Changelog\n\n';
 // files instead of colliding.
 const HEADER_RE = /^## \[?v?(\d+\.\d+\.\d+(?:-[A-Za-z0-9.]+)?)\]?/;
 
+// A bare "## Something" heading that ISN'T a version header ends the current
+// section too — root CHANGELOG.md's rolling window closes with a non-version
+// "## Older releases" footer, which must not be captured as part of the last
+// version's own body.
+const NON_VERSION_H2_RE = /^## (?!\[?v?\d+\.\d+\.\d+)/;
+
 function splitSections(raw) {
   const lines = raw.split('\n');
   const sections = [];
@@ -40,6 +46,9 @@ function splitSections(raw) {
     if (m) {
       if (current) sections.push(current);
       current = { version: m[1], startLine: i + 1, lines: [lines[i]] };
+    } else if (NON_VERSION_H2_RE.test(lines[i])) {
+      if (current) sections.push(current);
+      current = null;
     } else if (current) {
       current.lines.push(lines[i]);
     }
