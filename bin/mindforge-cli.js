@@ -25,8 +25,10 @@ const ROOT = path.resolve(__dirname, '..');
 const COMMANDS = {
   'security-scan': {
     script: 'bin/validate-config.js',
-    description: 'Validate configuration and run security checks',
-    defaultArgs: ['MINDFORGE.md']
+    description: 'Validate configuration and run security checks'
+    // No defaultArgs: validate-config.js already defaults to MINDFORGE.md
+    // (bin/validate-config.js:13). Declaring it here would prepend a positional
+    // that shadows a user-supplied config path.
   },
   'health': {
     script: 'bin/installer-core.js',
@@ -57,20 +59,31 @@ const COMMANDS = {
     script: 'bin/skill-validator.js',
     description: 'Run Level 1 & 2 validation on a SKILL.md file'
   },
+  // NOTE: install-skill / register-skill / audit-skill deliberately carry NO
+  // defaultArgs. Supplying their subcommand token here reaches skill-registry's
+  // write paths, which perform no existence or validation checks:
+  //   - audit-skill <name> <ver> <tier> appended a hash-chained
+  //     {event:'skill_installed', validation_passed:true} entry for a skill that
+  //     does not exist, and exited 0. For a product whose central claim is a
+  //     tamper-evident audit chain, a CLI that mints authentic-looking false
+  //     entries on request is worse than one that refuses.
+  //   - register-skill <name> <ver> 1 wrote a malformed 5-column row above the
+  //     table header of .mindforge/org/skills/MANIFEST.md, which ships in the
+  //     tarball, and exited 0.
+  // Without defaultArgs these refuse with "Invalid or missing action" (exit 1),
+  // which is the pre-11.9.2 behaviour. Re-enable only once skill-registry gates
+  // on skill existence and fixes its table-separator match.
   'install-skill': {
     script: 'bin/skill-registry.js',
-    description: 'Install a skill to the correct tier folder (Tier 1/2/3)',
-    defaultArgs: ['install']
+    description: 'Install a skill to the correct tier folder (pass the "install" action explicitly)'
   },
   'register-skill': {
     script: 'bin/skill-registry.js',
-    description: 'Register a skill in MANIFEST.md',
-    defaultArgs: ['register']
+    description: 'Register a skill in MANIFEST.md (pass the "register" action explicitly)'
   },
   'audit-skill': {
     script: 'bin/skill-registry.js',
-    description: 'Record skill life cycle events in audit log',
-    defaultArgs: ['audit']
+    description: 'Record skill life cycle events in audit log (pass the "audit" action explicitly)'
   },
   'remember': {
     script: 'bin/memory/cli.js',
@@ -97,6 +110,15 @@ const COMMANDS = {
     script: 'bin/spawn-agent.js',
     description: 'Invoke a specialized identity from /agents/',
     defaultArgs: ['identity']
+  },
+  // spawn-agent.js reads MODE from ARGS[0] and supports spawn|identity|subagent.
+  // 'subagent' had no router entry, so it was reached as `mindforge spawn subagent
+  // <name>` — which prepending 'spawn' now shadows (MODE='spawn', TARGET='subagent').
+  // Promoting it to a first-class command keeps the only implemented mode reachable.
+  'subagent': {
+    script: 'bin/spawn-agent.js',
+    description: 'Invoke a subagent definition from /subagents/',
+    defaultArgs: ['subagent']
   },
   'temporal': {
     script: 'bin/engine/temporal-cli.js',
@@ -129,10 +151,14 @@ const COMMANDS = {
     script: 'bin/engine/learning-manager.js',
     description: 'Consult or initialize the project agentic learning memory'
   },
+  // No defaultArgs: 'record' reaches a writer that resolves its target relative to
+  // the spawn cwd, which is still ROOT (deferred to v12). In a consumer install that
+  // writes inside node_modules/mindforge-cc/ and is destroyed by the next npm ci.
+  // Activating a writer while its path resolution is known-wrong is worse than
+  // leaving it inert; re-enable together with the cwd fix.
   'record-learning': {
     script: 'bin/engine/learning-manager.js',
-    description: 'Append a new Learning Entry to the Evolution Log',
-    defaultArgs: ['record']
+    description: 'Append a new Learning Entry to the Evolution Log (pass the "record" action explicitly)'
   },
   'verify': {
     script: 'bin/engine/verify-cli.js',
@@ -177,7 +203,13 @@ if (!target) {
 }
 
 const scriptPath = path.join(ROOT, target.script);
-const finalArgs = COMMAND_ARGS.length > 0 ? COMMAND_ARGS : (target.defaultArgs || []);
+
+// defaultArgs are PREPENDED, never replaced. They carry the subcommand token or
+// mode flag the child script requires (e.g. 'inject' for hindsight, '--check' for
+// health), so dropping them when the user supplies an argument silently changes
+// which code path runs — `health --force` used to lose '--check' and fall through
+// to installer-core's install() path.
+const finalArgs = [...(target.defaultArgs || []), ...COMMAND_ARGS];
 
 console.log(`🚀 Executing: ${COMMAND} (${target.description})`);
 
