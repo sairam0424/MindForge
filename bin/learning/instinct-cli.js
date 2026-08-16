@@ -24,6 +24,7 @@ const path = require('path');
 
 const guard = require('./lib/ssrf-guard');
 const { detectProject } = require('../hooks/lib/detect-project');
+const { withFileLock } = require('../utils/file-lock');
 
 const CONFIG_PATH = path.join(process.cwd(), '.mindforge', 'config.json');
 
@@ -71,33 +72,15 @@ function writeStoreAtomic(p, entries) {
 }
 
 /**
- * Advisory lock (Node has no fcntl): exclusive lockfile create, spin-with-timeout,
- * stale-break after 10s by mtime. Runs fn() while held, releases in finally.
+ * Advisory lock — now a thin delegate to the shared fail-closed lock (LOCK-01).
+ * The implementation moved to bin/utils/file-lock.js so the audit chain and the
+ * knowledge graph use the SAME lock semantics as the instinct store. Behaviour is
+ * unchanged: O_EXCL create, 50 tries, ~20ms waits, 10s stale reclaim, unlink in
+ * finally, THROW (never write anyway) when unacquirable — same error text.
  * Read the store INSIDE this so a prune/import rewrite can't race a hook append.
  */
 function withStoreLock(p, fn) {
-  const lock = `${p}.lock`;
-  const maxTries = 50, waitMs = 20, staleMs = 10000;
-  let held = false;
-  for (let i = 0; i < maxTries && !held; i++) {
-    try {
-      const fd = fs.openSync(lock, 'wx');
-      fs.closeSync(fd);
-      held = true;
-    } catch (err) {
-      if (err.code !== 'EEXIST') throw err;
-      // stale-break: if the lockfile is older than staleMs, remove it.
-      try {
-        const age = Date.now() - fs.statSync(lock).mtimeMs;
-        if (age > staleMs) { fs.unlinkSync(lock); continue; }
-      } catch { /* lock vanished — retry */ }
-      const until = Date.now() + waitMs;
-      while (Date.now() < until) { /* busy-wait (short) */ }
-    }
-  }
-  if (!held) throw new Error(`could not acquire instinct-store lock: ${lock}`);
-  try { return fn(); }
-  finally { try { fs.unlinkSync(lock); } catch { /* already gone */ } }
+  return withFileLock(p, fn, { label: 'instinct-store' });
 }
 
 function currentProjectId() {

@@ -61,6 +61,10 @@ ROADMAP_V7.md
 # instead of an over-broad unanchored *.tmp.[0-9]* that could match anything.
 .mindforge/*.tmp.*
 .planning/*.tmp.*
+# Advisory lock files (LOCK-01 fail-closed append lock). Unlinked in finally, but a
+# hard kill leaves one behind until the 10s stale reclaim — never commit them.
+.planning/**/*.jsonl.lock
+.mindforge/**/*.jsonl.lock
 .mindforge/memory/sync-manifest.json
 # Runtime auth tokens (generated at server startup, never commit)
 .mindforge/.dashboard-token

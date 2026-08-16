@@ -189,7 +189,13 @@ function main() {
     if (!fs.existsSync(storeDir)) {
       fs.mkdirSync(storeDir, { recursive: true });
     }
-    fs.appendFileSync(storePath, JSON.stringify(entry) + '\n');
+    // LOCK-01: instinct-cli's prune/import does read-modify-atomic-rename under this
+    // same lock, so an unlocked append here can be clobbered by that rename. Low
+    // maxTries because this is a hook fast path — the catch below keeps it non-fatal.
+    const { withFileLock } = require('../utils/file-lock');
+    withFileLock(storePath, () => {
+      fs.appendFileSync(storePath, JSON.stringify(entry) + '\n');
+    }, { maxTries: 10, label: 'instinct-store' });
     incrementSessionCount();
   } catch {
     // Non-fatal — hooks must not block

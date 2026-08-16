@@ -133,7 +133,14 @@ function createCausalEdges(bugId, allEntries, vectors) {
           weight: sim,
           reason: `Bug pattern potentially caused by code pattern (sim: ${sim.toFixed(3)})`,
         });
-      } catch { /* skip duplicates or self-refs */ }
+      } catch (err) {
+        // LOCK-01: this catch predates the graph-edges lock. Without the guard below,
+        // an edge LOST to lock contention is reported as a skipped duplicate — a
+        // silent write loss wearing the label of a no-op.
+        if (/could not acquire/.test(err.message)) {
+          console.warn(`[KnowledgeCapture] edge NOT written — graph-edges lock unavailable: ${err.message}`);
+        }
+      }
     }
   }
 }
@@ -165,7 +172,14 @@ function createInformsEdges(decisionId, allEntries, vectors) {
           weight: sim,
           reason: `Decision informs domain knowledge (sim: ${sim.toFixed(3)})`,
         });
-      } catch { /* skip duplicates or self-refs */ }
+      } catch (err) {
+        // LOCK-01: this catch predates the graph-edges lock. Without the guard below,
+        // an edge LOST to lock contention is reported as a skipped duplicate — a
+        // silent write loss wearing the label of a no-op.
+        if (/could not acquire/.test(err.message)) {
+          console.warn(`[KnowledgeCapture] edge NOT written — graph-edges lock unavailable: ${err.message}`);
+        }
+      }
     }
   }
 }
@@ -180,7 +194,13 @@ function reinforceRelatedEdges(nodeId) {
     for (const edge of edges.slice(0, 3)) { // Top 3 edges only
       Graph.reinforceEdge(edge.id);
     }
-  } catch { /* non-critical */ }
+  } catch (err) {
+    // LOCK-01: reinforceEdge now takes the graph-edges lock, so "non-critical" would
+    // also absorb a contention failure. Surface that one; keep the rest quiet.
+    if (/could not acquire/.test(err.message)) {
+      console.warn(`[KnowledgeCapture] reinforcement NOT recorded — graph-edges lock unavailable: ${err.message}`);
+    }
+  }
 }
 
 // ── Event-specific capture functions ─────────────────────────────────────────

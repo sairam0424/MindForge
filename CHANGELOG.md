@@ -1,5 +1,38 @@
 # Changelog
 
+## [Unreleased] — Concurrency: fail-closed append lock
+
+### Fixed
+- **Audit hash chain could fork under concurrent writers.** `bin/autonomous/audit-writer.js`
+  read the chain head and appended with no mutual exclusion, and cached the head in-process
+  indefinitely — so once a second process appended, the first kept chaining from a superseded
+  hash. Added `bin/utils/file-lock.js` (a fail-closed advisory lock promoted from
+  `bin/learning/instinct-cli.js`, deliberately NOT from `.agent/bin/lib/state.cjs`, which
+  writes anyway when the lock cannot be taken) held across read-head-through-fsync, and made
+  the cached head carry the file size that witnesses it is still the tail. 8 concurrent
+  appenders went from 199 broken links + 4 forks per 200 entries to 0. A lock alone was
+  measured insufficient — it still left 2 breaks and 1 fork, because the stale cache is a
+  second, independent defect.
+- **Knowledge-graph edge updates were lost under concurrency.** `deprecateEdge`,
+  `reinforceEdge` and `applyDecay` in `bin/memory/knowledge-graph.js` each did
+  `readAllEdges()` -> mutate -> append with no lock, and `addEdge` appended unserialised
+  against them. Measured at HEAD over 4 runs of 8 processes x 20 `reinforceEdge` calls:
+  93-129 of 160 increments lost, final `traversal_count` 31-67 instead of 160. All four
+  write paths now hold the `graph-edges.jsonl` lock across read-through-append; the same
+  probe then loses 0 of 160 in every run, with no lock-acquisition failures.
+- `bin/governance/policy-engine.js`: `logAudit`'s un-awaited audit write now has a
+  `.catch()` — a lock-contention failure is reported at the decision site instead of
+  escaping as an unhandled rejection.
+- `bin/hooks/instinct-capture-hook.js` appended to the instinct store without the lock that
+  `instinct-cli`'s prune/import rewrite holds, so a hook append landing in that window was
+  clobbered by the rename. It now takes the same lock.
+- `tests/v7-sovereign-security.test.js`: `new PolicyEngine()` no longer defaults
+  `planningDir` to `process.cwd()`, which appended test verdicts to the operator's real
+  `.planning/RISK-AUDIT.jsonl`.
+- Packaging: `package.json` files[] now excludes `**/*.lock` so a lockfile orphaned by a
+  hard kill cannot leak into the npm tarball (verified: without the negation, a
+  `.mindforge/memory/graph-edges.jsonl.lock` does ship).
+
 ## [11.9.2] — 2026-08-16 — Correctness: audit-chain integrity, dashboard crash policy, secret scanning
 
 Patch release. No new features. Twelve commits closing defects found by a

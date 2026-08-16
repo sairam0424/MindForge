@@ -53,7 +53,8 @@
     "MINDFORGE.md",
     "README.md",
     "RELEASENOTES.md",
-    "SECURITY.md"
+    "SECURITY.md",
+    "!**/*.lock"
   ],
   "scripts": {
     "test": "node scripts/ci/validate-assets.js && node tests/run-all.js",
