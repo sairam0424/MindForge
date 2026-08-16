@@ -88,3 +88,19 @@ ROADMAP_V7.md
 .mindforge/audit/manifests/
 .mindforge/metrics/token-usage.jsonl
 .gstack/
+
+# External agent-tooling artifacts (claude-flow / ruflo / hermes / agentdb).
+# Not MindForge's, but they materialise at the repo root and in mcp-server/ whenever those
+# tools run, and this is a PUBLIC repository — an unguarded `git add -A` would publish a
+# local vector database. files[] already keeps them out of the npm tarball; this keeps them
+# out of git.
+.claude-flow/
+.swarm/
+hermes-agent/
+agentdb.rvf
+agentdb.rvf.lock
+ruvector.db
+**/ruvector.db
+**/.claude-flow/
+.claude/proven-config.json
+.claude/.proven-config-version
