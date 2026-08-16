@@ -1,6 +1,6 @@
 {
   "name": "mindforge-sdk",
-  "version": "11.9.1",
+  "version": "11.9.2",
   "description": "MindForge SDK — Programmatic API for embedding MindForge in tools",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
