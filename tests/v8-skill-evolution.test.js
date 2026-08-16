@@ -57,17 +57,23 @@ async function runTest() {
         if (skillsInDb.length > 0) {
             console.log('✅ MindForge v8 Autonomous Skill Evolution Passed.');
         } else {
+            // Non-zero code required: logging alone let `finally { process.exit(0) }` report
+            // ✓ PASS on both of this suite's failure branches.
             console.error('❌ Skill was synthesized but not found in the Database!');
+            process.exitCode = 1;
         }
     } else {
         console.error('❌ ASE failed to synthesize a skill from the golden cluster.');
+        process.exitCode = 1;
     }
 
   } catch (err) {
     console.error(`[TEST] Error: ${err.message}`);
-    process.exit(1);
+    process.exitCode = 1;
   } finally {
-    process.exit(0);
+    // Forced exit retained (sql.js/WASM holds handles open) but it must propagate the outcome
+    // rather than overwrite it.
+    process.exit(process.exitCode || 0);
   }
 }
 
