@@ -85,7 +85,7 @@
     },
     "COST_HARD_LIMIT_USD": {
       "type": "number", "minimum": 0, "maximum": 10000,
-      "description": "Daily hard cost limit in USD. DECLARED BUT NOT ENFORCED as of 11.9.2: bin/models/cost-tracker.js reads MODEL_COST_HARD_LIMIT_USD, which this registry does not declare, so preflight() returns early and no cap is applied. Do not treat this as a spend control. Tracked as COST-02."
+      "description": "Daily hard cost limit in USD. ENFORCED as of 11.9.3 (COST-02): bin/models/cost-tracker.js preflight() throws COST_LIMIT_REACHED once today's ledger spend plus the call estimate reaches this value, and bin/models/model-client.js re-throws it. 0 disables the cap, and so does omitting the key (it is `recommended`, not `required`) — an upgrade never rewrites an existing MINDFORGE.md. A present-but-unparseable value throws COST_LIMIT_MISCONFIGURED rather than silently running uncapped."
     },
     "ADS_DEBATE_ROUNDS": {
       "type": "number", "minimum": 1, "maximum": 10,
