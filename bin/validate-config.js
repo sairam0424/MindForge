@@ -7,8 +7,10 @@
 
 'use strict';
 
-const fs   = require('fs');
-const path = require('path');
+const fs = require('fs');
+
+// The one bracket-aware MINDFORGE.md reader (see bin/utils/mindforge-params.js).
+const { readParams } = require('./utils/mindforge-params');
 
 const CONFIG_PATH  = process.argv[2] || 'MINDFORGE.md';
 const SCHEMA_PATH  = '.mindforge/MINDFORGE-SCHEMA.json';
@@ -23,28 +25,36 @@ if (!fs.existsSync(SCHEMA_PATH)) {
   process.exit(0);
 }
 
-const content = fs.readFileSync(CONFIG_PATH, 'utf8');
 const schema  = JSON.parse(fs.readFileSync(SCHEMA_PATH, 'utf8'));
 
 const errors   = [];
 const warnings = [];
 
-// Parse key=value pairs from MINDFORGE.md
-const settings = {};
-const lines = content.split('\n');
-lines.forEach(line => {
-  const match = line.match(/^([A-Z_]+)=(.+)$/);
-  if (match) {
-    const [, key, value] = match;
-    settings[key] = value.trim();
-  }
-});
+// MINDFORGE.md declares parameters as bracketed assignments ([KEY] = value).
+// v11.9.2 and earlier matched /^([A-Z_]+)=(.+)$/, which matches ZERO lines of a
+// real MINDFORGE.md — the validator parsed 0 settings and could never fail.
+// readParams() also still handles the legacy plain KEY=value form.
+const settings = readParams(CONFIG_PATH);
+
+// Required / recommended key sets (top-level arrays in the schema). Kept
+// deliberately identical to sdk/src/client.ts validateConfig() so the SDK and
+// the CLI validator enforce ONE contract.
+const required    = new Set(Array.isArray(schema.required) ? schema.required : []);
+const recommended = new Set(Array.isArray(schema.recommended) ? schema.recommended : []);
+
+for (const key of required) {
+  if (!settings[key]) errors.push(`${key} is required but not set`);
+}
+for (const key of recommended) {
+  if (!settings[key]) warnings.push(`${key} is recommended but not set`);
+}
 
 // Validate against schema
 for (const [key, def] of Object.entries(schema.properties || {})) {
   const value = settings[key];
 
-  if (def.required && !value) {
+  // Legacy per-property `required` flag still honoured (schema.required wins).
+  if (def.required && !value && !required.has(key)) {
     errors.push(`${key} is required but not set`);
     continue;
   }
@@ -68,8 +78,16 @@ for (const [key, def] of Object.entries(schema.properties || {})) {
     errors.push(`${key}: expected true or false, got "${value}"`);
   }
 
-  if (def.nonOverridable) {
-    warnings.push(`${key}: this is a non-overridable governance primitive (value will be ignored)`);
+  if (def.type === 'string' && def.pattern && !new RegExp(def.pattern).test(value)) {
+    errors.push(`${key}: "${value}" does not match required pattern ${def.pattern}`);
+  }
+
+  // A non-overridable governance primitive may be SET (MINDFORGE.md is its
+  // source of truth) but never DISABLED. Mirrors sdk/src/client.ts:176-182,
+  // which errors on `[KEY] = false`. The old code warned on every occurrence
+  // and claimed the value "will be ignored" — which was untrue and pure noise.
+  if (def.nonOverridable && def.type === 'boolean' && value === 'false') {
+    errors.push(`${key}: non-overridable governance primitive cannot be disabled`);
   }
 }
 

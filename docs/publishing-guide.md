@@ -20,24 +20,64 @@ Before any release, ensure the following is completed:
 ### 2. Versioning Strategy
 MindForge follows SemVer. Update `package.json`, create `changelogs/vX.Y.Z.md`, and prepend the entry to `CHANGELOG.md`'s rolling window first.
 
-### 3. Automated Release Workflow
-MindForge provides a built-in workflow to handle the heavy lifting:
+### 3. Tag — this is the ONLY supported publish path
 
-1. Run the slash command: `/publish-release`
-2. Follow the interactive prompts to execute tests and dry runs.
+Pushing a `v*` tag is what publishes. `.github/workflows/mindforge-release.yml` triggers on
+`push: tags: 'v*'`, runs the suite, and publishes both packages with `--provenance`.
 
-### 4. Manual Publishing (Fallback)
-If the workflow is unavailable:
-
-```bash
-npm publish --tag alpha --access public
-```
-
-### 5. Git Tagging & Origin Sync
 ```bash
 git tag v[version]
-git push origin --tags
+git push origin v[version]     # this publishes
 ```
 
+Then verify from outside the repo:
+
+```bash
+npm view mindforge-cc@[version] dist --json    # attestations.provenance must be present
+npm view mindforge-cc dist-tags                # latest must be [version], NOT alpha
+```
+
+> **Do not publish manually.** See the warning below — it is not a style preference, it is an
+> irreversible failure mode. The pre-flight checklist for the tag lives in
+> `.agent/workflows/publish-release.md` (there is no `/publish-release` slash command).
+
+### 4. ⚠️ Manual publishing strips provenance, permanently
+
+A manual `npm publish` **cannot be undone**, and it silently disables the provenanced publish
+that would have followed:
+
+1. A manual publish without `--provenance` uploads the version with no attestation. npm forbids
+   republishing a version that already exists, so this is not recoverable — the only remedy is
+   burning a version number.
+2. The release workflow checks npm for the version first
+   (`mindforge-release.yml:48-60`) and skips its publish step when the version is already there
+   (`if: steps.npm_check.outputs.already_published != 'true'`). So a manual publish makes the
+   provenanced publish a no-op rather than a correction.
+3. `npm publish --tag alpha` additionally parks the release on the `alpha` dist-tag, so
+   `npm install mindforge-cc` keeps resolving to the previous version.
+
+Provenance is not cosmetic: pnpm consumers reject a package whose attestation disappears
+between versions, so an unprovenanced release is a broken release for them.
+
+If you must publish outside CI — accepting that you lose CI's verification — the flags are
+non-negotiable, and you tag **first** so the workflow's idempotency check is the thing that
+skips, not your only provenanced attempt:
+
+```bash
+git tag v[version] && git push origin v[version]   # let CI try first
+# ONLY if the workflow itself is unavailable:
+npm publish --access public --provenance
+```
+
+### 5. If the tag run fails
+
+Do **not** fall back to a manual publish. Diagnose and re-tag:
+
+- **401 / E403 on npm** — the `NPM_TOKEN` repository secret is expired or lacks publish rights.
+  Rotate it, delete the tag (`git push origin :v[version]`), and re-push the tag.
+- **Suite failure** — nothing was published; the publish step runs after `npm test`. Fix and re-tag.
+- **`mcp-server` build failure** — see the ordering note in the workflow; `mindforge-cc` must not
+  publish before the second package has been proven buildable.
+
 ---
-*Last Updated: 2026-03-22*
+*Last Updated: 2026-08-16*

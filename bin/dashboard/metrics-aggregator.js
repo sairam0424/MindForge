@@ -7,6 +7,7 @@
 
 const fs   = require('fs');
 const path = require('path');
+const { ledgerPath, entryCost, entryDay } = require('../models/usage-record');
 
 // ── TTL Cache (5-second window) ──────────────────────────────────────────────
 const _cache = new Map();
@@ -29,7 +30,7 @@ function cacheSet(key, data) {
 // Paths are resolved lazily to support testing in temp directories
 const getPaths = () => ({
   quality:   path.join(process.cwd(), '.mindforge', 'metrics', 'session-quality.jsonl'),
-  usage:     path.join(process.cwd(), '.mindforge', 'metrics', 'token-usage.jsonl'),
+  usage:     ledgerPath(),
   audit:     path.join(process.cwd(), '.planning', 'AUDIT.jsonl'),
   handoff:   path.join(process.cwd(), '.planning', 'HANDOFF.json'),
   auto:      path.join(process.cwd(), '.planning', 'auto-state.json'),
@@ -122,12 +123,29 @@ function getMetrics() {
   const auditEntries   = readJSONL(paths.audit, 500);
 
   // Quality scores (last 20 sessions)
+  // session-quality.jsonl has NO writer anywhere in this repo — every one of its
+  // four references (here, sdk/src/client.ts, mcp-server/src/vendor/client.ts,
+  // plugins/mindforge/mcp/dist/index.js) is a READ, and no command instructs an
+  // agent to append it either. The read is kept because those three other
+  // consumers depend on the file and a schema-compliant one may exist in a user
+  // project; supplying a writer is OUT OF SCOPE for this patch. Read the
+  // SCHEMA-DECLARED names first (.mindforge/metrics/METRICS-SCHEMA.md), keeping
+  // the historical names as fallbacks.
+  // Per-session cost is NOT a session-quality field: it is joined from the
+  // usage ledger by session_id (every provider result carries one — see
+  // bin/models/model-client.js:69).
+  const costBySession = usageEntries.reduce((acc, u) => {
+    if (!u || typeof u.session_id !== 'string') return acc;
+    acc[u.session_id] = (acc[u.session_id] || 0) + entryCost(u);
+    return acc;
+  }, {});
+
   const sessions = qualityEntries.map(e => ({
     id:               e.session_id,
     timestamp:        e.timestamp,
-    quality_score:    e.quality_score ?? 0,
+    quality_score:    e.session_quality_score ?? e.quality_score ?? 0,
     verify_pass_rate: e.verify_pass_rate ?? 0,
-    cost_usd:         e.total_cost_usd ?? 0,
+    cost_usd:         costBySession[e.session_id] ?? 0,
     node_repairs:     e.node_repairs ?? 0,
   }));
 
@@ -302,12 +320,15 @@ function getCosts(windowDays = 7) {
   };
 
   for (const e of entries) {
-    if (e.timestamp < cutoff) continue;
-    
-    const cost = e.total_cost_usd || 0;
+    // Ledger rows carry both `date` and `timestamp` (see bin/models/usage-record.js).
+    // Bucket on the canonical day so date-only and full-ISO rows behave alike.
+    const day = entryDay(e);
+    if (!day || day < cutoff) continue;
+
+    const cost = entryCost(e);
     stats.total_usd += cost;
-    
-    if (e.timestamp && e.timestamp.startsWith(today)) {
+
+    if (day === today) {
       stats.today_usd += cost;
     }
 

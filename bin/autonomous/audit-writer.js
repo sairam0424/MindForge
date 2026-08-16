@@ -20,6 +20,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { hashAuditEntry } = require('../governance/audit-hash');
+const { withFileLock } = require('../utils/file-lock');
 
 /**
  * Computes the SHA-256 hash of an entry chained to its predecessor (UC-04).
@@ -57,19 +58,20 @@ function readLastHash(auditPath) {
 // sync write gives in-process consumers (e.g. StuckMonitor, which is fed the event
 // object directly but may also re-read the file) immediate, durable data.
 //
-// Chain head caching: re-reading the file's tail on every append is O(file) — bad
-// on hot paths. Instead we keep a per-path in-memory lastHash (Map keyed by the
-// RESOLVED absolute path), seeded ONCE from the file's last entry on the first
-// append, then advanced in-process for O(1) appends. If the cache is cold (new
-// process, or a path never written in this process) we seed from disk — so a
-// second process correctly continues the on-disk chain from its tail.
+// Chain head caching: re-reading the file's tail on every append is O(file) — bad on
+// hot paths. We keep a per-path in-memory head (Map keyed by the RESOLVED absolute
+// path) as { hash, size }, where `size` is the file size immediately after our own
+// write. The size is the WITNESS that the cache is still the true tail: if the file is
+// still exactly that long, nobody else appended and the cached hash is the tail (O(1));
+// if it differs, another process appended and we MUST re-seed from disk.
 //
-// Concurrency: within a process this is fully synchronous, so calls cannot
-// interleave and the cached lastHash is always current. ACROSS processes, each
-// process seeds from the file tail on its first append; this is correct only under
-// the single-operator model (no two processes appending CONCURRENTLY to the same
-// audit file). MindForge runs one autonomous operator at a time, so this holds.
-const _lastHashCache = new Map(); // resolvedPath -> last `_hash` written/seen
+// Concurrency (LOCK-01): the seed-through-write sequence below runs inside
+// withFileLock, so no other process can read the head, or append, while we hold it.
+// The size check is what makes the cache safe across processes — a lock alone is NOT
+// enough, because a warm cache would still hand back a hash that a lock-respecting
+// second writer has since superseded, forking the chain. Verified: lock-only leaves
+// 4-6 link breaks per 8-process run; lock + size-validated reseed leaves 0.
+const _lastHashCache = new Map(); // resolvedPath -> { hash, size }
 
 /**
  * Synchronously appends ONE hash-chained, durable entry to an audit JSONL file.
@@ -96,30 +98,43 @@ function appendAuditEntrySync(auditPath, event) {
     timestamp: event.timestamp || new Date().toISOString(),
   };
 
-  // 2. Seed previous_hash: prefer the warm in-process cache; fall back to the
-  //    file's last entry when cold (first append in this process for this path).
-  let previous_hash = _lastHashCache.has(resolved)
-    ? _lastHashCache.get(resolved)
-    : readLastHash(resolved);
+  // 2-5. LOCK-01: seed-through-write is ONE critical section. The lock opens BEFORE
+  //      the head is read and closes AFTER the fsync, so no other process can read the
+  //      same head, or interleave an append, while we hold it. maxTries is raised above
+  //      the module default because failing closed here DROPS an audit entry: at 16
+  //      concurrent writers the default ~1s ceiling loses ~35% of entries, 150 tries
+  //      loses none.
+  return withFileLock(resolved, () => {
+    // 2. Seed previous_hash from the warm cache ONLY if the file is still exactly as
+    //    long as we left it (proof nobody else appended); otherwise re-seed from disk.
+    const cached = _lastHashCache.get(resolved);
+    let onDiskSize = -1;
+    try { onDiskSize = fs.statSync(resolved).size; } catch { onDiskSize = -1; }
+    const previous_hash = (cached && cached.size === onDiskSize)
+      ? cached.hash
+      : readLastHash(resolved);
 
-  // 3. Compute _hash over {...stamped, previous_hash} WITHOUT _hash in the material.
-  const _hash = hashEntry(stamped, previous_hash);
+    // 3. Compute _hash over {...stamped, previous_hash} WITHOUT _hash in the material.
+    const _hash = hashEntry(stamped, previous_hash);
 
-  // 4. Write {...stamped, previous_hash, _hash} as one JSON line, durably+synchronously
-  //    (openSync('a') + writeSync + fsyncSync + closeSync — mirrors appendDurableSync).
-  const chained = { ...stamped, previous_hash, _hash };
-  fs.mkdirSync(path.dirname(resolved), { recursive: true });
-  const fd = fs.openSync(resolved, 'a');
-  try {
-    fs.writeSync(fd, JSON.stringify(chained) + '\n');
-    fs.fsyncSync(fd);
-  } finally {
-    fs.closeSync(fd);
-  }
+    // 4. Write {...stamped, previous_hash, _hash} as one JSON line, durably+synchronously
+    //    (openSync('a') + writeSync + fsyncSync + closeSync — mirrors appendDurableSync).
+    const chained = { ...stamped, previous_hash, _hash };
+    fs.mkdirSync(path.dirname(resolved), { recursive: true });
+    const fd = fs.openSync(resolved, 'a');
+    let sizeAfter = -1;
+    try {
+      fs.writeSync(fd, JSON.stringify(chained) + '\n');
+      fs.fsyncSync(fd);
+      sizeAfter = fs.fstatSync(fd).size;   // exact new length, one syscall, fd already open
+    } finally {
+      fs.closeSync(fd);
+    }
 
-  // 5. Advance the in-process chain head and return the written entry.
-  _lastHashCache.set(resolved, _hash);
-  return chained;
+    // 5. Advance the in-process chain head (hash + its witness) and return the entry.
+    _lastHashCache.set(resolved, { hash: _hash, size: sizeAfter });
+    return chained;
+  }, { maxTries: 150, label: 'audit' });
 }
 
 module.exports = { appendAuditEntrySync };

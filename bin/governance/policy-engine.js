@@ -165,6 +165,12 @@ class PolicyEngine {
   }
 
   logAudit(intent, impactScore, verdict) {
+    // LOCK-01: AuditWriter.write -> appendAuditEntrySync now takes a FAIL-CLOSED lock,
+    // so this can reject under contention. It is intentionally not awaited (the verdict
+    // path is synchronous), so catch here — otherwise the rejection escapes to a global
+    // unhandledRejection handler and the lost audit record is invisible at this site.
+    // The verdict is still returned: promoting an audit-write failure to an implicit
+    // DENY is a behaviour change for v12, not a patch.
     this._auditWriter.write({
       timestamp: new Date().toISOString(),
       requestId: verdict.requestId,
@@ -175,6 +181,8 @@ class PolicyEngine {
       impactScore,
       verdict: verdict.verdict,
       reason: verdict.reason
+    }).catch(err => {
+      console.error(`[APO-AUDIT-FAIL] [${verdict.requestId}] RISK-AUDIT append failed — decision NOT recorded: ${err.message}`);
     });
   }
 

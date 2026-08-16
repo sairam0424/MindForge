@@ -39,7 +39,7 @@ Map score to model tier via the routing decision matrix.
 </step>
 
 <step name="check_budget">
-Read token-ledger.jsonl for current session/project spend.
+Read token-usage.jsonl for current session/project spend.
 Compare against budget limits in config.json.
 If approaching warn threshold: flag to user.
 </step>
@@ -66,6 +66,6 @@ Recommend routing adjustments for next session.
 - NEVER skip security overrides to save money (auth/payment always >= standard tier)
 - NEVER exceed hard budget limit without explicit user approval
 - NEVER silently downgrade model quality — always inform
-- Track every model interaction in token-ledger.jsonl
+- Track every model interaction in token-usage.jsonl
 - Report cost transparency in every session summary
 </critical_rules>

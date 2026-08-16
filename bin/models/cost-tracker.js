@@ -4,32 +4,34 @@
 'use strict';
 
 const fs = require('fs');
-const path = require('path');
+const { ledgerPath, ledgerDir, buildRecord, entryCost, entryDay } = require('./usage-record');
 
-const METRICS_DIR = path.join(process.cwd(), '.mindforge', 'metrics');
-const USAGE_LOG = path.join(METRICS_DIR, 'token-usage.jsonl');
-
+// Paths are resolved lazily (see usage-record.js) so the suite can exercise the
+// ledger inside a temp cwd instead of appending to the developer's real ledger.
 function ensureDir() {
-  if (!fs.existsSync(METRICS_DIR)) {
-    fs.mkdirSync(METRICS_DIR, { recursive: true });
+  const dir = ledgerDir();
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
   }
 }
 
 let _dailyCache = { value: 0, computed_at: 0 };
 
 function getTodaySpend() {
-  if (!fs.existsSync(USAGE_LOG)) return 0;
-  
+  const usageLog = ledgerPath();
+  if (!fs.existsSync(usageLog)) return 0;
+
   const today = new Date().toISOString().slice(0, 10);
-  const content = fs.readFileSync(USAGE_LOG, 'utf8');
+  const content = fs.readFileSync(usageLog, 'utf8');
   const lines = content.trim().split('\n');
-  
+
   let total = 0;
   for (const line of lines) {
+    if (!line) continue;
     try {
       const entry = JSON.parse(line);
-      if (entry.date === today) {
-        total += entry.cost_usd || 0;
+      if (entryDay(entry) === today) {
+        total += entryCost(entry);
       }
     } catch (e) {
       process.stderr.write('[cost-tracker] Skipped malformed entry\n');
@@ -66,23 +68,20 @@ async function preflight(estimatedCost = 0) {
 
 async function record(entry) {
   ensureDir();
-  const enriched = {
-    ...entry,
-    date: new Date().toISOString().slice(0, 10),
-    timestamp: new Date().toISOString()
-  };
-  fs.appendFileSync(USAGE_LOG, JSON.stringify(enriched) + '\n');
+  const enriched = buildRecord(entry);
+  fs.appendFileSync(ledgerPath(), JSON.stringify(enriched) + '\n');
   _dailyCache.computed_at = 0; // Invalidate cache
 }
 
 function getSummary(params = { days: 7 }) {
-  if (!fs.existsSync(USAGE_LOG)) return { total_usd: 0, by_model: {} };
-  
+  const usageLog = ledgerPath();
+  if (!fs.existsSync(usageLog)) return { total_usd: 0, by_model: {} };
+
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - params.days);
   const cutoffStr = cutoffDate.toISOString().slice(0, 10);
 
-  const content = fs.readFileSync(USAGE_LOG, 'utf8');
+  const content = fs.readFileSync(usageLog, 'utf8');
   const lines = content.trim().split('\n');
   
   const result = {
@@ -95,8 +94,8 @@ function getSummary(params = { days: 7 }) {
   for (const line of lines) {
     try {
       const entry = JSON.parse(line);
-      if (entry.date >= cutoffStr) {
-        const cost = entry.cost_usd || 0;
+      if (entryDay(entry) >= cutoffStr) {
+        const cost = entryCost(entry);
         result.total_usd += cost;
         result.calls++;
         

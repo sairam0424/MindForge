@@ -205,13 +205,39 @@ test('getCosts: returns correct total', () => {
   process.chdir(p.dir);
   try {
     const today = new Date().toISOString().slice(0, 10);
+    // Fixtures MUST use the canonical ledger shape written by
+    // bin/models/cost-tracker.js -> bin/models/usage-record.js: `cost_usd`
+    // plus both `date` and full-ISO `timestamp`. Seeding `total_cost_usd`
+    // here is what previously kept the writer/reader mismatch green.
     p.write('.mindforge/metrics/token-usage.jsonl',
-      JSON.stringify({ timestamp: today, model: 'claude-sonnet-4-6', total_cost_usd: 0.05 }) + '\n' +
-      JSON.stringify({ timestamp: today, model: 'gpt-4o', total_cost_usd: 0.12 }) + '\n'
+      JSON.stringify({ date: today, timestamp: `${today}T09:00:00.000Z`, model: 'claude-sonnet-4-6', input_tokens: 100, output_tokens: 50, cost_usd: 0.05 }) + '\n' +
+      JSON.stringify({ date: today, timestamp: `${today}T09:05:00.000Z`, model: 'gpt-4o', input_tokens: 200, output_tokens: 80, cost_usd: 0.12 }) + '\n'
     );
 
     const costs = Metrics.getCosts(7);
     assert.ok(Math.abs(costs.total_usd - 0.17) < 0.01, `Expected ~0.17, got ${costs.total_usd}`);
+    assert.ok(Math.abs(costs.today_usd - 0.17) < 0.01, `Expected today ~0.17, got ${costs.today_usd}`);
+    assert.strictEqual(costs.by_model['gpt-4o'], 0.12, 'per-model split must use cost_usd');
+  } finally { process.chdir(orig); p.cleanup(); }
+});
+
+// Regression anchor for COST-01: the ledger's only cost field is `cost_usd`.
+// A row carrying `total_cost_usd` (the cross-review report field) must
+// contribute $0 — otherwise the writer/reader mismatch can silently return.
+test('getCosts: ignores total_cost_usd (wrong field) in ledger rows', () => {
+  const p    = mkProject();
+  const orig = process.cwd();
+  process.chdir(p.dir);
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    p.write('.mindforge/metrics/token-usage.jsonl',
+      JSON.stringify({ date: today, timestamp: `${today}T09:00:00.000Z`, model: 'gpt-4o', total_cost_usd: 9.99 }) + '\n'
+    );
+
+    // Window 6 (not 7) on purpose: getCosts memoizes per `costs:<window>` for
+    // 5s, so reusing 7 here would serve the previous test's cached result.
+    const costs = Metrics.getCosts(6);
+    assert.strictEqual(costs.total_usd, 0, `total_cost_usd must not be summed, got ${costs.total_usd}`);
   } finally { process.chdir(orig); p.cleanup(); }
 });
 

@@ -109,7 +109,18 @@ class RemediationEngine {
       }
 
       await SemanticHub.ensureInit();
-      const goldenTraces = await SemanticHub.getGoldenTraces({ limit: 3 });
+      // SemanticHub.getGoldenTraces(skillFilter = null) takes a STRING filter,
+      // not an options object: `{ limit: 3 }` flowed straight through to
+      // vectorHub.searchTraces() as the query text. That used to stringify to
+      // "[object Object]" and silently search for that literal; FTS-01 makes a
+      // non-string query throw a TypeError, so the call shape is corrected here
+      // in the same change. The cap the old `{ limit: 3 }` intended is applied
+      // locally, because getGoldenTraces() has no limit parameter.
+      const GOLDEN_TRACE_LIMIT = 3;
+      const allGoldenTraces = await SemanticHub.getGoldenTraces();
+      const goldenTraces = Array.isArray(allGoldenTraces)
+        ? allGoldenTraces.slice(0, GOLDEN_TRACE_LIMIT)
+        : [];
 
       if (!goldenTraces || goldenTraces.length === 0) {
         return { strategy: 'GOLDEN_TRACE_INJECTION', result: 'no_traces_found' };

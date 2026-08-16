@@ -198,7 +198,7 @@
         </div>
       </div>
       <div class="grid-4">
-        <div class="card"><div class="card-body"><div class="stat-label">Cumulative Cost</div><div id="stat-total-cost" class="stat-value">$0.00</div></div></div>
+        <div class="card"><div class="card-body"><div class="stat-label">Cost (7d)</div><div id="stat-total-cost" class="stat-value">$0.00</div></div></div>
         <div class="card"><div class="card-body"><div class="stat-label">Avg Quality</div><div id="stat-avg-quality" class="stat-value">0.0</div></div></div>
         <div class="card"><div class="card-body"><div class="stat-label">LSPs Registered</div><div id="stat-lsp-count" class="stat-value">0</div></div></div>
         <div class="card"><div class="card-body"><div class="stat-label">Token Velocity</div><div id="stat-velocity" class="stat-value">0 <span class="stat-unit">tx/m</span></div></div></div>
@@ -430,6 +430,7 @@
         const data = await res.json();
         state = data;
         updateMetricsUI(data);
+        refreshCosts();
         refreshApprovals();
         refreshMemory();
         refreshTeam();
@@ -538,8 +539,24 @@
     }
 
     function updateMetricsUI(data) {
-      document.getElementById('stat-total-cost').textContent = `$${(data.costs?.reduce((a,b) => a + b.cost, 0) || 0).toFixed(4)}`;
-      document.getElementById('stat-avg-quality').textContent = (data.quality?.reduce((a,b) => a + b.score, 0) / (data.quality?.length || 1)).toFixed(1);
+      // /api/metrics returns { sessions, avg_quality, avg_cost_usd, ... } — see
+      // bin/dashboard/metrics-aggregator.js getMetrics(). It has never returned
+      // `costs` or `quality`, so these tiles used to render "$0.0000" and "NaN".
+      document.getElementById('stat-avg-quality').textContent = (data.avg_quality ?? 0).toFixed(1);
+    }
+
+    // Cumulative spend comes from the usage ledger via /api/costs (already wired
+    // in bin/dashboard/api-router.js but never fetched until now).
+    async function refreshCosts() {
+      try {
+        const res = await fetch('/api/costs?window=7');
+        // sendServerError returns a well-formed JSON body, so res.json() would
+        // SUCCEED on a 500 and `total_usd ?? 0` would render "$0.00" — an outage
+        // and genuine zero spend look identical under the "Cost (7d)" label.
+        if (!res.ok) throw new Error(`/api/costs ${res.status}`);
+        const data = await res.json();
+        document.getElementById('stat-total-cost').textContent = `${(data.total_usd ?? 0).toFixed(2)}`;
+      } catch (e) { console.error('Cost refresh failed', e); }
     }
 
     function appendAuditEvent(data) {

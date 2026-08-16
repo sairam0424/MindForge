@@ -62,7 +62,7 @@ for cost-performance tradeoffs, or when budget limits are approaching.
 ### Budget Monitoring
 
 Check budget status regularly:
-- Session budget remaining: from token-ledger.jsonl
+- Session budget remaining: from token-usage.jsonl
 - Warning threshold: `[COST_WARN_USD]` from config
 - Hard limit: `[COST_HARD_LIMIT_USD]` from config
 
@@ -72,12 +72,12 @@ Check budget status regularly:
 - Never exceed hard limit without explicit user approval
 
 ### After any task
-- Log actual model used + tokens consumed to token-ledger.jsonl
+- Log actual model used + tokens consumed to token-usage.jsonl
 - Compare actual vs optimal tier (for future routing accuracy)
 - Report cost in session summary
 
 ## Self-check before task completion
 - [ ] Did I log the model routing decision with rationale?
-- [ ] Did I record actual token usage in token-ledger.jsonl?
+- [ ] Did I record actual token usage in token-usage.jsonl?
 - [ ] Did I check remaining budget against session/project limits?
 - [ ] Did I flag any tasks where a cheaper model could have been used?

@@ -8,7 +8,7 @@ non-zero on failure.
 ## Running
 
 ```bash
-# Run everything (auto-discovers tests/*.test.js)
+# Run everything (recursive auto-discovery of *.test.js under tests/)
 node tests/run-all.js
 
 # Run a subset by filename substring
@@ -19,10 +19,42 @@ node tests/run-all.js --filter=security,audit
 node tests/subagent-import.test.js
 ```
 
-The runner (`run-all.js`) globs every `tests/*.test.js`, runs each with the repo
-root as `cwd`, and aggregates pass/fail. **New `*.test.js` files are picked up
-automatically — no registration step.** A file whose first line is
-`// @skip: reason` is skipped.
+### How discovery actually works
+
+`run-all.js` performs a **recursive** walk from `tests/`. It is not a flat glob of
+`tests/*.test.js` (it was, before v11.9.2). Precisely:
+
+- A file is a test **iff its name ends in `.test.js`**, at any depth. Any other
+  name is invisible to the runner — `run-nexus-tests.js`, `foo-test.js` and
+  `test-foo.js` are all NOT discovered, no matter where they sit.
+- A **directory** is pruned if its name matches `/^(tmp-|node_modules$|\.)/` —
+  so `tests/tmp-graph/` and `tests/tmp-learning-test/` (scratch dirs some suites
+  create, which must never contribute a phantom suite after a crashed run),
+  `tests/node_modules/`, and any dot-directory. Nothing beneath a pruned
+  directory is walked.
+- **That prune applies to directories ONLY, never to files.** A file named
+  `tmp-foo.test.js` or `.foo.test.js` IS discovered and IS run. Do not use a
+  filename prefix to try to exclude a test — use `// @skip:`.
+- Non-pruned subdirectories are walked to arbitrary depth, so
+  `tests/governance/foo.test.js` runs. Discovered paths are relative to `tests/`,
+  and `--filter` matches that whole relative path, so `--filter=governance`
+  selects an entire subdirectory.
+- Each test runs in its own `node` child process with the **repo root as `cwd`**
+  (regardless of the test's own depth) and `NODE_ENV=test`. Results are
+  aggregated and the runner exits 1 if anything failed.
+- **New `*.test.js` files are picked up automatically — no registration step.**
+
+Two directives are honoured, and only on the file's **first line**:
+
+| Directive | Effect |
+|---|---|
+| `// @skip: reason` | file is not executed; counted as skipped, reason printed |
+| `// @timeout: 90000` | per-file timeout in ms; the default is `60000` |
+
+`run-all.js` is also safely requirable: it exports `{ discoverTests,
+getSkipReason, getTimeoutMs }` and calls `main()` only under
+`if (require.main === module)`, so `require('./run-all.js')` does **not** launch a
+nested full-suite run.
 
 ## House style (match it)
 

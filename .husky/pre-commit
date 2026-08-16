@@ -1,1 +1,38 @@
+#!/usr/bin/env sh
+
+# Secret scan FIRST — it takes ~1s and npm test takes ~30s, so failing here is
+# cheap. `gitleaks protect --staged` scans only what is about to be committed.
+#
+# This gate exists because .gitignore does NOT protect an already-tracked file:
+# adding a path to .gitignore after it is staged changes nothing, which is how a
+# credential-shaped file can reach a commit while looking handled.
+if command -v gitleaks >/dev/null 2>&1; then
+  if ! gitleaks protect --staged --redact --config .gitleaks.toml --no-banner; then
+    echo ""
+    echo "✖ pre-commit: a secret was detected in the STAGED changes (values redacted above)."
+    echo ""
+    echo "  Do NOT just add the file to .gitignore — if it is already staged that has no effect."
+    echo "  Instead:"
+    echo "    1. git restore --staged <file>        # unstage it"
+    echo "    2. move the value to an env var, e.g. _authToken=\${NPM_TOKEN}"
+    echo "    3. if the value was ever real, REVOKE it — assume it is compromised"
+    echo ""
+    echo "  False positive? Add a narrow [[allowlists]] entry in .gitleaks.toml with"
+    echo "  targetRules + regexTarget=\"line\", and prove with a negative control that a"
+    echo "  real secret in the same file is still caught. Never add a blanket path exclusion."
+    echo ""
+    exit 1
+  fi
+else
+  # Fail loudly rather than silently skipping. A security gate that quietly
+  # no-ops when its tool is absent is the failure mode this repo keeps hitting.
+  echo "✖ pre-commit: gitleaks is not installed, so staged changes were NOT scanned for secrets."
+  echo "  Install it:  brew install gitleaks"
+  echo "  Bypass once (accepting the risk):  MINDFORGE_SKIP_SECRET_SCAN=1 git commit ..."
+  if [ "$MINDFORGE_SKIP_SECRET_SCAN" != "1" ]; then
+    exit 1
+  fi
+  echo "  ⚠ skipped via MINDFORGE_SKIP_SECRET_SCAN=1"
+fi
+
 npm test

@@ -1,5 +1,58 @@
 # Release Notes
 
+## v11.9.2 — 2026-08-16 — Correctness: config gate, audit chain, retrieval, cost ledger
+
+### What's New
+Nothing. This is a correctness release: four things that were reported as working were measured
+and found not to be, and a fifth — the plugin channel's hooks — is now documented as broken
+instead of advertised as the fastest path.
+
+### ⚠️ Breaking (under a patch bump)
+The dashboard's HTTP surface changed shape. `detail` is gone from 5 endpoints and raw errno
+strings from 10 more; `correlation_id` is added to 15; malformed bodies now return
+`application/json` instead of an HTML error page. Those fields were leaking absolute filesystem
+paths — and so the operator's username and home directory — into an unauthenticated response.
+The dashboard also now **exits** on an unhandled rejection or uncaught exception where 11.9.1
+logged and continued, so supervised deployments will see restarts instead of silent errors.
+The surface is loopback-only, so this affects you only if you script against it.
+
+### Fixes
+- **`security-scan` could not fail.** It reported `MINDFORGE.md valid — 0 settings configured`
+  and exited 0 on every input, because both config parsers used a plain `KEY=value` regex while
+  the registry declares bracketed `[KEY] = value`. All 43 parameters were invisible. One shared
+  parser now reads both forms, and the schema has real `required` keys. Three CI gates go from
+  unfailable to failable — on fresh installs and `--force` reinstalls; a plain upgrade keeps
+  your existing schema.
+- **The audit hash chain forked under concurrent writers.** No `.jsonl` append took a lock, and
+  the chain head was cached in-process and never invalidated — so a second process's append made
+  the first keep chaining from a superseded hash. Both halves are fixed: a fail-closed lock, and
+  a cached head that carries the file size witnessing it is still the tail. A lock alone was
+  measured insufficient. 8 concurrent appenders went from 199 broken links to 0.
+- **44.4% of trace content was unsearchable and every multi-word query returned nothing.** The
+  index was keyed on `trace_id` rather than the row's primary key, so each span evicted the
+  previous one; and whole queries were wrapped as a single FTS phrase, so one absent term zeroed
+  the result. 2,270 of 5,117 rows are recovered losslessly and queries are now tokenised and
+  ranked. The shipped retrieval eval had zero callers and now runs as `npm run eval:retrieval`.
+- **The cost ledger reported two different totals for one concept** ($13.73 vs $0.00) because
+  writer and reader used different field names — and the test wrote the reader's name, so the
+  mismatch passed. One record shape now, and the configured ledger path no longer points at a
+  file that never existed.
+- **The daily cost cap is declared but not enforced**, and is now labelled that way in
+  `MINDFORGE.md` and the schema rather than described as non-overridable. Wiring it is COST-02.
+
+### Honesty
+`README.md` now carries a per-channel capability table with an explicit **Hooks enforced: No**
+row for both install channels, because no hook configuration ships and nothing generates one.
+The plugin channel's dispatcher additionally fails with `Cannot find module './lib/hook-flags'`
+on every fire. Treat MindForge as governance-by-convention plus a verifiable audit log, not as a
+policy enforcement point. Making enforcement real per harness is the goal of v12.
+
+### Stats
+105 test files, 103 pass, 2 environment-dependent skips. Four suites that could not report
+failure now can. Audit chain verifies clean. Tarball 1,973 entries.
+
+---
+
 ## v11.9.0 — 2026-07-27 — Bedrock Provider + Full Dry-Run Audit
 
 ### What's New

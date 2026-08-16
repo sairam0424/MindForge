@@ -17,6 +17,7 @@ const crypto   = require('crypto');
 const Store    = require('./knowledge-store');
 const Embedder = require('./embedding-engine');
 const EISClient = require('./eis-client');
+const { withFileLock } = require('../utils/file-lock');
 
 // ── Edge Types ────────────────────────────────────────────────────────────────
 const EDGE_TYPES = Object.freeze({
@@ -57,6 +58,19 @@ function getPaths() {
 
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+}
+
+/**
+ * LOCK-01: runs fn() holding the exclusive lock on graph-edges.jsonl.
+ * Every edge write below is a READ-modify-APPEND (readAllEdges -> mutate -> append),
+ * so the read MUST be inside the same critical section as the append or concurrent
+ * writers lose updates. Measured over 4 runs of 8 processes x 20 reinforceEdge calls:
+ * unlocked lost 93-129 of 160 increments (final traversal_count 31-67); locked lost 0
+ * of 160 in every run.
+ * Re-entrant: applyDecay() holds this lock and calls deprecateEdge(), which re-takes it.
+ */
+function withEdgesLock(fn, opts = {}) {
+  return withFileLock(getPaths().EDGES_PATH, fn, { maxTries: 150, label: 'graph-edges', ...opts });
 }
 
 // ── Edge CRUD ─────────────────────────────────────────────────────────────────
@@ -108,8 +122,12 @@ function addEdge(edge) {
   const payload = JSON.stringify({ ...record, checksum: '' });
   record.checksum = crypto.createHash('sha256').update(payload).digest('hex');
 
-  fs.appendFileSync(paths.EDGES_PATH, JSON.stringify(record) + '\n');
-  invalidateAdjacencyCache();
+  // LOCK-01: serialise against the read-modify-append paths below, whose readAllEdges()
+  // snapshot would otherwise go stale if this append landed inside their window.
+  withEdgesLock(() => {
+    fs.appendFileSync(paths.EDGES_PATH, JSON.stringify(record) + '\n');
+    invalidateAdjacencyCache();
+  });
   return id;
 }
 
@@ -144,19 +162,23 @@ function readAllEdges() {
  */
 function deprecateEdge(edgeId, reason) {
   const paths = getPaths();
-  const edges = readAllEdges();
-  const edge = edges.find(e => e.id === edgeId);
-  if (!edge) return;
+  // LOCK-01: read-modify-append is ONE critical section — the readAllEdges() snapshot
+  // must not be able to go stale before our append lands.
+  return withEdgesLock(() => {
+    const edges = readAllEdges();
+    const edge = edges.find(e => e.id === edgeId);
+    if (!edge) return;
 
-  const deprecated = {
-    ...edge,
-    deprecated: true,
-    deprecated_reason: reason,
-    deprecated_at: new Date().toISOString(),
-  };
+    const deprecated = {
+      ...edge,
+      deprecated: true,
+      deprecated_reason: reason,
+      deprecated_at: new Date().toISOString(),
+    };
 
-  fs.appendFileSync(paths.EDGES_PATH, JSON.stringify(deprecated) + '\n');
-  invalidateAdjacencyCache();
+    fs.appendFileSync(paths.EDGES_PATH, JSON.stringify(deprecated) + '\n');
+    invalidateAdjacencyCache();
+  });
 }
 
 /**
@@ -165,22 +187,26 @@ function deprecateEdge(edgeId, reason) {
  */
 function reinforceEdge(edgeId) {
   const paths = getPaths();
-  const edges = readAllEdges();
-  const edge = edges.find(e => e.id === edgeId);
-  if (!edge) return;
+  // LOCK-01: weight += 0.1 and traversal_count += 1 are read-modify-writes. Unlocked,
+  // 8 concurrent processes x 20 reinforcements lost 93-129 of 160 increments (4 runs).
+  return withEdgesLock(() => {
+    const edges = readAllEdges();
+    const edge = edges.find(e => e.id === edgeId);
+    if (!edge) return;
 
-  const reinforced = {
-    ...edge,
-    weight: Math.min(2.0, edge.weight + 0.1),
-    last_traversed: new Date().toISOString(),
-    traversal_count: (edge.traversal_count || 0) + 1,
-  };
+    const reinforced = {
+      ...edge,
+      weight: Math.min(2.0, edge.weight + 0.1),
+      last_traversed: new Date().toISOString(),
+      traversal_count: (edge.traversal_count || 0) + 1,
+    };
 
-  // Recompute checksum
-  const payload = JSON.stringify({ ...reinforced, checksum: '' });
-  reinforced.checksum = crypto.createHash('sha256').update(payload).digest('hex');
+    // Recompute checksum
+    const payload = JSON.stringify({ ...reinforced, checksum: '' });
+    reinforced.checksum = crypto.createHash('sha256').update(payload).digest('hex');
 
-  fs.appendFileSync(paths.EDGES_PATH, JSON.stringify(reinforced) + '\n');
+    fs.appendFileSync(paths.EDGES_PATH, JSON.stringify(reinforced) + '\n');
+  });
 }
 
 // ── Adjacency Index (with persistent cache) ─────────────────────────────────
@@ -489,6 +515,19 @@ function autoCreateEdges(entryId, vectors) {
  * @returns {{ decayed: number, pruned: number }}
  */
 function applyDecay() {
+  // LOCK-01: the ENTIRE pass is one read-modify-write — one readAllEdges() snapshot
+  // drives appends at the bottom of this loop AND nested deprecateEdge() calls. The
+  // nested calls re-take this same lock; withFileLock is re-entrant for that reason.
+  // staleMs is raised far above the 10s module default. This pass is O(n^2) — the
+  // nested deprecateEdge() re-reads the whole edges file per prune — and was measured
+  // holding this lock 9.1s at 2,000 edges and 14.4s at 2,500. Past STALE_MS another
+  // process classifies this LIVE lock as orphaned, unlinks it, and enters the critical
+  // section alongside us, so mutual exclusion would silently vanish on any real-sized
+  // graph — the same "looks guarded, isn't" failure this item exists to remove.
+  return withEdgesLock(() => applyDecayLocked(), { staleMs: 900000 });
+}
+
+function applyDecayLocked() {
   const edges = readAllEdges();
   const now = Date.now();
   let decayed = 0;

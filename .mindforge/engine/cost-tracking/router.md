@@ -41,7 +41,7 @@ These always override the matrix:
 3. Map score to tier via decision matrix
 4. Apply override rules
 5. Check budget: if remaining budget < estimated cost, downgrade one tier with WARNING
-6. Log routing decision to token-ledger.jsonl
+6. Log routing decision to token-usage.jsonl
 7. Return selected model ID
 
 ## Budget Guard
