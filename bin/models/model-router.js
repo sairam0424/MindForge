@@ -7,11 +7,15 @@
 const fs = require('fs');
 const path = require('path');
 
+// The one bracket-aware MINDFORGE.md reader (see bin/utils/mindforge-params.js).
+const { readParams } = require('../utils/mindforge-params');
+
 // v9: Model topology aligned to Claude 4.x family (2026-04)
 const DEFAULTS = {
   PLANNER_MODEL:          'claude-opus-4-7',
   EXECUTOR_MODEL:         'claude-sonnet-4-6',
   REVIEWER_MODEL:         'claude-sonnet-4-6',
+  VERIFIER_MODEL:         'claude-sonnet-4-6',
   SECURITY_MODEL:         'claude-opus-4-7',
   RESEARCH_MODEL:         'gemini-2.5-pro',
   QA_MODEL:               'claude-sonnet-4-6',
@@ -40,14 +44,31 @@ let _settingsMtime = 0;
 const CACHE_CHECK_INTERVAL_MS = 60000;
 let _lastCacheCheck = 0;
 
+// MINDFORGE.md declares the model topology with SHORT persona keys ([PLANNER]);
+// the router's canonical setting keys are the *_MODEL names in DEFAULTS above,
+// which is what every getAllSettings() consumer reads. Map short -> canonical
+// and keep BOTH in the returned object so nothing reading *_MODEL breaks.
+const KEY_ALIASES = {
+  PLANNER:  'PLANNER_MODEL',
+  EXECUTOR: 'EXECUTOR_MODEL',
+  REVIEWER: 'REVIEWER_MODEL',
+  VERIFIER: 'VERIFIER_MODEL',
+  SECURITY: 'SECURITY_MODEL',
+  RESEARCH: 'RESEARCH_MODEL',
+  QA:       'QA_MODEL',
+  DEBUG:    'DEBUG_MODEL',
+  QUICK:    'QUICK_MODEL',
+};
+
 function parseSettings(filePath) {
-  const content = fs.readFileSync(filePath, 'utf8');
-  const settings = { ...DEFAULTS };
-  const lines = content.split('\n');
-  for (const line of lines) {
-    const match = line.match(/^([A-Z0-9_]+)=(.*)$/);
-    if (match) {
-      settings[match[1]] = match[2].trim();
+  // v11.9.2 matched /^([A-Z0-9_]+)=(.*)$/ here, which matches ZERO lines of a
+  // bracketed MINDFORGE.md — routing silently always used DEFAULTS.
+  const raw = readParams(filePath);
+  const settings = { ...DEFAULTS, ...raw };
+  // An explicit [PLANNER_MODEL] always wins over the short [PLANNER] form.
+  for (const [shortKey, canonicalKey] of Object.entries(KEY_ALIASES)) {
+    if (raw[shortKey] !== undefined && raw[canonicalKey] === undefined) {
+      settings[canonicalKey] = raw[shortKey];
     }
   }
   return settings;
