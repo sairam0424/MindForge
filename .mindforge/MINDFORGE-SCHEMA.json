@@ -85,8 +85,7 @@
     },
     "COST_HARD_LIMIT_USD": {
       "type": "number", "minimum": 0, "maximum": 10000,
-      "nonOverridable": true,
-      "description": "NON-OVERRIDABLE: daily hard cost limit; cannot be raised without human approval"
+      "description": "Daily hard cost limit in USD. DECLARED BUT NOT ENFORCED as of 11.9.2: bin/models/cost-tracker.js reads MODEL_COST_HARD_LIMIT_USD, which this registry does not declare, so preflight() returns early and no cap is applied. Do not treat this as a spend control. Tracked as COST-02."
     },
     "ADS_DEBATE_ROUNDS": {
       "type": "number", "minimum": 1, "maximum": 10,

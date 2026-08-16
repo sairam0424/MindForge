@@ -1,8 +1,37 @@
 # Changelog
 
-## [Unreleased] — Correctness: config gate, concurrency, retrieval, cost ledger
+## [11.9.2] — 2026-08-16 — Correctness: audit-chain integrity, dashboard crash policy, secret scanning
+
+Patch release. No new features. Correctness work closing defects found by a
+multi-agent audit of v11.9.1, plus the regression suites that keep them closed.
+Contains a breaking change to the dashboard HTTP surface — see BREAKING below.
+
+### BREAKING
+
+Shipped under a PATCH bump. The break is confined to the dashboard's own HTTP
+surface, which binds to 127.0.0.1 only — but if you script against it, read this.
+
+- **Dashboard error responses changed shape.** `detail` is removed from 5 endpoints and
+  raw errno strings from 10 more; `correlation_id` is added to 15; a malformed request
+  body now returns `application/json` instead of express's `text/html` error page.
+  Anything parsing `detail` must correlate on the logged `correlation_id` instead. This
+  was deliberate — those fields leaked absolute filesystem paths, and therefore the
+  operator's username and home directory, into an unauthenticated response body
+  (`requireAuth` exempts GET).
+- **The dashboard now EXITS on an unhandled rejection or uncaught exception** where
+  11.9.1 logged and continued. If you supervise the process, expect restarts where you
+  previously saw a logged error. Rationale in the Fixed section below: log-and-continue
+  held client sockets open until the client timed out, and had made `shutdown()` swallow
+  a throwing token unlink and keep serving the authenticated mutation API after SIGTERM.
+- **`node bin/validate-config.js` and `mindforge security-scan` can now fail.** They
+  previously reported `MINDFORGE.md valid — 0 settings configured` and exited 0 on every
+  input. If you run either in CI, a genuinely invalid registry will now red-line where it
+  used to pass. Note this reaches **fresh installs and `--force` reinstalls only** — the
+  installer does not overwrite an existing `.mindforge/MINDFORGE-SCHEMA.json`, so a plain
+  upgrade keeps the old permissive schema.
 
 ### Fixed
+
 - **`security-scan` could not fail.** `bin/validate-config.js` and
   `bin/models/model-router.js` each parsed `MINDFORGE.md` with a plain `KEY=value` regex, but
   the registry declares its 43 parameters as bracketed `[KEY] = value`. Every schema property
@@ -32,8 +61,10 @@
   places across 13 files and is now absent. The dashboard cost tile no longer renders `$0.00`
   on a 500 — it had no `res.ok` check, and because errors return well-formed JSON the catch
   never fired, making an outage indistinguishable from zero spend.
-  `scripts/purge-synthetic-usage.js` removes fixture rows: dry-run by default, backs up first,
-  idempotent, and aborts leaving the ledger untouched if the rewrite fails.
+  A maintainer tool, `scripts/purge-synthetic-usage.js`, removes fixture rows: dry-run by
+  default, backs up first, idempotent, and aborts leaving the ledger untouched if the rewrite
+  fails. It is run from a repository checkout — `scripts/` is not in the published tarball, so
+  installed consumers do not have it.
 - **Audit hash chain could fork under concurrent writers.** `bin/autonomous/audit-writer.js`
   read the chain head and appended with no mutual exclusion, and cached the head in-process
   indefinitely — so once a second process appended, the first kept chaining from a superseded
@@ -63,13 +94,6 @@
 - Packaging: `package.json` files[] now excludes `**/*.lock` so a lockfile orphaned by a
   hard kill cannot leak into the npm tarball (verified: without the negation, a
   `.mindforge/memory/graph-edges.jsonl.lock` does ship).
-
-## [11.9.2] — 2026-08-16 — Correctness: audit-chain integrity, dashboard crash policy, secret scanning
-
-Patch release. No new features. Twelve commits closing defects found by a
-multi-agent audit of v11.9.1, plus the five regression suites that keep them closed.
-
-### Fixed
 
 - **Audit-chain forgery via un-awaited rollback.** `HindsightInjector.inject` called
   the async `TemporalHub.rollbackTo` without `await`, so its rejection escaped the
@@ -143,9 +167,17 @@ multi-agent audit of v11.9.1, plus the five regression suites that keep them clo
 
 ### Tests
 
-- Five regression suites, 102 files total (100 pass, 2 environment-dependent skips):
+- Suite totals for this release: **105 files, 103 pass, 2 environment-dependent skips**
+  (`browser`, `sre-integration`). Eight new suites across the release:
   `temporal-integrity`, `dashboard-error-leak`, `dashboard-crash-guards`,
-  `dashboard-wiring`, `cli-router`. `dashboard-wiring` derives the expected router set
+  `dashboard-wiring`, `cli-router`, `mindforge-params`, `file-lock`, `retrieval-fts`.
+- **Four suites could not report failure and now can.** `v8-persistence`,
+  `v8-skill-evolution` and `v8-orbital-governance` ended `finally { process.exit(0) }`, and
+  `v7-pillar-integration` had zero assertions with a premium-model gate that named two models
+  absent from the registry for several releases. `npm test` is the only quality step before
+  `npm publish`, and the runner gates on child exit codes, so a blind suite blinded the publish
+  gate. Verified by injected failure rather than inspection.
+  `dashboard-wiring` derives the expected router set
   from `server.js`'s own requires, so adding a router without mounting it fails.
   `cli-router` runs against a mirror-root sandbox under `os.tmpdir()` — required, not
   tidiness: the case that proves audit forgery is prevented would otherwise forge an
