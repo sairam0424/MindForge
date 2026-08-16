@@ -37,6 +37,7 @@ const SSE    = require('./sse-bridge');
 const API    = require('./api-router');
 const TemporalAPI = require('./temporal-api');
 const RevOpsAPI   = require('./revops-api');
+const { newCorrelationId } = require('./error-response');
 
 // ── Express app ───────────────────────────────────────────────────────────────
 const app = express();
@@ -194,12 +195,55 @@ app.use('/api/temporal', TemporalAPI);
 // returned 404 while the AgRevOps dashboard panels and docs described it as live.
 app.use('/api/revops', RevOpsAPI);
 
+// ── Terminal error handler (LEAK-01) ─────────────────────────────────────────
+// MUST stay last, after every route, and MUST keep its 4-arg signature or express
+// will treat it as ordinary middleware. Without it, express's default handler
+// renders err.stack into the response body whenever NODE_ENV !== 'production':
+// a single unauthenticated malformed-JSON POST (express.json() is mounted BEFORE
+// requireAuth, and requireAuth exempts GET anyway) returned the absolute paths of
+// node_modules and the repo — the operator's username and home directory — to any
+// local caller. Log server-side; return a generic body plus a correlation id.
+app.use((err, req, res, next) => {
+  if (res.headersSent) return next(err); // e.g. an SSE stream already flushed headers
+  const status = Number.isInteger(err && err.status) && err.status >= 400 && err.status < 600
+    ? err.status
+    : 500;
+  const correlationId = newCorrelationId();
+  console.error(
+    `[dashboard] unhandled ${req.method} ${req.originalUrl} -> ${status} [cid=${correlationId}]:`,
+    err && err.stack ? err.stack : err
+  );
+  res.status(status).json({
+    error: status >= 500 ? 'Internal server error' : 'Invalid request',
+    correlation_id: correlationId
+  });
+});
+
 // ── Crash guards ──────────────────────────────────────────────────────────────
-// An escaped promise rejection in a route handler terminates the process under
-// Node >= 15. Log it so the reason is recoverable, and keep serving: a single bad
-// request must not take the observability surface down.
+// Both guards log and exit. That is deliberate and symmetric.
+//
+// unhandledRejection: an escaped rejection is the ONLY reliable signal that an
+// async call was left un-awaited — the ASYNC-01 class this release fixes. Measured
+// on v11.9.1: an un-awaited rollbackTo() rejected, and by the time the rejection
+// surfaced a hash-chained `hindsight_injected` entry had already been fsync'd and
+// auto-state.json flipped to awaiting_regeneration for a rollback that never
+// happened; the client got ECONNRESET at ~16ms and the process exited 1. The
+// durable damage is committed before any handler can run, so a 500-and-continue
+// response would answer the request while leaving the audit chain asserting an
+// event that did not occur.
+// Keeping it survivable is also not free: express 4.22.1 does not route async
+// handler rejections to its error middleware (measured: a 4-arity app.use never
+// fires), so log-and-continue leaves the client socket open until the CLIENT gives
+// up — 2.5s, 4s and 8s clients all timed out with no response — versus a ~15ms
+// connection reset when the process exits. A silent hang is worse than a restart.
+// Cost accepted: one faulting request takes the observability surface down. The
+// dashboard is a 127.0.0.1-only single-operator tool, and an audit chain that
+// verifies as valid while recording events that did not happen is not a survivable
+// state to keep serving from.
 process.on('unhandledRejection', (reason) => {
-  console.error('[Dashboard] Unhandled rejection:', reason instanceof Error ? reason.stack : reason);
+  console.error('[Dashboard] Unhandled rejection — exiting:',
+    reason instanceof Error ? reason.stack : reason);
+  process.exit(1);
 });
 
 // uncaughtException MUST exit. After an uncaught throw the process state is

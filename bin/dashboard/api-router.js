@@ -9,6 +9,7 @@ const fs      = require('fs');
 const Metrics = require('./metrics-aggregator');
 const Approval = require('./approval-handler');
 const SSE     = require('./sse-bridge');
+const { sendServerError } = require('./error-response');
 
 // Steering queue path (from Day 8 auto-executor)
 const STEERING_QUEUE = path.join(process.cwd(), '.planning', 'steering-queue.jsonl');
@@ -38,7 +39,7 @@ function register(app) {
     try {
       res.json(Metrics.getStatus());
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      sendServerError(res, 'GET /api/status', err, 'Failed to read project status');
     }
   });
 
@@ -50,7 +51,7 @@ function register(app) {
       const event  = typeof req.query.event === 'string' ? req.query.event : null;
       res.json(Metrics.getAuditEntries(limit, offset, event));
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      sendServerError(res, 'GET /api/audit', err, 'Failed to read audit entries');
     }
   });
 
@@ -59,7 +60,7 @@ function register(app) {
     try {
       res.json(Metrics.getMetrics());
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      sendServerError(res, 'GET /api/metrics', err, 'Failed to read quality metrics');
     }
   });
 
@@ -68,7 +69,7 @@ function register(app) {
     try {
       res.json(Metrics.getApprovals());
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      sendServerError(res, 'GET /api/approvals', err, 'Failed to read approvals');
     }
   });
 
@@ -104,7 +105,7 @@ function register(app) {
 
       res.json(result);
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      sendServerError(res, 'POST /api/approve/:id', err, 'Failed to record approval decision');
     }
   });
 
@@ -113,7 +114,7 @@ function register(app) {
     try {
       res.json(Metrics.getTeamActivity());
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      sendServerError(res, 'GET /api/team', err, 'Failed to read team activity');
     }
   });
 
@@ -124,7 +125,7 @@ function register(app) {
       const limit = Math.min(parseInt(req.query.limit || '20', 10), 100);
       res.json(Metrics.getMemory(q, limit));
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      sendServerError(res, 'GET /api/memory', err, 'Failed to query knowledge base');
     }
   });
 
@@ -134,7 +135,7 @@ function register(app) {
       const window = Math.min(parseInt(req.query.window || '7', 10), 90);
       res.json(Metrics.getCosts(window));
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      sendServerError(res, 'GET /api/costs', err, 'Failed to read cost metrics');
     }
   });
 
@@ -193,7 +194,7 @@ function register(app) {
 
       res.json({ success: true, queued: true, id: entry.id, action });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      sendServerError(res, 'POST /api/steer', err, 'Failed to queue steering directive');
     }
   });
 
@@ -241,7 +242,7 @@ function register(app) {
         timestamp: new Date().toISOString()
       });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      sendServerError(res, 'GET /api/v1/system', err, 'Failed to read system observability data');
     }
   });
 }

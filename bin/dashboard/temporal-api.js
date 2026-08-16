@@ -8,6 +8,7 @@ const express = require('express');
 const router = express.Router();
 const TemporalHub = require('../engine/temporal-hub');
 const HindsightInjector = require('../hindsight-injector');
+const { sendServerError } = require('./error-response');
 
 /**
  * GET /api/temporal/history
@@ -18,7 +19,7 @@ router.get('/history', (req, res) => {
     const history = TemporalHub.getHistory();
     res.json(history);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to retrieve temporal history', detail: err.message });
+    sendServerError(res, 'GET /api/temporal/history', err, 'Failed to retrieve temporal history');
   }
 });
 
@@ -37,7 +38,7 @@ router.get('/snapshot/:auditId/:file', (req, res) => {
     
     res.send(content);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to retrieve snapshot file', detail: err.message });
+    sendServerError(res, 'GET /api/temporal/snapshot/:auditId/:file', err, 'Failed to retrieve snapshot file');
   }
 });
 
@@ -52,7 +53,9 @@ router.get('/snapshot/:auditId/meta', (req, res) => {
     if (!snap) return res.status(404).json({ error: 'Snapshot not found' });
     res.json(snap);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to retrieve snapshot metadata' });
+    // Previously swallowed the error entirely — no client detail, but no server log
+    // either, so a broken history dir was undiagnosable.
+    sendServerError(res, 'GET /api/temporal/snapshot/:auditId/meta', err, 'Failed to retrieve snapshot metadata');
   }
 });
 
@@ -72,10 +75,13 @@ router.post('/inject', async (req, res) => {
     if (result.success) {
       res.json(result);
     } else {
-      res.status(500).json(result);
+      // result.error is HindsightInjector's own `err.message` (hindsight-injector.js:59)
+      // and can be an fs error carrying an absolute path — never forward it verbatim.
+      sendServerError(res, 'POST /api/temporal/inject', result.error, 'Hindsight injection failed',
+        { success: false });
     }
   } catch (err) {
-    res.status(500).json({ error: 'Hindsight injection failed', detail: err.message });
+    sendServerError(res, 'POST /api/temporal/inject', err, 'Hindsight injection failed');
   }
 });
 
