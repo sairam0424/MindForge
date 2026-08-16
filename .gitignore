@@ -61,6 +61,9 @@ ROADMAP_V7.md
 # instead of an over-broad unanchored *.tmp.[0-9]* that could match anything.
 .mindforge/*.tmp.*
 .planning/*.tmp.*
+# COST-01: the ledger purge rewrites .mindforge/metrics/token-usage.jsonl, so its temp
+# file is TWO levels deep and the single-level globs above do not match it.
+.mindforge/**/*.tmp.*
 # Advisory lock files (LOCK-01 fail-closed append lock). Unlinked in finally, but a
 # hard kill leaves one behind until the 10s stale reclaim — never commit them.
 .planning/**/*.jsonl.lock

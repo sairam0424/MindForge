@@ -31,7 +31,7 @@ $ARGUMENTS
    - Identify divergence (models disagree — flag for user)
    - Identify novel insights (unique points from one model)
 7. **Present results** with clear attribution (which model said what).
-8. Log consultation in token-ledger.jsonl (model, tokens, cost per call).
+8. Log consultation in token-usage.jsonl (model, tokens, cost per call).
 9. Report total cost of this consultation.
 10. Remind: "External opinions are advisory — user sovereignty applies."
 </process>

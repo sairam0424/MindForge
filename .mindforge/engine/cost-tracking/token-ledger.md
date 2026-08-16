@@ -5,42 +5,39 @@ Append-only ledger recording all token usage for analytics, budgeting, and optim
 
 ## Storage
 
-- Location: `.mindforge/metrics/token-ledger.jsonl`
+- Location: `.mindforge/metrics/token-usage.jsonl` (canonical shape: `bin/models/usage-record.js`)
 - Format: JSON Lines (one entry per model interaction)
 - Rotation: Archive entries older than 30 days to `.mindforge/metrics/archive/`
 - Retention: Archives kept for 90 days, then deleted
 
 ## Entry Format
 
-Each line in the ledger is a complete JSON object:
+Each line in the ledger is a complete JSON object. The authoritative shape is
+`bin/models/usage-record.js`; this is what `bin/models/cost-tracker.js`
+actually appends today (all five providers in `bin/models/*-provider.js` emit it):
 
 ```json
 {
-  "id": "txn-[uuid]",
-  "timestamp": "2026-05-25T10:30:00Z",
-  "session_id": "session-abc123",
-  "task_id": "task-def456",
-  "phase": "execute",
   "model": "claude-sonnet-4-6",
-  "tier": "standard",
-  "routing_reason": "difficulty_score_5_multi_file",
-  "tokens": {
-    "input": 12500,
-    "output": 3200,
-    "cached_input": 8000,
-    "total": 15700
-  },
+  "input_tokens": 12500,
+  "output_tokens": 3200,
+  "cache_read_input_tokens": 8000,
+  "cache_creation_input_tokens": 0,
   "cost_usd": 0.085,
-  "budget_remaining": {
-    "session": 4.915,
-    "project_weekly": 49.915
-  },
-  "task_type": "implementation",
-  "files_touched": 3,
-  "skills_loaded": ["code-quality", "testing-standards"],
-  "outcome": "success"
+  "task_name": "Plan 3-04",
+  "session_id": "session-abc123",
+  "phase": 3,
+  "date": "2026-05-25",
+  "timestamp": "2026-05-25T10:30:00.000Z"
 }
 ```
+
+`cost_usd` is the ONLY cost field. `total_cost_usd` belongs to cross-review
+reports (`bin/review/cross-review-engine.js`) and must never appear here.
+
+Not yet emitted (aspirational — do not read these): `id`, `task_id`, `tier`,
+`routing_reason`, `budget_remaining`, `task_type`, `files_touched`,
+`skills_loaded`, `outcome`.
 
 ## Reporting Queries
 
@@ -71,7 +68,7 @@ debugging       | $0.85    | 32,000     | 8
 
 ## Integration
 
-- Written to by the budget-enforcer after every model interaction
+- Written to by `bin/models/cost-tracker.js` `record()` after every model interaction (called from `bin/models/model-client.js:77`)
 - Read by `/mindforge:cost-report` command
 - Summarized weekly into `.mindforge/metrics/weekly-cost-summary.json`
 - Referenced by AgRevOps dashboard for ROI tracking

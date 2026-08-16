@@ -57,7 +57,7 @@ multiple AI providers, or when the user explicitly requests cross-model consulta
    ```
 
 ### During consultation
-- Log every external call in token-ledger.jsonl (model, tokens, cost)
+- Log every external call in token-usage.jsonl (model, tokens, cost)
 - Never send more than 2000 tokens to external models per consultation
 - If a model is unavailable: skip it, note in output, continue with available models
 - Respect rate limits — max 3 consultations per session
@@ -70,6 +70,6 @@ multiple AI providers, or when the user explicitly requests cross-model consulta
 
 ## Self-check before task completion
 - [ ] Did I sanitize the prompt before sending to external models?
-- [ ] Did I log every external call in token-ledger.jsonl?
+- [ ] Did I log every external call in token-usage.jsonl?
 - [ ] Did I attribute responses to their source model (no unattributed blending)?
 - [ ] Did I remind the user that external opinions are advisory?

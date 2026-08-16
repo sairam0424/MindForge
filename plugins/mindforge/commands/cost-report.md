@@ -19,7 +19,7 @@ $ARGUMENTS
 
 <process>
 1. Parse flags: --window (time period, default: current session), --by-model, --by-task, --phase.
-2. Read `.mindforge/metrics/token-ledger.jsonl` for the specified window.
+2. Read `.mindforge/metrics/token-usage.jsonl` for the specified window.
 3. **Compute totals:**
    - Total tokens (input, output, cached)
    - Total estimated cost (USD)
