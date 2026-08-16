@@ -4,14 +4,29 @@
 # working-tree .npmrc. It was gitignored and never committed — git history only
 # ever contained the correct `${NPM_TOKEN}` placeholder, and no real token has
 # ever been in any commit (verified: 0 matches for npm_[A-Za-z0-9]{36} across
-# all 1,772 commits). So this config is prevention, not incident response.
+# every commit reachable from all refs). So this config is prevention, not
+# incident response.
 #
-# What justifies the custom rules: gitleaks' DEFAULT ruleset does NOT detect an
-# npm token in .npmrc. Verified empirically — a file containing
-# `//registry.npmjs.org/:_authToken=npm_<36 chars>` scans CLEAN with stock rules,
-# and a realistic github_pat_ is also missed by defaults but caught here. Had the
-# working-tree token ever been staged, the industry-standard scanner would not
-# have stopped it. Do not remove these rules.
+# CORRECTION — supersedes an earlier claim in this file and in commit 0174432:
+# gitleaks' DEFAULT ruleset DOES detect a realistic npm token. Rule
+# `npm-access-token` fires on npm_ + 36 mixed-charset chars, in .npmrc or bare.
+# The earlier "defaults scan it clean" claim came from testing with npm_ + 36
+# IDENTICAL characters: gitleaks entropy-gates its matches, so a zero-entropy
+# string is discarded even though the regex matches. Detection is
+# ENTROPY-GATED, NOT ABSENT. Measured: defaults find 1, this config finds 3.
+#
+# What the custom rules actually buy, stated honestly:
+#   1. Defence in depth — 3 rules fire where 1 did, so upstream tuning or removal
+#      of a single default rule does not silently reopen the hole.
+#   2. An explicit literal-vs-${VAR} distinction for _authToken, which encodes the
+#      correct practice instead of only matching the token shape.
+#   3. A tightened anthropic-key length bound, so this repo's own deliberately
+#      short leak-detector fixtures stop producing false positives without
+#      needing a file-wide allowlist.
+#
+# The larger win is not the rules at all: NOTHING was enforcing any scan before
+# this commit — no pre-commit hook, no CI job. See .husky/pre-commit and
+# .github/workflows/secret-scan.yml.
 #
 # Every allowlist entry below was validated with a negative control: a real
 # secret injected into the same file must still be caught. Re-run those before
