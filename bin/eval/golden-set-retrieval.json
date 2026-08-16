@@ -1,6 +1,15 @@
 {
   "description": "Golden set for retrieval quality evaluation. Each entry has a natural-language query and the IDs of documents that SHOULD be retrieved.",
   "version": "1.0.0",
+  "baseline": {
+    "note": "Committed measurement so a retrieval regression is detectable. Reproduce with `npm run eval:retrieval`. Corpus = repo docs enumerated by buildDocCorpus() in bin/eval/eval-harness.js; retriever = VectorHub.searchKnowledge (OR-joined terms, ranked by tf-idf over FTS4 matchinfo('pcnx')). Before FTS-01 both figures were 0.0000 because the whole query was one FTS phrase.",
+    "k": 10,
+    "meanRecallAtK": 0.6417,
+    "meanNDCG": 0.5698,
+    "corpusSize": 517,
+    "gateMinRecall": 0.55,
+    "measuredOn": "v11.9.2 (fix/v11.9.2-ship-blockers), sql.js 1.14.1 / SQLite 3.49.1"
+  },
   "queries": [
     {
       "query": "how does the audit hash chain work",
