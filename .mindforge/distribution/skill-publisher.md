@@ -8,7 +8,11 @@ Used by `/mindforge:publish-skill`.
 
 1. Validate SKILL.md (Levels 1, 2, and 3).
 2. Confirm `package.json` includes required `mindforge` metadata.
-3. Verify `CHANGELOG.md` has an entry for the current version.
+3. Verify `CHANGELOG.md` has an entry for the current version. Note: this
+   applies to a SKILL PACKAGE's own `CHANGELOG.md` (a distinct, single-version
+   file scoped to that npm `mindforge-skill-*` package) — unrelated to this
+   repository's root `CHANGELOG.md` rolling-window aggregator / `changelogs/`
+   archive split.
 4. Check if version already exists on the registry.
 5. Preview files with `npm pack --dry-run`.
 6. Confirm with the user.

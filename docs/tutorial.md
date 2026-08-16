@@ -8,7 +8,7 @@ This tutorial walks a new user from installation to advanced usage. It is writte
 
 v11.9.0 is the **first fully audited stable release** — validated by an IQ200 deep-audit across 258 checks:
 - `node bin/mindforge-cli.js --version` now works correctly (prints `11.9.0`)
-- All 32 workflow scripts pass runtime load validation
+- All 35 workflow scripts pass runtime load validation
 - 0 CVEs, 0 ESLint errors, 0 TypeScript errors in SDK
 - Skill routing is deterministic (12 duplicate triggers resolved)
 - `mesh.node_id` correctly set to `"auto"` for clean multi-node deployments
@@ -169,7 +169,7 @@ If you hit issues, consult these specialized guides:
 
 ## 13. Using Dynamic Workflows
 
-MindForge v11.9.0 ships 32 pre-built multi-agent workflows. Browse them with `/mindforge:wf-catalog`.
+MindForge v11.9.0 ships 35 pre-built multi-agent workflows. Browse them with `/mindforge:wf-catalog`.
 
 ### Quick start — run a workflow
 
@@ -194,7 +194,7 @@ The Beast tier runs 5-phase compound workflows with 8+ agents and adversarial ve
 
 ## Running Dynamic Workflows
 
-MindForge ships 32 pre-built multi-agent workflows. Each runs via Claude Code's `Workflow` tool using `parallel()`, `pipeline()`, `phase()`, and `agent()` primitives.
+MindForge ships 35 pre-built multi-agent workflows. Each runs via Claude Code's `Workflow` tool using `parallel()`, `pipeline()`, `phase()`, and `agent()` primitives.
 
 ### Discover available workflows
 ```bash
@@ -222,10 +222,114 @@ Workflow({
 | Tier | Count | Workflows |
 |------|-------|-----------|
 | Research | 5 | competitive-analysis, tech-evaluation, ai-model-eval, ux-heuristic-audit, competitive-teardown |
-| Dev | 12 | code-audit, feature-planner, pr-review, tdd-sprint, refactor-plan, test-coverage-gap, api-contract-test, debug-detective, writer-reviewer, mutation-testing, code-explainer, design-system-audit |
+| Dev | 14 | code-audit, feature-planner, pr-review, tdd-sprint, refactor-plan, test-coverage-gap, api-contract-test, debug-detective, writer-reviewer, mutation-testing, code-explainer, design-system-audit, orchestrate-review, verification-loop |
 | Ops | 6 | incident-response, release-prep, dependency-health, database-migration, multi-repo-sync, cost-analysis |
-| Intelligence | 6 | onboard-codebase, perf-optimize, architecture-modernization, documentation-gen, api-migration, data-pipeline-validate |
+| Intelligence | 7 | onboard-codebase, perf-optimize, architecture-modernization, documentation-gen, api-migration, data-pipeline-validate, workflow-optimizer |
 | Beast | 3 | security-hardening, accessibility-audit, security-threat-model |
+
+---
+
+## Full command walkthrough
+
+The 4-pillar lifecycle (`plan-phase` → `execute-phase` → `verify-phase` → `ship`) covers the core loop. MindForge also ships a wider set of commands for day-to-day project work — this is the complete walkthrough, in the order you're likely to reach for them:
+
+```bash
+/mindforge:init-project
+    → Requirements interview
+    → Creates PROJECT.md, REQUIREMENTS.md, STATE.md
+
+/mindforge:do <text>
+    → Smart natural language dispatcher (v2)
+
+/mindforge:note <text>
+    → Zero-friction idea capture and todo promotion (v2)
+
+/mindforge:ui-phase 1
+    → Create UI design contract (UI-SPEC.md) (v2)
+
+/mindforge:plan-phase 1 [--ads]
+    → Discuss scope and decisions
+    → Research domain (parallel)
+    → Create atomic XML task plans
+    → (Optional) Run Adversarial Decision Synthesis (ADS) loop
+
+/mindforge:execute-phase 1
+    → Wave-based parallel execution
+    → One commit per task
+    → Automated verification
+
+/mindforge:ui-review 1
+    → Retroactive 6-pillar visual audit (v2)
+
+/mindforge:validate-phase 1
+    → Requirement coverage and test gap audit (v2)
+
+/mindforge:session-report
+    → Automated post-session stakeholder summary (v2)
+
+/mindforge:add-backlog <desc>
+    → Park ideas in 999.x "parking lot" (v2)
+
+/mindforge:review-backlog
+    → Review and promote backlog items (v2)
+
+/mindforge:plant-seed <idea>
+    → Capture speculative ideas with triggers (v2)
+
+/mindforge:workstreams
+    → Parallel feature tracks with isolated state (v2)
+
+/mindforge:verify-phase 1
+    → Human acceptance testing
+    → Debug agent on failures
+    → UAT sign-off
+
+/mindforge:ship 1
+    → Changelog generation
+    → Final quality gates
+    → PR creation
+
+/mindforge:auto --phase 1
+    → Walk-away autonomous execution (v2)
+    → Intelligent stuck detection and node repair
+    → External steering via steering-queue
+
+/mindforge:qa
+    → Systematic visual verification of UI changes (v2)
+    → Automated regression test generation
+    → Persistent browser sessions and daemon
+
+/mindforge:cross-review
+    → Adversarial multi-model code review and synthesis (v2)
+    → Consensus detection and severity normalization
+
+/mindforge:research
+    → Deep research using Gemini 1.5 Pro 1M context (v2)
+    → Codebase-wide context packaging and SSRF protection
+
+/mindforge:costs
+    → Real-time token usage and cost profiling (v2)
+    → Daily budget tracking across all providers
+
+/mindforge:remember
+    → Manual knowledge management and search (v2)
+    → Persistent knowledge graph retrieval and promotion
+
+/mindforge:dashboard
+    → Real-time web observability and governance at localhost:7339 (v2)
+    → Live audit logs, metrics, activity, and team feed
+
+/mindforge:learn
+    → Automatically capture skills from Docs, Sessions, or npm (v2)
+    → 7-dimension quality scoring and injection protection
+
+/mindforge:marketplace
+    → Search, install, and publish community skills (v2)
+    → Verified installation via npm-based registry
+
+/mindforge:new-runtime
+    → Scaffold custom runtime configurations for any AI agent (v2)
+```
 
 ---
 

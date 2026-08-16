@@ -2,7 +2,7 @@
 
 This guide gets you from install to productive, with the minimum needed to run MindForge in a real project.
 
-> **v11.9.0 Stats:** 32 workflows · 221 slash commands · 232 engine skills · 211 personas · 0 CVEs · 258/258 IQ200 checks passing
+> **v11.9.0 Stats:** 35 workflows · 221 slash commands · 232 engine skills · 216 personas · 0 CVEs · 258/258 IQ200 checks passing
 
 ## Prerequisites
 
@@ -96,7 +96,7 @@ MindForge uses a unified 4-pillar workflow, hardened by the **Neural Protocol Me
 
 ### Dynamic Workflow Library
 
-MindForge ships **32 pre-built workflow pipelines** across **219 commands**, organized into **5 tiers**:
+MindForge ships **35 pre-built workflow pipelines** across **221 commands**, organized into **5 tiers**:
 
 | Tier | Description |
 |------|-------------|

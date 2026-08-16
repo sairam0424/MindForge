@@ -123,7 +123,7 @@ function printHelp() {
     npx mindforge-cc@latest --all --global        Global install for all runtimes
 
   ${c.bold('DOCUMENTATION')}
-    ${c.dim('https://github.com/mindforge-dev/mindforge')}
+    ${c.dim('https://github.com/sairam0424/MindForge')}
     ${c.dim('docs/enterprise-setup.md (after install)')}
 \n`);
 }

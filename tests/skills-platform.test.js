@@ -371,10 +371,13 @@ test('package.json version is at least 0.3.0', () => {
   );
 });
 
-test('CHANGELOG.md exists and has 0.3.0 entry', () => {
-  assert.ok(fs.existsSync('CHANGELOG.md'), 'CHANGELOG.md should exist after Day 3');
-  const content = fs.readFileSync('CHANGELOG.md', 'utf8');
-  assert.ok(content.includes('0.3.0'), 'CHANGELOG.md should have a 0.3.0 entry');
+test('changelogs/v0.3.0.md exists and has a 0.3.0 entry', () => {
+  // v0.3.0 is #94 of 98 versions — long aged out of the root CHANGELOG.md
+  // rolling window (newest ~10 versions only). Its full entry lives in the
+  // per-version archive instead.
+  assert.ok(fs.existsSync('changelogs/v0.3.0.md'), 'changelogs/v0.3.0.md should exist');
+  const content = fs.readFileSync('changelogs/v0.3.0.md', 'utf8');
+  assert.ok(content.includes('0.3.0'), 'changelogs/v0.3.0.md should have a 0.3.0 entry');
 });
 
 // ── Results ───────────────────────────────────────────────────────────────────

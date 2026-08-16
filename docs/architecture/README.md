@@ -1,10 +1,10 @@
 # MindForge Architecture Overview
 
-MindForge v6.0.0 is built on a distributed "Agentic OS" architecture, designed for enterprise-scale intelligence sharing and absolute governance.
+MindForge v11.9.0 is built on a distributed "Agentic OS" architecture, designed for enterprise-scale intelligence sharing and absolute governance.
 
 ---
 
-## 1. Core Architectural Pillars (v6.0.0)
+## 1. Core Architectural Pillars (v11.9.0)
 
 The framework is focused on eight major pillars, with V6 introducing the **Neural Blast Radius Optimizer (CADIA)**:
 

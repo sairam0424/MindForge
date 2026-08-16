@@ -29,6 +29,12 @@ npx mindforge-cc@latest --claude --local
 
 After installation, the `mindforge` CLI command is available for runtime operations (health checks, security scans, headless execution, etc.).
 
+**Global install** (system-wide `/mindforge` commands for your primary AI coding runtime):
+
+```bash
+npm install -g mindforge-cc@latest
+```
+
 ### 2. Claude Code plugin (self-hosted marketplace)
 
 Install MindForge as a Claude Code plugin from its marketplace:
@@ -37,6 +43,8 @@ Install MindForge as a Claude Code plugin from its marketplace:
 /plugin marketplace add sairam0424/MindForge
 /plugin install mindforge@mindforge
 ```
+
+Prefer just a slice (e.g. Python agents)? Install a focused pack like `mindforge-lang@mindforge` instead. See [docs/plugin-installation.md](plugin-installation.md) for all 10 plugin packs, token-budget guidance, and team setup.
 
 ### 3. Standalone MCP server
 
@@ -62,15 +70,32 @@ To build on top of MindForge programmatically, install the TypeScript SDK:
 npm i mindforge-sdk
 ```
 
-## Dynamic Workflow Library (32 workflows across 5 tiers)
+## Configuration & Runtimes
+
+MindForge adapts to your existing engineering environment via runtime flags:
+
+| Runtime | Global Command | Local Setup |
+| :--- | :--- | :--- |
+| **Claude Code** | `mindforge-cc --claude --global` | `mindforge-cc --claude --local` |
+| **Antigravity** | `mindforge-cc --antigravity --global` | `mindforge-cc --antigravity --local` |
+| **Cursor** | `mindforge-cc --cursor --global` | `mindforge-cc --cursor --local` |
+| **GitHub Copilot** | `mindforge-cc --copilot --global` | `mindforge-cc --copilot --local` |
+| **Gemini CLI** | `mindforge-cc --gemini --global` | `mindforge-cc --gemini --local` |
+
+### Advanced Setup Options
+- **Combined Runtimes**: `mindforge-cc --runtime claude,cursor --local`
+- **With Utilities**: `mindforge-cc --local --with-utils` (Installs specialized bin scripts)
+- **Minimalist**: `mindforge-cc --local --minimal` (Only basic protocols, no persona library)
+
+## Dynamic Workflow Library (35 workflows across 5 tiers)
 
 
 | Tier | Count | Workflows |
 |------|-------|-----------|
 | Research | 5 | competitive-analysis, tech-evaluation, ai-model-eval, ux-heuristic-audit, competitive-teardown |
-| Dev | 12 | code-audit, feature-planner, pr-review, tdd-sprint, refactor-plan, test-coverage-gap, api-contract-test, debug-detective, writer-reviewer, mutation-testing, code-explainer, design-system-audit |
+| Dev | 14 | code-audit, feature-planner, pr-review, tdd-sprint, refactor-plan, test-coverage-gap, api-contract-test, debug-detective, writer-reviewer, mutation-testing, code-explainer, design-system-audit, orchestrate-review, verification-loop |
 | Ops | 6 | incident-response, release-prep, dependency-health, database-migration, multi-repo-sync, cost-analysis |
-| Intelligence | 6 | onboard-codebase, perf-optimize, architecture-modernization, documentation-gen, api-migration, data-pipeline-validate |
+| Intelligence | 7 | onboard-codebase, perf-optimize, architecture-modernization, documentation-gen, api-migration, data-pipeline-validate, workflow-optimizer |
 | Beast | 3 | security-hardening, accessibility-audit, security-threat-model |
 
 **Run any workflow:**

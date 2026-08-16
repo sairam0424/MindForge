@@ -202,11 +202,11 @@ mindforge <command> [options]
 
 ## 🚀 Dynamic Workflow Library
 
-Pre-built multi-agent workflow scripts triggered via `/mindforge:wf-*` commands. Each runs via Claude Code's `Workflow` tool with true parallel agent execution. **32 pre-built multi-agent workflows** across 5 tiers.
+Pre-built multi-agent workflow scripts triggered via `/mindforge:wf-*` commands. Each runs via Claude Code's `Workflow` tool with true parallel agent execution. **35 pre-built multi-agent workflows** across 5 tiers.
 
 | Command | Tier | Description |
 | :--- | :--- | :--- |
-| `/mindforge:wf-catalog` | — | Browse all 32 workflows grouped by tier |
+| `/mindforge:wf-catalog` | — | Browse all 35 workflows grouped by tier |
 | **Research tier** | | |
 | `/mindforge:wf-competitive-analysis` | research | Multi-angle competitive research producing a SWOT and positioning summary |
 | `/mindforge:wf-tech-evaluation` | research | Scored technology evaluation across DX, performance, security, ecosystem, and community |
@@ -226,6 +226,8 @@ Pre-built multi-agent workflow scripts triggered via `/mindforge:wf-*` commands.
 | `/mindforge:wf-mutation-testing` | dev | Mutant generator → parallel kill-test agents → mutation score + survival report |
 | `/mindforge:wf-code-explainer` | dev | Structural map → domain extraction → architecture patterns → guided narrative tour for onboarding |
 | `/mindforge:wf-design-system-audit` | dev | 5 parallel dimension auditors (spacing/color/typography/icons/a11y) → consistency score |
+| `/mindforge:wf-orchestrate-review` | dev | 4-lens parallel review (factual, domain, safety, style) coordinated as one panel → single merged verdict |
+| `/mindforge:wf-verification-loop` | dev | Implementer vs. scorer loop — revises against a fixed metric each round until maxed or round cap hit |
 | **Ops tier** | | |
 | `/mindforge:wf-incident-response` | ops | Parallel investigation across logs, metrics, traces, and code → mitigation → RCA → postmortem |
 | `/mindforge:wf-release-prep` | ops | Automated release pipeline: tests → changelog → version bump → PR → announcement draft |
@@ -240,6 +242,7 @@ Pre-built multi-agent workflow scripts triggered via `/mindforge:wf-*` commands.
 | `/mindforge:wf-documentation-gen` | intelligence | Parallel per-file doc generation → style normalization → publish-ready documentation |
 | `/mindforge:wf-api-migration` | intelligence | Breaking change detection → versioning strategy → migration guide → compatibility matrix |
 | `/mindforge:wf-data-pipeline-validate` | intelligence | Pipeline stage-by-stage validation → data quality gates → anomaly detection report |
+| `/mindforge:wf-workflow-optimizer` | intelligence | Builder + scorer + optimizer roles — each round a separate agent proposes structural process changes, not just output tweaks |
 | **Beast tier** | | |
 | `/mindforge:wf-security-hardening` | beast | 5-angle OWASP parallel scout → 3-vote adversarial verification → threat model + remediation roadmap |
 | `/mindforge:wf-accessibility-audit` | beast | WCAG 2.2 parallel per-criterion audit → 3-vote adversarial verify failures → remediation spec |
@@ -247,13 +250,13 @@ Pre-built multi-agent workflow scripts triggered via `/mindforge:wf-*` commands.
 
 ---
 
-## Dynamic Workflow Library (32 workflows)
+## Dynamic Workflow Library (35 workflows)
 
 All workflow commands follow the pattern `/mindforge:wf-<name>`.
 
 Invoke via CLI:
 ```bash
-node bin/mindforge-cli.js workflow list              # browse all 32
+node bin/mindforge-cli.js workflow list              # browse all 35
 node bin/mindforge-cli.js workflow info <name>       # phases + description
 ```
 
@@ -266,7 +269,7 @@ node bin/mindforge-cli.js workflow info <name>       # phases + description
 | `/mindforge:wf-ux-heuristic-audit` | 10 Nielsen heuristics parallel audit → fix brief |
 | `/mindforge:wf-competitive-teardown` | 5 competitor angles → positioning report |
 
-### Dev Tier (12 workflows)
+### Dev Tier (14 workflows)
 | Command | Description |
 |---------|-------------|
 | `/mindforge:wf-code-audit` | Parallel security + quality + performance audit |
@@ -281,6 +284,8 @@ node bin/mindforge-cli.js workflow info <name>       # phases + description
 | `/mindforge:wf-mutation-testing` | Mutant generator → parallel kill-test → score |
 | `/mindforge:wf-code-explainer` | Structure → domain → architecture → narrative tour |
 | `/mindforge:wf-design-system-audit` | 5-dimension parallel audit → consistency score |
+| `/mindforge:wf-orchestrate-review` | 4-lens panel (factual/domain/safety/style) → merged verdict |
+| `/mindforge:wf-verification-loop` | Implementer vs. scorer loop → re-attempts until score maxed |
 
 ### Ops Tier (6 workflows)
 | Command | Description |
@@ -292,7 +297,7 @@ node bin/mindforge-cli.js workflow info <name>       # phases + description
 | `/mindforge:wf-multi-repo-sync` | Per-repo audit → divergence map → sync plan |
 | `/mindforge:wf-cost-analysis` | Infra/API/query/bundle cost agents → ROI plan |
 
-### Intelligence Tier (6 workflows)
+### Intelligence Tier (7 workflows)
 | Command | Description |
 |---------|-------------|
 | `/mindforge:wf-onboard-codebase` | Map → domain → architecture → guided tour |
@@ -301,6 +306,7 @@ node bin/mindforge-cli.js workflow info <name>       # phases + description
 | `/mindforge:wf-documentation-gen` | Parallel doc gen → normalize → publish-ready |
 | `/mindforge:wf-api-migration` | Breaking change detection → guide → compat matrix |
 | `/mindforge:wf-data-pipeline-validate` | Stage-by-stage validation → quality gates |
+| `/mindforge:wf-workflow-optimizer` | Builder + scorer + optimizer → revises the process itself, not just outputs |
 
 ### Beast Tier (3 workflows — 5 phases, 8+ agents, adversarial 3-vote verification)
 | Command | Description |

@@ -1,4 +1,4 @@
-# MindForge: 32 Unique Selling Points & Core Features (v8.0.0 Celestial)
+# MindForge: 32 Unique Selling Points & Core Features (v11.9.0 Celestial)
 
 MindForge is the enterprise's **Agentic OS**, built on the **CADIA v6.2 (Cross-Agentic Deterministic Intelligence Architecture)** framework. It provides a self-healing, self-optimizing environment for autonomous agent execution at scale.
 

@@ -4,23 +4,26 @@ This guide covers upgrades across all major MindForge versions.
 
 ---
 
-## Upgrading to v11.9.0 (from any v11.8.x)
+## Upgrading to v11.9.1 (from any v11.9.x or v11.8.x)
 
-v11.9.0 is a minor release — new AWS Bedrock provider, no breaking changes from v11.8.x.
+v11.9.1 is a drop-in patch — restores 34 `wf-*` and other slash command files that were missing from the v11.9.0 npm package due to a packaging gap. No breaking changes.
 
 ```bash
 # Upgrade via npx:
 npx mindforge-cc@latest install
 
 # Verify:
-node bin/mindforge-cli.js --version   # should print 11.9.0
+node bin/mindforge-cli.js --version   # should print 11.9.1
 node bin/mindforge-cli.js health      # should show all green
 ```
 
-### What changed in v11.9.0
+If you installed v11.9.0 and are missing `/mindforge:wf-*` slash commands, this release fixes it — no other action needed beyond reinstalling.
+
+### What changed in the v11.9.x series
 
 | Version | Date | Key changes |
 |---------|------|-------------|
+| v11.9.1 | 2026-07-29 | Packaging fix — restores 34 `.claude/commands/mindforge/` files (mostly `wf-*` workflow commands) missing from the v11.9.0 npm tarball |
 | v11.9.0 | 2026-07-27 | AWS Bedrock provider; full dry-run audit of all commands/personas/skills — resolved phantom-tool references and broken asset paths across 40 personas and 66 skills |
 
 ## Upgrading to v11.8.3 (from any v11.8.x)

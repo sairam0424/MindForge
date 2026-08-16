@@ -18,7 +18,7 @@ Before any release, ensure the following is completed:
 - **Mult-Model Review**: Run `/mindforge:cross-review` to have multiple models (Claude, GPT, Gemini) audit the new features for edge cases.
 
 ### 2. Versioning Strategy
-MindForge follows SemVer. Update `package.json` and `CHANGELOG.md` first.
+MindForge follows SemVer. Update `package.json`, create `changelogs/vX.Y.Z.md`, and prepend the entry to `CHANGELOG.md`'s rolling window first.
 
 ### 3. Automated Release Workflow
 MindForge provides a built-in workflow to handle the heavy lifting:
