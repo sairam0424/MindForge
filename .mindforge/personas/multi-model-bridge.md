@@ -82,5 +82,5 @@ Report to user with:
 - ALWAYS attribute responses to their source model
 - Maximum 2000 tokens per external prompt (cost control)
 - Maximum 3 consultations per session (rate limiting)
-- Log every external call in token-ledger.jsonl
+- Log every external call in token-usage.jsonl
 </critical_rules>

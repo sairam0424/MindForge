@@ -61,6 +61,13 @@ ROADMAP_V7.md
 # instead of an over-broad unanchored *.tmp.[0-9]* that could match anything.
 .mindforge/*.tmp.*
 .planning/*.tmp.*
+# COST-01: the ledger purge rewrites .mindforge/metrics/token-usage.jsonl, so its temp
+# file is TWO levels deep and the single-level globs above do not match it.
+.mindforge/**/*.tmp.*
+# Advisory lock files (LOCK-01 fail-closed append lock). Unlinked in finally, but a
+# hard kill leaves one behind until the 10s stale reclaim — never commit them.
+.planning/**/*.jsonl.lock
+.mindforge/**/*.jsonl.lock
 .mindforge/memory/sync-manifest.json
 # Runtime auth tokens (generated at server startup, never commit)
 .mindforge/.dashboard-token
@@ -81,3 +88,19 @@ ROADMAP_V7.md
 .mindforge/audit/manifests/
 .mindforge/metrics/token-usage.jsonl
 .gstack/
+
+# External agent-tooling artifacts (claude-flow / ruflo / hermes / agentdb).
+# Not MindForge's, but they materialise at the repo root and in mcp-server/ whenever those
+# tools run, and this is a PUBLIC repository — an unguarded `git add -A` would publish a
+# local vector database. files[] already keeps them out of the npm tarball; this keeps them
+# out of git.
+.claude-flow/
+.swarm/
+hermes-agent/
+agentdb.rvf
+agentdb.rvf.lock
+ruvector.db
+**/ruvector.db
+**/.claude-flow/
+.claude/proven-config.json
+.claude/.proven-config-version

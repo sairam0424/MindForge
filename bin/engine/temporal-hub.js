@@ -32,12 +32,23 @@ class TemporalHub {
   }
 
   static _verifyMetadata(metadata) {
-    if (!metadata.integrity) return false;
+    if (!metadata || typeof metadata.integrity !== 'string') return false;
     const { integrity, ...rest } = metadata;
     const expected = crypto.createHmac('sha256', HMAC_KEY)
       .update(JSON.stringify(rest))
       .digest('hex');
-    return crypto.timingSafeEqual(Buffer.from(integrity), Buffer.from(expected));
+    // timingSafeEqual throws RangeError on unequal BYTE lengths. A String's `.length`
+    // counts UTF-16 code units, NOT bytes, so a 64-unit `integrity` containing any
+    // non-ASCII character is 65+ bytes and still produced unequal Buffers and still
+    // threw. Materialise both Buffers and compare their real byte lengths.
+    // NOTE: this is a CORRECTNESS fix, not a security guarantee — HMAC_KEY is a
+    // literal in shipped source, the HMAC covers only metadata and not snapshot file
+    // CONTENTS, and an absent SNAPSHOT-META.json still bypasses verification. This
+    // was never an authenticity control.
+    const actual = Buffer.from(integrity, 'utf8');
+    const expectedBuf = Buffer.from(expected, 'utf8');
+    if (actual.length !== expectedBuf.length) return false;
+    return crypto.timingSafeEqual(actual, expectedBuf);
   }
 
   /**
@@ -124,18 +135,39 @@ class TemporalHub {
     }
 
     const metaPath = path.join(snapshotDir, 'SNAPSHOT-META.json');
+    // Read and verify as two SEPARATE stages so only one specific, expected condition
+    // (the metadata file genuinely not existing) can reach the tolerant legacy path.
+    // The previous single try/catch sniffed err.message for 'integrity verification',
+    // so ANY other throw — a JSON.parse SyntaxError, or the crypto RangeError from a
+    // non-ASCII `integrity` — fell through to 'proceeding without integrity check' and
+    // restored the snapshot anyway. Unexpected throws must fail CLOSED.
+    //
+    // Error messages deliberately carry no err.message: JSON.parse embeds file content
+    // and fs errors embed absolute paths, and these strings reach an HTTP response via
+    // hindsight-injector -> temporal-api. Detail goes to the server log only.
+    let metaRaw = null;
     try {
-      const metaRaw = await fsPromises.readFile(metaPath, 'utf8');
-      const metaData = JSON.parse(metaRaw);
-      if (!TemporalHub._verifyMetadata(metaData)) {
-        throw new Error(`Snapshot ${auditId} failed integrity verification — metadata may be tampered.`);
-      }
+      metaRaw = await fsPromises.readFile(metaPath, 'utf8');
     } catch (err) {
-      if (err.message.includes('integrity verification') || err.message.includes('tampered')) {
-        throw err;
+      if (err.code !== 'ENOENT') {
+        console.error(`[temporal-hub] metadata read failed for ${auditId}:`, err);
+        throw new Error(`Snapshot ${auditId} metadata could not be read (${err.code || err.name}) — refusing to restore.`);
       }
       // Missing metadata file on legacy snapshots — allow rollback with warning
       console.warn(`[temporal-hub] No verifiable metadata for ${auditId}, proceeding without integrity check.`);
+    }
+
+    if (metaRaw !== null) {
+      let verified = false;
+      try {
+        verified = TemporalHub._verifyMetadata(JSON.parse(metaRaw));
+      } catch (err) {
+        console.error(`[temporal-hub] metadata parse/verify failed for ${auditId}:`, err);
+        throw new Error(`Snapshot ${auditId} failed integrity verification — metadata unreadable or malformed (${err.name}).`);
+      }
+      if (!verified) {
+        throw new Error(`Snapshot ${auditId} failed integrity verification — metadata may be tampered.`);
+      }
     }
 
     try {

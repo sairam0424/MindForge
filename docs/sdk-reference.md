@@ -417,6 +417,6 @@ cd sdk && npm install && npm run build
 
 ## Installation
 ```bash
-npm install mindforge-sdk@11.8.0
+npm install mindforge-sdk@11.9.1
 # or: npx mindforge-cc@stable  # installs SDK as part of the framework
 ```

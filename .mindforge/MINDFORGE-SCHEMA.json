@@ -1,33 +1,146 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "MindForge Project Configuration Schema",
-  "description": "JSON Schema for MINDFORGE.md key-value settings",
+  "description": "JSON Schema for MINDFORGE.md bracketed parameter assignments ([KEY] = value)",
   "type": "object",
+  "required": [
+    "VERSION",
+    "REACTIVE_MODE",
+    "PLANNER",
+    "EXECUTOR",
+    "MIN_SOUL_SCORE"
+  ],
+  "recommended": [
+    "COST_WARN_USD",
+    "COST_HARD_LIMIT_USD",
+    "BLOCK_ON_SECURITY"
+  ],
   "properties": {
+    "NAME": { "type": "string", "description": "Project display name" },
+    "VERSION": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "MindForge version this registry targets (must equal package.json version)"
+    },
+    "STABLE": { "type": "boolean", "description": "Registry is a released/stable configuration" },
+    "MODE": { "type": "string", "description": "Operating mode label (free-form)" },
+    "REQUIRED_CORE_VERSION": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Minimum MindForge core version required by this project"
+    },
+    "SOVEREIGN_IDENTITY": {
+      "type": "boolean",
+      "nonOverridable": true,
+      "description": "NON-OVERRIDABLE: identity verification is always required"
+    },
+    "SRE_LAYER_ENABLED": { "type": "boolean", "description": "Enable the SRE persona layer" },
+    "SWARM_ORCHESTRATION": { "type": "boolean", "description": "Enable dynamic swarm orchestration" },
+    "AUTO_SWARM_THRESHOLD": {
+      "type": "number", "minimum": 0, "maximum": 10,
+      "description": "Difficulty score above which a swarm is auto-spawned"
+    },
+    "CONTEXT7_DEPTH": {
+      "type": "enum", "values": ["MINIMAL", "STANDARD", "EXTENDED"],
+      "description": "Depth of Context7 knowledge injection"
+    },
+    "DYNAMISM_LEVEL": {
+      "type": "number", "minimum": 1, "maximum": 5,
+      "description": "How aggressively the engine reshapes its own plan (1=static, 5=fully dynamic)"
+    },
+    "REACTIVE_MODE": { "type": "boolean", "description": "Enable the reactive (auto-discovery) engine" },
+    "CONTEXT_SHARDING": { "type": "boolean", "description": "Enable the sharded memory loop" },
+    "ADS_LOOP_ENFORCED": { "type": "boolean", "description": "Enforce the adversarial decision loop before architectural change" },
+    "TEMPORAL_VISION": { "type": "boolean", "description": "Enable temporal hindsight / steering" },
+    "RAG_2_AUTO_SHADOW": { "type": "boolean", "description": "Run RAG-2 retrieval in shadow mode" },
+    "ENABLE_ART_TRACING": { "type": "boolean", "description": "Enable agent reasoning trace (ART) capture" },
+    "ENABLE_ZTAI": {
+      "type": "boolean",
+      "nonOverridable": true,
+      "description": "NON-OVERRIDABLE: zero-trust agent identity cannot be bypassed"
+    },
+    "ZTAI_KEY_TYPE": { "type": "string", "description": "Declared ZTAI key algorithm label" },
+    "NEXUS_TRACE_RETENTION_DAYS": {
+      "type": "number", "minimum": 1, "maximum": 365,
+      "description": "Days of NexusTracer trace retention"
+    },
+    "CADIA_CORE": { "type": "boolean", "description": "Enable the CADIA core layer" },
+    "PQAS_ENFORCED": {
+      "type": "boolean",
+      "description": "Post-quantum attestation enforcement (SIMULATED/inactive by default — see bin/governance/quantum-crypto.js)"
+    },
+    "PROACTIVE_HOMING": { "type": "boolean", "description": "Enable proactive homing / next-task discovery" },
+    "PLANNER": { "type": "string", "description": "Model id for the planning persona (canonical: PLANNER_MODEL)" },
+    "EXECUTOR": { "type": "string", "description": "Model id for execution agents (canonical: EXECUTOR_MODEL)" },
+    "REVIEWER": { "type": "string", "description": "Model id for the code reviewer (canonical: REVIEWER_MODEL)" },
+    "VERIFIER": { "type": "string", "description": "Model id for the verification persona (canonical: VERIFIER_MODEL)" },
+    "SECURITY": { "type": "string", "description": "Model id for security review (canonical: SECURITY_MODEL)" },
+    "DEBUG": { "type": "string", "description": "Model id for the debug specialist (canonical: DEBUG_MODEL)" },
+    "RESEARCH": { "type": "string", "description": "Model id for the research agent (canonical: RESEARCH_MODEL)" },
+    "QA": { "type": "string", "description": "Model id for the QA engineer (canonical: QA_MODEL)" },
+    "QUICK": { "type": "string", "description": "Model id for tier-1 budget-bias tasks (canonical: QUICK_MODEL)" },
+    "COST_WARN_USD": {
+      "type": "number", "minimum": 0, "maximum": 10000,
+      "description": "Daily spend at which a cost warning is emitted"
+    },
+    "COST_HARD_LIMIT_USD": {
+      "type": "number", "minimum": 0, "maximum": 10000,
+      "description": "Daily hard cost limit in USD. DECLARED BUT NOT ENFORCED as of 11.9.2: bin/models/cost-tracker.js reads MODEL_COST_HARD_LIMIT_USD, which this registry does not declare, so preflight() returns early and no cap is applied. Do not treat this as a spend control. Tracked as COST-02."
+    },
+    "ADS_DEBATE_ROUNDS": {
+      "type": "number", "minimum": 1, "maximum": 10,
+      "description": "Red-team/blue-team debate rounds per architectural decision"
+    },
+    "MIN_SOUL_SCORE": {
+      "type": "number", "minimum": 0, "maximum": 10,
+      "nonOverridable": true,
+      "description": "NON-OVERRIDABLE: minimum SOUL score required for architectural changes"
+    },
+    "REQUIRE_ADR": { "type": "boolean", "description": "Require an ADR for architectural decisions" },
+    "BLOCK_ON_SECURITY": {
+      "type": "boolean",
+      "nonOverridable": true,
+      "description": "NON-OVERRIDABLE: security gate enforcement cannot be disabled"
+    },
+    "BROWSER_PORT": {
+      "type": "number", "minimum": 1024, "maximum": 65535,
+      "description": "Port for the browser/QA harness"
+    },
+    "DASHBOARD_PORT": {
+      "type": "number", "minimum": 1024, "maximum": 65535,
+      "description": "Port for the MindForge dashboard"
+    },
+    "API_URL": { "type": "string", "description": "Base URL of the project API under development" },
+    "SHARD_RETAIN_DAYS": {
+      "type": "number", "minimum": 1, "maximum": 365,
+      "description": "Days to retain context shards"
+    },
+    "FORBIDDEN": { "type": "string", "description": "Multi-line block of project prohibitions injected into every agent prompt" },
+    "INSTRUCTIONS": { "type": "string", "description": "Multi-line block of project instructions injected into every agent prompt" },
     "MINDFORGE_VERSION_REQUIRED": {
       "type": "string",
       "pattern": "^\\d+\\.\\d+\\.\\d+$",
       "description": "Minimum MindForge version required for this config"
     },
     "PLANNER_MODEL": {
-      "type": "enum",
-      "values": ["claude-opus-4-5", "claude-sonnet-4-5", "claude-haiku-4-5", "inherit"],
-      "description": "Claude model to use for the planning agent"
+      "type": "string",
+      "deprecated": true,
+      "description": "DEPRECATED long form of [PLANNER]. Model id for the planning agent (free-form: model ids churn faster than this schema)"
     },
     "EXECUTOR_MODEL": {
-      "type": "enum",
-      "values": ["claude-opus-4-5", "claude-sonnet-4-5", "claude-haiku-4-5", "inherit"],
-      "description": "Claude model to use for execution agents"
+      "type": "string",
+      "deprecated": true,
+      "description": "DEPRECATED long form of [EXECUTOR]. Model id for execution agents"
     },
     "REVIEWER_MODEL": {
-      "type": "enum",
-      "values": ["claude-opus-4-5", "claude-sonnet-4-5", "claude-haiku-4-5", "inherit"],
-      "description": "Claude model to use for the code reviewer"
+      "type": "string",
+      "deprecated": true,
+      "description": "DEPRECATED long form of [REVIEWER]. Model id for the code reviewer"
     },
     "SECURITY_MODEL": {
-      "type": "enum",
-      "values": ["claude-opus-4-5", "claude-sonnet-4-5", "claude-haiku-4-5", "inherit"],
-      "description": "Claude model to use for security review (recommend Opus for thoroughness)"
+      "type": "string",
+      "deprecated": true,
+      "description": "DEPRECATED long form of [SECURITY]. Model id for security review"
     },
     "TIER1_AUTO_APPROVE": {
       "type": "boolean",

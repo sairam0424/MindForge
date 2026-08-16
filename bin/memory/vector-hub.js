@@ -9,6 +9,135 @@ const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
 
+// ── FTS retrieval (FTS-01) ───────────────────────────────────────────────────
+// A MATCH argument is an FTS *query expression*, not a literal. Wrapping the
+// whole user query in double quotes made it ONE phrase, so a multi-word query
+// only matched documents holding those exact ADJACENT words. Default behaviour
+// is now search-box semantics: tokenise, drop FTS operator keywords, quote each
+// term (which neutralises every FTS metacharacter) and OR the results together.
+// Callers that genuinely need adjacency pass { phrase: true }.
+//
+// The OR alone is NOT the fix. FTS4 has no ranker, so the first `limit` rows
+// are docid order over documents containing ANY term ("how", "the", "work") and
+// measured mean recall@10 stays 0.0000. Ranking is what recovers it: tf-idf
+// scored in JS from FTS4's matchinfo('pcnx') blob. Measured via
+// `npm run eval:retrieval` on the repo doc corpus (517 docs, 10 golden
+// queries): recall@10 0.0000 -> 0.6417, nDCG@10 0.0000 -> 0.5698.
+const FTS_OPERATOR_WORDS = new Set(['and', 'or', 'not', 'near']);
+const FTS_MAX_TERMS = 32;
+const FTS_DEFAULT_LIMIT = 10;
+const FTS_MAX_LIMIT = 100;
+// Candidate rows pulled PER TERM before ranking. Bounds the work done for a very
+// common term; see _rankedFtsSearch for why the pool is per term and not per
+// query.
+const FTS_RANK_POOL = 2000;
+// BM25-style term-frequency saturation. matchinfo('pcnx') carries no document
+// length, so a raw term count would systematically favour long documents;
+// saturating tf at tf/(tf + k) keeps a repeated term ranked above a single
+// occurrence without letting file size dominate the score.
+const FTS_TF_SATURATION = 1.2;
+// The only tables a ranked search may touch, with each FTS table's per-column
+// relevance weights in DECLARED column order. _rankedFtsSearch interpolates
+// these identifiers into SQL (SQLite cannot bind an identifier), so they are
+// allowlisted here rather than trusted — no caller string can reach that SQL.
+// A hit in the identifier column is a title match and is worth more than one in
+// the body; traces_search declares `id` notindexed so it can never produce a hit
+// at all, and weight 0 documents that rather than implying otherwise.
+const FTS_SEARCH_TABLES = {
+  traces: { ftsTable: 'traces_search', columnWeights: [0, 1, 1, 1] }, // id, trace_id, content, agent
+  knowledge: { ftsTable: 'knowledge_search', columnWeights: [3, 1, 1] }, // id, content, tags
+};
+
+/**
+ * Tokenise a raw user query into individual FTS4 MATCH expressions.
+ * @param {string} rawQuery - MUST be a string; anything else is a caller bug
+ * @param {{phrase?: boolean}} [opts] - phrase:true yields a single
+ *   exact-adjacency phrase expression instead of one expression per term
+ * @returns {string[]} MATCH expressions; empty when the query holds no term
+ * @throws {TypeError} when rawQuery is not a string
+ */
+function buildFtsTerms(rawQuery, opts = {}) {
+  // Reject a non-string LOUDLY. Stringifying would turn an accidentally-passed
+  // options object into "[object Object]" and silently search for that literal —
+  // a wrong answer that looks like a working search. bin/engine/
+  // remediation-engine.js did exactly that. Failing at the boundary is honest.
+  if (typeof rawQuery !== 'string') {
+    const got = rawQuery === null ? 'null' : typeof rawQuery;
+    throw new TypeError(`[VectorHub] search query must be a string, received ${got}`);
+  }
+  if (opts.phrase) {
+    // FTS query syntax has no escape for a double quote inside a phrase, so
+    // strip them rather than emit an unparseable expression.
+    const phrase = rawQuery.replace(/"/g, ' ').trim();
+    return phrase ? [`"${phrase}"`] : [];
+  }
+  const terms = [];
+  const seen = new Set();
+  // Split on every character that is not a letter, digit or underscore: the
+  // resulting tokens cannot contain an FTS metacharacter, so quoting is total.
+  for (const token of rawQuery.split(/[^\p{L}\p{N}_]+/u)) {
+    if (!token) continue;
+    const lower = token.toLowerCase();
+    if (FTS_OPERATOR_WORDS.has(lower) || seen.has(lower)) continue;
+    seen.add(lower);
+    terms.push(`"${token}"`);
+    if (terms.length >= FTS_MAX_TERMS) break;
+  }
+  return terms;
+}
+
+/**
+ * Clamp a caller-supplied row limit into a sane bounded integer.
+ * @param {*} limit
+ * @returns {number} an integer in [1, FTS_MAX_LIMIT]
+ */
+function clampFtsLimit(limit) {
+  const n = parseInt(limit, 10);
+  if (!Number.isFinite(n) || n < 1) return FTS_DEFAULT_LIMIT;
+  return Math.min(n, FTS_MAX_LIMIT);
+}
+
+/**
+ * Score one FTS4 matchinfo('pcnx') blob as a weighted tf-idf sum over every
+ * phrase/column pair.
+ *
+ * Blob layout (little-endian uint32): [p, c, n, then 3 values per (phrase,
+ * column) pair — hits in THIS row, hits in ALL rows, number of documents with at
+ * least one hit]. tf is saturated (see FTS_TF_SATURATION) because 'pcnx' carries
+ * no document length to normalise by; idf is the BM25 form clamped at 0, so a
+ * term present in nearly every document can never drive a score negative.
+ * @param {Uint8Array|Buffer|null} blob - value of matchinfo(<table>, 'pcnx')
+ * @param {number[]} [columnWeights] - per-column multipliers in declared column
+ *   order; missing entries default to 1
+ * @returns {number} non-negative relevance score; 0 when the blob is unusable
+ */
+function scoreMatchInfo(blob, columnWeights) {
+  if (!blob || typeof blob.length !== 'number' || blob.length < 12) return 0;
+  const buf = Buffer.from(blob);
+  const u32 = (i) => buf.readUInt32LE(i * 4);
+  const phrases = u32(0);
+  const columns = u32(1);
+  const totalRows = u32(2);
+  if (!phrases || !columns) return 0;
+  let score = 0;
+  for (let p = 0; p < phrases; p++) {
+    for (let c = 0; c < columns; c++) {
+      const base = 3 + 3 * (p * columns + c);
+      // Truncated blob: return what was scored rather than read past the end.
+      if ((base + 3) * 4 > buf.length) return score;
+      const hitsThisRow = u32(base);
+      if (!hitsThisRow) continue;
+      const weight = (columnWeights && columnWeights[c] !== undefined) ? columnWeights[c] : 1;
+      if (weight === 0) continue;
+      const docsWithHits = u32(base + 2);
+      const tf = hitsThisRow / (hitsThisRow + FTS_TF_SATURATION);
+      const idf = Math.max(0, Math.log((totalRows - docsWithHits + 0.5) / (docsWithHits + 0.5)));
+      score += weight * tf * idf;
+    }
+  }
+  return score;
+}
+
 /**
  * VectorHub — Unified Persistence Layer
  * Traces, remediations, skills, knowledge, and graph edges.
@@ -203,10 +332,22 @@ class VectorHub {
 
     // ── FTS4 Virtual Tables (FTS4 is available in all sql.js builds) ────────
 
-    this._db.run(`
-      CREATE VIRTUAL TABLE IF NOT EXISTS traces_search
-      USING fts4(trace_id, content, agent, tokenize=porter)
-    `);
+    // FTS-01: traces_search must be keyed on the traces PRIMARY KEY (id), not
+    // trace_id. With a trace_id key every new span in a trace DELETEd its
+    // siblings' index rows, so only the last span per trace stayed searchable
+    // (live DB: 5,082 content-bearing traces, 2,827 index rows, 2,255 = 44.4%
+    // unsearchable). CREATE VIRTUAL TABLE IF NOT EXISTS cannot add a column to a
+    // database created before this fix, so detect the old signature and rebuild.
+    // The index is 100% derivable from `traces`, so the rebuild is lossless.
+    const ftsMigration = this._ensureTracesSearchSchema();
+    // Never let the rebuild be silent: it DROPS and recreates the index table, and a
+    // parity shortfall means rows silently stopped being searchable. Both are reported.
+    if (ftsMigration && ftsMigration.migrated && ftsMigration.expected > 0) {
+      console.log(`[VectorHub] traces_search migrated to the id-keyed schema; rebuilt ${ftsMigration.indexed}/${ftsMigration.expected} rows`);
+    }
+    if (ftsMigration && ftsMigration.migrated && ftsMigration.indexed !== ftsMigration.expected) {
+      console.warn(`[VectorHub] traces_search parity BROKEN after rebuild: indexed=${ftsMigration.indexed} expected=${ftsMigration.expected}`);
+    }
 
     this._db.run(`
       CREATE VIRTUAL TABLE IF NOT EXISTS knowledge_search
@@ -226,6 +367,120 @@ class VectorHub {
     this._installExitGuard();
     this.save();
     console.log(`[VectorHub] Initialized WASM SQLite persistence at ${this.dbPath}`);
+  }
+
+  /**
+   * Create traces_search with the correct (id-keyed) schema, migrating and
+   * repopulating an older trace_id-keyed table in place when one exists.
+   * Idempotent — the sqlite_master signature check makes a re-run a no-op.
+   * `id` is declared notindexed: it is an opaque UUID, contributes no useful
+   * search term, and leaving it unindexed keeps MATCH semantics identical to the
+   * pre-fix table (content, agent and trace_id all remain searchable).
+   * @returns {{migrated: boolean, indexed: number|null, expected: number|null}}
+   */
+  _ensureTracesSearchSchema() {
+    const existing = this.query(
+      'SELECT sql FROM sqlite_master WHERE type = ? AND name = ?',
+      ['table', 'traces_search']
+    );
+    const currentSql = existing.length ? String(existing[0].sql || '') : null;
+    if (currentSql !== null && /fts4\s*\(\s*id\s*,/i.test(currentSql)) {
+      return { migrated: false, indexed: null, expected: null };
+    }
+
+    if (currentSql !== null) {
+      this._db.run('DROP TABLE traces_search');
+    }
+    this._db.run(`
+      CREATE VIRTUAL TABLE traces_search
+      USING fts4(id, trace_id, content, agent, notindexed=id, tokenize=porter)
+    `);
+    return { migrated: true, ...this.rebuildTracesSearch() };
+  }
+
+  /**
+   * Rebuild traces_search from the `traces` base table.
+   *
+   * Explicitly re-runnable and idempotent: every index row is derivable from
+   * `traces`, so this clears the index and re-inserts exactly one row per
+   * content-bearing trace. Running it twice yields the same counts. This is the
+   * backfill that recovers rows lost to the old trace_id-keyed DELETE; no schema
+   * migration is required to run it once the schema is id-keyed.
+   * @returns {{indexed: number, expected: number}} post-rebuild row counts —
+   *   equal when the index is complete
+   */
+  rebuildTracesSearch() {
+    this._db.run('DELETE FROM traces_search');
+    this._db.run(
+      `INSERT INTO traces_search (id, trace_id, content, agent)
+       SELECT id, trace_id, content, agent
+       FROM traces
+       WHERE content IS NOT NULL AND content <> ?`,
+      ['']
+    );
+    const indexed = this.query('SELECT COUNT(*) AS c FROM traces_search')[0].c;
+    const expected = this.query(
+      'SELECT COUNT(*) AS c FROM traces WHERE content IS NOT NULL AND content <> ?',
+      ['']
+    )[0].c;
+    return { indexed, expected };
+  }
+
+  /**
+   * Run an FTS MATCH per term, then return the top `limit` base-table rows ranked
+   * by summed tf-idf.
+   *
+   * One MATCH per term rather than a single OR-joined MATCH: an OR-join returns
+   * its rows in docid order, so LIMIT cuts the candidate pool at the OLDEST
+   * FTS_RANK_POOL matches. Measured on the 5,082-row live trace index, a query of
+   * "celestial" (2,888 matches) plus a unique token could not retrieve the
+   * uniquely-matching document AT ALL, because 2,000 older rows filled the pool
+   * first — and since traces are append-only, the newest rows are always the
+   * first to be dropped. Scored per term the arithmetic is identical (matchinfo
+   * sums over phrases either way), but the pool can only be exhausted by a term's
+   * OWN document frequency, so a rare, discriminating term never loses.
+   * @param {string} baseTable - key of FTS_SEARCH_TABLES
+   * @param {string[]} terms - MATCH expressions from buildFtsTerms()
+   * @param {number} limit - clamped row limit
+   * @returns {Array<Object>} base-table rows, most relevant first
+   */
+  _rankedFtsSearch(baseTable, terms, limit) {
+    const config = FTS_SEARCH_TABLES[baseTable];
+    if (!config) {
+      throw new Error(`[VectorHub] refusing to search unknown table: ${baseTable}`);
+    }
+    if (terms.length === 0) return [];
+
+    // id -> { score, order }; `order` is the first-seen position, used as an
+    // explicit tiebreak so the ranking never depends on sort stability.
+    const scored = new Map();
+    for (const term of terms) {
+      const rows = this.query(
+        `SELECT id, matchinfo(${config.ftsTable}, 'pcnx') AS mi
+         FROM ${config.ftsTable}
+         WHERE ${config.ftsTable} MATCH ?
+         LIMIT ?`,
+        [term, FTS_RANK_POOL]
+      );
+      for (const row of rows) {
+        const add = scoreMatchInfo(row.mi, config.columnWeights);
+        const prev = scored.get(row.id);
+        scored.set(row.id, prev
+          ? { score: prev.score + add, order: prev.order }
+          : { score: add, order: scored.size });
+      }
+    }
+
+    const ids = [...scored.entries()]
+      .sort((a, b) => (b[1].score - a[1].score) || (a[1].order - b[1].order))
+      .slice(0, limit)
+      .map(([id]) => id);
+    if (ids.length === 0) return [];
+
+    const placeholders = ids.map(() => '?').join(', ');
+    const rows = this.query(`SELECT * FROM ${baseTable} WHERE id IN (${placeholders})`, ids);
+    const byId = new Map(rows.map(r => [r.id, r]));
+    return ids.map(id => byId.get(id)).filter(Boolean);
   }
 
   /**
@@ -396,12 +651,14 @@ class VectorHub {
       [entry.id, entry.trace_id, entry.span_id, entry.event, entry.timestamp, entry.agent, entry.content, entry.metadata, entry.drift_score, entry.mesh_node_id]
     );
 
-    // Update FTS index if content exists
+    // Update the FTS index if content exists. Keyed on entry.id (the traces
+    // PRIMARY KEY) — keying the DELETE on trace_id wiped every sibling span's
+    // index row, which is what made 44.4% of trace content unsearchable (FTS-01).
     if (entry.content) {
-      this._db.run('DELETE FROM traces_search WHERE trace_id = ?', [entry.trace_id]);
+      this._db.run('DELETE FROM traces_search WHERE id = ?', [entry.id]);
       this._db.run(
-        'INSERT INTO traces_search (trace_id, content, agent) VALUES (?, ?, ?)',
-        [entry.trace_id, entry.content, entry.agent]
+        'INSERT INTO traces_search (id, trace_id, content, agent) VALUES (?, ?, ?, ?)',
+        [entry.id, entry.trace_id, entry.content, entry.agent]
       );
     }
 
@@ -436,26 +693,34 @@ class VectorHub {
   }
 
   /**
-   * Full-text search for traces.
+   * Full-text search for traces, ranked by tf-idf.
+   *
+   * Multi-word queries are ORed across terms and ranked (see _rankedFtsSearch).
+   * FTS4 has no built-in ranker, so without the ranking step the result is docid
+   * order and mean recall@10 measures 0.0000.
+   * @param {string} rawQuery - the user's query text
+   * @param {{phrase?: boolean, limit?: number}} [opts]
+   *   phrase:true searches for the exact adjacent word sequence (old behaviour);
+   *   limit is clamped to [1, 100] and defaults to 10.
+   * @returns {Promise<Array<Object>>} trace rows, most relevant first
+   * @throws {TypeError} when rawQuery is not a string
    */
-  async searchTraces(rawQuery) {
-    const escaped = rawQuery.replace(/"/g, '""');
-    const ftsQuery = `"${escaped}"`;
-    return this.query(
-      `SELECT t.*
-       FROM traces t
-       JOIN traces_search ts ON t.trace_id = ts.trace_id
-       WHERE traces_search MATCH ?
-       LIMIT 10`,
-      [ftsQuery]
+  async searchTraces(rawQuery, opts = {}) {
+    return this._rankedFtsSearch(
+      'traces',
+      buildFtsTerms(rawQuery, opts),
+      clampFtsLimit(opts.limit)
     );
   }
 
   /**
    * Full-text search for traces (alias for backward compat).
+   * @param {string} rawQuery
+   * @param {{phrase?: boolean, limit?: number}} [opts]
+   * @returns {Promise<Array<Object>>}
    */
-  async searchFTS(rawQuery) {
-    return this.searchTraces(rawQuery);
+  async searchFTS(rawQuery, opts = {}) {
+    return this.searchTraces(rawQuery, opts);
   }
 
   /**
@@ -512,16 +777,22 @@ class VectorHub {
     return record.id;
   }
 
-  async searchKnowledge(rawQuery, limit = 10) {
-    const escaped = rawQuery.replace(/"/g, '""');
-    const ftsQuery = `"${escaped}"`;
-    return this.query(
-      `SELECT k.*
-       FROM knowledge k
-       JOIN knowledge_search ks ON k.id = ks.id
-       WHERE knowledge_search MATCH ?
-       LIMIT ?`,
-      [ftsQuery, limit]
+  /**
+   * Full-text search for knowledge entries, ranked by tf-idf (see searchTraces).
+   * @param {string} rawQuery
+   * @param {number|{phrase?: boolean, limit?: number}} [limitOrOpts] - a bare
+   *   number is still accepted for backward compatibility
+   * @returns {Promise<Array<Object>>} knowledge rows, most relevant first
+   * @throws {TypeError} when rawQuery is not a string
+   */
+  async searchKnowledge(rawQuery, limitOrOpts = {}) {
+    const opts = (limitOrOpts !== null && typeof limitOrOpts === 'object')
+      ? limitOrOpts
+      : { limit: limitOrOpts };
+    return this._rankedFtsSearch(
+      'knowledge',
+      buildFtsTerms(rawQuery, opts),
+      clampFtsLimit(opts.limit)
     );
   }
 
@@ -611,6 +882,7 @@ const lazyHub = new Proxy({}, {
   get(_, prop) {
     if (prop === 'VectorHub') return VectorHub;
     if (prop === 'createVectorHub') return createVectorHub;
+    if (prop === 'buildFtsTerms') return buildFtsTerms;
     if (!_instance) _instance = new VectorHub();
     return typeof _instance[prop] === 'function'
       ? _instance[prop].bind(_instance)
@@ -621,3 +893,4 @@ const lazyHub = new Proxy({}, {
 module.exports = lazyHub;
 module.exports.VectorHub = VectorHub;
 module.exports.createVectorHub = createVectorHub;
+module.exports.buildFtsTerms = buildFtsTerms;

@@ -105,7 +105,7 @@ MindForge/
 │   └── [guides]              # getting-started, user-guide, sdk-reference, etc.
 ├── examples/                  # Starter projects
 ├── changelogs/                # One file per version, v0.1.0 through the latest (archive)
-├── tests/                     # 43 test files (Node.js assert, no framework)
+├── tests/                     # 97 *.test.js files (Node.js assert, no framework)
 └── [root files]              # package.json, MINDFORGE.md, CHANGELOG.md (rolling window), etc.
 ```
 
@@ -339,10 +339,10 @@ Exports: `MindForgeClient`, `MindForgeEventStream`, `WebSocketEventStream`, `Min
 
 ## Testing
 
-- **Runner:** `tests/run-all.js` — discovers `*.test.js`, 60s timeout, sequential, exit-code propagation
+- **Runner:** `tests/run-all.js` — **recursive** walk from `tests/`, matching any file ending `.test.js` at any depth; directories matching `/^(tmp-|node_modules$|\.)/` are pruned (**directories only** — a *file* named `tmp-foo.test.js` still runs); sequential, one `node` child per file with the repo root as `cwd`; default 60s timeout, overridable per file with a first-line `// @timeout: <ms>`; exit-code propagation. Exports `discoverTests`/`getSkipReason`/`getTimeoutMs` behind a `require.main` guard, so requiring it does not launch a run.
 - **Framework:** Node.js built-in `assert` (no Jest/Mocha)
 - **Style:** `test(name, fn)` with manual harness, `✅ PASS` / `❌ FAIL` output
-- **Count:** 43 files (41 pass, 2 env-dependent skips)
+- **Count:** 97 `*.test.js` files (95 pass, 0 fail, 2 env-dependent skips: `browser.test.js`, `sre-integration.test.js`)
 - **Coverage:** `npm run coverage` via c8
 - **Pre-commit:** Husky runs `npm test` on every commit
 
@@ -352,7 +352,7 @@ Exports: `MindForgeClient`, `MindForgeEventStream`, `WebSocketEventStream`, `Min
 
 ```bash
 npm install              # Install deps (Node >= 18)
-npm test                 # Run all 43 test files
+npm test                 # Run all 102 test files (recursive discovery under tests/)
 npm run lint             # ESLint (single quotes, semis, ES2021)
 npm run coverage         # c8 coverage report
 npm run commit           # Commitizen conventional commits

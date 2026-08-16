@@ -1,11 +1,11 @@
 {
-  "version": "11.9.1",
+  "version": "11.9.2",
   "environment": "development",
   "governance": {
     "drift_threshold": 0.75,
     "critical_drift_threshold": 0.5,
     "res_threshold": 0.8,
-    "active_did": "did:mindforge:d8df13ed-4974-4a17-928e-d012f48ef2c9"
+    "active_did": "did:mindforge:e630e005-7b55-4779-9f4f-92aac356c52b"
   },
   "revops": {
     "market_registry": {
@@ -125,7 +125,7 @@
       "project_weekly_warn_usd": 50,
       "project_weekly_hard_limit_usd": 200
     },
-    "ledger_path": ".mindforge/metrics/token-ledger.jsonl"
+    "ledger_path": ".mindforge/metrics/token-usage.jsonl"
   },
   "proactive_suggestions": {
     "enabled": true,

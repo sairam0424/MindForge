@@ -37,6 +37,7 @@ const SSE    = require('./sse-bridge');
 const API    = require('./api-router');
 const TemporalAPI = require('./temporal-api');
 const RevOpsAPI   = require('./revops-api');
+const { newCorrelationId } = require('./error-response');
 
 // ── Express app ───────────────────────────────────────────────────────────────
 const app = express();
@@ -190,6 +191,73 @@ app.post('/api/v1/token/refresh', requireAuth, (req, res) => {
 // ── Register API routes ───────────────────────────────────────────────────────
 API.register(app);
 app.use('/api/temporal', TemporalAPI);
+// RevOpsAPI was required at the top of this file but never mounted, so /api/revops
+// returned 404 while the AgRevOps dashboard panels and docs described it as live.
+app.use('/api/revops', RevOpsAPI);
+
+// ── Terminal error handler (LEAK-01) ─────────────────────────────────────────
+// MUST stay last, after every route, and MUST keep its 4-arg signature or express
+// will treat it as ordinary middleware. Without it, express's default handler
+// renders err.stack into the response body whenever NODE_ENV !== 'production':
+// a single unauthenticated malformed-JSON POST (express.json() is mounted BEFORE
+// requireAuth, and requireAuth exempts GET anyway) returned the absolute paths of
+// node_modules and the repo — the operator's username and home directory — to any
+// local caller. Log server-side; return a generic body plus a correlation id.
+app.use((err, req, res, next) => {
+  if (res.headersSent) return next(err); // e.g. an SSE stream already flushed headers
+  const status = Number.isInteger(err && err.status) && err.status >= 400 && err.status < 600
+    ? err.status
+    : 500;
+  const correlationId = newCorrelationId();
+  console.error(
+    `[dashboard] unhandled ${req.method} ${req.originalUrl} -> ${status} [cid=${correlationId}]:`,
+    err && err.stack ? err.stack : err
+  );
+  res.status(status).json({
+    error: status >= 500 ? 'Internal server error' : 'Invalid request',
+    correlation_id: correlationId
+  });
+});
+
+// ── Crash guards ──────────────────────────────────────────────────────────────
+// Both guards log and exit. That is deliberate and symmetric.
+//
+// unhandledRejection: an escaped rejection is the ONLY reliable signal that an
+// async call was left un-awaited — the ASYNC-01 class this release fixes. Measured
+// on v11.9.1: an un-awaited rollbackTo() rejected, and by the time the rejection
+// surfaced a hash-chained `hindsight_injected` entry had already been fsync'd and
+// auto-state.json flipped to awaiting_regeneration for a rollback that never
+// happened; the client got ECONNRESET at ~16ms and the process exited 1. The
+// durable damage is committed before any handler can run, so a 500-and-continue
+// response would answer the request while leaving the audit chain asserting an
+// event that did not occur.
+// Keeping it survivable is also not free: express 4.22.1 does not route async
+// handler rejections to its error middleware (measured: a 4-arity app.use never
+// fires), so log-and-continue leaves the client socket open until the CLIENT gives
+// up — 2.5s, 4s and 8s clients all timed out with no response — versus a ~15ms
+// connection reset when the process exits. A silent hang is worse than a restart.
+// Cost accepted: one faulting request takes the observability surface down. The
+// dashboard is a 127.0.0.1-only single-operator tool, and an audit chain that
+// verifies as valid while recording events that did not happen is not a survivable
+// state to keep serving from.
+process.on('unhandledRejection', (reason) => {
+  console.error('[Dashboard] Unhandled rejection — exiting:',
+    reason instanceof Error ? reason.stack : reason);
+  process.exit(1);
+});
+
+// uncaughtException MUST exit. After an uncaught throw the process state is
+// undefined, and log-and-continue actively broke shutdown: a throw anywhere in the
+// first half of shutdown() (SSE.stop(), or unlinking the token file) was swallowed,
+// so server.close() was never reached and the forced-exit timer was never armed.
+// The result was a dashboard that IGNORED SIGTERM while still serving the
+// token-authenticated mutation endpoints, with the bearer token left on disk and
+// still valid in memory — i.e. the operator's documented stop command silently
+// failed while reporting success. Only SIGKILL stopped it.
+process.on('uncaughtException', (err) => {
+  console.error('[Dashboard] Uncaught exception — exiting:', err && err.stack ? err.stack : err);
+  process.exit(1);
+});
 
 // ── Start SSE bridge ──────────────────────────────────────────────────────────
 SSE.start();
@@ -231,14 +299,26 @@ server.on('error', err => {
 // ── Graceful shutdown ─────────────────────────────────────────────────────────
 function shutdown(signal) {
   console.log(`\n[dashboard] ${signal} received — shutting down`);
-  SSE.stop();
-  // Remove sensitive token file on shutdown
-  if (fs.existsSync(TOKEN_FILE)) fs.unlinkSync(TOKEN_FILE);
+
+  // Arm the forced exit FIRST. Every step below can throw (permission drift on the
+  // token path, a read-only .mindforge, an SSE listener error), and if any of them
+  // does before this timer is set, the process would keep serving the authenticated
+  // mutation API after the operator asked it to stop.
+  const forced = setTimeout(() => process.exit(0), 3000);
+  forced.unref();
+
+  try { SSE.stop(); } catch (err) { console.error('[dashboard] SSE.stop failed:', err.message); }
+
+  // Destroying the bearer token is a security step, not housekeeping — never let it
+  // throw. rmSync with force tolerates a missing path and most permission cases.
+  try { fs.rmSync(TOKEN_FILE, { force: true }); } catch (err) {
+    console.error('[dashboard] could not remove token file:', err.message);
+  }
+
   server.close(() => {
-    if (fs.existsSync(PID_FILE)) fs.unlinkSync(PID_FILE);
+    try { fs.rmSync(PID_FILE, { force: true }); } catch { /* best effort */ }
     process.exit(0);
   });
-  setTimeout(() => process.exit(0), 3000);
 }
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));

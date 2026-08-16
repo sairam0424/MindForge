@@ -68,6 +68,20 @@ jobs:
       - name: Build Package
         run: npm pack
 
+      # Prove the SECOND package builds BEFORE the first one publishes.
+      # This release publishes two packages from one run. The mcp-server publish step below
+      # runs `npm install && npm run build` inline, so a TypeScript error there used to surface
+      # only AFTER `mindforge-cc` had already gone to npm — leaving a half-published release
+      # with no way back, because npm forbids republishing a version. Building here makes that
+      # failure abort the run while both packages are still unpublished.
+      # Deliberately NOT guarded by the already_published check: on a re-run we still want a
+      # broken second package to stop the release.
+      - name: Verify mcp-server builds (gates the publishes below)
+        working-directory: mcp-server
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+
       - name: Publish to npm
         if: steps.npm_check.outputs.already_published != 'true'
         run: npm publish --access public --provenance

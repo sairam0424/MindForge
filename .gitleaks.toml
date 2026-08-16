@@ -1,0 +1,162 @@
+# Gitleaks configuration for MindForge.
+#
+# Why this file exists. An audit found a live npm publish token in the
+# working-tree .npmrc. It was gitignored and never committed — git history only
+# ever contained the correct `${NPM_TOKEN}` placeholder, and no real token has
+# ever been in any commit (verified: 0 matches for npm_[A-Za-z0-9]{36} across
+# every commit reachable from all refs). So this config is prevention, not
+# incident response.
+#
+# CORRECTION — supersedes an earlier claim in this file and in commit 0174432:
+# gitleaks' DEFAULT ruleset DOES detect a realistic npm token. Rule
+# `npm-access-token` fires on npm_ + 36 mixed-charset chars, in .npmrc or bare.
+# The earlier "defaults scan it clean" claim came from testing with npm_ + 36
+# IDENTICAL characters: gitleaks entropy-gates its matches, so a zero-entropy
+# string is discarded even though the regex matches. Detection is
+# ENTROPY-GATED, NOT ABSENT. Measured: defaults find 1, this config finds 3.
+#
+# What the custom rules actually buy, stated honestly:
+#   1. Defence in depth — 3 rules fire where 1 did, so upstream tuning or removal
+#      of a single default rule does not silently reopen the hole.
+#   2. An explicit literal-vs-${VAR} distinction for _authToken, which encodes the
+#      correct practice instead of only matching the token shape.
+#   3. A tightened anthropic-key length bound, so this repo's own deliberately
+#      short leak-detector fixtures stop producing false positives without
+#      needing a file-wide allowlist.
+#
+# The larger win is not the rules at all: NOTHING was enforcing any scan before
+# this commit — no pre-commit hook, no CI job. See .husky/pre-commit and
+# .github/workflows/secret-scan.yml.
+#
+# Every allowlist entry below was validated with a negative control: a real
+# secret injected into the same file must still be caught. Re-run those before
+# widening anything.
+
+[extend]
+useDefault = true
+
+# ---------------------------------------------------------------------------
+# npm registry auth tokens
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "npm-authtoken-literal"
+description = "npm registry _authToken with a literal value (must be ${ENV_VAR})"
+# Gitleaks uses Go's regexp (RE2), which has NO lookahead/lookbehind — a
+# (?!\$\{) here makes gitleaks panic at config load and silently scan nothing.
+# So exclude the env-var form by requiring the FIRST value character not to be
+# '$': `${NPM_TOKEN}` cannot match, a literal token must.
+# The excluded first characters are '$' (the ${VAR} form) and '\' (an escaped
+# \${VAR} as it appears inside shell/echo strings — documentation and help text
+# legitimately contain that, and a real token never starts with a backslash).
+regex = '''(?i)_auth(?:token)?\s*=\s*[^\s"'$\\][^\s"']{7,}'''
+keywords = ["_authtoken", "_auth"]
+
+[[rules]]
+id = "npm-classic-token"
+description = "npm classic access token (npm_ + 36 chars)"
+regex = '''\bnpm_[A-Za-z0-9]{36}\b'''
+keywords = ["npm_"]
+
+[[rules]]
+id = "npm-granular-token"
+description = "npm granular access token"
+regex = '''\bnpms_[A-Za-z0-9]{36,}\b'''
+keywords = ["npms_"]
+
+# ---------------------------------------------------------------------------
+# Other publish/CI credentials this project touches
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "github-pat"
+description = "GitHub personal access token (classic or fine-grained)"
+regex = '''\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{36}\b|\bgithub_pat_[A-Za-z0-9_]{22,}\b'''
+keywords = ["ghp_", "gho_", "ghu_", "ghs_", "ghr_", "github_pat_"]
+
+[[rules]]
+id = "anthropic-key"
+description = "Anthropic API key"
+# Real Anthropic keys are ~95-110 chars after the sk-ant- prefix. Requiring 80+
+# is what distinguishes a live key from the deliberately-short fakes used as
+# fixtures by this repo's own secret-leak detector tests (e.g.
+# tests/sre-integration.test.js uses a 28-char sk-ant-api03-... stub). Tightening
+# the rule is better than allowlisting the file: a REAL key dropped into that
+# same test would still be caught.
+regex = '''\bsk-ant-[A-Za-z0-9\-_]{80,}\b'''
+keywords = ["sk-ant-"]
+
+# ---------------------------------------------------------------------------
+# Global allowlist
+#
+# Deliberately NARROW. A broad allowlist is how the original leak survived a
+# .gitignore entry: the file was already tracked, so ignoring it changed nothing.
+# ---------------------------------------------------------------------------
+
+# NOTE: the singular [allowlist] table is DEPRECATED and gitleaks REFUSES to load
+# a config that mixes it with [[allowlists]] — it exits with
+# "Failed to load config", which several commands report in a way that is easy to
+# mistake for a clean scan. Everything below uses the plural form only.
+
+[[allowlists]]
+description = "Vendored repos, generated bundles and lockfiles"
+paths = [
+  # Nested repositories with their own history and scanning.
+  '''^hermes-agent/''',
+  '''^awesome-claude-code-subagents/''',
+  # Generated bundle — scan the source, not the build output.
+  '''^plugins/mindforge/mcp/dist/''',
+  # Lockfiles contain integrity hashes, not credentials.
+  '''package-lock\.json$''',
+]
+
+[[allowlists]]
+description = "Shipped HMAC literal — a documented defect, not a credential"
+# Tracked as its own v12 work item: it makes snapshot integrity forgeable.
+regexes = ['''mindforge-temporal-v3''']
+
+# ---------------------------------------------------------------------------
+# Scoped allowlists for verified-benign findings.
+#
+# These use the plural [[allowlists]] form with targetRules, so each suppression
+# applies to ONE rule on ONE line shape. A blanket path exclusion would have
+# blinded the scanner to real secrets in the same files — the negative controls
+# below each entry were run to confirm that does not happen.
+#
+# Note: regexTarget = "line" is REQUIRED to match surrounding context. Without
+# it gitleaks compares against the extracted secret and the allowlist silently
+# never fires — which is how the first version of this file looked like it
+# worked while doing nothing.
+# ---------------------------------------------------------------------------
+
+# These are scoped by PATH x targetRules, not by regexTarget = "line".
+#
+# Why: gitleaks does NOT populate the `Line` field when scanning git history
+# (`gitleaks git`) — only in filesystem mode (`gitleaks detect --no-git`). A
+# line-based allowlist therefore works locally and silently never fires in CI,
+# which is the worst possible split. Path x rule works in both modes.
+#
+# Each entry suppresses exactly ONE rule on ONE file, so any OTHER rule still
+# reports there. Verified by negative control: a real github_pat_ injected into
+# each of these files is still caught. Re-run /tmp/verify-gitleaks.sh before
+# widening any of them.
+
+[[allowlists]]
+description = "sre-manager: EPHEMERAL_ENCLAVE_KEY is crypto.randomBytes per process, never stored"
+targetRules = ["generic-api-key"]
+paths = ['''^bin/engine/sre-manager\.js$''']
+
+[[allowlists]]
+description = "knowledge-graph test: prose that names a credential rather than being one"
+targetRules = ["stripe-access-token", "generic-api-key"]
+paths = ['''^tests/knowledge-graph\.test\.js$''']
+
+[[allowlists]]
+description = "api-migration: JSON Schema required[] identifier arrays score as high entropy"
+targetRules = ["generic-api-key"]
+paths = ['''^\.mindforge/dynamic-workflows/scripts/api-migration\.js$''']
+
+[[allowlists]]
+description = "sre-integration test: deliberately short sk-ant- stub used to test leak detection"
+targetRules = ["generic-api-key", "anthropic-key"]
+paths = ['''^tests/sre-integration\.test\.js$''']

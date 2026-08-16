@@ -47,7 +47,13 @@ async function testPQAS() {
   // 2. Test ZK-Proof Policy Bypass
   console.log('\nStep 2: Testing ZK-Proof Policy Bypass...');
   const PolicyEngine = require('../bin/governance/policy-engine');
-  const pe = new PolicyEngine();
+  // Do NOT let a bare `new PolicyEngine()` default planningDir to process.cwd() — that
+  // appends test verdicts to the operator's real .planning/RISK-AUDIT.jsonl chain.
+  const peTmp = require('node:fs').mkdtempSync(require('node:path').join(require('node:os').tmpdir(), 'mf-pe-'));
+  // Reap the temp dir: this suite's failure path is process.exit(1) from the trailing
+  // .catch, so a finally would not run. /tmp on CI is not guaranteed to be roomy.
+  process.on('exit', () => { try { require('node:fs').rmSync(peTmp, { recursive: true, force: true }); } catch { /* best effort */ } });
+  const pe = new PolicyEngine({ planningDir: peTmp });
   
   const intent = {
     id: 'intent_v7_001',

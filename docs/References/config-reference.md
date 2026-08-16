@@ -4,24 +4,83 @@
 
 ---
 
+## 0. Syntax and required keys
+
+**Read this first.** As of 11.9.2 `node bin/validate-config.js` and
+`mindforge security-scan` can actually fail — before that they reported
+`0 settings configured` and exited 0 on any input, so an invalid registry passed silently.
+
+Two syntaxes are accepted:
+
+```text
+[PLANNER] = claude-opus-4-7      # bracketed — CANONICAL, what the shipped MINDFORGE.md uses
+PLANNER_MODEL=claude-opus-4-7    # plain — legacy, still read, used by examples/starter-project
+```
+
+Prefer the bracketed form. A bracketed key must open the line (leading whitespace is allowed)
+and be followed by `=`. Prose bullets that merely mention `[KEY]` are not parsed as settings.
+
+**These five keys are REQUIRED.** Validation exits 1 if any is missing:
+
+| Key | Example |
+| :--- | :--- |
+| `[VERSION]` | `11.9.2` — must match `^\d+\.\d+\.\d+$` |
+| `[REACTIVE_MODE]` | `true` |
+| `[PLANNER]` | `claude-opus-4-7` |
+| `[EXECUTOR]` | `claude-sonnet-4-6` |
+| `[MIN_SOUL_SCORE]` | `8` (range 0–10) |
+
+Three more are **recommended** — absent ones produce a warning, not an error:
+`[COST_WARN_USD]`, `[COST_HARD_LIMIT_USD]`, `[BLOCK_ON_SECURITY]`.
+
+> `[COST_HARD_LIMIT_USD]` is **declared but not enforced** as of 11.9.2. Do not rely on it as a
+> spend control; see the CHANGELOG.
+
+---
+
 ## 1. Model Configuration
 
 MindForge uses a tiered model routing system. You can specify exact models for different phases of the lifecycle.
 
-| Key | Description | Default |
-| :--- | :--- | :--- |
-| `PLANNER_MODEL` | Model used for task decomposition and planning. | `claude-sonnet-4-5` |
-| `EXECUTOR_MODEL` | Model used for code generation and implementation. | `claude-sonnet-4-5` |
-| `REVIEWER_MODEL` | Model used for code review and PR analysis. | `claude-opus-4-alpha` |
-| `VERIFIER_MODEL` | Model used for testing and UAT verification. | `claude-sonnet-4-5` |
-| `SECURITY_MODEL` | Model used for sensitive security scanning. | `claude-opus-4-alpha` |
+The canonical keys are the short bracketed forms; the `*_MODEL` names are accepted aliases kept
+for older configs.
 
-**Supported Values:**
+| Key | Alias | Description | Shipped default |
+| :--- | :--- | :--- | :--- |
+| `[PLANNER]` | `PLANNER_MODEL` | Task decomposition and planning. | `claude-opus-4-7` |
+| `[EXECUTOR]` | `EXECUTOR_MODEL` | Code generation and implementation. | `claude-sonnet-4-6` |
+| `[REVIEWER]` | `REVIEWER_MODEL` | Code review and PR analysis. | `claude-sonnet-4-6` |
+| `[VERIFIER]` | `VERIFIER_MODEL` | Testing and UAT verification. | `claude-sonnet-4-6` |
+| `[SECURITY]` | `SECURITY_MODEL` | Sensitive security scanning. | `claude-opus-4-7` |
+| `[DEBUG]` | — | Debugging and root-cause analysis. | `claude-opus-4-7` |
 
-- `claude-opus-4-alpha` (High intelligence, slow, expensive)
-- `claude-sonnet-4-5` (Balanced, recommended)
-- `claude-haiku-4-5` (Fast, logical, best for trivial tasks)
-- `inherit` (Use the system-wide default)
+**Values are free-form strings** — the schema does not constrain them to a list, so a new model
+id works without a framework upgrade. The ids shipped in `MINDFORGE.md` today are
+`claude-opus-4-7`, `claude-sonnet-4-6` and `claude-haiku-4-5`; `inherit` selects the
+system-wide default. Because the values are unconstrained, a typo is NOT caught by validation —
+it falls through to the routing defaults.
+
+---
+
+## 1b. Numeric bounds enforced by validation
+
+Out-of-range values now fail. These were previously documented nowhere a consumer reads.
+
+| Key | Range | Key | Range |
+| :--- | :--- | :--- | :--- |
+| `MIN_SOUL_SCORE` | 0–10 | `MAX_TASKS_PER_PHASE` | 1–50 |
+| `AUTO_SWARM_THRESHOLD` | 0–10 | `MIN_TEST_COVERAGE_PCT` | 0–100 |
+| `DYNAMISM_LEVEL` | 1–5 | `MAX_FUNCTION_LINES` | 10–200 |
+| `ADS_DEBATE_ROUNDS` | 1–10 | `MAX_CYCLOMATIC_COMPLEXITY` | 3–30 |
+| `COMPACTION_THRESHOLD_PCT` | 50–90 | `MAX_FULL_SKILL_INJECTIONS` | 1–10 |
+| `DASHBOARD_PORT` | 1024–65535 | `NEXUS_TRACE_RETENTION_DAYS` | 1–365 |
+| `BROWSER_PORT` | 1024–65535 | `SHARD_RETAIN_DAYS` | 1–365 |
+| `COST_WARN_USD` | 0–10000 | `AI_REVIEW_DAILY_LIMIT` | 0–500 |
+| `COST_HARD_LIMIT_USD` | 0–10000 | `CI_MIN_COVERAGE_PCT` | 0–100 |
+| `VERIFY_PASS_RATE_WARNING_THRESHOLD` | 0–1 | `DISCUSS_PHASE_REQUIRED_ABOVE_DIFFICULTY` | 1–5 |
+
+If one of these rejects a value you consider legitimate, the bound is wrong — report it rather
+than editing your registry to satisfy it.
 
 ---
 

@@ -69,17 +69,32 @@ async function runTest() {
     const results = await vectorHub.searchTraces(`persistence test ${testId}`);
     console.log(`[TEST] FTS Search Results: ${results.length}`);
 
-    if (traces.length > 0 && rems.length > 0 && skills.length > 0 && results.length > 0) {
+    const checks = [
+      ['traces', traces.length],
+      ['remediations', rems.length],
+      ['skills', skills.length],
+      ['fts search results', results.length],
+    ];
+    const empty = checks.filter(([, n]) => !(n > 0)).map(([name]) => name);
+
+    if (empty.length === 0) {
       console.log('✅ MindForge v8 Persistence Verification Passed.');
     } else {
-      console.error('❌ MindForge v8 Persistence Verification Failed.');
+      // Must set a non-zero code, not just log. This branch previously printed ❌ and then
+      // fell into `finally { process.exit(0) }`, so the suite reported ✓ PASS while telling
+      // you it had failed — and tests/run-all.js gates purely on the child exit code.
+      console.error(`❌ MindForge v8 Persistence Verification Failed — empty: ${empty.join(', ')}`);
+      process.exitCode = 1;
     }
 
   } catch (err) {
     console.error(`[TEST] Error: ${err.message}`);
-    process.exit(1);
+    process.exitCode = 1;
   } finally {
-    process.exit(0);
+    // The forced exit is deliberate — sql.js/WASM keeps handles open and the process would
+    // otherwise linger — but it must PROPAGATE the outcome. A bare process.exit(0) here
+    // overrode both the assertion branch above and any process.exitCode set in the catch.
+    process.exit(process.exitCode || 0);
   }
 }
 

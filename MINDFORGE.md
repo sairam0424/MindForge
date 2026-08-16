@@ -1,9 +1,9 @@
-# MINDFORGE.md — Parameter Registry (v11.9.1)
+# MINDFORGE.md — Parameter Registry (v11.9.2)
 
 ## 1. IDENTITY & VERSIONING
 
 [NAME]    = MindForge
-[VERSION] = 11.9.1
+[VERSION] = 11.9.2
 [STABLE]  = true
 [MODE]    = "Platform Sovereign"
 [REQUIRED_CORE_VERSION] = 11.9.1
@@ -99,7 +99,7 @@ The following parameters cannot be overridden by plugins, agents, or session-lev
 
 - [MIN_SOUL_SCORE] — Minimum SOUL score required for architectural changes
 - [BLOCK_ON_SECURITY] — Security gate enforcement cannot be disabled
-- [COST_HARD_LIMIT_USD] — Hard cost limit cannot be raised without human approval
+- [COST_HARD_LIMIT_USD] — declared here, but **NOT enforced as of 11.9.2**; do not rely on it as a spend control. `bin/models/cost-tracker.js` reads `MODEL_COST_HARD_LIMIT_USD`, a key this registry does not declare, so `preflight()` returns early and no cap is ever applied. Wiring it is tracked as COST-02 for 11.9.3
 - [BLOCK_ON_SECURITY] is non-overridable; PQAS itself is simulated/experimental (inactive by default) and is NOT a non-overridable guarantee — do not rely on it as an enforced control
 - [SOVEREIGN_IDENTITY] — Identity verification is always required
 - [ENABLE_ZTAI] — Zero-trust identity cannot be bypassed

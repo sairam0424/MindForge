@@ -1,12 +1,21 @@
 # MindForge Metrics — Schema Reference
 
 ## Files
-- `session-quality.jsonl`
-- `phase-metrics.jsonl`
-- `skill-usage.jsonl`
-- `compaction-quality.jsonl`
+- `session-quality.jsonl` — **no producer in this repo**; every reference to it
+  (`bin/dashboard/metrics-aggregator.js`, `sdk/src/client.ts`,
+  `mcp-server/src/vendor/client.ts`) is a READ. Expected to be supplied by the
+  agent/host; MindForge only consumes it.
+- `phase-metrics.jsonl` — no producer in this repo
+- `skill-usage.jsonl` — no producer in this repo
+- `compaction-quality.jsonl` — no producer in this repo
+- `token-usage.jsonl` — **code-written** by `bin/models/cost-tracker.js`; canonical
+  shape is `bin/models/usage-record.js`. Cost lives in `cost_usd` and nowhere else.
+  Gitignored and excluded from the npm tarball.
 
 All files are append-only JSONL.
+
+Per-session cost is NOT a `session-quality.jsonl` field: the dashboard joins it
+from `token-usage.jsonl` on `session_id`.
 
 ## session-quality.jsonl fields
 - session_id, date, phase, developer_id

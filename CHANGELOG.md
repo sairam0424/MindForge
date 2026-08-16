@@ -1,5 +1,213 @@
 # Changelog
 
+## [11.9.2] — 2026-08-16 — Correctness: audit-chain integrity, dashboard crash policy, secret scanning
+
+Patch release. No new features. Correctness work closing defects found by a
+multi-agent audit of v11.9.1, plus the regression suites that keep them closed.
+Contains a breaking change to the dashboard HTTP surface — see BREAKING below.
+
+### BREAKING
+
+Shipped under a PATCH bump. The break is confined to the dashboard's own HTTP
+surface, which binds to 127.0.0.1 only — but if you script against it, read this.
+
+- **Dashboard error responses changed shape.** `detail` is removed from 5 endpoints and
+  raw errno strings from 10 more; `correlation_id` is added to 15; a malformed request
+  body now returns `application/json` instead of express's `text/html` error page.
+  Anything parsing `detail` must correlate on the logged `correlation_id` instead. This
+  was deliberate — those fields leaked absolute filesystem paths, and therefore the
+  operator's username and home directory, into an unauthenticated response body
+  (`requireAuth` exempts GET).
+- **The dashboard now EXITS on an unhandled rejection or uncaught exception** where
+  11.9.1 logged and continued. If you supervise the process, expect restarts where you
+  previously saw a logged error. Rationale in the Fixed section below: log-and-continue
+  held client sockets open until the client timed out, and had made `shutdown()` swallow
+  a throwing token unlink and keep serving the authenticated mutation API after SIGTERM.
+- **`node bin/validate-config.js` and `mindforge security-scan` can now fail.** They
+  previously reported `MINDFORGE.md valid — 0 settings configured` and exited 0 on every
+  input. If you run either in CI, a genuinely invalid registry will now red-line where it
+  used to pass. Note this reaches **fresh installs and `--force` reinstalls only** — the
+  installer does not overwrite an existing `.mindforge/MINDFORGE-SCHEMA.json`, so a plain
+  upgrade keeps the old permissive schema.
+
+### Fixed
+
+- **`security-scan` could not fail.** `bin/validate-config.js` and
+  `bin/models/model-router.js` each parsed `MINDFORGE.md` with a plain `KEY=value` regex, but
+  the registry declares its 43 parameters as bracketed `[KEY] = value`. Every schema property
+  resolved to `undefined` and short-circuited, so the command reported
+  `MINDFORGE.md valid — 0 settings configured` and exited 0 on any input. The schema also had
+  no `required` key at all. Both parsers now share `bin/utils/mindforge-params.js`, which also
+  accepts the legacy plain form (`examples/starter-project/MINDFORGE.md` ships 28 such lines),
+  and the schema declares real `required`/`recommended` sets.
+  **Behaviour change for consumers:** three CI gates go from unfailable to failable —
+  `.github/workflows/mindforge-ci.yml:38`, `.gitlab-ci-mindforge.yml:12`, and
+  `.github/workflows/control-plane.yml:100`. If one red-lines on a valid value, the schema
+  bound is wrong; do not "fix" it by editing `MINDFORGE.md`. Model routing is unchanged —
+  30 persona x tier combinations resolve identically.
+- **Trace retrieval returned nothing usable.** Queries were wrapped as a single FTS phrase, so
+  any query containing one absent term scored zero; and `traces_search` was keyed on `trace_id`
+  rather than the primary key, so each span's DELETE evicted the previous span and only the last
+  span per trace stayed searchable — 2,270 of 5,117 content-bearing traces, 44.4%, unsearchable.
+  Queries are now tokenised, OR-joined and ranked by tf-idf (`matchinfo('pcnx')`); the index is
+  re-keyed and rebuilt losslessly from the base table. `bin/eval/eval-harness.js` and its golden
+  set had zero callers and are now reachable as `npm run eval:retrieval`, with the baseline
+  committed: mean recall@10 0.6417, nDCG 0.5698 over 519 documents.
+- **The cost ledger reported two totals for one concept.** `sum(cost_usd)` was $13.73 while
+  `sum(total_cost_usd)` was $0.00, and `tests/dashboard.test.js` wrote the reader's field name,
+  so the mismatch tested green. `bin/models/usage-record.js` is now the single definition of the
+  ledger path, record shape, per-entry cost and day bucket. The configured `ledger_path` pointed
+  at `token-ledger.jsonl`, a file that has never existed; that ghost filename had spread to 17
+  places across 13 files and is now absent. The dashboard cost tile no longer renders `$0.00`
+  on a 500 — it had no `res.ok` check, and because errors return well-formed JSON the catch
+  never fired, making an outage indistinguishable from zero spend.
+  A maintainer tool, `scripts/purge-synthetic-usage.js`, removes fixture rows: dry-run by
+  default, backs up first, idempotent, and aborts leaving the ledger untouched if the rewrite
+  fails. It is run from a repository checkout — `scripts/` is not in the published tarball, so
+  installed consumers do not have it.
+- **Audit hash chain could fork under concurrent writers.** `bin/autonomous/audit-writer.js`
+  read the chain head and appended with no mutual exclusion, and cached the head in-process
+  indefinitely — so once a second process appended, the first kept chaining from a superseded
+  hash. Added `bin/utils/file-lock.js` (a fail-closed advisory lock promoted from
+  `bin/learning/instinct-cli.js`, deliberately NOT from `.agent/bin/lib/state.cjs`, which
+  writes anyway when the lock cannot be taken) held across read-head-through-fsync, and made
+  the cached head carry the file size that witnesses it is still the tail. 8 concurrent
+  appenders went from 199 broken links + 4 forks per 200 entries to 0. A lock alone was
+  measured insufficient — it still left 2 breaks and 1 fork, because the stale cache is a
+  second, independent defect.
+- **Knowledge-graph edge updates were lost under concurrency.** `deprecateEdge`,
+  `reinforceEdge` and `applyDecay` in `bin/memory/knowledge-graph.js` each did
+  `readAllEdges()` -> mutate -> append with no lock, and `addEdge` appended unserialised
+  against them. Measured at HEAD over 4 runs of 8 processes x 20 `reinforceEdge` calls:
+  93-129 of 160 increments lost, final `traversal_count` 31-67 instead of 160. All four
+  write paths now hold the `graph-edges.jsonl` lock across read-through-append; the same
+  probe then loses 0 of 160 in every run, with no lock-acquisition failures.
+- `bin/governance/policy-engine.js`: `logAudit`'s un-awaited audit write now has a
+  `.catch()` — a lock-contention failure is reported at the decision site instead of
+  escaping as an unhandled rejection.
+- `bin/hooks/instinct-capture-hook.js` appended to the instinct store without the lock that
+  `instinct-cli`'s prune/import rewrite holds, so a hook append landing in that window was
+  clobbered by the rename. It now takes the same lock.
+- `tests/v7-sovereign-security.test.js`: `new PolicyEngine()` no longer defaults
+  `planningDir` to `process.cwd()`, which appended test verdicts to the operator's real
+  `.planning/RISK-AUDIT.jsonl`.
+- Packaging: `package.json` files[] now excludes `**/*.lock` so a lockfile orphaned by a
+  hard kill cannot leak into the npm tarball (verified: without the negation, a
+  `.mindforge/memory/graph-edges.jsonl.lock` does ship).
+
+- **Audit-chain forgery via un-awaited rollback.** `HindsightInjector.inject` called
+  the async `TemporalHub.rollbackTo` without `await`, so its rejection escaped the
+  surrounding `try/catch` while execution continued: a failed rollback still fsync'd a
+  hash-chained `hindsight_injected` entry and flipped `auto-state.json` to
+  `awaiting_regeneration` for something that never happened. The log gained a
+  cryptographically valid record of a non-event, and `verify-audit` reported the chain
+  valid — valid and wrong.
+- **CLI `defaultArgs` were replaced by user arguments, not prepended.** `mindforge
+  health <anything>` lost `--check` and fell through to `installer-core`'s real
+  `install()` with `force: true`. Now prepended.
+- **`_verifyMetadata` compared UTF-16 code units, not bytes**, so a 64-unit / 65-byte
+  `integrity` still threw `RangeError` — and the caller degraded that throw into
+  "proceeding without integrity check" and restored the snapshot anyway. Read and
+  verify are now separate stages; only a genuinely absent `SNAPSHOT-META.json` reaches
+  the tolerant path.
+- **Dashboard `RevOpsAPI` was required but never mounted**, so `/api/revops/overview`
+  404'd while the AgRevOps panels and docs described it as live. Even mounted it threw:
+  `getAuditEntries()` returns `{entries,total,limit,offset}` and three engines call
+  `.filter()` on it.
+- **Dashboard leaked error internals to clients.** `err.message` reached response
+  bodies from 14 sites (`api-router.js` ×10, `temporal-api.js` ×3, `revops-api.js` ×1);
+  for fs-sourced errors that string carries absolute paths, disclosing the operator's
+  username and home directory. All sites now log server-side and return a generic
+  message plus a `correlation_id`, behind a 4-arg terminal handler that stops express
+  rendering `err.stack` when `NODE_ENV !== 'production'`.
+- **Test runner discovery was a flat `readdirSync`**, so any suite in a subdirectory was
+  invisible. Now a recursive walk that prunes `tmp-*` / `node_modules` / dot
+  directories — directories only, never files.
+- Three orphan files removed: one truncated `.planning/AUDIT.jsonl` to zero, one
+  overwrote `.planning/STATE.md`, one called a function absent from `bin/`. Recursion
+  made the `STATE.md` clobberer reachable by a single in-place rename; the other two
+  were unreachable by the runner at any depth. **The claim in `5177225`'s message that
+  all three were newly armed by recursion is correct for one of the three and
+  over-attributed for the other two.**
+- Three relocated demos kept one-level-up requires after moving a directory deeper, so
+  all three exited 1; corrected to `../../bin/`.
+
+### Changed
+
+- **`mindforge audit-skill`, `register-skill`, `install-skill` and `record-learning` no
+  longer carry `defaultArgs`.** Prepending turned them from inert into live state
+  writers: `audit-skill <name> <ver> <tier>` appended a hash-chained
+  `{event:'skill_installed', validation_passed:true}` entry for a skill that does not
+  exist, and `register-skill` wrote a malformed row above the table header of
+  `.mindforge/org/skills/MANIFEST.md`, which ships in the tarball. Bare invocations now
+  print usage and exit 0 without reaching those writers, as at v11.9.1.
+- **`subagent` is a first-class command.** Prepending `spawn` shadowed `spawn-agent`'s
+  `subagent` mode, whose documented route was `mindforge spawn subagent <name>`.
+- **The dashboard now exits on an unhandled rejection instead of logging and
+  continuing.** An escaped rejection is the only reliable signal that an async call was
+  left un-awaited, and express 4.22.1 does not route async handler rejections to error
+  middleware — log-and-continue held the client socket open until the client gave up
+  (2.5s, 4s and 8s clients all timed out) versus a ~15ms reset on exit. Symmetric with
+  `uncaughtException`, whose log-and-continue form had made `shutdown()` swallow a
+  throwing token unlink and keep serving the token-authenticated mutation API **after
+  SIGTERM**, with the bearer token still on disk and valid in memory.
+- **Dashboard error responses changed shape.** `detail` is removed from 5 endpoints,
+  raw errno strings from 10 more, `correlation_id` is added to 15, and a malformed
+  request body now returns `application/json` rather than express's `text/html` error
+  page. Anything parsing `detail` must correlate on the logged id instead.
+
+### Added
+
+- **Secret scanning enforced at three layers**: `.gitleaks.toml`, a `.husky/pre-commit`
+  gate that fails loudly when gitleaks is absent rather than skipping, and
+  `.github/workflows/secret-scan.yml` scanning full history. `scripts/ci/verify-secret-scan.sh`
+  self-tests the scanner — it distinguishes "scanned clean" from "scanned and found"
+  from "did not scan", because gitleaks exits 1 for both a finding and a failed config
+  load, and writes no report in the latter case.
+
+### Tests
+
+- Suite totals for this release: **105 files, 103 pass, 2 environment-dependent skips**
+  (`browser`, `sre-integration`). Eight new suites across the release:
+  `temporal-integrity`, `dashboard-error-leak`, `dashboard-crash-guards`,
+  `dashboard-wiring`, `cli-router`, `mindforge-params`, `file-lock`, `retrieval-fts`.
+- **Four suites could not report failure and now can.** `v8-persistence`,
+  `v8-skill-evolution` and `v8-orbital-governance` ended `finally { process.exit(0) }`, and
+  `v7-pillar-integration` had zero assertions with a premium-model gate that named two models
+  absent from the registry for several releases. `npm test` is the only quality step before
+  `npm publish`, and the runner gates on child exit codes, so a blind suite blinded the publish
+  gate. Verified by injected failure rather than inspection.
+  `dashboard-wiring` derives the expected router set
+  from `server.js`'s own requires, so adding a router without mounting it fails.
+  `cli-router` runs against a mirror-root sandbox under `os.tmpdir()` — required, not
+  tidiness: the case that proves audit forgery is prevented would otherwise forge an
+  entry into the real chain on every run. `revops-roi.test.js` had 0 assertions and
+  could not fail; it now has 6.
+
+### Not fixed — deferred to v12
+
+- **No hook is registered in any consumer install.** The installer copies 9 hook
+  scripts into `<runtime>/hooks/`, but nothing writes `.claude/settings.json` and it is
+  absent from `package.json` `files[]`. Verified by installing the tarball into a
+  scratch project. Every gate this release hardens is inert until that lands.
+- **`requireAuth` exempts GET and OPTIONS**, so every read route — including
+  `/api/audit`, which serves the hash-chained audit log — is credential-free to any
+  local process. Mutations are protected. This is a threat-model decision, not a patch.
+- **`audit-skill audit <name> <ver> <tier>`** — the explicit form — still reaches a
+  writer that performs no existence check and hardcodes `validation_passed: true`. Only
+  the bare invocation is closed.
+- **Snapshot integrity is not an authenticity control.** `HMAC_KEY` is a literal in
+  shipped source, the HMAC covers only the metadata object so file **contents** are
+  unsigned (editing a file inside a signed snapshot leaves the signature valid), and
+  deleting `SNAPSHOT-META.json` bypasses verification entirely.
+- `cwd: ROOT` in the CLI, which resolves consumer state inside `node_modules`.
+- `security-scan` cannot fail: its parser expects `KEY=value` while `MINDFORGE.md` uses
+  `[KEY] = value`, so it always reports 0 settings and exits 0.
+- Version drift in six publishable manifests (`Formula/mindforge.rb`, `Dockerfile`,
+  `mcp-server/server.json`, `mcp-server/src/index.ts`, the plugin manifest and the
+  marketplace entry) is untouched here — none is gated, and the Formula pins a tarball
+  sha256 that cannot exist before publish.
+
 ## [11.9.1] — 2026-07-29 — Packaging Fix: Restore Missing Workflow Commands
 
 ### Fixed

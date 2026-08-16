@@ -6,13 +6,55 @@
 
 ## Latest release
 
-**v11.9.0** (2026-07-27) — Bedrock provider + full dry-run audit. See [CHANGELOG.md](./CHANGELOG.md) for full history, or [RELEASENOTES.md](./RELEASENOTES.md) for human-readable notes.
+**v11.9.2** (2026-08-16) — Correctness: the config gate can now fail, the audit chain no longer
+forks under concurrent writers, trace retrieval works, and the cost ledger has one record shape.
+**Contains a breaking change to the dashboard HTTP surface** (loopback-only) — see the BREAKING
+section in [CHANGELOG.md](./CHANGELOG.md), or [RELEASENOTES.md](./RELEASENOTES.md) for
+human-readable notes.
+
+---
+
+## What is actually enforced
+
+Read this before the install instructions. MindForge ships a large corpus of agent
+instructions — commands, skills, personas, protocols — and those are advisory: they work by
+being in the model's context, and a model can decline them. The parts that would *block* an
+action are hooks, and **no install channel currently registers them.**
+
+| Capability | Plugin channel | `npx` channel |
+|---|---|---|
+| Slash commands | Yes | Yes |
+| Skills / personas / protocol docs | Yes | Yes |
+| Subagents | Yes | Yes |
+| Audit hash-chain (`bin/verify-audit.js`) | Yes | Yes |
+| **Hooks enforced (can block a tool call)** | **No** | **No** |
+
+Why, specifically:
+
+- **No hook configuration ships, and nothing generates one.** `package.json` `files[]` has 47
+  entries and none contains `settings`, so neither `.claude/settings.json` nor
+  `.agent/settings.json` is published. All references to those paths in `bin/` are reads or
+  metadata strings — there is no code that writes or merges one. `bin/harness-audit.js:335`
+  even offers "wire trust-gate + block-no-verify into both …" as a *fix suggestion*, auditing a
+  wiring nothing creates.
+- **The plugin channel's hooks additionally crash when fired.**
+  `plugins/mindforge/scripts/run-with-flags.js:24` requires `./lib/hook-flags`, and
+  `plugins/mindforge/scripts/lib/` does not exist in the published plugin. Running the
+  dispatcher gives `Error: Cannot find module './lib/hook-flags'` and exit 1. The module it
+  needs does exist at `.agent/hooks/lib/hook-flags.js`; it was never copied in.
+
+So treat MindForge as **governance-by-convention plus a tamper-evident audit log**, not as a
+policy enforcement point. Installing it also expands your repository's trust boundary by a large
+volume of agent instructions — review what you install. Making hook registration real per
+harness is the headline goal of v12; the audit chain is genuinely verifiable today
+(`node bin/verify-audit.js`).
 
 ---
 
 ## Install
 
-Fastest path — Claude Code plugin marketplace (no project files written):
+Claude Code plugin marketplace (no project files written). **Note:** the plugin's hooks do not
+fire — see *What is actually enforced* above. Slash commands, skills and subagents do work.
 
 ```bash
 /plugin marketplace add sairam0424/MindForge
@@ -26,6 +68,12 @@ npx mindforge-cc@latest --claude --local
 ```
 
 All install channels (global, local, Antigravity, Cursor, Copilot, Gemini CLI, MCP server, combined runtimes, `--minimal`): see [docs/getting-started.md](docs/getting-started.md).
+
+**Upgrading from 11.9.x?** The installer does not overwrite an existing
+`.mindforge/MINDFORGE-SCHEMA.json`, so 11.9.2's armed config validator keeps the older
+permissive schema on a plain upgrade. Run with `--force` if you want the stricter gate. The
+daily cost cap declared as `[COST_HARD_LIMIT_USD]` in `MINDFORGE.md` is **not enforced** in
+11.9.2 — see the CHANGELOG.
 
 ---
 

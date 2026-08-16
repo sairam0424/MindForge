@@ -19,6 +19,7 @@
 'use strict';
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const assert = require('assert');
 const { execFileSync } = require('child_process');
@@ -150,6 +151,58 @@ test('installer-read docs dirs exist on disk with the exact case the installer u
     assert.ok(siblings.includes(dir),
       `docs/ has no exact-case "${dir}" entry — installer src('docs','${dir}') will miss on Linux`);
   }
+});
+
+// ── 10. Advisory lockfiles must NOT ship (LOCK-01) ────────────────────────────
+// bin/utils/file-lock.js writes "<target>.lock" beside the file it protects and unlinks
+// it in a finally, but a SIGKILL leaves one on disk until the 10s stale reclaim. Several
+// protected targets live under files[]-allowlisted dirs (e.g. .mindforge/memory/), and
+// package.json files[] OVERRIDES .npmignore — so without an explicit negation a leftover
+// lockfile ships. Proven below rather than asserted, because a bare "no .lock in FILES"
+// check is vacuous whenever no lockfile happens to exist at pack time.
+test('package.json files[] carries the !**/*.lock negation', () => {
+  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+  assert.ok(Array.isArray(pkg.files) && pkg.files.includes('!**/*.lock'),
+    'package.json files[] must include "!**/*.lock" or an orphaned advisory lockfile ships');
+});
+
+test('no .lock file is present in the real tarball', () => {
+  const locks = FILES.filter(f => f.endsWith('.lock'));
+  assert.deepStrictEqual(locks, [], `advisory lockfiles must not ship: ${locks.join(', ')}`);
+});
+
+test('the !**/*.lock negation demonstrably excludes a lockfile (with negative control)', () => {
+  // Synthetic 2-file package in a temp dir, packed twice with this same npm: once WITHOUT
+  // the negation (negative control — the .lock MUST ship, proving the gate can fail) and
+  // once WITH it (the .lock MUST be gone, proving the pattern works on this npm version).
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-packlock-'));
+  try {
+    fs.mkdirSync(path.join(tmp, '.mindforge', 'memory'), { recursive: true });
+    fs.writeFileSync(path.join(tmp, '.mindforge', 'memory', 'graph-edges.jsonl.lock'), '');
+    fs.writeFileSync(path.join(tmp, '.mindforge', 'memory', 'keep.md'), '# keep\n');
+
+    const packIn = (files) => {
+      fs.writeFileSync(path.join(tmp, 'package.json'),
+        JSON.stringify({ name: 'mf-packlock-probe', version: '1.0.0', files }, null, 2));
+      const raw = execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], {
+        cwd: tmp, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'], maxBuffer: 8 * 1024 * 1024,
+      });
+      const parsed = JSON.parse(raw);
+      const entry = Array.isArray(parsed) ? parsed[0] : parsed;
+      return (entry.files || []).map(f => f.path);
+    };
+
+    const without = packIn(['.mindforge/memory/']);
+    assert.ok(without.includes('.mindforge/memory/graph-edges.jsonl.lock'),
+      'NEGATIVE CONTROL FAILED: npm did not ship the .lock even without the negation, so ' +
+      'this test cannot prove the negation is what keeps it out');
+
+    const withNeg = packIn(['.mindforge/memory/', '!**/*.lock']);
+    assert.ok(!withNeg.includes('.mindforge/memory/graph-edges.jsonl.lock'),
+      '"!**/*.lock" did not exclude the lockfile on this npm version');
+    assert.ok(withNeg.includes('.mindforge/memory/keep.md'),
+      '"!**/*.lock" must not exclude anything else');
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 });
 
 (async () => {

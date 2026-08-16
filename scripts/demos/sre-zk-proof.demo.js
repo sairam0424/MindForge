@@ -4,9 +4,9 @@
  */
 'use strict';
 
-const { NexusTracer } = require('../bin/engine/nexus-tracer');
-const SREManager = require('../bin/engine/sre-manager');
-const ztai = require('../bin/governance/ztai-manager');
+const { NexusTracer } = require('../../bin/engine/nexus-tracer');
+const SREManager = require('../../bin/engine/sre-manager');
+const ztai = require('../../bin/governance/ztai-manager');
 const fs = require('fs');
 const path = require('path');
 

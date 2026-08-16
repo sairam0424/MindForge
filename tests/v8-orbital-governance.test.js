@@ -65,9 +65,14 @@ async function runTest() {
 
   } catch (err) {
     console.error(`[TEST] ❌ Error: ${err.message}`);
-    process.exit(1);
+    process.exitCode = 1;
   } finally {
-    process.exit(0);
+    // This suite is falsifiable today only because every check THROWS, so process.exit(1) in
+    // the catch terminates before this finally can run. That is fragile, not safe: adding one
+    // non-throwing check (an if/else that console.errors) would make the whole suite silently
+    // unfailable — which is exactly what happened in v8-persistence and v8-skill-evolution.
+    // The forced exit stays (sql.js/WASM holds handles open) but now propagates the outcome.
+    process.exit(process.exitCode || 0);
   }
 }
 
