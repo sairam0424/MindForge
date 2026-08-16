@@ -417,6 +417,14 @@ cd sdk && npm install && npm run build
 
 ## Installation
 ```bash
-npm install mindforge-sdk@11.9.1
+npm install mindforge-sdk
 # or: npx mindforge-cc@stable  # installs SDK as part of the framework
 ```
+
+> **`mindforge-sdk` is versioned independently of the framework.** The release workflow
+> (`.github/workflows/mindforge-release.yml`) publishes `mindforge-cc` and
+> `mindforge-mcp-server` only — it has no `sdk` steps — so `sdk/package.json`'s version
+> tracks the monorepo while the published package does not. At the time of writing the
+> latest published SDK is **11.8.0** (`npm view mindforge-sdk versions`), even though the
+> in-repo `sdk/package.json` reads 11.9.2. Install it unpinned, as above; pinning it to a
+> framework version yields `E404 No match found for version …`.
