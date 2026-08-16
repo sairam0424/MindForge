@@ -32,11 +32,16 @@ class TemporalHub {
   }
 
   static _verifyMetadata(metadata) {
-    if (!metadata.integrity) return false;
+    if (!metadata.integrity || typeof metadata.integrity !== 'string') return false;
     const { integrity, ...rest } = metadata;
     const expected = crypto.createHmac('sha256', HMAC_KEY)
       .update(JSON.stringify(rest))
       .digest('hex');
+    // timingSafeEqual throws RangeError on unequal buffer lengths, so a truncated or
+    // malformed `integrity` crashed the caller instead of failing verification.
+    // Compare lengths first — a length mismatch is already a verification failure,
+    // and leaking it is not a timing side channel because `expected` is fixed-width.
+    if (integrity.length !== expected.length) return false;
     return crypto.timingSafeEqual(Buffer.from(integrity), Buffer.from(expected));
   }
 

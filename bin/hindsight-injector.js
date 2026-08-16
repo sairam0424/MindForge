@@ -18,8 +18,14 @@ class HindsightInjector {
     console.log(`[hindsight] Injecting fix at ${auditId}: "${fixDescription}"`);
 
     try {
-      // 1. Rollback .planning directory
-      TemporalHub.rollbackTo(auditId);
+      // 1. Rollback .planning directory.
+      //    MUST be awaited: rollbackTo is async (engine/temporal-hub.js), so without
+      //    await its rejection escapes this try/catch entirely, the process dies on an
+      //    unhandled rejection, AND execution still falls through to steps 2-3 — which
+      //    fsync a hash-chained `hindsight_injected` entry and flip auto-state.json for
+      //    a rollback that never happened. The chain then verifies as valid but records
+      //    an event that did not occur.
+      await TemporalHub.rollbackTo(auditId);
 
       // 2. Append the "Hindsight" event to AUDIT.jsonl via the unified, hash-chained,
       //    durable append (UC-04b) so this entry links into the single verifiable chain.
