@@ -19,6 +19,9 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 
 const TESTS_DIR = path.join(__dirname);
+// Scratch dirs some suites create (tests/tmp-graph, tests/tmp-learning-test) must
+// never contribute test files, or a crashed run leaves behind a phantom suite.
+const SKIP_DIRS = /^(tmp-|node_modules$|\.)/;
 
 // ── Parse CLI flags ──────────────────────────────────────────────────────────
 
@@ -30,15 +33,17 @@ const filterPatterns = filterArg
 
 // ── Discover test files ──────────────────────────────────────────────────────
 
-function discoverTests() {
-  const entries = fs.readdirSync(TESTS_DIR);
-  const testFiles = entries
-    .filter(f => f.endsWith('.test.js'))
-    .filter(f => f !== 'run-all.js')
-    .sort();
+function discoverTests(patterns = filterPatterns) {
+  const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    if (SKIP_DIRS.test(e.name)) return [];
+    const abs = path.join(dir, e.name);
+    if (e.isDirectory()) return walk(abs);
+    return e.name.endsWith('.test.js') ? [path.relative(TESTS_DIR, abs)] : [];
+  });
+  const testFiles = walk(TESTS_DIR).sort();
 
-  if (filterPatterns) {
-    return testFiles.filter(f => filterPatterns.some(p => f.toLowerCase().includes(p)));
+  if (patterns) {
+    return testFiles.filter(f => patterns.some(p => f.toLowerCase().includes(p)));
   }
 
   return testFiles;
@@ -161,4 +166,6 @@ function main() {
   }
 }
 
-main();
+module.exports = { discoverTests, getSkipReason, getTimeoutMs };
+
+if (require.main === module) main();
