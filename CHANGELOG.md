@@ -1,8 +1,39 @@
 # Changelog
 
-## [Unreleased] — Concurrency: fail-closed append lock
+## [Unreleased] — Correctness: config gate, concurrency, retrieval, cost ledger
 
 ### Fixed
+- **`security-scan` could not fail.** `bin/validate-config.js` and
+  `bin/models/model-router.js` each parsed `MINDFORGE.md` with a plain `KEY=value` regex, but
+  the registry declares its 43 parameters as bracketed `[KEY] = value`. Every schema property
+  resolved to `undefined` and short-circuited, so the command reported
+  `MINDFORGE.md valid — 0 settings configured` and exited 0 on any input. The schema also had
+  no `required` key at all. Both parsers now share `bin/utils/mindforge-params.js`, which also
+  accepts the legacy plain form (`examples/starter-project/MINDFORGE.md` ships 28 such lines),
+  and the schema declares real `required`/`recommended` sets.
+  **Behaviour change for consumers:** three CI gates go from unfailable to failable —
+  `.github/workflows/mindforge-ci.yml:38`, `.gitlab-ci-mindforge.yml:12`, and
+  `.github/workflows/control-plane.yml:100`. If one red-lines on a valid value, the schema
+  bound is wrong; do not "fix" it by editing `MINDFORGE.md`. Model routing is unchanged —
+  30 persona x tier combinations resolve identically.
+- **Trace retrieval returned nothing usable.** Queries were wrapped as a single FTS phrase, so
+  any query containing one absent term scored zero; and `traces_search` was keyed on `trace_id`
+  rather than the primary key, so each span's DELETE evicted the previous span and only the last
+  span per trace stayed searchable — 2,270 of 5,117 content-bearing traces, 44.4%, unsearchable.
+  Queries are now tokenised, OR-joined and ranked by tf-idf (`matchinfo('pcnx')`); the index is
+  re-keyed and rebuilt losslessly from the base table. `bin/eval/eval-harness.js` and its golden
+  set had zero callers and are now reachable as `npm run eval:retrieval`, with the baseline
+  committed: mean recall@10 0.6417, nDCG 0.5698 over 519 documents.
+- **The cost ledger reported two totals for one concept.** `sum(cost_usd)` was $13.73 while
+  `sum(total_cost_usd)` was $0.00, and `tests/dashboard.test.js` wrote the reader's field name,
+  so the mismatch tested green. `bin/models/usage-record.js` is now the single definition of the
+  ledger path, record shape, per-entry cost and day bucket. The configured `ledger_path` pointed
+  at `token-ledger.jsonl`, a file that has never existed; that ghost filename had spread to 17
+  places across 13 files and is now absent. The dashboard cost tile no longer renders `$0.00`
+  on a 500 — it had no `res.ok` check, and because errors return well-formed JSON the catch
+  never fired, making an outage indistinguishable from zero spend.
+  `scripts/purge-synthetic-usage.js` removes fixture rows: dry-run by default, backs up first,
+  idempotent, and aborts leaving the ledger untouched if the rewrite fails.
 - **Audit hash chain could fork under concurrent writers.** `bin/autonomous/audit-writer.js`
   read the chain head and appended with no mutual exclusion, and cached the head in-process
   indefinitely — so once a second process appended, the first kept chaining from a superseded
