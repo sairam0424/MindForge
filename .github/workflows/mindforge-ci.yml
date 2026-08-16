@@ -123,15 +123,29 @@ jobs:
             echo "::notice::No SDK found - skipping build"
           fi
 
+      # The previous form piped tsc into `while read`, and GitHub's default shell is
+      # `bash -e {0}` with NO pipefail — so the step's exit status was the LOOP's, i.e.
+      # always 0. It emitted ::error:: annotations onto the PR while the check stayed
+      # green, which is worse than no check at all because it looks like it is working.
+      # Capture the output, annotate it, then exit on tsc's own status.
       - name: Type check
         run: |
-          if [ -f "sdk/tsconfig.json" ]; then
-            npx tsc --noEmit -p sdk/tsconfig.json 2>&1 | while read line; do
-              echo "::error::$line"
-            done
-          else
+          if [ ! -f "sdk/tsconfig.json" ]; then
             echo "::notice::No root or SDK tsconfig - skipping type check"
+            exit 0
           fi
+          set +e
+          npx tsc --noEmit -p sdk/tsconfig.json > /tmp/tsc.out 2>&1
+          tsc_status=$?
+          set -e
+          while IFS= read -r line; do
+            [ -n "$line" ] && echo "::error::$line"
+          done < /tmp/tsc.out
+          if [ "$tsc_status" -ne 0 ]; then
+            echo "::error::tsc exited $tsc_status — failing the type check"
+            exit "$tsc_status"
+          fi
+          echo "::notice::Type check passed"
 
       - name: Lint (fail on error)
         run: |
@@ -194,28 +208,48 @@ jobs:
       - name: Install MindForge
         run: node bin/wizard/setup-wizard.js --claude --local
 
-      - name: Run AI PR Review
+      # NOT IMPLEMENTED. This step collects the diff and stops; no model is invoked and
+      # /tmp/mindforge-review.md is never written. It must NOT imply a review happened —
+      # the previous body printed "AI PR review completed", and the unguarded post step
+      # below then published "✅ no significant issues found." as a real PR review on every
+      # pull request, including a 198-file release sync. A verification framework asserting
+      # a review it never ran is the exact defect class this release exists to remove.
+      - name: Collect PR diff for AI review (review itself NOT implemented)
+        id: collect_review
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          REVIEW_FILE: mindforge-review.md
         run: |
           if [ -z "${ANTHROPIC_API_KEY}" ]; then
-            echo "::notice::ANTHROPIC_API_KEY not set — skipping AI review"
+            echo "::notice::ANTHROPIC_API_KEY not set — no AI review will be produced"
             exit 0
           fi
+          git diff "${BASE_SHA}...${HEAD_SHA}" > /tmp/pr.diff
+          echo "::notice::Diff collected ($(wc -l < /tmp/pr.diff) lines). AI review is not implemented; no review will be posted."
+          # When a real review IS implemented, write it to $REVIEW_FILE (workspace-relative)
+          # and set the output below. The post step keys off THIS output, deliberately not
+          # off hashFiles(): hashFiles only matches inside GITHUB_WORKSPACE, so guarding on
+          # an absolute /tmp path would be permanently false and would silently suppress a
+          # genuine review — trading one invisible failure for another.
+          if [ -s "${REVIEW_FILE}" ]; then
+            echo "produced=true" >> "${GITHUB_OUTPUT}"
+          fi
 
-          git diff ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }} > /tmp/pr.diff
-
-          node -e "
-            console.log('::notice::AI PR review completed — see review comment on PR');
-          "
-
+      # Guarded on a review having actually been produced. Without this, the step always ran
+      # and published a hardcoded "✅ no significant issues found." as a real PR review — on
+      # every pull request, including a 198-file release sync.
       - name: Post review as PR comment
+        if: steps.collect_review.outputs.produced == 'true'
         uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
-            const review = fs.existsSync('/tmp/mindforge-review.md') ?
-              fs.readFileSync('/tmp/mindforge-review.md', 'utf8') :
-              '✅ MindForge AI review: no significant issues found.';
-
+            const review = fs.readFileSync('mindforge-review.md', 'utf8').trim();
+            if (!review) {
+              core.notice('Review file is empty — not posting.');
+              return;
+            }
             await github.rest.pulls.createReview({
               owner: context.repo.owner,
               repo: context.repo.repo,
