@@ -25,7 +25,11 @@ router.get('/overview', (req, res) => {
         ...metrics, 
         tasks_total: status.tasks_total || 0,
         tasks_completed: status.tasks_completed || 0,
-        auditEntries: metricsAggregator.getAuditEntries(500) // need enough history for velocity
+        // .entries — getAuditEntries() returns { entries, total, limit, offset }, not an
+        // array. roi-engine, velocity-forecaster and debt-monitor all call .filter() on
+        // this value, so handing them the wrapper object throws a TypeError that the
+        // route's catch turns into an opaque 500.
+        auditEntries: metricsAggregator.getAuditEntries(500).entries // need enough history for velocity
     };
 
     const roi      = roiEngine.calculate(fullMetrics);

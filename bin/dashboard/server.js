@@ -190,6 +190,30 @@ app.post('/api/v1/token/refresh', requireAuth, (req, res) => {
 // ── Register API routes ───────────────────────────────────────────────────────
 API.register(app);
 app.use('/api/temporal', TemporalAPI);
+// RevOpsAPI was required at the top of this file but never mounted, so /api/revops
+// returned 404 while the AgRevOps dashboard panels and docs described it as live.
+app.use('/api/revops', RevOpsAPI);
+
+// ── Crash guards ──────────────────────────────────────────────────────────────
+// An escaped promise rejection in a route handler terminates the process under
+// Node >= 15. Log it so the reason is recoverable, and keep serving: a single bad
+// request must not take the observability surface down.
+process.on('unhandledRejection', (reason) => {
+  console.error('[Dashboard] Unhandled rejection:', reason instanceof Error ? reason.stack : reason);
+});
+
+// uncaughtException MUST exit. After an uncaught throw the process state is
+// undefined, and log-and-continue actively broke shutdown: a throw anywhere in the
+// first half of shutdown() (SSE.stop(), or unlinking the token file) was swallowed,
+// so server.close() was never reached and the forced-exit timer was never armed.
+// The result was a dashboard that IGNORED SIGTERM while still serving the
+// token-authenticated mutation endpoints, with the bearer token left on disk and
+// still valid in memory — i.e. the operator's documented stop command silently
+// failed while reporting success. Only SIGKILL stopped it.
+process.on('uncaughtException', (err) => {
+  console.error('[Dashboard] Uncaught exception — exiting:', err && err.stack ? err.stack : err);
+  process.exit(1);
+});
 
 // ── Start SSE bridge ──────────────────────────────────────────────────────────
 SSE.start();
@@ -231,14 +255,26 @@ server.on('error', err => {
 // ── Graceful shutdown ─────────────────────────────────────────────────────────
 function shutdown(signal) {
   console.log(`\n[dashboard] ${signal} received — shutting down`);
-  SSE.stop();
-  // Remove sensitive token file on shutdown
-  if (fs.existsSync(TOKEN_FILE)) fs.unlinkSync(TOKEN_FILE);
+
+  // Arm the forced exit FIRST. Every step below can throw (permission drift on the
+  // token path, a read-only .mindforge, an SSE listener error), and if any of them
+  // does before this timer is set, the process would keep serving the authenticated
+  // mutation API after the operator asked it to stop.
+  const forced = setTimeout(() => process.exit(0), 3000);
+  forced.unref();
+
+  try { SSE.stop(); } catch (err) { console.error('[dashboard] SSE.stop failed:', err.message); }
+
+  // Destroying the bearer token is a security step, not housekeeping — never let it
+  // throw. rmSync with force tolerates a missing path and most permission cases.
+  try { fs.rmSync(TOKEN_FILE, { force: true }); } catch (err) {
+    console.error('[dashboard] could not remove token file:', err.message);
+  }
+
   server.close(() => {
-    if (fs.existsSync(PID_FILE)) fs.unlinkSync(PID_FILE);
+    try { fs.rmSync(PID_FILE, { force: true }); } catch { /* best effort */ }
     process.exit(0);
   });
-  setTimeout(() => process.exit(0), 3000);
 }
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));
