@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 /**
  * MindForge — Unified Test Runner
- * Discovers and executes all tests/*.test.js files sequentially.
+ * Recursively walks tests/ and executes every file ending in .test.js, each in its
+ * own child process, sequentially, with the repo root as cwd. Directories matching
+ * SKIP_DIRS are pruned; that prune applies to DIRECTORIES ONLY, never to files.
  *
  * Usage:
  *   node tests/run-all.js

@@ -48,7 +48,7 @@ cd mcp-server && npm install && npm run build   # tsc --noEmit + node build.mjs 
 cd mcp-server && npm run typecheck              # tsc --noEmit only
 ```
 
-To skip a test, make its **first line** `// @skip: reason`. There is no Jest/Mocha — `tests/run-all.js` discovers `*.test.js`, runs them sequentially with a 60s timeout, and propagates exit codes.
+To skip a test, make its **first line** `// @skip: reason`; to raise its timeout, `// @timeout: <ms>` (default `60000`). There is no Jest/Mocha — `tests/run-all.js` walks `tests/` **recursively** and runs every file whose name ends in `.test.js`, sequentially, each in its own `node` process with the repo root as `cwd`, propagating exit codes. **102 files today: 100 pass, 2 env-dependent skips (`browser.test.js`, `sre-integration.test.js`), 0 failures.** Directories named `tmp-*`, `node_modules` or `.*` are pruned — that prune applies to **directories only**, so a *file* named `tmp-foo.test.js` still runs; use `// @skip:` to exclude a test, never a filename prefix. `--filter=` matches the whole `tests/`-relative path, so it can select a subdirectory. The module exports `discoverTests`/`getSkipReason`/`getTimeoutMs` and `main()` is behind a `require.main` guard, so requiring it does not start a run.
 
 **Version bumps touch 5 files** (asserted by `tests/version-consistency.test.js`): `package.json`, `sdk/package.json`, `.mindforge/config.json`, `MINDFORGE.md` (`[VERSION]`), `sdk/README.md`. The MCP server (`mcp-server/package.json`) is a third independently-versioned package that must be bumped in lockstep.
 

@@ -1,5 +1,37 @@
 # MindForge v11.9.1 → v12 → v13 Phased Upgrade Plan
 
+> ## STATUS OF THIS SNAPSHOT — updated 2026-08-16
+>
+> **Approved against `f7b9e180` (v11.9.1). Nothing below has been rewritten**, except the
+> `Verification — v11.9.2` block and TEST-01, which are *instructions* and were corrected in
+> place — three of the verification commands could not run at all, and TEST-01's core
+> instruction is refuted. Corrections are marked `[corrected 2026-08-16]`.
+>
+> **Release 1 is partly landed** on `fix/v11.9.2-ship-blockers` (base `f7b9e180`, head
+> `0174432`):
+>
+> | Item | State | Commit |
+> |---|---|---|
+> | SEC-00 (`:95`) | **token half done** — revoked, `.npmrc` back to `${NPM_TOKEN}`, gitleaks enforced at three layers with a self-test. *Residue:* trusted publishing + post-publish provenance gate | `0174432` |
+> | ASYNC-01 (`:103`) | **done** — rollback awaited; `RevOpsAPI` mounted and fed `.entries`; `uncaughtException` logs and **exits**; `_verifyMetadata` type+length guard. *Deliberate divergence:* `unhandledRejection` logs and **continues**, so one bad request cannot take the observability surface down. *Residue:* the length guard is on UTF-16 units, not bytes | `4b09f19`, `fe9390b` |
+> | CLI-01 (`:102`) | **prepend half done**; `cwd: process.cwd()` **deferred to v12**. Prepending alone turned `install-skill`/`register-skill`/`audit-skill`/`record-learning` into live state writers (`audit-skill` minted hash-chained `{validation_passed:true}` entries for nonexistent skills), so those four now carry **no** `defaultArgs` and refuse with exit 1. `subagent` became a first-class command | `37392d5` |
+> | TEST-01 (`:125`) | **refuted and restaged** — see the corrected item | — |
+> | Test-runner discovery (not in this plan) | flat `readdirSync` -> recursive walk; three state-destroying orphan suites deleted; three demos relocated | `5177225`, `a9bdb0f` |
+>
+> **THE TOKEN CORRECTION.** `:95` is accurate that the token was gitignored and untracked. To
+> forestall any secondary summary claiming otherwise: git history only ever held the
+> `${NPM_TOKEN}` placeholder — `git log --all -p \| grep -cE 'npm_[A-Za-z0-9]{36}'` = **0**
+> across all **3,244** reachable commits, re-verified 2026-08-16. The token was never public.
+> It is revoked and scanning is enforced.
+>
+> **Measured as of.** `:21` and `:340` say **1,934** audit entries; the codebase index says
+> **1907**. Both are correct for their timestamp — `.planning/AUDIT.jsonl` is gitignored,
+> append-only local machine state, so any count is a timestamp, not a constant. Re-measured
+> 2026-08-16 on `0174432`: `✅ audit chain valid: 2067 entries`, chain valid, 12-line hasher
+> unchanged. `npm pack` `entryCount 1968` unchanged (`:128`, `:151`). DEL-01's `1,359` rows /
+> 59.3 MB (`:221`): **1,381** rows were purged locally, taking `celestial.db` from 64,933,888
+> to **4,231,168** bytes; the DB is gitignored, so the code half of DEL-01 is still open.
+
 ## Context
 
 MindForge sells itself as an **enforced** agentic operating protocol. Two research
@@ -92,7 +124,7 @@ Goal: stop active harm and tell the truth. Roughly two focused weeks, mostly sma
 | # | ID | Change | Files |
 |---|---|---|---|
 | 1 | DOC-01 | Per-channel capability matrix in README with an honest `Hooks enforced: NO` for **both** channels; de-recommend the plugin channel; new `harness-audit.js` check: *"is any MindForge hook actually registered for this harness?"* | `README.md`, `bin/harness-audit.js` |
-| 2 | SEC-00 | Revoke the live `npm_…` token at `.npmrc:13` (gitignored + untracked, so it is machine-local); audit publish history for all three packages; delete the file; adopt trusted publishing; add a pre-publish grep for `_authToken=` / `npm_[A-Za-z0-9]{36}` that hard-fails | `.npmrc`, `.github/workflows/mindforge-release.yml` |
+| 2 | SEC-00 | ~~Revoke the live `npm_…` token at `.npmrc:13`~~ **DONE in `0174432`** `[corrected 2026-08-16]`. It was gitignored + untracked, so machine-local — history held only the `${NPM_TOKEN}` placeholder (0 matches for `npm_[A-Za-z0-9]{36}` across 3,244 commits). Token **revoked**; `.npmrc` restored to the env-var form its own comments prescribed; publish history audited for all **three** published packages; scanning enforced at three layers (`.gitleaks.toml`, `.husky/pre-commit`, `.github/workflows/secret-scan.yml`, self-tested by `scripts/ci/verify-secret-scan.sh` — gitleaks' **default** ruleset does not detect an npm token in `.npmrc`, hence custom rules; full history clean). **Residue:** adopt trusted publishing (the release job pins Node 20, below the 22.14.0 floor) and add the post-publish provenance gate | `.npmrc`, `.gitleaks.toml`, `.husky/pre-commit`, `.github/workflows/{secret-scan,mindforge-release}.yml`, `scripts/ci/verify-secret-scan.sh` |
 
 ### 1.2 Then, fully parallel
 
@@ -122,33 +154,117 @@ Goal: stop active harm and tell the truth. Roughly two focused weeks, mostly sma
    that run in **zero** workflows (`harness:audit`, `harness:compliance`, `release:ready`)
    despite `CLAUDE.md:96` claiming otherwise; fix `tsc | while read` (exit status is the
    loop's); make the packaging skip `exit 1`; add `mcp-server` typecheck + stdio smoke.
-4. **TEST-01** — move to `node --test tests/` (14 files already use `node:test`). Add
-   `tests/meta-runner.test.js` banning `finally { process.exit(0) }` (4 suites currently
-   **cannot report failure**) and asserting ≥1 assertion per file (10 have zero). Golden
-   tarball manifest of 1,968 paths.
+4. **TEST-01** — `[corrected 2026-08-16]` **"move to `node --test tests/`" is refuted. Do
+   not attempt it.** Only 14 of 97 files use `node:test`; the other 83 are bare scripts.
+   Six blockers, each measured:
+
+   1. **A directory positional is loaded as a *module*.** `node --test tests/` on Node 26.5.0
+      -> `MODULE_NOT_FOUND` for `tests`, **exit 1**. On Node 20.20.2 a glob positional is also
+      rejected (`Could not find '.../sub/*.test.js'`) — glob support is 21+. The only working
+      form is **bare** `node --test` (no positional), which discovers recursively from cwd —
+      and that is blocker 2.
+   2. **Bare `node --test` from the repo root loads files that are not tests, and two of them
+      are ESM-in-`.js`.** Node's default patterns include `**/*-test.?(c|m)js` and
+      `**/test-*.?(c|m)js`, so it discovers
+      `.mindforge/dynamic-workflows/scripts/api-contract-test.js` and `test-coverage-gap.js`.
+      Both declare `export const meta` with a top-level `return`; loaded as ESM each dies with
+      `SyntaxError: Illegal return statement` (measured: 2 tests, 2 fail). That directory
+      **must not be renamed or ported** — only `.js` loads from a workflows directory, so a
+      port silently unregisters all 35 workflows. It also picks up `sdk/tests/*.test.js`,
+      which need `sdk/dist/` built first. Therefore: an explicit file list, never discovery.
+   3. **It is parallel by default over a corpus that shares one `celestial.db` and one
+      hash-chained `.planning/AUDIT.jsonl`.** Measured on Node 20.20.2 **and** 26.5.0: four
+      700 ms files all started within 9–17 ms of one another. `bin/memory/vector-hub.js`
+      exports the whole DB and `renameSync`es over the target (last-rename-wins), and 50
+      parallel `appendAuditEntrySync` calls produce
+      `❌ audit chain BROKEN at entry 2: previous_hash mismatch`. Parallelism is unsafe until
+      MEM-01 and LOCK-01 land.
+   4. **Serialisation exists but not on the declared engine floor.** `--test-concurrency=1`
+      **is** present on Node 20.20.2 and serialises correctly (measured: start1/end1 →
+      start4/end4, no interleave) — an earlier analysis claiming it needs Node ≥21 was wrong.
+      It is absent on Node 18, which `engines: ">=18.0.0"` and the `[18.x, 20.x, 22.x]` matrix
+      at `.github/workflows/mindforge-ci.yml:20` still admit, so it cannot be the sole guard
+      before NODE-01.
+   5. **There is no per-file `@skip`/`@timeout` equivalent.** `tests/run-all.js:56-75` honours
+      a first-line `// @skip: reason` (used by `browser.test.js`, `sre-integration.test.js`)
+      and `// @timeout: <ms>`, with a 60 s per-file default. `node:test` offers per-*test*
+      `{skip}`/`{timeout}` and one global `--test-timeout`; neither reproduces a per-file
+      directive across 83 bare-script files.
+   6. **The move does not fix what it was proposed to fix.** Under `node --test` a child that
+      calls `process.exit(0)` still reports as a pass, so the four `finally { process.exit(0) }`
+      suites stay green either way. The meta-test *is* the fix, and it needs no runner change.
+
+   **Staged replacement:**
+   - **Stage 1 (v11.9.2, no runner change).** Add `tests/meta-runner.test.js` under the
+     existing `tests/run-all.js`: ban `finally { process.exit(0) }` (4 suites **cannot report
+     failure**), assert ≥1 assertion per file (10 have zero), and assert
+     `discoverTests(null).length` equals the on-disk `*.test.js` count — `discoverTests`,
+     `getSkipReason` and `getTimeoutMs` are exported as of `5177225`. Golden tarball manifest
+     of 1,968 paths. This delivers the whole value at zero runner risk.
+   - **Stage 2 (v12.0).** Keep `run-all.js` as the entrypoint. Add an **opt-in** `node --test`
+     lane fed an explicit file list generated by `discoverTests()` — never a directory, never
+     a glob, never bare discovery — run with `--test-concurrency=1` and gated on
+     `process.version` ≥ 20. Diff its pass/fail set against `run-all.js` for one full release
+     cycle before trusting it.
+   - **Stage 3 (v13.0, after NODE-01 raises `engines` to ≥22.14.0).** Promote the lane to
+     primary; keep `--test-concurrency=1` until MEM-01 and LOCK-01 have removed the shared
+     writers; port the `@skip`/`@timeout` directives before retiring `run-all.js`.
 
 ### Verification — v11.9.2
 
+`[corrected 2026-08-16]` — three commands in the previous version of this block could not
+verify anything: `model-router.resolve` does not exist, `eval-harness.js --set` exits 0
+silently, and `appendAuditEntrySync` was called with the wrong arity. Every command below was
+executed on `0174432`; its **before** result is recorded so it discriminates.
+
 ```bash
-# CFG-01: must now parse the 41 bracketed lines and be able to fail
-node bin/validate-config.js                     # expect non-zero on a missing required key
-node -e "console.log(require('./bin/models/model-router').resolve('PLANNER'))"  # not a DEFAULT
+MF=$(pwd)   # absolute path to this checkout
+
+# CFG-01: MINDFORGE.md declares 43 bracketed keys (not 41 — 43 at v11.9.1 too); model-router
+# honours 0 of them, because :48's /^([A-Z0-9_]+)=(.*)$/ never matches `[KEY] = value` and
+# parseSettings seeds from {...DEFAULTS}, so getAllSettings() IS the DEFAULTS object.
+node -e "const s=require('./bin/models/model-router').getAllSettings();const d=require('fs').readFileSync('MINDFORGE.md','utf8');let n=0;for(const m of d.matchAll(/^\s*\[([A-Z0-9_]+)\]\s*=\s*(.+?)\s*\$/gm)) if(s[m[1]]===m[2]) n++;console.log('honoured:',n);process.exit(n>0?0:1)"
+#   before: honoured: 0   exit 1        after: honoured: >0   exit 0
+node bin/validate-config.js
+#   before: exit 0 (the schema has no `required` key at all)   after: non-zero on a missing key
+# NOTE: model-router exports {route, getModel, clearCache, getAllSettings}. There is NO
+# `resolve` — the old `.resolve('PLANNER')` probe threw TypeError, and getModel('PLANNER')
+# returns undefined because the key is PLANNER_MODEL (hence the alias table CFG-01 needs).
 
 # CLI-01: must NOT enter an install, and must keep both arg sets
-cd /tmp/mf-probe && node <path>/bin/mindforge-cli.js health --force   # no "Would install:"
-node <path>/bin/mindforge-cli.js hindsight AUD-abc "fix"              # 'inject' token retained
+cd "$(mktemp -d)" && node "$MF/bin/mindforge-cli.js" health --force   # no "Would install:"
+node "$MF/bin/mindforge-cli.js" hindsight AUD-abc "fix"
+#   after 37392d5: 'inject' retained; after 4b09f19 it exits 1 with a clean message and
+#   AUDIT.jsonl is byte-identical. NOTE cwd: ROOT at :185 is still unfixed, so the child
+#   still resolves relative paths inside the package dir.
 
-# FTS-01: the shipped golden set must stop scoring zero
-node bin/eval/eval-harness.js --set golden-set-retrieval.json         # recall@10 > 0
-sqlite3-equivalent count check: traces vs traces_search parity
+# FTS-01: row-count parity is the ONLY part verifiable today. Read-only; does not open
+# VectorHub (whose init/ALTER-TABLE path can write).
+node -e "const s=require('sql.js'),fs=require('fs');s().then(S=>{const db=new S.Database(fs.readFileSync('.mindforge/celestial.db'));const n=q=>db.exec(q)[0].values[0][0];const t=n('select count(*) from traces'),f=n('select count(*) from traces_search');console.log(t,f);process.exit(t===f?0:1)})"
+#   before: 5748 2796   exit 1        after FTS-01: equal   exit 0
+# recall@10 is NOT verifiable yet and must not be used as a gate. bin/eval/eval-harness.js
+# exports {recallAtK, ndcg, runEval}, has no argv handling and no `require.main` block, so
+# `node bin/eval/eval-harness.js --set golden-set-retrieval.json` exits 0 printing NOTHING.
+# runEval({goldenSet, retriever, k}) also needs a retriever nothing supplies. It gains a CLI
+# and a caller in EVAL-01; wire the gate then.
 
-# LOCK-01: concurrent append must not break the chain
-seq 1 50 | xargs -P8 -I{} node -e "require('./bin/autonomous/audit-writer').appendAuditEntrySync({event:'probe{}'})"
-node bin/verify-audit.js                        # expect: audit chain valid: N entries
+# LOCK-01: concurrent append must not break the chain. appendAuditEntrySync(auditPath, event)
+# takes the PATH FIRST — the one-arg form throws ERR_INVALID_ARG_TYPE and verifies nothing.
+# Run it in a scratch cwd; NEVER against this repo's .planning/AUDIT.jsonl.
+P=$(mktemp -d); mkdir -p "$P/.planning"
+(cd "$P" && seq 1 50 | xargs -P8 -I{} node -e "require('$MF/bin/autonomous/audit-writer').appendAuditEntrySync('.planning/AUDIT.jsonl',{event:'probe{}'})")
+node "$MF/bin/verify-audit.js" "$P/.planning/AUDIT.jsonl"
+#   before: 50 lines, "audit chain BROKEN at entry 2: previous_hash mismatch", exit 1
+#   after LOCK-01: "audit chain valid: 50 entries", exit 0
 
-# Gates
+# Gates. WARNING: `npm test` appends to the hash-chained .planning/AUDIT.jsonl, writes a
+# .mindforge/audit/manifests/ file, appends a token-usage.jsonl row and rewrites
+# celestial.db. Run it deliberately, not in a loop.
 npm test && npm run harness:audit && npm run harness:compliance -- --check && npm run release:ready
-npm pack --dry-run --json                       # 1,968 paths, no .db, no .npmrc
+#   measured on 0174432: 95 passed, 0 failed, 2 skipped, 97 total, 17,286 ms
+npm pack --dry-run --json --ignore-scripts      # entryCount 1968, no .db, no .npmrc
+#   measured: entryCount 1968, size 2,973,910 — unchanged from v11.9.1
+node bin/verify-audit.js                        # measured: audit chain valid: 2067 entries
 ```
 
 ---
