@@ -49,7 +49,7 @@ Document completed checks in `.planning/RELEASE-CHECKLIST.md`.
 | G01 | package.json version === 2.0.0 | `node -e "console.log(require('./package.json').version)"` | | | |
 | G02 | SDK package.json version === 2.0.0 | `node -e "console.log(require('./sdk/package.json').version)"` | | | |
 | G03 | Git tag v2.0.0 exists and points to HEAD | `git show v2.0.0 --no-patch` | | | |
-| G04 | CHANGELOG.md has v2.0.0 entry with release highlights | `grep -n "2.0.0" CHANGELOG.md` | | | |
+| G04 | CHANGELOG.md has v2.0.0 entry with release highlights | `grep -n "2.0.0" CHANGELOG.md`; if the root file's rolling window has since aged out this version, also check `grep -n "2.0.0" changelogs/v2.0.0.md` | | | |
 | G05 | `npm publish --dry-run` is clean | Run dry-run, verify file list | | | |
 
 ---
@@ -118,7 +118,7 @@ Document completed checks in `.planning/RELEASE-CHECKLIST.md`.
 - [ ] G01 — package.json version matches release
 - [ ] G02 — SDK package.json version matches
 - [ ] G03 — Git tag exists and points to HEAD
-- [ ] G04 — CHANGELOG.md has version entry
+- [ ] G04 — CHANGELOG.md (rolling window) or changelogs/vX.Y.Z.md (archive) has version entry
 - [ ] G05 — npm publish --dry-run is clean
 
 ---

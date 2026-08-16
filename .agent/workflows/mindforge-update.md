@@ -290,7 +290,7 @@ Format completion message (changelog was already shown in confirmation step):
 
 ⚠️  Restart your runtime to pick up the new commands.
 
-[View full changelog](https://github.com/glittercowboy/mindforge/blob/main/CHANGELOG.md)
+[View full changelog](https://github.com/sairam0424/MindForge/blob/main/CHANGELOG.md) ([full archive](https://github.com/sairam0424/MindForge/blob/main/changelogs/))
 ```
 </step>
 

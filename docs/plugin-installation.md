@@ -1,4 +1,4 @@
-# Installing MindForge as a Claude Code Plugin (v11.3.1)
+# Installing MindForge as a Claude Code Plugin (v11.9.0)
 
 MindForge ships as a native **Claude Code plugin marketplace** in addition to the
 `npx mindforge-cc` installer. The plugin path is the fastest way to get MindForge's

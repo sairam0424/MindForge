@@ -68,6 +68,18 @@ test('ships .agent command sets (mindforge + forge namespaces)', () => {
   assert.ok(hasPrefix('.agent/forge/'), 'missing .agent/forge/ command namespace');
 });
 
+test('.claude/commands/mindforge/ and .agent/mindforge/ ship the same command count', () => {
+  // A prior gap (34 files, mostly wf-* workflow commands, silently untracked
+  // under .claude/ due to a blanket gitignore rule) passed the >=150 checks
+  // above undetected because both counts already exceeded 150 independently.
+  // This mirrors what tests/version-consistency.test.js does for versions:
+  // catch drift between the two command trees, not just an absolute floor.
+  const claudeCount = countUnder('.claude/commands/mindforge/');
+  const agentCount = countUnder('.agent/mindforge/');
+  assert.strictEqual(claudeCount, agentCount,
+    `.claude/commands/mindforge/ (${claudeCount}) and .agent/mindforge/ (${agentCount}) command counts must match — a mismatch usually means one tree is missing files that were added to the other`);
+});
+
 // ── 2. Skills ship (the "no skills" symptom) ──────────────────────────────────
 test('ships >=70 skill files under .agent/skills/', () => {
   const n = countUnder('.agent/skills/', 'SKILL.md');

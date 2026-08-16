@@ -15,7 +15,7 @@ Execute `bin/updater/self-update.js` `checkAndUpdate()`.
 Always show: current version, latest version, update type (major/minor/patch).
 
 ### 2. Changelog display (unless --skip-changelog)
-Fetch and display the relevant CHANGELOG.md section.
+Fetch and display the relevant changelog section (root CHANGELOG.md rolling window covers the newest 10 versions; older versions are fetched from changelogs/vX.Y.Z.md via the changelog-fetcher.js fallback path).
 For major updates: prefix with ⚠️ BREAKING CHANGES notice.
 Limit display to 3,000 characters — link to full CHANGELOG for the rest.
 

@@ -406,6 +406,15 @@ test('CHANGELOG.md has latest version entry', () => {
   assert.ok(c.includes(pkg.version.split('-')[0]) || c.includes(pkg.version), 'CHANGELOG.md should have current version entry');
 });
 
+test('changelogs/ archive also has an entry for the current version', () => {
+  // Belt-and-suspenders check for the rolling-window split: catches the drift
+  // failure mode where a release prepends to root CHANGELOG.md but forgets to
+  // also write changelogs/vX.Y.Z.md (or vice versa).
+  const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+  const version = pkg.version.split('-')[0];
+  assert.ok(fs.existsSync(`changelogs/v${version}.md`), `changelogs/v${version}.md should also have an entry for the current version`);
+});
+
 test('all 20 ADR files present in .planning/decisions/', () => {
   if (!exists('.planning/decisions/')) return; // Skip if no decisions dir yet
   const adrs = fs.readdirSync('.planning/decisions/').filter(f => f.startsWith('ADR-') && f.endsWith('.md'));
