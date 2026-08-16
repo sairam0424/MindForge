@@ -4,7 +4,7 @@
  */
 'use strict';
 
-const CloudBroker = require('../bin/models/cloud-broker');
+const CloudBroker = require('../../bin/models/cloud-broker');
 const fs = require('fs');
 const path = require('path');
 

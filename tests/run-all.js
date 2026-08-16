@@ -35,9 +35,11 @@ const filterPatterns = filterArg
 
 function discoverTests(patterns = filterPatterns) {
   const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
-    if (SKIP_DIRS.test(e.name)) return [];
     const abs = path.join(dir, e.name);
-    if (e.isDirectory()) return walk(abs);
+    // SKIP_DIRS must be tested only for directories. Applying it to every dirent
+    // also silently dropped FILES whose names begin with 'tmp-' or '.', which the
+    // previous flat glob would have run.
+    if (e.isDirectory()) return SKIP_DIRS.test(e.name) ? [] : walk(abs);
     return e.name.endsWith('.test.js') ? [path.relative(TESTS_DIR, abs)] : [];
   });
   const testFiles = walk(TESTS_DIR).sort();

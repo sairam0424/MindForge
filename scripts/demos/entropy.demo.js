@@ -1,5 +1,5 @@
-const { NexusTracer } = require('../bin/engine/nexus-tracer');
-const TemporalHindsight = require('../bin/engine/temporal-hindsight');
+const { NexusTracer } = require('../../bin/engine/nexus-tracer');
+const TemporalHindsight = require('../../bin/engine/temporal-hindsight');
 const path = require('path');
 const fs = require('fs');
 
