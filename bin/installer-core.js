@@ -382,6 +382,29 @@ function safeCopyClaude(src, dst, options = {}) {
 }
 
 // ── Install verification ──────────────────────────────────────────────────────
+/**
+ * Check that an install produced the files it promised.
+ *
+ * THIS WAS DEAD CODE. Declared here and called from nowhere, while install() printed
+ * "Install verified" unconditionally under a section header reading "4. Verify installation".
+ * Two tests kept it alive without ever running it — tests/production.test.js:86 and
+ * tests/install.test.js:179 both assert only that the SOURCE CONTAINS the string
+ * "verifyInstall". They would pass against an empty function body, and they are why the dead
+ * function survived: the suite guaranteed the appearance of verification.
+ *
+ * Its contract was also UNSATISFIABLE. It required docs/registry/COMMANDS.md and
+ * docs/registry/PERSONAS.md under the project root, but docs/registry/ ships ZERO files in the
+ * npm tarball, so those two could never exist in a consumer install. Measured against a clean
+ * `--claude --local`: 12 of the 14 required files present, those two absent. Wiring it as
+ * written would therefore have exited 1 on every successful install — which is presumably why
+ * nobody wired it. They are removed rather than "fixed" by copying the files, because requiring
+ * an artefact the package does not publish is a category error, not a copy gap.
+ *
+ * Returns a result instead of calling process.exit, so it is testable without spawning an
+ * installer. The caller owns the exit decision.
+ *
+ * @returns {{ok: boolean, missing: string[], checked: number}}
+ */
 function verifyInstall(baseDir, cmdsDir, runtime, scope) {
   const cfg = RUNTIMES[runtime];
   const pfx = runtime === 'antigravity' ? 'mindforge:' : '';
@@ -399,18 +422,10 @@ function verifyInstall(baseDir, cmdsDir, runtime, scope) {
     path.join(process.cwd(), 'bin/memory/cli.js'),
     path.join(process.cwd(), 'bin/models/cost-tracker.js'),
     path.join(process.cwd(), 'bin/research/research-engine.js'),
-    path.join(process.cwd(), 'docs/registry/COMMANDS.md'),
-    path.join(process.cwd(), 'docs/registry/PERSONAS.md'),
   ];
 
   const missing = required.filter(f => !fsu.exists(f));
-
-  if (missing.length > 0) {
-    console.error(`\n  ❌  Install verification failed — ${missing.length} required file(s) missing:`);
-    missing.forEach(f => console.error(`      ${f}`));
-    console.error(`\n  Retry: npx mindforge-cc@latest --${runtime} --${scope} --force`);
-    process.exit(1);
-  }
+  return { ok: missing.length === 0, missing, checked: required.length };
 }
 
 // ── Install single runtime ────────────────────────────────────────────────────
@@ -808,7 +823,21 @@ async function install(runtime, scope, options = {}) {
   }
 
   // ── 4. Verify installation ──────────────────────────────────────────────────
-  Theme.printResolved(c.bold('Install verified'));
+  // This line used to print "Install verified" unconditionally, directly under this header,
+  // while verifyInstall() sat unreferenced 400 lines above. The claim is now earned: the check
+  // runs, names what is missing, and exits non-zero rather than reporting success.
+  //
+  // Not reachable on a dry run — that path returns earlier, so nothing is verified against a
+  // tree nothing was written to.
+  const verification = verifyInstall(baseDir, cmdsDir, runtime, scope);
+  if (!verification.ok) {
+    console.error(`\n  ❌  Install verification failed — ${verification.missing.length} of ` +
+      `${verification.checked} required file(s) missing:`);
+    verification.missing.forEach(f => console.error(`      ${f}`));
+    console.error(`\n  Retry: npx mindforge-cc@latest --${runtime} --${scope} --force`);
+    process.exit(1);
+  }
+  Theme.printResolved(c.bold(`Install verified (${verification.checked} required files present)`));
 }
 
 // ── Uninstall ─────────────────────────────────────────────────────────────────
@@ -981,7 +1010,7 @@ async function run(args) {
   }
 }
 
-module.exports = { run, install, uninstall, RUNTIMES, generateEntryContent, SENSITIVE_EXCLUDE, MINDFORGE_DEV_EXCLUDE };
+module.exports = { run, install, uninstall, verifyInstall, RUNTIMES, generateEntryContent, SENSITIVE_EXCLUDE, MINDFORGE_DEV_EXCLUDE };
 
 if (require.main === module) {
   const args = process.argv.slice(2);
