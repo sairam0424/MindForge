@@ -74,7 +74,17 @@ class PolicyEngine {
           
           // [PQAS] v7: Hardened Biometric Bypass for Risk > 95
           if (impactScore > 95) {
-            const gateResult = await policyGate.evaluateBypass(intent, impactScore);
+            // The gate looks up the attestation by `intent.requestId`, which this method never
+            // set — it generated `requestId` as a local and passed the bare intent, so the lookup
+            // always received undefined. Measured: orbital-guardian returns
+            // {verified:false, reason:"missing requestId"}, so the attestation path could NEVER
+            // approve, even immediately after a successful recordBypass(). The gate was stuck
+            // closed, which is safe but means the whole hardware-attestation feature only ever
+            // denied. tests/v8-orbital-governance.test.js passes an object that DOES carry
+            // requestId, which is why the contract looked satisfied.
+            //
+            // A new object rather than a mutation: the caller's intent is not ours to modify.
+            const gateResult = await policyGate.evaluateBypass({ ...intent, requestId }, impactScore);
             if (gateResult.status === 'WAIT_FOR_BIOMETRIC' || gateResult.status === 'WAIT_FOR_ORBITAL') {
               verdict = { 
                 verdict: 'DENY', 
@@ -86,8 +96,28 @@ class PolicyEngine {
               this.logAudit(intent, impactScore, verdict);
               return verdict;
             }
-            console.log(`[PQAS-GATE] [${requestId}] Biometric signature verified. Proceeding with high-risk mutation.`);
-            verdict = { verdict: 'PERMIT', reason: `Authorized via Biometric Bypass [${gateResult.signature || 'WEB-AUTHN-DEX'}]`, requestId };
+            // Only claim an attestation when one was actually verified. evaluateBypass has TWO
+            // non-WAIT returns, and they mean opposite things: an attestation verified in the
+            // enclave (carries attestation_id), or "Impact within standard threshold" — which
+            // states that no attestation was required. The old code logged "Biometric signature
+            // verified" and recorded the audit reason "Authorized via Biometric Bypass
+            // [WEB-AUTHN-DEX]" for BOTH, so the audit trail would assert a biometric verification
+            // for an operation the gate had explicitly waved through unchecked. That is the audit
+            // equivalent of a gate printing success without running.
+            const attested = Boolean(gateResult.attestation_id);
+            if (attested) {
+              console.log(`[PQAS-GATE] [${requestId}] Hardware attestation ${gateResult.attestation_id} verified. Proceeding with high-risk mutation.`);
+            } else {
+              console.log(`[PQAS-GATE] [${requestId}] Gate returned ${gateResult.status} without an attestation: ${gateResult.reason}. NOT recording this as attested.`);
+            }
+            verdict = {
+              verdict: 'PERMIT',
+              reason: attested
+                ? `Authorized via hardware attestation [${gateResult.attestation_id}]`
+                : `Permitted without attestation: ${gateResult.reason || gateResult.status}`,
+              requestId,
+              attested,
+            };
             this.logAudit(intent, impactScore, verdict);
             return verdict;
           }
