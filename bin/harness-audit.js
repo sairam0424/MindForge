@@ -20,6 +20,15 @@
  *   node bin/harness-audit.js --format json   # machine-readable
  *   node bin/harness-audit.js --scope security
  *   node bin/harness-audit.js --root /path/to/checkout
+ *   node bin/harness-audit.js --min-score 70        # exit 1 if below threshold
+ *   node bin/harness-audit.js --fail-on-findings    # exit 1 if ANY check fails
+ *
+ * GATE FLAGS (opt-in): without --min-score / --fail-on-findings this command
+ * ALWAYS exited 0 — even at 0/76 against an empty directory — so wiring it into
+ * CI produced a permanently-green required check. The threshold flags are the
+ * only way to make it fail; they are opt-in so existing callers (and the
+ * `harness:audit` npm script) keep their historical exit-0 behaviour verbatim.
+ * `harness:gate` is the CI-facing script that passes a threshold.
  */
 
 const fs = require('fs');
@@ -48,6 +57,22 @@ function normalizeScope(scope) {
   return value;
 }
 
+/**
+ * Coerce a --min-score value to a non-negative finite number, or throw.
+ *
+ * WHY strict instead of defaulting: a silently-ignored threshold (missing value,
+ * NaN, negative) would restore the always-green failure mode this flag exists to
+ * remove, and would do so invisibly in CI. A bad threshold is a hard error.
+ */
+function parseMinScore(raw) {
+  const text = raw === undefined || raw === null ? '' : String(raw).trim();
+  const value = Number(text);
+  if (text === '' || !Number.isFinite(value) || value < 0) {
+    throw new Error(`Invalid --min-score: ${raw}. Use a number >= 0 (points, compared against the scope's max_score).`);
+  }
+  return value;
+}
+
 function parseArgs(argv) {
   const args = argv.slice(2);
   const parsed = {
@@ -55,6 +80,10 @@ function parseArgs(argv) {
     format: 'text',
     help: false,
     root: path.resolve(process.env.AUDIT_ROOT || process.cwd()),
+    // null (not 0) means "no threshold requested". 0 is a legitimate, if
+    // permissive, threshold, so a falsy check here would silently disable it.
+    minScore: null,
+    failOnFindings: false,
   };
 
   for (let index = 0; index < args.length; index += 1) {
@@ -64,6 +93,9 @@ function parseArgs(argv) {
     if (arg === '--format') { parsed.format = (args[index + 1] || '').toLowerCase(); index += 1; continue; }
     if (arg === '--scope') { parsed.scope = normalizeScope(args[index + 1]); index += 1; continue; }
     if (arg === '--root') { parsed.root = path.resolve(args[index + 1] || process.cwd()); index += 1; continue; }
+    if (arg === '--min-score') { parsed.minScore = parseMinScore(args[index + 1]); index += 1; continue; }
+    if (arg === '--fail-on-findings') { parsed.failOnFindings = true; continue; }
+    if (arg.startsWith('--min-score=')) { parsed.minScore = parseMinScore(arg.slice('--min-score='.length)); continue; }
     if (arg.startsWith('--format=')) { parsed.format = arg.split('=')[1].toLowerCase(); continue; }
     if (arg.startsWith('--scope=')) { parsed.scope = normalizeScope(arg.split('=')[1]); continue; }
     if (arg.startsWith('--root=')) { parsed.root = path.resolve(arg.slice('--root='.length)); continue; }
@@ -488,11 +520,58 @@ function printText(report) {
 function showHelp(exitCode = 0) {
   console.log(`
 Usage: node bin/harness-audit.js [scope] [--scope <${SCOPES.join('|')}>] [--format <text|json>] [--root <path>]
+                                 [--min-score <n>] [--fail-on-findings]
 
 Deterministic MindForge harness audit based on explicit file/config checks.
 Audits the current working directory by default.
+
+Gate flags (opt-in — with neither of these the command always exits 0):
+  --min-score <n>      exit 1 when overall_score < n. n is in POINTS and the max
+                       is scope-dependent (repo 76, security 13, agents 4), so a
+                       value above the scope's max_score is rejected as
+                       unsatisfiable. CI uses: npm run harness:gate
+  --fail-on-findings   exit 1 when ANY check fails (strictest: every check added
+                       later becomes blocking the moment it lands)
 `);
   process.exit(exitCode);
+}
+
+/**
+ * Decide whether the report clears the requested gate. Pure: reads only the
+ * report's existing `overall_score` / `max_score` / `checks[].pass` fields and
+ * returns a NEW object — no parallel scoring path, no mutation of `report`.
+ *
+ * WHY an unsatisfiable threshold is itself a failure: --min-score is in POINTS
+ * and the max differs per scope (repo 76, security 13, agents 4), so
+ * `--scope agents --min-score 70` can never pass. Saying so beats a red check
+ * nobody can act on — and beats silently passing it.
+ */
+function evaluateGate(report, options = {}) {
+  const minScore = options.minScore === undefined ? null : options.minScore;
+  const failOnFindings = Boolean(options.failOnFindings);
+  const failures = [];
+
+  if (minScore !== null) {
+    if (minScore > report.max_score) {
+      failures.push(`--min-score ${minScore} exceeds max_score ${report.max_score} for scope "${report.scope}" — unsatisfiable threshold.`);
+    } else if (report.overall_score < minScore) {
+      failures.push(`score ${report.overall_score}/${report.max_score} is below --min-score ${minScore} (scope "${report.scope}").`);
+    }
+  }
+
+  if (failOnFindings) {
+    const failing = report.checks.filter(check => !check.pass);
+    if (failing.length > 0) {
+      failures.push(`--fail-on-findings: ${failing.length} of ${report.checks.length} checks failing (${failing.map(check => check.id).join(', ')}).`);
+    }
+  }
+
+  return {
+    enforced: minScore !== null || failOnFindings,
+    ok: failures.length === 0,
+    failures,
+    exitCode: failures.length === 0 ? 0 : 1,
+  };
 }
 
 function main() {
@@ -507,6 +586,17 @@ function main() {
     } else {
       printText(report);
     }
+
+    // Gate LAST and on stderr, so --format json keeps stdout pure JSON and the
+    // scorecard stays readable when the gate trips. There is deliberately no
+    // explicit process.exit(0) on the success path: falling off main() exits 0
+    // naturally, and a hardcoded exit(0) is how gates start lying.
+    const gate = evaluateGate(report, { minScore: args.minScore, failOnFindings: args.failOnFindings });
+    if (!gate.ok) {
+      console.error('');
+      for (const failure of gate.failures) { console.error(`Gate FAIL: ${failure}`); }
+      process.exit(gate.exitCode);
+    }
   } catch (error) {
     console.error(`Error: ${error.message}`);
     process.exit(1);
@@ -517,4 +607,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { buildReport, parseArgs, getChecks, CATEGORIES, RUBRIC_VERSION };
+module.exports = { buildReport, parseArgs, getChecks, evaluateGate, parseMinScore, CATEGORIES, RUBRIC_VERSION };

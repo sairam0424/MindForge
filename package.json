@@ -62,6 +62,7 @@
     "coverage": "npx c8 node tests/run-all.js",
     "lint": "eslint .",
     "harness:audit": "node bin/harness-audit.js",
+    "harness:gate": "node bin/harness-audit.js --min-score 76 --fail-on-findings",
     "harness:compliance": "node bin/installer/harness-adapter-compliance.js --check",
     "release:ready": "node bin/utils/readiness-gate.js release",
     "validate:assets": "node scripts/ci/validate-assets.js",
