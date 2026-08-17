@@ -306,10 +306,30 @@ class AutoRunner {
   runPreFlight() {
     console.log('🔍 Running pre-flight checks...');
 
-    // UC-01: fail closed on version drift before any wave executes
+    // UC-01: fail closed on version drift before any wave executes.
+    //
+    // The root MUST be MindForge's own install root, NOT process.cwd(). This check compares
+    // package.json against .mindforge/config.json, sdk/package.json and MINDFORGE.md — all
+    // MindForge's own manifests. Pointed at a consumer's cwd it takes THEIR application
+    // version as canonical and reports MindForge's own config as drift. Measured, with an app
+    // at 1.0.0 and MindForge at 11.9.2:
+    //   [".mindforge/config.json declares 11.9.2 but canonical (package.json) is 1.0.0"]
+    // and a consumer with no package.json at all fails closed on a missing canonical. Only a
+    // project whose app version coincidentally equalled MindForge's would have passed.
+    //
+    // This has never fired in a shipped build, because nothing constructs AutoRunner today
+    // (verified: no `new AutoRunner` anywhere in bin/; the only requirer is
+    // tests/wave-timeout-rollback.test.js, for the pure helpers). It is a landmine that arms
+    // the moment the runner is wired — which DEL-02 proposes doing — so it is disarmed here
+    // rather than left for whoever wires it to find in the field.
+    //
+    // __dirname/../.. is MindForge's root in both layouts: <repo> from a checkout, and
+    // <project>/node_modules/mindforge-cc when installed. In the installed shape
+    // .mindforge/config.json is absent (the installer writes that into the CONSUMER project),
+    // which reads as null and is SKIPPED rather than counted as drift — verified.
     try {
       const { assertVersionConsistency } = require('../utils/version-check');
-      assertVersionConsistency(process.cwd());
+      assertVersionConsistency(path.resolve(__dirname, '..', '..'));
     } catch (e) {
       throw new Error(`[pre-flight] ${e.message}`);
     }
