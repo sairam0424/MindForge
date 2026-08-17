@@ -630,14 +630,13 @@ async function install(runtime, scope, options = {}) {
     const forgeSrc = src('.mindforge');
     const forgeDst = path.join(process.cwd(), '.mindforge');
     if (fsu.exists(forgeSrc)) {
-      // Define all required enterprise framework folders
-      const standardFrameworkFolders = [
-        'engine', 'org', 'governance', 'integrations', 'personas', 'skills', 
-        'team', 'intelligence', 'memory', 'metrics', 'models', 'plugins', 
-        'dashboard', 'browser', 'monorepo', 'production', 'distribution',
-        'docs/registry'
-      ];
-
+      // An 18-entry `standardFrameworkFolders` list was declared here and never referenced. The
+      // non-minimal branch below copies the whole of .mindforge/ with copyDir, so the list
+      // described a selection that no code performed — deleting it changes nothing. It was the
+      // second dead copy-list in this file; the other was `coreEngines`, which named four
+      // bin/sre/ paths nothing installed. tests/install-module-load.test.js now fails on any
+      // array declared and never used here, because a copy list nothing reads is
+      // indistinguishable from files that are not installed.
       if (minimal) {
         const minimalEntries = new Set([
           'MINDFORGE-SCHEMA.json',
@@ -724,18 +723,31 @@ async function install(runtime, scope, options = {}) {
       Theme.printResolved(`${c.bold('WALKTHROUGH.md')} (updated)`);
     }
 
-    // Sovereign Intelligence v8.2.0: Copy core engines by default
-    const coreEngines = [
-      'bin/engine/nexus-tracer.js',
-      'bin/engine/learning-manager.js',
-      'bin/sre/sentinel.js',
-      'bin/sre/shadow-mirror.js',
-      'bin/sre/adversarial-sre.js',
-      'bin/sre/sli-verifier.js'
-    ];
+    // Engine subtrees copied into the consumer project.
+    //
+    // The first eleven entries are the feature engines. The last four are their DEPENDENCIES,
+    // and their absence was breaking the install: measured on a clean `--claude --local`, 16 of
+    // 119 installed modules failed to load with MODULE_NOT_FOUND, across seven subtrees —
+    //   bin/autonomous/audit-writer.js   -> ../utils/file-lock       (the audit-chain writer)
+    //   bin/autonomous/auto-runner.js    -> ../utils/file-lock
+    //   bin/autonomous/state-manager.js  -> ../utils/file-io
+    //   bin/governance/policy-engine.js  -> ../utils/file-io
+    //   bin/memory/knowledge-graph.js    -> ../utils/file-lock
+    //   bin/models/model-router.js       -> ../utils/mindforge-params
+    //   bin/engine/nexus-tracer.js       -> ../utils/index
+    //   ... and nine more
+    // bin/utils/ alone accounts for all sixteen. revops/, review/ and migrations/ are each
+    // required by an installed engine module too (engine/remediation-engine.js ->
+    // ../revops/remediation-queue, and so on).
+    //
+    // tests/install-module-load.test.js performs a real install and requires every installed
+    // module, so this list cannot silently drift again: adding an engine whose dependency is
+    // absent fails there rather than at a consumer's first run.
     const sovereignEngines = [
-      'governance', 'autonomous', 'memory', 'models', 'research', 
-      'wizard', 'updater', 'dashboard', 'browser', 'skills-builder', 'engine'
+      'governance', 'autonomous', 'memory', 'models', 'research',
+      'wizard', 'updater', 'dashboard', 'browser', 'skills-builder', 'engine',
+      // dependencies of the above — not features
+      'utils', 'revops', 'review', 'migrations'
     ];
     sovereignEngines.forEach(engine => {
       const srcDir = src('bin', engine);
@@ -743,6 +755,24 @@ async function install(runtime, scope, options = {}) {
       if (fsu.exists(srcDir)) {
         fsu.ensureDir(dstDir);
         fsu.copyDir(srcDir, dstDir, { excludePatterns: SENSITIVE_EXCLUDE, noOverwrite: !force });
+      }
+    });
+
+    // Individual top-level bin/ files an installed module requires. hindsight-injector is
+    // required by both bin/dashboard/temporal-api.js and bin/engine/temporal-cli.js, which do
+    // install, so without it those two fail to load.
+    //
+    // This replaces a `coreEngines` array that was declared here and NEVER REFERENCED — six
+    // paths, four of them under bin/sre/, copied by nothing. bin/sre/ stays uninstalled
+    // deliberately: no installed module requires it, so wiring the dead array would have shipped
+    // files nothing loads rather than fixing anything.
+    const coreFiles = ['bin/hindsight-injector.js'];
+    coreFiles.forEach(rel => {
+      const srcFile = src(...rel.split('/'));
+      const dstFile = path.join(process.cwd(), rel);
+      if (fsu.exists(srcFile)) {
+        fsu.ensureDir(path.dirname(dstFile));
+        fsu.copy(srcFile, dstFile);
       }
     });
 
