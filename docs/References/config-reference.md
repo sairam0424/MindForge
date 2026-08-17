@@ -33,8 +33,11 @@ and be followed by `=`. Prose bullets that merely mention `[KEY]` are not parsed
 Three more are **recommended** — absent ones produce a warning, not an error:
 `[COST_WARN_USD]`, `[COST_HARD_LIMIT_USD]`, `[BLOCK_ON_SECURITY]`.
 
-> `[COST_HARD_LIMIT_USD]` is **declared but not enforced** as of 11.9.2. Do not rely on it as a
-> spend control; see the CHANGELOG.
+> `[COST_HARD_LIMIT_USD]` is **enforced from 11.9.3** (it was declared but inert in 11.9.2).
+> `preflight()` refuses the model call once today's ledger spend plus the call estimate reaches
+> the limit. Because the key is *recommended* rather than *required*, an absent key — or an
+> explicit `0` — leaves the cap off; a present-but-unparseable value is a hard error
+> (`COST_LIMIT_MISCONFIGURED`), not a silent bypass.
 
 ---
 

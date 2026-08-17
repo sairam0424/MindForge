@@ -157,7 +157,43 @@ jobs:
           fi
 
       - name: Test suite with coverage
-        run: npx c8 --check-coverage --lines 30 node tests/run-all.js
+        # Exclude GENERATED bundles from the gate. tests/mcp-server-version.test.js spawns
+        # plugins/mindforge/mcp/dist/index.js (a 22k-line esbuild single-file bundle) to read
+        # serverInfo.version off the wire, which otherwise drops ~22k mostly-uncovered lines
+        # into the denominator of a threshold meant to measure hand-written code. A generated
+        # bundle belongs in neither the numerator nor the denominator.
+        run: npx c8 --check-coverage --lines 30 --exclude 'plugins/**' --exclude 'mcp-server/dist/**' node tests/run-all.js
+
+      # CI-01. Until now ZERO of the 11 workflows invoked any of the repo's own npm gates,
+      # while CLAUDE.md claimed the compliance scorecard "will fail CI". These three are
+      # wired because they can actually fail and are side-effect free (verified: the working
+      # tree is byte-identical before and after all three).
+      #
+      # Deliberately NOT wired, both verified rather than assumed:
+      #   * `node bin/verify-audit.js` — .planning/AUDIT.jsonl is gitignored, so in a fresh
+      #     checkout the file is absent and bin/governance/audit-verifier.js returns
+      #     valid:false on the read failure. Measured: exit 1, "audit chain BROKEN at entry 0:
+      #     unreadable: ENOENT". Wiring it would red-line every run. Its algorithm is already
+      #     covered by tests/audit-integrity.test.js, which the suite above runs.
+      #   * `npm run eval:retrieval` — already covered by tests/retrieval-fts.test.js, which
+      #     calls runGoldenSetEval() and asserts the same committed recall floor. Wiring it
+      #     would double the slowest suite for no added signal.
+      - name: Harness gate (harness-audit must clear its threshold)
+        run: npm run harness:gate
+
+      - name: Harness adapter compliance drift check
+        run: npm run harness:compliance -- --check
+
+      - name: Release readiness gate
+        run: npm run release:ready
+
+      # Offline by design: --check never reaches the network, so it cannot flake. It covers
+      # the distribution channels the npm-focused runtime check ignores — the Homebrew
+      # formula, the Dockerfile ARG default and the plugin marketplace entry, all three of
+      # which sat FOUR releases behind (11.5.1 / 11.4.0) while the 12 npm locations stayed
+      # in sync, because nothing asserted them.
+      - name: Version sync across all distribution channels
+        run: npm run version:check
 
       - name: Check governance tier (Tier 3 blocks CI)
         run: |

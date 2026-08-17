@@ -11,7 +11,7 @@ Flow: Validate → Research UI → Verify UI-SPEC → Done
 
 <execution_context>
 @.agent/workflows/mindforge-ui-phase.md
-@.agent/references/ui-brand.md
+@docs/References/ui-brand.md
 </execution_context>
 
 <context>

@@ -82,6 +82,20 @@ jobs:
           npm install --no-audit --no-fund
           npm run build
 
+      # MCP-VER: serverInfo.version is what every MCP client (Claude Desktop, Cursor, the
+      # Docker MCP Catalog entry) displays and logs. v11.9.2 shipped a hardcoded '11.4.0'
+      # inside the provenance-attested artifact because mcp-server/dist is gitignored and
+      # therefore compiled at publish time, and nothing ever read the wire value. The root
+      # `npm test` above CANNOT catch it: it runs before this build and never installs
+      # mcp-server/node_modules, so the bundle check there self-skips. MF_REQUIRE_MCP_BUNDLE=1
+      # turns that skip into a hard failure here — dist/ definitely exists now, and both
+      # publishes are still ahead of us, so a drifted version aborts the release instead of
+      # becoming unrepublishable on npm.
+      - name: Verify MCP serverInfo.version matches the manifests (MCP-VER)
+        env:
+          MF_REQUIRE_MCP_BUNDLE: '1'
+        run: node tests/mcp-server-version.test.js
+
       - name: Publish to npm
         if: steps.npm_check.outputs.already_published != 'true'
         run: npm publish --access public --provenance

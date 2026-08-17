@@ -5,7 +5,7 @@
     "drift_threshold": 0.75,
     "critical_drift_threshold": 0.5,
     "res_threshold": 0.8,
-    "active_did": "did:mindforge:e630e005-7b55-4779-9f4f-92aac356c52b"
+    "active_did": ""
   },
   "revops": {
     "market_registry": {
@@ -71,7 +71,7 @@
   },
   "mesh": {
     "_node_id_note": "Set node_id to a unique value per node in multi-node deployments. auto = hostname-derived.",
-    "node_id": "beta-node",
+    "node_id": "auto",
     "peers": []
   },
   "ase": {

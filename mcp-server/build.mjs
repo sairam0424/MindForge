@@ -20,7 +20,11 @@ await build({
   // as code (SyntaxError), which is the failure this comment originally guarded against.
   banner: { js: '#!/usr/bin/env node' },
   // Node built-ins are external by default on platform:node; nothing else is external,
-  // so the two deps + their tree are inlined into the single output file.
+  // so the two deps + their tree are inlined into the single output file. Do NOT externalise
+  // ../package.json either: src/index.ts imports its `version` so that serverInfo.version is
+  // inlined from the manifest here, at build time. Externalising it would turn a compile-time
+  // constant back into a runtime require and reopen MCP-VER, where a hardcoded '11.4.0'
+  // shipped inside the provenance-attested 11.9.2 artifact.
   logLevel: 'info',
 });
 console.log('Bundled mcp-server -> dist/index.js (self-contained, no runtime node_modules)');

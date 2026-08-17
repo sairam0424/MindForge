@@ -205,6 +205,67 @@ test('the !**/*.lock negation demonstrably excludes a lockfile (with negative co
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 });
 
+// ── 11. Shipped config must carry no test-fixture identity (CONF-A) ───────────
+// .mindforge/config.json is in files[], so it IS the config every consumer installs.
+// tests/v8-mesh-sync.test.js used to call configManager.set('mesh.node_id', ...) against
+// that TRACKED file, so whatever value its last write left behind shipped as every
+// install's federation identity. The same suite wrote governance.active_did, and a shipped
+// DID is worse than none: ztai-manager keeps key material in an in-process Map, so
+// mesh-syncer.exportBundle() fails with the opaque "Agent not registered: <did>" instead
+// of its designed, actionable "No active DID found for signing. Secure identity required."
+// That suite is now isolated to a temp mirror; these assertions guard the artifact itself.
+const FIXTURE_NODE_IDS = ['alpha-node', 'beta-node'];
+
+// Both predicates are named so the negative controls below can feed them known-bad
+// input. A check that only ever sees good input cannot be shown to work at all.
+function isShippableNodeId(nodeId) {
+  return typeof nodeId === 'string' && nodeId.length > 0 && !FIXTURE_NODE_IDS.includes(nodeId);
+}
+function isShippableActiveDid(did) {
+  return did === undefined || did === null || did === '';
+}
+function readShippedConfig() {
+  return JSON.parse(fs.readFileSync(path.join(ROOT, '.mindforge', 'config.json'), 'utf8'));
+}
+
+test('.mindforge/config.json ships a real default mesh.node_id, not a test fixture', () => {
+  assert.ok(FILES.includes('.mindforge/config.json'),
+    '.mindforge/config.json must ship — consumer config is seeded from it');
+
+  // NEGATIVE CONTROLS FIRST: prove the predicate rejects the exact values the suite
+  // writes. Without these the assertion below would have passed on the shipped bug.
+  for (const fixture of FIXTURE_NODE_IDS) {
+    assert.ok(!isShippableNodeId(fixture),
+      `NEGATIVE CONTROL FAILED: isShippableNodeId('${fixture}') returned true, so this ` +
+      'test cannot detect a test fixture leaking into the shipped config');
+  }
+  assert.ok(!isShippableNodeId(''), 'NEGATIVE CONTROL FAILED: an empty node_id must be rejected');
+  assert.ok(isShippableNodeId('auto'), 'the documented default "auto" must be accepted');
+
+  const mesh = readShippedConfig().mesh || {};
+  assert.ok(isShippableNodeId(mesh.node_id),
+    `shipped mesh.node_id is ${JSON.stringify(mesh.node_id)} — a test fixture or empty. ` +
+    'Every install would federate under that one identity. Reset it to "auto".');
+
+  // The sibling note is the only place the default is documented. If it stops saying
+  // "auto", then "auto" is no longer the correct committed value and this needs revisiting.
+  assert.match(String(mesh._node_id_note), /auto = hostname-derived/,
+    'mesh._node_id_note must keep documenting "auto = hostname-derived"');
+});
+
+test('.mindforge/config.json ships no pre-baked governance.active_did', () => {
+  // NEGATIVE CONTROL: a concrete DID must be rejected, or this assertion is vacuous.
+  assert.ok(!isShippableActiveDid('did:mindforge:e630e005-7b55-4779-9f4f-92aac356c52b'),
+    'NEGATIVE CONTROL FAILED: a concrete DID must not be considered shippable');
+  assert.ok(isShippableActiveDid(''), 'an empty active_did must be accepted');
+
+  const did = (readShippedConfig().governance || {}).active_did;
+  assert.ok(isShippableActiveDid(did),
+    `shipped governance.active_did is ${JSON.stringify(did)} — an identity whose private key ` +
+    'is not (and must not be) shipped. Leave it "" so mesh-syncer raises its designed ' +
+    '"No active DID found for signing" error instead of "Agent not registered".');
+});
+
 (async () => {
   if (!pack.ok) {
     // No silent caps: announce the skip loudly. This test gates releases, so a

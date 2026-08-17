@@ -49,21 +49,119 @@ function getTodaySpendCached() {
   return _dailyCache.value;
 }
 
+// COST-02 — the $25/day cap declared at MINDFORGE.md:54 was inert from the day it
+// was written. v11.9.2 read `settings.MODEL_COST_HARD_LIMIT_USD`; the registry
+// declares `[COST_HARD_LIMIT_USD]`. The MODEL_-prefixed name appears in exactly one
+// shipped file (.mindforge/MINDFORGE-V2-SCHEMA.json:58) and that file has no code
+// reader, so the lookup was always undefined -> parseFloat('0.0') -> 0 -> the
+// `hardLimit <= 0` guard returned before any spend was compared. Canonical registry
+// key first; the MODEL_-prefixed name is still read second so anyone who copied it
+// out of the V2 schema keeps the working cap they have instead of silently losing it.
+const HARD_LIMIT_KEYS = ['COST_HARD_LIMIT_USD', 'MODEL_COST_HARD_LIMIT_USD'];
+const WARN_LIMIT_KEYS = ['COST_WARN_USD', 'MODEL_COST_WARN_USD'];
+
+/** First non-empty key from `keys`, canonical-first. Returns null when none is set. */
+function findThreshold(settings, keys) {
+  for (const key of keys) {
+    const raw = settings[key];
+    if (raw !== undefined && raw !== null && String(raw).trim() !== '') {
+      return { key, raw: String(raw) };
+    }
+  }
+  return null;
+}
+
+/**
+ * Classify a registry cost threshold. Returns a new object, never mutates input:
+ *   { state: 'unset' }                  key absent/empty        -> caller fails OPEN
+ *   { state: 'disabled', key, value:0 } explicit 0              -> caller fails OPEN
+ *   { state: 'armed', key, value }      finite positive USD     -> caller enforces
+ *   { state: 'invalid', key, raw }      unreadable or negative  -> caller fails CLOSED
+ *
+ * parseFloat after stripping a leading `$` and thousands separators — not Number() —
+ * because `= $25.00` and `= 25.00 USD` are shapes a human types into MINDFORGE.md and
+ * both plainly mean 25; Number() would call them invalid and refuse every model call.
+ * Only a value with no leading number at all is invalid. Non-finite is invalid on
+ * purpose: `Infinity` compares false against every projection, i.e. it is not a cap.
+ */
+function classifyThreshold(found) {
+  if (!found) return { state: 'unset' };
+  const value = parseFloat(found.raw.trim());
+  if (!Number.isFinite(value) || value < 0) return { state: 'invalid', key: found.key, raw: found.raw };
+  if (value === 0) return { state: 'disabled', key: found.key, value: 0 };
+  return { state: 'armed', key: found.key, value };
+}
+
+// [COST_WARN_USD] had no reader anywhere in bin/ before COST-02. At most one line per
+// UTC day per threshold, so an armed warning does not append to stderr on every call.
+// Replaced as a whole object rather than mutated in place.
+let _warnState = { day: '', threshold: 0 };
+
+/** Soft threshold. Must never throw — a warning that blocks is a second hard cap. */
+function warnIfCrossed(settings, projected, hardLimit) {
+  const warn = classifyThreshold(findThreshold(settings, WARN_LIMIT_KEYS));
+  if (warn.state !== 'armed') return;
+  // Suppress only when an ARMED hard cap sits at or below the warn value — there the
+  // throw preempts this line anyway. With no hard cap, nothing preempts it, and an
+  // upgraded install without [COST_HARD_LIMIT_USD] is the common case
+  // (installer-core.js:706 never rewrites an existing MINDFORGE.md) — precisely the
+  // install that most needs a spend warning.
+  if (hardLimit !== null && warn.value >= hardLimit) return;
+  if (projected < warn.value) return;
+
+  const today = new Date().toISOString().slice(0, 10);
+  if (_warnState.day === today && _warnState.threshold === warn.value) return;
+  _warnState = { day: today, threshold: warn.value };
+  const cap = hardLimit === null ? 'no hard cap set' : `hard cap ${hardLimit}`;
+  process.stderr.write(
+    `[cost-tracker] Projected daily spend ${projected.toFixed(4)} crossed [${warn.key}] = ${warn.value} (${cap})\n`
+  );
+}
+
 async function preflight(estimatedCost = 0) {
   const settings = require('./model-router').getAllSettings();
-  const hardLimit = parseFloat(settings.MODEL_COST_HARD_LIMIT_USD || '0.0');
-  
-  if (hardLimit <= 0) return;
+  const limit = classifyThreshold(findThreshold(settings, HARD_LIMIT_KEYS));
+
+  // Fail CLOSED on a limit that is present but unreadable: a cap nobody can parse is
+  // not a cap. Not a new surprise either — bin/validate-config.js already rejects this
+  // exact config with exit 1, because COST_HARD_LIMIT_USD is typed "number" at
+  // .mindforge/MINDFORGE-SCHEMA.json:87. The code is distinct from COST_LIMIT_REACHED
+  // so a caller can tell a spend stop from a config fault; bin/models/model-client.js
+  // re-throws both, which is the only reason this throw is not swallowed.
+  if (limit.state === 'invalid') {
+    throw Object.assign(
+      new Error(`[${limit.key}] = "${limit.raw}" is not a USD amount — the daily cost cap cannot be evaluated. Set a number in MINDFORGE.md (0 disables the cap).`),
+      { code: 'COST_LIMIT_MISCONFIGURED', key: limit.key, raw: limit.raw }
+    );
+  }
+
+  // Fail OPEN when the key is absent or explicitly 0. DELIBERATE — do not invert it.
+  // docs/research/2026-08-v12-upgrade-report.md:85 recommends making an unset limit a
+  // config error, but bin/installer-core.js:706 writes MINDFORGE.md only when it does
+  // not already exist, so every install upgraded from a registry predating this key
+  // would start refusing every model call. The shipped schema agrees the key is
+  // optional: it sits in `recommended`, not `required` (.mindforge/MINDFORGE-SCHEMA.json
+  // :13-17), and bin/validate-config.js:48-49 only warns and exits 0 when it is absent.
+  if (limit.state !== 'armed') {
+    // The soft threshold must NOT depend on the hard cap. Guarded on the warn key so
+    // the no-cost-config fast path stays a pure early return and never reads the ledger.
+    if (classifyThreshold(findThreshold(settings, WARN_LIMIT_KEYS)).state === 'armed') {
+      warnIfCrossed(settings, getTodaySpendCached() + estimatedCost, null);
+    }
+    return;
+  }
 
   const todaySpend = getTodaySpendCached();
   const projected = todaySpend + estimatedCost;
 
-  if (projected >= hardLimit) {
+  if (projected >= limit.value) {
     throw Object.assign(
-      new Error(`Daily cost limit $${hardLimit} reached (Today: $${todaySpend.toFixed(4)})`),
-      { code: 'COST_LIMIT_REACHED', spend: todaySpend, limit: hardLimit }
+      new Error(`Daily cost limit $${limit.value} reached (Today: $${todaySpend.toFixed(4)})`),
+      { code: 'COST_LIMIT_REACHED', spend: todaySpend, limit: limit.value }
     );
   }
+
+  warnIfCrossed(settings, projected, limit.value);
 }
 
 async function record(entry) {

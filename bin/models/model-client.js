@@ -41,10 +41,15 @@ class ModelClient {
     let modelId = routing.model;
 
     // 2. Pre-flight cost check
+    // Both COST_ codes must propagate. This catch re-threw only COST_LIMIT_REACHED,
+    // so COST-02's fail-closed config fault would have been discarded here and the
+    // call would have proceeded uncapped — an interlock reporting success while doing
+    // nothing. Anything else still falls through on purpose: an unreadable ledger is
+    // a broken meter, and a broken meter must not block work.
     try {
       await CostTracker.preflight(0.05); // Conservative estimate
     } catch (e) {
-      if (e.code === 'COST_LIMIT_REACHED') throw e;
+      if (e.code === 'COST_LIMIT_REACHED' || e.code === 'COST_LIMIT_MISCONFIGURED') throw e;
     }
 
     // 3. Execute with fallbacks

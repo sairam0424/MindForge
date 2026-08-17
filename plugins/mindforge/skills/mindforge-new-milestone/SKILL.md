@@ -20,10 +20,10 @@ Brownfield equivalent of new-project. Project exists, PROJECT.md has history. Ga
 
 <execution_context>
 @.agent/workflows/mindforge-new-milestone.md
-@.agent/references/questioning.md
-@.agent/references/ui-brand.md
-@.agent/templates/project.md
-@.agent/templates/requirements.md
+@docs/References/questioning.md
+@docs/References/ui-brand.md
+@docs/Templates/Project/PROJECT.md
+@docs/Templates/Project/REQUIREMENTS.md
 </execution_context>
 
 <context>
