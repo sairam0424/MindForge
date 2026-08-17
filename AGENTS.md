@@ -28,7 +28,7 @@ cd sdk && npm install && npm run build   # tsc → sdk/dist/
 npm test                                  # pretest runs build first
 ```
 
-Run a single test file: `node tests/sharding.test.js`. Filter the runner: `node tests/run-all.js --filter=security,audit` (case-insensitive filename substring). A test file whose first line is `// @skip: reason` is skipped.
+Run a single test file: `node tests/sharding.test.js`. Filter the runner: `node tests/run-all.js --filter=security,audit` (case-insensitive filename substring); a filter that selects nothing exits 1 — add `--allow-empty` if that is intended. A test file whose first line is `// @skip: reason` is skipped.
 
 Other validators: `node bin/validate-config.js` (MINDFORGE.md vs schema), `npx tsc --noEmit -p sdk/tsconfig.json`.
 
