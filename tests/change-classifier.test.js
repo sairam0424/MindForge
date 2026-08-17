@@ -127,6 +127,62 @@ test('`before` is read from the push event payload, needing no workflow wiring',
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
+test('the reason names EVERY matched sensitive path, not just the first', () => {
+  // `find` short-circuited, so a change touching both .github/workflows/ and bin/governance/ was
+  // attributed only to the workflow. Measured consequence: PR #178's CI log showed
+  //   REASONS=Sensitive path modified: .github/workflows/control-plane.yml
+  // which was a path the OLD list already covered, so the log could not show that the
+  // newly-added framework paths were doing any work — and it hid the more interesting match from
+  // whoever reads the governance summary.
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-cls-multi-')));
+  try {
+    git(dir, 'init', '-q', '.');
+    git(dir, 'config', 'user.email', 'test@example.com');
+    git(dir, 'config', 'user.name', 'test');
+    fs.writeFileSync(path.join(dir, 'README.md'), 'readme\n');
+    git(dir, 'add', '-A'); git(dir, 'commit', '-qm', 'base');
+    const before = git(dir, 'rev-parse', 'HEAD').trim();
+
+    for (const rel of ['.github/workflows/ci.yml', 'bin/governance/policy.js', 'bin/security/gate.js']) {
+      const f = path.join(dir, rel);
+      fs.mkdirSync(path.dirname(f), { recursive: true });
+      fs.writeFileSync(f, '// x\n');
+    }
+    git(dir, 'add', '-A'); git(dir, 'commit', '-qm', 'touch three sensitive paths');
+
+    const r = runClassifier(dir, { GITHUB_EVENT_NAME: 'push', MINDFORGE_PUSH_BEFORE: before });
+    assert.strictEqual(r.tier, '3');
+    for (const expected of ['.github/workflows/ci.yml', 'bin/governance/policy.js', 'bin/security/gate.js']) {
+      assert.ok(r.reasons.includes(expected),
+        `the reason must name ${expected}; a single-match reason cannot show which rule fired. ` +
+        `Got: ${r.reasons}`);
+    }
+    assert.match(r.reasons, /Sensitive paths modified/,
+      'plural when more than one matched, so the message reads correctly');
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('a single match stays singular, and is capped for very wide changes', () => {
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-cls-one-')));
+  try {
+    git(dir, 'init', '-q', '.');
+    git(dir, 'config', 'user.email', 'test@example.com');
+    git(dir, 'config', 'user.name', 'test');
+    fs.writeFileSync(path.join(dir, 'README.md'), 'readme\n');
+    git(dir, 'add', '-A'); git(dir, 'commit', '-qm', 'base');
+    const before = git(dir, 'rev-parse', 'HEAD').trim();
+
+    fs.mkdirSync(path.join(dir, 'bin', 'governance'), { recursive: true });
+    for (let i = 0; i < 9; i++) fs.writeFileSync(path.join(dir, 'bin', 'governance', `m${i}.js`), '// x\n');
+    git(dir, 'add', '-A'); git(dir, 'commit', '-qm', 'nine sensitive files');
+
+    const r = runClassifier(dir, { GITHUB_EVENT_NAME: 'push', MINDFORGE_PUSH_BEFORE: before });
+    assert.strictEqual(r.tier, '3');
+    assert.match(r.reasons, /\(\+4 more\)/,
+      `nine matches must be summarised rather than dumped whole. Got: ${r.reasons}`);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
 // ── Fail-closed behaviour ────────────────────────────────────────────────────
 
 const FAIL_CLOSED = [

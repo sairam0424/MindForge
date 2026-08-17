@@ -131,10 +131,16 @@ function classify() {
     let reasons = [];
 
     // 1. Path-based detection (Tier 3)
-    const matchedPath = diffFiles.find(file => SENSITIVE_PATHS.some(p => file.startsWith(p)));
-    if (matchedPath) {
+    // Reports EVERY matched path, not just the first. `find` short-circuited, so a change
+    // touching both .github/workflows/ and bin/governance/ was attributed only to the workflow —
+    // which made the CI log unable to show that the newly-added framework paths were doing any
+    // work, and hid the more interesting of the two matches from the reviewer.
+    const matchedPaths = diffFiles.filter(file => SENSITIVE_PATHS.some(p => file.startsWith(p)));
+    if (matchedPaths.length) {
       tier = 3;
-      reasons.push(`Sensitive path modified: ${matchedPath}`);
+      const shown = matchedPaths.slice(0, 5).join(', ');
+      const more = matchedPaths.length > 5 ? ` (+${matchedPaths.length - 5} more)` : '';
+      reasons.push(`Sensitive path${matchedPaths.length > 1 ? 's' : ''} modified: ${shown}${more}`);
     }
 
     // 2. Pattern-based detection in diff (Tier 3) — non-test/doc files only
