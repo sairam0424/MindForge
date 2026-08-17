@@ -22,7 +22,12 @@ const colors = {
 };
 
 function main() {
-  const target = ARGS[0];
+  // The first NON-FLAG argument. This was `ARGS[0]`, so any flag placed before the path was taken
+  // as the filename: `validate-skill --no-color skill/SKILL.md` reported
+  // "File not found: <cwd>/--no-color" and exited 1. Flags-before-operands is the ordering most
+  // people reach for, and the two flags this tool documents (--no-color, --enterprise) are both
+  // read from anywhere in ARGS, so only the target lookup was position-sensitive.
+  const target = ARGS.find((a) => !a.startsWith('-'));
   if (!target || ARGS.includes('--help') || ARGS.includes('-h')) {
     console.log('\nUsage: mindforge-cc validate-skill <path-to-SKILL.md>\n');
     process.exit(0);
