@@ -40,8 +40,11 @@ const runLines = ci
   .filter((l) => l.startsWith('run:') || l.startsWith('- run:') || /^npm |^node /.test(l));
 const runText = runLines.join('\n');
 
-test('the three wired gates are each invoked by a run: line, not just mentioned in a comment', () => {
-  for (const cmd of ['npm run harness:gate', 'npm run harness:compliance', 'npm run release:ready']) {
+// The gates CI must invoke. Adding one here without wiring it fails; unwiring one fails too.
+const WIRED = ['harness:gate', 'harness:compliance', 'release:ready', 'version:check'];
+
+test('every wired gate is invoked by a run: line, not just mentioned in a comment', () => {
+  for (const cmd of WIRED.map((s) => `npm run ${s}`)) {
     assert.ok(runText.includes(cmd),
       `mindforge-ci.yml must invoke "${cmd}" from a run: line (found only in prose, or not at all)`);
   }
@@ -55,7 +58,7 @@ test('harness:compliance is invoked in --check mode, which is what makes it a ga
 });
 
 test('every wired gate exists as an npm script', () => {
-  for (const s of ['harness:gate', 'harness:compliance', 'release:ready']) {
+  for (const s of WIRED) {
     assert.ok(pkg.scripts && pkg.scripts[s], `package.json must define the "${s}" script that CI invokes`);
   }
 });
@@ -93,6 +96,29 @@ test('eval:retrieval stays OUT of CI because a suite already asserts its floor',
   const fts = fs.readFileSync(path.join(REPO_ROOT, 'tests', 'retrieval-fts.test.js'), 'utf8');
   assert.match(fts, /runGoldenSetEval/,
     'the exclusion above is only justified while tests/retrieval-fts.test.js runs the golden-set eval');
+});
+
+test('version:check is invoked in --check mode, so it reports drift instead of rewriting CI', () => {
+  // The same script writes when given no flag. A CI step that WROTE would make the tree
+  // dirty and mask the drift it exists to surface, so --check is what makes it a gate.
+  const line = runLines.find((l) => l.includes('version:check'));
+  assert.ok(line, 'no run: line invokes version:check');
+  assert.match(pkg.scripts['version:check'], /--check/,
+    `version:check must pass --check; without it the script WRITES. Got: ${pkg.scripts['version:check']}`);
+});
+
+test('version:check covers the non-npm channels the runtime version check does not', () => {
+  // bin/utils/version-check.js is deliberately npm-focused so a stale Homebrew formula
+  // cannot block a wave at pre-flight. That split is only safe while something else covers
+  // the distribution channels — this gate. Both halves must exist.
+  const sync = fs.readFileSync(path.join(REPO_ROOT, 'scripts', 'sync-version.js'), 'utf8');
+  for (const channel of ['Formula/mindforge.rb', 'Dockerfile', '.claude-plugin/marketplace.json']) {
+    assert.ok(sync.includes(channel),
+      `scripts/sync-version.js must cover ${channel} — it sat four releases behind unasserted`);
+  }
+  const runtime = fs.readFileSync(path.join(REPO_ROOT, 'bin', 'utils', 'version-check.js'), 'utf8');
+  assert.ok(!runtime.includes('Formula/'),
+    'the runtime check must stay npm-focused: a stale Homebrew formula must not block pre-flight');
 });
 
 console.log(`\nCI Gates Wired: ${passed} passed, ${failed} failed`);

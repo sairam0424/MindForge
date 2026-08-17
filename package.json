@@ -65,6 +65,7 @@
     "harness:gate": "node bin/harness-audit.js --min-score 76 --fail-on-findings",
     "harness:compliance": "node bin/installer/harness-adapter-compliance.js --check",
     "release:ready": "node bin/utils/readiness-gate.js release",
+    "version:check": "node scripts/sync-version.js --check",
     "validate:assets": "node scripts/ci/validate-assets.js",
     "eval:retrieval": "node bin/eval/eval-harness.js --set golden-set-retrieval.json --min-recall 0.55",
     "commit": "cz",

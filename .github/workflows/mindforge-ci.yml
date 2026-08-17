@@ -187,6 +187,14 @@ jobs:
       - name: Release readiness gate
         run: npm run release:ready
 
+      # Offline by design: --check never reaches the network, so it cannot flake. It covers
+      # the distribution channels the npm-focused runtime check ignores — the Homebrew
+      # formula, the Dockerfile ARG default and the plugin marketplace entry, all three of
+      # which sat FOUR releases behind (11.5.1 / 11.4.0) while the 12 npm locations stayed
+      # in sync, because nothing asserted them.
+      - name: Version sync across all distribution channels
+        run: npm run version:check
+
       - name: Check governance tier (Tier 3 blocks CI)
         run: |
           PENDING_T3=$(find .planning/approvals/ -name "*.json" 2>/dev/null | xargs grep -l '"tier": 3' 2>/dev/null | xargs -r grep -l '"status": "pending"' 2>/dev/null | wc -l)
