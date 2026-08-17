@@ -21,7 +21,7 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
-const { isHookEnabled } = require('./lib/hook-flags');
+const { isHookEnabled, getDisabledHookIds, getHookProfile, normalizeId } = require('./lib/hook-flags');
 const { buildPreToolUseAdditionalContext } = require('./lib/pretooluse-visible-output');
 
 const MAX_STDIN = 1024 * 1024;
@@ -159,16 +159,73 @@ function writeLegacySpawnOutput(raw, result) {
 }
 
 /**
- * Resolve the MindForge install root. In a plugin-install layout CLAUDE_PLUGIN_ROOT
- * points at the plugin root; otherwise we resolve the repo/.agent root from this
- * file's location (.agent/hooks/ -> repo root two levels up).
+ * The roots this dispatcher can legitimately run under, derived from its OWN location.
+ *
+ *   plugin install    <pluginRoot>/scripts/run-with-flags.js    -> __dirname/..
+ *   repo / npx        <root>/.agent/hooks/run-with-flags.js     -> __dirname/../..
+ *   installed project <project>/.claude/hooks/run-with-flags.js -> __dirname/../..
+ *
+ * In every real layout the root is an ancestor of __dirname. That is the property the
+ * CLAUDE_PLUGIN_ROOT check below relies on. A new layout must be added here deliberately —
+ * failing closed on an unrecognised one is the point.
+ */
+function candidateRoots() {
+  return [
+    path.resolve(__dirname, '..'),
+    path.resolve(__dirname, '..', '..'),
+  ];
+}
+
+/**
+ * realpath if the path exists, plain resolve otherwise.
+ *
+ * This exists to prevent FALSE REJECTIONS, not to block an attack — a correction to my first
+ * reading of it. An unrelated directory is rejected by the candidate comparison whether or not it
+ * is a symlink, because its resolved path is not a candidate either way. What realpath buys is the
+ * converse: a LEGITIMATE root reached by an equivalent path still matches. That happens routinely —
+ * a symlinked checkout, or macOS reporting /tmp/x while process paths resolve to /private/tmp/x.
+ * Comparing unresolved strings would reject those and silently fall back to the derived root.
+ */
+function canonical(p) {
+  try { return fs.realpathSync(path.resolve(p)); } catch { return path.resolve(p); }
+}
+
+/**
+ * Resolve the MindForge install root.
+ *
+ * CLAUDE_PLUGIN_ROOT is honoured ONLY when it names a root this dispatcher could actually be
+ * running from. It used to be returned verbatim, which made it a gate-substitution primitive
+ * rather than a relocation hint: the dispatcher resolves the hook script relative to this root,
+ * so pointing the variable at an attacker-controlled directory makes an arbitrary file execute
+ * WITH THE AUTHORITY OF THE SECURITY GATE. Measured against the real trust-gate:
+ *
+ *   unset                                   `rm -rf /` -> exit 2  (denied)
+ *   CLAUDE_PLUGIN_ROOT=<dir with a stub>    `rm -rf /` -> exit 0  (APPROVED by the stub)
+ *   CLAUDE_PLUGIN_ROOT=/tmp                 `rm -rf /` -> exit 2  (fails closed: no script there)
+ *
+ * The third case was already safe once deny-class hooks began failing closed. The second was
+ * not, and no amount of fail-closed logic fixes it — the substituted gate returns a clean ALLOW.
+ * The existing traversal guard does not help either, because the root it measures against is
+ * exactly what moved.
+ *
+ * Rejection is loud and falls back to the derived root, so a mis-set variable degrades to the
+ * correct gate rather than to no gate.
  */
 function getHookRoot() {
-  if (process.env.CLAUDE_PLUGIN_ROOT && process.env.CLAUDE_PLUGIN_ROOT.trim()) {
-    return process.env.CLAUDE_PLUGIN_ROOT;
+  const derived = path.resolve(__dirname, '..', '..');
+  const raw = process.env.CLAUDE_PLUGIN_ROOT;
+  if (!raw || !raw.trim()) return derived;
+
+  const requested = canonical(raw.trim());
+  if (candidateRoots().some((c) => canonical(c) === requested)) {
+    return requested;
   }
-  // .agent/hooks/run-with-flags.js -> repo root is two dirs up.
-  return path.resolve(__dirname, '..', '..');
+
+  process.stderr.write(
+    `[Hook] IGNORING CLAUDE_PLUGIN_ROOT=${raw.trim()} — it is not a root this dispatcher runs ` +
+    'from, and honouring it would resolve hook scripts out of an unrelated directory (executing ' +
+    `them with the gate's authority). Using ${derived} instead.\n`);
+  return derived;
 }
 
 async function main() {
@@ -181,6 +238,23 @@ async function main() {
   }
 
   if (!isHookEnabled(hookId, { profiles: profilesCsv })) {
+    // Leave a record. Switching a hook off used to be entirely silent — measured,
+    // MINDFORGE_DISABLED_HOOKS=trust-gate gave exit 0 with EMPTY stderr, so a disabled security
+    // gate was indistinguishable from a gate that ran and approved, in the log as well as in the
+    // exit code. The two reasons are reported separately because they are different events: an
+    // explicit opt-out is somebody's decision, while a profile mismatch is ordinary configuration.
+    const explicitlyDisabled = getDisabledHookIds().has(normalizeId(hookId));
+    if (explicitlyDisabled && DENY_CLASS.has(hookId)) {
+      process.stderr.write(
+        `[Hook] SECURITY GATE DISABLED: ${hookId} was switched off via MINDFORGE_DISABLED_HOOKS, ` +
+        'so this operation ran unchecked.\n');
+    } else if (explicitlyDisabled) {
+      process.stderr.write(`[Hook] ${hookId} disabled via MINDFORGE_DISABLED_HOOKS.\n`);
+    } else {
+      process.stderr.write(
+        `[Hook] ${hookId} not active for profile ${getHookProfile()} ` +
+        `(registered for: ${profilesCsv || 'standard,strict'}).\n`);
+    }
     process.stdout.write(raw);
     process.exit(0);
   }
