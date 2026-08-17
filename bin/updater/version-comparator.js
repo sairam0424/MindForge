@@ -37,6 +37,26 @@ function upgradeType(current, latest) {
  * Returns null on any error — callers must handle gracefully.
  * Timeout: 5 seconds (respects enterprise proxies that may be slow).
  */
+/**
+ * MindForge's own version for the User-Agent, or 'unknown'.
+ *
+ * The header used to interpolate `require('../../package.json').version`, which in an INSTALL is
+ * the consumer's manifest — measured 1.0.0 for a host app sitting alongside MindForge 11.9.2, so
+ * the registry saw the wrong client version. Resolved by package NAME instead.
+ *
+ * Required inline, and failure degrades to 'unknown' rather than throwing: this file documents
+ * itself as pure with no external dependencies, and an unresolvable version is no reason to break
+ * an update check. self-update.js throws in the same situation, correctly — there a wrong version
+ * would misclassify the upgrade.
+ */
+function userAgentVersion() {
+  try {
+    return require('../utils/mindforge-version').resolveMindforgeVersion({ fromDir: __dirname }).version;
+  } catch {
+    return 'unknown';
+  }
+}
+
 async function fetchLatestVersion(packageName = 'mindforge-cc') {
   const https = require('https');
   return new Promise(resolve => {
@@ -44,7 +64,7 @@ async function fetchLatestVersion(packageName = 'mindforge-cc') {
       hostname: 'registry.npmjs.org',
       path:     `/${encodeURIComponent(packageName)}/latest`,
       method:   'GET',
-      headers:  { 'Accept': 'application/json', 'User-Agent': `mindforge-cc/${require('../../package.json').version}` },
+      headers:  { 'Accept': 'application/json', 'User-Agent': `mindforge-cc/${userAgentVersion()}` },
       timeout:  5000,
     };
 

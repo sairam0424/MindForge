@@ -6,7 +6,10 @@ const readline = require('readline');
 const detector = require('./environment-detector');
 const generator = require('./config-generator');
 
-const VERSION = require('../../package.json').version;
+// Resolved by package NAME, not by relative path: in an install `../../package.json` is the
+// consumer's manifest, so the wizard displayed the host app's version as MindForge's.
+const { resolveMindforgeVersion } = require('../utils/mindforge-version');
+const VERSION = resolveMindforgeVersion({ fromDir: __dirname }).version;
 const ARGS = process.argv.slice(2);
 const IS_INTERACTIVE =
   !ARGS.some((a) => ['--claude', '--antigravity', '--all', '--help'].includes(a)) &&
