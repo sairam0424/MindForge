@@ -21,7 +21,7 @@ const { spawnSync } = require('child_process');
 
 const AUDIT = path.join(__dirname, '..', 'bin', 'harness-audit.js');
 const REPO_ROOT = path.resolve(__dirname, '..');
-const { buildReport, evaluateGate, parseArgs, parseMinScore } = require('../bin/harness-audit');
+const { buildReport, evaluateGate, parseArgs, parseMinScore, hookWired } = require('../bin/harness-audit');
 
 // The threshold `npm run harness:gate` ships with. Measured 76/76 on this repo,
 // so 70 tolerates the loss of any single check (the largest is worth 4 points)
@@ -242,6 +242,147 @@ test('npm run harness:gate is the gateable entrypoint, and its threshold matches
   assert.match(script, /--fail-on-findings/,
     'harness:gate must also pass --fail-on-findings: a score threshold alone cannot detect a check being removed');
 });
+
+// ── hookWired: the check must distinguish "registered" from "enforcing" ─────────
+// The security-bash-guard-both check used to be
+//     claudeSettings.includes('trust-gate-hook') && agentSettings.includes('trust-gate-hook')
+// a substring scan over raw file text. It scored Security Guardrails 10/10 for a repo whose hook
+// paths resolve NOWHERE in an install, because it never asked where the hooks would run. The
+// distinction is the whole difference between a gate and a silent permit: run-with-flags.js
+// prints "Script not found", echoes stdin and exits 0, which Claude Code reads as ALLOW.
+
+test('hookWired accepts the repo, where the trust-gate paths resolve', () => {
+  const claude = hookWired(REPO_ROOT, '.claude/settings.json', 'trust-gate-hook');
+  assert.ok(claude.ok, `.claude should be wired in the repo: ${claude.why}`);
+  const agent = hookWired(REPO_ROOT, '.agent/settings.json', 'trust-gate-hook');
+  assert.ok(agent.ok,
+    `.agent should be wired in the repo: ${agent.why}. The mirror uses Gemini's BeforeTool event ` +
+    'rather than PreToolUse, so a check that hardcodes PreToolUse reports it unwired — that was a ' +
+    'defect in the check, and the gate caught it.');
+});
+
+test('hookWired REJECTS a registration whose script does not resolve', () => {
+  // The exact shape of an install: the command is present and well-formed, and the script is not
+  // there. A substring check passes this; a real one must not.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-hookwired-'));
+  try {
+    fs.mkdirSync(path.join(dir, '.claude'), { recursive: true });
+    fs.writeFileSync(path.join(dir, '.claude', 'settings.json'), JSON.stringify({
+      hooks: {
+        PreToolUse: [{
+          matcher: 'Bash',
+          hooks: [{ type: 'command', command: 'node .agent/hooks/run-with-flags.js trust-gate bin/security/trust-gate-hook.js minimal,standard,strict' }],
+        }],
+      },
+    }, null, 2));
+    const r = hookWired(dir, '.claude/settings.json', 'trust-gate-hook');
+    assert.strictEqual(r.ok, false,
+      'a command naming a script that does not exist must NOT count as wired — it exits 0 and permits');
+    assert.match(r.why, /does not exist|permits/,
+      `the reason must say the script is missing, got: ${r.why}`);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('hookWired REJECTS a hook registered on a non-Bash matcher', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-hookwired-m-'));
+  try {
+    fs.mkdirSync(path.join(dir, '.claude'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'present.js'), '');
+    fs.writeFileSync(path.join(dir, '.claude', 'settings.json'), JSON.stringify({
+      hooks: { PreToolUse: [{ matcher: 'Read', hooks: [{ command: 'node present.js trust-gate-hook' }] }] },
+    }, null, 2));
+    const r = hookWired(dir, '.claude/settings.json', 'trust-gate-hook');
+    assert.strictEqual(r.ok, false,
+      'a Bash guard registered only for Read does not guard Bash');
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('the CHECK rejects a settings file whose hook script is absent (substring cannot)', () => {
+  // THE DISCRIMINATING CASE, and the reason the install-based test below is not sufficient on its
+  // own: an install has NO settings.json at all, so `claudeSettings.includes('trust-gate-hook')`
+  // is false there too and the old substring check "fails" for the wrong reason. A control that
+  // reverted this check to substring matching therefore left that test green.
+  //
+  // This fixture separates them: both settings files EXIST and both name trust-gate-hook, and the
+  // script it points at does not exist. Substring matching passes. Resolution does not. That gap
+  // is precisely the difference between a gate and a silent permit.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-discrim-'));
+  try {
+    const cmd = 'node .agent/hooks/run-with-flags.js trust-gate bin/security/trust-gate-hook.js minimal,standard,strict';
+    fs.mkdirSync(path.join(dir, '.claude'), { recursive: true });
+    fs.mkdirSync(path.join(dir, '.agent'), { recursive: true });
+    fs.writeFileSync(path.join(dir, '.claude', 'settings.json'), JSON.stringify({
+      hooks: { PreToolUse: [{ matcher: 'Bash', hooks: [{ type: 'command', command: cmd }] }] },
+    }, null, 2));
+    fs.writeFileSync(path.join(dir, '.agent', 'settings.json'), JSON.stringify({
+      hooks: { BeforeTool: [{ matcher: 'Bash', hooks: [{ type: 'command', command: cmd }] }] },
+    }, null, 2));
+
+    // Substring matching would accept this — assert that premise, so the test documents what it
+    // is discriminating against rather than merely asserting the new behaviour.
+    const claudeText = fs.readFileSync(path.join(dir, '.claude', 'settings.json'), 'utf8');
+    const agentText = fs.readFileSync(path.join(dir, '.agent', 'settings.json'), 'utf8');
+    assert.ok(claudeText.includes('trust-gate-hook') && agentText.includes('trust-gate-hook'),
+      'fixture precondition: the OLD substring check must accept this root, or this test proves nothing');
+
+    const report = buildReport('repo', { rootDir: dir });
+    const check = report.checks.find((c) => c.id === 'security-bash-guard-both');
+    assert.ok(check, 'security-bash-guard-both must be among the repo-scope checks');
+    assert.strictEqual(check.pass, false,
+      'a registration naming bin/security/trust-gate-hook.js that does not exist must NOT pass. ' +
+      'run-with-flags.js prints "Script not found", echoes stdin and exits 0 — Claude Code reads ' +
+      'that as ALLOW, so this configuration guards nothing.');
+
+    // And with the script actually present, it must pass — otherwise the check is simply always
+    // false and would be no more useful than the substring it replaced.
+    fs.mkdirSync(path.join(dir, 'bin', 'security'), { recursive: true });
+    fs.mkdirSync(path.join(dir, '.agent', 'hooks'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'bin', 'security', 'trust-gate-hook.js'), '');
+    fs.writeFileSync(path.join(dir, '.agent', 'hooks', 'run-with-flags.js'), '');
+    const after = buildReport('repo', { rootDir: dir }).checks.find((c) => c.id === 'security-bash-guard-both');
+    assert.strictEqual(after.pass, true,
+      'with both scripts present the check must pass, or it can never pass and is not a check');
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('the audit reports Security Guardrails HONESTLY against a real install', () => {
+  // The end-to-end consequence, and the tripwire for REG-01. An install registers no hooks at
+  // all, so this category must NOT score full marks. When REG-01 lands and hooks are genuinely
+  // wired, this fails and must be rewritten to assert the opposite — which is the point.
+  const project = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-auditinstall-'));
+  try {
+    fs.writeFileSync(path.join(project, 'package.json'),
+      JSON.stringify({ name: 'their-app', version: '1.0.0' }, null, 2));
+    const inst = spawnSync(process.execPath,
+      [path.join(REPO_ROOT, 'bin', 'install.js'), '--claude', '--local'],
+      { cwd: project, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: process.env.HOME, CI: '1' } });
+    assert.strictEqual(inst.status, 0, `install failed: ${(inst.stderr || '').slice(0, 500)}`);
+
+    const wired = hookWired(project, '.claude/settings.json', 'trust-gate-hook');
+    assert.strictEqual(wired.ok, false,
+      'an install writes no .claude/settings.json, so trust-gate cannot be wired there. If this ' +
+      'now passes, REG-01 has landed — replace this test with one asserting a real DENY.');
+
+    // `categories` is an object keyed by name -> {score, earned, max}, not an array. Scope 'repo'
+    // is what `npm run harness:gate` runs; scope 'security' against an install yields ZERO
+    // applicable checks (max: 0), which would make the score assertion below vacuously true.
+    const report = buildReport('repo', { rootDir: project });
+    const guardrails = report.categories['Security Guardrails'];
+    assert.ok(guardrails,
+      `the report must include Security Guardrails, got keys: ${Object.keys(report.categories).join(', ')}`);
+    assert.ok(guardrails.max > 0,
+      'the category must have applicable checks, or "score < 10" below proves nothing — a 0/0 ' +
+      `category satisfies it trivially. Got ${JSON.stringify(guardrails)}`);
+    assert.ok(guardrails.score < 10,
+      `Security Guardrails scored ${guardrails.score}/10 for an install that registers NO hooks. ` +
+      'That is the substring check returning — the score must reflect enforcement, not file text.');
+    // And the specific check must be the one reporting it, not some unrelated deduction.
+    const failed = report.checks.filter((c) => !c.pass).map((c) => c.id);
+    assert.ok(failed.includes('security-bash-guard-both'),
+      `security-bash-guard-both must be among the failures for an install. Failing: ${failed.join(', ')}`);
+  } finally { fs.rmSync(project, { recursive: true, force: true }); }
+});
+
 
 (async () => {
   // Guard the harness itself: if a case is registered below this loop it would never run,
