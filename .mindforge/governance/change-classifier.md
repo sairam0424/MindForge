@@ -44,9 +44,25 @@ Scan the actual diff content, not only filenames, for patterns such as:
 This protects against security-critical code being added to innocuous filenames
  like `src/utils/helper.ts`.
 
-### Signal C — AUDIT history patterns
-If the current phase has a recent HIGH or CRITICAL `security_finding`, the next
- change in that phase is elevated to Tier 3 automatically.
+### Signal C — AUDIT history patterns (SPECIFIED, NOT IMPLEMENTED)
+Intended behaviour: if the current phase has a recent HIGH or CRITICAL
+ `security_finding`, the next change in that phase is elevated to Tier 3
+ automatically.
+
+**This signal does not exist in `bin/change-classifier.js`.** It is recorded here
+ as a design intent, not as a live protection, because it would read from
+ `.planning/AUDIT.jsonl` — which is gitignored (`.gitignore:81`), untracked, and
+ absent from `package.json` `files[]`. That file therefore does not exist in the
+ fresh clone the classifier actually runs in
+ (`.github/workflows/control-plane.yml`). Implementing it against a source that is
+ structurally unavailable at the point of enforcement would produce a signal that
+ silently never fires — the same defect class as the Signal B gap above, where 13
+ of the 19 documented patterns were specified and absent.
+
+The `security_finding` event itself is real and carries `severity`: see
+ `bin/dashboard/metrics-aggregator.js:160` and `bin/revops/debt-monitor.js:23`,
+ both of which read it from a local audit log. Enabling Signal C needs a decision
+ about how phase history reaches CI, not merely classifier code.
 
 ## Classification audit entry
 Record why the tier was selected:
@@ -56,7 +72,7 @@ Record why the tier was selected:
   "event": "change_classified",
   "tier": 3,
   "classification_reason": "code pattern: jwt.sign found in src/utils/helper.ts",
-  "signals_checked": ["file_path", "code_content", "audit_history"],
+  "signals_checked": ["file_path", "code_content"],
   "signal_triggered": "code_content",
   "pattern_matched": "jwt.sign"
 }
