@@ -254,9 +254,15 @@ test('a tier-3 consumer exists, which is what makes the classifier exit 0 honest
   // The catch block returns tier 3 and exits 0 on the grounds that a downstream job gates on
   // it. If that consumer disappeared, failing closed would become failing OPEN.
   const cp = fs.readFileSync(path.join(REPO_ROOT, '.github', 'workflows', 'control-plane.yml'), 'utf8');
-  assert.match(cp, /if:\s*needs\.classify\.outputs\.tier\s*==\s*'3'/,
-    'control-plane.yml must still gate a job on tier == 3; without it the classifier reporting ' +
-    'tier 3 and exiting 0 means nothing happens at all');
+  // Asserts the tier output is CONSUMED, not that it is consumed by one particular syntax. It was
+  // originally a step-level `if: needs.classify.outputs.tier == '3'`; it is now passed to
+  // bin/governance/verify-approvals.js via env so the integrity half runs at every tier while the
+  // Tier-3 half only discloses. Pinning the old spelling made this test fail on an improvement.
+  assert.match(cp, /needs\.classify\.outputs\.tier/,
+    'control-plane.yml must still consume the classifier tier somewhere; without a consumer, the ' +
+    'classifier reporting tier 3 and exiting 0 means nothing happens at all');
+  assert.match(cp, /verify-approvals\.js/,
+    'the tier must reach a step that acts on it');
   assert.match(cp, /fetch-depth:\s*0/,
     'the classify job must keep fetch-depth: 0 — on a shallow clone `before` is unreachable and ' +
     'every push would fail closed to tier 3, which is the documented precursor to a gate being deleted');

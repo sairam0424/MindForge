@@ -185,12 +185,25 @@ test('the real Tier-3 evaluator is wired and its approval check can reject', () 
   // governance-gate job actually exists and its validation can fail.
   const cp = workflows.find((w) => w.name === 'control-plane.yml');
   assert.ok(cp, 'control-plane.yml must exist — mindforge-ci.yml defers Tier-3 evaluation to it');
-  assert.match(cp.text, /if:\s*needs\.classify\.outputs\.tier\s*==\s*'3'/,
-    'control-plane.yml must gate a job on the classifier reporting tier 3');
-  assert.match(cp.text, /process\.exit\(1\)/,
-    'the governance gate must have at least one rejecting path, or it is decorative');
-  assert.match(cp.text, /no approval found/,
-    'the gate must reject when no approval exists at all');
+  assert.match(cp.text, /needs\.classify\.outputs\.tier/,
+    'control-plane.yml must consume the classifier tier');
+  assert.match(cp.text, /verify-approvals\.js/,
+    'the Tier-3 evaluation must run bin/governance/verify-approvals.js');
+
+  // The rejecting path lives in the SCRIPT now, not inline in YAML, so assert it there. This
+  // check exists because the previous inline gate could not fail against the change being built:
+  // running it in a temp dir with no git repository at all exited 0.
+  const verifier = fs.readFileSync(path.join(REPO_ROOT, 'bin', 'governance', 'verify-approvals.js'), 'utf8');
+  assert.match(verifier, /return 1;/,
+    'verify-approvals.js must have at least one rejecting path, or the gate is decorative');
+  assert.match(verifier, /verifyRecord/,
+    'it must verify record integrity through the shared module rather than re-implementing it');
+
+  // And the shared module must still perform the two currency checks that killed the perpetual
+  // approval: version binding and expiry. Without both, one record approves every later release.
+  const rec = fs.readFileSync(path.join(REPO_ROOT, 'bin', 'governance', 'approval-record.js'), 'utf8');
+  assert.match(rec, /currentVersion/, 'records must be bound to the release being built');
+  assert.match(rec, /expires_at/, 'records must expire');
 });
 
 console.log(`\nCI Gates Wired: ${passed} passed, ${failed} failed`);
