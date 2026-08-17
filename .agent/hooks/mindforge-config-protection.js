@@ -96,13 +96,23 @@ function run(inputOrRaw, options = {}) {
       return { exitCode: 0 };
     }
 
+    // The deny reason no longer names the env var that turns this gate off.
+    //
+    // A PreToolUse denial is delivered to the MODEL whose tool call was just refused, so the old
+    // message ended by telling the agent it had blocked exactly how to stop being blocked
+    // ("disable the config-protection hook temporarily (MINDFORGE_DISABLED_HOOKS)"). A control
+    // that hands out its own bypass in the refusal is a suggestion, not a control.
+    //
+    // The escape hatch still exists and is documented in this file's header for the HUMAN
+    // operator, who is the party entitled to use it — and run-with-flags.js now writes
+    // "SECURITY GATE DISABLED" to stderr whenever it is used, so exercising it leaves a record.
     return {
       exitCode: 2,
       stderr:
         `BLOCKED: Modifying ${basename} is not allowed. ` +
         'Fix the source code to satisfy linter/formatter/tsconfig rules instead ' +
-        'of weakening the config. If this is a legitimate config change, disable ' +
-        'the config-protection hook temporarily (MINDFORGE_DISABLED_HOOKS).'
+        'of weakening the config. A legitimate config change needs a human decision, ' +
+        'not a hook bypass — ask the operator.'
     };
   }
 
