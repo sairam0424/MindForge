@@ -72,4 +72,16 @@ Spawn dispatch is not yet implemented in v11.9.0. Use `/mindforge:auto` or `/min
 Tier-3 trust uses in-process key simulation in v11.9.0 — this is intentional and safe. `SECURITY_TIER_3_SIMULATED = true` is the documented v11.x behavior. Hardware TPM/HSM is planned for v12.x.
 
 **Q: What is the test coverage?**
-95/97 tests passing (0 failures, 2 permanently env-skipped). Line coverage ~66% — gaps are in `bin/source-loader.js` and `scripts/ci/validate-assets.js`. Target is 80% for v11.9.0.
+117 test files: 115 pass, 0 failures, 2 env-dependent skips (`browser.test.js` needs a Chromium
+daemon, `sre-integration.test.js` needs git worktree support and a clean tree).
+
+The enforced floor is **30% lines**, gated in CI by the `mindforge-quality` job
+(`npx c8 --check-coverage --lines 30 --exclude 'plugins/**' --exclude 'mcp-server/dist/**'`).
+The measured figure is printed by that job and deliberately not restated here. The previous
+answer to this question was wrong in three ways at once — a test count from a much smaller
+suite, a stale coverage figure, and two named coverage gaps that were no longer the gaps — and
+it stayed wrong because none of it was checked by anything. `tests/doc-count-claims.test.js`
+now pins every count this file does state.
+
+Both `--exclude` flags are load-bearing: without them c8 measured the generated `plugins/` tree
+and `mcp-server/dist/` esbuild output, which understated real coverage substantially.
