@@ -39,7 +39,6 @@ function mkProject() {
 
 // ── Module imports ────────────────────────────────────────────────────────────
 const Metrics  = require('../bin/dashboard/metrics-aggregator');
-const Approval = require('../bin/dashboard/approval-handler');
 const SSE      = require('../bin/dashboard/sse-bridge');
 
 // ── Sample data fixtures ──────────────────────────────────────────────────────
@@ -64,16 +63,38 @@ const SAMPLE_AUTO_STATE = {
   last_commit: 'abc1234',
 };
 
-const SAMPLE_APPROVAL = {
-  id: 'aaaabbbb-cccc-dddd-eeee-ffffffffffff',
-  tier: 2,
-  phase: 3,
-  plan: '04',
-  description: 'Add user RBAC model',
-  status: 'pending',
-  requested_at: new Date().toISOString(),
-  expires_at: new Date(Date.now() + 86_400_000).toISOString(),
-};
+// Built through bin/governance/approval-record.js, the SAME module the writer and the CI
+// verifier use, so the fixture cannot drift from the real record shape.
+//
+// The previous fixture invented one: a 36-char UUID `id`, plus `phase`, `plan`, `description` and
+// `status: 'pending'`. No producer has ever written any of those four fields — approve.js emits
+// `MF-AUTH-<base36>` with `reason`, and nothing anywhere writes a `status`. The tests passed
+// because the fixture and the reader agreed with EACH OTHER while both disagreed with production,
+// which is why six independent incompatibilities survived in the shipped dashboard.
+const { checksumRecord, expiryFrom, SCHEMA } = require('../bin/governance/approval-record');
+const REPO_VERSION = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')).version;
+
+function makeApproval(over = {}) {
+  const timestamp = new Date().toISOString();
+  const rec = {
+    schema: SCHEMA,
+    id: 'MF-AUTH-DASHFIXTURE',
+    project: 'mindforge-cc',
+    version: REPO_VERSION,
+    tier: 3,
+    approved_by: 'fixture',
+    timestamp,
+    expires_at: expiryFrom(timestamp),
+    reason: 'dashboard fixture',
+    identity_verification: {
+      verified: false, method: 'git_identity_unverified', identity: 'fixture', unverified_ack: true,
+    },
+    ...over,
+  };
+  rec.record_checksum = checksumRecord(rec);
+  return rec;
+}
+const SAMPLE_APPROVAL = makeApproval();
 
 // ═══════════════════════════════════════════════════════════════════════
 console.log('\nMindForge v2 — Dashboard Tests\n');
@@ -84,7 +105,6 @@ console.log('Required files:');
   'bin/dashboard/server.js',
   'bin/dashboard/sse-bridge.js',
   'bin/dashboard/api-router.js',
-  'bin/dashboard/approval-handler.js',
   'bin/dashboard/metrics-aggregator.js',
   'bin/dashboard/frontend/index.html',
   '.mindforge/dashboard/dashboard-spec.md',
@@ -163,39 +183,84 @@ test('getAuditEntries: filters by event type', () => {
   } finally { process.chdir(orig); p.cleanup(); }
 });
 
-test('getApprovals: returns categorized approvals', () => {
+test('getApprovals: reads the filename the writer actually produces', () => {
+  // The reader filtered startsWith('APPROVAL-') while the only producer writes
+  // `approval-<id>.json`. startsWith is case-sensitive on every platform, so this returned
+  // nothing, always — on macOS too, where the case-insensitive filesystem affects fs.open but
+  // not a string comparison.
   const p    = mkProject();
   const orig = process.cwd();
   process.chdir(p.dir);
   try {
-    p.write(`.planning/approvals/APPROVAL-${SAMPLE_APPROVAL.id}.json`, JSON.stringify(SAMPLE_APPROVAL));
+    p.write(`.planning/approvals/approval-${SAMPLE_APPROVAL.id.toLowerCase()}.json`,
+      JSON.stringify(SAMPLE_APPROVAL));
 
     const result = Metrics.getApprovals();
-    assert.ok(Array.isArray(result.pending),   'Should have pending array');
-    assert.ok(Array.isArray(result.approved),  'Should have approved array');
-    assert.ok(Array.isArray(result.rejected),  'Should have rejected array');
-    assert.ok(Array.isArray(result.expired),   'Should have expired array');
-    assert.strictEqual(result.pending.length, 1, 'Should have 1 pending approval');
-    assert.strictEqual(result.pending[0].id, SAMPLE_APPROVAL.id);
+    assert.ok(Array.isArray(result),
+      'getApprovals must return an ARRAY: its only consumer does .length and .map(), which on ' +
+      'the previous {pending,approved,rejected,expired} object yields undefined then a TypeError');
+    assert.strictEqual(result.length, 1, `expected the record to be found, got ${result.length}`);
+    assert.strictEqual(result[0].id, SAMPLE_APPROVAL.id);
+    assert.strictEqual(result[0].state, 'valid', `a freshly minted record is valid, got ${result[0].state}`);
   } finally { process.chdir(orig); p.cleanup(); }
 });
 
-test('getApprovals: classifies expired approval correctly', () => {
+test('getApprovals: an UPPERCASE filename is NOT silently accepted', () => {
+  // Guards the fix from being "generalised" back into matching both spellings, which would
+  // re-admit the dashboard-only format that no producer writes.
   const p    = mkProject();
   const orig = process.cwd();
   process.chdir(p.dir);
   try {
-    const expired = {
-      ...SAMPLE_APPROVAL,
-      id: 'expired-uuid-1234-5678-abcd-ef0123456789',
-      status: 'pending',
-      expires_at: new Date(Date.now() - 3600_000).toISOString(), // 1 hour ago
-    };
-    p.write(`.planning/approvals/APPROVAL-${expired.id}.json`, JSON.stringify(expired));
-
+    p.write('.planning/approvals/notes.txt', 'not a record');
     const result = Metrics.getApprovals();
-    assert.strictEqual(result.expired.length, 1, 'Should classify as expired');
-    assert.strictEqual(result.pending.length, 0, 'Should not be in pending');
+    assert.strictEqual(result.length, 0, 'only .json files are records');
+  } finally { process.chdir(orig); p.cleanup(); }
+});
+
+test('getApprovals: categorises by VERIFIED state, not a self-declared status', () => {
+  const p    = mkProject();
+  const orig = process.cwd();
+  process.chdir(p.dir);
+  try {
+    // expired
+    const past = new Date(Date.now() - 100 * 3600_000).toISOString();
+    const expired = makeApproval({ id: 'MF-AUTH-EXPIRED', timestamp: past, expires_at: expiryFrom(past) });
+    p.write('.planning/approvals/approval-mf-auth-expired.json', JSON.stringify(expired));
+    // bound to an older release
+    const oldVersion = makeApproval({ id: 'MF-AUTH-OLDVER', version: '0.0.1' });
+    p.write('.planning/approvals/approval-mf-auth-oldver.json', JSON.stringify(oldVersion));
+    // tampered after minting
+    const tampered = { ...makeApproval({ id: 'MF-AUTH-TAMPER' }), reason: 'edited afterwards' };
+    p.write('.planning/approvals/approval-mf-auth-tamper.json', JSON.stringify(tampered));
+    // valid
+    p.write('.planning/approvals/approval-mf-auth-ok.json', JSON.stringify(makeApproval({ id: 'MF-AUTH-OK' })));
+
+    const byId = Object.fromEntries(Metrics.getApprovals().map(r => [r.id, r]));
+    assert.strictEqual(byId['MF-AUTH-OK'].state, 'valid');
+    assert.strictEqual(byId['MF-AUTH-EXPIRED'].state, 'stale', 'an expired record is stale');
+    assert.strictEqual(byId['MF-AUTH-OLDVER'].state, 'stale',
+      'a record bound to an earlier release is stale — this is the property that stopped one ' +
+      'record approving every later version');
+    assert.strictEqual(byId['MF-AUTH-TAMPER'].state, 'corrupt',
+      'an edited record is corrupt, not merely stale');
+    assert.ok(byId['MF-AUTH-TAMPER'].problems.some(x => /checksum/.test(x)),
+      'and it must say the checksum failed');
+  } finally { process.chdir(orig); p.cleanup(); }
+});
+
+test('getApprovals: reports corrupt JSON instead of silently dropping it', () => {
+  // The old reader had `catch { /* skip corrupt files */ }`, so an unparseable record vanished
+  // from the dashboard entirely — the operator saw an empty list rather than a problem.
+  const p    = mkProject();
+  const orig = process.cwd();
+  process.chdir(p.dir);
+  try {
+    p.write('.planning/approvals/approval-broken.json', '{ not json');
+    const result = Metrics.getApprovals();
+    assert.strictEqual(result.length, 1, 'a corrupt record must still be surfaced');
+    assert.strictEqual(result[0].state, 'corrupt');
+    assert.match(result[0].problems.join(' '), /not valid JSON/);
   } finally { process.chdir(orig); p.cleanup(); }
 });
 
@@ -260,137 +325,26 @@ test('getTeamActivity: returns active developers from AUDIT', () => {
   } finally { process.chdir(orig); p.cleanup(); }
 });
 
-// ── Approval handler ──────────────────────────────────────────────────────────
-console.log('\nApproval handler:');
-
-test('processDecision: approves a valid pending approval', () => {
-  const p    = mkProject();
-  const orig = process.cwd();
-  process.chdir(p.dir);
-  try {
-    p.write(`.planning/approvals/APPROVAL-${SAMPLE_APPROVAL.id}.json`, JSON.stringify(SAMPLE_APPROVAL));
-    p.write('.planning/AUDIT.jsonl', ''); // Create AUDIT file
-
-    const result = Approval.processDecision(SAMPLE_APPROVAL.id, 'approve', 'Looks good', 'reviewer@team.com');
-    assert.strictEqual(result.success, true,     'Should succeed');
-    assert.strictEqual(result.decision, 'approve', 'Should record approve decision');
-
-    const updated = JSON.parse(fs.readFileSync(path.join(p.dir, `.planning/approvals/APPROVAL-${SAMPLE_APPROVAL.id}.json`), 'utf8'));
-    assert.strictEqual(updated.status, 'approved', 'File should be updated to approved');
-    assert.strictEqual(updated.resolved_by, 'reviewer@team.com', 'Should record resolver');
-  } finally { process.chdir(orig); p.cleanup(); }
-});
-
-test('processDecision: rejects a valid pending approval', () => {
-  const p    = mkProject();
-  const orig = process.cwd();
-  process.chdir(p.dir);
-  try {
-    p.write(`.planning/approvals/APPROVAL-${SAMPLE_APPROVAL.id}.json`, JSON.stringify(SAMPLE_APPROVAL));
-    p.write('.planning/AUDIT.jsonl', '');
-
-    const result = Approval.processDecision(SAMPLE_APPROVAL.id, 'reject', 'Design flaw', 'reviewer@team.com');
-    assert.strictEqual(result.success, true, 'Should succeed');
-    const updated = JSON.parse(fs.readFileSync(path.join(p.dir, `.planning/approvals/APPROVAL-${SAMPLE_APPROVAL.id}.json`), 'utf8'));
-    assert.strictEqual(updated.status, 'rejected', 'File should be updated to rejected');
-  } finally { process.chdir(orig); p.cleanup(); }
-});
-
-test('processDecision: fails Tier 3 approval without confirmation ID', () => {
-  const p    = mkProject();
-  const orig = process.cwd();
-  process.chdir(p.dir);
-  try {
-    const tier3 = { ...SAMPLE_APPROVAL, tier: 3, phase: 1, plan: 'auth' };
-    p.write(`.planning/approvals/APPROVAL-${tier3.id}.json`, JSON.stringify(tier3));
-    p.write('.planning/AUDIT.jsonl', '');
-
-    const result = Approval.processDecision(tier3.id, 'approve', 'Go', 'admin');
-    assert.strictEqual(result.success, false, 'Should fail without confirmation');
-    assert.ok(result.confirmation_required, 'Should indicate confirmation required');
-    assert.strictEqual(result.expected, '1-auth', 'Should return expected ID');
-  } finally { process.chdir(orig); p.cleanup(); }
-});
-
-test('processDecision: succeeds Tier 3 approval with correct confirmation ID', () => {
-  const p    = mkProject();
-  const orig = process.cwd();
-  process.chdir(p.dir);
-  try {
-    const tier3 = { ...SAMPLE_APPROVAL, tier: 3, phase: 1, plan: 'auth' };
-    p.write(`.planning/approvals/APPROVAL-${tier3.id}.json`, JSON.stringify(tier3));
-    p.write('.planning/AUDIT.jsonl', '');
-
-    const result = Approval.processDecision(tier3.id, 'approve', 'Go', 'admin', '1-auth');
-    assert.strictEqual(result.success, true, 'Should succeed with correct confirmation');
-    
-    const audit = fs.readFileSync(path.join(p.dir, '.planning/AUDIT.jsonl'), 'utf8');
-    assert.ok(audit.includes('approval_granted'), 'Should write to AUDIT');
-  } finally { process.chdir(orig); p.cleanup(); }
-});
-
-test('processDecision: writes AUDIT before updating approval file (integrity)', () => {
-  const p    = mkProject();
-  const orig = process.cwd();
-  process.chdir(p.dir);
-  // We can't easily test "before" without mocking fs, but we verifies both happen
-  try {
-    p.write(`.planning/approvals/APPROVAL-${SAMPLE_APPROVAL.id}.json`, JSON.stringify(SAMPLE_APPROVAL));
-    p.write('.planning/AUDIT.jsonl', '');
-    
-    Approval.processDecision(SAMPLE_APPROVAL.id, 'approve', 'Ok', 'tester');
-    
-    const audit = fs.readFileSync(path.join(p.dir, '.planning/AUDIT.jsonl'), 'utf8');
-    const apprv = fs.readFileSync(path.join(p.dir, `.planning/approvals/APPROVAL-${SAMPLE_APPROVAL.id}.json`), 'utf8');
-    
-    assert.ok(audit.length > 0, 'AUDIT should be written');
-    assert.ok(JSON.parse(apprv).status === 'approved', 'Approval should be updated');
-  } finally { process.chdir(orig); p.cleanup(); }
-});
-
-// ── Security regression (v11.5.1): /api/approve must not trust client approver ──
-// The route used to pass req.body.approver straight to processDecision, letting a
-// caller forge the recorded identity (resolved_by). The fix records a FIXED trusted
-// actor instead. We mount the router on a stub app to capture the handler, then
-// invoke it with a forged approver and assert processDecision never receives it.
-console.log('\nSecurity — approver attribution:');
-
-test('/api/approve ignores a client-supplied approver (no forged audit identity)', () => {
-  const apiRouter = require('../bin/dashboard/api-router');
-  const Approval  = require('../bin/dashboard/approval-handler');
-
-  // Capture the registered POST /api/approve/:id handler via a stub express app.
-  const routes = {};
-  const stubApp = {
-    get() {}, put() {}, delete() {},
-    post(routePath, handler) { routes[routePath] = handler; },
-  };
-  apiRouter.register(stubApp);
-  const handler = routes['/api/approve/:id'];
-  assert.ok(typeof handler === 'function', 'approve route must be registered');
-
-  // Spy on processDecision to capture the approver argument the route passes.
-  const orig = Approval.processDecision;
-  let capturedApprover = '__never_set__';
-  Approval.processDecision = (id, decision, comment, approver) => {
-    capturedApprover = approver;
-    return { success: true, decision, approval_id: id, tier: 2, message: 'ok' };
-  };
-
-  try {
-    const req = { params: { id: 'aaaabbbb-cccc-dddd-eeee-ffffffffffff' },
-      body: { decision: 'approve', comment: 'x', approver: 'admin-user-FORGED' } };
-    const res = { json() {}, status() { return { json() {} }; } };
-    handler(req, res);
-
-    assert.notStrictEqual(capturedApprover, 'admin-user-FORGED',
-      'route must NOT pass the client-supplied approver through to the audit trail');
-    assert.strictEqual(capturedApprover, 'dashboard-authenticated',
-      'route must attribute the action to the fixed trusted actor');
-  } finally {
-    Approval.processDecision = orig;
-  }
-});
+// ── Approval decision endpoint: REMOVED ──────────────────────────────────────
+//
+// The five processDecision tests and the /api/approve approver-attribution regression test
+// that stood here are gone with the endpoint they covered. bin/dashboard/approval-handler.js
+// implemented a pending-request -> decide workflow that no producer has ever fed:
+// bin/governance/approve.js records an already-made decision, and nothing anywhere writes a
+// request awaiting one. The handler additionally required a 36-char UUID id (the writer emits
+// MF-AUTH-<base36>), required status:'pending' (never written), and read APPROVAL-*.json (the
+// writer emits approval-*.json).
+//
+// Those tests passed for the same reason the feature never worked: each built its own fixture
+// in the invented shape, so the module and its test agreed with each other and neither agreed
+// with production. Deleting them removes coverage of nothing that ran.
+//
+// The security property one of them protected — never trusting a client-supplied `approver` —
+// is preserved by construction: there is no longer any endpoint that writes an approval record.
+// Records are minted only by bin/governance/approve.js, which takes the identity from git and
+// fails closed without a GPG key unless MINDFORGE_ALLOW_UNVERIFIED_APPROVAL=1 is set
+// (tests/approve.test.js). Integrity of what it writes is covered by
+// tests/approval-integrity.test.js.
 
 // ── Summary ───────────────────────────────────────────────────────────────────
 console.log(`\nTests finished: ${passed} passed, ${failed} failed\n`);
