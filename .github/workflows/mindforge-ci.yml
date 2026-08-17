@@ -157,7 +157,12 @@ jobs:
           fi
 
       - name: Test suite with coverage
-        run: npx c8 --check-coverage --lines 30 node tests/run-all.js
+        # Exclude GENERATED bundles from the gate. tests/mcp-server-version.test.js spawns
+        # plugins/mindforge/mcp/dist/index.js (a 22k-line esbuild single-file bundle) to read
+        # serverInfo.version off the wire, which otherwise drops ~22k mostly-uncovered lines
+        # into the denominator of a threshold meant to measure hand-written code. A generated
+        # bundle belongs in neither the numerator nor the denominator.
+        run: npx c8 --check-coverage --lines 30 --exclude 'plugins/**' --exclude 'mcp-server/dist/**' node tests/run-all.js
 
       - name: Check governance tier (Tier 3 blocks CI)
         run: |

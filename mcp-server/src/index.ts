@@ -25,6 +25,15 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import { MindForgeMemory, type KnowledgeType } from './vendor/memory.js';
 import { MindForgeClient } from './vendor/client.js';
+// serverInfo.version MUST be derived, never typed. A hardcoded '11.4.0' sat here while
+// mcp-server/package.json said 11.9.2, and because mcp-server/dist is gitignored the bundle
+// is compiled at publish time — so the stale literal shipped inside the provenance-attested
+// 11.9.2 artifact and every MCP client (Claude Desktop, Cursor, the Docker MCP Catalog
+// entry) displayed and logged 11.4.0. esbuild inlines this named JSON import at bundle time
+// and tree-shakes the rest of package.json away, so the wire value cannot drift again, and a
+// broken binding fails the BUILD (`tsc --noEmit` plus esbuild resolution) instead of a
+// user's session. Never mark ../package.json external in build.mjs.
+import { version as MCP_SERVER_VERSION } from '../package.json';
 
 // The user's project root. Claude Code sets CLAUDE_PROJECT_DIR for plugin subprocesses;
 // fall back to cwd for direct/MCP-Inspector runs.
@@ -56,7 +65,7 @@ async function safe<T>(
   }
 }
 
-const server = new McpServer({ name: 'mindforge', version: '11.4.0' });
+const server = new McpServer({ name: 'mindforge', version: MCP_SERVER_VERSION });
 
 /**
  * Tool config + handler types. We register through a single helper whose `config.inputSchema`
