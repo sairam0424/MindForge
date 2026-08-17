@@ -90,7 +90,19 @@ test('approve() writes an HONESTLY-marked unverified record under explicit opt-i
     assert.strictEqual(written.identity_verification.verified, false,
       'opt-in record must be marked verified:false, not silently "approved"');
     assert.strictEqual(written.tier, 3);
-    assert.ok(written.signature.startsWith('sha256:'));
+    // `signature` was removed, not renamed-and-kept: it was sha256(id:reason:timestamp:hostname),
+    // which is not a signature (nothing signs it) and cannot be verified by a holder of the
+    // record (hostname is not one of its fields). Its replacement is recomputable.
+    assert.strictEqual(written.signature, undefined,
+      'the misnamed, unverifiable `signature` field must not come back');
+    assert.ok(written.record_checksum.startsWith('sha256:'), 'record must carry a checksum');
+    const { checksumRecord, verifyRecord } = require(path.join(ROOT, 'bin', 'governance', 'approval-record'));
+    assert.strictEqual(written.record_checksum, checksumRecord(written),
+      'the checksum must recompute from the record alone — that is the whole point of replacing ' +
+      'the hostname-salted digest');
+    const pkgVersion = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version;
+    const v = verifyRecord(written, { currentVersion: pkgVersion });
+    assert.ok(v.ok, `a freshly minted record must verify clean, got: ${v.problems.join('; ')}`);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 

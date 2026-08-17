@@ -127,6 +127,68 @@ function safeParseJson(text) {
   try { return JSON.parse(text); } catch (_error) { return null; }
 }
 
+/**
+ * Is a named hook genuinely WIRED in a settings file, relative to rootDir?
+ *
+ * "Wired" is asserted by three things, not by one substring:
+ *   1. the hook id appears in a command registered under PreToolUse,
+ *   2. that matcher covers Bash, and
+ *   3. every .js path in the command RESOLVES relative to rootDir.
+ *
+ * (3) is the load-bearing part. The previous check was
+ *     claudeSettings.includes('trust-gate-hook') && agentSettings.includes('trust-gate-hook')
+ * — a substring scan over the raw file text, which cannot distinguish a wired hook from one whose
+ * script path resolves to nothing. That distinction is the entire difference between a gate and a
+ * silent permit: .agent/hooks/run-with-flags.js:132-136 prints "Script not found", echoes stdin
+ * and exits 0, which Claude Code reads as ALLOW. Measured against a real
+ * `node bin/install.js --claude --local`, ZERO of the eight registered command paths resolve — yet
+ * the substring check scored this category 10/10, because it was reading the REPO's settings text
+ * rather than checking anything about where the hooks would run.
+ *
+ * Consequence worth stating: pointed at an installed project this check now FAILS, truthfully.
+ * That is the intended behaviour — it is the honest report of the REG-01 gap, and it is why the
+ * check is worth the points it carries.
+ *
+ * @param {string} rootDir
+ * @param {string} settingsRel  e.g. '.claude/settings.json'
+ * @param {string} hookId       substring identifying the hook script, e.g. 'trust-gate-hook'
+ * @returns {{ok: boolean, why: string}}
+ */
+function hookWired(rootDir, settingsRel, hookId) {
+  const parsed = safeParseJson(safeRead(rootDir, settingsRel));
+  if (!parsed) return { ok: false, why: `${settingsRel} missing or unparseable` };
+
+  // Both spellings of the pre-tool event. .claude/settings.json uses Claude Code's PreToolUse;
+  // .agent/settings.json is the Gemini/Antigravity mirror and uses BeforeTool — the same
+  // difference bin/hooks/mindforge-context-monitor.js switches on when GEMINI_API_KEY is set.
+  // Hardcoding PreToolUse made this check report the mirror as unwired, which is a defect in the
+  // check rather than in the mirror; the gate caught it.
+  const PRE_TOOL_EVENTS = ['PreToolUse', 'BeforeTool'];
+  const groups = PRE_TOOL_EVENTS.flatMap((ev) => {
+    const g = parsed.hooks && parsed.hooks[ev];
+    return Array.isArray(g) ? g : [];
+  });
+  if (!groups.length) {
+    return { ok: false, why: `${settingsRel} registers no ${PRE_TOOL_EVENTS.join('/')} groups` };
+  }
+
+  for (const group of groups) {
+    const matcher = String((group && group.matcher) || '');
+    if (!/bash/i.test(matcher) && matcher !== '*' && matcher !== '') continue;
+    for (const entry of (group && group.hooks) || []) {
+      const command = String((entry && entry.command) || '');
+      if (!command.includes(hookId)) continue;
+      const scripts = command.split(/\s+/).map((t) => t.replace(/^"|"$/g, '')).filter((t) => t.endsWith('.js'));
+      const unresolved = scripts.filter((rel) => !fs.existsSync(path.join(rootDir, rel)));
+      if (unresolved.length) {
+        return { ok: false, why: `${hookId} registered but ${unresolved.join(', ')} does not exist under ${rootDir} — run-with-flags exits 0 on a miss, so it permits` };
+      }
+      return { ok: true, why: `${hookId} wired on ${matcher || '*'} with ${scripts.length} resolvable script(s)` };
+    }
+  }
+  return { ok: false, why: `${hookId} is not registered on a Bash PreToolUse matcher in ${settingsRel}` };
+}
+
 function countFiles(rootDir, relativeDir, extension) {
   const dirPath = path.join(rootDir, relativeDir);
   if (!fs.existsSync(dirPath)) return 0;
@@ -362,9 +424,12 @@ function getChecks(rootDir) {
       id: 'security-bash-guard-both',
       category: 'Security Guardrails', points: 2, scopes: ['repo', 'hooks', 'security'],
       path: '.agent/settings.json',
-      description: 'Bash guards wired in BOTH .claude and the .agent Gemini mirror',
-      pass: claudeSettings.includes('trust-gate-hook') && agentSettings.includes('trust-gate-hook'),
-      fix: 'Wire trust-gate + block-no-verify into both .claude/settings.json and .agent/settings.json.',
+      description: 'Bash guards wired in BOTH .claude and the .agent Gemini mirror (paths resolve)',
+      pass: hookWired(rootDir, '.claude/settings.json', 'trust-gate-hook').ok
+        && hookWired(rootDir, '.agent/settings.json', 'trust-gate-hook').ok,
+      fix: 'Wire trust-gate into a Bash PreToolUse matcher in BOTH .claude/settings.json and '
+        + '.agent/settings.json, with command paths that RESOLVE from the audited root. A '
+        + 'registered command whose script is absent exits 0 and permits — see hookWired().',
     },
     {
       id: 'security-threat-model',
@@ -607,4 +672,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { buildReport, parseArgs, getChecks, evaluateGate, parseMinScore, CATEGORIES, RUBRIC_VERSION };
+module.exports = { buildReport, parseArgs, getChecks, evaluateGate, parseMinScore, hookWired, CATEGORIES, RUBRIC_VERSION };

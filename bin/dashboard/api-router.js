@@ -7,7 +7,6 @@
 const path    = require('path');
 const fs      = require('fs');
 const Metrics = require('./metrics-aggregator');
-const Approval = require('./approval-handler');
 const SSE     = require('./sse-bridge');
 const { sendServerError } = require('./error-response');
 
@@ -64,48 +63,29 @@ function register(app) {
     }
   });
 
-  // ── Approvals ───────────────────────────────────────────────────────────────
+  // ── Approvals (read-only) ───────────────────────────────────────────────────
+  // Returns the approval records that exist, each with its verified integrity state.
+  //
+  // `POST /api/approve/:id` was REMOVED. It implemented a pending-request -> decide workflow
+  // that nothing in MindForge has ever produced: bin/governance/approve.js records an
+  // already-made decision, and no code path anywhere writes a request awaiting one. The endpoint
+  // was unreachable six independent ways — it required a 36-char UUID id while the writer emits
+  // `MF-AUTH-<base36>`, required `status: 'pending'` which no producer writes, and looked for
+  // `APPROVAL-*.json` while the writer emits `approval-*.json`; the reader returned an object
+  // where the frontend expected an array; and the UI rendered `phase`, `plan` and `summary`,
+  // none of which any producer has ever written. It was speculative UI against a schema that
+  // never existed, not a flow with a bug.
+  //
+  // Disclosure note: requireAuth exempts GET, so this body is unauthenticated. That is
+  // proportionate here — the server binds to 127.0.0.1 only (ADR-017) as a single-operator
+  // tool, and the fields returned are the operator's own git-committed records. It is a
+  // different case from LEAK-01 (revops-api.js), which concerned error messages leaking
+  // filesystem paths the operator never chose to expose.
   app.get('/api/approvals', (req, res) => {
     try {
       res.json(Metrics.getApprovals());
     } catch (err) {
       sendServerError(res, 'GET /api/approvals', err, 'Failed to read approvals');
-    }
-  });
-
-  app.post('/api/approve/:id', (req, res) => {
-    try {
-      const { id }                  = req.params;
-      const { decision, comment }   = req.body || {};
-
-      if (!decision) {
-        return res.status(400).json({ error: 'Missing "decision" field (approve|reject)' });
-      }
-
-      // SECURITY (v11.5.1): do NOT trust a client-supplied `approver` for the
-      // recorded identity — it is forgeable and would let any caller write a
-      // false approval audit trail (e.g. resolved_by: 'admin'). requireAuth
-      // (server.js) proves the caller holds the owner-only dashboard token but
-      // exposes no named principal, so we attribute the action to a FIXED
-      // trusted actor. (A future RBAC pass can map a Bearer token -> DID and
-      // record the real principal; until then, never echo req.body.approver.)
-      const approver = 'dashboard-authenticated';
-
-      const result = Approval.processDecision(id, decision, comment, approver);
-
-      if (!result.success) {
-        return res.status(400).json(result);
-      }
-
-      // Broadcast approval event to all SSE clients
-      SSE.broadcast(
-        decision === 'approve' ? 'approval:resolved' : 'approval:resolved',
-        { approval_id: id, decision, message: result.message }
-      );
-
-      res.json(result);
-    } catch (err) {
-      sendServerError(res, 'POST /api/approve/:id', err, 'Failed to record approval decision');
     }
   });
 

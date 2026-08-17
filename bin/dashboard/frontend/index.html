@@ -374,7 +374,6 @@
     // ── State ─────────────────────────────────────────────────────────────────
     let currentApprovals = [];
     let state = { costs: [], quality: [] };
-    let currentTier3Approval = null;
 
     function showPage(id) {
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -487,43 +486,13 @@
       } catch(e) {}
     }
 
-    async function decide(id, decision) {
-      const approval = currentApprovals.find(a => a.id === id);
-      if (!approval) return;
+    // decide() and submitDecision() are removed along with POST /api/approve/:id. They sent
+    // `approver: 'admin-dash'` from the client, which the route already had to discard as
+    // forgeable. There is now no endpoint that writes an approval record at all, so that
+    // attribution problem is gone by construction rather than mitigated. Records are minted only
+    // by bin/governance/approve.js, which takes identity from git and fails closed without a GPG
+    // key unless MINDFORGE_ALLOW_UNVERIFIED_APPROVAL=1.
 
-      if (decision === 'approve' && approval.tier === 3) {
-        currentTier3Approval = approval;
-        const expected = `${approval.phase}-${approval.plan}`;
-        document.getElementById('confirm-title').innerText = 'Critical Tier 3 Approval';
-        document.getElementById('confirm-desc').innerText = `Danger: You are approving a sensitive change (Phase ${approval.phase}, Plan ${approval.plan}). This requires manual confirmation.`;
-        document.getElementById('tier3-input-group').style.display = 'block';
-        document.getElementById('confirm-input').value = '';
-        document.getElementById('confirm-overlay').style.display = 'flex';
-        document.getElementById('confirm-btn').onclick = () => submitDecision(id, decision, document.getElementById('confirm-input').value);
-        return;
-      }
-
-      submitDecision(id, decision);
-    }
-
-    async function submitDecision(id, decision, confirmationId = null) {
-      try {
-        const res = await fetch(`/api/approve/${id}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            decision,
-            comment: 'Decided via Dashboard',
-            approver: 'admin-dash',
-            confirmation_id: confirmationId
-          })
-        });
-        const result = await res.json();
-        if (!result.success) alert(result.error);
-        closeConfirm();
-        refreshApprovals();
-      } catch(e) { alert('Action failed'); }
-    }
 
     function closeConfirm() {
       document.getElementById('confirm-overlay').style.display = 'none';
@@ -568,31 +537,51 @@
       if (feed.children.length > 200) feed.lastChild.remove();
     }
 
+    // Read-only. The Approve/Reject buttons that were here posted to /api/approve/:id, an
+    // endpoint that could never succeed and has now been removed: it decided on pending
+    // REQUESTS, which nothing in MindForge produces. This panel shows the records that exist,
+    // with the integrity state the shared verifier reports.
+    //
+    // It also rendered a.phase, a.plan and a.summary — three fields no producer has ever
+    // written — and called .length/.map() on an object, which threw a TypeError.
     function renderApprovals() {
       const list = document.getElementById('approval-list');
-      if (currentApprovals.length === 0) {
-        list.innerHTML = '<div style="text-align:center; padding: 40px; color:var(--muted)">No pending approvals</div>';
+      const records = Array.isArray(currentApprovals) ? currentApprovals : [];
+      if (records.length === 0) {
+        list.innerHTML = '<div style="text-align:center; padding: 40px; color:var(--muted)">'
+          + 'No approval records. Tier-3 review is a recorded human acknowledgement; '
+          + 'authorization is enforced by branch protection, not from here.</div>';
         return;
       }
 
-      list.innerHTML = currentApprovals.map(a => `
+      const colour = { valid: 'var(--green)', stale: 'var(--purple)', corrupt: 'var(--red)' };
+      list.innerHTML = records.map(a => {
+        const hrs = a.hours_remaining;
+        const life = (hrs === null || hrs === undefined) ? ''
+          : hrs > 0 ? `${hrs.toFixed(1)}h remaining` : `expired ${Math.abs(hrs).toFixed(1)}h ago`;
+        const problems = (a.problems || []).length
+          ? '<ul style="margin:8px 0 0 16px; font-size:11px; color:var(--red)">'
+            + a.problems.map(x => `<li>${escapeHtml(x)}</li>`).join('') + '</ul>'
+          : '';
+        return `
         <div class="card approval-card">
           <div class="card-body">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
               <div>
-                <span class="tier-badge tier-${a.tier}">Tier ${a.tier}</span>
-                <span style="font-weight:700">Phase ${a.phase} | ${a.plan}</span>
+                <span class="tier-badge tier-${escapeHtml(String(a.tier ?? '?'))}">Tier ${escapeHtml(String(a.tier ?? '?'))}</span>
+                <span style="font-weight:700">${escapeHtml(a.id || a.file || 'unknown')}</span>
+                <span style="font-size:11px; color:${colour[a.state] || 'var(--muted)'}; margin-left:8px; text-transform:uppercase">${escapeHtml(a.state || '')}</span>
               </div>
-              <div style="font-size:11px; color:var(--muted)">Expires: ${new Date(a.expires_at).toLocaleTimeString()}</div>
+              <div style="font-size:11px; color:var(--muted)">${escapeHtml(life)}</div>
             </div>
-            <p style="margin-bottom:16px; font-size:12px; line-height:1.4">${escapeHtml(a.summary || 'No summary provided')}</p>
-            <div style="display:flex; gap:12px;">
-              <button class="btn btn-approve" onclick="decide('${a.id}', 'approve')">Approve Selection</button>
-              <button class="btn btn-reject" onclick="decide('${a.id}', 'reject')">Reject</button>
+            <div style="font-size:11px; color:var(--muted); margin-bottom:6px">
+              ${escapeHtml(a.approved_by || 'unknown')} &middot; v${escapeHtml(a.version || '?')}
             </div>
+            <p style="margin:0; font-size:12px; line-height:1.4">${escapeHtml(a.reason || 'No reason recorded')}</p>
+            ${problems}
           </div>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
     }
 
     function renderTeam(data) {

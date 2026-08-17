@@ -8,9 +8,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
-const crypto = require('crypto');
 const { execFileSync } = require('child_process');
+const { checksumRecord, expiryFrom, SCHEMA } = require('./approval-record');
 
 const ROOT = path.resolve(__dirname, '../../');
 const APPROVALS_DIR = path.join(ROOT, '.planning/approvals');
@@ -90,21 +89,27 @@ function approve(opts = {}) {
   // Verify approver identity — THROWS fail-closed if unverifiable (before any write).
   const identityVerification = verifyApproverIdentity(approver);
 
-  const signature = crypto.createHash('sha256')
-    .update(`${id}:${reason}:${timestamp}:${os.hostname()}`)
-    .digest('hex');
-
+  // The old `signature` field was sha256(id:reason:timestamp:os.hostname()). It was not a
+  // signature (nothing signs it), it could not be verified by anyone holding the record
+  // (hostname is not a field of it), and the only consumer asserted its PRESENCE. Replaced by a
+  // recomputable checksum over the record's own fields — see bin/governance/approval-record.js.
+  //
+  // `expires_at` is new and load-bearing: without it, the record committed on 2026-06-11 for
+  // version 11.5.1 still satisfied the Tier-3 gate 67 days and 286 commits later, against
+  // 11.9.2. An acknowledgement now stops applying, and it does not carry to a later release.
   const record = {
+    schema: SCHEMA,
     id,
     project: pkg.name,
     version: pkg.version,
     tier: 3,
     approved_by: approver,
     timestamp,
+    expires_at: expiryFrom(timestamp),
     reason,
-    signature: `sha256:${signature}`,
     identity_verification: identityVerification
   };
+  record.record_checksum = checksumRecord(record);
 
   if (!fs.existsSync(approvalsDir)) fs.mkdirSync(approvalsDir, { recursive: true });
   const filename = `approval-${id.toLowerCase()}.json`;

@@ -195,7 +195,19 @@ jobs:
       - name: Version sync across all distribution channels
         run: npm run version:check
 
-      - name: Check governance tier (Tier 3 blocks CI)
+      # SCOPE, stated because this step used to overstate it. The predicate below is
+      # `"status": "pending"`, and NO producer writes a `status` field: bin/governance/approve.js
+      # emits exactly {id, project, version, tier, approved_by, timestamp, reason, signature,
+      # identity_verification}, and the only files in the repo containing status:'pending' are
+      # tests/dashboard.test.js fixtures. So PENDING_T3 is always 0 here and this step has never
+      # blocked anything. The shell is not at fault — a fixture carrying that field DOES make it
+      # exit 1 — so the logic is kept: it arms itself the moment a producer writes `status`.
+      # What changed is the success message, which used to read "Governance check passed" and so
+      # asserted a check that had not happened. The real Tier-3 evaluation lives in
+      # control-plane.yml's governance-gate job, gated on the classifier's tier == '3'.
+      # tests/ci-gates-wired.test.js pins this predicate-vs-producer relationship in both
+      # directions so the claim cannot drift back.
+      - name: Check governance tier (blocks on a pending-status approval, if one is ever written)
         run: |
           PENDING_T3=$(find .planning/approvals/ -name "*.json" 2>/dev/null | xargs grep -l '"tier": 3' 2>/dev/null | xargs -r grep -l '"status": "pending"' 2>/dev/null | wc -l)
 
@@ -219,7 +231,9 @@ jobs:
             exit 1
           fi
 
-          echo "::notice::Governance check passed — no pending Tier 3 blocks ✅"
+          echo "::notice::No approval record carries status=pending. NOTE: no producer writes that"
+          echo "::notice::field today, so this step is not evidence that a Tier-3 change was reviewed."
+          echo "::notice::Tier-3 evaluation happens in control-plane.yml (governance-gate, tier == '3')."
 
   mindforge-ai-review:
     name: AI Code Review

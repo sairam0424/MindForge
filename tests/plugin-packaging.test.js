@@ -183,12 +183,76 @@ function assertRepoHooksResolve(label, settingsPath) {
   }
 }
 
-test('every hook in .claude/settings.json resolves to a script on disk', () => {
+// These two resolve against the REPO root, which is the only root where they resolve. The names
+// used to read "every hook ... resolves to a script on disk", which invited exactly the wrong
+// inference: that hooks resolve where they RUN. They do not. Measured on a real
+// `node bin/install.js --claude --local`, ZERO of the eight registered command paths resolve,
+// because the scripts install to .claude/hooks/ while the commands name .agent/hooks/ and bin/.
+// The gap is pinned executably by the test below, so these two cannot be mistaken for evidence
+// that hook enforcement works.
+test('every hook in .claude/settings.json resolves against the REPO root (local dev only)', () => {
   assertRepoHooksResolve('.claude/settings.json', path.join(ROOT, '.claude', 'settings.json'));
 });
 
-test('every hook in .agent/settings.json resolves to a script on disk', () => {
+test('every hook in .agent/settings.json resolves against the REPO root (local dev only)', () => {
   assertRepoHooksResolve('.agent/settings.json', path.join(ROOT, '.agent', 'settings.json'));
+});
+
+test('PINNED GAP: the repo hook paths resolve in NO install (REG-01 not yet done)', () => {
+  // Executable record of the enforcement gap, and the tripwire that forces this test to be
+  // rewritten the moment REG-01 lands.
+  //
+  // Why a pinned count rather than an aspiration: an install writes no registration at all, so
+  // there is nothing to assert "works" yet. What CAN be asserted is the precise current state —
+  // and pinning it means a PARTIAL fix (some paths resolving, some not) fails here. That matters
+  // more than it sounds: run-with-flags.js:132-136 echoes stdin and exits 0 on a missing script,
+  // which Claude Code reads as ALLOW, so a half-wired config is strictly worse than none. The
+  // repo's own generator says so at scripts/build-mindforge-plugin.js:176-183.
+  const { spawnSync } = require('child_process');
+  const os = require('os');
+  const project = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-hookgap-')));
+  try {
+    fs.writeFileSync(path.join(project, 'package.json'),
+      JSON.stringify({ name: 'their-app', version: '1.0.0' }, null, 2));
+    const r = spawnSync(process.execPath, [path.join(ROOT, 'bin', 'install.js'), '--claude', '--local'], {
+      cwd: project, encoding: 'utf8',
+      env: { PATH: process.env.PATH, HOME: process.env.HOME, CI: '1' },
+    });
+    assert.strictEqual(r.status, 0, `install failed: ${(r.stderr || '').slice(0, 600)}`);
+
+    // An install writes no registration whatsoever.
+    for (const rel of ['.claude/settings.json', '.claude/settings.local.json', '.agent/settings.json']) {
+      assert.ok(!fs.existsSync(path.join(project, rel)),
+        `${rel} now EXISTS in an install. If REG-01 has landed, replace this pinned-gap test with ` +
+        'a real assertion: every emitted command path must resolve, and a deny payload must be ' +
+        'answered with exit 2.');
+    }
+
+    // And the repo's own command paths resolve nowhere in that install.
+    const cmds = hookCommands(readJson(path.join(ROOT, '.claude', 'settings.json')).hooks);
+    const resolved = [];
+    for (const { command } of cmds) {
+      const { launcher, script } = parseHookCommand(command);
+      for (const rel of [launcher, script].filter(Boolean)) {
+        if (fs.existsSync(path.join(project, rel))) resolved.push(rel);
+      }
+    }
+    assert.deepStrictEqual(resolved, [],
+      `${resolved.length} of the repo's registered hook paths resolve in an install: ` +
+      `${resolved.join(', ')}. Any nonzero count means the layout changed — re-derive the ` +
+      'registration rather than leaving a partially-resolving config, which fails OPEN.');
+
+    // The scripts DID install — just not where the commands look. That distinction is the whole
+    // finding, so assert it rather than leaving "nothing resolves" ambiguous with "nothing shipped".
+    assert.ok(fs.existsSync(path.join(project, '.claude', 'hooks', 'run-with-flags.js')),
+      'the dispatcher must be present at .claude/hooks/ — if it is absent the diagnosis above is ' +
+      'wrong and the problem is the copy, not the paths');
+    assert.ok(!fs.existsSync(path.join(project, '.claude', 'hooks', 'trust-gate-hook.js')),
+      'trust-gate-hook.js is expected ABSENT from a default install (it lives under bin/security/, ' +
+      'which only --with-utils copies). If it is now present, the bundle changed.');
+  } finally {
+    fs.rmSync(project, { recursive: true, force: true });
+  }
 });
 
 test('every plugin hook resolves under the plugin root, require()d deps included', () => {

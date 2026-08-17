@@ -11,6 +11,12 @@
  *
  * It also pins the two gates that must stay OUT, with the measured reason, so a future
  * contributor does not "complete" CI-01 by adding a step that reds every run.
+ *
+ * BLIND SPOT THIS FILE ONCE HAD. It read only mindforge-ci.yml. That is why it never caught the
+ * dead Tier-3 gate in control-plane.yml, and why the same defect class the file exists to
+ * prevent survived inside a workflow it did not look at. It now enumerates EVERY workflow, and
+ * ties a gate's predicate to the existence of a producer that can satisfy it -- because a
+ * predicate no writer produces is the purest form of a check that cannot fail.
  */
 'use strict';
 
@@ -30,6 +36,12 @@ function test(name, fn) {
 
 const ci = fs.readFileSync(CI, 'utf8');
 const pkg = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8'));
+
+// EVERY workflow, so a gate defect cannot hide in a file this test does not open.
+const WORKFLOW_DIR = path.join(REPO_ROOT, '.github', 'workflows');
+const workflows = fs.readdirSync(WORKFLOW_DIR)
+  .filter((f) => f.endsWith('.yml') || f.endsWith('.yaml'))
+  .map((f) => ({ name: f, text: fs.readFileSync(path.join(WORKFLOW_DIR, f), 'utf8') }));
 
 // Every `run:` line in the CI workflow, so assertions are about EXECUTED commands rather
 // than about any mention in a comment. Comment-matching is how this kind of check gives a
@@ -119,6 +131,79 @@ test('version:check covers the non-npm channels the runtime version check does n
   const runtime = fs.readFileSync(path.join(REPO_ROOT, 'bin', 'utils', 'version-check.js'), 'utf8');
   assert.ok(!runtime.includes('Formula/'),
     'the runtime check must stay npm-focused: a stale Homebrew formula must not block pre-flight');
+});
+
+test('this test opens every workflow, not just one', () => {
+  // The guard on its own blind spot. If workflows are added, they are covered automatically.
+  assert.ok(workflows.length >= 2,
+    `expected to enumerate the workflow directory, found ${workflows.length} file(s)`);
+  const names = workflows.map((w) => w.name);
+  for (const required of ['mindforge-ci.yml', 'control-plane.yml']) {
+    assert.ok(names.includes(required),
+      `${required} must be among the enumerated workflows (found: ${names.join(', ')})`);
+  }
+});
+
+test('no workflow gates on an approval field that no producer writes, without saying so', () => {
+  // F1: mindforge-ci.yml greps approvals for '"status": "pending"'. bin/governance/approve.js --
+  // the ONLY writer into .planning/approvals/ -- emits no status field, so the predicate can
+  // never match and the step could never block. The shell is sound (a fixture carrying the field
+  // does make it exit 1); the gap is producer-side.
+  //
+  // This assertion is satisfied EITHER WAY, so it stays true as the design evolves:
+  //   (a) a producer writes `status`  -> the gate is live, nothing to disclose; or
+  //   (b) no producer does           -> the step must not claim a governance check passed.
+  const producer = fs.readFileSync(path.join(REPO_ROOT, 'bin', 'governance', 'approve.js'), 'utf8');
+  const writesStatus = /\bstatus\s*:/.test(producer);
+
+  // Strip YAML comments before matching. The first run of this assertion failed on the phrase
+  // inside the comment that DOCUMENTS its removal — the same substring-false-positive class this
+  // file already guards against for `run:` lines. Assert on executed content, never on prose.
+  const executable = (text) => text
+    .split('\n')
+    .filter((l) => !/^\s*#/.test(l))
+    .join('\n');
+
+  for (const wf of workflows) {
+    const body = executable(wf.text);
+    if (!/"status":\s*"pending"/.test(body)) continue;
+    if (writesStatus) continue;  // (a) — predicate has a producer
+    // (b) — the step must not assert that a check succeeded.
+    assert.ok(!/Governance check passed/.test(body),
+      `${wf.name} gates on '"status": "pending"' but bin/governance/approve.js writes no status ` +
+      'field, so the predicate can never match. The step must not print "Governance check ' +
+      'passed" — that asserts a review that did not happen. Either add a status producer or ' +
+      'state the limitation in the step output.');
+    assert.match(body, /no producer writes that/,
+      `${wf.name} must disclose, in step OUTPUT rather than a comment, that nothing writes the ` +
+      'status field it gates on — a comment is invisible in the CI log a reader actually sees');
+  }
+});
+
+test('the real Tier-3 evaluator is wired and its approval check can reject', () => {
+  // The step above defers to control-plane.yml. That deferral is only honest while the
+  // governance-gate job actually exists and its validation can fail.
+  const cp = workflows.find((w) => w.name === 'control-plane.yml');
+  assert.ok(cp, 'control-plane.yml must exist — mindforge-ci.yml defers Tier-3 evaluation to it');
+  assert.match(cp.text, /needs\.classify\.outputs\.tier/,
+    'control-plane.yml must consume the classifier tier');
+  assert.match(cp.text, /verify-approvals\.js/,
+    'the Tier-3 evaluation must run bin/governance/verify-approvals.js');
+
+  // The rejecting path lives in the SCRIPT now, not inline in YAML, so assert it there. This
+  // check exists because the previous inline gate could not fail against the change being built:
+  // running it in a temp dir with no git repository at all exited 0.
+  const verifier = fs.readFileSync(path.join(REPO_ROOT, 'bin', 'governance', 'verify-approvals.js'), 'utf8');
+  assert.match(verifier, /return 1;/,
+    'verify-approvals.js must have at least one rejecting path, or the gate is decorative');
+  assert.match(verifier, /verifyRecord/,
+    'it must verify record integrity through the shared module rather than re-implementing it');
+
+  // And the shared module must still perform the two currency checks that killed the perpetual
+  // approval: version binding and expiry. Without both, one record approves every later release.
+  const rec = fs.readFileSync(path.join(REPO_ROOT, 'bin', 'governance', 'approval-record.js'), 'utf8');
+  assert.match(rec, /currentVersion/, 'records must be bound to the release being built');
+  assert.match(rec, /expires_at/, 'records must expire');
 });
 
 console.log(`\nCI Gates Wired: ${passed} passed, ${failed} failed`);

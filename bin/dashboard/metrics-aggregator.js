@@ -183,36 +183,60 @@ function getMetrics() {
 }
 
 // ── Approvals ─────────────────────────────────────────────────────────────────
+/**
+ * Read the approval records that actually exist, with their verified integrity.
+ *
+ * This replaces a read path that could never return anything. It filtered
+ * `f.startsWith('APPROVAL-')` while the only producer — bin/governance/approve.js — writes
+ * `approval-<id>.json` in lower case, and String.prototype.startsWith is case-sensitive on every
+ * platform (macOS's case-insensitive filesystem affects fs.open, not this comparison). It then
+ * categorised on a `status` field no producer has ever written, so any record that HAD been
+ * found would have fallen into `pending` regardless of what it said.
+ *
+ * The categories are now derived from verification rather than from a self-declared status:
+ * a record either verifies against the release being built, or it is stale, or it is corrupt.
+ * There is deliberately no `pending` category — nothing in MindForge creates a pending approval
+ * REQUEST; approve.js records an already-made decision. A category with no producer is exactly
+ * the kind of empty promise this pass exists to remove.
+ *
+ * Returns an ARRAY, because the previous object shape was also incompatible with its only
+ * consumer: the dashboard did `currentApprovals.length` and `.map()` on it, which on an object
+ * yields undefined and then a TypeError.
+ */
 function getApprovals() {
   const paths = getPaths();
-  if (!fs.existsSync(paths.approvals)) return { pending: [], approved: [], rejected: [], expired: [] };
+  if (!fs.existsSync(paths.approvals)) return [];
 
-  const now   = Date.now();
+  const { verifyRecord } = require('../governance/approval-record');
+  let currentVersion = null;
+  try {
+    currentVersion = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'package.json'), 'utf8')).version;
+  } catch { /* version binding is skipped if the manifest is unreadable */ }
+
+  const now = Date.now();
   const files = fs.readdirSync(paths.approvals)
-    .filter(f => f.startsWith('APPROVAL-') && f.endsWith('.json'))
+    .filter(f => f.endsWith('.json'))
     .sort();
 
-  const pending  = [];
-  const approved = [];
-  const rejected = [];
-  const expired  = [];
-
+  const out = [];
   for (const f of files) {
-    try {
-      const data    = JSON.parse(fs.readFileSync(path.join(paths.approvals, f), 'utf8'));
-      const expiry  = data.expires_at ? new Date(data.expires_at).getTime() : Infinity;
-      const hoursRemaining = expiry === Infinity ? null : (expiry - now) / 3_600_000;
-
-      const enriched = { ...data, hours_remaining: hoursRemaining };
-
-      if (data.status === 'approved')        approved.push(enriched);
-      else if (data.status === 'rejected')   rejected.push(enriched);
-      else if (expiry < now)                 expired.push({ ...enriched, status: 'expired' });
-      else                                   pending.push(enriched);
-    } catch { /* skip corrupt files */ }
+    let data;
+    try { data = JSON.parse(fs.readFileSync(path.join(paths.approvals, f), 'utf8')); }
+    catch (e) {
+      out.push({ file: f, state: 'corrupt', problems: [`not valid JSON: ${e.message}`] });
+      continue;
+    }
+    const v = verifyRecord(data, { currentVersion, now: new Date(now) });
+    const expiry = data.expires_at ? new Date(data.expires_at).getTime() : null;
+    out.push({
+      ...data,
+      file: f,
+      state: v.ok ? 'valid' : (v.stale ? 'stale' : 'corrupt'),
+      problems: v.problems,
+      hours_remaining: expiry === null ? null : (expiry - now) / 3_600_000,
+    });
   }
-
-  return { pending, approved, rejected, expired };
+  return out;
 }
 
 // ── Team activity ─────────────────────────────────────────────────────────────
