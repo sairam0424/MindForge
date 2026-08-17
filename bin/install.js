@@ -25,8 +25,14 @@ const ARGS    = process.argv.slice(2);
 const Theme   = require('./wizard/theme');
 const c       = Theme.colors;
 
-// Note: Structural integrity check requires the presence of 'verifyInstall'.
-// The actual logic is now modularized in ./installer-core.js
+// The installation logic lives in ./installer-core.js; this file is the CLI entry point.
+//
+// A line here used to read "Structural integrity check requires the presence of 'verifyInstall'"
+// — a comment whose only purpose was to contain a string that tests/install.test.js grepped for.
+// The test asserted this file mentioned verifyInstall; the function had moved to installer-core.js
+// and was never called from anywhere. The comment satisfied the test, the test protected the
+// comment, and nothing verified an install. That test now asserts the delegation that actually
+// matters, and installer-core.js calls verifyInstall for real.
 
 // ── Minimum Node.js version gate ─────────────────────────────────────────────
 const NODE_MAJOR = parseInt(process.versions.node.split('.')[0], 10);

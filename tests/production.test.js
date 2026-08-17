@@ -81,11 +81,30 @@ test('installer excludes sensitive files (*.env, *.key, *.pem)', () => {
 });
 
 test('installer verifies install after completing', () => {
+  // Was: c.includes('verifyInstall') || c.includes('verification') — a substring check that
+  // passed for 400 lines of DEAD code. verifyInstall() was declared and called from nowhere,
+  // while install() printed "Install verified" unconditionally. The `|| 'verification'` arm made
+  // it weaker still: that word appears in comments.
   const c = read('bin/installer-core.js');
-  assert.ok(
-    c.includes('verifyInstall') || c.includes('verification'),
-    'Should verify install after completing'
-  );
+  const code = c.split('\n').filter(l => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n');
+
+  // Must match a CALL, not the declaration. My first attempt used /verifyInstall\s*\(\s*baseDir/,
+  // which the line `function verifyInstall(baseDir, ...)` satisfies — so un-wiring the call left
+  // this green. That is precisely the error the original substring check made, reproduced one
+  // level up. Requiring the result to be BOUND to a name distinguishes them.
+  assert.match(code, /=\s*verifyInstall\s*\(/,
+    'installer-core.js must CALL verifyInstall and bind its result, not merely declare it');
+
+  assert.match(code, /if\s*\(\s*!verification\.ok\s*\)/,
+    'the result must be checked — a call whose return value is discarded verifies nothing');
+  assert.match(code, /process\.exit\(1\)/,
+    'a failed verification must exit non-zero');
+  // And the success message must come AFTER the failure branch, so it cannot print on failure.
+  const failIdx = code.indexOf('Install verification failed');
+  const okIdx = code.indexOf('Install verified');
+  assert.ok(failIdx !== -1 && okIdx !== -1 && failIdx < okIdx,
+    'the "Install verified" message must follow the failure branch that exits, or it can print ' +
+    `for a failed install (failIdx=${failIdx}, okIdx=${okIdx})`);
 });
 
 // ── Self-update system ─────────────────────────────────────────────────────────

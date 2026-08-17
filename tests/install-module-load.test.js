@@ -249,6 +249,64 @@ test('a missing dependency WOULD be caught (negative control)', () => {
   }
 });
 
+// ── verifyInstall must actually verify ───────────────────────────────────────
+
+test('verifyInstall reports OK for the install just performed', () => {
+  // It was DEAD CODE: declared in installer-core.js and called from nowhere, while install()
+  // printed "Install verified" unconditionally under a header reading "4. Verify installation".
+  // Two tests kept it alive by asserting the SOURCE CONTAINED the string "verifyInstall" — one of
+  // them against bin/install.js, where the only occurrence was a comment added to satisfy that
+  // very assertion.
+  const { verifyInstall, RUNTIMES } = require(path.join(REPO_ROOT, 'bin', 'installer-core.js'));
+  const cwd = process.cwd();
+  try {
+    process.chdir(PROJECT);
+    const baseDir = path.join(PROJECT, RUNTIMES.claude.localDir);
+    const cmdsDir = path.join(baseDir, RUNTIMES.claude.commandsSubdir);
+    const r = verifyInstall(baseDir, cmdsDir, 'claude', 'local');
+    assert.strictEqual(r.ok, true,
+      `a clean install must verify. Missing: ${r.missing.join(', ')}`);
+    assert.ok(r.checked >= 12,
+      `it must check a meaningful number of files, got ${r.checked} — a contract of one file ` +
+      'verifies nothing');
+  } finally { process.chdir(cwd); }
+});
+
+test('verifyInstall DETECTS a missing required file (negative control)', () => {
+  // Without this, "reports OK" would be satisfied by a function that returns {ok:true} always —
+  // which is materially what the previous arrangement did, since it never ran.
+  const { verifyInstall, RUNTIMES } = require(path.join(REPO_ROOT, 'bin', 'installer-core.js'));
+  const cwd = process.cwd();
+  const victim = path.join(PROJECT, 'bin', 'governance', 'policy-engine.js');
+  const saved = fs.readFileSync(victim);
+  try {
+    process.chdir(PROJECT);
+    fs.rmSync(victim);
+    const baseDir = path.join(PROJECT, RUNTIMES.claude.localDir);
+    const cmdsDir = path.join(baseDir, RUNTIMES.claude.commandsSubdir);
+    const r = verifyInstall(baseDir, cmdsDir, 'claude', 'local');
+    assert.strictEqual(r.ok, false, 'removing a required file must make verification fail');
+    assert.ok(r.missing.some((f) => f.includes('policy-engine.js')),
+      `and it must NAME the missing file, got: ${r.missing.join(', ')}`);
+  } finally {
+    process.chdir(cwd);
+    fs.writeFileSync(victim, saved);
+  }
+});
+
+test('verifyInstall does not require files the package never publishes', () => {
+  // Its contract used to include docs/registry/COMMANDS.md and docs/registry/PERSONAS.md under the
+  // project root. docs/registry/ ships ZERO files in the tarball, so those could never exist in a
+  // consumer install: measured 12 of 14 present on a clean --claude --local. Wiring it as written
+  // would have exited 1 on every successful install, which is presumably why nobody wired it.
+  // Requiring an artefact the package does not publish is a category error, not a copy gap.
+  const src = fs.readFileSync(path.join(REPO_ROOT, 'bin', 'installer-core.js'), 'utf8');
+  const fn = src.slice(src.indexOf('function verifyInstall'), src.indexOf('// ── Install single runtime'));
+  assert.ok(!/docs\/registry/.test(fn),
+    'verifyInstall must not require docs/registry/* — that path ships no files, so the ' +
+    'requirement is unsatisfiable by construction');
+});
+
 (async () => {
   try {
     for (const { name, fn } of tests) {

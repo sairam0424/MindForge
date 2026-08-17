@@ -176,7 +176,17 @@ test('bin/install.js is executable and has no obvious syntax errors', () => {
   assert.ok(stat.size > 1000, 'bin/install.js is suspiciously small');
   const content = fs.readFileSync('bin/install.js', 'utf8');
   assert.ok(content.includes('#!/usr/bin/env node'), 'Missing shebang line');
-  assert.ok(content.includes('verifyInstall'), 'Missing install verification function');
+  // Was: assert.ok(content.includes('verifyInstall')). The function lives in installer-core.js,
+  // so this only ever passed because a COMMENT in this file contained the string — a comment added
+  // to satisfy this assertion. The real structural property is that the entry point delegates.
+  assert.match(content, /require\(['"]\.\/installer-core['"]\)/,
+    'bin/install.js must delegate to ./installer-core.js');
+  // Assert on CODE, not prose. The first version of this check tripped on the comment that
+  // explains the history above — a comment failing a grep is the same category error as a comment
+  // satisfying one. What must not exist is a code reference to a function defined elsewhere.
+  const codeOnly = content.split('\n').filter(l => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n');
+  assert.ok(!/verifyInstall/.test(codeOnly),
+    'bin/install.js code should not reference verifyInstall — it lives in installer-core.js');
 });
 
 test('No secrets in any committed file', () => {
