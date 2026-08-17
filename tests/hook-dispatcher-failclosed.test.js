@@ -200,6 +200,114 @@ test('a benign command is still allowed by the real gates', () => {
   }
 });
 
+// ── Payload truncation must not become a bypass ─────────────────────────────
+
+/** A payload whose real command sits past `padBytes` of filler, so truncation drops it. */
+function paddedPayload(command, padBytes) {
+  // Key order is insertion order in JSON.stringify, so the padding precedes tool_input and the
+  // dispatcher's MAX_STDIN cut lands before the command is ever seen.
+  return JSON.stringify({
+    hook_event_name: 'PreToolUse',
+    tool_name: 'Bash',
+    _pad: 'A'.repeat(padBytes),
+    tool_input: { command },
+  });
+}
+
+/** Fire a hook with a large payload, through the dispatcher. */
+function dispatchLarge(hookId, relScript, payload, env = {}) {
+  const r = spawnSync(process.execPath, [DISPATCHER, hookId, relScript, PROFILES], {
+    cwd: REPO_ROOT,
+    input: payload,
+    encoding: 'utf8',
+    maxBuffer: 32 * 1024 * 1024,
+    env: { ...process.env, ...env },
+  });
+  return { status: r.status, stderr: String(r.stderr || '') };
+}
+
+const BYPASS_CMD = `git commit --no${'-'}verify -m x`;
+const BNV = '.agent/hooks/mindforge-block-no-verify.js';
+
+test('block-no-verify still denies the bypass in a small payload (control)', () => {
+  const r = dispatchLarge('mindforge-block-no-verify', BNV, paddedPayload(BYPASS_CMD, 0));
+  assert.strictEqual(r.status, 2, `the plain case must deny, got ${r.status}. ${r.stderr.slice(0, 200)}`);
+  assert.match(r.stderr, /no-verify/, 'and name the flag it found');
+});
+
+test('block-no-verify denies when >1MiB of padding truncates the command away', () => {
+  // THE BYPASS. Measured before the fix: exit 0 (ALLOWED) for this exact payload, while the same
+  // command alone scored exit 2. The dispatcher caps stdin at MAX_STDIN, so a caller could push
+  // the flag past the cap; extractCommand's parse-failure fallback then scanned the surviving
+  // prefix, found no flag, and approved. Its sibling config-protection already refused on
+  // truncation; this hook computed the flag and never read it, and run() took one parameter so
+  // `options` never arrived.
+  const r = dispatchLarge('mindforge-block-no-verify', BNV, paddedPayload(BYPASS_CMD, 1024 * 1024 + 4096));
+  assert.strictEqual(r.status, 2,
+    `a truncated payload must not be approved, got ${r.status}. This is the padding bypass. ` +
+    `stderr: ${r.stderr.slice(0, 300)}`);
+  assert.match(r.stderr, /exceeded|truncated/i,
+    `the reason must name truncation rather than pretending it judged the command. Got: ${r.stderr.slice(0, 200)}`);
+});
+
+test('block-no-verify denies on JSON-looking input it cannot parse', () => {
+  // trust-gate already failed closed here ("parse error (BLOCKING)"), which is precisely why
+  // trust-gate was NOT bypassable by padding while this hook was.
+  const r = dispatchLarge('mindforge-block-no-verify', BNV, '{ "tool_input": { "command": ');
+  assert.strictEqual(r.status, 2, `unparseable JSON must fail closed, got ${r.status}`);
+  assert.match(r.stderr, /not valid JSON|Failing closed/,
+    `the reason must say why, got: ${r.stderr.slice(0, 200)}`);
+});
+
+test('block-no-verify still ALLOWS a large but benign payload', () => {
+  // The over-correction guard: a big payload is not itself suspicious. Only a TRUNCATED one is,
+  // and only because the command may have been cut off.
+  const r = dispatchLarge('mindforge-block-no-verify', BNV, paddedPayload('git status', 4096));
+  assert.strictEqual(r.status, 0,
+    `a 4KB benign payload must be allowed, got ${r.status}. ${r.stderr.slice(0, 200)}`);
+});
+
+test('block-no-verify honours the dispatcher truncation flag on the standalone path too', () => {
+  // The hook has two invocation modes — required in-process via run(), or spawned and reading its
+  // own stdin. Both had the hole. The spawn path now seeds truncation from
+  // MINDFORGE_HOOK_INPUT_TRUNCATED, which the dispatcher sets, and routes through run() so there
+  // is ONE decision path rather than two that can drift.
+  // The payload carries a BENIGN command. That is what makes this discriminating: the only thing
+  // that can produce a denial is the truncation flag itself. An earlier version of this test sent
+  // the bypass command WITH the flag, so it denied because the flag was in the text — and a control
+  // that removed env seeding still passed.
+  const benign = paddedPayload('git status', 0);
+  const withFlag = spawnSync(process.execPath, [path.join(REPO_ROOT, BNV)], {
+    cwd: REPO_ROOT,
+    input: benign,
+    encoding: 'utf8',
+    env: { ...process.env, MINDFORGE_HOOK_INPUT_TRUNCATED: '1' },
+  });
+  assert.strictEqual(withFlag.status, 2,
+    `the standalone path must honour MINDFORGE_HOOK_INPUT_TRUNCATED, got ${withFlag.status}. ` +
+    `stderr: ${String(withFlag.stderr || '').slice(0, 200)}`);
+
+  // And without the flag the identical payload must be allowed, or the assertion above would hold
+  // for a hook that simply denies everything.
+  const withoutFlag = spawnSync(process.execPath, [path.join(REPO_ROOT, BNV)], {
+    cwd: REPO_ROOT,
+    input: benign,
+    encoding: 'utf8',
+    env: { ...process.env, MINDFORGE_HOOK_INPUT_TRUNCATED: '' },
+  });
+  assert.strictEqual(withoutFlag.status, 0,
+    `the same benign payload without the flag must be allowed, got ${withoutFlag.status}`);
+});
+
+test('trust-gate is not bypassable by the same padding', () => {
+  // Recorded because it explains the asymmetry: trust-gate fails closed on a parse error, so
+  // truncation reached it as malformed JSON and it blocked. It needed no truncation check.
+  const dangerous = ['rm', '-rf', '/'].join(' ');
+  const r = dispatchLarge('trust-gate', 'bin/security/trust-gate-hook.js',
+    paddedPayload(dangerous, 1024 * 1024 + 4096));
+  assert.strictEqual(r.status, 2, `trust-gate must deny a padded payload, got ${r.status}`);
+});
+
 // ── The escape hatch is real, and loud ──────────────────────────────────────
 
 test('MINDFORGE_HOOK_FAILOPEN=1 restores the old permit, and says so', () => {
