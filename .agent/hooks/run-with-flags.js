@@ -26,6 +26,73 @@ const { buildPreToolUseAdditionalContext } = require('./lib/pretooluse-visible-o
 
 const MAX_STDIN = 1024 * 1024;
 
+/**
+ * Hooks whose entire job is to DENY. If one of these cannot produce a verdict, the safe answer
+ * is "block", because nothing has established that the operation is safe.
+ *
+ * Measured contract, identical across all three: exit 0 = allow, exit 2 = block. (trust-gate
+ * also writes {"decision":"block"} to stdout; the other two write a reason to stderr.) Exit 1 is
+ * not in the contract at all — Claude Code does not read it as a denial.
+ *
+ * Every OTHER hook stays fail-open on purpose. context-monitor, session-init, check-update and
+ * instinct-capture are advisory: if telemetry cannot run, nothing about the operation's safety
+ * became unknown, and blocking a tool call because a logger failed would be indefensible.
+ */
+const DENY_CLASS = new Set([
+  'trust-gate',
+  'mindforge-block-no-verify',
+  'mindforge-config-protection',
+]);
+
+/**
+ * Escape hatch, deliberately loud.
+ *
+ * Rationale for having one at all: these gates fire on every Bash call for anyone working in a
+ * MindForge checkout, so a latent crash in trust-gate would otherwise brick every tool call with
+ * no way out but editing hook source. The reviewed risk of fail-closed behaviour was precisely
+ * "visible unexplained tool-call denials". This makes the override explicit and auditable rather
+ * than leaving the failure mode silent.
+ */
+const FAIL_OPEN_OVERRIDE = process.env.MINDFORGE_HOOK_FAILOPEN === '1';
+
+/**
+ * A hook could not produce a verdict. Decide what that means and exit.
+ *
+ * Before this, EVERY such path echoed stdin and exited 0 — which Claude Code reads as an explicit
+ * ALLOW, indistinguishable from a hook that ran and approved. Measured paths that behaved this
+ * way: a script that does not exist, a rejected path traversal (it printed "Path traversal
+ * rejected" and then permitted), a run() that threw, a non-integer exitCode, and the top-level
+ * catch. The spawn path exited 1 instead, which is out of contract and therefore also permits —
+ * that one covers a hook TIMEOUT, where no exit 2 was previously reachable at all.
+ *
+ * @param {string} hookId
+ * @param {string} raw   the original payload, echoed only when allowing
+ * @param {string} reason
+ */
+function failed(hookId, raw, reason) {
+  const isDenyClass = DENY_CLASS.has(hookId);
+
+  if (isDenyClass && !FAIL_OPEN_OVERRIDE) {
+    process.stderr.write(
+      `[Hook] BLOCKED: ${hookId} could not run, so this operation was not checked — ${reason}\n` +
+      `[Hook] ${hookId} is a deny-class gate; failing closed. Fix the hook, or set ` +
+      'MINDFORGE_HOOK_FAILOPEN=1 to permit unchecked operations.\n');
+    // No stdout: a block carries its reason on stderr (see mindforge-block-no-verify).
+    process.exit(2);
+  }
+
+  if (isDenyClass) {
+    process.stderr.write(
+      `[Hook] FAIL-OPEN OVERRIDE: ${hookId} could not run (${reason}) and ` +
+      'MINDFORGE_HOOK_FAILOPEN=1 is set, so the operation proceeds UNCHECKED.\n');
+  } else {
+    process.stderr.write(`[Hook] ${hookId} skipped (advisory) — ${reason}\n`);
+  }
+
+  process.stdout.write(raw);
+  process.exit(0);
+}
+
 function readStdinRaw() {
   return new Promise(resolve => {
     let raw = '';
@@ -122,17 +189,14 @@ async function main() {
   const resolvedRoot = path.resolve(hookRoot);
   const scriptPath = path.resolve(hookRoot, relScriptPath);
 
-  // Prevent path traversal outside the install root
+  // Prevent path traversal outside the install root. This branch previously printed
+  // "Path traversal rejected" and then exited 0 — announcing an attack signal and permitting it.
   if (!scriptPath.startsWith(resolvedRoot + path.sep)) {
-    process.stderr.write(`[Hook] Path traversal rejected for ${hookId}: ${scriptPath}\n`);
-    process.stdout.write(raw);
-    process.exit(0);
+    failed(hookId, raw, `script path escapes the install root: ${scriptPath}`);
   }
 
   if (!fs.existsSync(scriptPath)) {
-    process.stderr.write(`[Hook] Script not found for ${hookId}: ${scriptPath}\n`);
-    process.stdout.write(raw);
-    process.exit(0);
+    failed(hookId, raw, `script not found at ${scriptPath}`);
   }
 
   // Prefer direct require() when the hook exports run(rawInput). Eliminates one
@@ -161,10 +225,18 @@ async function main() {
         truncated,
         maxStdin: MAX_STDIN
       });
+      // A hook that returns an exitCode which is not an integer has produced a result we cannot
+      // read. emitHookResult() coerced that to 0, so `{exitCode: '2'}` — a string, e.g. from
+      // JSON round-tripping — silently became ALLOW. Absent exitCode is different and legitimate:
+      // it means "allow, with a message".
+      if (output && typeof output === 'object'
+          && Object.prototype.hasOwnProperty.call(output, 'exitCode')
+          && !Number.isInteger(output.exitCode)) {
+        failed(hookId, raw, `run() returned a non-integer exitCode: ${JSON.stringify(output.exitCode)}`);
+      }
       process.exit(emitHookResult(raw, output));
     } catch (runErr) {
-      process.stderr.write(`[Hook] run() error for ${hookId}: ${runErr.message}\n`);
-      process.stdout.write(raw);
+      failed(hookId, raw, `run() threw: ${runErr.message}`);
     }
     process.exit(0);
   }
@@ -189,19 +261,43 @@ async function main() {
   if (result.stderr) process.stderr.write(result.stderr);
 
   if (result.error || result.signal || result.status === null) {
+    // Covers the 30s spawn TIMEOUT, which arrives as signal SIGTERM with a null status. Exiting 1
+    // here meant a timed-out security gate permitted the operation: 1 is not in the 0-allow/
+    // 2-block contract, so Claude Code does not read it as a denial.
     const failureDetail = result.error
       ? result.error.message
       : result.signal
         ? `terminated by signal ${result.signal}`
         : 'missing exit status';
-    writeStderr(`[Hook] legacy hook execution failed for ${hookId}: ${failureDetail}`);
-    process.exit(1);
+    failed(hookId, raw, `child process failed: ${failureDetail}`);
   }
 
-  process.exit(Number.isInteger(result.status) ? result.status : 0);
+  if (!Number.isInteger(result.status)) {
+    failed(hookId, raw, `child returned a non-integer status: ${String(result.status)}`);
+  }
+
+  // Enforce the contract: 0 = allow, 2 = block. Anything else is the hook ERRORING, not deciding.
+  // Measured: a hook that throws at module scope exits 1, and 1 is not a denial Claude Code
+  // honours — so a crashed security gate was permitting the very operation it exists to check.
+  // Advisory hooks keep their status verbatim; only a deny-class gate turns an unreadable result
+  // into a block, because only there does "we could not decide" mean "do not proceed".
+  if (result.status !== 0 && result.status !== 2) {
+    failed(hookId, raw, `child exited ${result.status}, which is outside the 0-allow/2-block contract`);
+  }
+
+  process.exit(result.status);
 }
 
 main().catch(err => {
+  // The dispatcher itself failed. hookId is argv[2] — read it directly, because main() may have
+  // thrown before assigning anything, and the class decision needs it.
+  const hookId = process.argv[2] || '';
+  if (DENY_CLASS.has(hookId) && !FAIL_OPEN_OVERRIDE) {
+    process.stderr.write(
+      `[Hook] BLOCKED: dispatcher failed for ${hookId} — ${err.message}\n` +
+      '[Hook] deny-class gate; failing closed. Set MINDFORGE_HOOK_FAILOPEN=1 to override.\n');
+    process.exit(2);
+  }
   process.stderr.write(`[Hook] run-with-flags error: ${err.message}\n`);
   process.exit(0);
 });
