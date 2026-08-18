@@ -1,5 +1,21 @@
 # Zero-Trust Agentic Identity (ZTAI) Overview
 
+> **STATUS: DESIGN DOCUMENT — NOT SHIPPED BEHAVIOUR.**
+>
+> Everything below describes an intended architecture. Measured against a live install:
+>
+> | Claim in this document | Reality |
+> |---|---|
+> | every agent action is cryptographically signed | **0 of 3116** audit entries carry a `signature` or `did` field |
+> | per-persona Ed25519 keypairs at spawn | `ztai-manager.js` can generate them; nothing calls it in a normal run |
+> | `.mindforge/identity` vault | not created by any install |
+> | every 50 entries triggers a Merkle-root | `.planning/audit-archive/` contains only `.gitkeep`; the archiver has no caller outside tests |
+> | Merkle-root chain | `ztai-archiver.js:57` sets `merkleRoot: cumulativeHash` — a linear chain hash, not a hash tree |
+>
+> `ENABLE_ZTAI` has no readers in `bin/`. What IS real and independently verifiable is the SHA-256
+> hash chain in `.planning/AUDIT.jsonl` — see `SECURITY.md` for its actual guarantees and its one
+> documented gap. Treat this file as a roadmap, and `bin/` plus `tests/` as ground truth.
+
 MindForge v4.2 introduces **ZTAI Enterprise Mode**, an enterprise-grade identity layer that ensures every agent action is cryptographically signed and non-repudiable.
 
 ## 1. Asymmetric Identity Model
