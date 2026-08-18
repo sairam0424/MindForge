@@ -77,9 +77,14 @@ const ADVISORY_PROFILES = 'standard,strict';
  * `script` is relative to the PROJECT ROOT, because that is what hookRoot resolves to for the
  * installed dispatcher. tests/hook-spec-parity.test.js pins this set against the tracked file.
  */
+// config-protection carries Bash in addition to Write|Edit|MultiEdit. Measured: an Edit targeting an
+// existing tsconfig.json returned exit 2 while `echo {} > tsconfig.json` returned exit 0, and
+// trust-gate permitted it too — the identical outcome blocked at one entrance and silently permitted
+// at another. The hook now detects write intent inside a Bash command; registering it on Bash is what
+// makes that detection reachable.
 const HOOK_SPEC = [
   { event: 'PreToolUse', matcher: 'Write|Edit|MultiEdit', hookId: 'mindforge-prompt-guard', script: `${HOOK_ROOT}/mindforge-prompt-guard.js` },
-  { event: 'PreToolUse', matcher: 'Write|Edit|MultiEdit', hookId: 'mindforge-config-protection', script: `${HOOK_ROOT}/mindforge-config-protection.js` },
+  { event: 'PreToolUse', matcher: 'Write|Edit|MultiEdit|Bash', hookId: 'mindforge-config-protection', script: `${HOOK_ROOT}/mindforge-config-protection.js` },
   { event: 'PreToolUse', matcher: 'Bash', hookId: 'trust-gate', script: `${HOOK_ROOT}/security/trust-gate-hook.js` },
   { event: 'PreToolUse', matcher: 'Bash', hookId: 'mindforge-block-no-verify', script: `${HOOK_ROOT}/mindforge-block-no-verify.js` },
   { event: 'PostToolUse', matcher: 'Bash|Edit|Write|MultiEdit|Agent|Task', hookId: 'mindforge-context-monitor', script: `${HOOK_ROOT}/mindforge-context-monitor.js` },
