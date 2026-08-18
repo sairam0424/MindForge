@@ -213,6 +213,19 @@ jobs:
       #   * `npm run eval:retrieval` — already covered by tests/retrieval-fts.test.js, which
       #     calls runGoldenSetEval() and asserts the same committed recall floor. Wiring it
       #     would double the slowest suite for no added signal.
+      # Supply-chain: what runs in the release path must be pinned to a commit.
+      #
+      # Measured before this gate: 41 `uses:` refs across 11 workflows, ZERO pinned, and the one
+      # third-party action (softprops/action-gh-release@v3) sat in the job holding `contents: write`
+      # and running `npm publish --provenance`. A mutable tag is a promise from a repository nobody
+      # here controls.
+      #
+      # Hard-fails on any unpinned third-party action and on any unpinned ref in the release path.
+      # First-party actions elsewhere ratchet on a ceiling, and the gate PRINTS every one of them with
+      # file:line on each run — so "0 violations" can never be read as "everything is pinned".
+      - name: Action pinning gate (release path must be commit-pinned)
+        run: npm run verify:pinning
+
       - name: Harness gate (harness-audit must clear its threshold)
         run: npm run harness:gate
 

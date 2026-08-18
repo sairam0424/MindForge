@@ -1,7 +1,7 @@
 {
   "name": "mindforge-cc",
   "version": "11.9.2",
-  "description": "MindForge \u2014 Sovereign Agentic Intelligence Framework. Sovereign Stability: Production-Hardened Agentic Intelligence (v11)",
+  "description": "MindForge — Sovereign Agentic Intelligence Framework. Sovereign Stability: Production-Hardened Agentic Intelligence (v11)",
   "bin": {
     "mindforge-cc": "bin/install.js",
     "mindforge": "bin/mindforge-cli.js"
@@ -70,7 +70,8 @@
     "validate:assets": "node scripts/ci/validate-assets.js",
     "eval:retrieval": "node bin/eval/eval-harness.js --set golden-set-retrieval.json --min-recall 0.55",
     "commit": "cz",
-    "prepare": "husky"
+    "prepare": "husky",
+    "verify:pinning": "node scripts/ci/verify-action-pinning.js"
   },
   "keywords": [
     "claude-code",
