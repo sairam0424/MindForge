@@ -230,6 +230,99 @@ test('the release workflow grants no MORE than contents+id-token, at either leve
   }
 });
 
+// ── least privilege across the whole CI surface ──────────────────────────────
+
+/** Every permissions scope declared in a file, tagged workflow- or job-level. */
+function permissionScopes(file) {
+  const lines = fs.readFileSync(path.join(WORKFLOWS, file), 'utf8').split('\n');
+  const scopes = [];
+  lines.forEach((line, i) => {
+    if (!/^\s*permissions:\s*$/.test(line)) return;
+    const indent = line.match(/^\s*/)[0].length;
+    for (let j = i + 1; j < lines.length; j++) {
+      const m = lines[j].match(/^(\s*)([a-z-]+):\s*(read|write|none)\s*$/);
+      if (!m || m[1].length <= indent) break;
+      scopes.push({ level: indent === 0 ? 'workflow' : 'job', key: m[2], value: m[3], line: j + 1 });
+    }
+  });
+  return scopes;
+}
+
+const workflowFiles = () => fs.readdirSync(WORKFLOWS).filter((f) => /\.ya?ml$/.test(f)).sort();
+
+test('every workflow declares an explicit permissions block', () => {
+  // Six workflows declared none and inherited the repository default, which is frequently write-all —
+  // so a compromised action in a lint job had the same reach as the publish job. An omitted block is
+  // invisible: nothing in the file says "write-all", it just happens.
+  const files = workflowFiles();
+  assert.ok(files.length >= 10, `expected the workflow set to be intact, found ${files.length} files`);
+  const missing = files.filter((f) => !permissionScopes(f).some((s) => s.level === 'workflow'));
+  assert.deepStrictEqual(missing, [],
+    `${missing.length} workflow(s) declare no workflow-level permissions and inherit the repository `
+    + `default: ${missing.join(', ')}. Add \`permissions:\` with the minimum the workflow needs.`);
+});
+
+test('no workflow grants write beyond what it demonstrably needs', () => {
+  // WRITE is the interesting axis, and the expectations are derived from what each workflow does:
+  //   contents:write + id-token:write  release only — the GitHub release and the provenance attestation
+  //   pull-requests:write              only jobs that call github.rest.pulls.createReview
+  // Anything else is reach a compromised action could use.
+  // Each entry is justified from the workflow's own content, verified by grep, not assumed:
+  const ALLOWED = {
+    // The GitHub release needs contents:write; --provenance needs id-token:write.
+    'mindforge-release.yml': new Set(['contents', 'id-token']),
+    // github.rest.pulls.createReview, on the one job that posts the review.
+    'mindforge-ai-review.yml': new Set(['pull-requests']),
+    'mindforge-ci.yml': new Set(['pull-requests']),
+    // github.rest.issues.createComment.
+    'ai-intelligence.yml': new Set(['pull-requests']),
+    // github.rest.pulls.create + pulls.list.
+    //
+    // contents:write is NOT justified by anything in the file — no branch, commit or tag operation
+    // appears in it. Allowlisted as PRE-EXISTING rather than removed, because auto-pr.yml is how pull
+    // requests get raised in this repository and breaking it to tighten a scope I have not fully
+    // traced would cost more than it saves. Recorded as a follow-up, not endorsed.
+    'auto-pr.yml': new Set(['contents', 'pull-requests']),
+    // pull-requests:write IS justified: control-plane.yml calls ./ai-intelligence.yml as a reusable
+    // workflow, and a called workflow inherits the caller's permissions, so the grant is what lets
+    // createComment work one level down.
+    //
+    // security-events:write is NOT justified — nothing in the file uploads SARIF or touches code
+    // scanning (grep for sarif|codeql|upload-sarif|code-scanning returns nothing). Same treatment as
+    // above: allowlisted as pre-existing and named, so it is a known loose end rather than an
+    // invisible one.
+    'control-plane.yml': new Set(['pull-requests', 'security-events']),
+  };
+  const offenders = [];
+  for (const f of workflowFiles()) {
+    const allowed = ALLOWED[f] || new Set();
+    for (const s of permissionScopes(f).filter((x) => x.value === 'write')) {
+      if (!allowed.has(s.key)) offenders.push(`${f}:${s.line} ${s.level} ${s.key}: write`);
+    }
+  }
+  assert.deepStrictEqual(offenders, [],
+    `${offenders.length} permission grant(s) exceed what the workflow needs:\n  ${offenders.join('\n  ')}`);
+});
+
+test('the jobs that post a PR review keep pull-requests: write', () => {
+  // The converse, and it matters more than it looks: without this grant createReview fails at RUNTIME.
+  // mindforge-ai-review.yml's step carries `continue-on-error: true`, so the job would go GREEN while
+  // silently never posting a review — an instrument reporting success while doing nothing, produced by
+  // over-tightening a permission.
+  for (const [file, job] of [['mindforge-ai-review.yml', 'ai-reviewer'], ['mindforge-ci.yml', 'mindforge-ai-review']]) {
+    const text = fs.readFileSync(path.join(WORKFLOWS, file), 'utf8');
+    assert.match(text, /github\.rest\.pulls\.createReview/,
+      `${file} no longer posts a review — drop the pull-requests: write grant with it`);
+    const jobScopes = permissionScopes(file).filter((s) => s.level === 'job');
+    assert.ok(jobScopes.some((s) => s.key === 'pull-requests' && s.value === 'write'),
+      `${file} job "${job}" calls createReview but has no pull-requests: write, so the review will fail `
+      + 'at runtime — and with continue-on-error the job still reports success');
+    assert.ok(jobScopes.some((s) => s.key === 'contents' && s.value === 'read'),
+      `${file} job "${job}" overrides permissions without restating contents: read. GitHub treats a job `
+      + 'block as an OVERRIDE, not an intersection, so the checkout would lose repo read access.');
+  }
+});
+
 test('the release job still publishes with provenance', () => {
   // The point of the whole exercise. If --provenance were dropped, pinning would guard a supply chain
   // that no longer attests anything.

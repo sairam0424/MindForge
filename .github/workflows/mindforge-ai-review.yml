@@ -4,8 +4,23 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+# Least privilege. This workflow declared no `permissions:` block, so every job inherited the
+# repository default — frequently write-all, which hands a compromised action far more than it needs.
+# Determined from what the workflow actually does, not guessed: no GITHUB_TOKEN reference, no `gh`
+# CLI call, no github.rest API call, and no commit/tag/branch write. One job posts a PR review and carries a narrower job-level
+# block granting pull-requests: write; every other job needs only read.
+permissions:
+  contents: read
+
 jobs:
   ai-reviewer:
+    # JOB-LEVEL override, deliberately narrower than the workflow default above.
+    # This is the only job that writes to GitHub: it calls github.rest.pulls.createReview to post the
+    # review as a PR comment. GitHub resolves a job block as an OVERRIDE, not an intersection, so
+    # contents:read must be restated here or this job would lose the ability to check out.
+    permissions:
+      contents: read
+      pull-requests: write
     name: Cross-Model Code Review
     runs-on: ubuntu-latest
     if: contains(github.event.pull_request.labels.*.name, 'needs-review') || github.event_name == 'pull_request'
