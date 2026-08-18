@@ -22,8 +22,12 @@
  *     repo checkout        76/76  ->  76/76   (unchanged — a rubric fix must not inflate this)
  *     fresh --claude       36/76  ->  41/76   (+3 context-monitor, +2 block-no-verify)
  *
- * The +5 is exactly the two checks whose files the install already had. The remaining three still
- * fail, correctly: they need files no install currently copies, and a settings.json nothing writes.
+ * The +5 is exactly the two checks whose files the install already had.
+ *
+ * REG-01 subsequently landed installer-side hook registration, so a real install now scores 49/76.
+ * The tests below therefore call hook-registration.unregister() to isolate the two effects: 41 is
+ * what the LAYOUT fix bought, 49 is what ENFORCEMENT bought on top of it. Asserting both, in both
+ * directions, is what keeps each commit's delta attributable to that commit.
  *
  * WHY THE REPO NUMBER IS THE IMPORTANT ASSERTION. Changing a rubric in the same breath as the thing
  * it measures is how a gate stops being evidence. Pinning repo == 76/76 across this change is what
@@ -233,23 +237,47 @@ test('the repo score is UNCHANGED at 76/76 by this rubric fix', () => {
   assert.strictEqual(r.max_score, 76, `max_score drifted to ${r.max_score}; update this test and the gate floor`);
 });
 
-test('a real install now scores 41/76, up from the 36 the old rubric reported', () => {
+test('the layout fix alone accounts for 36 -> 41, separated from registration', () => {
+  // A real install NOW also registers hooks (REG-01), so "what does an install score" conflates two
+  // independent changes. Unregistering isolates the rubric fix: strip REG-01's own entries and the
+  // remaining number is purely what the layout correction bought.
+  const reg = require(path.join(REPO_ROOT, 'bin', 'installer', 'hook-registration.js'));
   const { project, cleanup } = freshInstall();
   try {
-    const r = buildReport('repo', { rootDir: project });
-    assert.strictEqual(r.overall_score, 41,
-      `expected 41/76 after the layout fix, got ${r.overall_score}/${r.max_score}. The +5 is exactly ` +
-      'context-monitor-hook (3) + security-block-no-verify (2) — the two checks whose files an ' +
-      'install already contains. If this moved, either the installer changed what it copies or ' +
-      'another check flipped, and the ratchet floor needs revisiting.');
+    const withReg = buildReport('repo', { rootDir: project }).overall_score;
+    reg.unregister(project);
+    const withoutReg = buildReport('repo', { rootDir: project }).overall_score;
 
-    // The three that must STILL fail — they need files no install copies yet, and a settings.json
-    // nothing writes. Asserting this stops the layout fix from being mistaken for enforcement.
-    for (const id of ['memory-instinct-capture', 'security-trust-gate', 'security-bash-guard-both']) {
+    assert.strictEqual(withoutReg, 41,
+      `un-registered install must score 41/76 — the layout fix alone. Got ${withoutReg}. The +5 over ` +
+      'the old rubric\'s 36 is exactly context-monitor-hook (3) + security-block-no-verify (2), the ' +
+      'two checks whose files an install already contained.');
+
+    assert.ok(withReg > withoutReg,
+      `registration must add score on top of the layout fix: got ${withReg} registered vs ` +
+      `${withoutReg} un-registered. If equal, REG-01 registered nothing.`);
+    assert.strictEqual(withReg, 49,
+      `registered install must score 49/76, got ${withReg}. That +8 is enforcement, not rubric — if it ` +
+      'moved, raise INSTALL_SCORE_FLOOR in scripts/ci/harness-gate-install.js to match.');
+  } finally { cleanup(); }
+});
+
+test('the three settings-dependent checks fail WITHOUT registration and pass WITH it', () => {
+  // Before REG-01 these three failed on every install. Asserting both directions is what keeps the
+  // layout fix and the enforcement fix attributable to their own commits.
+  const reg = require(path.join(REPO_ROOT, 'bin', 'installer', 'hook-registration.js'));
+  const ids = ['memory-instinct-capture', 'security-trust-gate', 'security-bash-guard-both'];
+  const { project, cleanup } = freshInstall();
+  try {
+    for (const id of ids) {
+      assert.strictEqual(checkById(project, id).pass, true,
+        `${id} must PASS on a registered install — REG-01 copies the files and writes the settings`);
+    }
+    reg.unregister(project);
+    for (const id of ids) {
       assert.strictEqual(checkById(project, id).pass, false,
-        `${id} must still fail on an install: this commit fixes the RUBRIC's layout assumption, not ` +
-        'the missing files or the missing registration. If it passes now, enforcement landed ' +
-        'somewhere and this test should be rewritten rather than relaxed.');
+        `${id} must FAIL once registration is removed. If it still passes, it is not actually ` +
+        'measuring registration and cannot distinguish a wired install from an unwired one.');
     }
   } finally { cleanup(); }
 });

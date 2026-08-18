@@ -24,6 +24,9 @@
  *
  * FLOOR HISTORY, so a rubric correction is never mistaken for an enforcement gain:
  *   36  initial, measured against the pre-fix rubric
+ *   49  after REG-01 landed installer-side hook registration. THIS one IS an enforcement gain:
+ *       8 hooks registered, 3 deny-class verified blocking by execution. Security Guardrails
+ *       1/10 -> 6/10.
  *   41  after the layout fix to bin/harness-audit.js. NOT an enforcement improvement — five
  *       checks had hardcoded the source-repo layout (.agent/hooks/, bin/), so an install failed
  *       checks whose files it already contained. +3 context-monitor-hook, +2
@@ -54,7 +57,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
 /** Raise this as installer-side registration lands. Pinned by tests/harness-gate-install.test.js. */
-const INSTALL_SCORE_FLOOR = 41;
+const INSTALL_SCORE_FLOOR = 49;
 
 const REPO_ROOT = fs.realpathSync(path.join(__dirname, '..', '..'));
 const AUDIT = path.join(REPO_ROOT, 'bin', 'harness-audit.js');

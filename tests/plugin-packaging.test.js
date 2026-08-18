@@ -198,28 +198,25 @@ test('every hook in .agent/settings.json resolves against the REPO root (local d
   assertRepoHooksResolve('.agent/settings.json', path.join(ROOT, '.agent', 'settings.json'));
 });
 
-test('PINNED GAP: the repo hook paths resolve in NO install (REG-01 not yet done)', () => {
-  // Executable record of the enforcement gap, and the tripwire that forces this test to be
-  // rewritten the moment REG-01 lands.
+test('REG-01 LANDED: an install registers hooks whose paths resolve and which really deny', () => {
+  // This replaces a pinned-gap test that asserted an install writes NO settings.json. Its own failure
+  // message specified the replacement: "every emitted command path must resolve, and a deny payload
+  // must be answered with exit 2." That is what this asserts.
   //
-  // Why a pinned count rather than an aspiration: an install writes no registration at all, so
-  // there is nothing to assert "works" yet. What CAN be asserted is the precise current state —
-  // and pinning it means a PARTIAL fix (some paths resolving, some not) fails here. That matters
-  // more than it sounds: run-with-flags.js:132-136 echoes stdin and exits 0 on a missing script,
-  // which Claude Code reads as ALLOW, so a half-wired config is strictly worse than none. The
-  // repo's own generator says so at scripts/build-mindforge-plugin.js:176-183.
+  // The gap it recorded was real and worth having pinned: run-with-flags.js echoes stdin and exits 0
+  // on a missing script for ADVISORY ids, which Claude Code reads as ALLOW. That is why a
+  // partially-resolving config would be worse than none — and why the registrar refuses to write one,
+  // running an execution preflight and rolling back if any deny-class hook fails to deny.
   const { spawnSync } = require('child_process');
   const os = require('os');
+  const reg = require(path.join(ROOT, 'bin', 'installer', 'hook-registration.js'));
   const project = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-hookgap-')));
   try {
     fs.writeFileSync(path.join(project, 'package.json'),
       JSON.stringify({ name: 'their-app', version: '1.0.0' }, null, 2));
-    // HOME confined to the scratch project, NOT the operator's. This call site is the ORIGINAL
-    // instance of the leak: installer-core.js:253 resolves its registry through os.homedir(), which
-    // honours $HOME, so every `npm test` — including each Husky pre-commit — appended a mf-hookgap-*
-    // path to the developer's real ~/.mindforge/registry.json. Measured before the fix: 237 of 245
-    // entries were test temp dirs (97%), 41 from this prefix. Four other suites had copied the
-    // pattern from here. tests/no-home-leak.test.js now bans it repo-wide.
+    // HOME confined to the scratch project. installer-core.js:253 resolves its registry through
+    // os.homedir(); this call site was the ORIGINAL instance of the leak that put 237 test tmpdirs
+    // into a real ~/.mindforge/registry.json. tests/no-home-leak.test.js bans the pattern repo-wide.
     const homeDir = path.join(project, '.scratch-home');
     fs.mkdirSync(homeDir, { recursive: true });
     const r = spawnSync(process.execPath, [path.join(ROOT, 'bin', 'install.js'), '--claude', '--local'], {
@@ -228,41 +225,58 @@ test('PINNED GAP: the repo hook paths resolve in NO install (REG-01 not yet done
     });
     assert.strictEqual(r.status, 0, `install failed: ${(r.stderr || '').slice(0, 600)}`);
 
-    // An install writes no registration whatsoever.
-    for (const rel of ['.claude/settings.json', '.claude/settings.local.json', '.agent/settings.json']) {
-      assert.ok(!fs.existsSync(path.join(project, rel)),
-        `${rel} now EXISTS in an install. If REG-01 has landed, replace this pinned-gap test with ` +
-        'a real assertion: every emitted command path must resolve, and a deny payload must be ' +
-        'answered with exit 2.');
-    }
+    // 1. A registration now exists, and it is the PROJECT settings file, not settings.local.json.
+    const settingsPath = path.join(project, '.claude', 'settings.json');
+    assert.ok(fs.existsSync(settingsPath), 'an install must now register hooks in .claude/settings.json');
+    assert.ok(!fs.existsSync(path.join(project, '.agent', 'settings.json')),
+      'no .agent mirror may be written — its BeforeTool/AfterTool events are recorded as never firing, '
+      + 'so emitting one would be decorative config that makes the harness look wired');
 
-    // And the repo's own command paths resolve nowhere in that install.
-    const cmds = hookCommands(readJson(path.join(ROOT, '.claude', 'settings.json')).hooks);
-    const resolved = [];
-    for (const { command } of cmds) {
-      const { launcher, script } = parseHookCommand(command);
-      for (const rel of [launcher, script].filter(Boolean)) {
-        if (fs.existsSync(path.join(project, rel))) resolved.push(rel);
+    // 2. EVERY path in EVERY emitted command resolves. This is the assertion the pinned gap asked
+    //    for, and it covers BOTH tokens — the dispatcher and the 2nd positional script argument.
+    //    A rewrite that fixed only the first is exactly how the plugin channel broke.
+    const emitted = hookCommands(readJson(settingsPath).hooks);
+    assert.strictEqual(emitted.length, reg.HOOK_SPEC.length,
+      `expected ${reg.HOOK_SPEC.length} registered commands, got ${emitted.length}`);
+    const unresolved = [];
+    for (const { command } of emitted) {
+      for (const token of command.split(/\s+/)) {
+        const rel = token.replace(/^"|"$/g, '').replace(/^\$\{?CLAUDE_PROJECT_DIR\}?\//, '');
+        if (!rel.endsWith('.js')) continue;
+        if (!fs.existsSync(path.join(project, rel))) unresolved.push(rel);
       }
     }
-    assert.deepStrictEqual(resolved, [],
-      `${resolved.length} of the repo's registered hook paths resolve in an install: ` +
-      `${resolved.join(', ')}. Any nonzero count means the layout changed — re-derive the ` +
-      'registration rather than leaving a partially-resolving config, which fails OPEN.');
+    assert.deepStrictEqual(unresolved, [],
+      `${unresolved.length} emitted path(s) do not resolve in the install: ${unresolved.join(', ')}. `
+      + 'A missing script makes an advisory hook echo stdin and exit 0, which reads as ALLOW.');
 
-    // The scripts DID install — just not where the commands look. That distinction is the whole
-    // finding, so assert it rather than leaving "nothing resolves" ambiguous with "nothing shipped".
+    // 3. And it really denies. Payload PAIRED to the hook that guards it — a generic bad payload
+    //    proves nothing, since trust-gate answers only high-impact commands while --no-verify is
+    //    mindforge-block-no-verify's surface.
+    const denyCmd = emitted.map((e) => e.command).find((c) => / mindforge-block-no-verify /.test(c));
+    assert.ok(denyCmd, 'mindforge-block-no-verify must be registered');
+    const denied = spawnSync('/bin/sh', ['-c', denyCmd], {
+      cwd: project, encoding: 'utf8',
+      env: { PATH: process.env.PATH, HOME: homeDir, CLAUDE_PROJECT_DIR: project },
+      input: JSON.stringify({
+        hook_event_name: 'PreToolUse', tool_name: 'Bash',
+        tool_input: { command: 'git commit --no-verify -m x' },
+      }),
+    });
+    assert.strictEqual(denied.status, 2,
+      `the registered command must answer --no-verify with exit 2, got ${denied.status}. Exit 0 is a `
+      + 'permit; exit 1 is outside the 0-allow/2-deny contract and a harness reads it as an error.');
+
+    // 4. The previously-orphaned scripts now ship. trust-gate-hook.js lives in bin/security/, outside
+    //    the .agent/hooks/ tree the installer copies, which is why it reached 0 of 6 harnesses.
     assert.ok(fs.existsSync(path.join(project, '.claude', 'hooks', 'run-with-flags.js')),
-      'the dispatcher must be present at .claude/hooks/ — if it is absent the diagnosis above is ' +
-      'wrong and the problem is the copy, not the paths');
-    assert.ok(!fs.existsSync(path.join(project, '.claude', 'hooks', 'trust-gate-hook.js')),
-      'trust-gate-hook.js is expected ABSENT from a default install (it lives under bin/security/, ' +
-      'which only --with-utils copies). If it is now present, the bundle changed.');
-  } finally {
-    fs.rmSync(project, { recursive: true, force: true });
-  }
+      'the dispatcher must be present at .claude/hooks/');
+    for (const { dst } of reg.COPY_MANIFEST) {
+      assert.ok(fs.existsSync(path.join(project, dst)),
+        `${dst} must now be copied — it is referenced by a registered command or required by one`);
+    }
+  } finally { fs.rmSync(project, { recursive: true, force: true }); }
 });
-
 test('every plugin hook resolves under the plugin root, require()d deps included', () => {
   const cmds = hookCommands(readJson(path.join(PLUGIN, 'hooks', 'hooks.json')).hooks);
   assert.ok(cmds.length > 0, 'plugin hooks.json declares no hooks');
