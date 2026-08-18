@@ -114,3 +114,12 @@ ruvector.db
 **/.claude-flow/
 .claude/proven-config.json
 .claude/.proven-config-version
+# Agent worktrees. Isolated-worktree subagents check out FULL COPIES of this repo here — three of
+# them measured 50+ entries each — so a single `git add -A` during a run would commit the whole tree
+# several times over. They are transient and removed when the run ends.
+#
+# Note this does NOT stop repo-wide tooling from walking them: `npm run lint` is `eslint .`, and with
+# worktrees present it went from 193 warnings / 0 errors to 888 problems / 105 errors, all from other
+# agents' in-progress code. eslint flat config does not read .gitignore, and eslint.config.mjs is
+# protected against agent edits by design, so excluding it there is a human decision.
+.claude/worktrees/

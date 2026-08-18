@@ -324,15 +324,23 @@ function buildManifest(counts) {
 // rmrf had already deleted the committed mcp/dist/index.js and .mcp.json. The result was a
 // "successful" regeneration that silently stripped the plugin's MCP server, and
 // mcp-server/dist is untracked, so every fresh clone hit it. Refuse to build a partial plugin.
-if (!fs.existsSync(MCP_ENTRY)) {
-  console.error('build-mindforge-plugin: mcp-server/dist/index.js is missing.');
-  console.error('  Build it first:  npm --prefix mcp-server run build');
-  console.error('  Refusing to regenerate — doing so would delete the committed');
-  console.error('  plugins/mindforge/mcp/dist/index.js and .mcp.json and still exit 0.');
-  process.exit(1);
-}
-
 function build() {
+  // Preflight BEFORE the rmrf below, and INSIDE build() — it is a precondition for BUILDING, not for
+  // importing. At module scope it made `require()` of this file exit 1 on any machine without a built
+  // mcp-server/dist, which is every CI runner (mcp-server/dist is gitignored). That turned an
+  // import-for-HOOK_TREES in tests/plugin-packaging.test.js into a CI-only failure:
+  //     ✗ FAIL  plugin-packaging.test.js (32ms)
+  //        build-mindforge-plugin: mcp-server/dist/index.js is missing.
+  // green locally, red on the runner — the same local/CI divergence class as a test reading a
+  // gitignored file. Throwing rather than process.exit so an importer can catch it if it ever needs to.
+  if (!fs.existsSync(MCP_ENTRY)) {
+    console.error('build-mindforge-plugin: mcp-server/dist/index.js is missing.');
+    console.error('  Build it first:  npm --prefix mcp-server run build');
+    console.error('  Refusing to regenerate — doing so would delete the committed');
+    console.error('  plugins/mindforge/mcp/dist/index.js and .mcp.json and still exit 0.');
+    process.exit(1);
+  }
+
   // Rebuild from scratch so deletions in source propagate (no stale files linger). These wipes were
   // at module scope, which is why the require.main guard alone was not enough: importing the module
   // deleted the whole plugin tree and then returned without rebuilding it. Measured — a bare
