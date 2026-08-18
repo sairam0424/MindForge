@@ -22,7 +22,16 @@
  * real, wired into CI, and passing — while validating the only artifact that could pass. That is why
  * a production dry run found 15 open critical findings behind a green pipeline.
  *
- * WHY THE FLOOR IS 36 AND NOT 76. Setting it to 76 today would turn every unrelated PR red until
+ * FLOOR HISTORY, so a rubric correction is never mistaken for an enforcement gain:
+ *   36  initial, measured against the pre-fix rubric
+ *   41  after the layout fix to bin/harness-audit.js. NOT an enforcement improvement — five
+ *       checks had hardcoded the source-repo layout (.agent/hooks/, bin/), so an install failed
+ *       checks whose files it already contained. +3 context-monitor-hook, +2
+ *       security-block-no-verify. The repo score stayed 76/76 across that change, which is what
+ *       makes the +5 attributable to the correction rather than to a loosened rubric — pinned by
+ *       tests/harness-audit-layout.test.js.
+ *
+ * WHY THE FLOOR IS NOT 76. Setting it to 76 today would turn every unrelated PR red until
  * REG-01 (installer-side hook registration) lands, which buys nothing and trains people to ignore
  * the check. 36 is the measured current reality, so this is a RATCHET: the shipped score can never
  * silently drop, and the number in CI is finally the consumer's number rather than the maintainer's.
@@ -45,7 +54,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
 /** Raise this as installer-side registration lands. Pinned by tests/harness-gate-install.test.js. */
-const INSTALL_SCORE_FLOOR = 36;
+const INSTALL_SCORE_FLOOR = 41;
 
 const REPO_ROOT = fs.realpathSync(path.join(__dirname, '..', '..'));
 const AUDIT = path.join(REPO_ROOT, 'bin', 'harness-audit.js');
