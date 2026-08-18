@@ -3,18 +3,19 @@
  *
  * Changes:
  * 1. HANDOFF.json: add `plugin_api_version` field
- * 2. AUDIT.jsonl: backfill `session_id` for entries missing it
+ * 2. AUDIT.jsonl: append a migration record — existing entries are NEVER rewritten (see step 2)
  * 3. MINDFORGE.md: convert VERIFY_PASS_RATE_WARNING_THRESHOLD if in old 0-100 format
  * 4. STATE.md: add v1.0.0 compatibility note if it doesn't already have one
  */
 'use strict';
 
 const fs = require('fs');
+const { appendAuditEntrySync } = require('../autonomous/audit-writer');
 
 module.exports = {
   fromVersion: '0.6.0',
   toVersion:   '1.0.0',
-  description: 'Add plugin_api_version; backfill session_id; normalise MINDFORGE.md thresholds',
+  description: 'Add plugin_api_version; record the migration in the audit log; normalise MINDFORGE.md thresholds',
 
   async run(paths) {
     // ── 1. HANDOFF.json ───────────────────────────────────────────────────────
@@ -36,31 +37,35 @@ module.exports = {
     }
 
     // ── 2. AUDIT.jsonl ────────────────────────────────────────────────────────
+    //
+    // APPEND-ONLY. This step used to rewrite every entry to backfill `session_id`, which BROKE the
+    // hash chain and then reported success. Measured on a 50-entry chain written by the real writer:
+    //
+    //     before  ->  audit chain valid: 50 entries          exit 0
+    //     after   ->  audit chain BROKEN at entry 0: hash mismatch (entry mutated)   exit 1
+    //
+    // 50 of 50 entries mutated, integrity destroyed at the very first entry, and the migration printed
+    // "backfilled session_id in 50 of 50 entries" and carried on to report "All migrations complete".
+    // bin/governance/audit-hash.js hashes {...entry, previous_hash} with JSON.stringify, so ANY added
+    // key changes the material — a back-linked log cannot be edited in place, only appended to. No file
+    // in this directory referenced the canonical hasher.
+    //
+    // AND THE BACKFILL BOUGHT NOTHING. The only consumer of `session_id` on an audit entry is
+    // bin/dashboard/metrics-aggregator.js:253,286, which reads
+    // `entry.authored_by || entry.session_id || 'unknown'`. So the rewrite swapped the placeholder
+    // 'unknown' for the placeholder 'migrated-from-pre-1.0' — no consumer distinguishes them — at the
+    // cost of every integrity guarantee in the file. Deleting it loses nothing.
+    //
+    // What IS worth recording is that a migration touched this project, so one entry is APPENDED
+    // through the canonical writer. An append extends the chain instead of invalidating it.
     if (fs.existsSync(paths.audit)) {
-      const raw   = fs.readFileSync(paths.audit, 'utf8');
-      const lines = raw.split('\n').filter(Boolean);
-      let modified = 0;
-
-      const updated = lines.map(line => {
-        try {
-          const entry = JSON.parse(line);
-          if (!entry.session_id) {
-            entry.session_id = 'migrated-from-pre-1.0';
-            modified++;
-            return JSON.stringify(entry);
-          }
-          return line;
-        } catch {
-          return line;  // Preserve unparseable lines exactly as-is (quarantine pattern)
-        }
+      appendAuditEntrySync(paths.audit, {
+        event:       'schema_migrated',
+        target_id:   'AUDIT.jsonl',
+        description: 'schema 0.6.0 -> 1.0.0; existing entries left byte-identical (append-only log)',
+        agent:       'migrate',
       });
-
-      if (modified > 0) {
-        fs.writeFileSync(paths.audit, updated.join('\n') + '\n');
-        console.log(`    • AUDIT.jsonl: backfilled session_id in ${modified} of ${lines.length} entries`);
-      } else {
-        console.log('    • AUDIT.jsonl: all entries already have session_id');
-      }
+      console.log('    • AUDIT.jsonl: recorded the migration as a new entry; existing entries untouched');
     }
 
     // ── 3. MINDFORGE.md ───────────────────────────────────────────────────────

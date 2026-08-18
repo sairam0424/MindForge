@@ -39,18 +39,72 @@ function simulateHandoffMigration(handoff, toVersion) {
   return result;
 }
 
-function simulateAuditMigration(lines) {
-  return lines.map(line => {
-    try {
-      const entry = JSON.parse(line);
-      if (!entry.session_id) {
-        return JSON.stringify({ ...entry, session_id: 'migrated-from-pre-1.0' });
-      }
-      return line;
-    } catch {
-      return line; // preserve invalid lines
-    }
-  });
+// simulateAuditMigration() USED TO LIVE HERE, and it is why the defect below survived.
+//
+// It re-implemented the migration's audit step inside the test file, so the assertions verified the
+// simulation and never the shipped code. Three tests passed while asserting the mutation was CORRECT:
+// "backfills missing session_id in audit entries" checked that every entry gained
+// `session_id: 'migrated-from-pre-1.0'`. What the real migration did was rewrite every line of a
+// SHA-256 back-linked append-only log. Measured on a 50-entry chain written by the real writer:
+//
+//     before  ->  audit chain valid: 50 entries                              exit 0
+//     after   ->  audit chain BROKEN at entry 0: hash mismatch (entry mutated)  exit 1
+//
+// 50 of 50 entries mutated, integrity gone at the first entry, and the migration printed
+// "backfilled session_id in 50 of 50 entries" then reported "All migrations complete". A local
+// re-implementation cannot catch that, because the chain never enters the simulation. Same defect class
+// as tests/governance.test.js re-implementing classifyChange(), removed in 2e1f8c7.
+//
+// The tests below drive the REAL migration modules against a REAL chain and assert on
+// bin/verify-audit.js. That is the only arrangement in which this failure is visible.
+
+const { appendAuditEntrySync } = require(path.join(__dirname, '..', 'bin', 'autonomous', 'audit-writer.js'));
+const { spawnSync } = require('child_process');
+const os = require('os');
+const REPO = fs.realpathSync(path.join(__dirname, '..'));
+
+/** Build a real chain of `n` entries in a fresh tmpdir; returns {dir, audit, lines}. */
+function realChain(n = 50) {
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-migtest-')));
+  const audit = path.join(dir, '.planning', 'AUDIT.jsonl');
+  for (let i = 0; i < n; i++) {
+    appendAuditEntrySync(audit, {
+      event: `probe_${i}`, target_id: `T-${i}`, description: `entry ${i}`, agent: 'migration-test',
+    });
+  }
+  return { dir, audit, lines: fs.readFileSync(audit, 'utf8').split('\n').filter(Boolean) };
+}
+
+/** Run bin/verify-audit.js against an explicit path. */
+function verifyChain(audit) {
+  const r = spawnSync(process.execPath, [path.join(REPO, 'bin', 'verify-audit.js'), audit],
+    { cwd: REPO, encoding: 'utf8' });
+  return { status: r.status, out: `${r.stdout || ''}${r.stderr || ''}`.trim() };
+}
+
+/**
+ * Drive a real migration module's run() over a scratch project.
+ *
+ * Runs in a CHILD process because run() is async while this file's test() helper is synchronous —
+ * spawnSync awaits it without converting every existing test in the file to async. The runner script
+ * goes to a real file rather than `-e`, since the nested quoting needed to embed paths in a one-liner
+ * is where these probes usually break.
+ */
+function runRealMigration(name, dir) {
+  const script = path.join(dir, 'run-migration.js');
+  fs.writeFileSync(script, [
+    `const mig = require(${JSON.stringify(path.join(REPO, 'bin', 'migrations', `${name}.js`))});`,
+    `const d = ${JSON.stringify(dir)};`,
+    'const p = require(\'path\');',
+    'Promise.resolve(mig.run({',
+    '  audit:       p.join(d, \'.planning\', \'AUDIT.jsonl\'),',
+    '  handoff:     p.join(d, \'.planning\', \'HANDOFF.json\'),',
+    '  state:       p.join(d, \'.planning\', \'STATE.md\'),',
+    '  mindforgemd: p.join(d, \'MINDFORGE.md\'),',
+    '})).then(() => process.exit(0)).catch((e) => { console.error(e.message); process.exit(1); });',
+  ].join('\n'));
+  const r = spawnSync(process.execPath, [script], { cwd: dir, encoding: 'utf8' });
+  return { status: r.status, out: `${r.stdout || ''}${r.stderr || ''}` };
 }
 
 function simulateMindforgeMdMigration(content) {
@@ -191,35 +245,82 @@ test('migration does not overwrite existing values', () => {
 
 console.log('\nAUDIT.jsonl migration:');
 
-test('backfills missing session_id in audit entries', () => {
-  const lines = [
-    JSON.stringify({ id: 'uuid-1', timestamp: '2026-01-01T00:00:00Z', event: 'task_started', agent: 'test' }),
-    JSON.stringify({ id: 'uuid-2', timestamp: '2026-01-01T00:01:00Z', event: 'task_completed', agent: 'test', session_id: 'existing' }),
-  ];
-  const migrated = simulateAuditMigration(lines);
-  const first  = JSON.parse(migrated[0]);
-  const second = JSON.parse(migrated[1]);
-  assert.ok(first.session_id, 'Missing session_id should be backfilled');
-  assert.strictEqual(first.session_id, 'migrated-from-pre-1.0');
-  assert.strictEqual(second.session_id, 'existing', 'Existing session_id must not be changed');
-});
+for (const name of ['0.6.0-to-1.0.0', '1.0.0-to-2.0.0']) {
+  test(`${name} leaves every existing audit entry BYTE-IDENTICAL`, () => {
+    // The assertion the old simulation could not make. An append-only, back-linked log admits exactly
+    // one safe edit: appending. Byte-identity of the prefix is the strongest form of that statement and
+    // it does not depend on the verifier's own correctness.
+    const { dir, audit, lines: before } = realChain(50);
+    try {
+      const r = runRealMigration(name, dir);
+      assert.strictEqual(r.status, 0, `migration failed: ${r.out.slice(0, 300)}`);
+      const after = fs.readFileSync(audit, 'utf8').split('\n').filter(Boolean);
+      assert.ok(after.length >= before.length,
+        `entries went from ${before.length} to ${after.length} — a migration must never remove entries`);
+      const prefix = after.slice(0, before.length);
+      for (let i = 0; i < before.length; i++) {
+        assert.strictEqual(prefix[i], before[i],
+          `entry ${i} was REWRITTEN. Any added key changes the hash material, because `
+          + 'bin/governance/audit-hash.js hashes {...entry, previous_hash}. Before:\n'
+          + `  ${before[i].slice(0, 150)}\nAfter:\n  ${prefix[i].slice(0, 150)}`);
+      }
+    } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+  });
 
-test('preserves invalid JSON lines without crashing', () => {
-  const lines = [
-    JSON.stringify({ id: 'uuid-1', event: 'test', timestamp: 't', agent: 'a' }),
-    '{this is not valid JSON}',
-    JSON.stringify({ id: 'uuid-2', event: 'test', timestamp: 't', agent: 'a' }),
-  ];
-  const migrated = simulateAuditMigration(lines);
-  assert.strictEqual(migrated.length, 3, 'All lines preserved');
-  assert.strictEqual(migrated[1], '{this is not valid JSON}', 'Invalid line unchanged');
-});
+  test(`${name} leaves the hash chain VERIFIABLE`, () => {
+    // Driven through the real bin/verify-audit.js, which shares the canonical hasher with the writer.
+    const { dir, audit } = realChain(50);
+    try {
+      const control = verifyChain(audit);
+      assert.strictEqual(control.status, 0,
+        `the generated chain must verify before migrating, or this proves nothing: ${control.out}`);
 
-test('does not double-backfill entries that already have session_id', () => {
-  const original = JSON.stringify({ id: 'uuid', event: 'test', timestamp: 't', agent: 'a', session_id: 'my-session' });
-  const [migrated] = simulateAuditMigration([original]);
-  const entry = JSON.parse(migrated);
-  assert.strictEqual(entry.session_id, 'my-session', 'Should not overwrite existing session_id');
+      const r = runRealMigration(name, dir);
+      assert.strictEqual(r.status, 0, `migration failed: ${r.out.slice(0, 300)}`);
+
+      const after = verifyChain(audit);
+      assert.strictEqual(after.status, 0,
+        `the chain is BROKEN after ${name}. This is what the removed simulation hid: `
+        + `${after.out.slice(0, 200)}`);
+      assert.match(after.out, /valid: 51 entries/,
+        `expected 51 entries (50 + one appended migration record), got: ${after.out.slice(0, 120)}`);
+    } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+  });
+
+  test(`${name} RECORDS itself, rather than migrating silently`, () => {
+    // Deleting the mutation must not mean the migration leaves no trace. The record is APPENDED, so it
+    // extends the chain instead of invalidating it.
+    const { dir, audit, lines: before } = realChain(10);
+    try {
+      assert.strictEqual(runRealMigration(name, dir).status, 0);
+      const after = fs.readFileSync(audit, 'utf8').split('\n').filter(Boolean);
+      assert.strictEqual(after.length, before.length + 1,
+        `expected exactly one appended entry, got ${after.length - before.length}`);
+      const rec = JSON.parse(after[after.length - 1]);
+      assert.strictEqual(rec.event, 'schema_migrated');
+      assert.strictEqual(rec.target_id, 'AUDIT.jsonl');
+      assert.ok(rec.previous_hash && rec._hash, 'the appended record must itself be chained');
+      assert.ok(!('session_id' in rec) || typeof rec.session_id === 'string',
+        'the record must not reintroduce a placeholder field on other entries');
+    } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+  });
+}
+
+test('no migration rewrites AUDIT.jsonl in place', () => {
+  // Structural backstop across the whole directory, so a NEW migration cannot reintroduce the pattern.
+  // Targets writes to the audit path specifically; safeMigrate() takes content and returns replacement
+  // content, which is a rewrite by construction, so applying it to paths.audit is the smell.
+  const dir = path.join(REPO, 'bin', 'migrations');
+  const offenders = [];
+  for (const f of fs.readdirSync(dir).filter((n) => n.endsWith('.js'))) {
+    const code = fs.readFileSync(path.join(dir, f), 'utf8')
+      .split('\n').filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n');
+    if (/safeMigrate\(\s*paths\.audit/.test(code)) offenders.push(`${f}: safeMigrate(paths.audit)`);
+    if (/writeFileSync\(\s*paths\.audit/.test(code)) offenders.push(`${f}: writeFileSync(paths.audit)`);
+  }
+  assert.deepStrictEqual(offenders, [],
+    `${offenders.length} migration(s) rewrite the audit log in place: ${offenders.join(', ')}. `
+    + 'A SHA-256 back-linked log can only be appended to — use appendAuditEntrySync.');
 });
 
 console.log('\nMINDFORGE.md migration:');

@@ -11,11 +11,12 @@
 
 const fs = require('fs');
 const path = require('path');
+const { appendAuditEntrySync } = require('../autonomous/audit-writer');
 
 module.exports = {
   fromVersion: '1.0.0',
   toVersion:   '2.0.0',
-  description: 'Additive schema upgrade: backfill runtime/agent_id in audit; model_group in tokens',
+  description: 'Additive schema upgrade: record the migration in the audit log; model_group in tokens',
 
   async run(paths) {
     const backupDir = path.join(path.dirname(paths.handoff), '.backups', `v1-to-v2-${Date.now()}`);
@@ -65,29 +66,27 @@ module.exports = {
     });
 
     // ── 2. AUDIT.jsonl ────────────────────────────────────────────────────────
-    safeMigrate(paths.audit, (raw) => {
-      const lines = raw.split('\n').filter(Boolean);
-      let modified = 0;
-      
-      const updated = lines.map(line => {
-        try {
-          const entry = JSON.parse(line);
-          let changed = false;
-          if (!entry.runtime) { entry.runtime = 'unknown'; changed = true; }
-          if (!entry.agent_id) { entry.agent_id = 'migrated-v1'; changed = true; }
-          
-          if (changed) {
-            modified++;
-            return JSON.stringify(entry);
-          }
-          return line;
-        } catch {
-          return line;
-        }
+    //
+    // APPEND-ONLY, for the same reason as 0.6.0-to-1.0.0.js step 2: this rewrote every entry to add
+    // `runtime` and `agent_id`, and bin/governance/audit-hash.js hashes {...entry, previous_hash}, so
+    // any added key changes the hash material and the chain breaks at the first entry while the
+    // migration reports success.
+    //
+    // Worse than its sibling, because here the backfill had NO consumer at all: `git grep agent_id`
+    // and `git grep model_group` outside bin/migrations/ return zero readers in bin/. The chain was
+    // being destroyed to populate fields nothing reads.
+    //
+    // Note safeMigrate() cannot express this — it takes raw content and returns replacement content,
+    // which is a rewrite by construction. An append goes through the canonical writer instead.
+    if (fs.existsSync(paths.audit)) {
+      appendAuditEntrySync(paths.audit, {
+        event:       'schema_migrated',
+        target_id:   'AUDIT.jsonl',
+        description: 'schema 1.0.0 -> 2.0.0; existing entries left byte-identical (append-only log)',
+        agent:       'migrate',
       });
-      
-      return modified > 0 ? updated.join('\n') + '\n' : raw;
-    });
+      console.log('    • AUDIT.jsonl: recorded the migration as a new entry; existing entries untouched');
+    }
 
     // ── 3. token-usage.jsonl ──────────────────────────────────────────────────
     const tokensFile = path.join(path.dirname(paths.handoff), 'token-usage.jsonl');
