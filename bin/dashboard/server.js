@@ -179,6 +179,28 @@ app.get('/', (req, res) => {
   res.sendFile(FRONTEND);
 });
 
+// The application itself, as an EXTERNAL script. It used to be an inline <script> in index.html,
+// which this server's own CSP (`script-src 'self'`, set above) blocks — so the whole front end never
+// executed while the static shell displayed "● Connected". Measured in a headless browser:
+// "Executing inline script violates ... 'script-src 'self''. The action has been blocked.",
+// typeof window.showPage === undefined, and GET /api/connections === {"clients":0}.
+//
+// Serving it from the same origin satisfies the existing policy WITHOUT weakening it — no
+// 'unsafe-inline', no hash, no nonce. An explicit route rather than express.static: the frontend
+// directory is the only thing that should be reachable, and a static mount would expose whatever else
+// lands there later.
+const FRONTEND_ASSETS = new Set(['app.js']);
+app.get('/:asset', (req, res, next) => {
+  if (!FRONTEND_ASSETS.has(req.params.asset)) return next();
+  const file = path.join(path.dirname(FRONTEND), req.params.asset);
+  // Defence in depth: the allowlist already forbids traversal, but resolve and re-check anyway so a
+  // future edit to FRONTEND_ASSETS cannot turn this into a file-read primitive.
+  if (path.dirname(path.resolve(file)) !== path.dirname(path.resolve(FRONTEND))) return next();
+  if (!fs.existsSync(file)) return res.status(404).send('// asset not found');
+  res.type('application/javascript');
+  return res.sendFile(file);
+});
+
 // ── Token refresh endpoint (requires valid existing token) ───────────────────
 app.post('/api/v1/token/refresh', requireAuth, (req, res) => {
   const newToken = crypto.randomBytes(32).toString('hex');
