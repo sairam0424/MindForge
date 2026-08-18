@@ -117,6 +117,12 @@ class AutoRunner {
     this.phase = String(options.phase);
     this.isHeadless = options.headless || false;
     this.isPaused = false;
+    // Optional async function(task) that performs the actual work for one task. When absent,
+    // executeWave() aborts the wave rather than writing task_completed entries for work that would
+    // not run — see the comment there. Deliberately NOT defaulted to a no-op: bin/autonomous/
+    // wave-executor.js:133 defaults its own `executor` to `async () => {}`, and a silent no-op
+    // default is exactly how a wave came to report every task fulfilled while dispatching nothing.
+    this.taskExecutor = typeof options.taskExecutor === 'function' ? options.taskExecutor : null;
 
     // Paths
     const planningDir = path.join(process.cwd(), '.planning');
@@ -377,6 +383,40 @@ class AutoRunner {
 
     console.log(`\n⚡ Wave ${waveNum}/${this.waves.length}: ${pending.length} tasks (concurrency: ${maxConcurrency})`);
     if (idcStatus.action === 'UPGRADE_MIR') console.log(`  [IDC-ACTIVE] MIR Override: ${idcStatus.new_mir}`);
+
+    // REFUSE TO FABRICATE. The task body below used to be, in full:
+    //
+    //     try {
+    //       this.writeAudit({ event: 'task_started',   ... });
+    //       this.writeAudit({ event: 'task_completed', ... duration_ms: Date.now() - taskStart });
+    //       this.completedTasks.add(task.id);
+    //
+    // Nothing between the two writes. No dispatch. So every task was recorded as completed with a
+    // duration of ~0ms, the catch block was unreachable because nothing could throw, and the
+    // hash-chained audit log — the one component of this project that is genuinely production-grade
+    // and independently verifiable — became a tamper-evident record of statements that were false.
+    // A verifiable false record is worse than no record: it survives verify-audit and carries the
+    // authority of the chain.
+    //
+    // Measured before this change: task_completed = 0 in the live 3056-entry chain, and no module
+    // under bin/ requires auto-runner (every repo-wide match is a comment, a test, or an
+    // "extracted from" note). So the defect was LATENT — the code would have lied the first time
+    // anything invoked it, and nothing had. That is why this is a refusal rather than a cleanup:
+    // there is no contamination to repair, only a trap to disarm.
+    //
+    // A wave with no executor now writes ONE honest entry and throws, instead of N false ones.
+    if (typeof this.taskExecutor !== 'function') {
+      this.writeAudit({
+        event: 'wave_aborted', phase: this.phase, wave: waveNum, task_count: pending.length,
+        reason: 'no task executor is wired, so no task can run. Refusing to write task_completed '
+          + 'entries for work that would not be performed — see auto-runner.executeWave.',
+      });
+      throw new Error(
+        `Wave ${waveNum} cannot execute: no task executor wired. Pass { taskExecutor } to the `
+        + 'AutoRunner constructor, or drive waves through bin/autonomous/wave-executor.js. '
+        + 'Refusing to record completions for work that would not run.');
+    }
+
     this.writeAudit({ event: 'wave_started', phase: this.phase, wave: waveNum, task_count: pending.length });
 
     const semaphore = new Semaphore(maxConcurrency);
@@ -388,6 +428,9 @@ class AutoRunner {
         console.log(`  → Task: ${task.name || task.id}`);
         try {
           this.writeAudit({ event: 'task_started', phase: this.phase, wave: waveNum, task_id: task.id, task_name: task.name || task.id });
+          // The dispatch that was missing. Its absence is what made the catch below unreachable and
+          // every duration_ms ~0; task_completed is now written only after real work returns.
+          await this.taskExecutor(task);
           this.writeAudit({ event: 'task_completed', phase: this.phase, wave: waveNum, task_id: task.id, task_name: task.name || task.id, duration_ms: Date.now() - taskStart });
           this.completedTasks.add(task.id);
           return { taskId: task.id, status: 'fulfilled' };
