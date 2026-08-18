@@ -68,6 +68,16 @@ ROADMAP_V7.md
 # hard kill leaves one behind until the 10s stale reclaim — never commit them.
 .planning/**/*.jsonl.lock
 .mindforge/**/*.jsonl.lock
+# VectorHub now takes the same lock around the DB commit, so the lockfile sits beside
+# celestial.db rather than beside a .jsonl and the rules above do not cover it.
+.mindforge/*.db.lock
+.mindforge/**/*.db.lock
+# Conflict sidecars written when VectorHub refuses to clobber another process's write.
+# Each one is a FULL database copy — 147KB+ of trace and knowledge content — so an
+# unignored sidecar is both a large binary and a content leak waiting for `git add -A`.
+# They are recovery artifacts for the operator to reconcile, never repository state.
+.mindforge/*.conflict.*
+.mindforge/**/*.conflict.*
 .mindforge/memory/sync-manifest.json
 # Runtime auth tokens (generated at server startup, never commit)
 .mindforge/.dashboard-token

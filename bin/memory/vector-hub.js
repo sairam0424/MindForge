@@ -8,6 +8,7 @@
 const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
+const { withFileLock } = require('../utils/file-lock');
 
 // ── FTS retrieval (FTS-01) ───────────────────────────────────────────────────
 // A MATCH argument is an FTS *query expression*, not a literal. Wrapping the
@@ -167,6 +168,9 @@ class VectorHub {
     // deliberately bias toward flushing.
     this._pendingSaves = 0;
     this._exitGuardInstalled = false;
+    // null until a file is loaded or written. null means "no expectation", so a first write into a
+    // fresh directory is never treated as a conflict.
+    this._diskFingerprint = null;
   }
 
   _installExitGuard() {
@@ -220,6 +224,9 @@ class VectorHub {
     if (fs.existsSync(this.dbPath)) {
       const buffer = fs.readFileSync(this.dbPath);
       this._db = new SQL.Database(buffer);
+      // What the file looked like when this process took its copy. Every later write compares
+      // against it, so a rewrite by another process is detected instead of silently clobbered.
+      this._diskFingerprint = dbFingerprint(this.dbPath);
     } else {
       this._db = new SQL.Database();
     }
@@ -513,11 +520,24 @@ class VectorHub {
     // COMPLETED (success or failure). The exit guard fires saveSync() while any
     // scheduled save is still outstanding — see _installExitGuard().
     this._pendingSaves++;
-    this._saveChain = this._saveChain.then(() => writeDbDurable(dbPath, buffer))
-      .catch((err) => {
-        console.warn(`[VectorHub] Failed to save database: ${err.message}`);
+    this._saveChain = this._saveChain
+      // Write the tmp asynchronously, then commit it under the lock. The commit MUST be the last
+      // step — see commitDb's note on the check-then-write gap that made this guard bypassable.
+      .then(() => writeTmpDurable(dbPath, buffer))
+      .then((tmpPath) => {
+        const res = commitDb(dbPath, this._diskFingerprint, buffer, tmpPath);
+        if (res.ok) {
+          this._diskFingerprint = res.fingerprint;
+          this._pendingSaves--;         // decrement ONLY on a durable write; see below
+        }
       })
-      .then(() => { this._pendingSaves--; });
+      .catch((err) => {
+        // Left deliberately outstanding. _pendingSaves gates the exit guard, so decrementing after a
+        // FAILED save would make the guard skip its last-resort saveSync() and drop this batch — the
+        // exact loss the counter exists to prevent. withFileLock throws when it cannot acquire, so
+        // lock contention lands here, and leaving the count high is what makes the retry happen.
+        console.warn(`[VectorHub] Failed to save database: ${err.message}`);
+      });
     return this._saveChain;
   }
 
@@ -531,7 +551,7 @@ class VectorHub {
     try {
       this._ensureDir();
       const buffer = Buffer.from(this._db.export());
-      const tmpPath = `${this.dbPath}.tmp.${process.pid}`;
+      const tmpPath = `${this.dbPath}.tmp.${process.pid}.sync`;
       const fd = fs.openSync(tmpPath, 'w');
       try {
         fs.writeSync(fd, buffer);
@@ -539,7 +559,15 @@ class VectorHub {
       } finally {
         fs.closeSync(fd);
       }
-      fs.renameSync(tmpPath, this.dbPath);
+      // Commit under the lock. Worst case this blocks the exit handler for withFileLock's bounded
+      // retry ceiling (~1-2s) and then throws into the catch below — bounded, logged, and far better
+      // than writing over a file another process just changed.
+      const res = commitDb(this.dbPath, this._diskFingerprint, buffer, tmpPath);
+      if (!res.ok) {
+        this._pendingSaves = 0;   // the data is in the sidecar; retrying would clobber again
+        return;
+      }
+      this._diskFingerprint = res.fingerprint;
       // A sync export captures the full in-memory DB — a superset of anything the
       // outstanding async saves would have written — so the pending work is now
       // durably satisfied. Clearing the counter prevents a redundant second flush.
@@ -840,9 +868,98 @@ class VectorHub {
 // ── Durable async DB file write (UC-09) ───────────────────────────────────────
 // Crash-safe: write to a tmp file, fsync, then atomically rename over the target.
 // A crash mid-write leaves the previous good .db intact (rename is atomic on POSIX).
-function writeDbDurable(dbPath, buffer) {
+/**
+ * A cheap identity for the on-disk database: size plus mtime in ms.
+ *
+ * Not a digest — this runs before every save, and hashing a 10MB+ file on each write would be a real
+ * cost for a check whose only job is "did somebody else touch this?". size+mtimeMs changes on any
+ * rewrite by another process, which is exactly the event being detected.
+ */
+function dbFingerprint(dbPath) {
+  try {
+    const st = fs.statSync(dbPath);
+    return `${st.size}:${st.mtimeMs}`;
+  } catch {
+    return null;   // absent is a legitimate state, not an error
+  }
+}
+
+/**
+ * Refuse to silently overwrite another process's writes.
+ *
+ * sql.js holds the whole database in memory and persists by exporting the ENTIRE file and renaming it
+ * over the path. Two processes each hold their own copy and each rewrite the whole file, so the last
+ * writer wins and the other's rows are gone. Measured: two concurrent writers, 15 acknowledged
+ * recordTrace() calls each, 30 expected — 15 on disk, ALL from writer A. Writer B's 15 acknowledged
+ * writes vanished, with no error on either side.
+ *
+ * Evidence it has already happened in production: `.mindforge/` carries orphaned
+ * `celestial.db.tmp.<pid>` files, one of which is a valid database holding skills rows absent from the
+ * live file.
+ *
+ * Making sql.js genuinely multi-process safe means replacing the driver — the whole-file export IS the
+ * problem, and locking alone does not fix it, because both processes loaded a stale copy before either
+ * saved. What is fixable now is the SILENCE. On a detected clobber the export goes to a
+ * `.conflict.<pid>` sidecar and the caller is told, so the data still exists and somebody knows.
+ * Refusing loudly beats destroying quietly — the same choice as auto-runner refusing to record a
+ * completion it cannot substantiate.
+ *
+ * WHY CHECK AND RENAME ARE ONE CRITICAL SECTION. A first version checked the fingerprint and then
+ * handed the buffer to an ASYNC writer. Measured with a deterministic stage — parent writes 3, spawns a
+ * child that writes 5 and exits, parent then closes:
+ *
+ *     [parent] GUARD ...898 == ...898      <- check passes
+ *     === child writes and saves ===       <- file is now ...249
+ *     [parent] ASYNC-WROTE new=...309      <- writes its PRE-CHILD snapshot anyway
+ *     live rows: P0,P1,P2,seed             <- the child's 5 rows destroyed, silently
+ *
+ * spawnSync blocked the event loop, so the child fit entirely inside the gap between the check and the
+ * write. A check followed by a later write is not a guard — it is the same clobber with extra steps.
+ * So the fingerprint comparison and the atomic rename now happen together, synchronously, under the
+ * shared fail-closed lock. withFileLock rejects a thenable outright, which makes reintroducing that gap
+ * a loud TypeError rather than silent data loss.
+ *
+ * The expensive part (writing and fsyncing the tmp file) stays OUTSIDE the lock and may still be async:
+ * the tmp path is pid-scoped, so no other process can observe or touch it.
+ *
+ * @param {string} tmpPath  a fully-written, fsynced tmp file to rename into place
+ * @returns {{ok: boolean, fingerprint?: string, sidecar?: string}}
+ */
+function commitDb(dbPath, expected, buffer, tmpPath) {
+  return withFileLock(dbPath, () => {
+    const actual = dbFingerprint(dbPath);
+    if (expected === null || actual === null || actual === expected) {
+      fs.renameSync(tmpPath, dbPath);
+      return { ok: true, fingerprint: dbFingerprint(dbPath) };
+    }
+
+    // Conflict. Keep this process's bytes and leave the other process's file untouched.
+    const sidecar = `${dbPath}.conflict.${process.pid}.${buffer.length}`;
+    try {
+      fs.renameSync(tmpPath, sidecar);   // already fsynced; a rename beats a second full write
+    } catch (err) {
+      console.error(`[VectorHub] CONFLICT and the sidecar could not be written: ${err.message}`);
+      try { fs.unlinkSync(tmpPath); } catch { /* nothing further to do */ }
+      return { ok: false, sidecar: null };
+    }
+    console.error(
+      `[VectorHub] REFUSING TO OVERWRITE ${dbPath}: another process changed it since this one loaded it `
+      + `(expected ${expected}, found ${actual}). sql.js rewrites the whole file, so continuing would `
+      + `discard that process's rows. This process's data went to ${sidecar} instead — nothing is lost, `
+      + 'but the two databases must be reconciled by hand.');
+    return { ok: false, sidecar };
+  }, { label: 'vector-hub-db' });
+}
+
+/**
+ * Write and fsync the pid-scoped tmp file, resolving to its path. Does NOT rename it into place —
+ * that is commitDb's job, because the rename has to share a critical section with the staleness check.
+ * Staying async here is the point: fsync of a multi-megabyte export is the expensive part, and the tmp
+ * path cannot be observed by another process.
+ */
+function writeTmpDurable(dbPath, buffer) {
   return new Promise((resolve, reject) => {
-    const tmpPath = `${dbPath}.tmp.${process.pid}`;
+    const tmpPath = `${dbPath}.tmp.${process.pid}.async`;
     const fail = (err) => { fs.unlink(tmpPath, () => reject(err)); };
     fs.open(tmpPath, 'w', (openErr, fd) => {
       if (openErr) return reject(openErr);
@@ -852,10 +969,7 @@ function writeDbDurable(dbPath, buffer) {
           fs.close(fd, (closeErr) => {
             if (syncErr) return fail(syncErr);
             if (closeErr) return fail(closeErr);
-            fs.rename(tmpPath, dbPath, (renameErr) => {
-              if (renameErr) return fail(renameErr);
-              resolve();
-            });
+            resolve(tmpPath);
           });
         });
       });
