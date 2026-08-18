@@ -332,24 +332,43 @@ if (!fs.existsSync(MCP_ENTRY)) {
   process.exit(1);
 }
 
-// Rebuild from scratch so deletions in source propagate (no stale files linger).
-for (const sub of ['commands', 'agents', 'skills', 'hooks', 'scripts', 'mcp', '.claude-plugin']) {
-  rmrf(path.join(PLUGIN, sub));
+function build() {
+  // Rebuild from scratch so deletions in source propagate (no stale files linger). These wipes were
+  // at module scope, which is why the require.main guard alone was not enough: importing the module
+  // deleted the whole plugin tree and then returned without rebuilding it. Measured — a bare
+  // `require()` took plugins/ from 3 dirty files to 524.
+  for (const sub of ['commands', 'agents', 'skills', 'hooks', 'scripts', 'mcp', '.claude-plugin']) {
+    rmrf(path.join(PLUGIN, sub));
+  }
+  rmrf(path.join(PLUGIN, '.mcp.json'));
+
+  buildMcp();
+  const counts = {
+    commands: buildCommands(),
+    agents: buildAgents(),
+    skills: buildSkills(),
+    hookEvents: buildHooks(),
+  };
+  buildManifest(counts);
+
+  console.log('Generated plugins/mindforge/:');
+  console.log(`  commands: ${counts.commands}`);
+  console.log(`  agents:   ${counts.agents}`);
+  console.log(`  skills:   ${counts.skills} (incl. synthesized mindforge-protocol)`);
+  console.log(`  hook events: ${counts.hookEvents}`);
+  console.log('  mcp server: bundled (.mcp.json + mcp/dist)');
+  return counts;
 }
-rmrf(path.join(PLUGIN, '.mcp.json'));
 
-buildMcp();
-const counts = {
-  commands: buildCommands(),
-  agents: buildAgents(),
-  skills: buildSkills(),
-  hookEvents: buildHooks(),
-};
-buildManifest(counts);
+// Behind a require.main guard so importing this module does not REGENERATE 526 tracked files as an
+// import side effect. It used to run at module scope, which made the generator unusable from a test:
+// requiring it to read HOOK_TREES would rewrite the whole plugin tree mid-run. Same guard pattern as
+// tests/run-all.js.
+if (require.main === module) {
+  build();
+}
 
-console.log('Generated plugins/mindforge/:');
-console.log(`  commands: ${counts.commands}`);
-console.log(`  agents:   ${counts.agents}`);
-console.log(`  skills:   ${counts.skills} (incl. synthesized mindforge-protocol)`);
-console.log(`  hook events: ${counts.hookEvents}`);
-console.log('  mcp server: bundled (.mcp.json + mcp/dist)');
+// Exported so tests can derive the source -> shipped mapping from the generator itself rather than
+// re-declaring it. A test that hardcodes its own copy of this list stops testing the generator and
+// starts testing its own duplicate — which is how the stale trust-gate-hook.js shipped unnoticed.
+module.exports = { build, HOOK_TREES };
