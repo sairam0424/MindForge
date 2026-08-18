@@ -69,6 +69,13 @@ function repoWithSensitiveCommitBehindBenignTip() {
   return { dir, before };
 }
 
+// A throwaway HOME for every spawned child. The classifier itself does not write to $HOME, but
+// handing children the real one is the pattern that let five suites silently append to the
+// developer's ~/.mindforge/registry.json (installer-core.js:253 resolves it via os.homedir()).
+// Confining it here keeps this file correct if the classifier ever gains a HOME-dependent read, and
+// satisfies tests/no-home-leak.test.js, which bans the pattern repo-wide rather than per-suite.
+const SCRATCH_HOME = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-cls-home-')));
+
 /** Spawn the classifier in `dir` with `env` overrides. Returns {status, tier, reasons, out}. */
 function runClassifier(dir, env = {}) {
   const r = spawnSync(process.execPath, [CLASSIFIER], {
@@ -76,7 +83,7 @@ function runClassifier(dir, env = {}) {
     encoding: 'utf8',
     // A clean env: inheriting a real GitHub Actions env would silently change the code path.
     env: {
-      PATH: process.env.PATH, HOME: process.env.HOME,
+      PATH: process.env.PATH, HOME: SCRATCH_HOME,
       GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_SYSTEM: '/dev/null',
       ...env,
     },

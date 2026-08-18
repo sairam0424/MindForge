@@ -353,9 +353,15 @@ test('the audit reports Security Guardrails HONESTLY against a real install', ()
   try {
     fs.writeFileSync(path.join(project, 'package.json'),
       JSON.stringify({ name: 'their-app', version: '1.0.0' }, null, 2));
+    // HOME confined to the scratch project. installer-core.js:253 resolves its registry through
+    // os.homedir(), which honours $HOME, so the real HOME made every run of this test append a
+    // mf-auditinstall-* path to ~/.mindforge/registry.json — 55 such entries were measured in a real
+    // registry. tests/no-home-leak.test.js now bans the pattern repo-wide.
+    const homeDir = path.join(project, '.scratch-home');
+    fs.mkdirSync(homeDir, { recursive: true });
     const inst = spawnSync(process.execPath,
       [path.join(REPO_ROOT, 'bin', 'install.js'), '--claude', '--local'],
-      { cwd: project, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: process.env.HOME, CI: '1' } });
+      { cwd: project, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: homeDir, CI: '1' } });
     assert.strictEqual(inst.status, 0, `install failed: ${(inst.stderr || '').slice(0, 500)}`);
 
     const wired = hookWired(project, '.claude/settings.json', 'trust-gate-hook');

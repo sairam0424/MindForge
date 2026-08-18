@@ -214,9 +214,17 @@ test('PINNED GAP: the repo hook paths resolve in NO install (REG-01 not yet done
   try {
     fs.writeFileSync(path.join(project, 'package.json'),
       JSON.stringify({ name: 'their-app', version: '1.0.0' }, null, 2));
+    // HOME confined to the scratch project, NOT the operator's. This call site is the ORIGINAL
+    // instance of the leak: installer-core.js:253 resolves its registry through os.homedir(), which
+    // honours $HOME, so every `npm test` — including each Husky pre-commit — appended a mf-hookgap-*
+    // path to the developer's real ~/.mindforge/registry.json. Measured before the fix: 237 of 245
+    // entries were test temp dirs (97%), 41 from this prefix. Four other suites had copied the
+    // pattern from here. tests/no-home-leak.test.js now bans it repo-wide.
+    const homeDir = path.join(project, '.scratch-home');
+    fs.mkdirSync(homeDir, { recursive: true });
     const r = spawnSync(process.execPath, [path.join(ROOT, 'bin', 'install.js'), '--claude', '--local'], {
       cwd: project, encoding: 'utf8',
-      env: { PATH: process.env.PATH, HOME: process.env.HOME, CI: '1' },
+      env: { PATH: process.env.PATH, HOME: homeDir, CI: '1' },
     });
     assert.strictEqual(r.status, 0, `install failed: ${(r.stderr || '').slice(0, 600)}`);
 

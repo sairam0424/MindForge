@@ -60,9 +60,18 @@ const PROJECT = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-instal
 fs.writeFileSync(path.join(PROJECT, 'package.json'),
   JSON.stringify({ name: 'their-app', version: '1.0.0' }, null, 2));
 
+// A THROWAWAY HOME, not the operator's. installer-core.js:253 resolves its project registry as
+// path.join(os.homedir(), '.mindforge', 'registry.json'), and os.homedir() honours $HOME on POSIX —
+// so handing this child `HOME: process.env.HOME` makes every run of this suite append a tmpdir path
+// to the developer's real ~/.mindforge/registry.json. Measured before this fix: 237 of 245 entries
+// in a real registry were test-suite temp dirs (97%), 49 of them from this file's mf-installload-
+// prefix alone. `npm test` runs on every Husky pre-commit, so the pollution compounded silently.
+// tests/no-home-leak.test.js now bans the pattern repo-wide.
+const HOME_DIR = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-installload-home-')));
+
 const install = spawnSync(process.execPath, [INSTALLER, '--claude', '--local'], {
   cwd: PROJECT, encoding: 'utf8',
-  env: { PATH: process.env.PATH, HOME: process.env.HOME, CI: '1' },
+  env: { PATH: process.env.PATH, HOME: HOME_DIR, CI: '1' },
 });
 
 const installedBin = path.join(PROJECT, 'bin');
@@ -211,7 +220,7 @@ test('installed modules that DO load, actually load — executed spot check', ()
     if (!fs.existsSync(abs)) { failures.push(`${rel}: not installed`); continue; }
     const r = spawnSync(process.execPath, ['-e', `require(${JSON.stringify(abs)})`], {
       cwd: PROJECT, encoding: 'utf8',
-      env: { PATH: process.env.PATH, HOME: process.env.HOME },
+      env: { PATH: process.env.PATH, HOME: HOME_DIR },
     });
     if (r.status !== 0) {
       failures.push(`${rel}: exit ${r.status} — ${(r.stderr || '').split('\n').find(l => /Error/.test(l)) || ''}`);
