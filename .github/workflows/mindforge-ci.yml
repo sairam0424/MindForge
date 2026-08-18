@@ -115,6 +115,41 @@ jobs:
             cd sdk && npm install && cd ..
           fi
 
+      # The shipped artifact must be the reviewed artifact.
+      #
+      # mcp-server/ vendors sdk/src as TypeScript and esbuild inlines it into the single tracked
+      # bundle the marketplace plugin ships. Nothing compared either link, and both had drifted:
+      # events.ts and client.ts were 623 and 92 bytes behind sdk/src, and the staleness reached the
+      # wire — the shipped bundle carried JSON.parse(event.data.toString()) where sdk/src/events.ts
+      # says JSON.parse(String(event.data)). The vendoring script has no other caller in CI or in
+      # package.json; it was run by hand and had not been run since the SDK changed.
+      #
+      # tests/vendored-artifact-integrity.test.js gates the vendor link hermetically (pure function,
+      # no build needed). This step gates the BUNDLE link, which needs mcp-server/node_modules and so
+      # can only run here. esbuild is pinned to 0.28.1 in mcp-server/package-lock.json, and two full
+      # local regenerations produced an identical sha, so no timestamp or absolute path is embedded.
+      # Cross-host reproducibility (darwin/arm64 vs ubuntu/x64) is verified BY THIS STEP on its first
+      # run; if it reports drift with a clean tree, compare normalised content rather than deleting
+      # the gate.
+      #
+      # The bundle is committed 0644 because that is what esbuild emits. Committing 0755 would make
+      # this comparison report `mode change` on every run — a permanently red gate is one everyone
+      # learns to ignore.
+      - name: Shipped MCP bundle must match its source
+        run: |
+          npm --prefix mcp-server ci
+          node scripts/vendor-sdk-into-mcp.js
+          npm --prefix mcp-server run build
+          node scripts/build-mindforge-plugin.js
+          drift=$(git diff --name-only -- mcp-server/src/vendor plugins/mindforge)
+          if [ -n "$drift" ]; then
+            echo "::error::regenerating from source changed tracked files — the shipped artifact is not the reviewed artifact"
+            echo "$drift" | while IFS= read -r f; do echo "::error file=$f::drifted from source"; done
+            git diff --stat -- mcp-server/src/vendor plugins/mindforge
+            exit 1
+          fi
+          echo "::notice::vendored SDK and shipped bundle both reproduce from source"
+
       - name: Build SDK
         run: |
           if [ -d "sdk" ] && [ -f "sdk/tsconfig.json" ]; then
