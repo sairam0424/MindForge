@@ -63,6 +63,7 @@
     "lint": "eslint .",
     "harness:audit": "node bin/harness-audit.js",
     "harness:gate": "node bin/harness-audit.js --min-score 76 --fail-on-findings",
+    "harness:gate:install": "node scripts/ci/harness-gate-install.js",
     "harness:compliance": "node bin/installer/harness-adapter-compliance.js --check",
     "release:ready": "node bin/utils/readiness-gate.js release",
     "version:check": "node scripts/sync-version.js --check",

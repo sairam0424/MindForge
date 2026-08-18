@@ -181,6 +181,16 @@ jobs:
       - name: Harness gate (harness-audit must clear its threshold)
         run: npm run harness:gate
 
+      # The step above audits THIS CHECKOUT, which has .claude/settings.json and .agent/settings.json
+      # hand-maintained in git — neither of which is in package.json `files`, so no consumer receives
+      # them. harness-audit.js:426-431 requires trust-gate wired into both, so the repo scores 76/76
+      # while a fresh `--claude --local` install of the same tree scores 36/76 with Security
+      # Guardrails 1/10. The gate was real, wired and green while validating the only artifact that
+      # could pass. This second step audits an INSTALL root, so CI reports the consumer's number.
+      # It is a ratchet at the measured floor, not a pass/fail on the ideal — see the script header.
+      - name: Harness gate (INSTALL root — what a consumer actually receives)
+        run: npm run harness:gate:install
+
       - name: Harness adapter compliance drift check
         run: npm run harness:compliance -- --check
 

@@ -559,7 +559,15 @@ function buildReport(scope, options = {}) {
 }
 
 function printText(report) {
-  console.log(`MindForge Harness Audit (${report.scope}): ${report.overall_score}/${report.max_score}`);
+  // The header names the SCOPE, which is independent of --root. Auditing an installed project with
+  // `--root <dir>` therefore used to print "MindForge Harness Audit (repo)" — so an install-root
+  // score read as a repo score. Measured: the repo scores 76/76 while a fresh `--claude --local`
+  // install of the SAME tree scores 36/76 with Security Guardrails 1/10 and 17 of 31 checks failing.
+  // Two very different numbers under one identical label is how the enforcement gap stayed invisible.
+  // When the audited root is not the cwd, say so in the header rather than only in the Root: line.
+  const auditedElsewhere = path.resolve(report.root_dir) !== path.resolve(process.cwd());
+  const where = auditedElsewhere ? `${report.scope}, external root` : report.scope;
+  console.log(`MindForge Harness Audit (${where}): ${report.overall_score}/${report.max_score}`);
   console.log(`Root: ${report.root_dir}`);
   console.log('');
 
