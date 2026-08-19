@@ -556,7 +556,13 @@ async function install(runtime, scope, options = {}) {
   Theme.printPrompt(`Runtime : ${c.cyan(runtime)}`);
   Theme.printPrompt(`Scope   : ${c.dim(scope)} → ${c.bold(targetDir)}`);
   if (options.dryRun) Theme.printStatus('Mode    : DRY RUN (no changes)', 'warn');
-  if (selfInstall) Theme.printStatus(c.yellow('Self-install detected — skipping framework file copy'), 'warn');
+  // Names what is skipped, because the previous wording was FALSE. It read "skipping framework file
+  // copy" while the code still overwrote the entry file and 149 tracked command files. A message
+  // describing work the code does not do is worse than no message — it is why nobody noticed.
+  if (selfInstall) {
+    Theme.printStatus(c.yellow('Self-install detected — leaving this repository\'s own tracked files alone'), 'warn');
+    Theme.printStatus(c.dim(`    not written: ${cfg.entryFile}, commands, skills, hooks, personas, docs, subagents, memory`), 'info');
+  }
 
   if (dryRun) {
     console.log('\n  Would install:');
@@ -623,7 +629,15 @@ async function install(runtime, scope, options = {}) {
     fsu.write(tempEntry, adaptedContent);
     
     const targetPath = path.join(baseDir, cfg.entryFile);
-    safeCopyClaude(tempEntry, targetPath, { force, verbose });
+    // GATED ON !selfInstall, which it was not. The guard existed and stopped one line short: the root
+    // mirror below has always been gated, this write never was. In MindForge's own repository
+    // `.claude/CLAUDE.md` is TRACKED and not gitignored (226 files under .claude/ are tracked), so a
+    // self-install overwrote a committed file. No backup was taken either, and for a reason worth
+    // naming: safeCopyClaude only backs up when the existing content does NOT contain "MindForge" —
+    // and the repo's own entry file does, so it took the silent-replace path every time.
+    if (!selfInstall) {
+      safeCopyClaude(tempEntry, targetPath, { force, verbose });
+    }
 
     // ✨ STANDARD: Inject into project root and IDE-specific rules files
     if (scope === 'local' && !selfInstall) {
@@ -640,7 +654,11 @@ async function install(runtime, scope, options = {}) {
       } else {
         Theme.printResolved(`${c.bold('CLAUDE.md')} (Mirrored to project root)`);
       }
-    } else {
+    } else if (!selfInstall) {
+      // `!selfInstall` added alongside the write gate above. This branch printed the entry file name
+      // as a resolved artifact whenever the root mirror was skipped — including on a self-install,
+      // where the write no longer happens. Gating the write and leaving the print would have replaced
+      // one false claim with another, which is the failure this whole change is about.
       Theme.printResolved(c.bold(cfg.entryFile));
     }
   }
@@ -658,8 +676,22 @@ async function install(runtime, scope, options = {}) {
   // already reflects. Removed, because a special case that does nothing implies claude is handled
   // differently here when it is not.
 
+  // GATED ON !selfInstall for the same reason as the entry file above. Measured on a self-install into
+  // a clone of this repository: 149 TRACKED files under .claude/commands/ overwritten, zero backups,
+  // while the installer printed "Self-install detected — skipping framework file copy". It was not
+  // skipping; it said so and then copied.
+  //
+  // Skipping is correct rather than merely safe. In this repository `.agent/mindforge` and
+  // `.claude/commands/mindforge` are BOTH committed and legitimately differ (an audit measured 146
+  // entries differing between the two tracked copies, mostly frontmatter quoting). Copying does not
+  // "sync" them, it silently picks one side and destroys the other's committed state — inside a git
+  // working tree, with no prompt, under a message saying it did nothing.
+  //
+  // verifyInstall still passes afterwards: every file it requires under cmdsDir (help.md,
+  // init-project.md, health.md, execute-phase.md, security-scan.md) is tracked, so the files it checks
+  // are present from git rather than from this copy. Verified, not assumed.
   let totalCount = 0;
-  cmdSources.forEach(source => {
+  (selfInstall ? [] : cmdSources).forEach(source => {
     if (!fsu.exists(source.src)) return;
 
     const files = fsu.listFiles(source.src).filter(f => f.endsWith('.md'));
@@ -1158,8 +1190,21 @@ async function run(args) {
   }
 
   if (!isUninstall) {
-    const stats = collectManifestStats();
-    Theme.printSuccessV2(runtime, scope, stats);
+    // collectManifestStats() counts the SOURCE tree, not what was written. For a normal install those
+    // coincide, so the panel is accidentally accurate. For a self-install nothing is copied, and the
+    // panel announced "ACTIONS 221 — Total autonomous commands deployed" and
+    // "Skill Packs (123 verified)" for a run that deployed and verified nothing: a summary of the
+    // repository presenting itself as an installation report. Gating it is the honest minimum. Making
+    // the panel report MEASURED counts on every path is a larger change and is deliberately not
+    // attempted here — it would need the install to return what it wrote.
+    if (isSelfInstall()) {
+      Theme.printResolved(c.bold('Self-install complete — no framework files were written'));
+      Theme.printStatus(c.dim('This repository IS the framework: its committed .claude/ and .agent/ '
+        + 'trees are the source, so there was nothing to deploy.'), 'info');
+    } else {
+      const stats = collectManifestStats();
+      Theme.printSuccessV2(runtime, scope, stats);
+    }
   } else {
     Theme.printResolved(c.bold('MindForge uninstalled'));
   }
