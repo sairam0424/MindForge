@@ -83,7 +83,7 @@ Document completed checks in `.planning/RELEASE-CHECKLIST.md`.
 - [ ] C06 — Policy engine evaluates all intents
 - [ ] C07 — Blast radius scoring functional
 - [ ] C08 — ADR requirement enforced for architecture changes
-- [ ] C09 — Merkle-linked audit trail integrity
+- [ ] C09 — hash-chained audit trail integrity (SHA-256 back-links)
 - [ ] C10 — Plugin permission model enforced
 - [ ] D01 — docs/reference/commands.md exists
 - [ ] D02 — docs/security/SECURITY.md has disclosure policy

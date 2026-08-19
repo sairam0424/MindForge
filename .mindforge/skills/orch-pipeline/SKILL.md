@@ -128,7 +128,7 @@ Each phase delegates — it does not do the work inline.
   and `security-auditor` / `penetration-tester` whenever the diff touches a
   security trigger.
 - **6. Commit** — conventional commits (`feat:` / `fix:` / `refactor:` / …), one
-  per logical chunk, **+ a Merkle-linked AUDIT.jsonl entry per commit**. → **GATE 2.**
+  per logical chunk, **+ a hash-chained AUDIT.jsonl entry per commit**. → **GATE 2.**
 
 ---
 
@@ -166,7 +166,7 @@ This family is **gated, not autonomous**:
    work, the manual security overhead is completed here before approval.
 2. **GATE 2 — before Commit.** Present the diff summary and proposed conventional
    commit messages; do not commit until the user confirms. Each confirmed commit
-   writes a Merkle-linked AUDIT.jsonl entry (below).
+   writes a hash-chained AUDIT.jsonl entry (below).
 
 Everything between the gates flows without stopping.
 
@@ -227,7 +227,7 @@ On user confirmation at Gate 2, for **each** logical commit:
 
 1. Commit with a **conventional** message scoped to one logical change:
    `feat(<scope>): …` / `fix(<scope>): …` / `refactor(<scope>): …` / etc.
-2. Append a **Merkle-linked** AUDIT.jsonl entry to `.planning/AUDIT.jsonl`. Each
+2. Append a **hash-chained** AUDIT.jsonl entry to `.planning/AUDIT.jsonl`. Each
    entry sets `previous_hash` to the prior entry's `_hash` and computes its own
    `_hash` (per `.mindforge/audit/AUDIT-SCHEMA.md`):
 
@@ -263,7 +263,7 @@ On user confirmation at Gate 2, for **each** logical commit:
       security trigger was touched; `/mindforge:security-scan` passed PRE-COMMIT
       with no unaddressed Medium+ findings.
 - [ ] Commits are conventional and scoped to one logical change.
-- [ ] Each commit wrote a Merkle-linked AUDIT.jsonl entry (`previous_hash`/`_hash`).
+- [ ] Each commit wrote a hash-chained AUDIT.jsonl entry (`previous_hash`/`_hash`).
 - [ ] New / changed behavior has tests; coverage ≥ 80%.
 
 ---

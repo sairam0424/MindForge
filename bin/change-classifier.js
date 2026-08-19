@@ -41,7 +41,23 @@ const SENSITIVE_PATHS = [
   '.mindforge/governance/'
 ];
 
+// Scanned against the DIFF CONTENT, so security-critical code in an innocuously-named file still
+// reaches Tier 3 — that is the stated purpose of "Signal B" in
+// .mindforge/governance/change-classifier.md.
+//
+// The doc lists 19 patterns; measured, only 6 of them were detected. The second group below was
+// specified and absent: argon2 (a password hasher), the jose signing pair, paypal.,
+// createCipheriv/createDecipheriv and crypto.subtle (cipher construction), encrypt(/decrypt(,
+// role.*permission and hasPermission (authorization), and SET ROLE / GRANT (SQL privilege
+// changes). tests/governance.test.js pins every documented pattern against the live set, so the
+// doc and this array cannot drift apart again.
+//
+// Adding them cost nothing measurable: over the last 40 commits they caught ZERO additional
+// changes, because anything they would flag was already Tier 3 by path or by one of the broad
+// substring patterns above. So this closes a documented gap without moving the Tier-3 rate, which
+// sat at 50% (path OR pattern) before and after.
 const SENSITIVE_PATTERNS = [
+  // broad substring signals
   /jwt/i,
   /bcrypt/i,
   /stripe/i,
@@ -49,7 +65,20 @@ const SENSITIVE_PATTERNS = [
   /password/i,
   /secret/i,
   /token/i,
-  /PII/
+  /PII/,
+  // the specified-but-missing set
+  /argon2/i,
+  /jose\.(sign|verify)/i,
+  /paypal\./i,
+  /createCipheriv/,
+  /createDecipheriv/,
+  /crypto\.subtle/,
+  /\bencrypt\(/,
+  /\bdecrypt\(/,
+  /role.*permission/i,
+  /hasPermission/,
+  /\bSET ROLE\b/i,
+  /\bGRANT\b/
 ];
 
 /** True if `rev` resolves to an object in this clone (false on a shallow/partial fetch). */

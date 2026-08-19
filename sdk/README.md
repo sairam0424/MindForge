@@ -1,17 +1,17 @@
-# @mindforge/sdk
+# mindforge-sdk
 
 TypeScript SDK for embedding MindForge in tools, dashboards, and CI pipelines.
 
 ## Installation
 
 ```bash
-npm install @mindforge/sdk
+npm install mindforge-sdk
 ```
 
 ## Quick start
 
 ```typescript
-import { MindForgeClient } from '@mindforge/sdk';
+import { MindForgeClient } from 'mindforge-sdk';
 
 const client = new MindForgeClient({
   projectRoot: '/path/to/project',
@@ -55,7 +55,7 @@ Reconnection is automatic (5 attempts, linear backoff). A reconnect that fails i
 event fires with the reason, so a dead stream is observable rather than silent.
 
 ```typescript
-import { MindForgeEventStream } from '@mindforge/sdk';
+import { MindForgeEventStream } from 'mindforge-sdk';
 
 const stream = new MindForgeEventStream();
 await stream.start(7337);

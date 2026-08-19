@@ -21659,7 +21659,36 @@ var WebSocketEventStream = class {
     this.maxReconnectAttempts = 5;
     this.listeners = /* @__PURE__ */ new Map();
   }
+  /**
+   * Dispatch to registered listeners. One dispatch path for messages, reconnect failures and
+   * stream death, so those three cannot drift apart in how they treat a throwing listener.
+   *
+   * A missing 'error' listener does NOT mean silence: a reconnect that fails invisibly leaves the
+   * consumer believing the stream is live, which is the failure mode this class was already in.
+   */
+  emit(eventType, data) {
+    const handlers = this.listeners.get(eventType);
+    if (!handlers || handlers.size === 0) {
+      if (eventType === "error" && typeof process !== "undefined" && process.stderr) {
+        const message = data instanceof Error ? data.message : String(data);
+        process.stderr.write(`[MindForge SDK] event stream error: ${message}
+`);
+      }
+      return;
+    }
+    handlers.forEach((handler) => {
+      try {
+        handler(data);
+      } catch {
+      }
+    });
+  }
   async connect() {
+    if (typeof WebSocket === "undefined") {
+      throw new Error(
+        "WebSocketEventStream requires a global WebSocket: Node 22+, a browser, or the optional 'ws' package installed and assigned to globalThis.WebSocket. This SDK declares no runtime dependencies, so it does not install one for you."
+      );
+    }
     return new Promise((resolve, reject) => {
       this.ws = new WebSocket(this.url);
       this.ws.onopen = () => {
@@ -21669,16 +21698,22 @@ var WebSocketEventStream = class {
       this.ws.onerror = (err) => reject(err);
       this.ws.onmessage = (event) => {
         try {
-          const parsed = JSON.parse(event.data.toString());
-          const handlers = this.listeners.get(parsed.type) || /* @__PURE__ */ new Set();
-          handlers.forEach((handler) => handler(parsed.data));
+          const parsed = JSON.parse(String(event.data));
+          this.emit(parsed.type, parsed.data);
         } catch {
         }
       };
       this.ws.onclose = () => {
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
           this.reconnectAttempts++;
-          setTimeout(() => this.connect(), 1e3 * this.reconnectAttempts);
+          setTimeout(() => {
+            this.connect().catch((err) => this.emit("error", err));
+          }, 1e3 * this.reconnectAttempts);
+        } else if (this.maxReconnectAttempts > 0) {
+          this.emit("close", {
+            reason: "reconnect attempts exhausted",
+            attempts: this.reconnectAttempts
+          });
         }
       };
     });
@@ -21867,7 +21902,8 @@ var MindForgeClient = class extends import_events.EventEmitter {
     await eventSource.connect();
     const chunks = [];
     let resolveNext = null;
-    eventSource.on("stream_chunk", (data) => {
+    eventSource.on("stream_chunk", (raw) => {
+      const data = raw;
       if (resolveNext) {
         resolveNext({ value: data, done: data.type === "done" });
         resolveNext = null;

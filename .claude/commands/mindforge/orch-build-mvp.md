@@ -42,7 +42,7 @@ with `$ARGUMENTS` as the doc path and `operation = build-mvp` (default floor:
    > the orch-pipeline skill.
 4. `/mindforge:review` (+ the `quick.md` security auto-trigger / `security-reviewer`
    on any security-trigger slice), then commit the scaffold and each slice as
-   separate conventional `feat(...)` commits, each writing a Merkle-linked
+   separate conventional `feat(...)` commits, each writing a hash-chained
    AUDIT.jsonl entry. → **GATE 2**.
 
 If `$ARGUMENTS` is empty, ask the user for the path to the design/spec doc.

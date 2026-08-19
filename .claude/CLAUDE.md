@@ -78,7 +78,7 @@ Prioritize based on `[REACTIVE_MODE]` in MINDFORGE.md. These are the **Quality g
 - [ ] **AgRevOps Check**: Verify ROI trends and Security Health Score via `/api/revops`.
 - [ ] **PLAN-FIRST RULE**: Never code without a verified XML plan.
 - [ ] **Verify First**: Never task-complete without successful `<verify>` output.
-- [ ] **Audit Always**: Write a JSONL entry for every significant session event. All entries must be Merkle-linked.
+- [ ] **Audit Always**: Write a JSONL entry for every significant session event. The result is a hash-chained append-only audit log (SHA-256 back-links): each entry sets `previous_hash` to the prior entry's `_hash`.
 
 ---
 

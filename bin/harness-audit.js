@@ -114,6 +114,25 @@ function fileExists(rootDir, relativePath) {
   return fs.existsSync(path.join(rootDir, relativePath));
 }
 
+/**
+ * True when ANY of `relativePaths` exists under rootDir.
+ *
+ * Several checks below asked for one hardcoded path — `.agent/hooks/mindforge-context-monitor.js`,
+ * `bin/hooks/instinct-capture-hook.js` — which is the SOURCE-REPO layout. The installer copies
+ * `.agent/hooks/` to `<localDir>/hooks/`, and `bin/` is not present in a consumer project at all, so
+ * an installed tree fails these checks while containing the very same working scripts under a
+ * different name. Measured: a fresh `--claude --local` install scores 36/76 largely on checks whose
+ * subject it genuinely has.
+ *
+ * That made the audit unusable as an install-root gate — it under-reported a real install rather
+ * than over-reporting it, which is the safer direction but still wrong. Accepting either layout is a
+ * fix to the CHECK, not a relaxation: each alternative names a specific file that must exist, and
+ * absence of all of them still fails.
+ */
+function fileExistsAny(rootDir, relativePaths) {
+  return relativePaths.some((rel) => fileExists(rootDir, rel));
+}
+
 function readText(rootDir, relativePath) {
   return fs.readFileSync(path.join(rootDir, relativePath), 'utf8');
 }
@@ -178,7 +197,21 @@ function hookWired(rootDir, settingsRel, hookId) {
     for (const entry of (group && group.hooks) || []) {
       const command = String((entry && entry.command) || '');
       if (!command.includes(hookId)) continue;
-      const scripts = command.split(/\s+/).map((t) => t.replace(/^"|"$/g, '')).filter((t) => t.endsWith('.js'));
+      // Strip a leading environment anchor before resolving. A registered command may legitimately
+      // be root-anchored rather than cwd-relative — `node "$CLAUDE_PROJECT_DIR/.claude/hooks/..."` —
+      // and Claude Code has set CLAUDE_PROJECT_DIR in the hook environment since 1.0.57. Without
+      // this, path.join(rootDir, '$CLAUDE_PROJECT_DIR/.claude/hooks/x.js') is checked literally, so
+      // an env-anchored registration reads as UNRESOLVED and the check reports a correctly wired
+      // hook as permitting. Handles $VAR/, ${VAR}/ and ${VAR:-default}/.
+      //
+      // Note this only affects the EXISTENCE probe. It is deliberately not a general shell expander:
+      // an anchor pointing somewhere other than the audited root cannot be validated from here, and
+      // pretending otherwise would be the same class of defect as the literal check it replaces.
+      const ENV_ANCHOR = /^\$\{?[A-Z_][A-Z0-9_]*(?::-[^}]*)?\}?\//;
+      const scripts = command.split(/\s+/)
+        .map((t) => t.replace(/^"|"$/g, ''))
+        .map((t) => t.replace(ENV_ANCHOR, ''))
+        .filter((t) => t.endsWith('.js'));
       const unresolved = scripts.filter((rel) => !fs.existsSync(path.join(rootDir, rel)));
       if (unresolved.length) {
         return { ok: false, why: `${hookId} registered but ${unresolved.join(', ')} does not exist under ${rootDir} — run-with-flags exits 0 on a miss, so it permits` };
@@ -289,7 +322,9 @@ function getChecks(rootDir) {
       category: 'Context Efficiency', points: 3, scopes: ['repo', 'hooks'],
       path: '.agent/hooks/mindforge-context-monitor.js',
       description: 'Context-monitor hook exists',
-      pass: fileExists(rootDir, '.agent/hooks/mindforge-context-monitor.js'),
+      // Repo layout OR installed layout — the installer copies .agent/hooks/ to <localDir>/hooks/.
+      pass: fileExistsAny(rootDir, ['.agent/hooks/mindforge-context-monitor.js',
+        '.claude/hooks/mindforge-context-monitor.js']),
       fix: 'Implement .agent/hooks/mindforge-context-monitor.js for context-pressure tracking.',
     },
     {
@@ -349,7 +384,9 @@ function getChecks(rootDir) {
       category: 'Memory & Learning', points: 3, scopes: ['repo', 'hooks'],
       path: 'bin/hooks/instinct-capture-hook.js',
       description: 'Instinct-capture hook exists',
-      pass: fileExists(rootDir, 'bin/hooks/instinct-capture-hook.js'),
+      // bin/ does not exist in a consumer project; the installed copy lands under .claude/hooks/.
+      pass: fileExistsAny(rootDir, ['bin/hooks/instinct-capture-hook.js',
+        '.claude/hooks/instinct/instinct-capture-hook.js']),
       fix: 'Add bin/hooks/instinct-capture-hook.js for auto-capture of instincts.',
     },
     {
@@ -401,7 +438,13 @@ function getChecks(rootDir) {
       category: 'Security Guardrails', points: 3, scopes: ['repo', 'hooks', 'security'],
       path: 'bin/security/trust-gate-hook.js',
       description: 'TrustGate Bash guard exists',
-      pass: fileExists(rootDir, 'bin/security/trust-gate-hook.js') && fileExists(rootDir, 'bin/security/trust-boundaries.js'),
+      // Both files must be present, in EITHER the repo layout or the installed one. Requiring one
+      // from each layout would be satisfiable by a half-copied install, so the pairs are evaluated
+      // whole rather than per-file.
+      pass: (fileExists(rootDir, 'bin/security/trust-gate-hook.js')
+        && fileExists(rootDir, 'bin/security/trust-boundaries.js'))
+        || (fileExists(rootDir, '.claude/hooks/security/trust-gate-hook.js')
+          && fileExists(rootDir, '.claude/hooks/security/trust-boundaries.js')),
       fix: 'Restore bin/security/trust-gate-hook.js + trust-boundaries.js.',
     },
     {
@@ -409,7 +452,8 @@ function getChecks(rootDir) {
       category: 'Security Guardrails', points: 2, scopes: ['repo', 'hooks', 'security'],
       path: '.agent/hooks/mindforge-block-no-verify.js',
       description: 'Git-hook-bypass guard exists',
-      pass: fileExists(rootDir, '.agent/hooks/mindforge-block-no-verify.js'),
+      pass: fileExistsAny(rootDir, ['.agent/hooks/mindforge-block-no-verify.js',
+        '.claude/hooks/mindforge-block-no-verify.js']),
       fix: 'Add .agent/hooks/mindforge-block-no-verify.js to block --no-verify.',
     },
     {
@@ -425,8 +469,15 @@ function getChecks(rootDir) {
       category: 'Security Guardrails', points: 2, scopes: ['repo', 'hooks', 'security'],
       path: '.agent/settings.json',
       description: 'Bash guards wired in BOTH .claude and the .agent Gemini mirror (paths resolve)',
+      // The .agent mirror is required only WHEN PRESENT. No install channel writes it, and this
+      // repo's own spec records its BeforeTool/AfterTool events as never firing — so requiring it
+      // unconditionally made this check unpassable on every install root even with Claude Code
+      // enforcement fully wired. It measured layout, not enforcement. Absent mirror: .claude
+      // alone decides. Present mirror: BOTH must be wired, so a half-configured Gemini setup
+      // still fails.
       pass: hookWired(rootDir, '.claude/settings.json', 'trust-gate-hook').ok
-        && hookWired(rootDir, '.agent/settings.json', 'trust-gate-hook').ok,
+        && (hookWired(rootDir, '.agent/settings.json', 'trust-gate-hook').ok
+          || !fileExists(rootDir, '.agent/settings.json')),
       fix: 'Wire trust-gate into a Bash PreToolUse matcher in BOTH .claude/settings.json and '
         + '.agent/settings.json, with command paths that RESOLVE from the audited root. A '
         + 'registered command whose script is absent exits 0 and permits — see hookWired().',
@@ -503,7 +554,7 @@ function getChecks(rootDir) {
       id: 'gov-audit-trail',
       category: 'Governance & Identity', points: 2, scopes: ['repo'],
       path: '.mindforge/audit/',
-      description: 'Merkle-linked audit trail directory exists',
+      description: 'Hash-chained audit trail directory exists',
       pass: fileExists(rootDir, '.mindforge/audit') || fileExists(rootDir, '.planning'),
       fix: 'Ensure the audit-trail directory (.mindforge/audit/) is present.',
     },
@@ -559,7 +610,15 @@ function buildReport(scope, options = {}) {
 }
 
 function printText(report) {
-  console.log(`MindForge Harness Audit (${report.scope}): ${report.overall_score}/${report.max_score}`);
+  // The header names the SCOPE, which is independent of --root. Auditing an installed project with
+  // `--root <dir>` therefore used to print "MindForge Harness Audit (repo)" — so an install-root
+  // score read as a repo score. Measured: the repo scores 76/76 while a fresh `--claude --local`
+  // install of the SAME tree scores 36/76 with Security Guardrails 1/10 and 17 of 31 checks failing.
+  // Two very different numbers under one identical label is how the enforcement gap stayed invisible.
+  // When the audited root is not the cwd, say so in the header rather than only in the Root: line.
+  const auditedElsewhere = path.resolve(report.root_dir) !== path.resolve(process.cwd());
+  const where = auditedElsewhere ? `${report.scope}, external root` : report.scope;
+  console.log(`MindForge Harness Audit (${where}): ${report.overall_score}/${report.max_score}`);
   console.log(`Root: ${report.root_dir}`);
   console.log('');
 

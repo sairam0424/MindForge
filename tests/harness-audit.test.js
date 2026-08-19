@@ -346,22 +346,57 @@ test('the CHECK rejects a settings file whose hook script is absent (substring c
 });
 
 test('the audit reports Security Guardrails HONESTLY against a real install', () => {
-  // The end-to-end consequence, and the tripwire for REG-01. An install registers no hooks at
-  // all, so this category must NOT score full marks. When REG-01 lands and hooks are genuinely
-  // wired, this fails and must be rewritten to assert the opposite — which is the point.
+  // REG-01 HAS NOW LANDED, and this test was rewritten to assert the opposite, as its previous
+  // version instructed. It used to pin the gap: "an install writes no .claude/settings.json, so
+  // trust-gate cannot be wired there". A real install now registers 8 hooks and the three deny-class
+  // ids are verified blocking by execution during the installer's own preflight.
+  //
+  // What it asserts now is the thing that actually matters and that a score alone cannot show: that
+  // trust-gate is wired AND that driving the registered command with a real payload produces exit 2.
+  // A category score is a proxy; an exit code is the product.
   const project = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-auditinstall-'));
   try {
     fs.writeFileSync(path.join(project, 'package.json'),
       JSON.stringify({ name: 'their-app', version: '1.0.0' }, null, 2));
+    // HOME confined to the scratch project. installer-core.js:253 resolves its registry through
+    // os.homedir(), which honours $HOME, so the real HOME made every run of this test append a
+    // mf-auditinstall-* path to ~/.mindforge/registry.json — 55 such entries were measured in a real
+    // registry. tests/no-home-leak.test.js now bans the pattern repo-wide.
+    const homeDir = path.join(project, '.scratch-home');
+    fs.mkdirSync(homeDir, { recursive: true });
     const inst = spawnSync(process.execPath,
       [path.join(REPO_ROOT, 'bin', 'install.js'), '--claude', '--local'],
-      { cwd: project, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: process.env.HOME, CI: '1' } });
+      { cwd: project, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: homeDir, CI: '1' } });
     assert.strictEqual(inst.status, 0, `install failed: ${(inst.stderr || '').slice(0, 500)}`);
 
     const wired = hookWired(project, '.claude/settings.json', 'trust-gate-hook');
-    assert.strictEqual(wired.ok, false,
-      'an install writes no .claude/settings.json, so trust-gate cannot be wired there. If this ' +
-      'now passes, REG-01 has landed — replace this test with one asserting a real DENY.');
+    assert.strictEqual(wired.ok, true,
+      `an install must now register trust-gate with resolvable paths. Got: ${wired.why}`);
+
+    // The assertion the old test asked for: a REAL DENY, not a wiring claim. Read the command back
+    // out of the file the installer wrote and execute it.
+    const settings = JSON.parse(fs.readFileSync(path.join(project, '.claude/settings.json'), 'utf8'));
+    // PAIR THE PAYLOAD TO THE HOOK. Each deny-class hook guards a different surface, so a generic
+    // "bad" payload proves nothing: trust-gate answers only high-impact commands
+    // (trust-boundaries.isHighImpact), and `git commit --no-verify` belongs to
+    // mindforge-block-no-verify. Driving trust-gate with a --no-verify payload returns exit 0 —
+    // correctly — and reads as a broken gate. Measured three times while writing these tests.
+    const cmd = Object.values(settings.hooks).flat()
+      .flatMap((g) => g.hooks || []).map((h) => h.command)
+      .find((c) => / mindforge-block-no-verify /.test(c));
+    assert.ok(cmd, 'mindforge-block-no-verify must appear in a registered command');
+    const denied = spawnSync('/bin/sh', ['-c', cmd], {
+      cwd: project, encoding: 'utf8',
+      env: { PATH: process.env.PATH, HOME: homeDir, CLAUDE_PROJECT_DIR: project },
+      input: JSON.stringify({
+        hook_event_name: 'PreToolUse', tool_name: 'Bash',
+        tool_input: { command: 'git commit --no-verify -m x' },
+      }),
+    });
+    assert.strictEqual(denied.status, 2,
+      `the registered mindforge-block-no-verify command must answer --no-verify with exit 2, got ${denied.status}. ` +
+      'Exit 0 is a permit; exit 1 is outside the hook contract and a harness reads it as an error, ' +
+      `not a deny. stderr: ${(denied.stderr || '').slice(0, 200)}`);
 
     // `categories` is an object keyed by name -> {score, earned, max}, not an array. Scope 'repo'
     // is what `npm run harness:gate` runs; scope 'security' against an install yields ZERO
@@ -373,13 +408,26 @@ test('the audit reports Security Guardrails HONESTLY against a real install', ()
     assert.ok(guardrails.max > 0,
       'the category must have applicable checks, or "score < 10" below proves nothing — a 0/0 ' +
       `category satisfies it trivially. Got ${JSON.stringify(guardrails)}`);
+    // Still below 10 after REG-01: the permissions.deny baseline and the .agent mirror remain
+    // unwritten by design, so a full sweep would mean the rubric had stopped discriminating.
     assert.ok(guardrails.score < 10,
-      `Security Guardrails scored ${guardrails.score}/10 for an install that registers NO hooks. ` +
-      'That is the substring check returning — the score must reflect enforcement, not file text.');
-    // And the specific check must be the one reporting it, not some unrelated deduction.
+      `Security Guardrails scored ${guardrails.score}/10 on an install. REG-01 registers hooks but ` +
+      'deliberately writes no permissions key and no .agent mirror, so a 10/10 here would mean the ' +
+      'category had stopped measuring those.');
+    assert.ok(guardrails.score >= 5,
+      `Security Guardrails scored only ${guardrails.score}/10 — REG-01 should have raised this to ` +
+      'roughly 6/10. A drop means registration regressed.');
+    // The specific checks, not an aggregate. security-bash-guard-both used to be pinned as FAILING —
+    // that WAS the gap. REG-01 closed it, so it must now PASS, and what remains failing must be the
+    // things REG-01 deliberately does not do rather than anything it broke.
     const failed = report.checks.filter((c) => !c.pass).map((c) => c.id);
-    assert.ok(failed.includes('security-bash-guard-both'),
-      `security-bash-guard-both must be among the failures for an install. Failing: ${failed.join(', ')}`);
+    assert.ok(!failed.includes('security-bash-guard-both'),
+      'security-bash-guard-both must now PASS on an install — REG-01 registers trust-gate with '
+      + `resolvable paths. Still failing: ${failed.join(', ')}`);
+    assert.ok(failed.includes('security-deny-baseline'),
+      'security-deny-baseline must still fail: REG-01 writes no permissions key, deliberately, so it '
+      + 'touches no top-level setting other than hooks. If this now passes, something started writing '
+      + `permissions, which is outside REG-01's declared scope. Failing: ${failed.join(', ')}`);
   } finally { fs.rmSync(project, { recursive: true, force: true }); }
 });
 

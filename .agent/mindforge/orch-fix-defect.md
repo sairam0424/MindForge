@@ -33,7 +33,7 @@ with `$ARGUMENTS` as the request and `operation = fix-defect`. The engine will:
    this a fix, not a tweak.)
 3. `/mindforge:review` (+ the `quick.md` security auto-trigger / `security-reviewer`
    if the defect sits in a sensitive path).
-4. Commit as a conventional `fix(...)` commit + Merkle-linked AUDIT.jsonl entry.
+4. Commit as a conventional `fix(...)` commit + hash-chained AUDIT.jsonl entry.
    → **GATE 2** (confirm before commit).
 
 Use this only when behavior is **broken/wrong** — not for intentional changes

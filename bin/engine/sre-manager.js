@@ -69,7 +69,7 @@ class SREManager {
       return { status: 'PLAINTEXT', content: thoughtChain };
     }
 
-    // v5 Pillar VI: Merkle-style Cumulative Hash Chain
+    // v5 Pillar VI: cumulative SHA-256 hash chain (linear back-links, no hash tree)
     const enclaveData = this.activeEnclaves.get(enclaveId);
     const prevHash = enclaveData.cumulativeHash;
     const digest = crypto.createHash('sha256').update(thoughtChain).digest('hex');

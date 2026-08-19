@@ -79,7 +79,7 @@ audit has a real target, not an abstraction.
 | 9 | Answer shaping | SWARM-SUMMARY consolidation | Format corruption in the final response |
 | 10 | Platform rendering | Dashboard (localhost:7339) / CLI / API transport | Transport-layer mutation of a valid answer |
 | 11 | Hidden repair loops | soul-engine ADS rewrite + Temporal hindsight regeneration | Silent fallback/retry running a second LLM pass |
-| 12 | Persistence | auto-state.json + Merkle audit log | Expired state or cached artifacts reused as live evidence |
+| 12 | Persistence | auto-state.json + hash-chained audit log | Expired state or cached artifacts reused as live evidence |
 
 ### Common Failure Patterns
 
@@ -148,7 +148,7 @@ Define what you're auditing:
 Gather evidence from the codebase:
 - **Source code** — swarm loop, hooks_route tool router, shard admission, prompt
   assembly across the source-of-truth hierarchy
-- **Logs** — NexusTracer session traces, Merkle-linked AUDIT entries, tool-call
+- **Logs** — NexusTracer session traces, hash-chained AUDIT entries, tool-call
   records
 - **Config** — MINDFORGE.md parameters, tool schemas, PersonaFactory patches,
   provider settings

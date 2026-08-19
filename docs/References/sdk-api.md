@@ -2,7 +2,7 @@
 
 ## Package
 
-`@mindforge/sdk`
+`mindforge-sdk`
 
 ## Exports
 
