@@ -31,7 +31,7 @@ action are hooks, and **no install channel currently registers them.**
 
 Why, specifically:
 
-- **No hook configuration ships, and nothing generates one.** `package.json` `files[]` has 47
+- **No hook configuration ships, and nothing generates one.** `package.json` `files[]` has 48
   entries and none contains `settings`, so neither `.claude/settings.json` nor
   `.agent/settings.json` is published. All references to those paths in `bin/` are reads or
   metadata strings — there is no code that writes or merges one. `bin/harness-audit.js:335`

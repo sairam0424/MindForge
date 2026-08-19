@@ -115,12 +115,18 @@ jobs:
               body
             });
 
+      # Uploads only what this workflow writes. CODE-REVIEW.md and CROSS-REVIEW.md were listed
+      # here and in mindforge-ai-review.yml, but NOTHING in the repository writes either name —
+      # bin/review/cross-review-engine.js contains no writeFileSync at all. They produced a
+      # not-found warning on every run while /tmp/review-summary.md (written at :77/:89/:94) carried
+      # the actual content, so the upload worked and the dead entries were merely noise. Removed
+      # rather than left in: a path list that names files nothing produces invites the assumption
+      # that they exist.
       - name: Upload Review Artifacts
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: ai-review-reports
+          if-no-files-found: warn
           path: |
-            CODE-REVIEW.md
-            CROSS-REVIEW.md
             /tmp/review-summary.md
