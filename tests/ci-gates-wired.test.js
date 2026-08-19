@@ -23,6 +23,7 @@
 const assert = require('node:assert');
 const fs = require('node:fs');
 const path = require('node:path');
+const { execFileSync } = require('node:child_process');
 
 const REPO_ROOT = path.join(__dirname, '..');
 const CI = path.join(REPO_ROOT, '.github', 'workflows', 'mindforge-ci.yml');
@@ -204,6 +205,91 @@ test('the real Tier-3 evaluator is wired and its approval check can reject', () 
   const rec = fs.readFileSync(path.join(REPO_ROOT, 'bin', 'governance', 'approval-record.js'), 'utf8');
   assert.match(rec, /currentVersion/, 'records must be bound to the release being built');
   assert.match(rec, /expires_at/, 'records must expire');
+});
+
+// ── Guards that generalise, rather than pinning one instance ─────────────────
+
+test('no workflow guards a step on hashFiles() of an ABSOLUTE path', () => {
+  // hashFiles() only matches paths inside GITHUB_WORKSPACE, so `hashFiles('/tmp/x') != ''` is
+  // permanently false and the guarded step never runs — while the job still reports success.
+  //
+  // Measured before the fix: mindforge-ai-review.yml:60 guarded "Post AI Review Comment" on
+  // hashFiles('/tmp/mindforge-review.md'), and that step was `skipped` in all five most recent runs
+  // of the workflow while "Run AI Review" succeeded and the check went green.
+  //
+  // What makes this worth a generalised rule rather than a one-line fix: mindforge-ci.yml ALREADY
+  // contained the correct pattern and a comment warning against exactly this — "hashFiles only
+  // matches inside GITHUB_WORKSPACE, so guarding on an absolute /tmp path would be permanently
+  // false and would silently suppress a genuine review". The knowledge was one directory entry
+  // away and was not applied. A rule catches the next copy; a fix does not.
+  const offenders = [];
+  for (const wf of workflows) {
+    for (const line of wf.text.split('\n')) {
+      if (/^\s*#/.test(line)) continue;               // prose about the rule is not a violation
+      const m = line.match(/hashFiles\(\s*['"]([^'"]+)['"]/);
+      if (m && m[1].startsWith('/')) offenders.push(`${wf.name}: ${line.trim()}`);
+    }
+  }
+  assert.deepStrictEqual(offenders, [],
+    'hashFiles() on an absolute path is permanently false, so the guarded step silently never ' +
+    'runs. Guard on a step OUTPUT instead, or write the file inside the workspace:\n  ' +
+    offenders.join('\n  '));
+});
+
+test('every artifact path a workflow uploads is one something actually writes', () => {
+  // CODE-REVIEW.md and CROSS-REVIEW.md were listed in two workflows' upload-artifact paths.
+  // NOTHING in the repository writes either name — bin/review/cross-review-engine.js contains no
+  // writeFileSync at all — so mindforge-ai-review.yml's upload step reported success having
+  // uploaded nothing, and the run it was measured on produced zero artifacts.
+  //
+  // Only workspace-relative names are checked. Absolute paths like /tmp/review-summary.md are
+  // legitimate — upload-artifact accepts them, measured at 1226 bytes on a real run — and the file
+  // is written by a shell redirect this scan cannot follow.
+  // Evidence must be an actual WRITE, not a mention. My first version collected the workflow texts
+  // wholesale as "writers", which meant a filename in an upload list counted as evidence for
+  // itself — circular, and a control that re-added CODE-REVIEW.md passed. Now it looks for write
+  // syntax: a shell redirect, a tee, or a writeFileSync naming the file.
+  const repoFiles = new Set(
+    execFileSync('git', ['ls-files'], { cwd: REPO_ROOT, encoding: 'utf8' }).split('\n').filter(Boolean));
+
+  const searchable = [
+    ...workflows.map((w) => w.text),
+    ...fs.readdirSync(path.join(REPO_ROOT, 'bin', 'review'))
+      .map((f) => fs.readFileSync(path.join(REPO_ROOT, 'bin', 'review', f), 'utf8')),
+  ].join('\n');
+
+  /** Is there syntax anywhere that WRITES this filename? */
+  const isWritten = (name) => {
+    const n = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`(>>?\\s*\\S*${n}|tee\\s+\\S*${n}|writeFileSync\\(\\s*['"\`][^'"\`]*${n})`).test(searchable);
+  };
+
+  const offenders = [];
+  for (const wf of workflows) {
+    const lines = wf.text.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      if (!/uses:\s*actions\/upload-artifact/.test(lines[i])) continue;
+      for (let j = i; j < Math.min(i + 20, lines.length); j++) {
+        const cand = lines[j].trim();
+        if (!/^[A-Za-z0-9._-]+\.(md|json|txt|log)$/.test(cand)) continue;
+        if (repoFiles.has(cand)) continue;   // tracked in the repo
+        if (isWritten(cand)) continue;       // demonstrably written somewhere
+        offenders.push(`${wf.name}: uploads "${cand}" — nothing writes or tracks it`);
+      }
+    }
+  }
+  assert.deepStrictEqual(offenders, [],
+    'an upload step that names a file nothing produces reports success having uploaded nothing:\n  ' +
+    offenders.join('\n  '));
+});
+
+test('the AI review comment step keys off a step output, not a file probe', () => {
+  const wf = workflows.find((w) => w.name === 'mindforge-ai-review.yml');
+  assert.ok(wf, 'mindforge-ai-review.yml must exist');
+  assert.match(wf.text, /if:\s*steps\.review\.outputs\.produced\s*==\s*'true'/,
+    'the post step must be gated on the review step publishing produced=true');
+  assert.match(wf.text, /produced=true/,
+    'and the review step must actually publish that output, or the guard can never be satisfied');
 });
 
 console.log(`\nCI Gates Wired: ${passed} passed, ${failed} failed`);
