@@ -44,17 +44,57 @@ const GENERIC_TRIGGERS = new Set([
   'response', 'handler', 'controller', 'repository', 'schema',
 ]);
 
+// ── Trigger frontmatter, in both grammars ─────────────────────────────────────
+//
+// THE DEFECT THIS FIXES. This parser required a YAML BLOCK list:
+//
+//     const triggersSection = frontmatter.match(/^triggers:\n((?: {2}- .+\n?)*)/m);
+//
+// The shipped corpus is written in the INLINE comma form. Measured by driving this module's real
+// parseSkill over the real .mindforge/skills tree: 232 skills, 232 with ZERO triggers, mean 0.00 —
+// 232 inline, 0 block. So every engine skill scored 0 of the 30 points `score()` awards for trigger
+// coverage (:95-99), and the suggestion at :233 told skills carrying 12 triggers to "add 25 more to
+// reach 25+ (currently 0)". Three callers — learn-cli.js, skill-registrar.js, skill-generator.js —
+// make registration decisions against that uniformly-zero scoreboard.
+//
+// bin/skill-validator.js:119 has always read the inline form (`fm.triggers.split(',')`). Two readers
+// of the same field, two incompatible grammars, and the corpus written in the one the scorer could
+// not read. The DIVERGENCE is the real defect; the regex is just where it surfaced.
+//
+// BOTH grammars are supported deliberately. The block form is not legacy cruft: all three fixtures
+// in tests/self-building-skills.test.js use it, and :209 asserts >= 24 triggers on one of them, so
+// dropping it would silently zero those fixtures and the test would still pass for the wrong reason.
+//
+// DELIBERATELY NOT DONE HERE: extracting one shared frontmatter reader so the scorer and the
+// validator cannot diverge again. That is the durable fix, but it edits bin/skill-validator.js,
+// which PR #185 is currently changing. Doing it here would collide. Follow-up once #185 lands.
+function parseTriggers(frontmatter) {
+  // Block form first. The ordering is defence in depth, not the load-bearing part — verified rather
+  // than assumed: the `\S` in the inline pattern below already makes it REJECT a block-form header,
+  // because after `triggers:` the next character is a newline and `.` does not match one. Loosen
+  // that `\S` to `.` and the inline branch starts matching block form with an EMPTY capture, so a
+  // list of triggers would silently parse as none. Two independent things prevent that; keep both.
+  // `[ \t]+` rather than the old `{2}` — two spaces is a convention, not a requirement.
+  const block = frontmatter.match(/^triggers:[ \t]*\n((?:[ \t]+-[ \t]+.+\n?)+)/m);
+  if (block) {
+    return block[1].split('\n').map((l) => l.replace(/^\s*-\s*/, '').trim()).filter(Boolean);
+  }
+
+  // Inline comma form, e.g. `triggers: a11y testing, axe-core, WCAG compliance test`.
+  const inline = frontmatter.match(/^triggers:[ \t]*(\S.*)$/m);
+  if (inline) {
+    return inline[1].split(',').map((t) => t.trim()).filter(Boolean);
+  }
+
+  return [];
+}
+
 // ── SKILL.md parser ───────────────────────────────────────────────────────────
 function parseSkill(content) {
   const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
   const frontmatter      = frontmatterMatch?.[1] || '';
 
-  // Extract triggers from frontmatter
-  const triggersSection = frontmatter.match(/^triggers:\n((?: {2}- .+\n?)*)/m);
-  const triggers        = (triggersSection?.[1] || '')
-    .split('\n')
-    .map(l => l.replace(/^\s*- /, '').trim())
-    .filter(Boolean);
+  const triggers = parseTriggers(frontmatter);
 
   // Count code blocks with ≥ 3 lines (meaningful examples, not one-liners)
   const codeBlockMatches = content.match(/```[\s\S]*?```/g) || [];

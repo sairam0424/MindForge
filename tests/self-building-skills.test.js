@@ -278,6 +278,81 @@ test('formatForPresentation: shows patterns when found', () => {
   assert.ok(output.includes('Prisma Cascade Pattern'), 'Should include pattern name');
 });
 
+// ── Trigger grammars: the scorer must read the corpus it ships with ───────────
+//
+// Every fixture above uses the YAML BLOCK form, which is why this suite was fully green while the
+// scorer could not read a single shipped skill. Fixtures proved the parser worked on input the
+// corpus does not contain. These tests assert against the CORPUS, and against both grammars.
+
+const SKILLS_ROOT = path.join(__dirname, '..', '.mindforge', 'skills');
+
+function corpusTriggerStats() {
+  const dirs = fs.readdirSync(SKILLS_ROOT, { withFileTypes: true }).filter((d) => d.isDirectory());
+  let scanned = 0, zero = 0, sum = 0, min = Infinity;
+  const zeroNames = [];
+  for (const d of dirs) {
+    const p = path.join(SKILLS_ROOT, d.name, 'SKILL.md');
+    if (!fs.existsSync(p)) continue;
+    const { triggers } = Scorer.parseSkill(fs.readFileSync(p, 'utf8'));
+    scanned++;
+    sum += triggers.length;
+    if (triggers.length < min) min = triggers.length;
+    if (triggers.length === 0) { zero++; if (zeroNames.length < 8) zeroNames.push(d.name); }
+  }
+  return { scanned, zero, zeroNames, mean: sum / scanned, min };
+}
+
+test('the scorer can read the trigger form the shipped corpus is written in', () => {
+  const s = corpusTriggerStats();
+
+  // NON-VACUITY FLOOR, first and with its own message. If the directory walk breaks or the path
+  // rots, `scanned` is 0, `zero` is 0, and every assertion below passes green having read nothing.
+  // That is this repository's signature defect, and it is the failure mode this gate is guarding.
+  assert.ok(s.scanned >= 200,
+    `only ${s.scanned} skills were read from ${SKILLS_ROOT} (232 at the time of writing). `
+    + 'The WALK is broken, not the corpus clean. Do not lower this floor to make it pass.');
+
+  assert.strictEqual(s.zero, 0,
+    `${s.zero} of ${s.scanned} shipped skills parse to ZERO triggers`
+    + (s.zeroNames.length ? ` (e.g. ${s.zeroNames.join(', ')})` : '')
+    + '. Before the inline-comma grammar was supported this was 232 of 232, so every skill scored '
+    + '0 of the 30 points score() awards for trigger coverage.');
+
+  assert.ok(s.mean >= 10,
+    `mean triggers per skill is ${s.mean.toFixed(2)} (measured 12.38). A collapse here means the `
+    + 'parser is matching something narrower than the corpus.');
+
+  // skill-validator.js:120 REJECTS a skill with fewer than 5 triggers. If the scorer and the
+  // validator disagree about how many a skill has, one of them is wrong about every skill.
+  assert.ok(s.min >= 5,
+    `the least-triggered skill parses to ${s.min} triggers, below the minimum of 5 that `
+    + 'bin/skill-validator.js:120 enforces — the two readers of this field disagree again.');
+});
+
+test('both trigger grammars parse, so neither can be dropped later', () => {
+  const INLINE = '---\nname: i\nversion: 1.0.0\nstatus: stable\n'
+    + 'triggers: alpha thing, beta thing, gamma thing, delta thing, epsilon thing\n---\n\n# I\n';
+  const BLOCK = '---\nname: b\nversion: 1.0.0\nstatus: stable\n'
+    + 'triggers:\n  - alpha thing\n  - beta thing\n  - gamma thing\n  - delta thing\n  - epsilon thing\n---\n\n# B\n';
+
+  const inline = Scorer.parseSkill(INLINE).triggers;
+  const block = Scorer.parseSkill(BLOCK).triggers;
+
+  assert.deepStrictEqual(inline, ['alpha thing', 'beta thing', 'gamma thing', 'delta thing', 'epsilon thing'],
+    `inline comma form parsed as ${JSON.stringify(inline)} — this is the form all 232 shipped skills use`);
+  assert.deepStrictEqual(block, ['alpha thing', 'beta thing', 'gamma thing', 'delta thing', 'epsilon thing'],
+    `YAML block form parsed as ${JSON.stringify(block)} — this is the form every fixture in this file `
+    + 'uses, so losing it would silently zero them all');
+
+  // Both grammars must agree, or the same skill scores differently depending on how it was written.
+  assert.deepStrictEqual(inline, block, 'the two grammars must yield identical trigger lists');
+
+  // A `triggers:` key with nothing under it must yield [], not a phantom entry.
+  assert.deepStrictEqual(
+    Scorer.parseSkill('---\nname: e\ntriggers:\ndescription: x\n---\n\n# E\n').triggers, [],
+    'an empty triggers key must parse to no triggers');
+});
+
 // ── Results ───────────────────────────────────────────────────────────────────
 console.log(`\n${'─'.repeat(55)}`);
 console.log(`Results: ${passed} passed, ${failed} failed`);
