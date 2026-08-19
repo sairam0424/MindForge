@@ -20,7 +20,11 @@
 
 'use strict';
 
-const VERSION = require('../package.json').version;
+// Resolved by package NAME, not by relative path. This file is copied into the consumer's project
+// by --with-utils, where '../package.json' is THEIR manifest — so a relative read prints their app's
+// version in the banner and in `--version`. resolveMindforgeVersion walks up for a package.json
+// whose name is 'mindforge-cc', then falls back to <cwd>/.mindforge/config.json.
+const VERSION = require('./utils/mindforge-version').resolveMindforgeVersion().version;
 const ARGS    = process.argv.slice(2);
 const Theme   = require('./wizard/theme');
 const c       = Theme.colors;

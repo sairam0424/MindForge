@@ -11,7 +11,13 @@ const SessionMemoryLoader = require('./memory/session-memory-loader');
 const Theme = require('./wizard/theme');
 const c = Theme.colors;
 
-const VERSION = require('../package.json').version;
+// A `const VERSION = require('../package.json').version` used to sit here. It was DEAD — declared,
+// never read, never exported — and it was the only reason this module could fail to load at all.
+// `require` of a missing path throws MODULE_NOT_FOUND, and in an install this file lands at
+// <project>/bin/installer-core.js, so '../package.json' is the CONSUMER's manifest: present and
+// wrong (their app's version), or absent and fatal. A dead read that can only ever crash is pure
+// liability, so it is gone rather than rewired. Anything here that needs MindForge's version must
+// call resolveMindforgeVersion() from ./utils/mindforge-version, which resolves by package NAME.
 
 // ── Runtime configurations ────────────────────────────────────────────────────
 const RUNTIMES = {
