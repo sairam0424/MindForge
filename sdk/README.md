@@ -33,6 +33,27 @@ console.log(metrics);
 
 ## Real-time event streaming
 
+`MindForgeEventStream` is the supported path and it is self-contained: it starts its own SSE server,
+tails `.planning/AUDIT.jsonl`, and broadcasts each new entry as an `audit_entry` event. Verified end to
+end — `GET /events` returns `text/event-stream`, and appending to the audit log produces a broadcast.
+Note the `watchAuditLog()` call below is required: `start()` serves the stream but does not begin
+tailing on its own.
+
+`WebSocketEventStream` is also exported, and it comes with two constraints worth knowing before you
+reach for it:
+
+- **It needs a global `WebSocket` that this package does not provide.** `engines.node` is `>=18.0.0`
+  and `dependencies` is empty, so on Node 18 or 20 you must install `ws` yourself and assign it to
+  `globalThis.WebSocket`. On Node 22+ the global exists. Calling `connect()` without one throws an
+  error saying so, rather than a bare `ReferenceError`.
+- **MindForge ships no WebSocket server.** The default URL is `ws://127.0.0.1:7337/ws`, but the
+  dashboard exposes no `/ws` upgrade path — so this client is for connecting to a server *you* run,
+  not to MindForge itself. Use `MindForgeEventStream` if you want events from MindForge.
+
+Reconnection is automatic (5 attempts, linear backoff). A reconnect that fails is delivered to an
+`'error'` listener registered with `on('error', handler)`; once the attempts are exhausted a `'close'`
+event fires with the reason, so a dead stream is observable rather than silent.
+
 ```typescript
 import { MindForgeEventStream } from 'mindforge-sdk';
 
@@ -89,7 +110,7 @@ import type {
 ### Streaming execution
 
 ```typescript
-import { MindForgeClient, WebSocketEventStream } from 'mindforge-sdk';
+import { MindForgeClient } from 'mindforge-sdk';
 
 const client = new MindForgeClient({ projectRoot: '.' });
 const { stream } = await client.streamExecution(1);
