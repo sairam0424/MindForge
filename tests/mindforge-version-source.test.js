@@ -142,19 +142,96 @@ test('the error names every place it looked', () => {
 
 // ── The call sites are actually rewired ──────────────────────────────────────
 
-test('no module reads ../../package.json for MindForge\'s version any more', () => {
-  for (const rel of [
-    'bin/updater/self-update.js',
-    'bin/updater/version-comparator.js',
-    'bin/wizard/setup-wizard.js',
-  ]) {
-    const src = fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8');
-    // Comments explaining the old pattern are expected; only code matters.
-    const code = src.split('\n').filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n');
-    assert.ok(!/require\(['"]\.\.\/\.\.\/package\.json['"]\)/.test(code),
-      `${rel} still requires ../../package.json, which is the CONSUMER's manifest in an install`);
-    assert.match(code, /resolveMindforgeVersion/,
-      `${rel} must resolve the version by package name`);
+// Matches ANY number of parent hops. The first version of this gate pinned exactly `../../`, which
+// is why it never caught bin/mindforge-cli.js, bin/install.js or bin/installer-core.js — those sit
+// one level down and read `../package.json`. Same defect, one hop instead of two, and the assertion
+// was written narrowly enough to miss it.
+const RAW_PARENT_READ = /require\(['"](?:\.\.\/)+package\.json['"]\)/;
+
+// Must not read raw, AND must resolve by package name.
+const REWIRED = [
+  'bin/updater/self-update.js',
+  'bin/updater/version-comparator.js',
+  'bin/wizard/setup-wizard.js',
+  'bin/mindforge-cli.js',   // answers `--version`; printed the host app's version
+  'bin/install.js',         // banner + `--version`
+];
+
+// Must not read raw, and needs no version at all. bin/installer-core.js declared
+// `const VERSION = require('../package.json').version` and never used it — dead, unexported, and
+// the single reason the module could fail to LOAD (MODULE_NOT_FOUND when the consumer has no
+// manifest). Deleted rather than rewired, so requiring the resolver here would be wrong.
+const NO_VERSION_READ = ['bin/installer-core.js'];
+
+const codeOf = (rel) => {
+  const src = fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8');
+  // Comments explaining the old pattern are expected; only code matters.
+  return src.split('\n').filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n');
+};
+
+test('no module reads a parent package.json for MindForge\'s version any more', () => {
+  // Non-vacuity floor: if the list is emptied or the paths rot, the loop below asserts nothing and
+  // passes green. Pin the count so a shrinking list reds instead of quietly covering less.
+  assert.ok(REWIRED.length + NO_VERSION_READ.length >= 6,
+    `only ${REWIRED.length + NO_VERSION_READ.length} files are checked (6 at the time of writing) — `
+    + 'the list shrank, so this gate now covers less than it did. Do not remove entries to make it pass.');
+
+  for (const rel of [...REWIRED, ...NO_VERSION_READ]) {
+    assert.ok(fs.existsSync(path.join(REPO_ROOT, rel)), `${rel} does not exist — the path rotted`);
+    const code = codeOf(rel);
+    assert.ok(!RAW_PARENT_READ.test(code),
+      `${rel} still requires a parent package.json. In an install that is the CONSUMER's manifest: `
+      + 'present and wrong (their app version), or absent and fatal.');
+  }
+
+  for (const rel of REWIRED) {
+    assert.match(codeOf(rel), /resolveMindforgeVersion/,
+      `${rel} must resolve the version by package NAME, which is the only thing that distinguishes `
+      + 'MindForge\'s manifest from a consumer\'s');
+  }
+
+  for (const rel of NO_VERSION_READ) {
+    assert.ok(!/resolveMindforgeVersion/.test(codeOf(rel)),
+      `${rel} needs no version at all — its read was dead code. If something here now genuinely `
+      + 'needs the version, move this entry into REWIRED rather than loosening the assertion.');
+  }
+});
+
+test('`--version` reports MindForge\'s version from an INSTALLED layout, not the host app\'s', () => {
+  // The behavioural half, and the gap the existing end-to-end test could not close: that one calls
+  // resolveMindforgeVersion() directly, so it proved the HELPER worked while bin/mindforge-cli.js
+  // still answered --version with a raw relative read. This runs the real CLI.
+  //
+  // Builds the install layout directly instead of running the installer: deterministic, ~50ms
+  // instead of ~10s, and it isolates the resolution context, which is the thing under test.
+  const proj = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-verscli-')));
+  const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-vershome-')));
+  try {
+    fs.mkdirSync(path.join(proj, 'bin', 'utils'), { recursive: true });
+    fs.mkdirSync(path.join(proj, '.mindforge'), { recursive: true });
+    fs.copyFileSync(path.join(REPO_ROOT, 'bin', 'mindforge-cli.js'), path.join(proj, 'bin', 'mindforge-cli.js'));
+    fs.copyFileSync(path.join(REPO_ROOT, 'bin', 'utils', 'mindforge-version.js'),
+      path.join(proj, 'bin', 'utils', 'mindforge-version.js'));
+
+    // The host app's manifest, one directory above the CLI — exactly what '../package.json' hit.
+    fs.writeFileSync(path.join(proj, 'package.json'),
+      JSON.stringify({ name: 'their-app', version: '1.0.0' }, null, 2));
+    // What the installer writes, and the source the resolver must fall back to.
+    fs.writeFileSync(path.join(proj, '.mindforge', 'config.json'),
+      JSON.stringify({ version: REPO_VERSION }, null, 2));
+
+    const r = spawnSync(process.execPath, [path.join(proj, 'bin', 'mindforge-cli.js'), '--version'],
+      { cwd: proj, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: home, CI: '1' } });
+
+    assert.strictEqual(r.status, 0, `--version exited ${r.status}: ${(r.stderr || '').slice(0, 300)}`);
+    const printed = (r.stdout || '').trim();
+    assert.strictEqual(printed, REPO_VERSION,
+      `--version printed ${JSON.stringify(printed)}, expected ${REPO_VERSION}`);
+    assert.notStrictEqual(printed, '1.0.0',
+      'the host app\'s version surfaced as MindForge\'s — the raw relative read is back');
+  } finally {
+    fs.rmSync(proj, { recursive: true, force: true });
+    fs.rmSync(home, { recursive: true, force: true });
   }
 });
 

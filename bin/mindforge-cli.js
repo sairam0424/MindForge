@@ -174,8 +174,18 @@ if (COMMAND === 'workflow') {
 }
 
 if (ARGS.includes('--version') || ARGS.includes('-V')) {
-  console.log(require('../package.json').version);
-  process.exit(0);
+  // Resolve by package NAME. In an install this file lands at <project>/bin/mindforge-cli.js, so
+  // '../package.json' is the CONSUMER's manifest and `--version` confidently printed THEIR app's
+  // version as MindForge's — measured: 1.0.0 for a host app at 1.0.0, while MindForge was 11.9.2.
+  // Exit non-zero on an unresolvable version rather than guessing: the whole point of this command
+  // is to be trusted, and a plausible wrong answer is worse than an honest failure.
+  try {
+    console.log(require('./utils/mindforge-version').resolveMindforgeVersion().version);
+    process.exit(0);
+  } catch (err) {
+    console.error(err.message);
+    process.exit(1);
+  }
 }
 
 if (!COMMAND || ARGS.includes('--help') || ARGS.includes('-h')) {
