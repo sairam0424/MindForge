@@ -116,7 +116,7 @@ it does not have autonomy — it has cut its own brake lines.
 ### 3.6 Observability
 
 If you cannot see what the agent read, which tool it called, and what destination it
-tried to reach, you cannot secure it. MindForge logs to the Merkle-linked AUDIT.jsonl;
+tried to reach, you cannot secure it. MindForge logs to the hash-chained AUDIT.jsonl (SHA-256 back-links);
 ensure tool name, input summary, files touched, approval decisions, and network attempts
 are captured so anomalous calls stand out against a session baseline.
 

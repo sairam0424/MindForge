@@ -25,17 +25,6 @@ function read(file) {
   return fs.readFileSync(file, 'utf8');
 }
 
-function classifyChange({ files, diff, recentHighSeverityFinding = false }) {
-  const fileSignals = /(auth\/|security\/|payment\/|billing\/|privacy\/|crypto\/|secrets\/|login\.ts|logout\.ts|token\.ts|password\.ts|credentials\.ts|session\.ts|oauth\.ts|jwt\.ts|hash\.ts|encrypt\.ts|stripe\.ts|payment\.ts|billing\.ts|pii\.ts|consent\.ts)/;
-  const codeSignals = /(bcrypt|argon2|jwt\.sign|jwt\.verify|jose\.sign|jose\.verify|stripe\.|paypal\.|createCipheriv|createDecipheriv|crypto\.subtle|hashPassword|verifyPassword|encrypt\(|decrypt\(|role.*permission|hasPermission|SET ROLE|GRANT)/;
-
-  if (files.some(file => fileSignals.test(file))) return 3;
-  if (codeSignals.test(diff)) return 3;
-  if (recentHighSeverityFinding) return 3;
-  if (files.length > 10) return 2;
-  return 1;
-}
-
 console.log('\nMindForge Day 4 — Governance Tests\n');
 
 console.log('Governance files:');
@@ -54,21 +43,48 @@ console.log('Governance files:');
 
 console.log('\nClassifier hardening:');
 
-test('tier 3 triggers on code pattern even in helper.ts', () => {
-  const tier = classifyChange({
-    files: ['src/utils/helper.ts'],
-    diff: '+ const token = jwt.sign(payload, secret);',
-  });
-  assert.strictEqual(tier, 3);
+// These two tests used to call a classifyChange() defined at the top of THIS FILE — a complete
+// re-implementation of the classifier, with its own file and code regexes. They asserted that the
+// local copy behaved, never that bin/change-classifier.js did. Measured: replacing the real
+// classifier's whole pattern loop with `for (const pattern of [])` left this suite green and
+// tests/change-classifier.test.js at 14/14. One of the two tests asserted audit-history escalation
+// that the real classifier has never implemented at all.
+//
+// Tier behaviour is now driven end-to-end against the real module, through real git repos, in
+// tests/change-classifier.test.js. What belongs HERE is the governance concern: does the
+// governance DOC describe what the code actually does?
+
+test('this suite does not re-implement the classifier it is meant to guard', () => {
+  // The defect above, pinned so it cannot come back. A local re-implementation always passes,
+  // because it is written from the same doc the assertions were written from.
+  const self = read(__filename);
+  const code = self.split('\n').filter(l => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n');
+  assert.ok(!/function\s+classifyChange\b/.test(code),
+    'governance.test.js must not define its own classifyChange — require bin/change-classifier.js ' +
+    'or assert on the doc, never on a copy of the logic');
 });
 
-test('tier 3 triggers on audit-history escalation', () => {
-  const tier = classifyChange({
-    files: ['src/utils/helpers.ts'],
-    diff: '+ export const noop = true;',
-    recentHighSeverityFinding: true,
-  });
-  assert.strictEqual(tier, 3);
+test('Signal C is documented as unimplemented, because it is', () => {
+  // The doc specified Signal C (audit-history escalation) in the imperative, and listed
+  // "audit_history" in signals_checked, while bin/change-classifier.js has no such signal. It
+  // cannot be implemented as specified: .planning/AUDIT.jsonl is gitignored, untracked and not in
+  // package.json files[], so it is absent from the clone the classifier runs in.
+  const classifier = read('bin/change-classifier.js');
+  const doc = read('.mindforge/governance/change-classifier.md');
+  const implemented = /security_finding|audit_history|AUDIT\.jsonl/.test(classifier);
+
+  if (implemented) {
+    assert.ok(!/SPECIFIED, NOT IMPLEMENTED/.test(doc),
+      'Signal C now appears in bin/change-classifier.js — remove the "NOT IMPLEMENTED" marker ' +
+      'from change-classifier.md and add a behavioural test for it');
+  } else {
+    assert.match(doc, /### Signal C[^\n]*SPECIFIED, NOT IMPLEMENTED/,
+      'Signal C is absent from the classifier, so the doc must say so rather than describing it ' +
+      'as a live protection');
+    assert.ok(!/"audit_history"/.test(doc),
+      'the audit-entry example must not list audit_history in signals_checked while no code ' +
+      'checks it — that is a claim of coverage the classifier does not provide');
+  }
 });
 
 test('change classifier documents trigger points and code-content scanning', () => {

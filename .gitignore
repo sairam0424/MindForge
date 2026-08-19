@@ -68,7 +68,28 @@ ROADMAP_V7.md
 # hard kill leaves one behind until the 10s stale reclaim — never commit them.
 .planning/**/*.jsonl.lock
 .mindforge/**/*.jsonl.lock
+# VectorHub now takes the same lock around the DB commit, so the lockfile sits beside
+# celestial.db rather than beside a .jsonl and the rules above do not cover it.
+.mindforge/*.db.lock
+.mindforge/**/*.db.lock
+# Conflict sidecars written when VectorHub refuses to clobber another process's write.
+# Each one is a FULL database copy — 147KB+ of trace and knowledge content — so an
+# unignored sidecar is both a large binary and a content leak waiting for `git add -A`.
+# They are recovery artifacts for the operator to reconcile, never repository state.
+.mindforge/*.conflict.*
+.mindforge/**/*.conflict.*
 .mindforge/memory/sync-manifest.json
+# SRE shadow mirrors. bin/autonomous/auto-runner.js:217 constructs ShadowMirror with no options, so
+# bin/sre/shadow-mirror.js:29 falls back to `process.cwd()/.mindforge/mirrors` — a FULL git-worktree
+# replica of the project. Measured: one run left a 49-entry copy of this repo under
+# .mindforge/mirrors/mirror-sre-<id>/, including its own plugins/mindforge/.mcp.json. Untracked and
+# unignored, so a single `git add -A` after an incident-remediation run commits the whole tree twice.
+#
+# NOTE this does NOT stop `eslint .` from walking a stray mirror: eslint flat config does not read
+# .gitignore, and a mirrored copy of .mindforge/dynamic-workflows/scripts/ produces parse errors that
+# turn `npm run lint` red. Same human decision as `.claude/worktrees/**` — both need an ignore entry in
+# the protected eslint.config.mjs.
+.mindforge/mirrors/
 # Runtime auth tokens (generated at server startup, never commit)
 .mindforge/.dashboard-token
 .mindforge/.browser-daemon-token
@@ -104,3 +125,12 @@ ruvector.db
 **/.claude-flow/
 .claude/proven-config.json
 .claude/.proven-config-version
+# Agent worktrees. Isolated-worktree subagents check out FULL COPIES of this repo here — three of
+# them measured 50+ entries each — so a single `git add -A` during a run would commit the whole tree
+# several times over. They are transient and removed when the run ends.
+#
+# Note this does NOT stop repo-wide tooling from walking them: `npm run lint` is `eslint .`, and with
+# worktrees present it went from 193 warnings / 0 errors to 888 problems / 105 errors, all from other
+# agents' in-progress code. eslint flat config does not read .gitignore, and eslint.config.mjs is
+# protected against agent edits by design, so excluding it there is a human decision.
+.claude/worktrees/

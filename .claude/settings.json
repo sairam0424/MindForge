@@ -37,7 +37,7 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Write|Edit|MultiEdit",
+        "matcher": "Write|Edit|MultiEdit|Bash",
         "hooks": [
           {
             "type": "command",
@@ -46,7 +46,7 @@
           },
           {
             "type": "command",
-            "command": "node .agent/hooks/run-with-flags.js mindforge-config-protection .agent/hooks/mindforge-config-protection.js standard,strict",
+            "command": "node .agent/hooks/run-with-flags.js mindforge-config-protection .agent/hooks/mindforge-config-protection.js minimal,standard,strict",
             "timeout": 5000
           }
         ]

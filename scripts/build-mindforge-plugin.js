@@ -324,32 +324,59 @@ function buildManifest(counts) {
 // rmrf had already deleted the committed mcp/dist/index.js and .mcp.json. The result was a
 // "successful" regeneration that silently stripped the plugin's MCP server, and
 // mcp-server/dist is untracked, so every fresh clone hit it. Refuse to build a partial plugin.
-if (!fs.existsSync(MCP_ENTRY)) {
-  console.error('build-mindforge-plugin: mcp-server/dist/index.js is missing.');
-  console.error('  Build it first:  npm --prefix mcp-server run build');
-  console.error('  Refusing to regenerate — doing so would delete the committed');
-  console.error('  plugins/mindforge/mcp/dist/index.js and .mcp.json and still exit 0.');
-  process.exit(1);
+function build() {
+  // Preflight BEFORE the rmrf below, and INSIDE build() — it is a precondition for BUILDING, not for
+  // importing. At module scope it made `require()` of this file exit 1 on any machine without a built
+  // mcp-server/dist, which is every CI runner (mcp-server/dist is gitignored). That turned an
+  // import-for-HOOK_TREES in tests/plugin-packaging.test.js into a CI-only failure:
+  //     ✗ FAIL  plugin-packaging.test.js (32ms)
+  //        build-mindforge-plugin: mcp-server/dist/index.js is missing.
+  // green locally, red on the runner — the same local/CI divergence class as a test reading a
+  // gitignored file. Throwing rather than process.exit so an importer can catch it if it ever needs to.
+  if (!fs.existsSync(MCP_ENTRY)) {
+    console.error('build-mindforge-plugin: mcp-server/dist/index.js is missing.');
+    console.error('  Build it first:  npm --prefix mcp-server run build');
+    console.error('  Refusing to regenerate — doing so would delete the committed');
+    console.error('  plugins/mindforge/mcp/dist/index.js and .mcp.json and still exit 0.');
+    process.exit(1);
+  }
+
+  // Rebuild from scratch so deletions in source propagate (no stale files linger). These wipes were
+  // at module scope, which is why the require.main guard alone was not enough: importing the module
+  // deleted the whole plugin tree and then returned without rebuilding it. Measured — a bare
+  // `require()` took plugins/ from 3 dirty files to 524.
+  for (const sub of ['commands', 'agents', 'skills', 'hooks', 'scripts', 'mcp', '.claude-plugin']) {
+    rmrf(path.join(PLUGIN, sub));
+  }
+  rmrf(path.join(PLUGIN, '.mcp.json'));
+
+  buildMcp();
+  const counts = {
+    commands: buildCommands(),
+    agents: buildAgents(),
+    skills: buildSkills(),
+    hookEvents: buildHooks(),
+  };
+  buildManifest(counts);
+
+  console.log('Generated plugins/mindforge/:');
+  console.log(`  commands: ${counts.commands}`);
+  console.log(`  agents:   ${counts.agents}`);
+  console.log(`  skills:   ${counts.skills} (incl. synthesized mindforge-protocol)`);
+  console.log(`  hook events: ${counts.hookEvents}`);
+  console.log('  mcp server: bundled (.mcp.json + mcp/dist)');
+  return counts;
 }
 
-// Rebuild from scratch so deletions in source propagate (no stale files linger).
-for (const sub of ['commands', 'agents', 'skills', 'hooks', 'scripts', 'mcp', '.claude-plugin']) {
-  rmrf(path.join(PLUGIN, sub));
+// Behind a require.main guard so importing this module does not REGENERATE 526 tracked files as an
+// import side effect. It used to run at module scope, which made the generator unusable from a test:
+// requiring it to read HOOK_TREES would rewrite the whole plugin tree mid-run. Same guard pattern as
+// tests/run-all.js.
+if (require.main === module) {
+  build();
 }
-rmrf(path.join(PLUGIN, '.mcp.json'));
 
-buildMcp();
-const counts = {
-  commands: buildCommands(),
-  agents: buildAgents(),
-  skills: buildSkills(),
-  hookEvents: buildHooks(),
-};
-buildManifest(counts);
-
-console.log('Generated plugins/mindforge/:');
-console.log(`  commands: ${counts.commands}`);
-console.log(`  agents:   ${counts.agents}`);
-console.log(`  skills:   ${counts.skills} (incl. synthesized mindforge-protocol)`);
-console.log(`  hook events: ${counts.hookEvents}`);
-console.log('  mcp server: bundled (.mcp.json + mcp/dist)');
+// Exported so tests can derive the source -> shipped mapping from the generator itself rather than
+// re-declaring it. A test that hardcodes its own copy of this list stops testing the generator and
+// starts testing its own duplicate — which is how the stale trust-gate-hook.js shipped unnoticed.
+module.exports = { build, HOOK_TREES };

@@ -69,6 +69,13 @@ function repoWithSensitiveCommitBehindBenignTip() {
   return { dir, before };
 }
 
+// A throwaway HOME for every spawned child. The classifier itself does not write to $HOME, but
+// handing children the real one is the pattern that let five suites silently append to the
+// developer's ~/.mindforge/registry.json (installer-core.js:253 resolves it via os.homedir()).
+// Confining it here keeps this file correct if the classifier ever gains a HOME-dependent read, and
+// satisfies tests/no-home-leak.test.js, which bans the pattern repo-wide rather than per-suite.
+const SCRATCH_HOME = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-cls-home-')));
+
 /** Spawn the classifier in `dir` with `env` overrides. Returns {status, tier, reasons, out}. */
 function runClassifier(dir, env = {}) {
   const r = spawnSync(process.execPath, [CLASSIFIER], {
@@ -76,7 +83,7 @@ function runClassifier(dir, env = {}) {
     encoding: 'utf8',
     // A clean env: inheriting a real GitHub Actions env would silently change the code path.
     env: {
-      PATH: process.env.PATH, HOME: process.env.HOME,
+      PATH: process.env.PATH, HOME: SCRATCH_HOME,
       GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_SYSTEM: '/dev/null',
       ...env,
     },
@@ -301,6 +308,129 @@ test('every sensitive path uses a prefix that startsWith can actually match', ()
     assert.ok(tracked.some((f) => f.startsWith(p)),
       `SENSITIVE_PATHS entry ${JSON.stringify(p)} matches no tracked file. Either it is a typo, ` +
       'or it is consumer-only and belongs in the documented consumer group.');
+  }
+});
+
+// ── Signal B: patterns in the diff, not just the path ───────────────────────
+//
+// Measured before these tests existed: replacing the whole SENSITIVE_PATTERNS loop with
+// `for (const pattern of [])` left this file at 14/14 passing and tests/governance.test.js green.
+// Every path test above sets tier 3 at step 1, so `if (tier < 3)` skipped the pattern block
+// entirely — Signal B, the doc's headline protection, could have been deleted from the shipping
+// classifier with CI green. governance.test.js appeared to cover it but asserted on a local
+// re-implementation of classifyChange() living in the test file, which no longer exists.
+
+/**
+ * A scratch repo whose ONLY change is one line in a file that is neither a sensitive path nor a
+ * test/doc file. Without Signal B this classifies tier 2 (a .ts file changed); with it, tier 3.
+ * That 3-vs-2 gap is the discriminator — a repo where both answers were 3 would prove nothing.
+ */
+function repoWithLineInInnocuousPath(line, rel = 'src/utils/helper.ts') {
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-sigb-')));
+  git(dir, 'init', '-q', '.');
+  git(dir, 'config', 'user.email', 'test@example.com');
+  git(dir, 'config', 'user.name', 'test');
+  fs.writeFileSync(path.join(dir, 'README.md'), 'readme\n');
+  git(dir, 'add', '-A'); git(dir, 'commit', '-qm', 'base');
+
+  fs.mkdirSync(path.join(dir, path.dirname(rel)), { recursive: true });
+  fs.writeFileSync(path.join(dir, rel), `${line}\n`);
+  git(dir, 'add', '-A'); git(dir, 'commit', '-qm', 'chore: edit');
+  return dir;
+}
+
+test('a sensitive PATTERN in an innocuous path reaches tier 3', () => {
+  // The doc's own worked example: "protects against security-critical code being added to
+  // innocuous filenames like src/utils/helper.ts".
+  const dir = repoWithLineInInnocuousPath('const token = jwt.sign(payload, secret);');
+  try {
+    const r = runClassifier(dir);
+    assert.strictEqual(r.tier, '3',
+      `a jwt.sign in src/utils/helper.ts must be tier 3, got ${r.tier}. ${r.out}`);
+    assert.match(r.reasons, /Sensitive pattern detected/,
+      `the reason must attribute this to the pattern signal, got: ${r.reasons}`);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('the SAME file without the pattern is tier 2 — proving the above is not vacuous', () => {
+  const dir = repoWithLineInInnocuousPath('export const noop = true;');
+  try {
+    const r = runClassifier(dir);
+    assert.strictEqual(r.tier, '2',
+      `an innocuous .ts edit must be tier 2, got ${r.tier}. If this is also 3, the test above ` +
+      `proves nothing. ${r.out}`);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('a pattern inside a DOC file is still excluded from the scan', () => {
+  // The exclusion exists so a doc mentioning secrets, or a test asserting on them, does not trip
+  // Tier 3. That carve-out is only safe while it is deliberate, so it is pinned rather than
+  // discovered later as a hole.
+  const dir = repoWithLineInInnocuousPath('call jwt.sign like this', 'docs/guide.md');
+  try {
+    const r = runClassifier(dir);
+    assert.notStrictEqual(r.tier, '3',
+      `a jwt.sign inside docs/guide.md must NOT reach tier 3, got ${r.tier}. ${r.out}`);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('every pattern the governance doc lists in Signal B is actually detected', () => {
+  // The doc listed 19 patterns; measured, the live set detected 6. argon2, the jose pair, paypal.,
+  // createCipheriv/createDecipheriv, crypto.subtle, encrypt(/decrypt(, role.*permission,
+  // hasPermission, SET ROLE and GRANT were specified and absent. A doc that names a protection the
+  // code does not implement is the same defect class as a gate that cannot fail.
+  const { SENSITIVE_PATTERNS } = require('../bin/change-classifier.js');
+
+  // Realistic diff lines, not bare tokens: /\bGRANT\b/ cannot match inside "GRANTfoo", so probing
+  // with concatenated tokens reports false gaps. This mistake was made and caught while writing it.
+  const CASES = {
+    'bcrypt':           '+ const h = await bcrypt.hash(pw, 12);',
+    'argon2':           '+ const h = await argon2.hash(pw);',
+    'jwt.sign':         '+ const t = jwt.sign(payload, secret);',
+    'jwt.verify':       '+ const c = jwt.verify(t, secret);',
+    'jose.sign':        '+ const t = await jose.sign(payload);',
+    'jose.verify':      '+ const c = await jose.verify(t);',
+    'stripe.':          '+ await stripe.charges.create(args);',
+    'paypal.':          '+ await paypal.orders.create(order);',
+    'createCipheriv':   '+ const c = crypto.createCipheriv(alg, key, iv);',
+    'createDecipheriv': '+ const d = crypto.createDecipheriv(alg, key, iv);',
+    'crypto.subtle':    '+ await crypto.subtle.importKey(fmt, raw);',
+    'hashPassword':     '+ const h = hashPassword(pw);',
+    'verifyPassword':   '+ if (!verifyPassword(pw, h)) return;',
+    'encrypt(':         '+ const blob = encrypt(payload);',
+    'decrypt(':         '+ const raw = decrypt(blob);',
+    'role.*permission': '+ if (role.canEditPermission) grantAccess();',
+    'hasPermission':    '+ if (!hasPermission(user, action)) return;',
+    'SET ROLE':         '+ await db.query(\'SET ROLE readonly\');',
+    'GRANT':            '+ await db.query(\'GRANT SELECT ON t TO u\');',
+  };
+
+  // The case table must stay equal to what the doc claims — otherwise a pattern added to the doc
+  // could go untested, which is how the original 13-pattern gap survived.
+  const doc = fs.readFileSync(
+    path.join(REPO_ROOT, '.mindforge', 'governance', 'change-classifier.md'), 'utf8');
+  const section = doc.match(/### Signal B[\s\S]*?(?=This protects)/);
+  assert.ok(section, 'could not locate the Signal B pattern list in change-classifier.md');
+  const documented = [...section[0].matchAll(/`([^`]+)`/g)].map((m) => m[1]);
+  assert.deepStrictEqual(documented.slice().sort(), Object.keys(CASES).sort(),
+    'the doc\'s Signal B list and this test\'s case table have drifted apart. Add the new pattern ' +
+    'to BOTH, or remove it from the doc.');
+
+  const missed = documented.filter((tok) => !SENSITIVE_PATTERNS.some((p) => p.test(CASES[tok])));
+  assert.deepStrictEqual(missed, [],
+    `the governance doc specifies these patterns but SENSITIVE_PATTERNS does not detect them: ${missed.join(', ')}`);
+});
+
+test('the pattern set is not a rubber stamp — ordinary code matches nothing', () => {
+  // Without this, the test above would pass just as well against /.*/ .
+  const { SENSITIVE_PATTERNS } = require('../bin/change-classifier.js');
+  for (const line of [
+    '+ const total = items.reduce((a, b) => a + b, 0);',
+    '+ export function formatDate(d) { return d.toISOString(); }',
+    '+ log.info(`processed ${n} rows`);',
+  ]) {
+    const hit = SENSITIVE_PATTERNS.find((p) => p.test(line));
+    assert.ok(!hit, `ordinary code must not trip Tier 3, but ${hit} matched: ${line}`);
   }
 });
 

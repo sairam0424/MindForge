@@ -165,12 +165,53 @@ function getCommandDescription(content) {
 }
 
 // ── File system utilities ─────────────────────────────────────────────────────
+/**
+ * Refuse to write through a symlink.
+ *
+ * THE DEFECT, reproduced with a canary before this guard existed. `fs.writeFileSync` and
+ * `fs.copyFileSync` open the destination O_WRONLY|O_CREAT|O_TRUNC and FOLLOW symlinks, and every
+ * installer write funnels through the two primitives below. So a repository that commits its entry
+ * file as a symlink turned the documented install command into an arbitrary-file overwrite:
+ *
+ *     $ ln -s <victim> <project>/CLAUDE.md      # the repo carries this; git preserves symlinks
+ *     $ npx mindforge-cc@latest --claude --local
+ *     victim before: 24 bytes   sha 2cfdbb20c25ced11
+ *     victim after:  5646 bytes sha 05b78d05307b2350        <- overwritten
+ *     <project>/CLAUDE.md.backup-<epoch> CONTAINS THE VICTIM CONTENT   <- and disclosed
+ *
+ * Two separate harms in one step: the target is destroyed, and because safeCopyClaude reads the
+ * destination THROUGH the link before replacing it, the victim's previous contents are copied into
+ * the project's working tree as a backup file. Point the link at anything the installing user can
+ * write and both happen with their privileges.
+ *
+ * Refusing rather than unlinking is deliberate. Unlinking would silently change what the user's
+ * project looks like; refusing leaves their file untouched and tells them why. Writing through a
+ * symlink is not something an installer ever legitimately needs to do.
+ *
+ * SCOPE, stated rather than implied: this guards the destination FILE. A symlinked DIRECTORY in the
+ * destination path is a separate escape — mkdirSync/copyFileSync resolve it too — and is not covered
+ * here. Closing that needs a containment check against the install root, which behaves differently
+ * for --local (cwd-relative) and global installs, so it belongs in its own change.
+ */
+function assertNotSymlink(p) {
+  let st;
+  try { st = fs.lstatSync(p); } catch { return; }   // absent is a normal, safe state
+  if (!st.isSymbolicLink()) return;
+  let target = '';
+  try { target = ` -> ${fs.readlinkSync(p)}`; } catch { target = ' -> <dangling>'; }
+  throw new Error(
+    `[installer] REFUSING to write through a symlink: ${p}${target}\n`
+    + '  fs.writeFileSync/copyFileSync follow symlinks, so this would overwrite the target outside\n'
+    + '  the project and could copy its contents into the working tree as a backup.\n'
+    + '  Remove or replace the link, then re-run the installer.');
+}
+
 const fsu = {
   exists:     p  => fs.existsSync(p),
   read:       p  => fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : '',
-  write:      (p, t) => { fsu.ensureDir(path.dirname(p)); fs.writeFileSync(p, t, 'utf8'); },
+  write:      (p, t) => { assertNotSymlink(p); fsu.ensureDir(path.dirname(p)); fs.writeFileSync(p, t, 'utf8'); },
   ensureDir:  p  => { if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true }); },
-  copy:       (src, dst) => { fsu.ensureDir(path.dirname(dst)); fs.copyFileSync(src, dst); },
+  copy:       (src, dst) => { assertNotSymlink(dst); fsu.ensureDir(path.dirname(dst)); fs.copyFileSync(src, dst); },
   listFiles:  p  => fs.existsSync(p) ? fs.readdirSync(p) : [],
   listFilesRecursive: (p, ext = '.md') => {
     if (!fs.existsSync(p)) return [];
@@ -359,6 +400,12 @@ function resolveBaseDir(runtime, scope) {
 function safeCopyClaude(src, dst, options = {}) {
   const { force = false, verbose = false } = options;
 
+  // BEFORE reading. fsu.read() resolves the link, so checking here rather than relying on the guard
+  // inside fsu.copy() is what stops the DISCLOSURE half: with a symlinked destination the old order
+  // read the victim's contents and wrote them to `${dst}.backup-<epoch>` inside the project, and that
+  // backup path is a fresh regular file, so the primitive's guard would never have fired on it.
+  assertNotSymlink(dst);
+
   if (fsu.exists(dst)) {
     const existing = fsu.read(dst);
 
@@ -442,6 +489,9 @@ async function install(runtime, scope, options = {}) {
   const cmdsDir = norm(path.join(baseDir, cfg.commandsSubdir));
   const selfInstall = isSelfInstall();
   const targetDir = baseDir;
+  // REG-01 result, printed in the final summary. Declared here so the summary cannot reference an
+  // undefined binding when the registration block is skipped (global scope, self-install, etc.).
+  let hookRegistration = { status: 'not-attempted', reason: 'registration block not reached', registered: false };
 
   Theme.printPrompt(`Runtime : ${c.cyan(runtime)}`);
   Theme.printPrompt(`Scope   : ${c.dim(scope)} → ${c.bold(targetDir)}`);
@@ -622,6 +672,16 @@ async function install(runtime, scope, options = {}) {
         Theme.printResolved(`${c.bold(asset.label.padEnd(12))} (Enterprise sync)`);
       }
     });
+
+    // ── 2.1b REG-01: register the hooks we just copied ────────────────────────
+    // Measured before this landed: 0 of 6 harnesses wrote any settings.json, and this file plus
+    // bin/install.js contained ZERO references to settings.json, PreToolUse or a hook dispatcher.
+    // 11 hook scripts landed and none of them could ever fire. register() is deliberately narrow —
+    // claude + local + non-Windows only — and returns a machine-readable status for every other
+    // case rather than writing a config it cannot verify. It EXECUTES all 8 emitted commands before
+    // keeping the file, and rolls back if any deny-class hook fails to deny.
+    hookRegistration = require('./installer/hook-registration')
+      .register({ projectRoot: process.cwd(), repoRoot: SOURCE_ROOT, runtime, scope, selfInstall, dryRun });
   }
 
   // ── 2.2 Install Subagents (native Claude-Code agents, both scopes) ──────────
@@ -838,6 +898,24 @@ async function install(runtime, scope, options = {}) {
     process.exit(1);
   }
   Theme.printResolved(c.bold(`Install verified (${verification.checked} required files present)`));
+
+  // ── 4b. REG-01 hook-registration status ─────────────────────────────────────
+  // Printed ALWAYS, in one machine-readable line, including when nothing was registered. A silent
+  // skip is how "0 of 6 harnesses register a hook" went unnoticed for the product's whole life: the
+  // installer exited 0 with a success banner and never mentioned that the gates it had just copied
+  // were inert. Whatever the outcome, the operator is told which it was and why.
+  if (hookRegistration.registered) {
+    Theme.printResolved(c.bold(`Hooks registered: ${hookRegistration.reason}`));
+    Theme.printStatus(c.yellow('Restart your harness — Claude Code snapshots hooks at session start, '
+      + 'so the gates are not live in an already-open session.'), 'warn');
+    if (hookRegistration.backup) {
+      Theme.printStatus(c.dim(`Previous settings backed up to ${hookRegistration.backup}`), 'info');
+    }
+  } else {
+    Theme.printStatus(c.yellow(`Hooks NOT registered (${hookRegistration.status}): ${hookRegistration.reason}`), 'warn');
+    Theme.printStatus(c.dim('The hook scripts are installed but nothing invokes them, so no tool call '
+      + 'is gated. This is stated rather than implied — see docs/troubleshooting.md.'), 'info');
+  }
 }
 
 // ── Uninstall ─────────────────────────────────────────────────────────────────

@@ -21669,7 +21669,7 @@ var WebSocketEventStream = class {
       this.ws.onerror = (err) => reject(err);
       this.ws.onmessage = (event) => {
         try {
-          const parsed = JSON.parse(event.data.toString());
+          const parsed = JSON.parse(String(event.data));
           const handlers = this.listeners.get(parsed.type) || /* @__PURE__ */ new Set();
           handlers.forEach((handler) => handler(parsed.data));
         } catch {
@@ -21867,7 +21867,8 @@ var MindForgeClient = class extends import_events.EventEmitter {
     await eventSource.connect();
     const chunks = [];
     let resolveNext = null;
-    eventSource.on("stream_chunk", (data) => {
+    eventSource.on("stream_chunk", (raw) => {
+      const data = raw;
       if (resolveNext) {
         resolveNext({ value: data, done: data.type === "done" });
         resolveNext = null;

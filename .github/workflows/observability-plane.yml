@@ -6,6 +6,15 @@ on:
     types:
       - completed
 
+# Least privilege. This workflow declared no `permissions:` block, so every job inherited the
+# repository default — frequently write-all, which hands a compromised action far more than it needs.
+# Determined from what the workflow actually does, not guessed: no GITHUB_TOKEN reference, no `gh`
+# CLI call, no github.rest API call, and no commit/tag/branch write. It checks out the repo and
+# uploads artifacts, and artifact upload uses the Actions runtime token rather than GITHUB_TOKEN
+# permissions, so read on contents is sufficient.
+permissions:
+  contents: read
+
 jobs:
   analytics:
     name: 📊 Run Analytics

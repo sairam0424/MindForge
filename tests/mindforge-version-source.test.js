@@ -178,9 +178,15 @@ test('a real install resolves MindForge\'s version, not the host app\'s', () => 
   try {
     fs.writeFileSync(path.join(project, 'package.json'),
       JSON.stringify({ name: 'their-app', version: '1.0.0' }, null, 2));
+    // HOME is confined to the scratch project, NOT the operator's. installer-core.js:253 resolves
+    // its registry via os.homedir(), which honours $HOME, so passing the real one made every run of
+    // this test append a mf-versinstall-* path to ~/.mindforge/registry.json — 29 such entries were
+    // measured in a real registry. See tests/no-home-leak.test.js, which now bans the pattern.
+    const homeDir = path.join(project, '.scratch-home');
+    fs.mkdirSync(homeDir, { recursive: true });
     const inst = spawnSync(process.execPath,
       [path.join(REPO_ROOT, 'bin', 'install.js'), '--claude', '--local'],
-      { cwd: project, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: process.env.HOME, CI: '1' } });
+      { cwd: project, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: homeDir, CI: '1' } });
     assert.strictEqual(inst.status, 0, `install failed: ${(inst.stderr || '').slice(0, 400)}`);
 
     const helper = path.join(project, 'bin', 'utils', 'mindforge-version.js');

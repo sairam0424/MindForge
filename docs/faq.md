@@ -72,7 +72,7 @@ Spawn dispatch is not yet implemented in v11.9.0. Use `/mindforge:auto` or `/min
 Tier-3 trust uses in-process key simulation in v11.9.0 — this is intentional and safe. `SECURITY_TIER_3_SIMULATED = true` is the documented v11.x behavior. Hardware TPM/HSM is planned for v12.x.
 
 **Q: What is the test coverage?**
-117 test files: 115 pass, 0 failures, 2 env-dependent skips (`browser.test.js` needs a Chromium
+130 test files: 128 pass, 0 failures, 2 env-dependent skips (`browser.test.js` needs a Chromium
 daemon, `sre-integration.test.js` needs git worktree support and a clean tree).
 
 The enforced floor is **30% lines**, gated in CI by the `mindforge-quality` job

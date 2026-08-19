@@ -66,7 +66,7 @@ MindForge/
 ├── .planning/                 # Execution state (partially gitignored)
 │   ├── STATE.md              # Current project state (tracked)
 │   ├── HANDOFF.json          # Resumable execution state (tracked)
-│   ├── AUDIT.jsonl           # Merkle-chained audit log (gitignored)
+│   ├── AUDIT.jsonl           # Hash-chained audit log, SHA-256 back-links (gitignored)
 │   ├── history/              # Timestamped planning snapshots
 │   ├── decisions/            # Council verdict outputs
 │   └── phases/               # Phase execution plans
@@ -163,7 +163,7 @@ HANDOFF ──────────── Write state to HANDOFF.json + AUDIT
 | stuck-monitor.js | 120 | Detect deadlocks via AUDIT pattern analysis |
 | intent-harvester.js | 80 | Proactive semantic intent extraction |
 | mesh-self-healer.js | 70 | Detect/repair reasoning drift |
-| audit-writer.js | 75 | Buffered Merkle-chained JSONL writes (LRUMap + AuditRotator) |
+| audit-writer.js | 75 | Buffered hash-chained JSONL writes, SHA-256 back-links (LRUMap + AuditRotator) |
 | progress-stream.js | 65 | Real-time status to dashboard SSE |
 | semaphore.js | 45 | Semaphore-based concurrency limiter for batch execution |
 
@@ -371,7 +371,7 @@ cd sdk && npm run build  # TypeScript → sdk/dist/
 6. **Instinct evolution** — Patterns auto-promote to skills when proven
 7. **Multi-voice decisions** — Council prevents single-perspective architectural mistakes
 8. **Zero native deps** — sql.js (WASM) for portability across all platforms
-9. **Append-only audit** — Merkle-chained JSONL for tamper-evident history
+9. **Append-only audit** — Hash-chained JSONL (SHA-256 back-links) for tamper-evident history: detects mutation and mid-file deletion, NOT tail truncation
 10. **Skill composition** — Skills build on skills without duplication
 
 ---

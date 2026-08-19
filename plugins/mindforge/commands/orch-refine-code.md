@@ -35,7 +35,7 @@ with `$ARGUMENTS` as the request and `operation = refine-code`. The engine will:
    — the existing suite proves behavior is unchanged). Dead-code/dup sweeps
    delegate to `/mindforge:de-slop`.
 4. `/mindforge:review`, then commit as `refactor(...)` (the diff must be
-   behavior-neutral) + Merkle-linked AUDIT.jsonl entry. → **GATE 2**.
+   behavior-neutral) + hash-chained AUDIT.jsonl entry. → **GATE 2**.
 
 Use this only when behavior must **not** change. If behavior should change at
 all, use `/mindforge:orch-change-feature` or `/mindforge:orch-fix-defect`.

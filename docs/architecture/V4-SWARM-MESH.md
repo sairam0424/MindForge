@@ -60,7 +60,7 @@ Every swarm cluster operates under strict enterprise governance rules:
 - **Audit Trails**: Non-repudiable logs signed by each agent's unique **Decentralized Identifier (DID)**.
 
 - **Identity Hardening (Enterprise Mode)**: High-tier agents (T3) use asymmetric keys anchored in a simulated **Secure Enclave (HSM)**.
-- **Integrity Proofs**: All audit blocks are finalized with **Merkle-root payloads** signed by the archiver to prevent tampering.
+- **Integrity Proofs**: Audit blocks are finalized with a **cumulative SHA-256 chain hash** signed by the archiver. It is a linear fold, not a Merkle tree — there is no hash tree and no inclusion proof — and it DETECTS tampering inside a covered block rather than preventing it. `ztai-archiver.js` still names the field `merkleRoot`.
 
 ---
 

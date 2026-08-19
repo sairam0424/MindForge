@@ -35,6 +35,13 @@ const { checksumRecord, verifyRecord, expiryFrom, SCHEMA, TTL_HOURS } =
   require(path.join(REPO_ROOT, 'bin', 'governance', 'approval-record'));
 const CURRENT = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8')).version;
 
+// A throwaway HOME for every spawned child. The verifier does not write to $HOME today, but passing
+// children the real one is the pattern that let five suites silently append to the developer's
+// ~/.mindforge/registry.json (installer-core.js:253 resolves it through os.homedir()). Confined here
+// so the leak cannot reappear if this binary ever gains a HOME-dependent read.
+// tests/no-home-leak.test.js bans the pattern repo-wide.
+const SCRATCH_HOME = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-approval-home-')));
+
 let passed = 0;
 let failed = 0;
 const tests = [];
@@ -68,7 +75,7 @@ function runVerifier(dir, tier) {
   if (tier !== undefined) args.push('--tier', String(tier));
   const r = spawnSync(process.execPath, args, {
     encoding: 'utf8',
-    env: { PATH: process.env.PATH, HOME: process.env.HOME },
+    env: { PATH: process.env.PATH, HOME: SCRATCH_HOME },
   });
   return { status: r.status, out: `${r.stdout || ''}${r.stderr || ''}` };
 }
@@ -240,7 +247,7 @@ test('the disclosure reaches the step summary a human actually reads', () => wit
   fs.writeFileSync(summaryFile, '');
   const r = spawnSync(process.execPath, [VERIFIER, '--dir', dir, '--tier', '3'], {
     encoding: 'utf8',
-    env: { PATH: process.env.PATH, HOME: process.env.HOME, GITHUB_STEP_SUMMARY: summaryFile, GITHUB_ACTIONS: 'true' },
+    env: { PATH: process.env.PATH, HOME: SCRATCH_HOME, GITHUB_STEP_SUMMARY: summaryFile, GITHUB_ACTIONS: 'true' },
   });
   assert.strictEqual(r.status, 0);
   const written = fs.readFileSync(summaryFile, 'utf8');
