@@ -554,7 +554,7 @@ function getChecks(rootDir) {
       id: 'gov-audit-trail',
       category: 'Governance & Identity', points: 2, scopes: ['repo'],
       path: '.mindforge/audit/',
-      description: 'Merkle-linked audit trail directory exists',
+      description: 'Hash-chained audit trail directory exists',
       pass: fileExists(rootDir, '.mindforge/audit') || fileExists(rootDir, '.planning'),
       fix: 'Ensure the audit-trail directory (.mindforge/audit/) is present.',
     },

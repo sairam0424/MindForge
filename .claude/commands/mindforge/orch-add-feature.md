@@ -34,7 +34,7 @@ with `$ARGUMENTS` as the request and `operation = add-feature`. The engine will:
 3. TDD each task via `mindforge-tdd_extended` (new failing tests → green), then
    `/mindforge:review` (+ the `quick.md` security auto-trigger / `security-reviewer`
    if a security trigger is touched).
-4. Commit as conventional `feat(...)` commits, each writing a Merkle-linked
+4. Commit as conventional `feat(...)` commits, each writing a hash-chained
    AUDIT.jsonl entry. → **GATE 2** (confirm before commit).
 
 Honor both gates — do not write implementation before Gate 1, do not commit

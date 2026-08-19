@@ -308,6 +308,193 @@ test('this chain is not called a Merkle tree in the core security docs', () => {
   }
 });
 
+// ── the repo-wide "Merkle" sweep (HON-merkle-sweep) ──────────────────────────
+//
+// The test above covers the two documents a security reviewer opens first. It left 31 OTHER tracked
+// files calling the linear chain "Merkle-linked" — including `.claude/CLAUDE.md`, its `.agent/` twin
+// and the generated `mindforge-protocol` skill, all THREE copies of seven `/mindforge:*` command
+// docs, `.mindforge/skills/orch-pipeline/SKILL.md`, `CODEBASE-MAP.md` and
+// `MINDFORGE-AGENTIC-SECURITY.md`. Those are what an agent reads as a current statement of
+// behaviour, so they mattered more than the security pages did.
+//
+// Re-measured on the tree these assertions were written against (base 963902d): `git grep -Il -i
+// merkle` matched 49 tracked files before the sweep and 18 after. Detection profile, measured
+// through the real writer and the real bin/verify-audit.js (see verifyChain above): mutation ->
+// exit 1, mid-file deletion -> exit 1, TAIL TRUNCATION -> exit 0. So "Merkle", "tamper-proof" and
+// "immutable" all overstate it.
+
+/** A line mentions the term at all. */
+const MERKLE_MENTION = /merkle/i;
+
+/**
+ * A line that mentions the term but CORRECTS it. Deliberately STRONGER than the regex in the
+ * per-document test above, which also accepts a bare `linear`: the sentence "a Merkle tree verifies
+ * in linear time" satisfies that, so it is a marker a false claim can meet by accident. Pinned by
+ * the decoy assertions below.
+ */
+const MERKLE_CORRECTED = /not a Merkle|not a hash tree|no hash tree|no inclusion proof|misnamed|wrong word/i;
+
+/**
+ * Paths where the term is allowed to survive. A trailing `/` is a directory prefix; everything else
+ * is an exact repo-relative path. Every entry is justified, and `the Merkle allowlist excludes only
+ * what it names` below asserts that each one really does cover a file that mentions the term AND
+ * that none of them shadows a live instructional path.
+ */
+const MERKLE_ALLOWLIST = [
+  // HISTORICAL RECORD — a record of what was said at the time. Rewriting a changelog or a dated
+  // release note destroys the history that makes the correction legible.
+  'RELEASENOTES.md',
+  'changelogs/',
+  'docs/research/',       // dated audit research reports (2026-08-*) that FOUND this defect
+  'docs/superpowers/',    // dated plans/specs (2026-05-30-*) recording a past decision
+  // CODE IDENTIFIER, reported rather than swept. ztai-archiver.js:57 persists `merkleRoot` into
+  // .mindforge/audit/manifests/*.json and verifyIntegrity():157 reads that key back, so a rename
+  // invalidates every manifest already on disk. It needs a migration, not a doc sweep.
+  'bin/governance/ztai-archiver.js',
+  // GENERATED SNAPSHOT — an LLM-written code index rewritten wholesale by its own tool. Hand-edits
+  // are overwritten on the next run and nobody reads it as instruction.
+  '.understand-anything/knowledge-graph.json',
+  // THIS GATE'S OWN EVIDENCE. These files quote the false claims in order to forbid them, and
+  // reference the `merkleRoot` identifier; a scanner that reads its own decoys reports itself.
+  'tests/audit-claims-honesty.test.js',
+  'tests/ztai-archiver-integrity.test.js',
+  'tests/ztai-enterprise.test.js',
+];
+
+/**
+ * The live files still ALLOWED to mention the term, because each mention is a correction. Pinned
+ * exactly: if the allowlist ever widens, this set shrinks and the assertion fails rather than the
+ * gate quietly covering less.
+ */
+const MERKLE_LIVE_WITH_CORRECTIONS = [
+  'SECURITY.md',
+  'docs/architecture/V4-SWARM-MESH.md',
+  'docs/security/SECURITY.md',
+  'docs/security/ZTAI-OVERVIEW.md',
+];
+
+/**
+ * Live instructional paths the allowlist must NEVER cover. Half are files this sweep corrected, the
+ * rest are the obvious places a reintroduction would land. Each is asserted TRACKED, because
+ * `isAllowlisted('typo.md') === false` would otherwise satisfy the check for free.
+ */
+const MERKLE_MUST_BE_SCANNED = [
+  '.claude/CLAUDE.md', '.agent/CLAUDE.md', 'plugins/mindforge/skills/mindforge-protocol/SKILL.md',
+  '.claude/commands/mindforge/orch-fix-defect.md', '.agent/mindforge/orch-fix-defect.md',
+  'plugins/mindforge/commands/orch-fix-defect.md',
+  '.mindforge/skills/orch-pipeline/SKILL.md', '.mindforge/skills/agent-architecture-audit/SKILL.md',
+  '.mindforge/production/production-checklist.md',
+  'CODEBASE-MAP.md', 'MINDFORGE-AGENTIC-SECURITY.md', 'README.md', 'MINDFORGE.md', 'AGENTS.md',
+  'bin/harness-audit.js', 'bin/engine/sre-manager.js',
+  'SECURITY.md', 'docs/security/SECURITY.md', 'docs/security/ZTAI-OVERVIEW.md',
+  'docs/architecture/V4-SWARM-MESH.md',
+];
+
+const isMerkleAllowlisted = (f) =>
+  MERKLE_ALLOWLIST.some((a) => (a.endsWith('/') ? f.startsWith(a) : f === a));
+
+/**
+ * The gate's predicate, taking its input as an argument so the decoy assertions below exercise the
+ * SAME code the repo scan does rather than a re-implementation of it.
+ * @param {Array<{file: string, line: number, text: string}>} hits
+ */
+const merkleOffenders = (hits) => hits.filter(
+  (h) => !isMerkleAllowlisted(h.file) && MERKLE_MENTION.test(h.text) && !MERKLE_CORRECTED.test(h.text));
+
+/** Tracked files containing the term, via git so the result is identical on a fresh clone. */
+function merkleFiles() {
+  const r = spawnSync('git', ['grep', '-Il', '-i', 'merkle', '--', '.'], { cwd: REPO_ROOT, encoding: 'utf8' });
+  // git grep exits 0 with matches, 1 with none, >1 on error. Folding an error into "no matches" is
+  // precisely how a gate reports success while measuring nothing.
+  assert.ok(r.status === 0 || r.status === 1,
+    `git grep failed with status ${r.status}, so this gate measured nothing: ${r.stderr}`);
+  return (r.stdout || '').split('\n').filter(Boolean).sort();
+}
+
+/** @param {string[]} files @returns {Array<{file: string, line: number, text: string}>} */
+function merkleHits(files) {
+  const out = [];
+  for (const f of files) {
+    const lines = fs.readFileSync(path.join(REPO_ROOT, f), 'utf8').split('\n');
+    lines.forEach((text, i) => { if (MERKLE_MENTION.test(text)) out.push({ file: f, line: i + 1, text }); });
+  }
+  return out;
+}
+
+test('no live instructional file calls the audit chain a Merkle anything', () => {
+  const files = merkleFiles();
+  // Non-vacuity floor. 18 tracked files matched when this was written; a git grep that suddenly
+  // matches almost nothing means the scan broke, not that the repo got clean.
+  assert.ok(files.length >= 10,
+    `only ${files.length} tracked file(s) matched /merkle/i (18 when written) — the scan is broken, `
+    + 'not the repo clean');
+
+  const live = files.filter((f) => !isMerkleAllowlisted(f));
+
+  // The offending LINES first, because that is the actionable message. Asserting the file SET first
+  // reported "classify the new one" for a plain reintroduction into a file already on the list —
+  // true but unhelpful.
+  const bad = merkleOffenders(merkleHits(live)).map((h) => `${h.file}:${h.line}: ${h.text.trim().slice(0, 120)}`);
+  assert.deepStrictEqual(bad, [],
+    `${bad.length} line(s) describe the audit chain as Merkle without correcting it. It is a LINEAR `
+    + 'SHA-256 back-link chain (bin/governance/audit-hash.js): no hash tree, no inclusion proof. Say '
+    + `"hash-chained append-only audit log (SHA-256 back-links)" instead:\n  ${bad.join('\n  ')}`);
+
+  // Then the SET, pinned exactly: a widened allowlist shrinks this list, and a new file that merely
+  // mentions the term correctively still has to be classified on purpose rather than drift in.
+  assert.deepStrictEqual(live, MERKLE_LIVE_WITH_CORRECTIONS,
+    'the set of live files mentioning the term changed. Classify it: LIVE INSTRUCTIONAL '
+    + '(correct it), HISTORICAL RECORD (add to MERKLE_ALLOWLIST with a reason), or CODE IDENTIFIER '
+    + `(decide deliberately). Got:\n  ${live.join('\n  ')}`);
+});
+
+test('the Merkle gate catches a reintroduction, in both directions', () => {
+  // NON-VACUITY for the test above, through the same predicate. Without this pair, MERKLE_MENTION
+  // could stop matching, or MERKLE_CORRECTED could start matching everything, and the repo scan
+  // would still report zero offenders.
+  const claim = '- [ ] **Audit Always**: all entries must be Merkle-linked.';
+
+  assert.strictEqual(merkleOffenders([{ file: '.claude/CLAUDE.md', line: 81, text: claim }]).length, 1,
+    'the exact sentence this sweep removed from .claude/CLAUDE.md:81 must be flagged if it returns');
+  assert.strictEqual(merkleOffenders([{ file: 'changelogs/v10.0.0.md', line: 11, text: claim }]).length, 0,
+    'the allowlist must be decided by PATH — the identical sentence is legitimate history in a changelog');
+  assert.strictEqual(
+    merkleOffenders([{ file: 'SECURITY.md', line: 70, text: 'Not a Merkle tree: no inclusion proof.' }]).length, 0,
+    'a mention that corrects itself must pass, or the gate forces the correction off the page');
+  assert.strictEqual(
+    merkleOffenders([{ file: 'SECURITY.md', line: 1, text: 'A Merkle tree verifies in linear time.' }]).length, 1,
+    'a bare "linear" must NOT count as a correction marker — that is how a false claim satisfies its '
+    + 'own guard by accident');
+});
+
+test('the Merkle allowlist excludes only what it names', () => {
+  const files = merkleFiles();
+
+  // (a) No dead or speculative entries: each must actually cover a file that mentions the term. An
+  // allowlist entry with nothing behind it is silent scope removal waiting for a future mention.
+  const unjustified = MERKLE_ALLOWLIST.filter(
+    (a) => !files.some((f) => (a.endsWith('/') ? f.startsWith(a) : f === a)));
+  assert.deepStrictEqual(unjustified, [],
+    `${unjustified.length} allowlist entry(ies) cover no file that mentions the term, so they only `
+    + `widen the exemption: ${unjustified.join(', ')}`);
+
+  // (b) The allowlist does not swallow the live surface. "This sweep touches many files; a gate that
+  // excludes too much is indistinguishable from one that works."
+  const trackedProbe = spawnSync('git', ['ls-files', '--', ...MERKLE_MUST_BE_SCANNED],
+    { cwd: REPO_ROOT, encoding: 'utf8' });
+  assert.strictEqual(trackedProbe.status, 0, `git ls-files failed: ${trackedProbe.stderr}`);
+  const tracked = new Set((trackedProbe.stdout || '').split('\n').filter(Boolean));
+  const missing = MERKLE_MUST_BE_SCANNED.filter((p) => !tracked.has(p));
+  assert.deepStrictEqual(missing, [],
+    `${missing.length} pinned path(s) are not tracked, so asserting they are un-allowlisted proves `
+    + `nothing — fix the path or drop it: ${missing.join(', ')}`);
+
+  const shadowed = MERKLE_MUST_BE_SCANNED.filter((p) => isMerkleAllowlisted(p));
+  assert.deepStrictEqual(shadowed, [],
+    `${shadowed.length} live instructional path(s) are exempted by the allowlist, so a reintroduction `
+    + `there would go unnoticed: ${shadowed.join(', ')}`);
+});
+
 test('no published security doc leaks a local filesystem path', () => {
   // docs/security/SECURITY.md shipped a `file:///Users/sairamugge/Desktop/MindForge/...` link, which
   // both leaked the maintainer's directory layout and pointed at a path that no longer exists.

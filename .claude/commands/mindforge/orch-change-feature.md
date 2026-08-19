@@ -36,7 +36,7 @@ with `$ARGUMENTS` as the request and `operation = change-feature`. The engine wi
    first is what makes this a tweak, not a fix.)
 4. `/mindforge:review` (+ the `quick.md` security auto-trigger / `security-reviewer`
    on a security trigger), then commit as conventional `feat(...)` / `refactor(...)`
-   + Merkle-linked AUDIT.jsonl entry. → **GATE 2**.
+   + hash-chained AUDIT.jsonl entry. → **GATE 2**.
 
 Use this only when the feature **works** but should behave differently — not for
 bugs (`/mindforge:orch-fix-defect`) or net-new capability
