@@ -143,6 +143,95 @@ test('with no error listener the failure is reported, not swallowed', () => {
     `an unlistened error must still be reported. stderr was: ${JSON.stringify(r.stderr.slice(0, 300))}`);
 });
 
+test('exhausting the reconnect attempts emits `close`, so a dead stream is observable', () => {
+  ensureBuilt();
+  // The default backoff is 1s+2s+3s+4s+5s = 15s, which is 15 seconds added to every CI run forever
+  // for one branch. `maxReconnectAttempts` is `private` in TypeScript but an ordinary property at
+  // runtime, so the driver lowers it to 2 and the same branch is reached in ~3s.
+  //
+  // Lowering it could hide a change to the DEFAULT, so the driver also reports the default read from
+  // a fresh instance and this test asserts it is still 5. Cheaper AND covering one thing more.
+  const r = runDriver(`
+let made = 0;
+globalThis.WebSocket = class {
+  constructor() {
+    made++;
+    const mine = made;
+    setTimeout(() => {
+      if (mine === 1) {
+        this.onopen && this.onopen();
+        setTimeout(() => this.onclose && this.onclose(), 10);
+      } else {
+        // Every reconnect fails, and each failure also closes, driving the next attempt.
+        this.onerror && this.onerror(new Error('refused'));
+        setTimeout(() => this.onclose && this.onclose(), 5);
+      }
+    }, 5);
+  }
+  send() {}
+  close() {}
+};
+(async () => {
+  const defaultMax = new WebSocketEventStream().maxReconnectAttempts;
+  const s = new WebSocketEventStream();
+  s.maxReconnectAttempts = 2;     // TS-private, plain property at runtime: 1s + 2s instead of 15s
+  const closes = [];
+  s.on('error', () => {});
+  s.on('close', (d) => closes.push(d));
+  await s.connect();
+  await new Promise((res) => setTimeout(res, 4500));
+  process.stdout.write(JSON.stringify({ closes, sockets: made, defaultMax }) + '\\n');
+})();
+`);
+  assert.strictEqual(r.status, 0, `exited ${r.status}: ${r.stderr.slice(0, 300)}`);
+  const out = JSON.parse(r.stdout.trim().split('\n').filter(Boolean).pop());
+
+  // The default must not drift unnoticed just because the driver lowers it.
+  assert.strictEqual(out.defaultMax, 5,
+    `maxReconnectAttempts defaults to ${out.defaultMax}, expected 5. sdk/README.md states "5 attempts".`);
+
+  // Non-vacuity: 1 initial + 2 reconnects. If fewer, the backoff never ran to exhaustion and the
+  // absence of a close event would prove nothing.
+  assert.strictEqual(out.sockets, 3,
+    `${out.sockets} sockets constructed, expected 3 (1 initial + 2 reconnects). The attempts did not `
+    + 'run to exhaustion, so this test cannot say anything about the exhausted branch.');
+
+  assert.strictEqual(out.closes.length, 1,
+    `expected exactly one 'close' event once attempts were exhausted, got ${out.closes.length}. `
+    + 'sdk/README.md promises this; without it a dead stream is silent.');
+  assert.strictEqual(out.closes[0].reason, 'reconnect attempts exhausted');
+  assert.strictEqual(out.closes[0].attempts, 2);
+});
+
+test('a deliberate disconnect() does NOT report itself as exhausted attempts', () => {
+  ensureBuilt();
+  // disconnect() sets maxReconnectAttempts to 0, which lands in the same else-branch as exhaustion.
+  // Without a guard the caller would be told their stream died when they closed it themselves.
+  const r = runDriver(`
+globalThis.WebSocket = class {
+  constructor() { setTimeout(() => this.onopen && this.onopen(), 5); }
+  send() {}
+  close() { setTimeout(() => this.onclose && this.onclose(), 5); }
+};
+(async () => {
+  const s = new WebSocketEventStream();
+  const closes = [];
+  s.on('close', (d) => closes.push(d));
+  await s.connect();
+  const ws = s.ws;               // keep a handle: disconnect() nulls the field
+  s.disconnect();
+  ws.close();                    // a real socket fires onclose after close()
+  await new Promise((res) => setTimeout(res, 300));
+  process.stdout.write(JSON.stringify({ closes }) + '\\n');
+})();
+`);
+  assert.strictEqual(r.status, 0, `exited ${r.status}: ${r.stderr.slice(0, 300)}`);
+  const out = JSON.parse(r.stdout.trim().split('\n').filter(Boolean).pop());
+  assert.deepStrictEqual(out.closes, [],
+    `a caller-initiated disconnect emitted ${JSON.stringify(out.closes)}. It must stay silent — the `
+    + 'caller already knows, and "reconnect attempts exhausted" would be a false explanation.');
+});
+
 test('a missing global WebSocket fails legibly, not as a bare ReferenceError', () => {
   ensureBuilt();
   const r = runDriver(`

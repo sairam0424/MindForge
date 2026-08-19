@@ -249,9 +249,13 @@ export class WebSocketEventStream {
             // onerror: exit code 1, and the line after the wait never ran.
             this.connect().catch((err: unknown) => this.emit('error', err));
           }, 1000 * this.reconnectAttempts);
-        } else {
+        } else if (this.maxReconnectAttempts > 0) {
           // Attempts exhausted. This branch did not exist: the stream simply went quiet, leaving
           // the consumer with no way to learn it was dead.
+          //
+          // Guarded on maxReconnectAttempts > 0 because disconnect() sets it to 0 (:276). Without
+          // the guard, a DELIBERATE disconnect would emit 'close' with reason "reconnect attempts
+          // exhausted" — telling the caller their stream died when they closed it themselves.
           this.emit('close', {
             reason: 'reconnect attempts exhausted',
             attempts: this.reconnectAttempts,
