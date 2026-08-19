@@ -65,12 +65,28 @@ async function run() {
 
   const VALIDATOR = path.join(__dirname, '..', 'bin', 'skill-validator.js');
 
-  /** Run the validator in a scratch cwd. Exit status from .status, never through a pipe. */
+  /**
+   * Run the validator in a scratch cwd. Exit status from .status, never through a pipe.
+   *
+   * HOME is confined to a throwaway directory, not inherited. It used to be
+   * `HOME: process.env.HOME`, which tests/no-home-leak.test.js forbids: os.homedir() honours $HOME on
+   * POSIX, so any child that reaches it writes into the operator's real ~/.mindforge. This validator
+   * is not known to do that today, but the rule is deliberately blanket — the cost of confining is one
+   * mkdtemp and the cost of not confining is a suite that silently edits the developer's home.
+   *
+   * This was a MERGE-ONLY failure: #185 added this call site and #186 added the guard, so neither
+   * branch was red on its own and the combination was.
+   */
   function runValidator(args, cwd) {
-    const r = spawnSync(process.execPath, [VALIDATOR, ...args], {
-      cwd, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: process.env.HOME },
-    });
-    return { status: r.status, out: `${r.stdout || ''}${r.stderr || ''}` };
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-skillval-home-'));
+    try {
+      const r = spawnSync(process.execPath, [VALIDATOR, ...args], {
+        cwd, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: home },
+      });
+      return { status: r.status, out: `${r.stdout || ''}${r.stderr || ''}` };
+    } finally {
+      fs.rmSync(home, { recursive: true, force: true });
+    }
   }
 
   function withSkills(fn) {
