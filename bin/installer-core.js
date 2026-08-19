@@ -165,12 +165,53 @@ function getCommandDescription(content) {
 }
 
 // ── File system utilities ─────────────────────────────────────────────────────
+/**
+ * Refuse to write through a symlink.
+ *
+ * THE DEFECT, reproduced with a canary before this guard existed. `fs.writeFileSync` and
+ * `fs.copyFileSync` open the destination O_WRONLY|O_CREAT|O_TRUNC and FOLLOW symlinks, and every
+ * installer write funnels through the two primitives below. So a repository that commits its entry
+ * file as a symlink turned the documented install command into an arbitrary-file overwrite:
+ *
+ *     $ ln -s <victim> <project>/CLAUDE.md      # the repo carries this; git preserves symlinks
+ *     $ npx mindforge-cc@latest --claude --local
+ *     victim before: 24 bytes   sha 2cfdbb20c25ced11
+ *     victim after:  5646 bytes sha 05b78d05307b2350        <- overwritten
+ *     <project>/CLAUDE.md.backup-<epoch> CONTAINS THE VICTIM CONTENT   <- and disclosed
+ *
+ * Two separate harms in one step: the target is destroyed, and because safeCopyClaude reads the
+ * destination THROUGH the link before replacing it, the victim's previous contents are copied into
+ * the project's working tree as a backup file. Point the link at anything the installing user can
+ * write and both happen with their privileges.
+ *
+ * Refusing rather than unlinking is deliberate. Unlinking would silently change what the user's
+ * project looks like; refusing leaves their file untouched and tells them why. Writing through a
+ * symlink is not something an installer ever legitimately needs to do.
+ *
+ * SCOPE, stated rather than implied: this guards the destination FILE. A symlinked DIRECTORY in the
+ * destination path is a separate escape — mkdirSync/copyFileSync resolve it too — and is not covered
+ * here. Closing that needs a containment check against the install root, which behaves differently
+ * for --local (cwd-relative) and global installs, so it belongs in its own change.
+ */
+function assertNotSymlink(p) {
+  let st;
+  try { st = fs.lstatSync(p); } catch { return; }   // absent is a normal, safe state
+  if (!st.isSymbolicLink()) return;
+  let target = '';
+  try { target = ` -> ${fs.readlinkSync(p)}`; } catch { target = ' -> <dangling>'; }
+  throw new Error(
+    `[installer] REFUSING to write through a symlink: ${p}${target}\n`
+    + '  fs.writeFileSync/copyFileSync follow symlinks, so this would overwrite the target outside\n'
+    + '  the project and could copy its contents into the working tree as a backup.\n'
+    + '  Remove or replace the link, then re-run the installer.');
+}
+
 const fsu = {
   exists:     p  => fs.existsSync(p),
   read:       p  => fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : '',
-  write:      (p, t) => { fsu.ensureDir(path.dirname(p)); fs.writeFileSync(p, t, 'utf8'); },
+  write:      (p, t) => { assertNotSymlink(p); fsu.ensureDir(path.dirname(p)); fs.writeFileSync(p, t, 'utf8'); },
   ensureDir:  p  => { if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true }); },
-  copy:       (src, dst) => { fsu.ensureDir(path.dirname(dst)); fs.copyFileSync(src, dst); },
+  copy:       (src, dst) => { assertNotSymlink(dst); fsu.ensureDir(path.dirname(dst)); fs.copyFileSync(src, dst); },
   listFiles:  p  => fs.existsSync(p) ? fs.readdirSync(p) : [],
   listFilesRecursive: (p, ext = '.md') => {
     if (!fs.existsSync(p)) return [];
@@ -358,6 +399,12 @@ function resolveBaseDir(runtime, scope) {
 // ── CLAUDE.md safe copy ───────────────────────────────────────────────────────
 function safeCopyClaude(src, dst, options = {}) {
   const { force = false, verbose = false } = options;
+
+  // BEFORE reading. fsu.read() resolves the link, so checking here rather than relying on the guard
+  // inside fsu.copy() is what stops the DISCLOSURE half: with a symlinked destination the old order
+  // read the victim's contents and wrote them to `${dst}.backup-<epoch>` inside the project, and that
+  // backup path is a fresh regular file, so the primitive's guard would never have fired on it.
+  assertNotSymlink(dst);
 
   if (fsu.exists(dst)) {
     const existing = fsu.read(dst);

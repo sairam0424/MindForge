@@ -79,6 +79,17 @@ ROADMAP_V7.md
 .mindforge/*.conflict.*
 .mindforge/**/*.conflict.*
 .mindforge/memory/sync-manifest.json
+# SRE shadow mirrors. bin/autonomous/auto-runner.js:217 constructs ShadowMirror with no options, so
+# bin/sre/shadow-mirror.js:29 falls back to `process.cwd()/.mindforge/mirrors` — a FULL git-worktree
+# replica of the project. Measured: one run left a 49-entry copy of this repo under
+# .mindforge/mirrors/mirror-sre-<id>/, including its own plugins/mindforge/.mcp.json. Untracked and
+# unignored, so a single `git add -A` after an incident-remediation run commits the whole tree twice.
+#
+# NOTE this does NOT stop `eslint .` from walking a stray mirror: eslint flat config does not read
+# .gitignore, and a mirrored copy of .mindforge/dynamic-workflows/scripts/ produces parse errors that
+# turn `npm run lint` red. Same human decision as `.claude/worktrees/**` — both need an ignore entry in
+# the protected eslint.config.mjs.
+.mindforge/mirrors/
 # Runtime auth tokens (generated at server startup, never commit)
 .mindforge/.dashboard-token
 .mindforge/.browser-daemon-token
