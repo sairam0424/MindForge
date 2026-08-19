@@ -4,8 +4,10 @@
  */
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const assert = require('assert');
+const { execFileSync } = require('child_process');
 
 if (!fs.existsSync(path.join(process.cwd(), 'bin/mindforge-cli.js'))) {
   console.error('ERROR: Tests must be run from the MindForge project root: cd MindForge && npm test');
@@ -189,52 +191,136 @@ test('bin/install.js is executable and has no obvious syntax errors', () => {
     'bin/install.js code should not reference verifyInstall — it lives in installer-core.js');
 });
 
-test('No secrets in any committed file', () => {
-  const secretPatterns = [
-    /password\s*=\s*['"][^'"]{6,}/i,
-    /api[_-]?key\s*=\s*['"][^'"]{10,}/i,
-    /secret\s*=\s*['"][^'"]{8,}/i,
-    /-----BEGIN (RSA |EC |PRIVATE )?KEY-----/,
-    /sk-[a-zA-Z0-9]{20,}/,
-  ];
+// ── Committed-secret scan ─────────────────────────────────────────────────────
+//
+// THE DEFECT THIS REPLACES. The test below is named "No secrets in any COMMITTED file" and its
+// own comment said that scanning gitignored trees "is both wrong and a false-positive source" —
+// and then it called `scanDir('.')`, walking the working tree. The committed set was approximated
+// by a 7-entry `SKIP_DIRS` denylist standing in for a `.gitignore` that has ~60 entries. Two
+// consequences, both observed:
+//
+//   FALSE POSITIVES. Any gitignored file holding a secret-shaped string reds the suite, and
+//   because `.husky/pre-commit` runs `npm test`, that BLOCKS EVERY COMMIT. Measured twice in one
+//   day, both times on private notes under the gitignored `scratch-pad/` that merely *described*
+//   a hardcoded-credential pattern. The escape is `--no-verify`, which also skips the staged
+//   gitleaks scan at `.husky/pre-commit:9-25` — so a false positive here actively degrades
+//   security.
+//
+//   FALSE NEGATIVES. Only `.md`/`.js`/`.json` were read. Measured: 2982 tracked files, 2858
+//   scanned, so 59 TRACKED files were invisible — 19 `.cjs`, 14 `.yml`, 12 `.ts`, 9 `.sh`,
+//   4 `.mjs`, 1 `.toml`. The 14 YAML files are `.github/workflows/`, which is where credentials
+//   actually appear. Expanding the extension list found 0 new violations, so the coverage was
+//   free; it had simply never been taken.
+//
+// THE FIX is to make the scanned set BE the committed set, by enumerating `git ls-files` instead
+// of walking the disk. Not by appending `scratch-pad` to `SKIP_DIRS`: that makes the name true
+// for one directory and leaves every other ignored path scanned, buying a green hook while
+// keeping the lie.
+//
+// WHY DROPPING UNTRACKED FILES IS SAFE. A brand-new file with a real secret is caught earlier and
+// better: `.husky/pre-commit:9-25` runs `gitleaks protect --staged` BEFORE `npm test`, and that
+// scans exactly the staged set with a purpose-built engine. This test's job is the standing
+// committed history, which gitleaks-staged does not cover.
 
-  // Skip dirs that are not committed to this repo: deps, VCS internals, and the
-  // gitignored donor/upstream repos (ECC/, awesome-claude-code-subagents/) whose
-  // OWN content — including security docs that contain example secret patterns —
-  // is not part of MindForge's committed tree. This test asserts on COMMITTED
-  // files, so scanning gitignored donor trees is both wrong and a false-positive
-  // source.
-  const SKIP_DIRS = ['node_modules', '.git', 'ECC', 'awesome-claude-code-subagents', '.serena', 'hermes-agent', 'Ag-Bash'];
+// A secret-shaped match is a violation only if it is NOT an obvious placeholder. Allowlisting the
+// placeholder VALUE rather than whole directories keeps the scanner live over docs that TEACH
+// about secret patterns, so a genuine credential in one of them would still be caught.
+const PLACEHOLDER = /(xxxx|x{4,}|your[-_]?(api[-_]?)?key|placeholder|example|redacted|\.\.\.|<[^>]+>|changeme|dummy|fake|sample)/i;
 
-  // Obvious placeholder tokens. A "secret-shaped" match that contains one of
-  // these is a pedagogical example (e.g. security rule docs that TEACH about
-  // secret patterns), not a real credential. We allowlist the placeholder VALUE
-  // rather than skip whole directories, so the scanner stays active over those
-  // files and would still catch a genuine leaked secret.
-  const PLACEHOLDER = /(xxxx|x{4,}|your[-_]?(api[-_]?)?key|placeholder|example|redacted|\.\.\.|<[^>]+>|changeme|dummy|fake|sample)/i;
+const SECRET_PATTERNS = [
+  /password\s*=\s*['"][^'"]{6,}/i,
+  /api[_-]?key\s*=\s*['"][^'"]{10,}/i,
+  /secret\s*=\s*['"][^'"]{8,}/i,
+  /-----BEGIN (RSA |EC |PRIVATE )?KEY-----/,
+  /sk-[a-zA-Z0-9]{20,}/,
+];
 
-  function scanDir(dir) {
-    const base = path.basename(dir);
-    if (SKIP_DIRS.includes(base) || dir.includes('node_modules') || dir.includes('.git')) return;
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
-    entries.forEach(entry => {
-      const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        scanDir(full);
-      } else if (entry.name.endsWith('.md') || entry.name.endsWith('.js') || entry.name.endsWith('.json')) {
-        const content = fs.readFileSync(full, 'utf8');
-        secretPatterns.forEach(pattern => {
-          const m = content.match(pattern);
-          // A match is a violation only if it is NOT an obvious placeholder.
-          if (m && !PLACEHOLDER.test(m[0])) {
-            assert.fail(`Potential secret in ${full}: ${m[0].slice(0, 40)}`);
-          }
-        });
-      }
-    });
+// Text formats a credential can hide in. `.yml` and `.sh` are the additions that matter.
+const SCAN_EXT = ['.md', '.js', '.json', '.yml', '.yaml', '.ts', '.mjs', '.cjs', '.sh', '.toml', '.txt'];
+
+// The committed set, NUL-delimited so paths with spaces survive.
+function trackedTextFiles(cwd) {
+  const out = execFileSync('git', ['ls-files', '-z'], { cwd, maxBuffer: 1 << 28 }).toString('utf8');
+  return out.split('\0').filter(Boolean).filter((f) => SCAN_EXT.some((e) => f.endsWith(e)));
+}
+
+function findSecrets(cwd, files) {
+  const hits = [];
+  for (const rel of files) {
+    let body;
+    try { body = fs.readFileSync(path.join(cwd, rel), 'utf8'); } catch { continue; }
+    for (const pattern of SECRET_PATTERNS) {
+      const m = body.match(pattern);
+      if (m && !PLACEHOLDER.test(m[0])) hits.push({ file: rel, match: m[0].slice(0, 40) });
+    }
   }
+  return hits;
+}
 
-  scanDir('.');
+test('No secrets in any committed file', () => {
+  const files = trackedTextFiles(process.cwd());
+
+  // NON-VACUITY FLOOR, and the load-bearing assertion here. If `git ls-files` fails, returns
+  // nothing, or the extension filter stops matching, the loop below scans zero files and the
+  // deepStrictEqual passes green — reporting "no secrets" having looked at nothing. That is this
+  // repository's signature defect and the reason this assertion comes FIRST, with its own message.
+  assert.ok(files.length >= 2800,
+    `only ${files.length} tracked text files enumerated (measured 2917 at the time of writing). `
+    + 'git ls-files is broken or the extension filter stopped matching — the SCAN is vacuous, not '
+    + 'the repository clean. Do not lower this floor to make it pass.');
+
+  const hits = findSecrets(process.cwd(), files);
+  assert.deepStrictEqual(hits, [],
+    `${hits.length} potential secret(s) in COMMITTED files: `
+    + hits.map((h) => `${h.file}: ${h.match}`).join(' | '));
+});
+
+test('the scan set is the COMMITTED set — a tracked secret is caught, an ignored file is not', () => {
+  // The mechanism test, run against a throwaway repo so it proves the RULE rather than the current
+  // state of this one. Byte-identical string in both places; only the tracked file may be reported.
+  //
+  // Assembled from fragments so the literal never appears in this file's own source — otherwise the
+  // scanner above would flag install.test.js, which is itself tracked.
+  const CANARY = `${'pass'}word = "n0tAplaceh0lder"`;
+
+  const tmp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-scanset-')));
+  try {
+    const git = (...args) => execFileSync('git', args, { cwd: tmp, stdio: 'pipe' });
+    git('init', '-q');
+    git('config', 'user.email', 'test@example.invalid');
+    git('config', 'user.name', 'test');
+
+    fs.writeFileSync(path.join(tmp, '.gitignore'), 'notes/\n');
+    fs.mkdirSync(path.join(tmp, 'notes'));
+    fs.writeFileSync(path.join(tmp, 'app.js'), `const ${CANARY};\n`);
+    fs.writeFileSync(path.join(tmp, 'notes', 'private.md'), `Debugging note: ${CANARY} was hardcoded.\n`);
+    git('add', 'app.js', '.gitignore');
+    git('commit', '-qm', 'init');
+
+    const flagged = findSecrets(tmp, trackedTextFiles(tmp)).map((h) => h.file).sort();
+
+    // Bidirectional on purpose: one assertion catches both failure directions.
+    assert.deepStrictEqual(flagged, ['app.js'],
+      `expected exactly the TRACKED file to be flagged, got ${JSON.stringify(flagged)}. `
+      + 'If notes/private.md is present, the scanner is walking the working tree again and every '
+      + 'gitignored private note that MENTIONS a credential will block all commits. '
+      + 'If app.js is absent, the scanner has stopped detecting a real secret.');
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test('the expanded extension list actually reaches workflows and shell scripts', () => {
+  // Pins the false-negative half. Without this, someone trimming SCAN_EXT back to .md/.js/.json
+  // silently re-hides 59 tracked files — including every GitHub workflow — and no test notices.
+  const files = trackedTextFiles(process.cwd());
+  const count = (ext) => files.filter((f) => f.endsWith(ext)).length;
+
+  assert.ok(count('.yml') >= 10,
+    `only ${count('.yml')} tracked .yml files are scanned. .github/workflows/ is where credentials `
+    + 'appear; if this dropped, SCAN_EXT was narrowed and the workflows are unscanned again.');
+  assert.ok(count('.sh') >= 5,
+    `only ${count('.sh')} tracked .sh files are scanned — shell scripts are back out of scope.`);
 });
 
 // ── Results ───────────────────────────────────────────────────────────────────
