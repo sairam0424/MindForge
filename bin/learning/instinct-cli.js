@@ -23,6 +23,7 @@ const fs = require('fs');
 const path = require('path');
 
 const guard = require('./lib/ssrf-guard');
+const { redactSecrets } = require('../utils/redact-secrets');
 const { detectProject } = require('../hooks/lib/detect-project');
 const { withFileLock } = require('../utils/file-lock');
 
@@ -197,7 +198,13 @@ async function cmdImport(args, cfg) {
   for (const e of incoming) {
     if (!e || !guard.validateInstinctId(e.id || '')) { process.stderr.write(`skipping entry with invalid id: ${e && e.id}\n`); continue; }
     if ((Number(e.confidence) || 0) < minC) continue;
+    // Import is the store's second ingress and it accepts an https:// source, so incoming text is
+    // untrusted twice over: it may carry a credential from whoever exported it. Redacting here
+    // rather than at every egress means export, promote, list and the LLM promotion path into a
+    // published SKILL.md all inherit already-clean data — one choke point instead of five.
     valid.push(Object.assign({}, e, {
+      observation: redactSecrets(e.observation),
+      behavior: redactSecrets(e.behavior),
       project: projectName, project_id: scopeId, source: 'imported',
       imported_from: source, created_at: now, updated_at: now,
     }));

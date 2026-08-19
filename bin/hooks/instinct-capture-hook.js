@@ -15,6 +15,7 @@ const path = require('path');
 const crypto = require('crypto');
 const os = require('os');
 const { detectProject } = require('./lib/detect-project');
+const { redactSecrets } = require('../utils/redact-secrets');
 
 // ── Configuration ────────────────────────────────────────────────────────────
 
@@ -81,18 +82,25 @@ function extractPattern(payload) {
     if (!command || command.length < 5) return null;
     // Skip trivial commands
     if (/^(ls|pwd|echo|cat|cd)\b/.test(command.trim())) return null;
+    // Redact BEFORE truncating. Slicing first can cut a credential mid-token, leaving a fragment
+    // that no longer matches its own prefix rule — a half-secret is still a secret.
+    const safe = redactSecrets(command).slice(0, 200);
     return {
-      observation: `Bash command succeeded: ${command.slice(0, 200)}`,
-      behavior: `Use pattern: ${command.slice(0, 200)}`,
+      observation: `Bash command succeeded: ${safe}`,
+      behavior: `Use pattern: ${safe}`,
     };
   }
 
   if (tool === 'task') {
     const description = payload.description || payload.task_description || payload.name || '';
     if (!description) return null;
+    // The Task branch leaks too, and it is easy to miss because it carries no "command" in its name.
+    // Measured: a payload {tool_name:'Task', status:'completed', description:'rotate prod secret
+    // using token <40 chars>'} wrote that token verbatim into BOTH fields.
+    const safe = redactSecrets(description).slice(0, 200);
     return {
-      observation: `Task completed successfully: ${description.slice(0, 200)}`,
-      behavior: `Reuse approach for similar tasks: ${description.slice(0, 200)}`,
+      observation: `Task completed successfully: ${safe}`,
+      behavior: `Reuse approach for similar tasks: ${safe}`,
     };
   }
 
