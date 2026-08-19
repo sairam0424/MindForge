@@ -64,12 +64,83 @@ test('installer backs up existing CLAUDE.md', () => {
   assert.ok(c.includes('backup') || c.includes('.backup-'), 'Should back up CLAUDE.md');
 });
 
-test('installer has self-install detection', () => {
-  const c = read('bin/installer-core.js');
-  assert.ok(
-    c.includes('isSelfInstall') || c.includes('\'mindforge-cc\''),
-    'Should detect self-install scenario'
-  );
+test('a self-install writes NOTHING over the repository\'s own tracked files', () => {
+  // THIS REPLACES A VACUOUS ASSERTION. It read:
+  //   assert.ok(c.includes('isSelfInstall') || c.includes("'mindforge-cc'"), 'Should detect self-install')
+  // — a grep of the source for a string that any COMMENT satisfies. It could not fail while the
+  // detection was broken, and it did not fail while the detection worked and the installer overwrote
+  // 149 tracked files anyway.
+  //
+  // THE DEFECT it now covers. `selfInstall` gated 8 write sites and missed two: the entry-file write
+  // and the entire command copy. So a self-install printed "Self-install detected — skipping framework
+  // file copy" and then overwrote `.claude/CLAUDE.md` plus 149 tracked files under
+  // `.claude/commands/`, with no backup — safeCopyClaude only backs up when the existing content does
+  // NOT contain "MindForge", and this repo's entry file does.
+  //
+  // Asserted against a real clone and real git status, because the property is "the working tree is
+  // untouched" and nothing short of git can establish that.
+  const os = require('os');
+  const path = require('path');
+  const { spawnSync } = require('child_process');
+
+  const REPO = process.cwd();
+  const work = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-selfinstall-')));
+  const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-selfinstall-home-')));
+  const clone = path.join(work, 'repo');
+
+  try {
+    const cloned = spawnSync('git', ['clone', '--quiet', '--no-hardlinks', '--shared', REPO, clone],
+      { encoding: 'utf8' });
+    assert.strictEqual(cloned.status, 0, `could not clone the repo: ${(cloned.stderr || '').slice(0, 200)}`);
+
+    // Carry any UNCOMMITTED installer changes into the clone, then commit them there, so the clone
+    // starts clean AND reflects the tree about to be committed. Without this the test could only ever
+    // describe committed state, which means it cannot go green until after the fix lands — and a gate
+    // you cannot run before committing gets bypassed with --no-verify. In CI the diff is empty and
+    // this is a no-op.
+    const diff = spawnSync('git', ['diff', 'HEAD', '--', 'bin', 'tests'], { cwd: REPO, encoding: 'utf8' });
+    if (diff.stdout && diff.stdout.trim()) {
+      const applied = spawnSync('git', ['apply', '--whitespace=nowarn', '-'],
+        { cwd: clone, encoding: 'utf8', input: diff.stdout });
+      assert.strictEqual(applied.status, 0,
+        `could not carry the working-tree diff into the clone: ${(applied.stderr || '').slice(0, 300)}`);
+      spawnSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-aqm', 'wt'],
+        { cwd: clone, encoding: 'utf8' });
+    }
+
+    // The clone must start clean, or "nothing changed" would be unmeasurable.
+    const before = spawnSync('git', ['status', '--porcelain'], { encoding: 'utf8', cwd: clone });
+    assert.strictEqual(before.stdout.trim(), '',
+      `the clone is not clean, so this test cannot attribute changes: ${before.stdout.slice(0, 200)}`);
+
+    // node_modules is not symlinked: bin/install.js must run on builtins plus its own bin/ tree.
+    const r = spawnSync(process.execPath, ['bin/install.js', '--claude', '--local', '--skip-wizard'], {
+      cwd: clone, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: home, CI: '1' },
+    });
+    assert.strictEqual(r.status, 0, `the self-install failed: ${(r.stderr || '').slice(-300)}`);
+
+    // NON-VACUITY: it must actually have taken the self-install branch. Without this, an install that
+    // errored early or ran as a normal install would also leave... no, a normal install would DIRTY the
+    // tree. But an install that did nothing at all would pass, so require the branch to announce itself.
+    assert.match(r.stdout, /Self-install detected/,
+      `the run did not take the self-install branch, so it proves nothing. Output: ${r.stdout.slice(-300)}`);
+
+    const after = spawnSync('git', ['status', '--porcelain'], { encoding: 'utf8', cwd: clone });
+    const modified = after.stdout.split('\n').filter((l) => l.startsWith(' M') || l.startsWith('M'));
+    assert.deepStrictEqual(modified, [],
+      `${modified.length} TRACKED file(s) were overwritten by a self-install:\n  `
+      + `${modified.slice(0, 8).join('\n  ')}\nThe installer says it is skipping the framework file `
+      + 'copy; it must not then copy. Measured before the gate: 149 files, zero backups.');
+
+    // And it must not claim work it did not do — the summary panel counts the SOURCE tree, so it
+    // announced "221 Total autonomous commands deployed" for a run that deployed none.
+    assert.ok(!/Total autonomous commands deployed/.test(r.stdout),
+      'the self-install printed the deployment summary panel, which reports source-tree counts and so '
+      + 'claims commands were deployed when none were written');
+  } finally {
+    fs.rmSync(work, { recursive: true, force: true });
+    fs.rmSync(home, { recursive: true, force: true });
+  }
 });
 
 test('installer excludes sensitive files (*.env, *.key, *.pem)', () => {
