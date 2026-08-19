@@ -219,7 +219,7 @@ Then re-run `/mindforge:migrate --dry-run`.
 | Area | Change | User action |
 | :--- | :--- | :--- |
 | **Database engine** | `better-sqlite3` replaced by `sql.js` (pure WASM) | None — transparent to consumers. Native build tools are no longer required. |
-| **SDK memory module** | Rewritten for sql.js compatibility | If you consume `@mindforge/sdk`, update to v10.0.1 |
+| **SDK memory module** | Rewritten for sql.js compatibility | If you consume `mindforge-sdk`, update to v10.0.1 |
 | **Dashboard auth** | Now requires a bearer token | Token is printed at startup. Pass it in the `Authorization` header. |
 | **VectorHub API** | Factory function `createVectorHub()` is the preferred entry point | The backward-compatible proxy still works; no immediate action needed. |
 | **Removed commands** | `sync-jira` and `sync-confluence` removed | These were never functional. Remove any references from your scripts. |
@@ -240,7 +240,7 @@ npx mindforge-cc --claude --local --force
 
 ### Notes for SDK consumers
 
-If you use `@mindforge/sdk` directly (e.g., for custom integrations):
+If you use `mindforge-sdk` directly (e.g., for custom integrations):
 
 - The memory module has been rewritten. Update your SDK dependency to `^10.0.1`.
 - Prefer `createVectorHub()` over direct instantiation. The legacy constructor proxy remains for backward compatibility but may be removed in a future major version.

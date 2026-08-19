@@ -1,6 +1,6 @@
 /**
  * MindForge SDK — Public API
- * @module @mindforge/sdk
+ * @module mindforge-sdk
  */
 
 export { MindForgeClient } from './client';

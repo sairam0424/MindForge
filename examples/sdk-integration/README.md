@@ -1,6 +1,6 @@
 # SDK Integration Example
 
-Demonstrates basic usage of the `@mindforge/sdk` package.
+Demonstrates basic usage of the `mindforge-sdk` package.
 
 ## Prerequisites
 
