@@ -4,7 +4,7 @@ This guide outlines the standard procedure for publishing a new version of `mind
 
 ## Prerequisites
 
-1. **NPM Permissions**: You must have publish access to the `mindforge-cc` and `@mindforge/sdk` packages.
+1. **NPM Permissions**: You must have publish access to the `mindforge-cc` and `mindforge-sdk` packages.
 2. **Clean State**: Ensure all changes are committed and your working directory is clean.
 3. **Authentication**: Run `npm whoami` to verify you are logged into the correct account.
 

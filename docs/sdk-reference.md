@@ -2,8 +2,8 @@
 
 ## Overview
 
-The `@mindforge/sdk` package provides a programmatic TypeScript API for integrating
-MindForge into tools, dashboards, and CI pipelines. Import from `@mindforge/sdk`.
+The `mindforge-sdk` package provides a programmatic TypeScript API for integrating
+MindForge into tools, dashboards, and CI pipelines. Import from `mindforge-sdk`.
 
 ```typescript
 import {
@@ -11,7 +11,7 @@ import {
   MindForgeEventStream,
   MindForgeMemory,
   commands,
-} from '@mindforge/sdk';
+} from 'mindforge-sdk';
 ```
 
 Current SDK version: `11.9.0`

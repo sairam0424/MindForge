@@ -94,7 +94,7 @@ MindForge/
 │   ├── revops/                # Revenue ops analytics (6 files)
 │   ├── updater/               # Self-update mechanism (3 files)
 │   └── utils/                 # Shared utilities (4 files)
-├── sdk/                       # TypeScript SDK (@mindforge/sdk)
+├── sdk/                       # TypeScript SDK (mindforge-sdk)
 │   ├── src/index.ts           # Exports: MindForgeClient, commands, types
 │   ├── src/client.ts          # Main API: health(), readState(), readHandoff()
 │   └── tests/                 # SDK-specific tests
@@ -318,7 +318,7 @@ UISwarm, BackendSwarm, SecuritySwarm, AIEngineeringSwarm, DeveloperExperienceSwa
 
 ---
 
-## SDK API (`@mindforge/sdk`)
+## SDK API (`mindforge-sdk`)
 
 ```typescript
 import { MindForgeClient, WebSocketEventStream } from 'mindforge-sdk';

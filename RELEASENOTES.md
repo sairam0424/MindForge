@@ -622,7 +622,7 @@ You must address these before upgrading from v9.x:
 |--------|--------|-----------|
 | `better-sqlite3` removed, replaced by `sql.js` | If you imported or extended VectorHub internals, the constructor API has changed | Use `createVectorHub()` factory function instead of `new VectorHub()` |
 | VectorHub uses FTS4 (not FTS5) | FTS5-specific syntax (e.g., `BM25`) no longer available | Use standard FTS4 `MATCH` queries; ranking is handled internally |
-| SDK `memory.ts` rewritten | If you imported memory utilities from `../../bin/` paths, those imports no longer resolve | Import from `@mindforge/sdk` directly — all public APIs are re-exported |
+| SDK `memory.ts` rewritten | If you imported memory utilities from `../../bin/` paths, those imports no longer resolve | Import from `mindforge-sdk` directly — all public APIs are re-exported |
 | Dashboard endpoints require auth | Unauthenticated requests to `/api/steering`, `/api/approve`, and SSE mutators now return 401 | Set `MINDFORGE_DASHBOARD_TOKEN` env var; pass as `Authorization: Bearer <token>` |
 | `sync-jira` / `sync-confluence` CLI routes removed | These were stubs with no implementation | Remove any scripts that invoke these commands |
 | Prompt injection blocklist removed | The regex-based `BLOCKED_PATTERNS` array no longer exists | Use the structured action allowlist in `bin/governance/action-allowlist.js` |
@@ -714,7 +714,7 @@ The database file format is compatible. No data migration is required.
 import { MemoryStore } from '../../bin/memory/store';
 
 // After (v10) — public SDK exports
-import { MemoryStore } from '@mindforge/sdk';
+import { MemoryStore } from 'mindforge-sdk';
 ```
 
 ### Step 5: Remove references to deleted commands
