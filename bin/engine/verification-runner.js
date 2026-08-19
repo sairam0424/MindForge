@@ -19,7 +19,19 @@ const STAGE_DEFS = {
       process.env.NODE_ENV === 'test',
   },
   lint: {
-    command: 'npx eslint . --max-warnings=0',
+    // `--max-warnings=0` used to be here, which made this stage IMPOSSIBLE to pass in the repo it
+    // ships from: measured, `npx eslint .` reports 199 problems / 0 errors / 199 warnings. So
+    // `mindforge verify` reported a lint FAILURE on a tree whose lint is green by the project's own
+    // definition — a confidently wrong answer, which is worse than no answer.
+    //
+    // Aligned with the project's own contract rather than a stricter threshold invented here:
+    //   package.json  "lint": "eslint ."                      (warnings tolerated)
+    //   CI            eslint . --max-warnings=9999            (warnings tolerated)
+    //   sdk CI        eslint src/ --max-warnings 0            (strict, but only over sdk/src)
+    // Two of the three tolerate warnings and the third is scoped to a different tree, so a
+    // repo-wide zero-warning gate was this file's opinion alone. Errors still fail the stage,
+    // because eslint exits non-zero on an error regardless of the warning threshold.
+    command: 'npx eslint .',
     skipIf: null,
   },
   audit: {
@@ -128,4 +140,7 @@ function formatReport(result) {
   return lines.join('\n');
 }
 
-module.exports = { runVerification, formatReport };
+// STAGE_DEFS is exported so a test can compare the lint stage's threshold against the project's own
+// lint script rather than hardcoding what it expects to find. Read-only by contract: mutating it
+// would change every subsequent run in the same process.
+module.exports = { runVerification, formatReport, STAGE_DEFS };
