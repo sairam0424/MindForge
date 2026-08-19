@@ -95,20 +95,41 @@ function sharedAssetTrees(base, { hooks = 11 } = {}) {
 }
 
 /**
- * Commands land flat in ONE directory per harness, fed by two sources in order — `.agent/mindforge`
- * (221 files) then `.agent/forge` (3 files) — both writing into cfg.commandsSubdir
- * (bin/installer-core.js:542-582). The three forge names collide with mindforge names and WIN, which
- * is why the total is 221 and not 224, and why the second probe below asserts help.md against the
- * forge copy: a subset check against `.agent/mindforge` alone would report three spurious diffs.
+ * Commands come from two sources: `.agent/mindforge` (221 files) and `.agent/forge` (3 files).
+ *
+ * THIS RECORD USED TO DOCUMENT A DATA-LOSS BUG AS A SPECIFICATION. Both sources were written into the
+ * same directory under their bare filenames, forge second, and all three forge names collide with
+ * mindforge names — so forge won. The previous version of this comment said so plainly ("The three
+ * forge names collide with mindforge names and WIN, which is why the total is 221 and not 224") and
+ * then encoded it: `min_files: 221` and a probe asserting `help.md` was byte-identical to
+ * `.agent/forge/help.md`. Someone observed the overwrite, understood it, and pinned it as correct.
+ *
+ * What was actually being lost, measured against the sources:
+ *   help.md 33 -> 11 lines, init-project.md 170 -> 36, plan-phase.md 131 -> 34.  253 lines, silently,
+ *   on every install — and the three surviving forge commands pointed at `.claude/commands/forge/`,
+ *   a directory the installer never created.
+ *
+ * The installer now gives each namespace its own destination (resolveCommandTarget in
+ * bin/installer-core.js), so nothing is overwritten. Measured after that change:
+ *   claude / opencode / gemini / copilot   commands/mindforge  221 files, sibling forge/  3 files
+ *   cursor (flat `rules/`)                 rules               224 files (forge prefixed `forge:`)
+ *
+ * So min_files is 221 for the namespaced harnesses — the probed directory holds mindforge's set — and
+ * 224 for cursor, where both land side by side. And `help.md` in the probed directory is now
+ * mindforge's, which is what the probe asserts.
+ *
+ * @param {string} asset
+ * @param {string} dir
+ * @param {number} [minFiles=221] 224 for harnesses whose commands directory is not per-namespace.
  */
-function flatCommandTree(asset, dir) {
+function flatCommandTree(asset, dir, minFiles = 221) {
   return {
     asset,
     dir,
-    min_files: 221,
+    min_files: minFiles,
     probes: [
       { file: 'security-scan.md', identical_to: '.agent/mindforge/security-scan.md' },
-      { file: 'help.md', identical_to: '.agent/forge/help.md' },
+      { file: 'help.md', identical_to: '.agent/mindforge/help.md' },
     ],
   };
 }
@@ -122,7 +143,7 @@ const ADAPTER_RECORDS = Object.freeze([
     unsupported_surfaces: [
       'Claude-native hooks do not imply parity in other harnesses',
       'No MCP config: the installer writes no .mcp.json and no mcpServers key for ANY harness — the only mcpServers strings in an emitted tree are inside two content files (.mindforge/schemas/plugin.schema.json and .claude/agents/scientific-literature-researcher.md)',
-      'The three .agent/forge commands overwrite their same-named .agent/mindforge counterparts, so the flat command dir holds 221 files rather than 224',
+      'Commands arrive as TWO namespaces, not one: .claude/commands/mindforge/ (221 files) and .claude/commands/forge/ (3). The three forge basenames collide with mindforge names, so they get their own directory — which is also where .agent/forge/help.md says forge commands live. Until this was fixed the forge copies overwrote the mindforge ones in place, destroying 253 lines across help.md, init-project.md and plan-phase.md on every install',
     ],
     install_or_onramp: ['`npx mindforge-cc@latest --claude --local`', 'Claude plugin install'],
     // `node bin/install.js --check` was listed here and is an npm UPDATE check (bin/install.js:114
@@ -285,7 +306,7 @@ const ADAPTER_RECORDS = Object.freeze([
       base_dir: '.cursor',
       entry_files: ['.cursor/.cursorrules', '.cursorrules', 'CLAUDE.md'],
       emits: [
-        flatCommandTree('Cursor rules', '.cursor/rules'),
+        flatCommandTree('Cursor rules', '.cursor/rules', 224),
         ...sharedAssetTrees('.cursor'),
       ],
       absent_dirs: [{ asset: 'subagents (harness dir)', dir: '.cursor/agents' }],

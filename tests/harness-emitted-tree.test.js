@@ -327,6 +327,66 @@ test('the shared .claude/ mirror is byte-identical across every non-claude harne
     `the mirror differs between harnesses: ${JSON.stringify([...seen])}`);
 });
 
+test('no command is destroyed by the other namespace — both sources survive byte-for-byte', () => {
+  // THE DEFECT. `.agent/mindforge` and `.agent/forge` were both written into the runtime's single
+  // commands directory under their BARE filenames, forge second. `.agent/forge` holds exactly three
+  // files and all three collide, so forge won every time. Measured on a real --claude --local:
+  //   help.md 33 -> 11 lines, init-project.md 170 -> 36, plan-phase.md 131 -> 34. 253 lines gone,
+  // silently, on every install. The same bug inflated the announced count: both sources were summed,
+  // so the installer said 224 commands while 221 landed.
+  //
+  // Asserted as a PROPERTY — every installed command matches some source byte-for-byte, and every
+  // colliding basename appears in both variants somewhere — rather than as a check on the naming
+  // scheme. A future change to where forge lands should not have to touch this test; a change that
+  // loses a file must fail it.
+  const mindforgeSrc = sourceHashes(path.join('.agent', 'mindforge'));
+  const forgeSrc = sourceHashes(path.join('.agent', 'forge'));
+
+  // NON-VACUITY: the whole defect depends on these basenames overlapping. If they ever stop
+  // overlapping this test would pass for an unrelated reason, so make the premise fail loudly.
+  const overlap = [...forgeSrc.keys()].filter((f) => mindforgeSrc.has(f)).sort();
+  assert.ok(overlap.length > 0,
+    'no basename is shared between .agent/mindforge and .agent/forge, so this test no longer '
+    + 'exercises the collision it was written for. Either the sources were reorganised — delete '
+    + 'this test and say why — or sourceHashes() stopped reading them.');
+
+  for (const record of installable) {
+    const runtime = record.install_claims.runtime;
+    const cfg = RUNTIMES[runtime];
+    const project = installs.get(record.id).project;
+
+    // Search the whole runtime root, so this holds whether forge lands in a sibling directory, under
+    // a prefixed filename, or somewhere a later change puts it.
+    const root = path.join(project, cfg.localDir);
+    const digests = new Map();          // basename -> Set(digest)
+    for (const rel of listFiles(root)) {
+      if (!rel.endsWith('.md')) continue;
+      const base = path.basename(rel).replace(/^[a-z]+:/, '');   // antigravity prefixes with ns:
+      if (!mindforgeSrc.has(base) && !forgeSrc.has(base)) continue;
+      if (!digests.has(base)) digests.set(base, new Set());
+      digests.get(base).add(sha256(path.join(root, rel)));
+    }
+
+    for (const base of overlap) {
+      const found = digests.get(base) || new Set();
+      // Antigravity rewrites frontmatter on copy, so its bytes legitimately differ from source.
+      // Assert the weaker but still decisive property there: BOTH copies exist, under distinct names.
+      if (runtime === 'antigravity') {
+        const names = listFiles(root).filter((r) => path.basename(r).endsWith(`:${base}`));
+        assert.strictEqual(names.length, 2,
+          `${runtime}: expected both namespaces to emit ${base}, found ${JSON.stringify(names)}`);
+        continue;
+      }
+      assert.ok(found.has(mindforgeSrc.get(base)),
+        `${runtime}: the installed ${base} does not match .agent/mindforge/${base}. The forge copy `
+        + 'overwrote it — 253 lines across three flagship commands were lost this way.');
+      assert.ok(found.has(forgeSrc.get(base)),
+        `${runtime}: .agent/forge/${base} did not land anywhere. Fixing the overwrite must not drop `
+        + 'the other namespace instead — that is the same defect pointing the other way.');
+    }
+  }
+});
+
 test('the mirror carries only commands/ and agents/ — so copilot gets no skills on a surface IT reads', () => {
   // THE NAME IS THE ASSERTION HERE, AND ITS FIRST VERSION WAS FALSE. It read "so copilot receives zero
   // skills", which is not what this test checks and not what the installer does: the same copilot
