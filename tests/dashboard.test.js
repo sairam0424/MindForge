@@ -346,6 +346,124 @@ test('getTeamActivity: returns active developers from AUDIT', () => {
 // (tests/approve.test.js). Integrity of what it writes is covered by
 // tests/approval-integrity.test.js.
 
+// ── Dashboard lifecycle flags ─────────────────────────────────────────────────
+//
+// THE DEFECT. `--stop` and `--status` were documented in four places and implemented in none, and
+// `--start` in five docs never existed at all. Only `--port` and `--open` were parsed. Worst of it,
+// bin/dashboard/server.js told the operator to run one of the missing flags itself: on EADDRINUSE it
+// printed "[dashboard] Stop it: /mindforge:dashboard --stop". Following that started a second
+// server. They are implemented rather than deleted because the PID file already existed to support
+// them — written on listen, removed on shutdown.
+
+test('--status reports honestly when nothing is running', () => {
+  const { spawnSync } = require('child_process');
+  const SERVER = path.join(__dirname, '..', 'bin', 'dashboard', 'server.js');
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-dashlc-')));
+  try {
+    fs.mkdirSync(path.join(dir, '.planning'), { recursive: true });
+    // TIMEOUT IS LOAD-BEARING. If the lifecycle block regresses, --status falls through to the
+    // express bootstrap and the server LISTENS FOREVER — spawnSync would block and hang the whole
+    // suite instead of failing it. Verified by mutation: disabling the block hung a 10-minute
+    // harness. A test that hangs on regression is worse than no test, because CI reports nothing.
+    const r = spawnSync(process.execPath, [SERVER, '--status'],
+      { cwd: dir, encoding: 'utf8', timeout: 20000, killSignal: 'SIGKILL',
+        env: { PATH: process.env.PATH, HOME: dir } });
+    assert.ok(!r.error || r.error.code !== 'ETIMEDOUT',
+      '--status never exited: it fell through to the server bootstrap and started listening. That '
+      + 'is precisely the defect — the flag was unparsed, so asking for status STARTED a server.');
+    assert.strictEqual(r.status, 1,
+      `--status must exit non-zero when the dashboard is not running, got ${r.status}. Before this `
+      + `existed, the flag was unparsed and the server simply STARTED.\n${r.stdout}${r.stderr}`);
+    assert.match(`${r.stdout}${r.stderr}`, /not running/,
+      'it must say so in words, not only in the exit code');
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('--stop REFUSES a live process that is not the dashboard', () => {
+  // The assertion that matters. A PID file is not proof of identity: the recorded process can die
+  // without cleanup and the OS reuses the number, so acting on the file alone means SIGTERM to an
+  // unrelated process the operator never mentioned.
+  //
+  // This caught a real bug during development. The identity check first tested whether `ps -o
+  // command=` merely CONTAINED "dashboard/server.js" — which matched the shell running its own
+  // test, because that shell's command line embedded the script source. The shell got the SIGTERM.
+  // The check is now anchored to a node invocation of that path, and this test spawns a decoy whose
+  // command line does NOT mention it, plus asserts the decoy survives.
+  const { spawnSync, spawn } = require('child_process');
+  const SERVER = path.join(__dirname, '..', 'bin', 'dashboard', 'server.js');
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-dashkill-')));
+  // The decoy's command line deliberately MENTIONS bin/dashboard/server.js while not being it.
+  // That is the exact shape that broke the first implementation: a containment test matched the
+  // shell whose command line embedded the script source, and SIGTERM'd it. A decoy that does not
+  // mention the path cannot distinguish an anchored check from a containment one — verified by
+  // mutation, where a plain `sleep`-style decoy left the loosened check passing.
+  const decoy = spawn(process.execPath,
+    ['-e', 'setTimeout(() => {}, 60000) /* bin/dashboard/server.js */'], { stdio: 'ignore' });
+  try {
+    fs.mkdirSync(path.join(dir, '.planning'), { recursive: true });
+    fs.writeFileSync(path.join(dir, '.planning', 'dashboard-server.pid'), String(decoy.pid));
+
+    const r = spawnSync(process.execPath, [SERVER, '--stop'],
+      { cwd: dir, encoding: 'utf8', timeout: 20000, killSignal: 'SIGKILL',
+        env: { PATH: process.env.PATH, HOME: dir } });
+    assert.ok(!r.error || r.error.code !== 'ETIMEDOUT',
+      '--stop never exited: it fell through to the server bootstrap and started listening');
+    const out = `${r.stdout}${r.stderr}`;
+
+    assert.strictEqual(r.status, 1, `--stop must refuse and exit non-zero, got ${r.status}:\n${out}`);
+    assert.match(out, /REFUSING/, `the refusal must be explicit:\n${out}`);
+
+    // The whole point: the decoy is untouched.
+    let alive = true;
+    try { process.kill(decoy.pid, 0); } catch { alive = false; }
+    assert.ok(alive,
+      `--stop signalled pid ${decoy.pid}, which is NOT the dashboard. A stale PID file plus a reused `
+      + 'number would make this kill an arbitrary process.');
+  } finally {
+    try { decoy.kill('SIGKILL'); } catch { /* already gone */ }
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('every dashboard flag the docs advertise is actually parsed', () => {
+  // The drift gate. --stop, --status and --start were documented across nine places while the code
+  // parsed two flags, so the docs and the implementation are compared directly rather than trusting
+  // either. Derived from both sides: no hardcoded expected list to go stale.
+  const server = fs.readFileSync(path.join(__dirname, '..', 'bin', 'dashboard', 'server.js'), 'utf8');
+  const implemented = new Set([
+    ...[...server.matchAll(/ARGS\.includes\('(--[a-z-]+)'\)/g)].map((m) => m[1]),
+    ...[...server.matchAll(/a\[i-1\] === '(--[a-z-]+)'/g)].map((m) => m[1]),
+  ]);
+  assert.ok(implemented.size >= 2,
+    `only ${implemented.size} flag(s) detected in server.js — the pattern broke, so this check would `
+    + 'silently pass no matter what the docs claim');
+
+  const docRoots = [
+    path.join(__dirname, '..', 'docs'),
+    path.join(__dirname, '..', '.claude', 'commands', 'mindforge'),
+  ];
+  const claimed = new Map();
+  for (const root of docRoots) {
+    if (!fs.existsSync(root)) continue;
+    for (const f of fs.readdirSync(root)) {
+      if (!f.endsWith('.md')) continue;
+      const full = path.join(root, f);
+      for (const line of fs.readFileSync(full, 'utf8').split('\n')) {
+        if (!/mindforge:dashboard/.test(line)) continue;
+        for (const m of line.matchAll(/(--[a-z-]+)/g)) {
+          if (!claimed.has(m[1])) claimed.set(m[1], `${path.basename(root)}/${f}`);
+        }
+      }
+    }
+  }
+
+  const phantom = [...claimed].filter(([flag]) => !implemented.has(flag));
+  assert.deepStrictEqual(phantom.map(([f, where]) => `${f} (${where})`), [],
+    'the docs advertise dashboard flag(s) the server does not parse. Implemented: '
+    + `${[...implemented].sort().join(' ')}. Either implement the flag or stop documenting it — `
+    + 'server.js used to print "Stop it: /mindforge:dashboard --stop" for a flag it ignored.');
+});
+
 // ── Summary ───────────────────────────────────────────────────────────────────
 console.log(`\nTests finished: ${passed} passed, ${failed} failed\n`);
 if (failed > 0) process.exit(1);

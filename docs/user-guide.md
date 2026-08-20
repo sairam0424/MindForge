@@ -153,7 +153,7 @@ Use the **Steer** command to guide logic without stopping execution:
 Observe your agent waves, token spend, and milestone progress in real-time.
 
 ```bash
-/mindforge:dashboard --start --open
+/mindforge:dashboard --open
 ```
 
 The dashboard provides a premium web interface at `http://localhost:7339`.
@@ -260,7 +260,7 @@ Keep your framework current with the latest personas and library updates:
 
 MindForge allows you to "time-travel" through your agent's reasoning.
 
-1.  **Launch the Dashboard**: `/mindforge:dashboard --start --open`
+1.  **Launch the Dashboard**: `/mindforge:dashboard --open`
 2.  **Navigate to 'Temporal'**: Use the horizontal slider to scrub through reasoning snapshots.
 3.  **Inspect State**: View the exact memory, file diffs, and thought chain at that point in space-time.
 4.  **Inject Hindsight**: If you see a logic error, use the **Hindsight Injector** form to roll back and provide a corrective "Steering Vector."

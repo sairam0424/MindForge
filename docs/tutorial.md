@@ -108,7 +108,7 @@ MindForge v11.9.0 ships 211 specialized personas. Each is a "digital twin" of a 
 Observable engineering is core to MindForge. Start the dashboard to see live agent activity:
 
 ```bash
-/mindforge:dashboard --start --open
+/mindforge:dashboard --open
 ```
 
 Visit `http://localhost:7339` for the premium web interface.
