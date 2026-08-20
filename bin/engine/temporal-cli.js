@@ -46,7 +46,7 @@ async function main() {
     }
 
     default:
-      console.log('Usage: /mindforge:temporal <status|cleanup|inject>');
+      console.log('Usage: mindforge temporal <status|cleanup|inject>');
       break;
   }
 }

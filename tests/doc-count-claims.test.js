@@ -114,6 +114,72 @@ const CLAIMS = [
   { file: 'subagents/.claude-plugin/marketplace.json', what: 'subagent count', re: /collection of (\d+) specialized/, expect: () => MEASURED.subagents() },
 ];
 
+// ── Every /mindforge: command a SHIPPED doc names must exist ──────────────────
+//
+// THE DEFECT. The shipped docs advertised 15 slash commands that exist in neither harness root:
+// autonomous, brainstorming, history, join-discord, neural-orchestrator, parallel-mesh, personas,
+// pr-branch, settings, skill-creation, swarm-execution, tdd, temporal, verify-work and
+// workspace-isolated. A reader following docs/user-guide.md typed `/mindforge:personas --list` and
+// got nothing.
+//
+// They were not typos. `.agent/workflows/` holds 130 tracked files using those exact names — the OLD
+// Antigravity target layout, committed and then orphaned. It ships ZERO files (verified against
+// `npm pack --dry-run`), the installer's command sources are `.agent/mindforge` and `.agent/forge`,
+// and no code references it. The docs were written against a layout that no longer reaches anyone.
+//
+// SCOPED TO WHAT SHIPS, deliberately. docs/PERSONAS.md, docs/tutorial.md and docs/registry/* carry
+// more of these names and ship no files, so a user cannot be misled by them. Widening this gate to
+// unshipped docs would trade real coverage for a larger number.
+//
+// The dispositions were not guesses. Each phantom was checked against the real command set, the CLI
+// table and the engine specs before being renamed, repointed or removed — and two initial choices
+// were corrected by that check: `/mindforge:workspace` does not document `--cleanup`, so the flag was
+// dropped rather than carried over; and `pr-branch` -> `pr-review` was rejected as a semantic
+// mismatch (creating a branch versus reviewing a diff) in favour of plain git.
+
+test('no shipped doc names a /mindforge: command that does not exist', () => {
+  const { execFileSync } = require('child_process');
+  const packed = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json'],
+    { cwd: REPO_ROOT, encoding: 'utf8', maxBuffer: 1 << 28 }));
+  const shipped = packed[0].files
+    .map((f) => f.path)
+    .filter((f) => /\.md$/.test(f))
+    // changelogs/ and RELEASENOTES are HISTORICAL RECORDS. changelogs/v2.6.0.md names
+    // /mindforge:temporal because that is what v2.6.0 shipped with; rewriting it would falsify the
+    // record to satisfy a present-tense check. Same exclusion the audit-terminology sweep used, and
+    // for the same reason. Everything a reader would act on TODAY is still in scope.
+    .filter((f) => !f.startsWith('changelogs/') && !/^RELEASENOTES/.test(f));
+
+  // NON-VACUITY: if the pack output shape changed, an empty list would pass silently.
+  assert.ok(shipped.length >= 5,
+    `only ${shipped.length} shipped .md file(s) found — npm pack --dry-run --json shape changed, so `
+    + 'this check would cover nothing');
+
+  const commandDir = path.join(REPO_ROOT, '.claude', 'commands', 'mindforge');
+  const mirrorDir = path.join(REPO_ROOT, '.agent', 'mindforge');
+  const exists = (n) => fs.existsSync(path.join(commandDir, `${n}.md`))
+    || fs.existsSync(path.join(mirrorDir, `${n}.md`));
+
+  const broken = [];
+  for (const rel of shipped) {
+    const full = path.join(REPO_ROOT, rel);
+    if (!fs.existsSync(full)) continue;
+    const lines = fs.readFileSync(full, 'utf8').split('\n');
+    lines.forEach((line, i) => {
+      for (const m of line.matchAll(/\/mindforge:([a-z][a-z0-9-]*)/g)) {
+        // `wf-` is a documented template placeholder (/mindforge:wf-<name>), not a command name.
+        if (m[1] === 'wf' || m[1].startsWith('wf-')) continue;
+        if (!exists(m[1])) broken.push(`${rel}:${i + 1}  /mindforge:${m[1]}`);
+      }
+    });
+  }
+  assert.deepStrictEqual(broken, [],
+    `${broken.length} reference(s) in SHIPPED docs name a command no harness provides:\n  `
+    + `${broken.join('\n  ')}\n`
+    + 'Every consumer receives these files. Name a real command, name the CLI form, or describe the '
+    + 'capability where it actually lives.');
+});
+
 for (const claim of CLAIMS) {
   test(`${claim.file}: ${claim.what} matches reality`, () => {
     const text = read(claim.file);
