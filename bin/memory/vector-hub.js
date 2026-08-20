@@ -178,8 +178,57 @@ class VectorHub {
     this._exitGuardInstalled = true;
     // 'exit' handlers can only run synchronous code — saveSync() fits exactly.
     process.once('exit', () => {
-      if (this._db && this._pendingSaves > 0) this.saveSync();
+      if (!this._db) return;
+      // _pendingSaves === 0 means every scheduled save already ran commitDb, which consumes
+      // its tmp file by renaming it. So there is nothing outstanding and the in-memory DB is
+      // durable — the reap below is safe without a further write.
+      const durable = this._pendingSaves > 0 ? this.saveSync() : true;
+      if (durable) this._reapAbandonedExport();
     });
+  }
+
+  /**
+   * Delete THIS process's abandoned tmp export.
+   *
+   * THE LEAK. save() is a two-step chain: writeTmpDurable() writes and fsyncs
+   * `<db>.tmp.<pid>.async`, then commitDb() renames it into place. A 'exit' handler can only
+   * run synchronous code, so a process that exits with a save in flight abandons the pending
+   * .then() — the microtask never runs, commitDb never renames, and the tmp file stays on disk
+   * forever. Nothing anywhere deleted it. Measured in this repository: 176 orphaned
+   * `celestial.db.tmp.<pid>.async` files totalling 1.8 GB, against a live database of 10.6 MB.
+   * Each orphan is a complete copy of the database, so the directory grew by ~11 MB per exit.
+   *
+   * Reproduced with a control arm: three runs that call process.exit() without close() leave
+   * three orphans, one per pid; three runs that await close() leave zero. Orphan size records
+   * how far the chain got — 0 bytes if the process died inside fs.open, a full export if the
+   * write landed and only the rename was lost.
+   *
+   * The trigger is ordinary, not exotic. nexus-tracer.js is the framework-wide tracing
+   * singleton, so any command that traces and then exits hits this window;
+   * bin/migrations/v9-unified-memory.js calls process.exit() and never calls close() at all.
+   *
+   * WHY THIS IS SAFE, AND WHY IT IS GATED. An earlier snapshot from the SAME process is a
+   * subset of what saveSync() just exported: saveSync() serialises the entire current
+   * in-memory database, which already contains every row the abandoned export held. So once
+   * persistence is confirmed the orphan is provably redundant.
+   *
+   * It is confirmed, not assumed. When saveSync() fails — commitDb throws, or the conflict
+   * sidecar could not be written — the abandoned export may be the only copy of those rows on
+   * disk, and deleting it would be exactly the silent data destruction commitDb refuses to
+   * commit. In that case the caller does NOT reap, and the file is deliberately left behind for
+   * a human. Accumulating a file on a failed write is the correct trade against destroying the
+   * last copy of it. Measured: zero `.sync` orphans exist in this repository, so that path does
+   * not fire in practice — the accumulation was entirely the async one.
+   *
+   * Both suffixes are swept because saveSync()'s own tmp leaks by the same argument if
+   * commitDb throws after the write; that arm is currently unobserved but not impossible.
+   */
+  _reapAbandonedExport() {
+    for (const suffix of ['async', 'sync']) {
+      try {
+        fs.unlinkSync(`${this.dbPath}.tmp.${process.pid}.${suffix}`);
+      } catch { /* not present — the normal case, since commitDb usually consumes it */ }
+    }
   }
 
   _ensureDir() {
@@ -545,9 +594,14 @@ class VectorHub {
    * Synchronous, crash-safe persistence — used only on shutdown to GUARANTEE
    * no acknowledged write is lost if the process exits before the async save
    * chain drains. Correctness over non-blocking here.
+   *
+   * @returns {boolean} true when the in-memory database is durably on disk — either committed
+   *   over the live file or preserved in a conflict sidecar. false when it is NOT, which is the
+   *   signal _reapAbandonedExport() needs: on false, an abandoned tmp export may hold the only
+   *   copy of those rows and must be left alone.
    */
   saveSync() {
-    if (!this._db) return;
+    if (!this._db) return false;
     try {
       this._ensureDir();
       const buffer = Buffer.from(this._db.export());
@@ -565,15 +619,20 @@ class VectorHub {
       const res = commitDb(this.dbPath, this._diskFingerprint, buffer, tmpPath);
       if (!res.ok) {
         this._pendingSaves = 0;   // the data is in the sidecar; retrying would clobber again
-        return;
+        // A written sidecar IS durable persistence — the bytes are on disk under a name nothing
+        // else will touch. A NULL sidecar is not: commitDb unlinked the tmp and wrote nothing,
+        // so this export exists only in memory and is about to be lost with the process.
+        return res.sidecar !== null && res.sidecar !== undefined;
       }
       this._diskFingerprint = res.fingerprint;
       // A sync export captures the full in-memory DB — a superset of anything the
       // outstanding async saves would have written — so the pending work is now
       // durably satisfied. Clearing the counter prevents a redundant second flush.
       this._pendingSaves = 0;
+      return true;
     } catch (err) {
       console.warn(`[VectorHub] Failed to save database (sync): ${err.message}`);
+      return false;
     }
   }
 
@@ -893,9 +952,19 @@ function dbFingerprint(dbPath) {
  * recordTrace() calls each, 30 expected — 15 on disk, ALL from writer A. Writer B's 15 acknowledged
  * writes vanished, with no error on either side.
  *
- * Evidence it has already happened in production: `.mindforge/` carries orphaned
- * `celestial.db.tmp.<pid>` files, one of which is a valid database holding skills rows absent from the
- * live file.
+ * A caveat on the corroborating evidence, because it was overstated. `.mindforge/` does carry
+ * orphaned `celestial.db.tmp.<pid>` files, and one IS a valid database with skills rows absent from
+ * the live file — but those rows are not lost user data. Audited all 171 non-empty orphans against
+ * the live database: 161 are strict subsets, 9 exceed it only on `traces_search_segdir` (an FTS5
+ * segment-directory count, an index-merge artifact rather than rows), and exactly one
+ * (`celestial.db.tmp.4027`, 63.5 MB, pre-dating the `.async`/`.sync` suffixes) holds 1,373 skill
+ * names the live file lacks — every one of them a `Synthesized Skill (mf-*) - ev_<hash>` row, the
+ * generated filler already slated for deletion. So the orphans corroborate that the clobber window
+ * was ENTERED; they are not evidence that anything worth keeping was destroyed.
+ *
+ * The cross-process loss itself is proven by the two-writer measurement above, which does not
+ * depend on this. Recorded because "there is a database on disk holding rows the live file lacks"
+ * reads as recoverable data loss, and here it is not.
  *
  * Making sql.js genuinely multi-process safe means replacing the driver — the whole-file export IS the
  * problem, and locking alone does not fix it, because both processes loaded a stale copy before either

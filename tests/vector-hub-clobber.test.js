@@ -20,8 +20,19 @@
  * ENTIRE file and renaming it over the path, so two processes each rewrite the whole thing and the
  * last writer wins. Measured before this change: two writers, 15 acknowledged recordTrace() calls
  * each, 30 expected — 15 on disk, ALL from writer A. Writer B's 15 vanished with no error on either
- * side. Corroborating evidence from a production dry run: `.mindforge/` held orphaned
- * `celestial.db.tmp.<pid>` files, one a valid database with skills rows absent from the live file.
+ * side.
+ *
+ * THE CORROBORATING EVIDENCE WAS OVERSTATED, corrected here rather than quietly dropped. This
+ * header used to cite orphaned `celestial.db.tmp.<pid>` files, "one a valid database with skills
+ * rows absent from the live file", as production proof. All 171 non-empty orphans have since been
+ * audited against the live database: 161 are strict subsets, 9 exceed it only on
+ * `traces_search_segdir` (an FTS5 index-merge artifact, not rows), and the single real outlier holds
+ * 1,373 skill names the live file lacks — all of them generated `Synthesized Skill (mf-*) - ev_*`
+ * filler. The orphans prove the clobber window was entered; they are NOT evidence that anything
+ * worth keeping was destroyed. The two-writer measurement above stands on its own.
+ *
+ * Those orphans had a second defect of their own — they accumulated to 1.8 GB because nothing ever
+ * deleted them. See tests/vector-hub-tmp-reap.test.js.
  *
  * WHAT THIS FIX DOES, AND DOES NOT. It does NOT make sql.js multi-process safe — that needs a
  * different driver, and a lock around the save would not help, because both processes loaded a stale
