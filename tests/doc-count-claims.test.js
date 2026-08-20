@@ -104,6 +104,13 @@ const CLAIMS = [
   { file: 'docs/faq.md', what: 'passing test count', re: /test files: (\d+) pass/, expect: () => MEASURED.testFiles() - MEASURED.skippedTests() },
   { file: 'docs/faq.md', what: 'skip count', re: /(\d+) env-dependent skips/, expect: () => MEASURED.skippedTests() },
   { file: 'docs/faq.md', what: 'coverage floor', re: /enforced floor is \*\*(\d+)% lines\*\*/, expect: () => MEASURED.coverageFloor() },
+  // CLAUDE.md states the same three numbers as docs/faq.md and was NOT covered here, so it drifted
+  // to "111 files today: 109 pass" against a real 132/130 — a 21-file gap, in the one document every
+  // contributor and every agent session reads first. An ungated count does not stay right; these
+  // three entries are the whole reason the other nine exist.
+  { file: 'CLAUDE.md', what: 'test file count', re: /\*\*(\d+) files today:/, expect: () => MEASURED.testFiles() },
+  { file: 'CLAUDE.md', what: 'passing test count', re: /files today: (\d+) pass/, expect: () => MEASURED.testFiles() - MEASURED.skippedTests() },
+  { file: 'CLAUDE.md', what: 'skip count', re: /pass, (\d+) env-dependent skips/, expect: () => MEASURED.skippedTests() },
   { file: 'subagents/.claude-plugin/marketplace.json', what: 'subagent count', re: /collection of (\d+) specialized/, expect: () => MEASURED.subagents() },
 ];
 

@@ -11,7 +11,7 @@ Cross-cutting systems worth understanding before editing:
 
 - **Audit hash-chain** — `bin/governance/audit-hash.js` is the single canonical SHA-256 hasher used by both `bin/autonomous/audit-writer.js` and `bin/governance/audit-verifier.js` (note: writer lives under `autonomous/`, verifier under `governance/`); `.planning/AUDIT.jsonl` is tamper-evident via `previous_hash` linkage. Verify with `node bin/verify-audit.js` (fail-closed, exit 1 on break).
 - **Pricing registry** — `bin/models/pricing-registry.js` is the single source of truth; all three providers call `priceCall()`. Never hardcode per-model prices in providers.
-- **Other roots:** `.mindforge/` (engine configs, 232 skills, personas, governance), `.agent/` (9 hooks — 8 registered, 221 workflows, `CLAUDE.md` protocols), `.planning/` (STATE.md, ROADMAP.md, audit), `docs/`, `examples/`, `tests/` (131 `*.test.js`).
+- **Other roots:** `.mindforge/` (engine configs, 232 skills, personas, governance), `.agent/` (9 hooks — 8 registered, 221 workflows, `CLAUDE.md` protocols), `.planning/` (STATE.md, ROADMAP.md, audit), `docs/`, `examples/`, `tests/` (132 `*.test.js`).
 
 ## Build, Test, and Development Commands
 
