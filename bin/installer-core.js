@@ -170,6 +170,60 @@ function getCommandDescription(content) {
   return 'No description available';
 }
 
+/**
+ * Where a command file from a given namespace must be written, and under what name.
+ *
+ * THE DEFECT THIS FIXES. Both command sources — `.agent/mindforge` and `.agent/forge` — were written
+ * into the SAME directory under their bare filenames. `.agent/forge` holds exactly three files and
+ * ALL THREE collide with mindforge commands, and forge was pushed second, so forge won. Measured on
+ * a real `--claude --local` install, the installed file against its two candidate sources:
+ *
+ *     help.md          33 lines -> 11    (-22)
+ *     init-project.md 170 lines -> 36   (-134)
+ *     plan-phase.md   131 lines -> 34    (-97)
+ *
+ * 253 lines of the three flagship commands destroyed on every install, with no warning. The same bug
+ * inflated the reported count: `totalCount` summed both sources, so the installer announced 224
+ * commands while 221 landed — the overcount was exactly the three overwritten files.
+ *
+ * They are not duplicates, which is what makes the loss silent rather than harmless. They are a
+ * SEPARATE command family: forge's own body says "Show all available FORGE commands" and
+ * "List every .md file in `.claude/commands/forge/`" — a directory the installer never created. So
+ * `/mindforge:help` was answering with forge's text, which then pointed the model at a path that
+ * does not exist.
+ *
+ * THE FIX follows a pattern this file already contains. The cross-IDE mirror below has always
+ * written `path.join(cwd, '.claude', 'commands', source.namespace)` — per-namespace directories. The
+ * primary install simply never did the same.
+ *
+ * @param {string} cmdsDir   the runtime's configured commands directory
+ * @param {string} runtime   RUNTIMES key
+ * @param {string} namespace 'mindforge' | 'forge'
+ * @param {string} file      basename, e.g. 'help.md'
+ * @returns {{dir: string, name: string}}
+ */
+function resolveCommandTarget(cmdsDir, runtime, namespace, file) {
+  // Antigravity flattens everything into one `workflows/` directory and has always disambiguated by
+  // prefixing the namespace. Left exactly as it was — it never had the collision.
+  if (runtime === 'antigravity') return { dir: cmdsDir, name: `${namespace}:${file}` };
+
+  // Runtimes whose commands directory is already per-family (leaf 'mindforge': claude, opencode,
+  // gemini, copilot) get a SIBLING directory per namespace. For claude that is
+  // .claude/commands/forge/ — exactly where forge's own help text says forge commands live, so the
+  // fix makes that text true rather than merely stopping the overwrite.
+  if (path.basename(cmdsDir) === 'mindforge') {
+    return namespace === 'mindforge'
+      ? { dir: cmdsDir, name: file }
+      : { dir: path.join(path.dirname(cmdsDir), namespace), name: file };
+  }
+
+  // Flat runtimes (cursor writes into `rules/`). Keep mindforge's filenames unchanged — renaming
+  // them would alter cursor's rule set for reasons unrelated to this defect — and prefix the rest.
+  return namespace === 'mindforge'
+    ? { dir: cmdsDir, name: file }
+    : { dir: cmdsDir, name: `${namespace}:${file}` };
+}
+
 // ── File system utilities ─────────────────────────────────────────────────────
 /**
  * Refuse to write through a symlink.
@@ -597,15 +651,12 @@ async function install(runtime, scope, options = {}) {
     { src: src('.agent', 'forge'),     namespace: 'forge' }
   ];
 
-  if (runtime === 'claude') {
-    // Claude Code looks in .claude/commands/mindforge. Use .agent/mindforge as the
-    // canonical source — it is always committed, while .claude/ is gitignored. The
-    // previous behaviour of reading from .claude/commands/mindforge/ (itself gitignored)
-    // left CI with an empty command set on a fresh checkout.
-    cmdSources.length = 0;
-    cmdSources.push({ src: src('.agent', 'mindforge'), namespace: 'mindforge' });
-    cmdSources.push({ src: src('.agent', 'forge'),     namespace: 'forge' });
-  }
+  // A `if (runtime === 'claude') { cmdSources.length = 0; ...push the identical two entries... }`
+  // block used to sit here. It was a NO-OP — it cleared the array and pushed back exactly what the
+  // initializer above already contains. Its comment described a historical change (reading from
+  // .agent/mindforge rather than the gitignored .claude/commands/mindforge) that the initializer
+  // already reflects. Removed, because a special case that does nothing implies claude is handled
+  // differently here when it is not.
 
   let totalCount = 0;
   cmdSources.forEach(source => {
@@ -613,13 +664,12 @@ async function install(runtime, scope, options = {}) {
 
     const files = fsu.listFiles(source.src).filter(f => f.endsWith('.md'));
     totalCount += files.length;
-    fsu.ensureDir(cmdsDir);
 
     files.forEach(f => {
-      // Logic for naming: antigravity uses namespace:prefix, others use just the file name
-      const targetName = runtime === 'antigravity' ? `${source.namespace}:${f}` : f;
+      const { dir: destDir, name: targetName } = resolveCommandTarget(cmdsDir, runtime, source.namespace, f);
+      fsu.ensureDir(destDir);
       const srcPath = path.join(source.src, f);
-      const dstPath = path.join(cmdsDir, targetName);
+      const dstPath = path.join(destDir, targetName);
 
       if (runtime === 'antigravity') {
         const content = fsu.read(srcPath);
