@@ -547,7 +547,24 @@ async function install(runtime, scope, options = {}) {
   const cfg     = RUNTIMES[runtime];
   const baseDir = resolveBaseDir(runtime, scope);
   const cmdsDir = norm(path.join(baseDir, cfg.commandsSubdir));
-  const selfInstall = isSelfInstall();
+  // SCOPE MATTERS, and leaving it out was a regression this commit introduced and then had to fix.
+  //
+  // isSelfInstall() answers only "is the CURRENT DIRECTORY the MindForge repo". The guard's actual
+  // premise is narrower: "the files I am about to write ARE this repository's own tracked files".
+  // That holds for a LOCAL install, whose baseDir is `.claude/` inside the repo. It does NOT hold for
+  // a GLOBAL install, whose baseDir is `~/.claude/` — a directory that has nothing to do with the
+  // checkout you happen to be standing in.
+  //
+  // Measured on `--claude --global` run from a MindForge checkout, with HOME confined:
+  //   develop            exit 0, 225 files written to $HOME/.claude
+  //   with cwd-only gate exit 1, 0 files, then "Retry: ... --force" — which also fails
+  // So gating on cwd alone broke global installs for every MindForge developer, and offered a retry
+  // that could not work. Anchoring on scope as well restores it while keeping the local-install
+  // protection that is the whole point.
+  //
+  // Every downstream gate reads this one binding, so the correction lands at all twelve sites at
+  // once rather than being re-derived (and re-forgotten) at each.
+  const selfInstall = isSelfInstall() && scope === 'local';
   const targetDir = baseDir;
   // REG-01 result, printed in the final summary. Declared here so the summary cannot reference an
   // undefined binding when the registration block is skipped (global scope, self-install, etc.).

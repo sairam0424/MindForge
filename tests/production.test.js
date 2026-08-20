@@ -143,6 +143,72 @@ test('a self-install writes NOTHING over the repository\'s own tracked files', (
   }
 });
 
+test('a GLOBAL install still works when run from inside the repository', () => {
+  // THE REGRESSION THIS CATCHES, which the self-install gate above introduced and an independent
+  // audit found before it merged.
+  //
+  // isSelfInstall() answers only "is the CURRENT DIRECTORY the MindForge repo". The gate's premise is
+  // narrower: "the files I am about to write ARE this repository's tracked files". True for a LOCAL
+  // install (baseDir is `.claude/` in the repo); false for a GLOBAL install (baseDir is
+  // `~/.claude/`). Keying on cwd alone therefore skipped every write of a perfectly legitimate global
+  // install, failed verification, and printed "Retry: ... --force" — which also fails.
+  //
+  // Measured with HOME confined, running `--claude --global` from a MindForge checkout:
+  //     develop              exit 0, 225 files in $HOME/.claude
+  //     cwd-only gate        exit 1,   0 files, then an impossible --force retry
+  //     scope-aware gate     exit 0, 389 files
+  //
+  // Both directions are asserted, because "global installs files" alone is satisfied by removing the
+  // gate entirely, and "local writes nothing" alone is satisfied by breaking global.
+  const os = require('os');
+  const path = require('path');
+  const { spawnSync } = require('child_process');
+
+  const REPO = process.cwd();
+  const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-globalinstall-home-')));
+  const tmp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-globalinstall-tmp-')));
+  const git = (...args) => spawnSync('git', args, { cwd: REPO, encoding: 'utf8' });
+  const dirtyBefore = git('status', '--porcelain').stdout;
+
+  try {
+    // cwd is the repository — exactly the condition that made the cwd-only gate misfire.
+    const r = spawnSync(process.execPath, ['bin/install.js', '--claude', '--global'], {
+      cwd: REPO, encoding: 'utf8', timeout: 180000,
+      env: { PATH: process.env.PATH, HOME: home, CI: '1', TMPDIR: tmp },
+    });
+
+    assert.strictEqual(r.status, 0,
+      `a global install run from the repo must succeed, got ${r.status}. The self-install gate keys on `
+      + `cwd; a global install writes to $HOME and is not a self-install.\n${(r.stdout || '').slice(-400)}`);
+
+    const written = [];
+    (function walk(d) {
+      let entries;
+      try { entries = fs.readdirSync(d, { withFileTypes: true }); } catch { return; }
+      for (const e of entries) {
+        const full = path.join(d, e.name);
+        if (e.isDirectory()) walk(full); else written.push(full);
+      }
+    })(path.join(home, '.claude'));
+    assert.ok(written.length > 100,
+      `a global install wrote only ${written.length} file(s) to ${home}/.claude. Measured on develop `
+      + 'before the gate existed: 225. Zero means every write was skipped as if this were a '
+      + 'self-install.');
+
+    assert.ok(!/Retry:/.test(r.stdout),
+      'the install printed a "Retry: ... --force" suggestion, which means verification failed — and '
+      + 'that retry provably fails too, because --force does not change which branch the gate takes');
+
+    // AND the local-install protection must be intact: a global install must still not touch the repo.
+    assert.strictEqual(git('status', '--porcelain').stdout, dirtyBefore,
+      'a global install modified the repository working tree. It writes to $HOME and must leave the '
+      + 'checkout it was launched from completely alone.');
+  } finally {
+    fs.rmSync(home, { recursive: true, force: true });
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
 test('installer excludes sensitive files (*.env, *.key, *.pem)', () => {
   const c = read('bin/installer-core.js');
   assert.ok(
