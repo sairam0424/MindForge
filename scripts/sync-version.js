@@ -141,7 +141,27 @@ for (const rel of ['sdk/package.json', 'mcp-server/package.json', '.mindforge/co
   syncJson(rel, (d) => { d.version = CANON; }, (d) => d.version);
 }
 syncByRegex('sdk/src/index.ts', /VERSION = '(\d+\.\d+\.\d+)'/g);
-syncByRegex('sdk/README.md', /(?:@|v)(\d+\.\d+\.\d+)/g, 'sdk/README.md');
+// sdk/README.md carries the version in TWO shapes and this pattern only matched one.
+//
+//   ## New in v11.9.2            <- `v` prefix, matched
+//   VERSION,              // '11.9.2'   <- quote prefix, MISSED
+//
+// So a bump left the export comment stale while the report said `[fixed] sdk/README.md` — a partial
+// write announced as a complete one. Measured on an 11.9.2 -> 11.9.3 rehearsal: the heading moved,
+// the comment did not, and tests/version-consistency.test.js caught it. That test is why this was
+// findable at all; the tool claimed success either way.
+syncByRegex('sdk/README.md', /(?:@|v|VERSION,\s*\/\/\s*')(\d+\.\d+\.\d+)/g, 'sdk/README.md');
+
+// AGENTS.md was not a channel AT ALL — zero mentions in this file — while
+// tests/doc-count-claims.test.js asserts its version against package.json. A gate demanding a value
+// that nothing writes: `npm test` failed on every version bump and the documented remedy, "never
+// bump by hand, run scripts/sync-version.js", could not fix it.
+//
+// Anchored on the exact sentence the gate reads rather than sweeping bare versions. AGENTS.md holds
+// exactly one version token today, but a future Node or dependency version in this file must not be
+// rewritten to the package version by a greedy pattern — that is how the marketplace subagent
+// entries nearly got swept onto the core version.
+syncByRegex('AGENTS.md', /MindForge v(\d+\.\d+\.\d+) is an agentic/g, 'AGENTS.md');
 // MINDFORGE.md: the [VERSION] assignment and the H1 title only. [REQUIRED_CORE_VERSION] is
 // deliberately excluded — see the header.
 syncByRegex('MINDFORGE.md', /^\[VERSION\]\s*=\s*(\d+\.\d+\.\d+)/gm, 'MINDFORGE.md [VERSION]');
