@@ -129,7 +129,17 @@ const MIRROR_CLI = path.join(MIRROR, 'bin', 'mindforge-cli.js');
 function cli(...args) {
   const r = spawnSync(process.execPath, [MIRROR_CLI, ...args], {
     encoding: 'utf8',
-    cwd: os.tmpdir(),   // belt-and-braces: the router overrides this with its ROOT
+    // The fixtures this suite asserts against (custom-config.md, AGENTS_LEARNING.md,
+    // .mindforge/org/skills/, .planning/AUDIT.jsonl) all live in MIRROR, so MIRROR is what the
+    // child's working directory has to be.
+    //
+    // This was `os.tmpdir()` with the comment "belt-and-braces: the router overrides this with its
+    // ROOT" — the suite was leaning on the router pinning cwd to its own install dir. That pin is
+    // gone: it made `security-scan` validate the framework's own MINDFORGE.md and report
+    // `✅ valid — 43 settings configured` over any caller's config. Passing os.tmpdir() now really
+    // means os.tmpdir(), so two assertions went red for the honest reason that their fixtures were
+    // not in the working directory. Naming MIRROR explicitly is what the tests always meant.
+    cwd: MIRROR,
     timeout: 30000,
     env: { ...process.env, NODE_ENV: 'test', CI: 'true' }
   });
@@ -267,6 +277,91 @@ test('security-scan custom-config.md validates that path, not a prepended MINDFO
   assert.ok(/MAX_TASKS_PER_PHASE: 999 exceeds maximum 50/.test(out),
     `expected the fixture config to be validated, got:\n${out}`);
   assert.strictEqual(code, 1, 'a config with a schema error must exit 1');
+});
+
+// ── 5b. The child runs in the CALLER's directory, not the framework's ────────
+//
+// THE DEFECT. bin/mindforge-cli.js spawned every routed command with `cwd: ROOT`, its own install
+// directory. So `security-scan` — the command the protocol mandates pre-commit for any
+// Auth/Payment/PII change — validated MindForge's OWN MINDFORGE.md and reported
+// `✅ MINDFORGE.md valid — 43 settings configured` no matter what the caller had configured.
+// Measured against a fixture declaring `[MIN_SOUL_SCORE] = 99` (schema maximum 10): exit 0. Two
+// different fixture configs produced byte-identical output, which is the proof it read neither.
+//
+// The test above covers an EXPLICIT argv[2] path. This covers the default, which is the case that
+// actually shipped: no consumer passes `security-scan ./MINDFORGE.md`, they just run the command.
+//
+// Both directions are asserted. "Exit 1 on a bad config" alone is satisfied by a gate that always
+// fails, which would be a different defect with the same test result.
+
+/** A throwaway project with its own MINDFORGE.md, and a HOME that is never the operator's. */
+function fixtureProject(configBody) {
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-cwd-')));
+  const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-cwd-home-')));
+  fs.writeFileSync(path.join(dir, 'package.json'),
+    JSON.stringify({ name: 'their-app', version: '1.0.0' }));
+  if (configBody !== null) fs.writeFileSync(path.join(dir, 'MINDFORGE.md'), configBody);
+  return { dir, home };
+}
+
+function cliIn({ dir, home }, ...args) {
+  const r = spawnSync(process.execPath, [MIRROR_CLI, ...args], {
+    encoding: 'utf8', cwd: dir, timeout: 30000,
+    env: { PATH: process.env.PATH, HOME: home, NODE_ENV: 'test', CI: 'true' },
+  });
+  return { code: r.status, out: `${r.stdout || ''}${r.stderr || ''}` };
+}
+
+const VALID_CONFIG = '# fixture\n\n[VERSION] = 11.9.2\n[REACTIVE_MODE] = true\n'
+  + '[PLANNER] = opus\n[EXECUTOR] = sonnet\n[MIN_SOUL_SCORE] = 8\n';
+
+test('security-scan validates the CALLER\'s MINDFORGE.md and fails on it', () => {
+  const p = fixtureProject(VALID_CONFIG.replace('[MIN_SOUL_SCORE] = 8', '[MIN_SOUL_SCORE] = 99'));
+  try {
+    const { code, out } = cliIn(p, 'security-scan');
+    assert.ok(/MIN_SOUL_SCORE: 99 exceeds maximum 10/.test(out),
+      'the caller\'s invalid setting was not reported. With cwd pinned to the framework\'s install '
+      + `dir this printed "✅ MINDFORGE.md valid — 43 settings configured" instead. Got:\n${out}`);
+    assert.strictEqual(code, 1,
+      `a caller config that violates the schema must exit 1, got ${code}:\n${out}`);
+    assert.ok(!/43 settings configured/.test(out),
+      'it reported 43 settings — that is the FRAMEWORK\'s own setting count, so it validated the '
+      + 'vendor\'s config rather than the caller\'s');
+  } finally {
+    fs.rmSync(p.dir, { recursive: true, force: true });
+    fs.rmSync(p.home, { recursive: true, force: true });
+  }
+});
+
+test('security-scan still PASSES a caller config that satisfies the schema', () => {
+  // Without this, an always-failing gate passes the test above. The schema must still be found
+  // after the cwd change — it is resolved from __dirname in bin/validate-config.js precisely
+  // because it belongs to the framework, and a cwd-relative lookup would silently skip every check
+  // and exit 0 for consumers, trading a wrong pass for an unfalsifiable one.
+  const p = fixtureProject(VALID_CONFIG);
+  try {
+    const { code, out } = cliIn(p, 'security-scan');
+    assert.ok(!/skipping schema validation/.test(out),
+      'the schema was not found from the caller\'s directory, so nothing was validated and the '
+      + `exit code below proves nothing:\n${out}`);
+    assert.strictEqual(code, 0, `a schema-valid caller config must exit 0, got ${code}:\n${out}`);
+  } finally {
+    fs.rmSync(p.dir, { recursive: true, force: true });
+    fs.rmSync(p.home, { recursive: true, force: true });
+  }
+});
+
+test('security-scan reports an absent caller config honestly, naming the path and directory', () => {
+  const p = fixtureProject(null);
+  try {
+    const { code, out } = cliIn(p, 'security-scan');
+    assert.strictEqual(code, 0, 'no config at all is a legitimate defaults case, not a failure');
+    assert.ok(out.includes(p.dir),
+      `the message must name the directory it searched, so "not found" is actionable. Got:\n${out}`);
+  } finally {
+    fs.rmSync(p.dir, { recursive: true, force: true });
+    fs.rmSync(p.home, { recursive: true, force: true });
+  }
 });
 
 // ── 6. Unknown command ───────────────────────────────────────────────────────
