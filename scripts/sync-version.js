@@ -184,11 +184,52 @@ syncByRegex('Dockerfile', /MINDFORGE_MCP_VERSION=(\d+\.\d+\.\d+)/g, 'Dockerfile'
     if (urlVer && urlVer !== CANON) {
       let sha = SHA_ARG;
       if (!sha && FETCH_SHA && !CHECK) {
+        // FAIL CLOSED. This used `curl -sL` with no -f and hashed whatever came back. npm answers an
+        // unpublished version with HTTP 404 and a 21-byte body `{"error":"Not found"}`, and curl
+        // exits 0 — so the digest written was the sha256 of that error text,
+        // c8d3eae160a892e32837db3dcae515e843e5383fef52b8141940c8bcf8b6d59f, the same constant for
+        // every unpublished version.
+        //
+        // Worse than refusing, because it turned the gate GREEN. Measured end to end on a 11.9.3
+        // bump: plain sync exits 1 (formula SKIPPED), `--check` exits 1, then `--fetch-sha` writes
+        // the 404 digest and `--check` exits 0 — CI passing on a formula whose digest can never
+        // match its url. The REFUSING branch just below exists to prevent precisely that ("makes
+        // `brew install` fail hard") and this path walked straight past it.
+        //
+        // Verified by CONTENT, not only status: an npm tarball is gzip and must begin with the 1f 8b
+        // magic bytes. A status check alone would still accept a 200 serving an error page, and no
+        // text body can satisfy the magic-byte test.
         const url = `https://registry.npmjs.org/mindforge-cc/-/mindforge-cc-${CANON}.tgz`;
         process.stderr.write(`[sync-version] fetching ${url} to compute sha256…\n`);
-        const buf = execFileSync('curl', ['-sL', url], { maxBuffer: 64 * 1024 * 1024 });
-        sha = crypto.createHash('sha256').update(buf).digest('hex');
-        process.stderr.write(`[sync-version] sha256 ${sha}\n`);
+        let buf = null;
+        try {
+          // -f makes curl exit non-zero on 4xx/5xx rather than handing us the error body.
+          buf = execFileSync('curl', ['-fsSL', url], { maxBuffer: 64 * 1024 * 1024 });
+        } catch (err) {
+          console.error(
+            `[sync-version] REFUSING: ${CANON} is not downloadable from the npm registry.\n` +
+            `  ${url}\n  ${((err.stderr || '').toString().trim()) || err.message}\n` +
+            '\n  A tarball digest cannot exist before the tarball does, so the formula is the LAST\n' +
+            '  step of a release, not part of the version bump. Correct order:\n' +
+            '    1. bump package.json, run `node scripts/sync-version.js` (formula SKIPPED, exit 1)\n' +
+            `    2. tag, and let mindforge-release.yml publish ${CANON} to npm\n` +
+            '    3. `node scripts/sync-version.js --fetch-sha` — the tarball now exists\n' +
+            '    4. commit the formula\n');
+          process.exitCode = 1;
+        }
+        if (buf && (buf.length < 2 || buf[0] !== 0x1f || buf[1] !== 0x8b)) {
+          console.error(
+            `[sync-version] REFUSING: ${url} returned ${buf.length} byte(s) that are not gzip.\n` +
+            `  First bytes: ${buf.slice(0, 40).toString('utf8').replace(/\s+/g, ' ')}\n` +
+            '  An npm tarball begins with the gzip magic 1f 8b. Hashing this would write a digest\n' +
+            '  no real artifact can match, and `brew install` would fail hard.\n');
+          process.exitCode = 1;
+          buf = null;
+        }
+        if (buf) {
+          sha = crypto.createHash('sha256').update(buf).digest('hex');
+          process.stderr.write(`[sync-version] sha256 ${sha} (${buf.length} bytes)\n`);
+        }
       }
       findings.push({ file: rel, found: urlVer, want: CANON, fixed: !CHECK && Boolean(sha) });
       if (!CHECK) {
