@@ -323,6 +323,98 @@ test('the expanded extension list actually reaches workflows and shell scripts',
     `only ${count('.sh')} tracked .sh files are scanned — shell scripts are back out of scope.`);
 });
 
+// ── The installer must not act on a subcommand it does not have ───────────────
+//
+// The runner sets cwd to the repository root and line 12 asserts it, which is how the rest of
+// this file resolves paths. Captured once here because the children below run with a DIFFERENT cwd.
+const REPO_ROOT_FOR_GUARD = process.cwd();
+//
+// THE DEFECT. bin/install.js takes flags only and never inspected positionals, so a bare word was
+// silently ignored and the installer just ran. The trap was that the LAST thing a successful
+// install printed (bin/wizard/theme.js) was:
+//
+//     Next steps:
+//       mindforge-cc init   — Initialize your first workspace
+//
+// There is no `init`. Measured by obeying it in an empty temp dir: 1,836 files written, .claude/
+// .mindforge/ .planning/ bin/ created plus CLAUDE.md, MINDFORGE.md and AGENTS_LEARNING.md, exit 0
+// — and the same panel printed again, so the instruction loops. The real command is the slash
+// command /mindforge:init-project, which the install has just placed in the harness.
+//
+// Two assertions because there are two defects: the installer accepting the argument, and the
+// panel advertising it. Fixing either alone leaves the trap — a corrected message with a
+// permissive installer still installs on any typo, and a guard under a wrong instruction still
+// sends every user down a path that now errors.
+
+test('a stray positional is REJECTED, writing nothing', () => {
+  const work = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-posguard-')));
+  // Never the operator's HOME: installer-core resolves its registry under os.homedir(), which
+  // honours $HOME on POSIX. tests/no-home-leak.test.js bans the pattern repo-wide.
+  const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-posguard-home-')));
+  try {
+    const r = require('child_process').spawnSync(
+      process.execPath, [path.join(REPO_ROOT_FOR_GUARD, 'bin', 'install.js'), 'init'],
+      { cwd: work, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: home, CI: 'true' } });
+
+    assert.strictEqual(r.status, 1,
+      `\`install.js init\` must exit 1, got ${r.status}. Before the guard it ran a full install `
+      + `into the current directory and exited 0.\n${(r.stdout || '').slice(-400)}`);
+
+    const written = [];
+    (function walk(d) {
+      for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+        const p = path.join(d, e.name);
+        if (e.isDirectory()) walk(p); else written.push(path.relative(work, p));
+      }
+    })(work);
+    assert.deepStrictEqual(written, [],
+      `${written.length} file(s) were written into the caller's directory by a rejected argument. `
+      + `Measured before the guard: 1,836. First few: ${written.slice(0, 5).join(', ')}`);
+
+    // Naming the real command is the point — an error that only says "unknown" leaves the user
+    // holding an instruction the tool just refused.
+    assert.match(r.stderr, /\/mindforge:init-project/,
+      `the error for \`init\` must name the real command. Got:\n${r.stderr}`);
+  } finally {
+    fs.rmSync(work, { recursive: true, force: true });
+    fs.rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test('the documented flag forms still reach the installer', () => {
+  // NON-VACUITY, and the guard's real risk. `--runtime` takes its value as a SEPARATE token
+  // (installer-core.js reads args[rtIdx + 1]), so a naive "anything not starting with -" check
+  // would reject the documented `--runtime claude`. If this suite only asserted the rejection
+  // above, that regression would ship green.
+  for (const args of [['--version'], ['--help'],
+    ['--claude', '--local', '--dry-run'], ['--runtime', 'claude', '--local', '--dry-run']]) {
+    const work = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-posok-')));
+    const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-posok-home-')));
+    try {
+      const r = require('child_process').spawnSync(
+        process.execPath, [path.join(REPO_ROOT_FOR_GUARD, 'bin', 'install.js'), ...args],
+        { cwd: work, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: home, CI: 'true' } });
+      assert.strictEqual(r.status, 0,
+        `\`${args.join(' ')}\` must still be accepted, got ${r.status}. The positional guard is `
+        + `rejecting a documented flag form.\n${(r.stderr || '').slice(-300)}`);
+    } finally {
+      fs.rmSync(work, { recursive: true, force: true });
+      fs.rmSync(home, { recursive: true, force: true });
+    }
+  }
+});
+
+test('the success panel does not advertise a command that does not exist', () => {
+  const theme = fs.readFileSync(path.join(REPO_ROOT_FOR_GUARD, 'bin', 'wizard', 'theme.js'), 'utf8');
+  // Only the executable strings, so the explanatory comment naming the old text cannot satisfy or
+  // break this — the same false-positive class this repo hit greping source for behaviour.
+  const code = theme.split('\n').filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n');
+  assert.ok(!/mindforge-cc init/.test(code),
+    'bin/wizard/theme.js still prints `mindforge-cc init` as a next step. mindforge-cc has no '
+    + 'subcommands, and bin/install.js now exits 1 on it — so this would instruct every user to '
+    + 'run a command the installer refuses.');
+});
+
 // ── Results ───────────────────────────────────────────────────────────────────
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`Results: ${passed} passed, ${failed} failed`);
