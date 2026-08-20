@@ -316,6 +316,73 @@ test('verifyInstall does not require files the package never publishes', () => {
     'requirement is unsatisfiable by construction');
 });
 
+// ── The documented entry point must land on the DOCUMENTED path ──────────────
+//
+// docs/getting-started.md:30 promises "the `mindforge` CLI command is available for runtime
+// operations". Measured on a default `--claude --local` install before this was fixed: 152
+// bin/**/*.js landed across 15 subdirectories, but only ONE top-level file, and
+// `find . -name mindforge-cli.js` returned NOTHING. The whole bin/ copy sat behind --with-utils, an
+// "Advanced Setup Option" the documented command does not pass.
+//
+// The consequence was worse than a missing convenience: every fix to that CLI — the version
+// resolver, the router, the command surface — was invisible to anyone following the docs. Asserted
+// against the same default install the rest of this file uses, so it cannot pass because a flag was
+// quietly added to the harness.
+
+test('a DEFAULT install delivers the documented CLI entry point', () => {
+  // Non-vacuity first. If the install failed or wrote almost nothing, "the file is missing" would be
+  // true for an uninteresting reason, and "the file is present" could not be trusted either.
+  assert.strictEqual(install.status, 0,
+    `the shared install failed (${install.status}), so nothing below is meaningful: `
+    + String(install.stderr || '').slice(-300));
+  assert.ok(installed.length >= 100,
+    `only ${installed.length} bin/**/*.js landed (measured 152). The install is not doing its job, so `
+    + 'an assertion about one file inside it proves nothing.');
+
+  assert.ok(fs.existsSync(path.join(PROJECT, 'bin', 'mindforge-cli.js')),
+    'bin/mindforge-cli.js is absent from a DEFAULT install. docs/getting-started.md tells users to '
+    + 'run it, so the documented first-run command fails with MODULE_NOT_FOUND on the CLI itself. It '
+    + 'belongs in installer-core.js\'s coreFiles list, not behind --with-utils.');
+});
+
+test('the delivered CLI runs, and reports MindForge\'s version not the host app\'s', () => {
+  const cli = path.join(PROJECT, 'bin', 'mindforge-cli.js');
+  if (!fs.existsSync(cli)) return;   // the test above already reported the real failure
+
+  const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-cliver-home-')));
+  try {
+    const r = spawnSync(process.execPath, [cli, '--version'], {
+      cwd: PROJECT, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: home },
+    });
+    assert.strictEqual(r.status, 0,
+      `\`--version\` exited ${r.status}. Shipping the file is only half the fix — it has to load. `
+      + `stderr: ${String(r.stderr || '').slice(0, 300)}`);
+
+    const printed = String(r.stdout || '').trim();
+    const expected = require(path.join(REPO_ROOT, 'package.json')).version;
+    assert.strictEqual(printed, expected, `printed ${JSON.stringify(printed)}, expected ${expected}`);
+    // PROJECT's package.json declares 1.0.0, so this also pins that the version comes from
+    // MindForge's manifest rather than the host application's — the defect
+    // bin/utils/mindforge-version.js exists to prevent, reachable on the default path for the first
+    // time now that the CLI actually ships there.
+    assert.notStrictEqual(printed, '1.0.0', 'the host app\'s version surfaced as MindForge\'s');
+  } finally {
+    fs.rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test('shipping the entry point did NOT turn --with-utils into a bulk copy', () => {
+  // The fix adds ONE name to coreFiles. If someone "simplifies" it by dropping the withUtils gate,
+  // a default install would start carrying all of bin/ — a far larger payload than the documented
+  // install promises. Pin the boundary in both directions.
+  const topLevel = fs.readdirSync(path.join(PROJECT, 'bin'))
+    .filter((f) => f.endsWith('.js')).sort();
+  assert.deepStrictEqual(topLevel, ['hindsight-injector.js', 'mindforge-cli.js'],
+    `a default install has top-level bin/ files ${JSON.stringify(topLevel)}. Expected exactly the two `
+    + 'coreFiles entries: MORE means the --with-utils gate was removed rather than the entry point '
+    + 'added; FEWER means the entry point is missing.');
+});
+
 (async () => {
   try {
     for (const { name, fn } of tests) {

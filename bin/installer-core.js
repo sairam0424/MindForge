@@ -828,7 +828,14 @@ async function install(runtime, scope, options = {}) {
       'governance', 'autonomous', 'memory', 'models', 'research',
       'wizard', 'updater', 'dashboard', 'browser', 'skills-builder', 'engine',
       // dependencies of the above — not features
-      'utils', 'revops', 'review', 'migrations'
+      'utils', 'revops', 'review', 'migrations',
+      // Required by bin/mindforge-cli.js:171 for the `workflow` verb. Added in the same change that
+      // started shipping the CLI: the router's require is lazy, so the CLI still LOADED without it,
+      // but `mindforge workflow list` exited 1 with MODULE_NOT_FOUND. Caught by
+      // tests/install-module-load.test.js's require-resolution scan the moment the CLI began landing
+      // — the entry point and its dispatch targets are one unit. One file, 4 KB, and its own requires
+      // are `fs` and `path` only.
+      'workflows'
     ];
     sovereignEngines.forEach(engine => {
       const srcDir = src('bin', engine);
@@ -847,7 +854,21 @@ async function install(runtime, scope, options = {}) {
     // paths, four of them under bin/sre/, copied by nothing. bin/sre/ stays uninstalled
     // deliberately: no installed module requires it, so wiring the dead array would have shipped
     // files nothing loads rather than fixing anything.
-    const coreFiles = ['bin/hindsight-injector.js'];
+    // bin/mindforge-cli.js is here, not behind --with-utils, because it is the ENTRY POINT the
+    // documentation tells users to run. Measured on a default `--claude --local --skip-wizard`
+    // install before this change: 152 bin/**/*.js landed across 15 subdirectories, but only ONE
+    // top-level file, and `find . -name mindforge-cli.js` returned nothing. So
+    // docs/getting-started.md's promise that "the `mindforge` CLI command is available for runtime
+    // operations" was false on the documented path, and every fix to that CLI was invisible to
+    // anyone who followed the docs.
+    //
+    // Shipping the single file is sufficient, verified rather than assumed: its only load-time
+    // requires are `child_process` and `path`, both Node builtins, and the subdirectories it
+    // dispatches into (bin/utils 11 files, bin/engine 23, bin/wizard 4) already land via
+    // sovereignEngines above.
+    //
+    // The rest of bin/ stays behind --with-utils. This is the entry point, not a bulk copy.
+    const coreFiles = ['bin/hindsight-injector.js', 'bin/mindforge-cli.js'];
     coreFiles.forEach(rel => {
       const srcFile = src(...rel.split('/'));
       const dstFile = path.join(process.cwd(), rel);
