@@ -157,6 +157,44 @@ for (const rel of ['package-lock.json', 'sdk/package-lock.json', 'mcp-server/pac
 for (const rel of ['sdk/package.json', 'mcp-server/package.json', '.mindforge/config.json']) {
   syncJson(rel, (d) => { d.version = CANON; }, (d) => d.version);
 }
+
+// mcp-server/server.json — the MCP Registry's view of the package, and it had NO writer here at all.
+//
+// It carries the version TWICE: the server's own `.version`, and the npm package entry's
+// `packages[].version`. tests/mcp-server-version.test.js:139 asserts BOTH against
+// mcp-server/package.json, so this is the same shape as the AGENTS.md gap fixed one commit earlier —
+// a gate demanding a value that nothing writes. The test's own header records the consequence: it
+// "froze at 11.5.1 in both places while package.json moved on four minor versions".
+//
+// Structured rather than by regex, and both fields set explicitly, because the file has two
+// independent version keys and a `$schema` URL containing a date (2025-12-11). A loose numeric sweep
+// over this file is exactly how the marketplace subagent entries nearly got rewritten.
+//
+// The package entry is matched by IDENTIFIER, not by position: `packages` is an array and the schema
+// permits several, so index 0 is an assumption rather than a fact. An entry for a different
+// identifier is deliberately left alone — it would version on its own line.
+{
+  const rel = 'mcp-server/server.json';
+  let mcpName = 'mindforge-mcp-server';
+  try { mcpName = JSON.parse(read('mcp-server/package.json')).name || mcpName; } catch { /* default */ }
+  syncJson(rel,
+    (d) => {
+      d.version = CANON;
+      for (const p of (Array.isArray(d.packages) ? d.packages : [])) {
+        if (p && p.identifier === mcpName) p.version = CANON;
+      }
+    },
+    // Report the STALEST of the two, so a partial file cannot look synced because one field happens
+    // to be current — the failure mode sdk/README.md had.
+    (d) => {
+      const seen = [d.version];
+      for (const p of (Array.isArray(d.packages) ? d.packages : [])) {
+        if (p && p.identifier === mcpName) seen.push(p.version);
+      }
+      const stale = seen.filter((v) => v !== CANON);
+      return stale.length ? stale.join(', ') : CANON;
+    });
+}
 syncByRegex('sdk/src/index.ts', /VERSION = '(\d+\.\d+\.\d+)'/g);
 // sdk/README.md carries the version in TWO shapes and this pattern only matched one.
 //

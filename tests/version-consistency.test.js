@@ -174,6 +174,66 @@ test('the Dockerfile ARG default matches package.json', () => {
   }
 });
 
+// ── A real bump must move EVERY channel the gates check ───────────────────────
+//
+// WHY A ROUND TRIP AND NOT A --check. `sync-version.js --check` on a clean tree is green whether or
+// not a channel is wired, so it cannot detect a MISSING channel — only a stale one. Both channel gaps
+// found in this area were invisible to it: AGENTS.md (asserted by doc-count-claims, written by
+// nothing) and mcp-server/server.json (asserted by mcp-server-version.test.js:139, written by
+// nothing, and per that test's own header "froze at 11.5.1 in both places while package.json moved on
+// four minor versions").
+//
+// Deleting either channel from the script left version-consistency at 19/19 and doc-count-claims at
+// 19/19. So this test performs an ACTUAL bump in a throwaway copy and asserts the files moved. It is
+// the only shape that can fail when a channel is absent rather than merely stale.
+
+test('a real version bump moves every gated channel, not just the ones --check sees', () => {
+  const tmp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-bumproundtrip-')));
+  try {
+    // The script resolves its repo as path.resolve(__dirname, '..') and ignores cwd, so the fixture
+    // must contain a COPY of it — passing `cwd` alone makes it happily rewrite the real repo instead.
+    fs.mkdirSync(path.join(tmp, 'scripts'), { recursive: true });
+    fs.mkdirSync(path.join(tmp, 'mcp-server'), { recursive: true });
+    fs.copyFileSync(path.join(ROOT, 'scripts', 'sync-version.js'),
+      path.join(tmp, 'scripts', 'sync-version.js'));
+
+    const BUMP = '99.0.0';
+    fs.writeFileSync(path.join(tmp, 'package.json'),
+      JSON.stringify({ name: 'mindforge-cc', version: BUMP }, null, 2) + '\n');
+
+    // Only the channels under test, each seeded STALE. A partial fixture is deliberate: it keeps the
+    // assertion about these two files rather than about the whole 15-channel surface.
+    fs.copyFileSync(path.join(ROOT, 'mcp-server', 'package.json'),
+      path.join(tmp, 'mcp-server', 'package.json'));
+    const mcpPkgPath = path.join(tmp, 'mcp-server', 'package.json');
+    const mcpPkg = JSON.parse(fs.readFileSync(mcpPkgPath, 'utf8'));
+    mcpPkg.version = '1.0.0';
+    fs.writeFileSync(mcpPkgPath, JSON.stringify(mcpPkg, null, 2) + '\n');
+    fs.copyFileSync(path.join(ROOT, 'mcp-server', 'server.json'),
+      path.join(tmp, 'mcp-server', 'server.json'));
+    fs.writeFileSync(path.join(tmp, 'AGENTS.md'),
+      'MindForge v1.0.0 is an agentic intelligence framework distributed as the `mindforge-cc` npm package.\n');
+
+    const r = spawnSync(process.execPath, [path.join(tmp, 'scripts', 'sync-version.js')],
+      { cwd: tmp, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: tmp } });
+
+    const agents = fs.readFileSync(path.join(tmp, 'AGENTS.md'), 'utf8');
+    assert.match(agents, new RegExp(`MindForge v${BUMP.replace(/\./g, '\\.')} is an agentic`),
+      'AGENTS.md was not bumped. doc-count-claims.test.js asserts this exact sentence against '
+      + 'package.json, so a missing channel makes every version bump fail npm test — and '
+      + `mindforge-release.yml runs npm test.\n${r.stdout}${r.stderr}`);
+
+    const server = JSON.parse(fs.readFileSync(path.join(tmp, 'mcp-server', 'server.json'), 'utf8'));
+    assert.strictEqual(server.version, BUMP,
+      `server.json .version was not bumped (got ${server.version})`);
+    const entry = (server.packages || []).find((x) => x.identifier === mcpPkg.name);
+    assert.ok(entry, `server.json must still carry a package entry for ${mcpPkg.name}`);
+    assert.strictEqual(entry.version, BUMP,
+      `server.json packages[].version was not bumped (got ${entry.version}). It carries the version `
+      + 'TWICE and mcp-server-version.test.js asserts both.');
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+});
+
 test('the Homebrew formula is internally consistent, and never AHEAD of canonical', () => {
   // WAS strict equality with package.json, which asserted something impossible. The formula's
   // sha256 is the digest of the published tarball, so it cannot be correct until AFTER the release
