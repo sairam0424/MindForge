@@ -483,6 +483,135 @@ test('--fetch-sha REFUSES an unpublished version rather than hashing the error b
   }
 });
 
+// ── the two plugin artifacts a BUILD writes, which sync-version.js can only report ────────────
+//
+// THE DEFECT. `grep -n plugins/ scripts/sync-version.js` returned nothing, while
+// tests/plugin-packaging.test.js asserts plugins/mindforge/.claude-plugin/plugin.json against
+// package.json and tests/mcp-server-version.test.js spawns plugins/mindforge/mcp/dist/index.js and
+// reads serverInfo.version back. Two gates demanding a value nothing wrote — the AGENTS.md and
+// mcp-server/server.json shape again, but this one ANNOUNCED SUCCESS. Measured on an 11.9.2 -> 11.9.3
+// bump of the merged release queue:
+//
+//   node scripts/sync-version.js          exit 0   "wrote 15 file(s)"
+//   node scripts/sync-version.js --check  exit 0   "every channel that CAN be derived offline is at 11.9.3"
+//   npm test                              exit 1   128 passed / 3 FAILED
+//   npm run release:ready                 exit 1   12/14  (14/14 at 11.9.2)
+//
+// So a contributor following CLAUDE.md's "never bump by hand, run scripts/sync-version.js" got a green
+// tool and a red suite, with nothing naming the cause.
+//
+// WHY A FIXTURE ROUND TRIP AND NOT AN ASSERTION ABOUT THE LIVE TREE. On a synced tree both artifacts
+// already equal package.json, so nothing distinguishes a working detector from a deleted one — the same
+// reason the bump round trip above exists. These seed them STALE and read the report.
+//
+// The pair is deliberate. The first test alone would pass against a script that printed the section
+// unconditionally; the second pins that a fresh tree stays silent and exits 0.
+
+function buildArtifactFixture(artifactVersion) {
+  const tmp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-buildchan-')));
+  // The script resolves its repo as path.resolve(__dirname, '..') and ignores cwd, so the fixture must
+  // hold a COPY of it — passing cwd alone makes it rewrite the real repo instead.
+  fs.mkdirSync(path.join(tmp, 'scripts'), { recursive: true });
+  fs.mkdirSync(path.join(tmp, 'plugins', 'mindforge', '.claude-plugin'), { recursive: true });
+  fs.mkdirSync(path.join(tmp, 'plugins', 'mindforge', 'mcp', 'dist'), { recursive: true });
+  fs.copyFileSync(path.join(ROOT, 'scripts', 'sync-version.js'),
+    path.join(tmp, 'scripts', 'sync-version.js'));
+  fs.writeFileSync(path.join(tmp, 'package.json'),
+    JSON.stringify({ name: 'mindforge-cc', version: '99.0.0' }, null, 2) + '\n');
+  fs.writeFileSync(path.join(tmp, 'plugins', 'mindforge', '.claude-plugin', 'plugin.json'),
+    JSON.stringify({ name: 'mindforge', version: artifactVersion }, null, 2) + '\n');
+  // Stands in for the 769KB esbuild bundle. The version reaches it as a JSON-quoted literal because
+  // mcp-server/src/index.ts imports it from package.json, so the quoted form is what must be matched —
+  // the real bundle also contains 3.0.0, 1.0.12 and `127.0.0` (from 127.0.0.1), which is why a bare
+  // semver scan cannot be used. Those decoys are reproduced here so a regression to a loose pattern
+  // fails this test rather than passing it by luck.
+  fs.writeFileSync(path.join(tmp, 'plugins', 'mindforge', 'mcp', 'dist', 'index.js'),
+    'const dep="3.0.0",other="1.0.12",host="127.0.0.1";\n'
+    + 'const server={name:"mindforge",version:"' + artifactVersion + '"};\n');
+  return tmp;
+}
+
+const CHAIN = [
+  'npm --prefix mcp-server install',
+  'npm --prefix mcp-server run build',
+  'node scripts/build-mindforge-plugin.js',
+];
+
+test('sync-version.js reports the plugin build artifacts it cannot write, and refuses to exit 0', () => {
+  const tmp = buildArtifactFixture('1.2.3');
+  try {
+    const pluginRel = path.join('plugins', 'mindforge', '.claude-plugin', 'plugin.json');
+    const bundleRel = path.join('plugins', 'mindforge', 'mcp', 'dist', 'index.js');
+    const beforePlugin = fs.readFileSync(path.join(tmp, pluginRel), 'utf8');
+    const beforeBundle = fs.readFileSync(path.join(tmp, bundleRel), 'utf8');
+
+    const r = spawnSync(process.execPath, [path.join(tmp, 'scripts', 'sync-version.js')],
+      { cwd: tmp, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: tmp, TMPDIR: tmp } });
+    const out = `${r.stdout || ''}${r.stderr || ''}`;
+
+    assert.match(out, /REQUIRE A BUILD/,
+      'a stale plugin.json and mcp bundle must be reported as their own category. Collapsing them into '
+      + `the derivable channels is how a bump reported success over a red npm test.\n${out}`);
+    assert.match(out, /plugins\/mindforge\/\.claude-plugin\/plugin\.json: 1\.2\.3 -> 99\.0\.0/,
+      `the report must name plugin.json and both versions.\n${out}`);
+    // The bundle line states ABSENCE of the canonical token, not "the bundle is at version X" — a
+    // 769KB esbuild bundle has no single soundly-identifiable version field, and naming one would be
+    // a guess. Absence is what the check establishes and all it may claim.
+    assert.match(out, /plugins\/mindforge\/mcp\/dist\/index\.js: no "99\.0\.0" token/,
+      `the report must name the mcp bundle and say what it looked for.\n${out}`);
+    // REGRESSION GUARD for a loose detector. The fixture seeds 3.0.0, 1.0.12 and 127.0.0.1 as decoys,
+    // exactly as the real bundle contains them. A "first semver token wins" implementation would print
+    // one of those as the bundle's version, which is how an IP address gets reported as a release.
+    for (const decoy of ['3.0.0 -> 99.0.0', '1.0.12 -> 99.0.0', '127.0.0 -> 99.0.0']) {
+      assert.ok(!out.includes(decoy),
+        `the bundle detector matched the decoy "${decoy.split(' ')[0]}" — it must key on the quoted `
+        + `canonical token, not on the first semver-shaped string in the file.\n${out}`);
+    }
+
+    // The runbook, not just the complaint. The obvious single command does not work from a clean
+    // checkout: build-mindforge-plugin.js refuses without mcp-server/dist/index.js, and mcp-server/dist
+    // is gitignored, so it is absent on every fresh clone. All three steps, in order, or the operator is
+    // handed a command that exits 1.
+    for (const step of CHAIN) {
+      assert.ok(out.includes(step),
+        `the report must print the remedy step "${step}" — without the full chain the documented `
+        + `remedy exits 1 on a fresh clone.\n${out}`);
+    }
+    assert.ok(out.indexOf(CHAIN[0]) < out.indexOf(CHAIN[1])
+      && out.indexOf(CHAIN[1]) < out.indexOf(CHAIN[2]),
+      `the remedy steps must be printed in runnable order.\n${out}`);
+
+    assert.notStrictEqual(r.status, 0,
+      'a tree whose gated build artifacts are stale is not releasable, so this must not exit 0. '
+      + `Exiting 0 here is the original defect.\n${out}`);
+
+    // MUST NOT FORGE A PASSING GATE. plugin.json is plain JSON this script could trivially edit, but
+    // tests/plugin-packaging.test.js asserts no generator drift across the WHOLE plugin surface, so
+    // writing the version alone would turn that gate green while every other generated field stayed
+    // stale — a partial write announced as a complete one.
+    assert.strictEqual(fs.readFileSync(path.join(tmp, pluginRel), 'utf8'), beforePlugin,
+      'sync-version.js must LEAVE plugin.json alone; build-mindforge-plugin.js is its only writer');
+    assert.strictEqual(fs.readFileSync(path.join(tmp, bundleRel), 'utf8'), beforeBundle,
+      'sync-version.js must LEAVE the mcp bundle alone — it is compiler output');
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+});
+
+test('sync-version.js stays silent about the build artifacts when they are already current', () => {
+  // The complement, and the reason the test above means anything: a script that printed the section
+  // unconditionally would satisfy it. Both artifacts at canonical must produce NO build section and
+  // exit 0, so the detector has to actually compare rather than always complain.
+  const tmp = buildArtifactFixture('99.0.0');
+  try {
+    const r = spawnSync(process.execPath, [path.join(tmp, 'scripts', 'sync-version.js')],
+      { cwd: tmp, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: tmp, TMPDIR: tmp } });
+    const out = `${r.stdout || ''}${r.stderr || ''}`;
+    assert.ok(!/REQUIRE A BUILD/.test(out),
+      `current artifacts must not be reported as needing a build.\n${out}`);
+    assert.strictEqual(r.status, 0,
+      `a tree whose artifacts are all current must exit 0.\n${out}`);
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+});
+
 (async () => {
   for (const { name, fn } of tests) {
     try { await fn(); console.log(`  ✅  ${name}`); passed++; }

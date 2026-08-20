@@ -7,7 +7,7 @@
  * version bump was a manual sweep across a sprawl nobody had enumerated, and it went wrong
  * three separate times in the 11.9.2 release alone — each caught by RUNNING something rather
  * than by reading the docs:
- *   - CLAUDE.md said bumps "touch 5 files" (the real npm-relevant count is 12)
+ *   - CLAUDE.md said bumps "touch 5 files" (measured today: 16 channels over 15 files)
  *   - mcp-server/package-lock.json was found stale during the release gauntlet
  *   - the root and sdk lockfiles were found stale while cutting the release branch
  * and three non-npm channels were left FOUR releases behind: the Homebrew formula and the
@@ -20,6 +20,17 @@
  *   node scripts/sync-version.js                      # write every derivable channel
  *   node scripts/sync-version.js --sha256 <hex>       # also rewrite the Homebrew formula
  *   node scripts/sync-version.js --fetch-sha          # fetch the published tarball and hash it
+ *
+ * A CHANNEL IS ONE OF THREE KINDS, and the report keeps them apart rather than collapsing them
+ * into one red number:
+ *
+ *   derivable        this script writes it. 15 channels over 14 files.
+ *   requires a build a compiler writes it. The two plugin artifacts below.
+ *   deferred         the published tarball has to exist first. The Homebrew formula only.
+ *
+ * The distinction is the whole point. "You must act now", "run the build", and "this catches up
+ * after publish" are three different instructions, and a single exit code that means all three is
+ * how an operator ends up ignoring the one that mattered.
  *
  * DELIBERATE EXCLUSIONS, each with a reason rather than an omission:
  *
@@ -250,6 +261,95 @@ syncByRegex('CLAUDE.md', /`mindforge-cc`, v(\d+\.\d+\.\d+)\)/g, 'CLAUDE.md intro
 // ── Dockerfile: the ARG default is what `docker build .` uses with no flag ─────
 syncByRegex('Dockerfile', /MINDFORGE_MCP_VERSION=(\d+\.\d+\.\d+)/g, 'Dockerfile');
 
+// ── plugin build artifacts: derived from package.json, writable only by a BUILD ──────────────
+//
+// Two TRACKED files carry the canonical version and nothing in this script can produce either:
+//
+//   plugins/mindforge/.claude-plugin/plugin.json   gated by tests/plugin-packaging.test.js
+//   plugins/mindforge/mcp/dist/index.js            gated by tests/mcp-server-version.test.js
+//
+// Before this block, `grep -n plugins/ scripts/sync-version.js` returned nothing. That is the same
+// "a gate demands a value nothing writes" shape as the AGENTS.md and mcp-server/server.json gaps two
+// channels up, except louder, because this one announced success:
+//
+//   Measured on an 11.9.2 -> 11.9.3 rehearsal of the merged release queue —
+//     node scripts/sync-version.js          exit 0, "wrote 15 file(s)"
+//     node scripts/sync-version.js --check  exit 0, "every channel that CAN be derived offline is at 11.9.3"
+//     npm test                              exit 1, 128 passed / 3 FAILED
+//     npm run release:ready                 exit 1, 12/14 (was 14/14 at 11.9.2)
+//
+// So the tool reported a fully-synced tree and left `npm test` red, which is precisely the class of
+// defect this file exists to end. The printed remedy made it worse: `node scripts/build-mindforge-plugin.js`
+// REFUSES from a clean checkout ("mcp-server/dist/index.js is missing") because mcp-server/dist is
+// gitignored, so the one command an operator would reach for cannot run. The real chain is three
+// commands and was documented nowhere; it is printed below.
+//
+// NOT WRITTEN HERE, though plugin.json is plain JSON this script could trivially edit.
+// tests/plugin-packaging.test.js asserts "no generator drift" across the WHOLE plugin surface, so
+// setting `.version` alone would turn that gate green while every other generated field stayed
+// stale — a partial write announced as a complete one, which is the exact sdk/README.md failure
+// recorded a few channels above. build-mindforge-plugin.js is the only correct writer. This script's
+// job is to detect and say so, not to forge a passing gate.
+{
+  const artifacts = [
+    {
+      rel: 'plugins/mindforge/.claude-plugin/plugin.json',
+      // Exact: parse and read the field the gate compares. Returns null when current, else the
+      // version found — enough for the report to render `found -> want`.
+      stale: (text) => {
+        let found = null;
+        try { found = JSON.parse(text).version || null; } catch { return { detail: 'unparseable' }; }
+        return found === CANON ? null : { found: String(found) };
+      },
+    },
+    {
+      rel: 'plugins/mindforge/mcp/dist/index.js',
+      // A 769KB esbuild bundle, so this reads rather than parses. mcp-server/src/index.ts:36 does
+      // `import { version as MCP_SERVER_VERSION } from '../package.json'`, which esbuild inlines as a
+      // JSON-quoted literal — `"11.9.2"` appears exactly once in the current bundle.
+      //
+      // Matching the quoted form, not a bare semver: the bundle also contains 3.0.0, 1.0.12 and
+      // `127.0.0` (the leading three components of 127.0.0.1), so "first semver token wins" would
+      // report a dependency version or an IP address as the server's version.
+      //
+      // Absence of `"CANON"` is sound evidence of staleness: a bundle that never contains the string
+      // cannot report it over MCP. Presence is strong but not proof — a dependency pinned to exactly
+      // CANON would alias. That residual case is covered by tests/mcp-server-version.test.js, which
+      // SPAWNS the bundle and reads serverInfo.version back over a real MCP initialize. This check is
+      // the cheap offline pre-filter, not the authority, and it must never be treated as the latter.
+      // Reports ABSENCE, and says only that. An earlier version listed every quoted semver it found,
+      // which printed `3.0.0, 1.0.12, 1.2.3 -> 99.0.0` and read as though three dependency versions
+      // were candidates for the server's version. Absence is the only thing this check establishes
+      // soundly, so it is the only thing the line claims. The remedy is a rebuild either way.
+      stale: (text) => (text.includes(`"${CANON}"`)
+        ? null
+        : { detail: `no "${CANON}" token — the bundle still reports an older version` }),
+    },
+  ];
+
+  for (const a of artifacts) {
+    // SKIP when absent, matching every other channel's exists() guard rather than reporting a
+    // missing file. Not a soft spot: the test fixtures in tests/version-consistency.test.js are
+    // deliberately PARTIAL scratch repos (scripts/ + package.json + the one channel under test), and
+    // that is documented at tests/version-consistency.test.js:308 — "missing channels are skipped by
+    // its exists() guards". Treating absence as drift here made four `status === 0` assertions fail,
+    // measured, because none of those fixtures contains plugins/.
+    //
+    // Absence is already covered where it belongs: tests/plugin-packaging.test.js and
+    // tests/mcp-server-version.test.js both read these paths directly and fail if they are gone.
+    if (!exists(a.rel)) continue;
+    const r = a.stale(read(a.rel));
+    if (r !== null) {
+      findings.push({
+        file: a.rel, found: r.found, want: CANON, fixed: false, requiresBuild: true,
+        // `detail` replaces the `found -> want` rendering for artifacts where a single "current
+        // version" is not soundly knowable (the compiled bundle). Claiming one would be a guess.
+        detail: r.detail,
+      });
+    }
+  }
+}
+
 // ── Homebrew formula: url + assert, and the digest, which cannot be derived ────
 {
   const rel = 'Formula/mindforge.rb';
@@ -266,10 +366,14 @@ syncByRegex('Dockerfile', /MINDFORGE_MCP_VERSION=(\d+\.\d+\.\d+)/g, 'Dockerfile'
         // every unpublished version.
         //
         // Worse than refusing, because it turned the gate GREEN. Measured end to end on a 11.9.3
-        // bump: plain sync exits 1 (formula SKIPPED), `--check` exits 1, then `--fetch-sha` writes
-        // the 404 digest and `--check` exits 0 — CI passing on a formula whose digest can never
-        // match its url. The REFUSING branch just below exists to prevent precisely that ("makes
-        // `brew install` fail hard") and this path walked straight past it.
+        // bump AT THE TIME: plain sync exited 1 (formula SKIPPED) and `--check` exited 1, then
+        // `--fetch-sha` wrote the 404 digest and `--check` exited 0 — CI passing on a formula whose
+        // digest can never match its url. The REFUSING branch just below exists to prevent precisely
+        // that ("makes `brew install` fail hard") and this path walked straight past it.
+        //
+        // Those two exit codes are now 0, deliberately: a lagging formula is DEFERRED rather than
+        // failed, per the may-lag-never-lead rule below. Stated in the past tense because reading it
+        // as current behaviour is exactly the mistake the runbook string a few lines down was making.
         //
         // Verified by CONTENT, not only status: an npm tarball is gzip and must begin with the 1f 8b
         // magic bytes. A status check alone would still accept a 200 serving an error page, and no
@@ -286,7 +390,7 @@ syncByRegex('Dockerfile', /MINDFORGE_MCP_VERSION=(\d+\.\d+\.\d+)/g, 'Dockerfile'
             `  ${url}\n  ${((err.stderr || '').toString().trim()) || err.message}\n` +
             '\n  A tarball digest cannot exist before the tarball does, so the formula is the LAST\n' +
             '  step of a release, not part of the version bump. Correct order:\n' +
-            '    1. bump package.json, run `node scripts/sync-version.js` (formula SKIPPED, exit 1)\n' +
+            '    1. bump package.json, run `node scripts/sync-version.js` (formula DEFERRED, exit 0)\n' +
             `    2. tag, and let mindforge-release.yml publish ${CANON} to npm\n` +
             '    3. `node scripts/sync-version.js --fetch-sha` — the tarball now exists\n' +
             '    4. commit the formula\n');
@@ -327,6 +431,9 @@ syncByRegex('Dockerfile', /MINDFORGE_MCP_VERSION=(\d+\.\d+\.\d+)/g, 'Dockerfile'
         file: rel, found: urlVer, want: CANON,
         fixed: !CHECK && Boolean(sha),
         deferrable: lagging,
+        // Recorded on the finding, not inferred from process.exitCode at the end. `leads` is the one
+        // state with no legitimate reading; every other non-zero exit means something else.
+        leads: !lagging,
       });
       if (!lagging) {
         console.error(
@@ -360,12 +467,20 @@ if (findings.length === 0) {
   console.log(`✅ every derivable channel is at ${CANON}`);
   process.exit(0);
 }
-// A finding that is `deferrable` and was not fixed is a channel legitimately BEHIND canonical — today
-// only the Homebrew formula, whose digest cannot exist before the tarball. Everything else is
-// blocking. Split rather than counted, so the report can distinguish "you must act" from "this
-// catches up after publish" instead of collapsing both into one red number.
+// THREE CATEGORIES, kept apart on purpose (see the header):
+//
+//   deferred          `deferrable` and unfixed — legitimately BEHIND canonical because its input does
+//                     not exist yet. Today only the Homebrew formula, whose digest is the hash of a
+//                     tarball that is published later. Catches up after release.
+//   requiresBuild     this script cannot write it; a compiler can, right now. Act before committing.
+//   blocking          everything else — derivable, and either fixed or reported.
+//
+// Collapsing these into one number is what produced the defect this block was rewritten for: a bump
+// printed "every channel that CAN be derived offline is at 11.9.3" and exit 0 while leaving `npm test`
+// at 128 passed / 3 failed.
 const deferred = findings.filter((f) => f.deferrable && !f.fixed);
-const blocking = findings.filter((f) => !(f.deferrable && !f.fixed));
+const needsBuild = findings.filter((f) => f.requiresBuild);
+const blocking = findings.filter((f) => !(f.deferrable && !f.fixed) && !f.requiresBuild);
 
 if (blocking.length > 0) {
   console.log(`${CHECK ? '❌' : '🔧'} canonical ${CANON} — ${blocking.length} channel(s) out of sync:`);
@@ -373,19 +488,50 @@ if (blocking.length > 0) {
     console.log(`   ${CHECK ? '' : f.fixed ? '[fixed] ' : '[SKIPPED] '}${f.file}: ${f.found} -> ${f.want}`);
   }
 }
+if (needsBuild.length > 0) {
+  console.log(`\n🔨 ${needsBuild.length} channel(s) REQUIRE A BUILD — this script cannot write them:`);
+  for (const f of needsBuild) {
+    console.log(`   ${f.file}: ${f.detail || `${f.found} -> ${f.want}`}`);
+  }
+  // The exact chain, because the obvious single command does not work from a clean checkout:
+  // build-mindforge-plugin.js refuses without mcp-server/dist/index.js, and mcp-server/dist is
+  // gitignored, so it is absent on every fresh clone.
+  console.log('   Run, in order:');
+  console.log('       npm --prefix mcp-server install');
+  console.log('       npm --prefix mcp-server run build');
+  console.log('       node scripts/build-mindforge-plugin.js');
+  console.log('   then commit both regenerated files. Until then `npm test` and `npm run '
+    + 'release:ready` will fail,');
+  console.log('   and .github/workflows/mindforge-release.yml runs `npm test` before publishing.');
+}
+// LAST, and that ordering is the message: blocking and requiresBuild must be acted on before the
+// commit, deferred cannot be acted on until after the publish. Printing them in urgency order stops
+// the one thing the operator can safely postpone from being read first.
 if (deferred.length > 0) {
   console.log(`\n⏳ ${deferred.length} channel(s) DEFERRED until after publish (behind, not ahead):`);
   for (const f of deferred) console.log(`   ${f.file}: ${f.found} -> ${f.want}`);
   console.log('   Run `node scripts/sync-version.js --fetch-sha` once the release is on npm.');
 }
 
+// Distinguish "a channel LEADS canonical" (never legitimate) from any other reason the exit code is
+// non-zero. The old final line said "a channel is AHEAD of canonical" whenever process.exitCode was
+// set at all, so the --fetch-sha refusal for an unpublished tarball — a channel that is BEHIND —
+// printed the exact opposite of the truth, in the same run that had just printed
+// "DEFERRED until after publish (behind, not ahead)". Diagnosis is load-bearing here: the two states
+// have opposite remedies.
+const leading = findings.some((f) => f.leads);
+
 if (CHECK) {
-  if (blocking.length === 0) {
+  if (blocking.length === 0 && needsBuild.length === 0) {
     console.log(`\n✅ every channel that CAN be derived offline is at ${CANON}`);
     process.exit(process.exitCode || 0);
   }
-  console.log('\nRun `node scripts/sync-version.js` (add --fetch-sha to include the Homebrew formula).');
+  if (blocking.length > 0) {
+    console.log('\nRun `node scripts/sync-version.js` (add --fetch-sha to include the Homebrew formula).');
+  }
   process.exit(1);
 }
 console.log(`\nwrote ${wrote} file(s)`);
-if (process.exitCode) console.log('a channel is AHEAD of canonical — see above');
+if (leading) console.log('a channel is AHEAD of canonical — see above');
+// A build-only gap is not a script failure, but the tree is not releasable, so it must not exit 0.
+if (needsBuild.length > 0) process.exitCode = 1;
