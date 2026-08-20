@@ -311,9 +311,39 @@ test('an install leaves nothing behind in the temp directory it was given', () =
 });
 
 test('an install copies neither the framework database nor its daemon token', () => {
+  // PLANTS ITS OWN BAIT, because without it this assertion is vacuous in CI.
+  //
+  // `.mindforge/celestial.db` is gitignored and untracked. On a developer machine it exists, so
+  // removing both excludes reds this test — which is how it looked verified. In a clean clone or a CI
+  // runner the file is simply ABSENT, nothing is available to copy, and the assertion passes no matter
+  // what the exclude list says. Found by an independent audit; the local red masked it exactly the way
+  // an ambient dependency always does.
+  //
+  // Planting a recognisable fixture (and the sidecars and orphan shapes the exclude pattern is meant
+  // to cover) makes the check mean the same thing everywhere. Only files this test created are
+  // removed afterwards — a pre-existing real database is left untouched.
+  const planted = [];
+  const mfDir = path.join(REPO_ROOT, '.mindforge');
+  for (const name of ['celestial.db', 'celestial.db-wal', 'celestial.db-shm',
+    'celestial.db.tmp.999999.async', '.browser-daemon-token']) {
+    const f = path.join(mfDir, name);
+    if (fs.existsSync(f)) continue;                 // never disturb a real one
+    fs.mkdirSync(mfDir, { recursive: true });
+    fs.writeFileSync(f, `PLANTED-BY-TEST-${name}\n`);
+    planted.push(f);
+  }
+
   const i = freshInstall();
   try {
     assert.strictEqual(i.r.status, 0, `install failed: ${(i.r.stderr || '').slice(-300)}`);
+
+    // NON-VACUITY: the bait must actually be present in the SOURCE, or "nothing was copied" is true
+    // for the boring reason. Checked after the install, since the installer must not remove it either.
+    const baitPresent = ['celestial.db', '.browser-daemon-token']
+      .filter((n) => fs.existsSync(path.join(mfDir, n)));
+    assert.strictEqual(baitPresent.length, 2,
+      `the source tree lacks ${2 - baitPresent.length} of the files this test asserts are NOT copied, `
+      + 'so it would pass without the excludes doing anything');
 
     const dbFiles = findAll(i.project, (n) => /^celestial\.db($|[.-])/.test(n));
     assert.deepStrictEqual(dbFiles, [],
@@ -330,7 +360,10 @@ test('an install copies neither the framework database nor its daemon token', ()
     // true because nothing was copied at all.
     assert.ok(fs.existsSync(path.join(i.project, '.mindforge', 'config.json')),
       'the install produced no .mindforge/config.json, so this test proves nothing about excludes');
-  } finally { cleanup(i); }
+  } finally {
+    cleanup(i);
+    for (const f of planted) { try { fs.rmSync(f, { force: true }); } catch { /* best effort */ } }
+  }
 });
 
 test('excluding the database does not stop a fresh one being created', () => {
