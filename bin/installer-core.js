@@ -402,6 +402,26 @@ const SENSITIVE_EXCLUDE = [
   '.git',
   '.DS_Store',
   'browser-daemon.log',
+  // The framework's OWN runtime state, which is not the consumer's and is not small.
+  //
+  // Measured on a `--claude --local` install whose source was this working tree: the target received
+  // celestial.db (11.2 MB, sha256 IDENTICAL to the source, so copied rather than created) plus its
+  // -wal and -shm sidecars and SEVEN orphaned `celestial.db.tmp.<pid>.async` exports at 11.1 MB each
+  // — about 89 MB of the developer's traces, skills and attestations landing in someone else's
+  // project. `browser-daemon.log` was already excluded here; the database beside it was not.
+  //
+  // SCOPE, stated honestly: `npm pack --dry-run` confirms neither celestial.db nor the daemon token
+  // ships in the tarball, so an ordinary `npx mindforge-cc` install has nothing to copy and was never
+  // exposed. This bites installs whose SOURCE is a working tree — a git-clone install, or local
+  // development. It is defence in depth rather than a live consumer leak, and it belongs here because
+  // `files[]` excluding it today is not a guarantee about tomorrow.
+  //
+  // One pattern for the database and every sidecar and orphan: .db, .db-wal, .db-shm,
+  // .db.tmp.<pid>.async, .db.conflict.<pid>.<len>.
+  /^celestial\.db($|[.-])/,
+  // A live capability token. Not a credential for a remote service, but still this machine's handle
+  // to a running daemon, and nothing the target project should receive.
+  /^\.browser-daemon-token$/,
   /audit\.jsonl/i,
   /handoff\.json/i,
   /jira-sync\.json/i,
@@ -641,10 +661,21 @@ async function install(runtime, scope, options = {}) {
     // ✨ RUNTIME ADAPTATION: Generate specific content for this runtime
     const adaptedContent = generateEntryContent(runtime, content);
 
-    // Keep legacy location based on runtime config
+    // Keep legacy location based on runtime config.
+    //
+    // THE LEAK. This staging file was written and never removed — no unlink, no finally, no exit
+    // handler. Every install left one behind, forever. Measured on this machine: 2,711 orphaned
+    // `/tmp/CLAUDE.md-<ms>.md` files (~21 MB), and 905 more accumulated within a day of clearing
+    // them. Unconditional, unlike the .mindforge excludes below: it fires on an ordinary
+    // `npx mindforge-cc` install too, because os.tmpdir() has nothing to do with the source tree.
+    //
+    // Removed in a `finally` rather than after the last write, so a throw from any of the three
+    // safeCopyClaude calls cannot skip it — a leak on the failure path is how the original one
+    // survived review.
     const tempEntry = path.join(os.tmpdir(), `${cfg.entryFile}-${Date.now()}.md`);
     fsu.write(tempEntry, adaptedContent);
-    
+    try {
+
     const targetPath = path.join(baseDir, cfg.entryFile);
     // GATED ON !selfInstall, which it was not. The guard existed and stopped one line short: the root
     // mirror below has always been gated, this write never was. In MindForge's own repository
@@ -677,6 +708,12 @@ async function install(runtime, scope, options = {}) {
       // where the write no longer happens. Gating the write and leaving the print would have replaced
       // one false claim with another, which is the failure this whole change is about.
       Theme.printResolved(c.bold(cfg.entryFile));
+    }
+
+    } finally {
+      // Best-effort: a staging file we cannot remove is not worth failing an otherwise good install
+      // over, and the next run writes a differently-named one regardless.
+      try { fs.rmSync(tempEntry, { force: true }); } catch { /* nothing further to do */ }
     }
   }
 
