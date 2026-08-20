@@ -542,16 +542,41 @@ function verifyInstall(baseDir, cmdsDir, runtime, scope) {
     path.join(cmdsDir, `${pfx}health.md`),
     path.join(cmdsDir, `${pfx}execute-phase.md`),
     path.join(cmdsDir, `${pfx}security-scan.md`),
-    // Sovereign Engine logic
-    path.join(process.cwd(), 'bin/governance/policy-engine.js'),
-    path.join(process.cwd(), 'bin/governance/quantum-crypto.js'),
-    path.join(process.cwd(), 'bin/autonomous/intent-harvester.js'),
-    path.join(process.cwd(), 'bin/memory/cli.js'),
-    path.join(process.cwd(), 'bin/models/cost-tracker.js'),
-    path.join(process.cwd(), 'bin/research/research-engine.js'),
+    // Sovereign Engine logic — LOCAL SCOPE ONLY, because a global install never writes it.
+    //
+    // These six were required unconditionally against process.cwd(), so every `--claude --global`
+    // install ended:
+    //
+    //     ❌  Install verification failed — 6 of 12 required file(s) missing
+    //         Retry: npx mindforge-cc@latest --claude --global --force
+    //     exit 1
+    //
+    // Measured: a global install writes 389 files to $HOME/.claude and ZERO to bin/ anywhere —
+    // neither the project nor $HOME/.claude/bin. That is deliberate, not a gap: the block that copies
+    // sovereignEngines is gated `if (scope === 'local' && !selfInstall)` at :845. So verification was
+    // demanding artifacts of an operation the installer had correctly chosen not to perform, then
+    // advising a --force retry that cannot help — --force does not change which scope branch runs.
+    //
+    // The scope-conditional shape was already here, applied to the entry file on the first line of
+    // this array and to nothing else. Extending it is the smaller change; the alternative — making a
+    // global install carry bin/ — is a decision about what global scope MEANS and is deliberately not
+    // taken here. Flagged instead: a global install currently gives a user commands under
+    // ~/.claude/commands/mindforge/ with no Node runtime beside them, and whether that is coherent is
+    // a product question rather than a verification bug.
+    ...(scope === 'local' ? [
+      path.join(process.cwd(), 'bin/governance/policy-engine.js'),
+      path.join(process.cwd(), 'bin/governance/quantum-crypto.js'),
+      path.join(process.cwd(), 'bin/autonomous/intent-harvester.js'),
+      path.join(process.cwd(), 'bin/memory/cli.js'),
+      path.join(process.cwd(), 'bin/models/cost-tracker.js'),
+      path.join(process.cwd(), 'bin/research/research-engine.js'),
+    ] : []),
   ];
 
   const missing = required.filter(f => !fsu.exists(f));
+  // `checked` is reported by the caller ("Install verified (N required files present)"), so it has to
+  // reflect what was actually examined for this scope — 12 local, 6 global. Printing 12 after checking
+  // 6 would be the same class of false claim this function exists to catch.
   return { ok: missing.length === 0, missing, checked: required.length };
 }
 

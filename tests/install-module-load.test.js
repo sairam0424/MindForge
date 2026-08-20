@@ -361,6 +361,70 @@ test('verifyInstall DETECTS a missing required file (negative control)', () => {
   }
 });
 
+test('verifyInstall requires bin/ for LOCAL scope only, because global never writes it', () => {
+  // THE DEFECT. Six bin/** paths were required unconditionally against process.cwd(), so every
+  // `--claude --global` install ended:
+  //
+  //     ❌  Install verification failed — 6 of 12 required file(s) missing
+  //         Retry: npx mindforge-cc@latest --claude --global --force
+  //     exit 1
+  //
+  // Measured: a global install writes 389 files to $HOME/.claude and ZERO to bin/ anywhere. That is
+  // deliberate — the block copying sovereignEngines is gated `if (scope === 'local' && !selfInstall)`.
+  // So verification demanded artifacts of an operation the installer had correctly declined to
+  // perform, and then advised a --force retry that cannot help, since --force does not change which
+  // scope branch runs.
+  //
+  // Both directions are asserted. "global passes" alone is satisfied by deleting the requirements
+  // outright; "local still fails" alone is satisfied by leaving global broken.
+  const { verifyInstall, RUNTIMES } = require(path.join(REPO_ROOT, 'bin', 'installer-core.js'));
+  const cwd = process.cwd();
+  const victim = path.join(PROJECT, 'bin', 'governance', 'policy-engine.js');
+  const saved = fs.existsSync(victim) ? fs.readFileSync(victim) : null;
+  assert.ok(saved, 'fixture precondition: the local install must have copied policy-engine.js');
+
+  try {
+    process.chdir(PROJECT);
+    const baseDir = path.join(PROJECT, RUNTIMES.claude.localDir);
+    const cmdsDir = path.join(baseDir, RUNTIMES.claude.commandsSubdir);
+
+    // `checked` is printed to the operator as "Install verified (N required files present)", so it has
+    // to describe what was actually examined for that scope rather than a fixed number.
+    const localAll = verifyInstall(baseDir, cmdsDir, 'claude', 'local');
+    const globalAll = verifyInstall(baseDir, cmdsDir, 'claude', 'global');
+    assert.strictEqual(localAll.checked, 12, `local scope must check 12, got ${localAll.checked}`);
+    assert.strictEqual(globalAll.checked, 6, `global scope must check 6, got ${globalAll.checked}`);
+
+    // Remove a bin/ file: local must notice, global must not care.
+    fs.rmSync(victim);
+    const localMissing = verifyInstall(baseDir, cmdsDir, 'claude', 'local');
+    assert.strictEqual(localMissing.ok, false,
+      'local scope installs bin/, so a missing engine file must still fail verification');
+    assert.ok(localMissing.missing.some((f) => f.includes('policy-engine.js')),
+      `and it must NAME it, got: ${localMissing.missing.join(', ')}`);
+
+    const globalOk = verifyInstall(baseDir, cmdsDir, 'claude', 'global');
+    assert.strictEqual(globalOk.ok, true,
+      'global scope does not write bin/, so its absence must not fail verification — that is the bug '
+      + 'that made every global install exit 1 on a correctly completed run');
+
+    // NON-VACUITY: global must not have gone slack. A missing COMMAND file still has to fail, or this
+    // change replaced a false negative with a check that cannot fail at all.
+    const cmdVictim = path.join(cmdsDir, 'help.md');
+    const cmdSaved = fs.readFileSync(cmdVictim);
+    try {
+      fs.rmSync(cmdVictim);
+      const globalBroken = verifyInstall(baseDir, cmdsDir, 'claude', 'global');
+      assert.strictEqual(globalBroken.ok, false,
+        'global scope must still fail when a required COMMAND file is missing — it verifies 6 things, '
+        + 'not nothing');
+    } finally { fs.writeFileSync(cmdVictim, cmdSaved); }
+  } finally {
+    process.chdir(cwd);
+    if (saved) { fs.mkdirSync(path.dirname(victim), { recursive: true }); fs.writeFileSync(victim, saved); }
+  }
+});
+
 test('verifyInstall does not require files the package never publishes', () => {
   // Its contract used to include docs/registry/COMMANDS.md and docs/registry/PERSONAS.md under the
   // project root. docs/registry/ ships ZERO files in the tarball, so those could never exist in a
