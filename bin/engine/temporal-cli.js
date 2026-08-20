@@ -32,7 +32,7 @@ async function main() {
       const auditId = ARGS[1];
       const fix = ARGS.slice(2).join(' ');
       if (!auditId || !fix) {
-        console.error('Usage: /mindforge:temporal inject <auditId> <fix description>');
+        console.error('Usage: mindforge temporal inject <auditId> <fix description>');
         process.exit(1);
       }
       const result = await HindsightInjector.inject(auditId, fix);

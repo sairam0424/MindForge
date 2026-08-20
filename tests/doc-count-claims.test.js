@@ -143,7 +143,16 @@ test('no shipped doc names a /mindforge: command that does not exist', () => {
     { cwd: REPO_ROOT, encoding: 'utf8', maxBuffer: 1 << 28 }));
   const shipped = packed[0].files
     .map((f) => f.path)
-    .filter((f) => /\.md$/.test(f))
+    // .js AS WELL AS .md, and the .js half is the more urgent of the two. Shipped hooks INJECT their
+    // text straight into the agent's context at runtime, so a phantom there is not a doc a user might
+    // read — it is an instruction the model receives and acts on. Applying this gate's own logic to
+    // the 233 shipped .js files surfaced three live ones: /mindforge:pause-work in
+    // .agent/hooks/mindforge-context-monitor.js and /mindforge:fast twice in
+    // .agent/hooks/mindforge-workflow-guard.js. Both repointed to commands that exist
+    // (/mindforge:checkpoint and /mindforge:do), after checking that the replacement fits what the
+    // surrounding message actually says — the first attempt suggested /mindforge:handoff in a message
+    // whose next clause is "Do NOT write handoff files".
+    .filter((f) => /\.(md|js)$/.test(f))
     // changelogs/ and RELEASENOTES are HISTORICAL RECORDS. changelogs/v2.6.0.md names
     // /mindforge:temporal because that is what v2.6.0 shipped with; rewriting it would falsify the
     // record to satisfy a present-tense check. Same exclusion the audit-terminology sweep used, and

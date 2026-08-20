@@ -5,7 +5,7 @@
 // (no active /mindforge: command or Task subagent) and injects an advisory warning.
 //
 // This is a SOFT guard — it advises, not blocks. The edit still proceeds.
-// The warning nudges Claude to use /mindforge:quick or /mindforge:fast instead of
+// The warning nudges Claude to use /mindforge:quick or /mindforge:do instead of
 // making direct edits that bypass state tracking.
 //
 // Enable via config: hooks.workflow_guard: true (default: false)
@@ -80,7 +80,7 @@ process.stdin.on('end', () => {
         hookEventName: 'PreToolUse',
         additionalContext: `⚠️ WORKFLOW ADVISORY: You're editing ${path.basename(filePath)} directly without a MindForge command. ` +
           'This edit will not be tracked in STATE.md or produce a SUMMARY.md. ' +
-          'Consider using /mindforge:fast for trivial fixes or /mindforge:quick for larger changes ' +
+          'Consider using /mindforge:do to route the intent, or /mindforge:quick for a small tracked change, ' +
           'to maintain project state tracking. ' +
           'If this is intentional (e.g., user explicitly asked for a direct edit), proceed normally.'
       }
