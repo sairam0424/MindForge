@@ -71,14 +71,39 @@ if (ARGS.includes('--status') || ARGS.includes('--stop')) {
     if (process.platform === 'win32') return null;      // no ps; --stop refuses below
     try {
       const cmd = execFileSync('ps', ['-o', 'command=', '-p', String(pid)], { encoding: 'utf8' }).trim();
-      // ANCHORED, and this matters more than it looks. A containment test
-      // (/dashboard[/\\]server\.js/) matches any process whose command line merely MENTIONS the
-      // path — a shell running a script that references it, a grep, an editor. Found the hard way:
-      // the first version of this check was handed the PID of the shell running its own test, whose
-      // command line embedded the script source, matched, and got a SIGTERM. Requiring the command
-      // to BEGIN with a node invocation of that path is the difference between identifying a
-      // process and finding a string.
-      return /^\S*node(\.exe)?\s+\S*dashboard[/\\]server\.js(\s|$)/.test(cmd) ? cmd : null;
+
+      // IDENTITY, not shape. Two earlier versions of this check were both too loose, and the second
+      // was the more dangerous:
+      //
+      //   /dashboard[/\\]server\.js/                       matched any process whose command line
+      //                                                    MENTIONED the path — a shell running a
+      //                                                    script that referenced it got a SIGTERM
+      //   /^\S*node...\S*dashboard[/\\]server\.js(\s|$)/   matched any `node <anything>/dashboard/
+      //                                                    server.js`. `dashboard/server.js` is an
+      //                                                    utterly ordinary path: this would have
+      //                                                    signalled an UNRELATED app's dashboard
+      //                                                    (verified against
+      //                                                    `node /var/www/unrelated_app/dashboard/server.js`)
+      //
+      // Anchoring made the first mistake unreachable and left a worse one, because both were asking
+      // "does this look like a dashboard server" when the only safe question is "is this THE one I am".
+      // So the script argument is resolved and compared against this file's own realpath.
+      //
+      // A relative script path cannot be resolved from here — it would need the target process's cwd,
+      // which ps does not give us — so that case REFUSES rather than guessing. Same choice as
+      // commitDb's conflict path: declining loudly beats acting on a guess, and the cost of being
+      // wrong here is someone else's process dying.
+      const m = /^\S*node(?:\.exe)?\s+(\S+)/.exec(cmd);
+      if (!m) return null;
+      const script = m[1];
+      if (!path.isAbsolute(script)) return null;        // unresolvable without the target's cwd
+      let resolved;
+      let self;
+      try {
+        resolved = fs.realpathSync(script);
+        self = fs.realpathSync(__filename);
+      } catch { return null; }                          // script gone, or unreadable — refuse
+      return resolved === self ? cmd : null;
     } catch { return null; }
   };
 
@@ -93,7 +118,12 @@ if (ARGS.includes('--status') || ARGS.includes('--stop')) {
       process.exit(1);
     }
     const cmd = identify(pid);
-    console.log(`[dashboard] running — pid ${pid}, port ${PORT}`);
+    // No port claimed. PORT here is whatever THIS invocation was told, not what the running
+    // process bound — measured, `--status` on a server started with --port 7466 printed "port 7339",
+    // the default this process happened to receive. The PID file records only the pid, so the port is
+    // not knowable from here, and stating a number we cannot know is the defect this file is full of
+    // fixes for.
+    console.log(`[dashboard] running — pid ${pid}`);
     if (!cmd && process.platform !== 'win32') {
       console.log(`[dashboard] warning: pid ${pid} is alive but does not look like this server, so `
         + 'the PID file may be stale and the number reused');

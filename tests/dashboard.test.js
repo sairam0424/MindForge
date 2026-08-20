@@ -392,13 +392,25 @@ test('--stop REFUSES a live process that is not the dashboard', () => {
   const { spawnSync, spawn } = require('child_process');
   const SERVER = path.join(__dirname, '..', 'bin', 'dashboard', 'server.js');
   const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-dashkill-')));
-  // The decoy's command line deliberately MENTIONS bin/dashboard/server.js while not being it.
-  // That is the exact shape that broke the first implementation: a containment test matched the
-  // shell whose command line embedded the script source, and SIGTERM'd it. A decoy that does not
-  // mention the path cannot distinguish an anchored check from a containment one — verified by
-  // mutation, where a plain `sleep`-style decoy left the loosened check passing.
+  // TWO decoys, because the check has been wrong in two different ways and each needs its own bait.
+  //
+  //   decoy A — command line MENTIONS the path but is not it. Catches a containment test. This is the
+  //             shape that SIGTERM'd the shell running this very suite.
+  //   decoy B — a REAL `node <path>/dashboard/server.js` in an unrelated project. Catches a check
+  //             that anchors on the path SHAPE rather than identity. `dashboard/server.js` is an
+  //             utterly ordinary path, so the second implementation would have killed this one —
+  //             verified against `node /var/www/unrelated_app/dashboard/server.js`.
+  //
+  // Decoy A alone left the shape bug invisible, which is how it shipped. The only safe question is
+  // "is this the very file I am", answered by comparing realpaths.
+  const decoyDir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-decoy-')));
+  fs.mkdirSync(path.join(decoyDir, 'unrelated_app', 'dashboard'), { recursive: true });
+  const decoyScript = path.join(decoyDir, 'unrelated_app', 'dashboard', 'server.js');
+  fs.writeFileSync(decoyScript, 'setTimeout(() => {}, 60000);\n');
+
   const decoy = spawn(process.execPath,
     ['-e', 'setTimeout(() => {}, 60000) /* bin/dashboard/server.js */'], { stdio: 'ignore' });
+  const decoyB = spawn(process.execPath, [decoyScript], { stdio: 'ignore' });
   try {
     fs.mkdirSync(path.join(dir, '.planning'), { recursive: true });
     fs.writeFileSync(path.join(dir, '.planning', 'dashboard-server.pid'), String(decoy.pid));
@@ -419,9 +431,26 @@ test('--stop REFUSES a live process that is not the dashboard', () => {
     assert.ok(alive,
       `--stop signalled pid ${decoy.pid}, which is NOT the dashboard. A stale PID file plus a reused `
       + 'number would make this kill an arbitrary process.');
+
+    // And now decoy B: a genuine node process running SOME OTHER dashboard/server.js.
+    fs.writeFileSync(path.join(dir, '.planning', 'dashboard-server.pid'), String(decoyB.pid));
+    const rB = spawnSync(process.execPath, [SERVER, '--stop'], {
+      cwd: dir, encoding: 'utf8', timeout: 20000, killSignal: 'SIGKILL',
+      env: { PATH: process.env.PATH, HOME: dir },
+    });
+    assert.strictEqual(rB.status, 1,
+      `--stop must refuse an unrelated app's dashboard/server.js, got ${rB.status}:\n${rB.stdout}${rB.stderr}`);
+    let aliveB = true;
+    try { process.kill(decoyB.pid, 0); } catch { aliveB = false; }
+    assert.ok(aliveB,
+      `--stop killed pid ${decoyB.pid}, an UNRELATED application whose script happens to be called `
+      + 'dashboard/server.js. Matching the path shape is not identity — compare realpaths against '
+      + '__filename.');
   } finally {
     try { decoy.kill('SIGKILL'); } catch { /* already gone */ }
+    try { decoyB.kill('SIGKILL'); } catch { /* already gone */ }
     fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(decoyDir, { recursive: true, force: true });
   }
 });
 
