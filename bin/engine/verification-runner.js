@@ -86,14 +86,29 @@ const STAGE_DEFS = {
   },
   audit: {
     command: 'node bin/verify-audit.js',
-    // The verifier itself, not the log: an absent AUDIT.jsonl is a legitimate empty chain that
-    // verify-audit.js reports on correctly. What cannot be recovered from is the script being
-    // missing, which is the state of every consumer install today — the installer does not copy
-    // bin/verify-audit.js, so this stage died in Node's module loader and printed the stack trace
-    // as its verification result.
-    skipIf: (cwd) => (fs.existsSync(path.join(cwd, 'bin', 'verify-audit.js'))
-      ? false
-      : 'bin/verify-audit.js is not installed here, so the audit chain cannot be verified'),
+    // BOTH the verifier AND the log — and the comment that used to sit here asserted the opposite of
+    // measured behaviour, which is how the remaining gap survived review.
+    //
+    // It claimed "an absent AUDIT.jsonl is a legitimate empty chain that verify-audit.js reports on
+    // correctly". Measured in an empty project: `node bin/verify-audit.js` prints
+    // "❌ audit chain BROKEN at entry 0: unreadable: ENOENT: no such file or directory" and exits 1.
+    // It does not report an empty chain, it reports corruption. So wherever the script IS present and
+    // the log is not — a --with-utils install, a fresh checkout — this stage still produced a red for
+    // a project that has simply never written an audit entry. That is the same
+    // absence-reported-as-failure defect the rest of this change exists to remove.
+    //
+    // The script being missing is the state of every ordinary consumer install (the installer does not
+    // copy bin/verify-audit.js), and there the stage died in Node's module loader and printed the
+    // stack trace as its verification result.
+    skipIf: (cwd) => {
+      if (!fs.existsSync(path.join(cwd, 'bin', 'verify-audit.js'))) {
+        return 'bin/verify-audit.js is not installed here, so the audit chain cannot be verified';
+      }
+      if (!fs.existsSync(path.join(cwd, '.planning', 'AUDIT.jsonl'))) {
+        return 'no .planning/AUDIT.jsonl yet — nothing has been audited, which is not a broken chain';
+      }
+      return false;
+    },
   },
   typecheck: {
     command: 'npx tsc --noEmit',
