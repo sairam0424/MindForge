@@ -256,7 +256,14 @@ test('every CLI invocation printed in a doc names a verb the router will dispatc
     .split('\n').filter(Boolean)
     .filter((f) => !f.startsWith('changelogs/') && !/^RELEASENOTES/.test(f))
     .filter((f) => !f.includes('node_modules/'))
-    .filter((f) => !f.startsWith('docs/research/'));
+    .filter((f) => !f.startsWith('docs/research/'))
+    // .planning/ is SESSION STATE and a running record, not instructional documentation. It ships
+    // ZERO files (verified: `npm pack --dry-run` reports no .planning/ entries), and STATE.md
+    // legitimately QUOTES commands that were broken while describing that they were broken —
+    // caught immediately when this gate flagged the handoff doc's own account of the very defect
+    // it had just fixed. Same category as changelogs/: rewriting a record to satisfy a
+    // present-tense check falsifies the record.
+    .filter((f) => !f.startsWith('.planning/'));
 
   // NON-VACUITY on the corpus: an empty list would pass silently.
   assert.ok(tracked.length >= 500,

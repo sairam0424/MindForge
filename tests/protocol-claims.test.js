@@ -220,11 +220,35 @@ test('every .js file any authority doc names actually exists', () => {
     `only ${seen.length} backticked .js reference(s) across ${docs.length} authority docs — the pattern `
     + 'broke, and this check would pass no matter what those docs claim');
 
-  assert.deepStrictEqual(unresolvable, [],
-    `${unresolvable.length} authority doc reference(s) name a script that does not exist:\n  `
-    + `${unresolvable.join('\n  ')}\n`
+  // A GITIGNORED path is a declared BUILD OUTPUT, not a phantom, and this distinction is a property
+  // rather than a name — which is why it is not an allowlist.
+  //
+  // Caught by running this gate in a fresh detached worktree AFTER it passed in the live repo: CLAUDE.md
+  // references `mcp-server/dist/index.js` in the sentence explaining that build-mindforge-plugin.js
+  // refuses without it BECAUSE mcp-server/dist is gitignored and absent on a clone. The reference is
+  // correct; the file simply does not exist until its build runs. It existed locally only because that
+  // build had been run earlier in the session, so the gate passed on one machine and would have failed
+  // CI on every clone.
+  //
+  // Measured, the two cases separate cleanly:
+  //   mcp-server/dist/index.js                   check-ignore HIT  -> generated, legitimate
+  //   bin/hooks/mindforge-context-monitor.js     no hit, absent    -> phantom (the defect this found)
+  //   soul-engine.js                             no hit, absent    -> phantom
+  // A phantom is never gitignored: nobody adds an ignore rule for a file that was never meant to exist.
+  const stillMissing = unresolvable.filter((entry) => {
+    const ref = entry.split(' -> ')[1];
+    if (!ref || !ref.includes('/')) return true;          // bare names cannot be ignore-matched usefully
+    const r = require('node:child_process').spawnSync('git', ['check-ignore', '-q', '--', ref],
+      { cwd: ROOT });
+    return r.status !== 0;                                 // 0 = ignored = generated, so not missing
+  });
+
+  assert.deepStrictEqual(stillMissing, [],
+    `${stillMissing.length} authority doc reference(s) name a script that does not exist:\n  `
+    + `${stillMissing.join('\n  ')}\n`
     + 'These files are read as instructions at the start of a session. Name a real path, write an '
-    + 'illustrative pattern as a pattern (`*.test.js`), or describe the step as reasoning.');
+    + 'illustrative pattern as a pattern (`*.test.js`), or describe the step as reasoning. A generated '
+    + 'artifact is fine — this check treats a gitignored path as a build output, not a phantom.');
 });
 
 (async () => {
