@@ -730,3 +730,62 @@ test('a bump moves structural version markers and leaves floors, since-markers a
   console.log(`\nVersion Consistency: ${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 })();
+
+// ── README's "Latest release" is a shipped surface and must name canonical ────
+//
+// WHY THIS IS A TEST AND NOT A SYNC CHANNEL. scripts/sync-version.js could trivially rewrite the
+// `**v11.9.3**` token to canonical, and that would be worse than leaving it alone: the section is a
+// version followed by a paragraph describing what that version changed. Auto-bumping the number
+// produces the right version attached to the wrong description — a more convincing falsehood than an
+// obviously stale one. Same distinction #211 drew when it added the shipped-doc channels: structural
+// markers track canonical, narrative measurements deliberately do not. So this FAILS and makes a
+// human write the paragraph.
+//
+// WHY IT EXISTS AT ALL. This surface has shipped stale twice in consecutive releases. The immutable
+// 11.9.3 tarball said "Latest release v11.9.2"; the immutable 11.9.4 tarball says "v11.9.3" and
+// credits hook registration to 11.9.3 — the release that registers 0 hooks. That is the page
+// npmjs.com renders for the version being installed, so it is the first thing a new user reads. It
+// was corrected by hand in 348a3a2c one release earlier, with no gate added, and promptly recurred.
+test('README.md\'s "Latest release" section names the canonical version', () => {
+  const pkgVersion = JSON.parse(readText(path.join(ROOT, 'package.json'))).version;
+  const readme = readText(path.join(ROOT, 'README.md'));
+
+  const idx = readme.indexOf('## Latest release');
+  assert.ok(idx > 0,
+    'README.md has no "## Latest release" section. If it was renamed, update this assertion '
+    + 'deliberately — an anchor that matches nothing silently covers nothing.');
+
+  // Bounded by the next heading, so a version mentioned further down the file cannot satisfy this.
+  const after = readme.slice(idx + '## Latest release'.length);
+  const end = after.search(/\n#{2,3} /);
+  const section = end === -1 ? after : after.slice(0, end);
+
+  const versions = [...section.matchAll(/\bv?(\d+\.\d+\.\d+)\b/g)].map((m) => m[1]);
+  assert.ok(versions.length > 0,
+    `README.md's "Latest release" section names no version at all:\n${section.slice(0, 200)}`);
+  assert.strictEqual(versions[0], pkgVersion,
+    `README.md's "Latest release" leads with v${versions[0]} but package.json is ${pkgVersion}. This `
+    + 'section is what npmjs.com renders for the published package, so a stale version here is the '
+    + 'first thing a new user reads. Write the new summary — it is deliberately not auto-generated, '
+    + 'because a synced number on a previous release\'s description is a better-disguised falsehood '
+    + 'than a visibly old one.');
+});
+
+// The sibling gate. RELEASENOTES.md is offered by the README as the human-readable route to the
+// BREAKING notes, and the 11.9.4 tarball shipped with no 11.9.4 entry in it — the same recurrence,
+// on the same pair of files, for the same reason: bin/utils/readiness-gate.js checks only that
+// RELEASENOTES.md EXISTS, while its changelog sibling checks that the version appears in it.
+test('RELEASENOTES.md carries an entry for the canonical version', () => {
+  const pkgVersion = JSON.parse(readText(path.join(ROOT, 'package.json'))).version;
+  const notes = readText(path.join(ROOT, 'RELEASENOTES.md'));
+  // Anchored at line start and bounded on the right. A plain `includes('## v11.9.4')` was the first
+  // version, and falsification killed it: `## v11.9.4-notyet` and `## v11.9.40` both contain that
+  // substring, so the check passed on headings for versions that are not this one.
+  const heading = new RegExp(`^## v${pkgVersion.replace(/\./g, '\\.')}(?![\\d.\\w-])`, 'm');
+  assert.match(notes, heading,
+    `RELEASENOTES.md has no "## v${pkgVersion}" heading. README.md links to it as the human-readable `
+    + 'route to the BREAKING notes, so shipping a release without one sends readers to a file whose '
+    + 'newest entry describes something else. bin/utils/readiness-gate.js only checks this file '
+    + 'EXISTS; its changelog sibling checks the version is in it, and that asymmetry is why both '
+    + 'prose surfaces shipped stale in 11.9.3 and again in 11.9.4.');
+});

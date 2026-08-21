@@ -87,6 +87,12 @@ jobs:
         run: npm run validate:assets
       - name: Version channels in sync
         run: npm run version:check
+      # v11.9.4 published two packages irreversibly and then died on the third: sdk/package.json had
+      # no `repository` field, and npm compares that field against the attestation REGISTRY-SIDE at PUT.
+      # `npm publish --dry-run` does not check it and no gate here did either, so the failure was
+      # unreachable until after the point of no return. This makes it reachable in preflight.
+      - name: Provenance metadata (every --provenance package can actually publish)
+        run: npm run provenance:check
       # LAST, because it is the one most likely to fail on a real release attempt: it checks that
       # CHANGELOG.md contains an entry for the version about to be published.
       - name: Release readiness
@@ -186,6 +192,7 @@ jobs:
       # actually wrote and which release:ready already proved exists; fall back to the fetcher, then to
       # git log; and FAIL if all three produce an empty file rather than publishing a blank page.
       - name: Generate CHANGELOG
+        id: changelog
         run: |
           VER="${GITHUB_REF_NAME#v}"
           NOTES=/tmp/release-notes.md
@@ -212,6 +219,7 @@ jobs:
           head -3 "${NOTES}"
 
       - name: Build Package
+        id: pack
         run: npm pack
 
       # Prove the SECOND package builds BEFORE the first one publishes.
@@ -243,63 +251,23 @@ jobs:
         run: node tests/mcp-server-version.test.js
 
       - name: Publish to npm
+        id: cc_publish
         if: steps.npm_check.outputs.already_published != 'true'
         run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Standalone MCP server — published as its own public package (mindforge-mcp-server)
-      # so it can be listed on the official MCP Registry, Docker MCP Catalog, PulseMCP, etc.
-      # The same bundle is also vendored into the Claude Code plugin; this publish is additive.
-      - name: Publish standalone MCP server to npm
-        id: mcp_publish
-        working-directory: mcp-server
-        run: |
-          MCP_VER="$(node -p "require('./package.json').version")"
-          PUBLISHED="$(npm view "mindforge-mcp-server@${MCP_VER}" version 2>/dev/null || true)"
-          if [ -n "${PUBLISHED}" ]; then
-            echo "::notice::mindforge-mcp-server@${MCP_VER} already on npm — skipping"
-            exit 0
-          fi
-          npm install --no-audit --no-fund
-          npm run build
-          npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      # THIRD PACKAGE, and the reason it is here rather than "additive, later": mindforge-sdk sat at
-      # 11.8.0 on npm while sync-version.js kept sdk/package.json at canonical, so the repository and
-      # the registry disagreed by SEVEN releases (11.8.1 through 11.9.3, none published) and nothing
-      # noticed — version:check verifies the tracked file, not what npm serves. It is also the only one
-      # of the three packages with NO provenance attestation, so a consumer could not verify its
-      # origin at all.
-      #
-      # Placed AFTER the two publishes above and BEFORE the GitHub Release, deliberately: it is the
-      # newest step here and the least exercised, so it must not be able to cost the two proven
-      # packages their release artifacts. Same reasoning that put the dist-tag step last.
-      #
-      # `npm ci` because sdk/package-lock.json is present and this is a publish, not the lint-parity
-      # install above — an exact tree is worth more than matching the CI job here. `npm run build`
-      # explicitly rather than relying on prepublishOnly: that hook runs `npm test`, which runs
-      # `pretest` -> build anyway, but a build failure should surface as a build failure.
-      - name: Publish the SDK to npm
-        id: sdk_publish
-        working-directory: sdk
-        run: |
-          SDK_VER="$(node -p "require('./package.json').version")"
-          PUBLISHED="$(npm view "mindforge-sdk@${SDK_VER}" version 2>/dev/null || true)"
-          if [ -n "${PUBLISHED}" ]; then
-            echo "::notice::mindforge-sdk@${SDK_VER} already on npm — skipping"
-            exit 0
-          fi
-          npm ci --no-audit --no-fund
-          npm run build
-          npm publish --access public --provenance
-          echo "::notice::mindforge-sdk@${SDK_VER} published with provenance ✅"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - name: Create GitHub Release
+        # RUNS EVEN IF A LATER-ORDERED STEP HAS ALREADY FAILED, but only when its own inputs are
+        # good. Bare `if: always()` or bare `!cancelled()` would be wrong here: if Generate CHANGELOG
+        # succeeds and Build Package fails, a bare guard publishes a release with a 0-byte body and an
+        # unmatched .tgz glob (fail_on_unmatched_files defaults false at the pinned SHA) — the exact
+        # bodyBytes=0 defect seen on v11.9.0/1/2. Conditioning on already_published as well as
+        # cc_publish keeps the re-run path working, where that step's outcome is 'skipped', not 'success'.
+        if: ${{ !cancelled()
+          && steps.changelog.outcome == 'success'
+          && steps.pack.outcome == 'success'
+          && (steps.npm_check.outputs.already_published == 'true' || steps.cc_publish.outcome == 'success') }}
         uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         with:
           body_path: /tmp/release-notes.md
@@ -346,6 +314,16 @@ jobs:
       # PRERELEASES ARE SKIPPED. v12.0.0-rc1 must not become `stable`; those have their own `rc` and
       # `alpha` tags, which this deliberately does not touch.
       - name: Point the stable dist-tag at this release
+        # RUNS EVEN IF A LATER-ORDERED STEP HAS ALREADY FAILED, but only when its own inputs are
+        # good. Bare `if: always()` or bare `!cancelled()` would be wrong here: if Generate CHANGELOG
+        # succeeds and Build Package fails, a bare guard publishes a release with a 0-byte body and an
+        # unmatched .tgz glob (fail_on_unmatched_files defaults false at the pinned SHA) — the exact
+        # bodyBytes=0 defect seen on v11.9.0/1/2. Conditioning on already_published as well as
+        # cc_publish keeps the re-run path working, where that step's outcome is 'skipped', not 'success'.
+        if: ${{ !cancelled()
+          && steps.changelog.outcome == 'success'
+          && steps.pack.outcome == 'success'
+          && (steps.npm_check.outputs.already_published == 'true' || steps.cc_publish.outcome == 'success') }}
         run: |
           VER="${{ steps.verify_version.outputs.version }}"
           if [ -z "${VER}" ]; then
@@ -398,5 +376,64 @@ jobs:
             exit 1
           fi
           echo "::notice::stable -> ${VER} ✅"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Standalone MCP server — published as its own public package (mindforge-mcp-server)
+      # so it can be listed on the official MCP Registry, Docker MCP Catalog, PulseMCP, etc.
+      # The same bundle is also vendored into the Claude Code plugin; this publish is additive.
+      - name: Publish standalone MCP server to npm
+        id: mcp_publish
+        # `!cancelled()` so a failure in the OTHER additive publish does not skip this one. Deliberately
+        # not `continue-on-error`: a tolerated failure reports the whole run GREEN, which would recreate
+        # the 'nothing noticed' blindness that let the SDK sit seven releases behind unattested.
+        if: ${{ !cancelled() }}
+        working-directory: mcp-server
+        run: |
+          MCP_VER="$(node -p "require('./package.json').version")"
+          PUBLISHED="$(npm view "mindforge-mcp-server@${MCP_VER}" version 2>/dev/null || true)"
+          if [ -n "${PUBLISHED}" ]; then
+            echo "::notice::mindforge-mcp-server@${MCP_VER} already on npm — skipping"
+            exit 0
+          fi
+          npm install --no-audit --no-fund
+          npm run build
+          npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # THIRD PACKAGE, and the reason it is here rather than "additive, later": mindforge-sdk sat at
+      # 11.8.0 on npm while sync-version.js kept sdk/package.json at canonical, so the repository and
+      # the registry disagreed by SEVEN releases (11.8.1 through 11.9.3, none published) and nothing
+      # noticed — version:check verifies the tracked file, not what npm serves. It is also the only one
+      # of the three packages with NO provenance attestation, so a consumer could not verify its
+      # origin at all.
+      #
+      # Placed AFTER the two publishes above and BEFORE the GitHub Release, deliberately: it is the
+      # newest step here and the least exercised, so it must not be able to cost the two proven
+      # packages their release artifacts. Same reasoning that put the dist-tag step last.
+      #
+      # `npm ci` because sdk/package-lock.json is present and this is a publish, not the lint-parity
+      # install above — an exact tree is worth more than matching the CI job here. `npm run build`
+      # explicitly rather than relying on prepublishOnly: that hook runs `npm test`, which runs
+      # `pretest` -> build anyway, but a build failure should surface as a build failure.
+      - name: Publish the SDK to npm
+        id: sdk_publish
+        # `!cancelled()` so a failure in the OTHER additive publish does not skip this one. Deliberately
+        # not `continue-on-error`: a tolerated failure reports the whole run GREEN, which would recreate
+        # the 'nothing noticed' blindness that let the SDK sit seven releases behind unattested.
+        if: ${{ !cancelled() }}
+        working-directory: sdk
+        run: |
+          SDK_VER="$(node -p "require('./package.json').version")"
+          PUBLISHED="$(npm view "mindforge-sdk@${SDK_VER}" version 2>/dev/null || true)"
+          if [ -n "${PUBLISHED}" ]; then
+            echo "::notice::mindforge-sdk@${SDK_VER} already on npm — skipping"
+            exit 0
+          fi
+          npm ci --no-audit --no-fund
+          npm run build
+          npm publish --access public --provenance
+          echo "::notice::mindforge-sdk@${SDK_VER} published with provenance ✅"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
