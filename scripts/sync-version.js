@@ -68,6 +68,23 @@ if (!/^\d+\.\d+\.\d+/.test(CANON)) {
 const findings = [];   // { file, found, want, fixed }
 let wrote = 0;
 
+/**
+ * Compare two dotted versions numerically. Returns <0, 0 or >0.
+ *
+ * Numeric per component, not lexicographic: '11.10.0' is AHEAD of '11.9.2', which a string compare
+ * gets backwards ('11.1' < '11.9'). Getting that wrong would classify a leading formula as a
+ * harmless lag on exactly the release where it matters — the first bump past a .9 minor.
+ */
+function cmpSemver(a, b) {
+  const pa = String(a).split('.').map((n) => parseInt(n, 10) || 0);
+  const pb = String(b).split('.').map((n) => parseInt(n, 10) || 0);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const d = (pa[i] || 0) - (pb[i] || 0);
+    if (d !== 0) return d < 0 ? -1 : 1;
+  }
+  return 0;
+}
+
 /** Replace every occurrence of a single-capture regex's group with CANON. */
 function syncByRegex(rel, re, label = rel) {
   if (!exists(rel)) return;
@@ -139,6 +156,44 @@ for (const rel of ['package-lock.json', 'sdk/package-lock.json', 'mcp-server/pac
 }
 for (const rel of ['sdk/package.json', 'mcp-server/package.json', '.mindforge/config.json']) {
   syncJson(rel, (d) => { d.version = CANON; }, (d) => d.version);
+}
+
+// mcp-server/server.json — the MCP Registry's view of the package, and it had NO writer here at all.
+//
+// It carries the version TWICE: the server's own `.version`, and the npm package entry's
+// `packages[].version`. tests/mcp-server-version.test.js:139 asserts BOTH against
+// mcp-server/package.json, so this is the same shape as the AGENTS.md gap fixed one commit earlier —
+// a gate demanding a value that nothing writes. The test's own header records the consequence: it
+// "froze at 11.5.1 in both places while package.json moved on four minor versions".
+//
+// Structured rather than by regex, and both fields set explicitly, because the file has two
+// independent version keys and a `$schema` URL containing a date (2025-12-11). A loose numeric sweep
+// over this file is exactly how the marketplace subagent entries nearly got rewritten.
+//
+// The package entry is matched by IDENTIFIER, not by position: `packages` is an array and the schema
+// permits several, so index 0 is an assumption rather than a fact. An entry for a different
+// identifier is deliberately left alone — it would version on its own line.
+{
+  const rel = 'mcp-server/server.json';
+  let mcpName = 'mindforge-mcp-server';
+  try { mcpName = JSON.parse(read('mcp-server/package.json')).name || mcpName; } catch { /* default */ }
+  syncJson(rel,
+    (d) => {
+      d.version = CANON;
+      for (const p of (Array.isArray(d.packages) ? d.packages : [])) {
+        if (p && p.identifier === mcpName) p.version = CANON;
+      }
+    },
+    // Report the STALEST of the two, so a partial file cannot look synced because one field happens
+    // to be current — the failure mode sdk/README.md had.
+    (d) => {
+      const seen = [d.version];
+      for (const p of (Array.isArray(d.packages) ? d.packages : [])) {
+        if (p && p.identifier === mcpName) seen.push(p.version);
+      }
+      const stale = seen.filter((v) => v !== CANON);
+      return stale.length ? stale.join(', ') : CANON;
+    });
 }
 syncByRegex('sdk/src/index.ts', /VERSION = '(\d+\.\d+\.\d+)'/g);
 // sdk/README.md carries the version in TWO shapes and this pattern only matched one.
@@ -251,14 +306,43 @@ syncByRegex('Dockerfile', /MINDFORGE_MCP_VERSION=(\d+\.\d+\.\d+)/g, 'Dockerfile'
           process.stderr.write(`[sync-version] sha256 ${sha} (${buf.length} bytes)\n`);
         }
       }
-      findings.push({ file: rel, found: urlVer, want: CANON, fixed: !CHECK && Boolean(sha) });
+      // THE FORMULA MAY LAG CANONICAL, BUT MUST NEVER LEAD IT.
+      //
+      // A tarball digest cannot exist before the tarball, so requiring the formula to EQUAL
+      // package.json before publishing requires something impossible. Measured: bumping to 11.9.3
+      // made `--check` exit 1, and since .github/workflows/mindforge-release.yml runs `npm test`,
+      // which transitively covers the same claim, the publish was blocked by the very artifact that
+      // can only be produced after publishing.
+      //
+      // Lagging is the correct transient state and is reported, never silently tolerated. Leading is
+      // always wrong: a formula naming a version npm does not serve makes `brew install` fail hard,
+      // which is the outcome the REFUSING branch below exists to prevent.
+      //
+      // This is not a new policy. CLAUDE.md already documents exactly this rule for MINDFORGE.md's
+      // [REQUIRED_CORE_VERSION] — "a minimum floor ... it may lag but must never exceed canonical".
+      // Applying the same rule to the other artifact that cannot be derived offline is consistency,
+      // not a loosened gate.
+      const lagging = cmpSemver(urlVer, CANON) < 0;
+      findings.push({
+        file: rel, found: urlVer, want: CANON,
+        fixed: !CHECK && Boolean(sha),
+        deferrable: lagging,
+      });
+      if (!lagging) {
+        console.error(
+          `[sync-version] ${rel} pins ${urlVer}, which is AHEAD of canonical ${CANON}.\n` +
+          '  A formula naming a version the registry does not serve makes `brew install` fail hard.\n' +
+          '  This is never a transient state — correct the formula or the canonical version.');
+        process.exitCode = 1;
+      }
       if (!CHECK) {
         if (!sha) {
           console.error(
-            `[sync-version] REFUSING to bump ${rel} without a matching sha256.\n` +
-            '  A formula whose digest does not match its url makes `brew install` fail hard.\n' +
-            `  Pass --sha256 <hex>, or --fetch-sha to download ${CANON} and compute it.`);
-          process.exitCode = 1;
+            `[sync-version] DEFERRING ${rel}: it pins ${urlVer} and canonical is ${CANON}, whose\n` +
+            '  tarball does not exist yet. The formula is the LAST step of a release, not part of\n' +
+            '  the version bump. After the release workflow publishes, run:\n' +
+            '      node scripts/sync-version.js --fetch-sha\n' +
+            '  and commit the formula. Lagging is allowed and reported; leading is an error.');
         } else {
           const after = before
             .replace(/mindforge-cc-\d+\.\d+\.\d+\.tgz/g, `mindforge-cc-${CANON}.tgz`)
@@ -276,13 +360,32 @@ if (findings.length === 0) {
   console.log(`✅ every derivable channel is at ${CANON}`);
   process.exit(0);
 }
-console.log(`${CHECK ? '❌' : '🔧'} canonical ${CANON} — ${findings.length} channel(s) out of sync:`);
-for (const f of findings) {
-  console.log(`   ${CHECK ? '' : f.fixed ? '[fixed] ' : '[SKIPPED] '}${f.file}: ${f.found} -> ${f.want}`);
+// A finding that is `deferrable` and was not fixed is a channel legitimately BEHIND canonical — today
+// only the Homebrew formula, whose digest cannot exist before the tarball. Everything else is
+// blocking. Split rather than counted, so the report can distinguish "you must act" from "this
+// catches up after publish" instead of collapsing both into one red number.
+const deferred = findings.filter((f) => f.deferrable && !f.fixed);
+const blocking = findings.filter((f) => !(f.deferrable && !f.fixed));
+
+if (blocking.length > 0) {
+  console.log(`${CHECK ? '❌' : '🔧'} canonical ${CANON} — ${blocking.length} channel(s) out of sync:`);
+  for (const f of blocking) {
+    console.log(`   ${CHECK ? '' : f.fixed ? '[fixed] ' : '[SKIPPED] '}${f.file}: ${f.found} -> ${f.want}`);
+  }
 }
+if (deferred.length > 0) {
+  console.log(`\n⏳ ${deferred.length} channel(s) DEFERRED until after publish (behind, not ahead):`);
+  for (const f of deferred) console.log(`   ${f.file}: ${f.found} -> ${f.want}`);
+  console.log('   Run `node scripts/sync-version.js --fetch-sha` once the release is on npm.');
+}
+
 if (CHECK) {
+  if (blocking.length === 0) {
+    console.log(`\n✅ every channel that CAN be derived offline is at ${CANON}`);
+    process.exit(process.exitCode || 0);
+  }
   console.log('\nRun `node scripts/sync-version.js` (add --fetch-sha to include the Homebrew formula).');
   process.exit(1);
 }
 console.log(`\nwrote ${wrote} file(s)`);
-if (process.exitCode) console.log('one or more channels were SKIPPED — see above');
+if (process.exitCode) console.log('a channel is AHEAD of canonical — see above');

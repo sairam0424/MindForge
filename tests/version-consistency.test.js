@@ -174,19 +174,103 @@ test('the Dockerfile ARG default matches package.json', () => {
   }
 });
 
-test('the Homebrew formula url, digest and test assertion agree with package.json', () => {
+// ── A real bump must move EVERY channel the gates check ───────────────────────
+//
+// WHY A ROUND TRIP AND NOT A --check. `sync-version.js --check` on a clean tree is green whether or
+// not a channel is wired, so it cannot detect a MISSING channel — only a stale one. Both channel gaps
+// found in this area were invisible to it: AGENTS.md (asserted by doc-count-claims, written by
+// nothing) and mcp-server/server.json (asserted by mcp-server-version.test.js:139, written by
+// nothing, and per that test's own header "froze at 11.5.1 in both places while package.json moved on
+// four minor versions").
+//
+// Deleting either channel from the script left version-consistency at 19/19 and doc-count-claims at
+// 19/19. So this test performs an ACTUAL bump in a throwaway copy and asserts the files moved. It is
+// the only shape that can fail when a channel is absent rather than merely stale.
+
+test('a real version bump moves every gated channel, not just the ones --check sees', () => {
+  const tmp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-bumproundtrip-')));
+  try {
+    // The script resolves its repo as path.resolve(__dirname, '..') and ignores cwd, so the fixture
+    // must contain a COPY of it — passing `cwd` alone makes it happily rewrite the real repo instead.
+    fs.mkdirSync(path.join(tmp, 'scripts'), { recursive: true });
+    fs.mkdirSync(path.join(tmp, 'mcp-server'), { recursive: true });
+    fs.copyFileSync(path.join(ROOT, 'scripts', 'sync-version.js'),
+      path.join(tmp, 'scripts', 'sync-version.js'));
+
+    const BUMP = '99.0.0';
+    fs.writeFileSync(path.join(tmp, 'package.json'),
+      JSON.stringify({ name: 'mindforge-cc', version: BUMP }, null, 2) + '\n');
+
+    // Only the channels under test, each seeded STALE. A partial fixture is deliberate: it keeps the
+    // assertion about these two files rather than about the whole 15-channel surface.
+    fs.copyFileSync(path.join(ROOT, 'mcp-server', 'package.json'),
+      path.join(tmp, 'mcp-server', 'package.json'));
+    const mcpPkgPath = path.join(tmp, 'mcp-server', 'package.json');
+    const mcpPkg = JSON.parse(fs.readFileSync(mcpPkgPath, 'utf8'));
+    mcpPkg.version = '1.0.0';
+    fs.writeFileSync(mcpPkgPath, JSON.stringify(mcpPkg, null, 2) + '\n');
+    fs.copyFileSync(path.join(ROOT, 'mcp-server', 'server.json'),
+      path.join(tmp, 'mcp-server', 'server.json'));
+    fs.writeFileSync(path.join(tmp, 'AGENTS.md'),
+      'MindForge v1.0.0 is an agentic intelligence framework distributed as the `mindforge-cc` npm package.\n');
+
+    const r = spawnSync(process.execPath, [path.join(tmp, 'scripts', 'sync-version.js')],
+      { cwd: tmp, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: tmp } });
+
+    const agents = fs.readFileSync(path.join(tmp, 'AGENTS.md'), 'utf8');
+    assert.match(agents, new RegExp(`MindForge v${BUMP.replace(/\./g, '\\.')} is an agentic`),
+      'AGENTS.md was not bumped. doc-count-claims.test.js asserts this exact sentence against '
+      + 'package.json, so a missing channel makes every version bump fail npm test — and '
+      + `mindforge-release.yml runs npm test.\n${r.stdout}${r.stderr}`);
+
+    const server = JSON.parse(fs.readFileSync(path.join(tmp, 'mcp-server', 'server.json'), 'utf8'));
+    assert.strictEqual(server.version, BUMP,
+      `server.json .version was not bumped (got ${server.version})`);
+    const entry = (server.packages || []).find((x) => x.identifier === mcpPkg.name);
+    assert.ok(entry, `server.json must still carry a package entry for ${mcpPkg.name}`);
+    assert.strictEqual(entry.version, BUMP,
+      `server.json packages[].version was not bumped (got ${entry.version}). It carries the version `
+      + 'TWICE and mcp-server-version.test.js asserts both.');
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+});
+
+test('the Homebrew formula is internally consistent, and never AHEAD of canonical', () => {
+  // WAS strict equality with package.json, which asserted something impossible. The formula's
+  // sha256 is the digest of the published tarball, so it cannot be correct until AFTER the release
+  // — yet .github/workflows/mindforge-release.yml runs `npm test`, so this assertion blocked the
+  // publish that would have made it satisfiable. Measured on an 11.9.2 -> 11.9.3 rehearsal: five
+  // test files red, of which this was the root.
+  //
+  // Same rule as [REQUIRED_CORE_VERSION] directly below, and for the same reason: an artifact that
+  // cannot be derived offline may LAG canonical and must never EXCEED it. Leading means naming a
+  // version the registry does not serve, which makes `brew install` fail hard.
+  //
+  // What is still strict: the formula's three version tokens must agree with EACH OTHER. A url at
+  // one version and an assert_match at another is incoherent at any point in a release, not a
+  // transient state.
   const pkg  = readJson(path.join(ROOT, 'package.json'));
   const text = readText(path.join(ROOT, 'Formula', 'mindforge.rb'));
   const url    = text.match(/mindforge-cc-([\d.]+)\.tgz/);
   const assertM = text.match(/assert_match "([\d.]+)"/);
   const sha    = text.match(/sha256 "([0-9a-f]+)"/);
   assert.ok(url && assertM && sha, 'formula must declare a url, a sha256 and an assert_match');
-  assert.strictEqual(url[1], pkg.version,
-    `formula url pins ${url[1]}, package.json is ${pkg.version}`);
-  assert.strictEqual(assertM[1], pkg.version,
-    `formula test asserts ${assertM[1]}, package.json is ${pkg.version}`);
+
+  assert.strictEqual(assertM[1], url[1],
+    `formula url pins ${url[1]} but its assert_match says ${assertM[1]} — the formula contradicts `
+    + 'itself, which no stage of a release makes correct');
   assert.strictEqual(sha[1].length, 64,
     `sha256 must be 64 hex chars, got ${sha[1].length} — a truncated digest fails brew install`);
+
+  // Numeric per component, matching the [REQUIRED_CORE_VERSION] check below. A lexicographic
+  // compare would read 11.10.0 as BEHIND 11.9.2 and wave through a leading formula on the first
+  // bump past a .9 minor.
+  const num = (v) => v.split('.').map(Number);
+  const [fa, fb, fc] = num(url[1]);
+  const [pa, pb, pc] = num(pkg.version);
+  assert.ok(fa * 1e6 + fb * 1e3 + fc <= pa * 1e6 + pb * 1e3 + pc,
+    `Formula/mindforge.rb pins ${url[1]}, which is AHEAD of package.json ${pkg.version}. The `
+    + 'registry does not serve that tarball, so `brew install` would fail hard. Lagging is the '
+    + 'legitimate pre-publish state; leading never is.');
 });
 
 test('MINDFORGE.md [REQUIRED_CORE_VERSION] is a floor, never ahead of canonical', () => {
@@ -252,10 +336,17 @@ test('sync-version.js --check FAILS on a drifted tree (negative control)', () =>
   }
 });
 
-test('sync-version.js refuses to bump the Homebrew formula without a digest', () => {
-  // A formula whose sha256 does not match its url makes `brew install` fail hard, which is
-  // worse than a stale-but-installable formula. The refusal must be an error, not a silent
-  // skip that leaves the url bumped and the digest stale.
+test('sync-version.js leaves the Homebrew formula ALONE without a digest, and says so', () => {
+  // A formula whose sha256 does not match its url makes `brew install` fail hard, which is worse
+  // than a stale-but-installable formula. So the file must be left BYTE-IDENTICAL and the operator
+  // told — never a silent skip that bumps the url and strands the digest. That is unchanged and is
+  // still the load-bearing assertion here.
+  //
+  // WHAT CHANGED IS THE EXIT CODE, from 1 to 0. A lagging formula is the correct pre-publish state
+  // (its digest cannot exist yet), and exiting non-zero on it meant `npm test` — which
+  // mindforge-release.yml runs — blocked the publish that would have made the formula satisfiable.
+  // Leading canonical is still exit 1, asserted in the next test. Deferring is reported, not hidden:
+  // stdout carries a DEFERRED section naming the channel and the follow-up command.
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-syncsha-'));
   try {
     fs.mkdirSync(path.join(tmp, 'scripts'), { recursive: true });
@@ -269,10 +360,17 @@ test('sync-version.js refuses to bump the Homebrew formula without a digest', ()
 
     const r = spawnSync(process.execPath, [path.join(tmp, 'scripts', 'sync-version.js')],
       { encoding: 'utf8' });
-    assert.strictEqual(r.status, 1, 'must exit non-zero when it cannot complete the formula');
-    assert.match(r.stderr, /REFUSING/, `must say why. stderr:\n${r.stderr}`);
+    assert.strictEqual(r.status, 0,
+      'a formula BEHIND canonical is the legitimate pre-publish state and must not fail the run — '
+      + `mindforge-release.yml runs npm test, so exiting 1 here blocked the publish. stderr:\n${r.stderr}`);
+    assert.match(r.stderr, /DEFERRING/, `must say why it left the formula alone. stderr:\n${r.stderr}`);
+    assert.match(`${r.stdout}`, /DEFERRED/,
+      `the report must list the deferred channel, or "exit 0" hides it. stdout:\n${r.stdout}`);
+    assert.match(`${r.stdout}${r.stderr}`, /--fetch-sha/,
+      'it must name the follow-up command, or the operator is told to wait with no instruction');
     assert.strictEqual(fs.readFileSync(path.join(tmp, 'Formula', 'mindforge.rb'), 'utf8'), stale,
-      'the formula must be left untouched — a bumped url with a stale digest is unusable');
+      'the formula must be left BYTE-IDENTICAL — a bumped url with a stale digest is unusable, and '
+      + 'this is the assertion that did not change');
 
     // With a digest supplied it completes.
     const ok = spawnSync(process.execPath,
