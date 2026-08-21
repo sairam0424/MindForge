@@ -288,6 +288,103 @@ test('sync-version.js refuses to bump the Homebrew formula without a digest', ()
   }
 });
 
+// ── The Homebrew digest must be a real tarball digest ─────────────────────────
+//
+// THE DEFECT. scripts/sync-version.js --fetch-sha downloaded the tarball with `curl -sL` — no -f —
+// and hashed whatever came back. npm answers an unpublished version with HTTP 404 and a 21-byte
+// body `{"error":"Not found"}`, and curl exits 0. So bumping to a version that is not yet on npm
+// wrote sha256 of that error text into Formula/mindforge.rb.
+//
+// It was worse than a refusal because it turned the GATE GREEN. Measured end to end on an 11.9.3
+// bump: `sync-version.js` exits 1 (formula SKIPPED), `--check` exits 1 — then `--fetch-sha` writes
+// the 404 digest and `--check` exits 0. `npm run version:check` is a CI gate
+// (.github/workflows/mindforge-ci.yml:262), so CI would pass on a formula whose digest can never
+// match its url, which is exactly the "makes `brew install` fail hard" outcome the REFUSING branch
+// fifteen lines above it was written to prevent.
+//
+// The digest of the 404 body is a CONSTANT — the same for every unpublished version — which makes
+// it an exact, offline, zero-cost canary for this bug specifically.
+
+const KNOWN_NON_ARTIFACT_DIGESTS = {
+  // sha256 of npm's 21-byte `{"error":"Not found"}`, i.e. what --fetch-sha wrote for any
+  // unpublished version. Verified against the live registry.
+  c8d3eae160a892e32837db3dcae515e843e5383fef52b8141940c8bcf8b6d59f:
+    'npm\'s 404 body `{"error":"Not found"}` — the version was not published when the digest was taken',
+  // sha256 of the empty string, i.e. an empty or fully-failed download.
+  e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855:
+    'an empty response body — the download produced no bytes',
+};
+
+test('the Homebrew formula digest is not the hash of an error body', () => {
+  const rel = path.join(ROOT, 'Formula', 'mindforge.rb');
+  if (!fs.existsSync(rel)) return;            // formula is optional; nothing to assert
+  const src = fs.readFileSync(rel, 'utf8');
+  const m = src.match(/sha256 "([0-9a-f]{64})"/);
+  assert.ok(m, 'Formula/mindforge.rb must declare a 64-hex sha256; the pattern no longer matches, '
+    + 'so this check would silently cover nothing.');
+  const digest = m[1];
+  const why = KNOWN_NON_ARTIFACT_DIGESTS[digest];
+  assert.ok(!why,
+    `Formula/mindforge.rb's sha256 is ${digest}, which is ${why}. \`brew install\` cannot ever `
+    + 'match this against the real tarball. Run --fetch-sha only AFTER the version is published: '
+    + 'a tarball digest cannot exist before the tarball does.');
+});
+
+test('--fetch-sha REFUSES an unpublished version rather than hashing the error body', async () => {
+  // Behavioural, not a source grep. Network-conditional: the registry is the subject, so when it is
+  // unreachable this prints why it was skipped instead of passing vacuously — a silent pass here
+  // would be the same defect class the test exists to catch.
+  let reachable = false;
+  try {
+    const r = await fetch('https://registry.npmjs.org/mindforge-cc/-/mindforge-cc-99.99.99.tgz');
+    reachable = r.status === 404;             // a 404 is the exact condition under test
+  } catch { /* offline */ }
+  if (!reachable) {
+    console.log('      ↳ skipped: npm registry unreachable, and this asserts registry behaviour');
+    return;
+  }
+
+  const work = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-fetchsha-')));
+  try {
+    // The script resolves its repo as path.resolve(__dirname, '..') and ignores cwd — correct for a
+    // repo-maintenance tool, but it means a fixture must contain a COPY of the script so that
+    // __dirname/.. lands inside the fixture. A first attempt passed `cwd: work` and watched it
+    // cheerfully report "every derivable channel is at 11.9.2" from the real repo.
+    fs.mkdirSync(path.join(work, 'scripts'));
+    fs.copyFileSync(path.join(ROOT, 'scripts', 'sync-version.js'),
+      path.join(work, 'scripts', 'sync-version.js'));
+    fs.writeFileSync(path.join(work, 'package.json'),
+      JSON.stringify({ name: 'mindforge-cc', version: '99.99.99' }, null, 2));
+    fs.mkdirSync(path.join(work, 'Formula'));
+    fs.writeFileSync(path.join(work, 'Formula', 'mindforge.rb'),
+      'class Mindforge < Formula\n'
+      + '  url "https://registry.npmjs.org/mindforge-cc/-/mindforge-cc-11.9.2.tgz"\n'
+      + '  sha256 "114b512cf943ee450c79e8e2b7e71725fe79946b615e9270f56f7917804f8f1e"\n'
+      + '  assert_match "11.9.2"\n'
+      + 'end\n');
+
+    const r = spawnSync(process.execPath,
+      [path.join(work, 'scripts', 'sync-version.js'), '--fetch-sha'],
+      { cwd: work, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: work } });
+
+    const after = fs.readFileSync(path.join(work, 'Formula', 'mindforge.rb'), 'utf8');
+    for (const bad of Object.keys(KNOWN_NON_ARTIFACT_DIGESTS)) {
+      assert.ok(!after.includes(bad),
+        `--fetch-sha wrote ${bad} into the formula for an unpublished version. That is the digest `
+        + `of ${KNOWN_NON_ARTIFACT_DIGESTS[bad]}.\n${(r.stderr || '').slice(-400)}`);
+    }
+    assert.ok(after.includes('114b512cf943ee450c79e8e2b7e71725fe79946b615e9270f56f7917804f8f1e'),
+      `the formula's original digest was overwritten for a version that does not exist:\n${after}`);
+    assert.notStrictEqual(r.status, 0,
+      'refusing to write the digest must be reported as a failure, not exit 0 — a caller scripting '
+      + `this needs to know the formula was left behind.\n${(r.stdout || '').slice(-300)}`);
+    assert.match(`${r.stdout || ''}${r.stderr || ''}`, /REFUSING/,
+      'the refusal must say so out loud');
+  } finally {
+    fs.rmSync(work, { recursive: true, force: true });
+  }
+});
+
 (async () => {
   for (const { name, fn } of tests) {
     try { await fn(); console.log(`  ✅  ${name}`); passed++; }
