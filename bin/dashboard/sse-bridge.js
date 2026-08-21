@@ -136,21 +136,24 @@ function pollApprovals() {
     if (mtime === _lastMtimes[APPROVAL_DIR]) return; // unchanged
     _lastMtimes[APPROVAL_DIR] = mtime;
 
+    // Reads `approval-*.json`, the name the only producer (bin/governance/approve.js) actually
+    // writes. The old filter was startsWith('APPROVAL-'), which matched nothing on any platform:
+    // String.prototype.startsWith is case-sensitive regardless of the filesystem, so macOS's
+    // case-insensitive lookup (which affects fs.open, not this comparison) did not save it.
     const files  = fs.readdirSync(APPROVAL_DIR)
-      .filter(f => f.startsWith('APPROVAL-') && f.endsWith('.json'))
+      .filter(f => f.endsWith('.json'))
       .sort();
     const key = files.join(',');
     if (key === _lastApprovals) return;
     _lastApprovals = key;
 
-    // Find new pending approvals
+    // Announce records as they appear. The previous condition was `data.status === 'pending'`, a
+    // field no producer has ever written, so this loop could never broadcast. There is no
+    // pending-request concept to restore either — approve.js records an already-made decision.
+    // Only the filename is sent; a listener that wants contents calls GET /api/approvals, which
+    // returns each record with its verified integrity state.
     for (const f of files) {
-      try {
-        const data = JSON.parse(fs.readFileSync(path.join(APPROVAL_DIR, f), 'utf8'));
-        if (data.status === 'pending') {
-          broadcast('approval:new', data);
-        }
-      } catch { /* skip */ }
+      broadcast('approval:new', { file: f });
     }
   } catch { /* ignore */ }
 }

@@ -131,13 +131,12 @@ High-fidelity behaviors ported from the Superpowers library and hardened for pro
 
 | Command | Description |
 | :--- | :--- |
-| `/mindforge:brainstorming` | Deep exploratory protocol for intent clarification and architectural ideation. |
-| `/mindforge:swarm-execution` | Wave-based implemention for independent, non-conflicting tasks. |
-| `/mindforge:parallel-mesh` | Orchestrates a mesh of agent waves with automated dependency compaction. |
+| *(protocol, not a command)* | Wave-based implementation for independent tasks — see `.mindforge/engine/swarm-controller.md`. |
+| *(protocol, not a command)* | Mesh of agent waves with dependency compaction — see `.mindforge/engine/wave-executor.md`. |
 | `/mindforge:workspace` | Manages isolated development environments via git worktrees with smart safety checks. |
-| `/mindforge:tdd` | Strict Test-Driven Development (Red-Green-Refactor) with automated test generation. |
+| `/mindforge:skill-tdd` | Strict Test-Driven Development (Red-Green-Refactor) with automated test generation. |
 | `/mindforge:debug` | Systematic debugging using persistent state tracking and Root Cause Analysis. |
-| `/mindforge:verify-work` | Multi-level truth verification protocol (substance, existence, wiring). |
+| `/mindforge:verify-phase` | Multi-level truth verification protocol (substance, existence, wiring). |
 | `/mindforge:retrospective` | Facilitates structured team retrospectives with objective telemetry and metrics. |
 
 ---

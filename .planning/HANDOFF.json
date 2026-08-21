@@ -2,13 +2,56 @@
   "_warning": "DO NOT ADD SECRETS OR SENSITIVE DATA TO THIS FILE. IT IS SYNCED ACROSS SESSIONS.",
   "schema_type": "HANDOFF",
   "schema_version": "1.0.0",
-  "next_task": "",
-  "context_refs": [],
-  "blockers": [],
-  "decisions_needed": [],
-  "recent_commits": [],
-  "recent_files": [],
+  "next_task": "Author CHANGELOG.md's 11.9.3 section and changelogs/v11.9.3.md — the only two artifacts a human must write — then cut 11.9.3: bump package.json, `node scripts/sync-version.js`, run the three-command mcp-server build chain it prints, merge develop -> release -> main, and tag. The workflow now gates the tag push and moves the `stable` dist-tag itself. All 8 audit findings and the release-gating hole are closed; the PR queue is empty.",
+  "current_context": "develop is at 1b5302b5 and GREEN both locally (131 passed / 0 failed / 2 skipped / 133 total, all seven gates plus verify:pinning exit 0) and in CI (MindForge CI, Control Plane, Secret scan all success). Sixteen PRs merged this session (#200-#216), each verified by `merge-base --is-ancestor` rather than by badge, because #198 is MERGED with its code absent from develop. package.json is still 11.9.2; npm latest=11.9.2, stable=11.8.3 until the next release moves it automatically.",
+  "context_refs": [
+    "scratch-pad/daily-logs/2026-08-21.md — the full session narrative, including every self-inflicted harness bug and its control experiment. READ THIS FIRST.",
+    "scratch-pad/daily-logs/2026-08-20.md — the preceding session (the 11-PR queue being built).",
+    "CLAUDE.md lines 53-57 — the version-bump contract: 16 channels over 15 files, PLUS the two build artifacts and their 3-command chain.",
+    "scripts/sync-version.js — read the header. Three channel categories: derivable / requires-a-build / deferred.",
+    "tests/version-consistency.test.js — 23 assertions; the round-trip tests are the only shape that can catch a MISSING or GREEDY channel.",
+    ".planning/RELEASE-CHECKLIST.md — pre-existing release steps.",
+    "docs/publishing-guide.md and .agent/workflows/publish-release.md — the documented publish sequence."
+  ],
+  "blockers": [
+    "11.9.3 RELEASE — CHANGELOG.md has no 11.9.3 section and changelogs/v11.9.3.md does not exist. Two independent gates demand them: bin/utils/readiness-gate.js:115 (a bare `.includes(pkgVersion)` on CHANGELOG.md) and tests/production.test.js:629/:638 (the second is existence-only, so an empty file satisfies it). Without them release:ready drops 14/14 -> 12/14 and npm test fails. These are the ONLY two artifacts a human must author.",
+    "11.9.3 RELEASE — after `node scripts/sync-version.js`, two tracked build artifacts remain stale and sync-version now says so and exits non-zero: plugins/mindforge/.claude-plugin/plugin.json and plugins/mindforge/mcp/dist/index.js. Clear with, IN ORDER: `npm --prefix mcp-server install && npm --prefix mcp-server run build && node scripts/build-mindforge-plugin.js`. All three are required because build-mindforge-plugin.js refuses without mcp-server/dist/index.js, which is gitignored and absent on a fresh clone."
+  ],
+  "decisions_needed": [
+    "PARTLY DONE (#216). The preflight job now gates the publishing event: it asserts the tagged commit is an ancestor of origin/main and runs the six gates a tag push never saw, with the publish job behind `needs: preflight`. What remains is repo-settings-only and cannot be done in code: a `v*` TAG ruleset restricting who may CREATE the ref. Required status checks cannot attach to a tag, so that ruleset is about authorship, not verification. KNOWN RESIDUAL, documented in the workflow itself: a tag push resolves the workflow from the TAGGED ref, so a tag placed on a commit predating #216 runs that commit's workflow and is ungated.",
+    "RESOLVED, no longer a decision: the release workflow now moves the npm `stable` dist-tag itself, as its last step. Forward-only (refuses to move backward, which a re-run of an older tag would otherwise do silently), prereleases skipped, and verified by reading back /-/package/<pkg>/dist-tags rather than the CDN-cached packument. `stable` is still 11.8.3 on the registry until the next release runs; nothing needs doing by hand to fix that.",
+    "NPM_TOKEN is a long-lived repo secret and there are ZERO configured GitHub environments. Adding an `environment:` key with no environment configured publishes exactly as before while LOOKING like a gate — move the token to an environment secret FIRST, then add the key.",
+    "mindforge-sdk has no provenance on npm (mindforge-cc does, since 11.9.0). Decide whether to add it.",
+    "HANDOFF.json field mismatch (found while writing this file): the writer bin/autonomous/state-manager.js:151 and bin/dashboard/metrics-aggregator.js:85 use `last_updated`, but .claude/commands/mindforge/next.md:14 gates freshness on `updated_at`, which never existed in this file. That gate is therefore ALWAYS false and a fresh handoff is never honoured. This file now writes BOTH keys so it works with every reader; pick one name and fix the other side, with a test.",
+    "Carried over, still unresolved: D5 plugin asset contract, D6 is the SDK published, D7 what exit code `verify` should use when every stage skips, D8 whether .planning/VERIFICATION.md should be tracked, D9 whether to governance-gate the release path, and whether a --global install should carry bin/ at all."
+  ],
+  "recent_commits": [
+    "983c0a06 Merge #210 fix/installer-leaks-tmp-and-db",
+    "5e41ddc5 Merge #209 fix/shipped-docs-name-real-commands",
+    "17ffd135 Merge #200 fix/selfinstall-overwrites-tracked-files-redo",
+    "8d4ea8ef Merge #206 fix/dashboard-lifecycle-flags",
+    "c457cf83 Merge #205 fix/protocol-file-names-only-real-things",
+    "f17a2189 Merge #211 fix/sync-version-plugin-build-channel",
+    "4b1a94f5 Merge #208 fix/formula-may-lag-never-lead",
+    "86a9d87a Merge #207 fix/sync-version-misses-two-channels",
+    "49c8f416 Merge #203 fix/fetch-sha-hashes-404-body",
+    "08987519 Merge #204 fix/verify-stage-availability-guards",
+    "0bc322cf Merge #202 fix/installer-positional-subcommand",
+    "ad15a089 Merge #201 fix/cli-router-cwd-pin"
+  ],
+  "recent_files": [
+    "scripts/sync-version.js — three channel categories; 16 channels + 2 build artifacts + 1 deferred",
+    "tests/version-consistency.test.js — 23 assertions incl. two round trips and a greed guard",
+    "bin/installer-core.js — scope-aware self-install gate, 8 coreFiles, SENSITIVE_EXCLUDE, tmp reaping",
+    "bin/mindforge-cli.js — cwd: process.cwd() (was ROOT)",
+    "bin/dashboard/server.js — --status/--stop with a realpath identity check",
+    "bin/engine/verification-runner.js — stage availability guards, skip vs fail",
+    "bin/engine/temporal-cli.js — cleanup wired to TemporalHub.gc with --dry-run",
+    "tests/production.test.js — SENSITIVE_EXCLUDE now behavioural, not a source grep",
+    "SECURITY.md + docs/{getting-started,faq,troubleshooting,user-guide,sdk-reference}.md — now version channels",
+    "CLAUDE.md, .claude/CLAUDE.md, .agent/CLAUDE.md — protocol docs name only real files"
+  ],
   "handoffs": [],
-  "current_context": "",
-  "last_updated": "2026-05-21T00:00:00Z"
+  "last_updated": "2026-08-21T10:00:00Z",
+  "updated_at": "2026-08-21T10:00:00Z"
 }

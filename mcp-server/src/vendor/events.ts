@@ -173,48 +173,110 @@ export class MindForgeEventStream {
  * WebSocket-based event stream client for real-time bidirectional communication.
  * Requires Node 22+ (global WebSocket) or the 'ws' package for older versions.
  */
-declare const WebSocket: any;
+
+// Minimal structural type for the WebSocket we use — the global type isn't guaranteed
+// across Node versions / the optional 'ws' fallback, so we declare only the surface this
+// client touches rather than depending on lib.dom or pulling @types/ws.
+interface WebSocketLike {
+  onopen: (() => void) | null;
+  onerror: ((err: unknown) => void) | null;
+  onmessage: ((event: { data: unknown }) => void) | null;
+  onclose: (() => void) | null;
+  send(data: string): void;
+  close(): void;
+}
+declare const WebSocket: { new (url: string): WebSocketLike };
+
+// Socket payloads are untyped JSON off the wire; callers narrow as needed.
+type EventHandler = (data: unknown) => void;
 
 export class WebSocketEventStream {
-  private ws: InstanceType<typeof WebSocket> | null = null;
+  private ws: WebSocketLike | null = null;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
-  private listeners: Map<string, Set<(data: any) => void>> = new Map();
+  private listeners: Map<string, Set<EventHandler>> = new Map();
 
   constructor(private url: string = 'ws://127.0.0.1:7337/ws') {}
 
+  /**
+   * Dispatch to registered listeners. One dispatch path for messages, reconnect failures and
+   * stream death, so those three cannot drift apart in how they treat a throwing listener.
+   *
+   * A missing 'error' listener does NOT mean silence: a reconnect that fails invisibly leaves the
+   * consumer believing the stream is live, which is the failure mode this class was already in.
+   */
+  private emit(eventType: string, data: unknown): void {
+    const handlers = this.listeners.get(eventType);
+    if (!handlers || handlers.size === 0) {
+      if (eventType === 'error' && typeof process !== 'undefined' && process.stderr) {
+        const message = data instanceof Error ? data.message : String(data);
+        process.stderr.write(`[MindForge SDK] event stream error: ${message}\n`);
+      }
+      return;
+    }
+    // A listener that throws must not take the stream — or the process — with it.
+    handlers.forEach((handler) => { try { handler(data); } catch { /* listener fault */ } });
+  }
+
   async connect(): Promise<void> {
+    // Fail fast and legibly. `WebSocket` is declared, not imported, and sdk/package.json has NO
+    // dependencies while engines.node is >=18.0.0 — so on Node 18 or 20 the constructor below is a
+    // bare `ReferenceError: WebSocket is not defined`, which tells the caller nothing about why.
+    if (typeof WebSocket === 'undefined') {
+      throw new Error(
+        'WebSocketEventStream requires a global WebSocket: Node 22+, a browser, or the optional '
+        + '\'ws\' package installed and assigned to globalThis.WebSocket. This SDK declares no '
+        + 'runtime dependencies, so it does not install one for you.',
+      );
+    }
     return new Promise((resolve, reject) => {
       this.ws = new WebSocket(this.url);
       this.ws.onopen = () => {
         this.reconnectAttempts = 0;
         resolve();
       };
-      this.ws.onerror = (err: any) => reject(err);
-      this.ws.onmessage = (event: any) => {
+      this.ws.onerror = (err: unknown) => reject(err);
+      this.ws.onmessage = (event: { data: unknown }) => {
         try {
-          const parsed = JSON.parse(event.data.toString());
-          const handlers = this.listeners.get(parsed.type) || new Set();
-          handlers.forEach(handler => handler(parsed.data));
+          const parsed = JSON.parse(String(event.data));
+          this.emit(parsed.type, parsed.data);
         } catch { /* malformed message */ }
       };
       this.ws.onclose = () => {
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
           this.reconnectAttempts++;
-          setTimeout(() => this.connect(), 1000 * this.reconnectAttempts);
+          setTimeout(() => {
+            // A scheduled reconnect is fire-and-forget, so nothing awaits the promise it returns.
+            // Without this .catch(), `connect()` rejecting via onerror is an UNHANDLED REJECTION —
+            // and under Node's default mode that is fatal: it TERMINATES THE CALLER'S PROCESS.
+            // Reproduced against the compiled module with a stub socket whose reconnect calls
+            // onerror: exit code 1, and the line after the wait never ran.
+            this.connect().catch((err: unknown) => this.emit('error', err));
+          }, 1000 * this.reconnectAttempts);
+        } else if (this.maxReconnectAttempts > 0) {
+          // Attempts exhausted. This branch did not exist: the stream simply went quiet, leaving
+          // the consumer with no way to learn it was dead.
+          //
+          // Guarded on maxReconnectAttempts > 0 because disconnect() sets it to 0 (:276). Without
+          // the guard, a DELIBERATE disconnect would emit 'close' with reason "reconnect attempts
+          // exhausted" — telling the caller their stream died when they closed it themselves.
+          this.emit('close', {
+            reason: 'reconnect attempts exhausted',
+            attempts: this.reconnectAttempts,
+          });
         }
       };
     });
   }
 
-  on(eventType: string, handler: (data: any) => void): void {
+  on(eventType: string, handler: EventHandler): void {
     if (!this.listeners.has(eventType)) {
       this.listeners.set(eventType, new Set());
     }
     this.listeners.get(eventType)!.add(handler);
   }
 
-  off(eventType: string, handler: (data: any) => void): void {
+  off(eventType: string, handler: EventHandler): void {
     this.listeners.get(eventType)?.delete(handler);
   }
 

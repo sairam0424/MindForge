@@ -4,8 +4,23 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+# Least privilege. This workflow declared no `permissions:` block, so every job inherited the
+# repository default — frequently write-all, which hands a compromised action far more than it needs.
+# Determined from what the workflow actually does, not guessed: no GITHUB_TOKEN reference, no `gh`
+# CLI call, no github.rest API call, and no commit/tag/branch write. One job posts a PR review and carries a narrower job-level
+# block granting pull-requests: write; every other job needs only read.
+permissions:
+  contents: read
+
 jobs:
   ai-reviewer:
+    # JOB-LEVEL override, deliberately narrower than the workflow default above.
+    # This is the only job that writes to GitHub: it calls github.rest.pulls.createReview to post the
+    # review as a PR comment. GitHub resolves a job block as an OVERRIDE, not an intersection, so
+    # contents:read must be restated here or this job would lose the ability to check out.
+    permissions:
+      contents: read
+      pull-requests: write
     name: Cross-Model Code Review
     runs-on: ubuntu-latest
     if: contains(github.event.pull_request.labels.*.name, 'needs-review') || github.event_name == 'pull_request'
@@ -46,24 +61,45 @@ jobs:
           node bin/review/cross-review-engine.js --models claude,gpt4o --output json > /tmp/review-results.json
           echo "::endgroup::"
 
-          # Generate review markdown
+          # Generate review markdown INTO THE WORKSPACE, not /tmp, so it can be uploaded as an
+          # artifact and inspected. Then publish an explicit output the post step keys off.
           node -e "
             const results = JSON.parse(require('fs').readFileSync('/tmp/review-results.json', 'utf8'));
             const md = '# 🧠 MindForge AI Review\n\n' +
                        '## Summary\n' + results.summary + '\n\n' +
                        '## Findings\n' + results.findings.map(f => '- ' + f).join('\n');
-            require('fs').writeFileSync('/tmp/mindforge-review.md', md);
+            require('fs').writeFileSync('mindforge-review.md', md);
           "
+          if [ -s mindforge-review.md ]; then
+            echo "produced=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "::warning::AI review produced no markdown; nothing will be posted."
+          fi
 
       - name: Post AI Review Comment
-        # Only run when a review markdown was actually generated (keys present + engine ran).
-        if: hashFiles('/tmp/mindforge-review.md') != ''
+        # Keys off the review step's OWN output, deliberately not off hashFiles().
+        #
+        # This guard was `hashFiles('/tmp/mindforge-review.md') != ''`, which is PERMANENTLY FALSE:
+        # hashFiles only matches paths inside GITHUB_WORKSPACE, so an absolute /tmp path never
+        # hashes to anything. Measured across the five most recent runs of this workflow, this step
+        # was `skipped` every time while "Run AI Review" reported success and the check went green.
+        #
+        # Two independent reasons masked each other. This repo has no ANTHROPIC_API_KEY, so the
+        # review step exits early and no markdown is written anyway — which is why nobody noticed
+        # the guard. The day a key IS added, the review would be generated and still silently never
+        # posted.
+        #
+        # mindforge-ci.yml already had this right, and its comment warns against exactly this
+        # pattern: "hashFiles only matches inside GITHUB_WORKSPACE, so guarding on an absolute /tmp
+        # path would be permanently false and would silently suppress a genuine review". The fix
+        # existed one directory entry away and was not applied here.
+        if: steps.review.outputs.produced == 'true'
         continue-on-error: true
         uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
-            const reviewContent = fs.readFileSync('/tmp/mindforge-review.md', 'utf8');
+            const reviewContent = fs.readFileSync('mindforge-review.md', 'utf8');
 
             await github.rest.pulls.createReview({
               owner: context.repo.owner,
@@ -73,10 +109,16 @@ jobs:
               event: 'COMMENT'
             });
 
+      # Uploads the file the review step actually writes. It previously listed CODE-REVIEW.md and
+      # CROSS-REVIEW.md — NOTHING in the repository writes either name (bin/review/
+      # cross-review-engine.js contains no writeFileSync at all), so the step reported success
+      # while uploading nothing, and the queried run produced zero artifacts. if-no-files-found is
+      # set explicitly so "uploaded nothing" is visible in the log rather than silent.
       - name: Upload Review Artifacts
+        if: steps.review.outputs.produced == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: ai-review-reports
+          if-no-files-found: warn
           path: |
-            CODE-REVIEW.md
-            CROSS-REVIEW.md
+            mindforge-review.md

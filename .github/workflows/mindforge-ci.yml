@@ -11,6 +11,14 @@ env:
   MINDFORGE_CI: true
   NODE_VERSION: '20'
 
+# Least privilege. This workflow declared no `permissions:` block, so every job inherited the
+# repository default — frequently write-all, which hands a compromised action far more than it needs.
+# Determined from what the workflow actually does, not guessed: no GITHUB_TOKEN reference, no `gh`
+# CLI call, no github.rest API call, and no commit/tag/branch write. One job posts a PR review and carries a narrower job-level
+# block granting pull-requests: write; every other job needs only read.
+permissions:
+  contents: read
+
 jobs:
   mindforge-health:
     name: MindForge Health Check
@@ -115,6 +123,41 @@ jobs:
             cd sdk && npm install && cd ..
           fi
 
+      # The shipped artifact must be the reviewed artifact.
+      #
+      # mcp-server/ vendors sdk/src as TypeScript and esbuild inlines it into the single tracked
+      # bundle the marketplace plugin ships. Nothing compared either link, and both had drifted:
+      # events.ts and client.ts were 623 and 92 bytes behind sdk/src, and the staleness reached the
+      # wire — the shipped bundle carried JSON.parse(event.data.toString()) where sdk/src/events.ts
+      # says JSON.parse(String(event.data)). The vendoring script has no other caller in CI or in
+      # package.json; it was run by hand and had not been run since the SDK changed.
+      #
+      # tests/vendored-artifact-integrity.test.js gates the vendor link hermetically (pure function,
+      # no build needed). This step gates the BUNDLE link, which needs mcp-server/node_modules and so
+      # can only run here. esbuild is pinned to 0.28.1 in mcp-server/package-lock.json, and two full
+      # local regenerations produced an identical sha, so no timestamp or absolute path is embedded.
+      # Cross-host reproducibility (darwin/arm64 vs ubuntu/x64) is verified BY THIS STEP on its first
+      # run; if it reports drift with a clean tree, compare normalised content rather than deleting
+      # the gate.
+      #
+      # The bundle is committed 0644 because that is what esbuild emits. Committing 0755 would make
+      # this comparison report `mode change` on every run — a permanently red gate is one everyone
+      # learns to ignore.
+      - name: Shipped MCP bundle must match its source
+        run: |
+          npm --prefix mcp-server ci
+          node scripts/vendor-sdk-into-mcp.js
+          npm --prefix mcp-server run build
+          node scripts/build-mindforge-plugin.js
+          drift=$(git diff --name-only -- mcp-server/src/vendor plugins/mindforge)
+          if [ -n "$drift" ]; then
+            echo "::error::regenerating from source changed tracked files — the shipped artifact is not the reviewed artifact"
+            echo "$drift" | while IFS= read -r f; do echo "::error file=$f::drifted from source"; done
+            git diff --stat -- mcp-server/src/vendor plugins/mindforge
+            exit 1
+          fi
+          echo "::notice::vendored SDK and shipped bundle both reproduce from source"
+
       - name: Build SDK
         run: |
           if [ -d "sdk" ] && [ -f "sdk/tsconfig.json" ]; then
@@ -157,9 +200,80 @@ jobs:
           fi
 
       - name: Test suite with coverage
-        run: npx c8 --check-coverage --lines 30 node tests/run-all.js
+        # Exclude GENERATED bundles from the gate. tests/mcp-server-version.test.js spawns
+        # plugins/mindforge/mcp/dist/index.js (a 22k-line esbuild single-file bundle) to read
+        # serverInfo.version off the wire, which otherwise drops ~22k mostly-uncovered lines
+        # into the denominator of a threshold meant to measure hand-written code. A generated
+        # bundle belongs in neither the numerator nor the denominator.
+        run: npx c8 --check-coverage --lines 30 --exclude 'plugins/**' --exclude 'mcp-server/dist/**' node tests/run-all.js
 
-      - name: Check governance tier (Tier 3 blocks CI)
+      # CI-01. Until now ZERO of the 11 workflows invoked any of the repo's own npm gates,
+      # while CLAUDE.md claimed the compliance scorecard "will fail CI". These three are
+      # wired because they can actually fail and are side-effect free (verified: the working
+      # tree is byte-identical before and after all three).
+      #
+      # Deliberately NOT wired, both verified rather than assumed:
+      #   * `node bin/verify-audit.js` — .planning/AUDIT.jsonl is gitignored, so in a fresh
+      #     checkout the file is absent and bin/governance/audit-verifier.js returns
+      #     valid:false on the read failure. Measured: exit 1, "audit chain BROKEN at entry 0:
+      #     unreadable: ENOENT". Wiring it would red-line every run. Its algorithm is already
+      #     covered by tests/audit-integrity.test.js, which the suite above runs.
+      #   * `npm run eval:retrieval` — already covered by tests/retrieval-fts.test.js, which
+      #     calls runGoldenSetEval() and asserts the same committed recall floor. Wiring it
+      #     would double the slowest suite for no added signal.
+      # Supply-chain: what runs in the release path must be pinned to a commit.
+      #
+      # Measured before this gate: 41 `uses:` refs across 11 workflows, ZERO pinned, and the one
+      # third-party action (softprops/action-gh-release@v3) sat in the job holding `contents: write`
+      # and running `npm publish --provenance`. A mutable tag is a promise from a repository nobody
+      # here controls.
+      #
+      # Hard-fails on any unpinned third-party action and on any unpinned ref in the release path.
+      # First-party actions elsewhere ratchet on a ceiling, and the gate PRINTS every one of them with
+      # file:line on each run — so "0 violations" can never be read as "everything is pinned".
+      - name: Action pinning gate (release path must be commit-pinned)
+        run: npm run verify:pinning
+
+      - name: Harness gate (harness-audit must clear its threshold)
+        run: npm run harness:gate
+
+      # The step above audits THIS CHECKOUT, which has .claude/settings.json and .agent/settings.json
+      # hand-maintained in git — neither of which is in package.json `files`, so no consumer receives
+      # them. harness-audit.js:426-431 requires trust-gate wired into both, so the repo scores 76/76
+      # while a fresh `--claude --local` install of the same tree scores 36/76 with Security
+      # Guardrails 1/10. The gate was real, wired and green while validating the only artifact that
+      # could pass. This second step audits an INSTALL root, so CI reports the consumer's number.
+      # It is a ratchet at the measured floor, not a pass/fail on the ideal — see the script header.
+      - name: Harness gate (INSTALL root — what a consumer actually receives)
+        run: npm run harness:gate:install
+
+      - name: Harness adapter compliance drift check
+        run: npm run harness:compliance -- --check
+
+      - name: Release readiness gate
+        run: npm run release:ready
+
+      # Offline by design: --check never reaches the network, so it cannot flake. It covers
+      # the distribution channels the npm-focused runtime check ignores — the Homebrew
+      # formula, the Dockerfile ARG default and the plugin marketplace entry, all three of
+      # which sat FOUR releases behind (11.5.1 / 11.4.0) while the 12 npm locations stayed
+      # in sync, because nothing asserted them.
+      - name: Version sync across all distribution channels
+        run: npm run version:check
+
+      # SCOPE, stated because this step used to overstate it. The predicate below is
+      # `"status": "pending"`, and NO producer writes a `status` field: bin/governance/approve.js
+      # emits exactly {id, project, version, tier, approved_by, timestamp, reason, signature,
+      # identity_verification}, and the only files in the repo containing status:'pending' are
+      # tests/dashboard.test.js fixtures. So PENDING_T3 is always 0 here and this step has never
+      # blocked anything. The shell is not at fault — a fixture carrying that field DOES make it
+      # exit 1 — so the logic is kept: it arms itself the moment a producer writes `status`.
+      # What changed is the success message, which used to read "Governance check passed" and so
+      # asserted a check that had not happened. The real Tier-3 evaluation lives in
+      # control-plane.yml's governance-gate job, gated on the classifier's tier == '3'.
+      # tests/ci-gates-wired.test.js pins this predicate-vs-producer relationship in both
+      # directions so the claim cannot drift back.
+      - name: Check governance tier (blocks on a pending-status approval, if one is ever written)
         run: |
           PENDING_T3=$(find .planning/approvals/ -name "*.json" 2>/dev/null | xargs grep -l '"tier": 3' 2>/dev/null | xargs -r grep -l '"status": "pending"' 2>/dev/null | wc -l)
 
@@ -183,9 +297,18 @@ jobs:
             exit 1
           fi
 
-          echo "::notice::Governance check passed — no pending Tier 3 blocks ✅"
+          echo "::notice::No approval record carries status=pending. NOTE: no producer writes that"
+          echo "::notice::field today, so this step is not evidence that a Tier-3 change was reviewed."
+          echo "::notice::Tier-3 evaluation happens in control-plane.yml (governance-gate, tier == '3')."
 
   mindforge-ai-review:
+    # JOB-LEVEL override, deliberately narrower than the workflow default above.
+    # This is the only job that writes to GitHub: it calls github.rest.pulls.createReview to post the
+    # review as a PR comment. GitHub resolves a job block as an OVERRIDE, not an intersection, so
+    # contents:read must be restated here or this job would lose the ability to check out.
+    permissions:
+      contents: read
+      pull-requests: write
     name: AI Code Review
     runs-on: ubuntu-latest
     needs: [mindforge-security, mindforge-quality]

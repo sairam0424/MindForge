@@ -39,7 +39,6 @@ function mkProject() {
 
 // ── Module imports ────────────────────────────────────────────────────────────
 const Metrics  = require('../bin/dashboard/metrics-aggregator');
-const Approval = require('../bin/dashboard/approval-handler');
 const SSE      = require('../bin/dashboard/sse-bridge');
 
 // ── Sample data fixtures ──────────────────────────────────────────────────────
@@ -64,16 +63,38 @@ const SAMPLE_AUTO_STATE = {
   last_commit: 'abc1234',
 };
 
-const SAMPLE_APPROVAL = {
-  id: 'aaaabbbb-cccc-dddd-eeee-ffffffffffff',
-  tier: 2,
-  phase: 3,
-  plan: '04',
-  description: 'Add user RBAC model',
-  status: 'pending',
-  requested_at: new Date().toISOString(),
-  expires_at: new Date(Date.now() + 86_400_000).toISOString(),
-};
+// Built through bin/governance/approval-record.js, the SAME module the writer and the CI
+// verifier use, so the fixture cannot drift from the real record shape.
+//
+// The previous fixture invented one: a 36-char UUID `id`, plus `phase`, `plan`, `description` and
+// `status: 'pending'`. No producer has ever written any of those four fields — approve.js emits
+// `MF-AUTH-<base36>` with `reason`, and nothing anywhere writes a `status`. The tests passed
+// because the fixture and the reader agreed with EACH OTHER while both disagreed with production,
+// which is why six independent incompatibilities survived in the shipped dashboard.
+const { checksumRecord, expiryFrom, SCHEMA } = require('../bin/governance/approval-record');
+const REPO_VERSION = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')).version;
+
+function makeApproval(over = {}) {
+  const timestamp = new Date().toISOString();
+  const rec = {
+    schema: SCHEMA,
+    id: 'MF-AUTH-DASHFIXTURE',
+    project: 'mindforge-cc',
+    version: REPO_VERSION,
+    tier: 3,
+    approved_by: 'fixture',
+    timestamp,
+    expires_at: expiryFrom(timestamp),
+    reason: 'dashboard fixture',
+    identity_verification: {
+      verified: false, method: 'git_identity_unverified', identity: 'fixture', unverified_ack: true,
+    },
+    ...over,
+  };
+  rec.record_checksum = checksumRecord(rec);
+  return rec;
+}
+const SAMPLE_APPROVAL = makeApproval();
 
 // ═══════════════════════════════════════════════════════════════════════
 console.log('\nMindForge v2 — Dashboard Tests\n');
@@ -84,7 +105,6 @@ console.log('Required files:');
   'bin/dashboard/server.js',
   'bin/dashboard/sse-bridge.js',
   'bin/dashboard/api-router.js',
-  'bin/dashboard/approval-handler.js',
   'bin/dashboard/metrics-aggregator.js',
   'bin/dashboard/frontend/index.html',
   '.mindforge/dashboard/dashboard-spec.md',
@@ -163,39 +183,84 @@ test('getAuditEntries: filters by event type', () => {
   } finally { process.chdir(orig); p.cleanup(); }
 });
 
-test('getApprovals: returns categorized approvals', () => {
+test('getApprovals: reads the filename the writer actually produces', () => {
+  // The reader filtered startsWith('APPROVAL-') while the only producer writes
+  // `approval-<id>.json`. startsWith is case-sensitive on every platform, so this returned
+  // nothing, always — on macOS too, where the case-insensitive filesystem affects fs.open but
+  // not a string comparison.
   const p    = mkProject();
   const orig = process.cwd();
   process.chdir(p.dir);
   try {
-    p.write(`.planning/approvals/APPROVAL-${SAMPLE_APPROVAL.id}.json`, JSON.stringify(SAMPLE_APPROVAL));
+    p.write(`.planning/approvals/approval-${SAMPLE_APPROVAL.id.toLowerCase()}.json`,
+      JSON.stringify(SAMPLE_APPROVAL));
 
     const result = Metrics.getApprovals();
-    assert.ok(Array.isArray(result.pending),   'Should have pending array');
-    assert.ok(Array.isArray(result.approved),  'Should have approved array');
-    assert.ok(Array.isArray(result.rejected),  'Should have rejected array');
-    assert.ok(Array.isArray(result.expired),   'Should have expired array');
-    assert.strictEqual(result.pending.length, 1, 'Should have 1 pending approval');
-    assert.strictEqual(result.pending[0].id, SAMPLE_APPROVAL.id);
+    assert.ok(Array.isArray(result),
+      'getApprovals must return an ARRAY: its only consumer does .length and .map(), which on ' +
+      'the previous {pending,approved,rejected,expired} object yields undefined then a TypeError');
+    assert.strictEqual(result.length, 1, `expected the record to be found, got ${result.length}`);
+    assert.strictEqual(result[0].id, SAMPLE_APPROVAL.id);
+    assert.strictEqual(result[0].state, 'valid', `a freshly minted record is valid, got ${result[0].state}`);
   } finally { process.chdir(orig); p.cleanup(); }
 });
 
-test('getApprovals: classifies expired approval correctly', () => {
+test('getApprovals: an UPPERCASE filename is NOT silently accepted', () => {
+  // Guards the fix from being "generalised" back into matching both spellings, which would
+  // re-admit the dashboard-only format that no producer writes.
   const p    = mkProject();
   const orig = process.cwd();
   process.chdir(p.dir);
   try {
-    const expired = {
-      ...SAMPLE_APPROVAL,
-      id: 'expired-uuid-1234-5678-abcd-ef0123456789',
-      status: 'pending',
-      expires_at: new Date(Date.now() - 3600_000).toISOString(), // 1 hour ago
-    };
-    p.write(`.planning/approvals/APPROVAL-${expired.id}.json`, JSON.stringify(expired));
-
+    p.write('.planning/approvals/notes.txt', 'not a record');
     const result = Metrics.getApprovals();
-    assert.strictEqual(result.expired.length, 1, 'Should classify as expired');
-    assert.strictEqual(result.pending.length, 0, 'Should not be in pending');
+    assert.strictEqual(result.length, 0, 'only .json files are records');
+  } finally { process.chdir(orig); p.cleanup(); }
+});
+
+test('getApprovals: categorises by VERIFIED state, not a self-declared status', () => {
+  const p    = mkProject();
+  const orig = process.cwd();
+  process.chdir(p.dir);
+  try {
+    // expired
+    const past = new Date(Date.now() - 100 * 3600_000).toISOString();
+    const expired = makeApproval({ id: 'MF-AUTH-EXPIRED', timestamp: past, expires_at: expiryFrom(past) });
+    p.write('.planning/approvals/approval-mf-auth-expired.json', JSON.stringify(expired));
+    // bound to an older release
+    const oldVersion = makeApproval({ id: 'MF-AUTH-OLDVER', version: '0.0.1' });
+    p.write('.planning/approvals/approval-mf-auth-oldver.json', JSON.stringify(oldVersion));
+    // tampered after minting
+    const tampered = { ...makeApproval({ id: 'MF-AUTH-TAMPER' }), reason: 'edited afterwards' };
+    p.write('.planning/approvals/approval-mf-auth-tamper.json', JSON.stringify(tampered));
+    // valid
+    p.write('.planning/approvals/approval-mf-auth-ok.json', JSON.stringify(makeApproval({ id: 'MF-AUTH-OK' })));
+
+    const byId = Object.fromEntries(Metrics.getApprovals().map(r => [r.id, r]));
+    assert.strictEqual(byId['MF-AUTH-OK'].state, 'valid');
+    assert.strictEqual(byId['MF-AUTH-EXPIRED'].state, 'stale', 'an expired record is stale');
+    assert.strictEqual(byId['MF-AUTH-OLDVER'].state, 'stale',
+      'a record bound to an earlier release is stale — this is the property that stopped one ' +
+      'record approving every later version');
+    assert.strictEqual(byId['MF-AUTH-TAMPER'].state, 'corrupt',
+      'an edited record is corrupt, not merely stale');
+    assert.ok(byId['MF-AUTH-TAMPER'].problems.some(x => /checksum/.test(x)),
+      'and it must say the checksum failed');
+  } finally { process.chdir(orig); p.cleanup(); }
+});
+
+test('getApprovals: reports corrupt JSON instead of silently dropping it', () => {
+  // The old reader had `catch { /* skip corrupt files */ }`, so an unparseable record vanished
+  // from the dashboard entirely — the operator saw an empty list rather than a problem.
+  const p    = mkProject();
+  const orig = process.cwd();
+  process.chdir(p.dir);
+  try {
+    p.write('.planning/approvals/approval-broken.json', '{ not json');
+    const result = Metrics.getApprovals();
+    assert.strictEqual(result.length, 1, 'a corrupt record must still be surfaced');
+    assert.strictEqual(result[0].state, 'corrupt');
+    assert.match(result[0].problems.join(' '), /not valid JSON/);
   } finally { process.chdir(orig); p.cleanup(); }
 });
 
@@ -260,136 +325,172 @@ test('getTeamActivity: returns active developers from AUDIT', () => {
   } finally { process.chdir(orig); p.cleanup(); }
 });
 
-// ── Approval handler ──────────────────────────────────────────────────────────
-console.log('\nApproval handler:');
+// ── Approval decision endpoint: REMOVED ──────────────────────────────────────
+//
+// The five processDecision tests and the /api/approve approver-attribution regression test
+// that stood here are gone with the endpoint they covered. bin/dashboard/approval-handler.js
+// implemented a pending-request -> decide workflow that no producer has ever fed:
+// bin/governance/approve.js records an already-made decision, and nothing anywhere writes a
+// request awaiting one. The handler additionally required a 36-char UUID id (the writer emits
+// MF-AUTH-<base36>), required status:'pending' (never written), and read APPROVAL-*.json (the
+// writer emits approval-*.json).
+//
+// Those tests passed for the same reason the feature never worked: each built its own fixture
+// in the invented shape, so the module and its test agreed with each other and neither agreed
+// with production. Deleting them removes coverage of nothing that ran.
+//
+// The security property one of them protected — never trusting a client-supplied `approver` —
+// is preserved by construction: there is no longer any endpoint that writes an approval record.
+// Records are minted only by bin/governance/approve.js, which takes the identity from git and
+// fails closed without a GPG key unless MINDFORGE_ALLOW_UNVERIFIED_APPROVAL=1 is set
+// (tests/approve.test.js). Integrity of what it writes is covered by
+// tests/approval-integrity.test.js.
 
-test('processDecision: approves a valid pending approval', () => {
-  const p    = mkProject();
-  const orig = process.cwd();
-  process.chdir(p.dir);
+// ── Dashboard lifecycle flags ─────────────────────────────────────────────────
+//
+// THE DEFECT. `--stop` and `--status` were documented in four places and implemented in none, and
+// `--start` in five docs never existed at all. Only `--port` and `--open` were parsed. Worst of it,
+// bin/dashboard/server.js told the operator to run one of the missing flags itself: on EADDRINUSE it
+// printed "[dashboard] Stop it: /mindforge:dashboard --stop". Following that started a second
+// server. They are implemented rather than deleted because the PID file already existed to support
+// them — written on listen, removed on shutdown.
+
+test('--status reports honestly when nothing is running', () => {
+  const { spawnSync } = require('child_process');
+  const SERVER = path.join(__dirname, '..', 'bin', 'dashboard', 'server.js');
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-dashlc-')));
   try {
-    p.write(`.planning/approvals/APPROVAL-${SAMPLE_APPROVAL.id}.json`, JSON.stringify(SAMPLE_APPROVAL));
-    p.write('.planning/AUDIT.jsonl', ''); // Create AUDIT file
-
-    const result = Approval.processDecision(SAMPLE_APPROVAL.id, 'approve', 'Looks good', 'reviewer@team.com');
-    assert.strictEqual(result.success, true,     'Should succeed');
-    assert.strictEqual(result.decision, 'approve', 'Should record approve decision');
-
-    const updated = JSON.parse(fs.readFileSync(path.join(p.dir, `.planning/approvals/APPROVAL-${SAMPLE_APPROVAL.id}.json`), 'utf8'));
-    assert.strictEqual(updated.status, 'approved', 'File should be updated to approved');
-    assert.strictEqual(updated.resolved_by, 'reviewer@team.com', 'Should record resolver');
-  } finally { process.chdir(orig); p.cleanup(); }
+    fs.mkdirSync(path.join(dir, '.planning'), { recursive: true });
+    // TIMEOUT IS LOAD-BEARING. If the lifecycle block regresses, --status falls through to the
+    // express bootstrap and the server LISTENS FOREVER — spawnSync would block and hang the whole
+    // suite instead of failing it. Verified by mutation: disabling the block hung a 10-minute
+    // harness. A test that hangs on regression is worse than no test, because CI reports nothing.
+    const r = spawnSync(process.execPath, [SERVER, '--status'],
+      { cwd: dir, encoding: 'utf8', timeout: 20000, killSignal: 'SIGKILL',
+        env: { PATH: process.env.PATH, HOME: dir } });
+    assert.ok(!r.error || r.error.code !== 'ETIMEDOUT',
+      '--status never exited: it fell through to the server bootstrap and started listening. That '
+      + 'is precisely the defect — the flag was unparsed, so asking for status STARTED a server.');
+    assert.strictEqual(r.status, 1,
+      `--status must exit non-zero when the dashboard is not running, got ${r.status}. Before this `
+      + `existed, the flag was unparsed and the server simply STARTED.\n${r.stdout}${r.stderr}`);
+    assert.match(`${r.stdout}${r.stderr}`, /not running/,
+      'it must say so in words, not only in the exit code');
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('processDecision: rejects a valid pending approval', () => {
-  const p    = mkProject();
-  const orig = process.cwd();
-  process.chdir(p.dir);
+test('--stop REFUSES a live process that is not the dashboard', () => {
+  // The assertion that matters. A PID file is not proof of identity: the recorded process can die
+  // without cleanup and the OS reuses the number, so acting on the file alone means SIGTERM to an
+  // unrelated process the operator never mentioned.
+  //
+  // This caught a real bug during development. The identity check first tested whether `ps -o
+  // command=` merely CONTAINED "dashboard/server.js" — which matched the shell running its own
+  // test, because that shell's command line embedded the script source. The shell got the SIGTERM.
+  // The check is now anchored to a node invocation of that path, and this test spawns a decoy whose
+  // command line does NOT mention it, plus asserts the decoy survives.
+  const { spawnSync, spawn } = require('child_process');
+  const SERVER = path.join(__dirname, '..', 'bin', 'dashboard', 'server.js');
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-dashkill-')));
+  // TWO decoys, because the check has been wrong in two different ways and each needs its own bait.
+  //
+  //   decoy A — command line MENTIONS the path but is not it. Catches a containment test. This is the
+  //             shape that SIGTERM'd the shell running this very suite.
+  //   decoy B — a REAL `node <path>/dashboard/server.js` in an unrelated project. Catches a check
+  //             that anchors on the path SHAPE rather than identity. `dashboard/server.js` is an
+  //             utterly ordinary path, so the second implementation would have killed this one —
+  //             verified against `node /var/www/unrelated_app/dashboard/server.js`.
+  //
+  // Decoy A alone left the shape bug invisible, which is how it shipped. The only safe question is
+  // "is this the very file I am", answered by comparing realpaths.
+  const decoyDir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-decoy-')));
+  fs.mkdirSync(path.join(decoyDir, 'unrelated_app', 'dashboard'), { recursive: true });
+  const decoyScript = path.join(decoyDir, 'unrelated_app', 'dashboard', 'server.js');
+  fs.writeFileSync(decoyScript, 'setTimeout(() => {}, 60000);\n');
+
+  const decoy = spawn(process.execPath,
+    ['-e', 'setTimeout(() => {}, 60000) /* bin/dashboard/server.js */'], { stdio: 'ignore' });
+  const decoyB = spawn(process.execPath, [decoyScript], { stdio: 'ignore' });
   try {
-    p.write(`.planning/approvals/APPROVAL-${SAMPLE_APPROVAL.id}.json`, JSON.stringify(SAMPLE_APPROVAL));
-    p.write('.planning/AUDIT.jsonl', '');
+    fs.mkdirSync(path.join(dir, '.planning'), { recursive: true });
+    fs.writeFileSync(path.join(dir, '.planning', 'dashboard-server.pid'), String(decoy.pid));
 
-    const result = Approval.processDecision(SAMPLE_APPROVAL.id, 'reject', 'Design flaw', 'reviewer@team.com');
-    assert.strictEqual(result.success, true, 'Should succeed');
-    const updated = JSON.parse(fs.readFileSync(path.join(p.dir, `.planning/approvals/APPROVAL-${SAMPLE_APPROVAL.id}.json`), 'utf8'));
-    assert.strictEqual(updated.status, 'rejected', 'File should be updated to rejected');
-  } finally { process.chdir(orig); p.cleanup(); }
-});
+    const r = spawnSync(process.execPath, [SERVER, '--stop'],
+      { cwd: dir, encoding: 'utf8', timeout: 20000, killSignal: 'SIGKILL',
+        env: { PATH: process.env.PATH, HOME: dir } });
+    assert.ok(!r.error || r.error.code !== 'ETIMEDOUT',
+      '--stop never exited: it fell through to the server bootstrap and started listening');
+    const out = `${r.stdout}${r.stderr}`;
 
-test('processDecision: fails Tier 3 approval without confirmation ID', () => {
-  const p    = mkProject();
-  const orig = process.cwd();
-  process.chdir(p.dir);
-  try {
-    const tier3 = { ...SAMPLE_APPROVAL, tier: 3, phase: 1, plan: 'auth' };
-    p.write(`.planning/approvals/APPROVAL-${tier3.id}.json`, JSON.stringify(tier3));
-    p.write('.planning/AUDIT.jsonl', '');
+    assert.strictEqual(r.status, 1, `--stop must refuse and exit non-zero, got ${r.status}:\n${out}`);
+    assert.match(out, /REFUSING/, `the refusal must be explicit:\n${out}`);
 
-    const result = Approval.processDecision(tier3.id, 'approve', 'Go', 'admin');
-    assert.strictEqual(result.success, false, 'Should fail without confirmation');
-    assert.ok(result.confirmation_required, 'Should indicate confirmation required');
-    assert.strictEqual(result.expected, '1-auth', 'Should return expected ID');
-  } finally { process.chdir(orig); p.cleanup(); }
-});
+    // The whole point: the decoy is untouched.
+    let alive = true;
+    try { process.kill(decoy.pid, 0); } catch { alive = false; }
+    assert.ok(alive,
+      `--stop signalled pid ${decoy.pid}, which is NOT the dashboard. A stale PID file plus a reused `
+      + 'number would make this kill an arbitrary process.');
 
-test('processDecision: succeeds Tier 3 approval with correct confirmation ID', () => {
-  const p    = mkProject();
-  const orig = process.cwd();
-  process.chdir(p.dir);
-  try {
-    const tier3 = { ...SAMPLE_APPROVAL, tier: 3, phase: 1, plan: 'auth' };
-    p.write(`.planning/approvals/APPROVAL-${tier3.id}.json`, JSON.stringify(tier3));
-    p.write('.planning/AUDIT.jsonl', '');
-
-    const result = Approval.processDecision(tier3.id, 'approve', 'Go', 'admin', '1-auth');
-    assert.strictEqual(result.success, true, 'Should succeed with correct confirmation');
-    
-    const audit = fs.readFileSync(path.join(p.dir, '.planning/AUDIT.jsonl'), 'utf8');
-    assert.ok(audit.includes('approval_granted'), 'Should write to AUDIT');
-  } finally { process.chdir(orig); p.cleanup(); }
-});
-
-test('processDecision: writes AUDIT before updating approval file (integrity)', () => {
-  const p    = mkProject();
-  const orig = process.cwd();
-  process.chdir(p.dir);
-  // We can't easily test "before" without mocking fs, but we verifies both happen
-  try {
-    p.write(`.planning/approvals/APPROVAL-${SAMPLE_APPROVAL.id}.json`, JSON.stringify(SAMPLE_APPROVAL));
-    p.write('.planning/AUDIT.jsonl', '');
-    
-    Approval.processDecision(SAMPLE_APPROVAL.id, 'approve', 'Ok', 'tester');
-    
-    const audit = fs.readFileSync(path.join(p.dir, '.planning/AUDIT.jsonl'), 'utf8');
-    const apprv = fs.readFileSync(path.join(p.dir, `.planning/approvals/APPROVAL-${SAMPLE_APPROVAL.id}.json`), 'utf8');
-    
-    assert.ok(audit.length > 0, 'AUDIT should be written');
-    assert.ok(JSON.parse(apprv).status === 'approved', 'Approval should be updated');
-  } finally { process.chdir(orig); p.cleanup(); }
-});
-
-// ── Security regression (v11.5.1): /api/approve must not trust client approver ──
-// The route used to pass req.body.approver straight to processDecision, letting a
-// caller forge the recorded identity (resolved_by). The fix records a FIXED trusted
-// actor instead. We mount the router on a stub app to capture the handler, then
-// invoke it with a forged approver and assert processDecision never receives it.
-console.log('\nSecurity — approver attribution:');
-
-test('/api/approve ignores a client-supplied approver (no forged audit identity)', () => {
-  const apiRouter = require('../bin/dashboard/api-router');
-  const Approval  = require('../bin/dashboard/approval-handler');
-
-  // Capture the registered POST /api/approve/:id handler via a stub express app.
-  const routes = {};
-  const stubApp = {
-    get() {}, put() {}, delete() {},
-    post(routePath, handler) { routes[routePath] = handler; },
-  };
-  apiRouter.register(stubApp);
-  const handler = routes['/api/approve/:id'];
-  assert.ok(typeof handler === 'function', 'approve route must be registered');
-
-  // Spy on processDecision to capture the approver argument the route passes.
-  const orig = Approval.processDecision;
-  let capturedApprover = '__never_set__';
-  Approval.processDecision = (id, decision, comment, approver) => {
-    capturedApprover = approver;
-    return { success: true, decision, approval_id: id, tier: 2, message: 'ok' };
-  };
-
-  try {
-    const req = { params: { id: 'aaaabbbb-cccc-dddd-eeee-ffffffffffff' },
-      body: { decision: 'approve', comment: 'x', approver: 'admin-user-FORGED' } };
-    const res = { json() {}, status() { return { json() {} }; } };
-    handler(req, res);
-
-    assert.notStrictEqual(capturedApprover, 'admin-user-FORGED',
-      'route must NOT pass the client-supplied approver through to the audit trail');
-    assert.strictEqual(capturedApprover, 'dashboard-authenticated',
-      'route must attribute the action to the fixed trusted actor');
+    // And now decoy B: a genuine node process running SOME OTHER dashboard/server.js.
+    fs.writeFileSync(path.join(dir, '.planning', 'dashboard-server.pid'), String(decoyB.pid));
+    const rB = spawnSync(process.execPath, [SERVER, '--stop'], {
+      cwd: dir, encoding: 'utf8', timeout: 20000, killSignal: 'SIGKILL',
+      env: { PATH: process.env.PATH, HOME: dir },
+    });
+    assert.strictEqual(rB.status, 1,
+      `--stop must refuse an unrelated app's dashboard/server.js, got ${rB.status}:\n${rB.stdout}${rB.stderr}`);
+    let aliveB = true;
+    try { process.kill(decoyB.pid, 0); } catch { aliveB = false; }
+    assert.ok(aliveB,
+      `--stop killed pid ${decoyB.pid}, an UNRELATED application whose script happens to be called `
+      + 'dashboard/server.js. Matching the path shape is not identity — compare realpaths against '
+      + '__filename.');
   } finally {
-    Approval.processDecision = orig;
+    try { decoy.kill('SIGKILL'); } catch { /* already gone */ }
+    try { decoyB.kill('SIGKILL'); } catch { /* already gone */ }
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(decoyDir, { recursive: true, force: true });
   }
+});
+
+test('every dashboard flag the docs advertise is actually parsed', () => {
+  // The drift gate. --stop, --status and --start were documented across nine places while the code
+  // parsed two flags, so the docs and the implementation are compared directly rather than trusting
+  // either. Derived from both sides: no hardcoded expected list to go stale.
+  const server = fs.readFileSync(path.join(__dirname, '..', 'bin', 'dashboard', 'server.js'), 'utf8');
+  const implemented = new Set([
+    ...[...server.matchAll(/ARGS\.includes\('(--[a-z-]+)'\)/g)].map((m) => m[1]),
+    ...[...server.matchAll(/a\[i-1\] === '(--[a-z-]+)'/g)].map((m) => m[1]),
+  ]);
+  assert.ok(implemented.size >= 2,
+    `only ${implemented.size} flag(s) detected in server.js — the pattern broke, so this check would `
+    + 'silently pass no matter what the docs claim');
+
+  const docRoots = [
+    path.join(__dirname, '..', 'docs'),
+    path.join(__dirname, '..', '.claude', 'commands', 'mindforge'),
+  ];
+  const claimed = new Map();
+  for (const root of docRoots) {
+    if (!fs.existsSync(root)) continue;
+    for (const f of fs.readdirSync(root)) {
+      if (!f.endsWith('.md')) continue;
+      const full = path.join(root, f);
+      for (const line of fs.readFileSync(full, 'utf8').split('\n')) {
+        if (!/mindforge:dashboard/.test(line)) continue;
+        for (const m of line.matchAll(/(--[a-z-]+)/g)) {
+          if (!claimed.has(m[1])) claimed.set(m[1], `${path.basename(root)}/${f}`);
+        }
+      }
+    }
+  }
+
+  const phantom = [...claimed].filter(([flag]) => !implemented.has(flag));
+  assert.deepStrictEqual(phantom.map(([f, where]) => `${f} (${where})`), [],
+    'the docs advertise dashboard flag(s) the server does not parse. Implemented: '
+    + `${[...implemented].sort().join(' ')}. Either implement the flag or stop documenting it — `
+    + 'server.js used to print "Stop it: /mindforge:dashboard --stop" for a flag it ignored.');
 });
 
 // ── Summary ───────────────────────────────────────────────────────────────────

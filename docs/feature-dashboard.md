@@ -6,7 +6,7 @@ The MindForge Real-time Dashboard provides a high-fidelity, web-based control ce
 
 To launch the dashboard:
 ```bash
-/mindforge:dashboard --start --open
+/mindforge:dashboard --open
 ```
 
 Default access: `http://localhost:7339` (Strictly bound to `127.0.0.1` for security).

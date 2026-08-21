@@ -31,7 +31,7 @@ action are hooks, and **no install channel currently registers them.**
 
 Why, specifically:
 
-- **No hook configuration ships, and nothing generates one.** `package.json` `files[]` has 47
+- **No hook configuration ships, and nothing generates one.** `package.json` `files[]` has 48
   entries and none contains `settings`, so neither `.claude/settings.json` nor
   `.agent/settings.json` is published. All references to those paths in `bin/` are reads or
   metadata strings — there is no code that writes or merges one. `bin/harness-audit.js:335`
@@ -72,8 +72,9 @@ All install channels (global, local, Antigravity, Cursor, Copilot, Gemini CLI, M
 **Upgrading from 11.9.x?** The installer does not overwrite an existing
 `.mindforge/MINDFORGE-SCHEMA.json`, so 11.9.2's armed config validator keeps the older
 permissive schema on a plain upgrade. Run with `--force` if you want the stricter gate. The
-daily cost cap declared as `[COST_HARD_LIMIT_USD]` in `MINDFORGE.md` is **not enforced** in
-11.9.2 — see the CHANGELOG.
+daily cost cap declared as `[COST_HARD_LIMIT_USD]` in `MINDFORGE.md` was **not enforced** in
+11.9.2; 11.9.3 arms it. An upgrade never rewrites an existing `MINDFORGE.md`, so if yours
+predates the key the cap stays off — add `[COST_HARD_LIMIT_USD] = 25.00` to turn it on.
 
 ---
 

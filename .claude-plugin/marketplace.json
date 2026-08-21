@@ -10,8 +10,8 @@
     {
       "name": "mindforge",
       "source": "./plugins/mindforge",
-      "description": "Sovereign Agentic Intelligence for Claude Code — 174 commands, 154 subagents, 74 skills, and governance hooks. The full MindForge framework as one plugin.",
-      "version": "11.4.0",
+      "description": "Sovereign Agentic Intelligence for Claude Code — 221 commands, 164 subagents, 124 skills, and governance hooks. The full MindForge framework as one plugin.",
+      "version": "11.9.3",
       "category": "framework",
       "keywords": [
         "agentic",

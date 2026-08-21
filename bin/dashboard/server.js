@@ -5,7 +5,7 @@
  *
  * Usage:
  *   node bin/dashboard/server.js [--port 7339] [--open]
- *   /mindforge:dashboard [--port 7339] [--open] [--stop]
+ *   /mindforge:dashboard [--port 7339] [--open] [--stop] [--status]
  *
  * Security: binds to 127.0.0.1 only (ADR-017 policy).
  * Bearer token auth on all mutating endpoints (POST/PUT/DELETE).
@@ -22,6 +22,143 @@ const ARGS   = process.argv.slice(2);
 const PORT     = parseInt(ARGS.find((_, i, a) => a[i-1] === '--port') || '7339', 10);
 const OPEN_BROWSER = ARGS.includes('--open');
 const PID_FILE = path.join(process.cwd(), '.planning', 'dashboard-server.pid');
+
+// ── Lifecycle flags: --status and --stop ──────────────────────────────────────
+//
+// THE DEFECT. `--stop` and `--status` were documented in four places and implemented in none. The
+// shipped slash command `.claude/commands/mindforge/dashboard.md` listed both in its Usage line and
+// gave each a worked example; docs/user-guide.md documented a `--start` that never existed either.
+// Worst of all, THIS FILE told the operator to run one of them: on EADDRINUSE it printed
+// "[dashboard] Stop it: /mindforge:dashboard --stop". Only `--port` and `--open` were ever parsed,
+// so every one of those instructions did nothing but start a second server.
+//
+// They are implemented rather than deleted because the PID file below already exists to support
+// them — it is written on listen and removed on shutdown, so the information was there all along.
+//
+// This runs BEFORE express is required, deliberately. This module has no `require.main` guard and
+// starts a server as a side effect of loading, so a lifecycle flag has to be handled and exited
+// here or `--stop` would stop the old server and start a new one. It also means `--status` works
+// when express is not installed, which is exactly when an operator is most likely to ask.
+if (ARGS.includes('--status') || ARGS.includes('--stop')) {
+  const { execFileSync } = require('child_process');
+
+  /** Read the recorded pid, or null when there is no usable PID file. */
+  const readPid = () => {
+    try {
+      const pid = parseInt(fs.readFileSync(PID_FILE, 'utf8').trim(), 10);
+      return Number.isInteger(pid) && pid > 0 ? pid : null;
+    } catch { return null; }
+  };
+
+  /** Signal 0 tests for existence and permission without delivering anything. */
+  const isAlive = (pid) => {
+    try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; }
+  };
+
+  /**
+   * Confirm the pid is THIS dashboard before signalling it.
+   *
+   * A PID file is not proof: the recorded process can exit without cleanup (a SIGKILL, a power
+   * loss) and the operating system will reuse the number. Sending SIGTERM on the strength of a
+   * stale file means killing an unrelated process the operator never asked about — so identity is
+   * verified from the process table and, when it cannot be verified, this REFUSES. That is the same
+   * choice the audit writer and the vector-hub conflict path make: declining loudly beats acting on
+   * a guess.
+   *
+   * Returns the command line on success, or null when identity could not be established.
+   */
+  const identify = (pid) => {
+    if (process.platform === 'win32') return null;      // no ps; --stop refuses below
+    try {
+      const cmd = execFileSync('ps', ['-o', 'command=', '-p', String(pid)], { encoding: 'utf8' }).trim();
+
+      // IDENTITY, not shape. Two earlier versions of this check were both too loose, and the second
+      // was the more dangerous:
+      //
+      //   /dashboard[/\\]server\.js/                       matched any process whose command line
+      //                                                    MENTIONED the path — a shell running a
+      //                                                    script that referenced it got a SIGTERM
+      //   /^\S*node...\S*dashboard[/\\]server\.js(\s|$)/   matched any `node <anything>/dashboard/
+      //                                                    server.js`. `dashboard/server.js` is an
+      //                                                    utterly ordinary path: this would have
+      //                                                    signalled an UNRELATED app's dashboard
+      //                                                    (verified against
+      //                                                    `node /var/www/unrelated_app/dashboard/server.js`)
+      //
+      // Anchoring made the first mistake unreachable and left a worse one, because both were asking
+      // "does this look like a dashboard server" when the only safe question is "is this THE one I am".
+      // So the script argument is resolved and compared against this file's own realpath.
+      //
+      // A relative script path cannot be resolved from here — it would need the target process's cwd,
+      // which ps does not give us — so that case REFUSES rather than guessing. Same choice as
+      // commitDb's conflict path: declining loudly beats acting on a guess, and the cost of being
+      // wrong here is someone else's process dying.
+      const m = /^\S*node(?:\.exe)?\s+(\S+)/.exec(cmd);
+      if (!m) return null;
+      const script = m[1];
+      if (!path.isAbsolute(script)) return null;        // unresolvable without the target's cwd
+      let resolved;
+      let self;
+      try {
+        resolved = fs.realpathSync(script);
+        self = fs.realpathSync(__filename);
+      } catch { return null; }                          // script gone, or unreadable — refuse
+      return resolved === self ? cmd : null;
+    } catch { return null; }
+  };
+
+  const pid = readPid();
+  const alive = pid !== null && isAlive(pid);
+
+  if (ARGS.includes('--status')) {
+    if (!alive) {
+      console.log(pid === null
+        ? '[dashboard] not running (no PID file)'
+        : `[dashboard] not running (stale PID file records ${pid})`);
+      process.exit(1);
+    }
+    const cmd = identify(pid);
+    // No port claimed. PORT here is whatever THIS invocation was told, not what the running
+    // process bound — measured, `--status` on a server started with --port 7466 printed "port 7339",
+    // the default this process happened to receive. The PID file records only the pid, so the port is
+    // not knowable from here, and stating a number we cannot know is the defect this file is full of
+    // fixes for.
+    console.log(`[dashboard] running — pid ${pid}`);
+    if (!cmd && process.platform !== 'win32') {
+      console.log(`[dashboard] warning: pid ${pid} is alive but does not look like this server, so `
+        + 'the PID file may be stale and the number reused');
+    }
+    process.exit(0);
+  }
+
+  // --stop
+  if (!alive) {
+    console.error(pid === null
+      ? '[dashboard] nothing to stop (no PID file)'
+      : `[dashboard] nothing to stop (stale PID file records ${pid})`);
+    if (pid !== null) { try { fs.rmSync(PID_FILE, { force: true }); } catch { /* best effort */ } }
+    process.exit(1);
+  }
+  if (process.platform === 'win32') {
+    console.error(`[dashboard] REFUSING to stop pid ${pid}: process identity cannot be verified on `
+      + 'this platform. Stop the server with CTRL+C in its own terminal.');
+    process.exit(1);
+  }
+  if (!identify(pid)) {
+    console.error(`[dashboard] REFUSING to stop pid ${pid}: it is running, but is not this `
+      + 'dashboard. The PID file is stale and the number has been reused — signalling it would kill '
+      + `an unrelated process. Delete ${PID_FILE} if you are sure it is obsolete.`);
+    process.exit(1);
+  }
+  try {
+    process.kill(pid, 'SIGTERM');
+    console.log(`[dashboard] SIGTERM sent to pid ${pid}`);
+    process.exit(0);
+  } catch (err) {
+    console.error(`[dashboard] could not stop pid ${pid}: ${err.message}`);
+    process.exit(1);
+  }
+}
 const FRONTEND = path.join(__dirname, 'frontend', 'index.html');
 
 // ── Load dependencies gracefully ──────────────────────────────────────────────
@@ -177,6 +314,28 @@ app.get('/', (req, res) => {
     return res.status(503).send('<h1>Dashboard frontend not found</h1><p>Run: npm run build:dashboard</p>');
   }
   res.sendFile(FRONTEND);
+});
+
+// The application itself, as an EXTERNAL script. It used to be an inline <script> in index.html,
+// which this server's own CSP (`script-src 'self'`, set above) blocks — so the whole front end never
+// executed while the static shell displayed "● Connected". Measured in a headless browser:
+// "Executing inline script violates ... 'script-src 'self''. The action has been blocked.",
+// typeof window.showPage === undefined, and GET /api/connections === {"clients":0}.
+//
+// Serving it from the same origin satisfies the existing policy WITHOUT weakening it — no
+// 'unsafe-inline', no hash, no nonce. An explicit route rather than express.static: the frontend
+// directory is the only thing that should be reachable, and a static mount would expose whatever else
+// lands there later.
+const FRONTEND_ASSETS = new Set(['app.js']);
+app.get('/:asset', (req, res, next) => {
+  if (!FRONTEND_ASSETS.has(req.params.asset)) return next();
+  const file = path.join(path.dirname(FRONTEND), req.params.asset);
+  // Defence in depth: the allowlist already forbids traversal, but resolve and re-check anyway so a
+  // future edit to FRONTEND_ASSETS cannot turn this into a file-read primitive.
+  if (path.dirname(path.resolve(file)) !== path.dirname(path.resolve(FRONTEND))) return next();
+  if (!fs.existsSync(file)) return res.status(404).send('// asset not found');
+  res.type('application/javascript');
+  return res.sendFile(file);
 });
 
 // ── Token refresh endpoint (requires valid existing token) ───────────────────

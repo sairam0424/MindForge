@@ -31,7 +31,7 @@ LLM layer judges *whether it matters here* and proposes the highest-leverage fix
 
 ## Step 3 — Report + AUDIT entry
 
-Summarize the scorecard, then write a Merkle-linked AUDIT.jsonl entry:
+Summarize the scorecard, then write a hash-chained AUDIT.jsonl entry:
 
 ```json
 {

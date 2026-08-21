@@ -62,6 +62,58 @@ function parseInput(inputOrRaw) {
 /**
  * Exportable run() for in-process execution via run-with-flags.js.
  */
+/**
+ * Return the protected path a Bash command would WRITE, or '' if it writes none.
+ *
+ * Deliberately conservative and pattern-specific rather than clever. This hook is deny-class, so a
+ * false positive blocks a legitimate command; and every pattern here was chosen because the protected
+ * file appears in an unambiguous write position:
+ *
+ *   > path        >> path      >| path        shell redirect
+ *   tee ... path                              writes each named file
+ *   sed -i ... path                           edits in place
+ *   dd of=path                                writes the output file
+ *   truncate ... path                         truncates the named file
+ *   cp/mv src path                            path is the DESTINATION only when it is last
+ *
+ * NOT matched, on purpose: `cat path`, `grep x path`, `git diff path`, `< path`, and
+ * `cp path /tmp/backup` — all reads. A pipeline is split on |, ; and && first, so
+ * `cat tsconfig.json | grep strict` cannot be mistaken for a write.
+ */
+function bashWriteTarget(command) {
+  if (!command) return '';
+  const names = [...PROTECTED_FILES].map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  if (!names.length) return '';
+  const anyName = `(?:${names.join('|')})`;
+  // A path token ending in a protected basename, at a word boundary so `my-tsconfig.json` is not
+  // mistaken for `tsconfig.json`.
+  const PATH = `((?:[^\\s;|&<>]*[/])?${anyName})(?![\\w.-])`;
+
+  // Normalise `>|` (bash's noclobber override) to `>` BEFORE splitting on pipelines. Splitting on a
+  // bare `|` tears `>|` in half — `echo {} >| tsconfig.json` became the segments `echo {} >` and
+  // ` tsconfig.json`, so the redirect pattern found nothing and the write was permitted. The
+  // segmentation was defeating the operator match it exists to support. `>|` and `>` are the same
+  // write as far as this gate is concerned, so collapsing them is exact, not a heuristic.
+  const normalised = command.replace(/>\s*\|/g, '>');
+  for (const segment of normalised.split(/\|\||&&|[;|\n]/)) {
+    const s = segment.trim();
+    if (!s) continue;
+    const checks = [
+      new RegExp(`>>?\\|?\\s*${PATH}`),                       // redirect
+      new RegExp(`\\btee\\b(?:\\s+-\\S+)*\\s+${PATH}`),        // tee [flags] path
+      new RegExp(`\\bsed\\b[^\\n]*?\\s-i\\S*[^\\n]*?\\s${PATH}`), // sed -i ... path
+      new RegExp(`\\bdd\\b[^\\n]*?\\bof=${PATH}`),             // dd of=path
+      new RegExp(`\\btruncate\\b[^\\n]*?\\s${PATH}`),          // truncate ... path
+      new RegExp(`\\b(?:cp|mv|install)\\b[^\\n]*?\\s${PATH}\\s*$`), // destination is the LAST token
+    ];
+    for (const re of checks) {
+      const m = s.match(re);
+      if (m) return m[1];
+    }
+  }
+  return '';
+}
+
 function run(inputOrRaw, options = {}) {
   if (options.truncated) {
     return {
@@ -74,7 +126,24 @@ function run(inputOrRaw, options = {}) {
   }
 
   const input = parseInput(inputOrRaw);
-  const filePath = input?.tool_input?.file_path || input?.tool_input?.file || '';
+  let filePath = input?.tool_input?.file_path || input?.tool_input?.file || '';
+
+  // A Bash command reaches the same files by a different door.
+  //
+  // Measured before this: an Edit targeting an existing tsconfig.json returned exit 2, while
+  // `echo {} > tsconfig.json` as a Bash command returned exit 0 — and trust-gate permitted it too.
+  // The identical outcome was blocked through one tool surface and silently permitted through
+  // another, with no warning on the permitted path. That is what made "Non-Bypassable Compliance
+  // Gates" unsupportable: not a disabled gate, a gate watching one entrance.
+  //
+  // Only WRITE intent counts. `cat tsconfig.json`, `grep x tsconfig.json` and
+  // `cp tsconfig.json /tmp/backup` are reads of a protected file and must pass — a gate that blocks
+  // reading its own protected files would be worse than the hole it closes, and this hook is
+  // deny-class, so a false positive blocks the operator's real work.
+  if (!filePath) {
+    const target = bashWriteTarget(String(input?.tool_input?.command || ''));
+    if (target) filePath = target;
+  }
   if (!filePath) return { exitCode: 0 };
 
   const basename = path.basename(filePath);
@@ -96,13 +165,23 @@ function run(inputOrRaw, options = {}) {
       return { exitCode: 0 };
     }
 
+    // The deny reason no longer names the env var that turns this gate off.
+    //
+    // A PreToolUse denial is delivered to the MODEL whose tool call was just refused, so the old
+    // message ended by telling the agent it had blocked exactly how to stop being blocked
+    // ("disable the config-protection hook temporarily (MINDFORGE_DISABLED_HOOKS)"). A control
+    // that hands out its own bypass in the refusal is a suggestion, not a control.
+    //
+    // The escape hatch still exists and is documented in this file's header for the HUMAN
+    // operator, who is the party entitled to use it — and run-with-flags.js now writes
+    // "SECURITY GATE DISABLED" to stderr whenever it is used, so exercising it leaves a record.
     return {
       exitCode: 2,
       stderr:
         `BLOCKED: Modifying ${basename} is not allowed. ` +
         'Fix the source code to satisfy linter/formatter/tsconfig rules instead ' +
-        'of weakening the config. If this is a legitimate config change, disable ' +
-        'the config-protection hook temporarily (MINDFORGE_DISABLED_HOOKS).'
+        'of weakening the config. A legitimate config change needs a human decision, ' +
+        'not a hook bypass — ask the operator.'
     };
   }
 

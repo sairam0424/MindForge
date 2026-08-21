@@ -11,7 +11,13 @@ const SessionMemoryLoader = require('./memory/session-memory-loader');
 const Theme = require('./wizard/theme');
 const c = Theme.colors;
 
-const VERSION = require('../package.json').version;
+// A `const VERSION = require('../package.json').version` used to sit here. It was DEAD — declared,
+// never read, never exported — and it was the only reason this module could fail to load at all.
+// `require` of a missing path throws MODULE_NOT_FOUND, and in an install this file lands at
+// <project>/bin/installer-core.js, so '../package.json' is the CONSUMER's manifest: present and
+// wrong (their app's version), or absent and fatal. A dead read that can only ever crash is pure
+// liability, so it is gone rather than rewired. Anything here that needs MindForge's version must
+// call resolveMindforgeVersion() from ./utils/mindforge-version, which resolves by package NAME.
 
 // ── Runtime configurations ────────────────────────────────────────────────────
 const RUNTIMES = {
@@ -164,13 +170,108 @@ function getCommandDescription(content) {
   return 'No description available';
 }
 
+/**
+ * Where a command file from a given namespace must be written, and under what name.
+ *
+ * THE DEFECT THIS FIXES. Both command sources — `.agent/mindforge` and `.agent/forge` — were written
+ * into the SAME directory under their bare filenames. `.agent/forge` holds exactly three files and
+ * ALL THREE collide with mindforge commands, and forge was pushed second, so forge won. Measured on
+ * a real `--claude --local` install, the installed file against its two candidate sources:
+ *
+ *     help.md          33 lines -> 11    (-22)
+ *     init-project.md 170 lines -> 36   (-134)
+ *     plan-phase.md   131 lines -> 34    (-97)
+ *
+ * 253 lines of the three flagship commands destroyed on every install, with no warning. The same bug
+ * inflated the reported count: `totalCount` summed both sources, so the installer announced 224
+ * commands while 221 landed — the overcount was exactly the three overwritten files.
+ *
+ * They are not duplicates, which is what makes the loss silent rather than harmless. They are a
+ * SEPARATE command family: forge's own body says "Show all available FORGE commands" and
+ * "List every .md file in `.claude/commands/forge/`" — a directory the installer never created. So
+ * `/mindforge:help` was answering with forge's text, which then pointed the model at a path that
+ * does not exist.
+ *
+ * THE FIX follows a pattern this file already contains. The cross-IDE mirror below has always
+ * written `path.join(cwd, '.claude', 'commands', source.namespace)` — per-namespace directories. The
+ * primary install simply never did the same.
+ *
+ * @param {string} cmdsDir   the runtime's configured commands directory
+ * @param {string} runtime   RUNTIMES key
+ * @param {string} namespace 'mindforge' | 'forge'
+ * @param {string} file      basename, e.g. 'help.md'
+ * @returns {{dir: string, name: string}}
+ */
+function resolveCommandTarget(cmdsDir, runtime, namespace, file) {
+  // Antigravity flattens everything into one `workflows/` directory and has always disambiguated by
+  // prefixing the namespace. Left exactly as it was — it never had the collision.
+  if (runtime === 'antigravity') return { dir: cmdsDir, name: `${namespace}:${file}` };
+
+  // Runtimes whose commands directory is already per-family (leaf 'mindforge': claude, opencode,
+  // gemini, copilot) get a SIBLING directory per namespace. For claude that is
+  // .claude/commands/forge/ — exactly where forge's own help text says forge commands live, so the
+  // fix makes that text true rather than merely stopping the overwrite.
+  if (path.basename(cmdsDir) === 'mindforge') {
+    return namespace === 'mindforge'
+      ? { dir: cmdsDir, name: file }
+      : { dir: path.join(path.dirname(cmdsDir), namespace), name: file };
+  }
+
+  // Flat runtimes (cursor writes into `rules/`). Keep mindforge's filenames unchanged — renaming
+  // them would alter cursor's rule set for reasons unrelated to this defect — and prefix the rest.
+  return namespace === 'mindforge'
+    ? { dir: cmdsDir, name: file }
+    : { dir: cmdsDir, name: `${namespace}:${file}` };
+}
+
 // ── File system utilities ─────────────────────────────────────────────────────
+/**
+ * Refuse to write through a symlink.
+ *
+ * THE DEFECT, reproduced with a canary before this guard existed. `fs.writeFileSync` and
+ * `fs.copyFileSync` open the destination O_WRONLY|O_CREAT|O_TRUNC and FOLLOW symlinks, and every
+ * installer write funnels through the two primitives below. So a repository that commits its entry
+ * file as a symlink turned the documented install command into an arbitrary-file overwrite:
+ *
+ *     $ ln -s <victim> <project>/CLAUDE.md      # the repo carries this; git preserves symlinks
+ *     $ npx mindforge-cc@latest --claude --local
+ *     victim before: 24 bytes   sha 2cfdbb20c25ced11
+ *     victim after:  5646 bytes sha 05b78d05307b2350        <- overwritten
+ *     <project>/CLAUDE.md.backup-<epoch> CONTAINS THE VICTIM CONTENT   <- and disclosed
+ *
+ * Two separate harms in one step: the target is destroyed, and because safeCopyClaude reads the
+ * destination THROUGH the link before replacing it, the victim's previous contents are copied into
+ * the project's working tree as a backup file. Point the link at anything the installing user can
+ * write and both happen with their privileges.
+ *
+ * Refusing rather than unlinking is deliberate. Unlinking would silently change what the user's
+ * project looks like; refusing leaves their file untouched and tells them why. Writing through a
+ * symlink is not something an installer ever legitimately needs to do.
+ *
+ * SCOPE, stated rather than implied: this guards the destination FILE. A symlinked DIRECTORY in the
+ * destination path is a separate escape — mkdirSync/copyFileSync resolve it too — and is not covered
+ * here. Closing that needs a containment check against the install root, which behaves differently
+ * for --local (cwd-relative) and global installs, so it belongs in its own change.
+ */
+function assertNotSymlink(p) {
+  let st;
+  try { st = fs.lstatSync(p); } catch { return; }   // absent is a normal, safe state
+  if (!st.isSymbolicLink()) return;
+  let target = '';
+  try { target = ` -> ${fs.readlinkSync(p)}`; } catch { target = ' -> <dangling>'; }
+  throw new Error(
+    `[installer] REFUSING to write through a symlink: ${p}${target}\n`
+    + '  fs.writeFileSync/copyFileSync follow symlinks, so this would overwrite the target outside\n'
+    + '  the project and could copy its contents into the working tree as a backup.\n'
+    + '  Remove or replace the link, then re-run the installer.');
+}
+
 const fsu = {
   exists:     p  => fs.existsSync(p),
   read:       p  => fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : '',
-  write:      (p, t) => { fsu.ensureDir(path.dirname(p)); fs.writeFileSync(p, t, 'utf8'); },
+  write:      (p, t) => { assertNotSymlink(p); fsu.ensureDir(path.dirname(p)); fs.writeFileSync(p, t, 'utf8'); },
   ensureDir:  p  => { if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true }); },
-  copy:       (src, dst) => { fsu.ensureDir(path.dirname(dst)); fs.copyFileSync(src, dst); },
+  copy:       (src, dst) => { assertNotSymlink(dst); fsu.ensureDir(path.dirname(dst)); fs.copyFileSync(src, dst); },
   listFiles:  p  => fs.existsSync(p) ? fs.readdirSync(p) : [],
   listFilesRecursive: (p, ext = '.md') => {
     if (!fs.existsSync(p)) return [];
@@ -301,6 +402,26 @@ const SENSITIVE_EXCLUDE = [
   '.git',
   '.DS_Store',
   'browser-daemon.log',
+  // The framework's OWN runtime state, which is not the consumer's and is not small.
+  //
+  // Measured on a `--claude --local` install whose source was this working tree: the target received
+  // celestial.db (11.2 MB, sha256 IDENTICAL to the source, so copied rather than created) plus its
+  // -wal and -shm sidecars and SEVEN orphaned `celestial.db.tmp.<pid>.async` exports at 11.1 MB each
+  // — about 89 MB of the developer's traces, skills and attestations landing in someone else's
+  // project. `browser-daemon.log` was already excluded here; the database beside it was not.
+  //
+  // SCOPE, stated honestly: `npm pack --dry-run` confirms neither celestial.db nor the daemon token
+  // ships in the tarball, so an ordinary `npx mindforge-cc` install has nothing to copy and was never
+  // exposed. This bites installs whose SOURCE is a working tree — a git-clone install, or local
+  // development. It is defence in depth rather than a live consumer leak, and it belongs here because
+  // `files[]` excluding it today is not a guarantee about tomorrow.
+  //
+  // One pattern for the database and every sidecar and orphan: .db, .db-wal, .db-shm,
+  // .db.tmp.<pid>.async, .db.conflict.<pid>.<len>.
+  /^celestial\.db($|[.-])/,
+  // A live capability token. Not a credential for a remote service, but still this machine's handle
+  // to a running daemon, and nothing the target project should receive.
+  /^\.browser-daemon-token$/,
   /audit\.jsonl/i,
   /handoff\.json/i,
   /jira-sync\.json/i,
@@ -359,6 +480,12 @@ function resolveBaseDir(runtime, scope) {
 function safeCopyClaude(src, dst, options = {}) {
   const { force = false, verbose = false } = options;
 
+  // BEFORE reading. fsu.read() resolves the link, so checking here rather than relying on the guard
+  // inside fsu.copy() is what stops the DISCLOSURE half: with a symlinked destination the old order
+  // read the victim's contents and wrote them to `${dst}.backup-<epoch>` inside the project, and that
+  // backup path is a fresh regular file, so the primitive's guard would never have fired on it.
+  assertNotSymlink(dst);
+
   if (fsu.exists(dst)) {
     const existing = fsu.read(dst);
 
@@ -382,6 +509,29 @@ function safeCopyClaude(src, dst, options = {}) {
 }
 
 // ── Install verification ──────────────────────────────────────────────────────
+/**
+ * Check that an install produced the files it promised.
+ *
+ * THIS WAS DEAD CODE. Declared here and called from nowhere, while install() printed
+ * "Install verified" unconditionally under a section header reading "4. Verify installation".
+ * Two tests kept it alive without ever running it — tests/production.test.js:86 and
+ * tests/install.test.js:179 both assert only that the SOURCE CONTAINS the string
+ * "verifyInstall". They would pass against an empty function body, and they are why the dead
+ * function survived: the suite guaranteed the appearance of verification.
+ *
+ * Its contract was also UNSATISFIABLE. It required docs/registry/COMMANDS.md and
+ * docs/registry/PERSONAS.md under the project root, but docs/registry/ ships ZERO files in the
+ * npm tarball, so those two could never exist in a consumer install. Measured against a clean
+ * `--claude --local`: 12 of the 14 required files present, those two absent. Wiring it as
+ * written would therefore have exited 1 on every successful install — which is presumably why
+ * nobody wired it. They are removed rather than "fixed" by copying the files, because requiring
+ * an artefact the package does not publish is a category error, not a copy gap.
+ *
+ * Returns a result instead of calling process.exit, so it is testable without spawning an
+ * installer. The caller owns the exit decision.
+ *
+ * @returns {{ok: boolean, missing: string[], checked: number}}
+ */
 function verifyInstall(baseDir, cmdsDir, runtime, scope) {
   const cfg = RUNTIMES[runtime];
   const pfx = runtime === 'antigravity' ? 'mindforge:' : '';
@@ -392,25 +542,42 @@ function verifyInstall(baseDir, cmdsDir, runtime, scope) {
     path.join(cmdsDir, `${pfx}health.md`),
     path.join(cmdsDir, `${pfx}execute-phase.md`),
     path.join(cmdsDir, `${pfx}security-scan.md`),
-    // Sovereign Engine logic
-    path.join(process.cwd(), 'bin/governance/policy-engine.js'),
-    path.join(process.cwd(), 'bin/governance/quantum-crypto.js'),
-    path.join(process.cwd(), 'bin/autonomous/intent-harvester.js'),
-    path.join(process.cwd(), 'bin/memory/cli.js'),
-    path.join(process.cwd(), 'bin/models/cost-tracker.js'),
-    path.join(process.cwd(), 'bin/research/research-engine.js'),
-    path.join(process.cwd(), 'docs/registry/COMMANDS.md'),
-    path.join(process.cwd(), 'docs/registry/PERSONAS.md'),
+    // Sovereign Engine logic — LOCAL SCOPE ONLY, because a global install never writes it.
+    //
+    // These six were required unconditionally against process.cwd(), so every `--claude --global`
+    // install ended:
+    //
+    //     ❌  Install verification failed — 6 of 12 required file(s) missing
+    //         Retry: npx mindforge-cc@latest --claude --global --force
+    //     exit 1
+    //
+    // Measured: a global install writes 389 files to $HOME/.claude and ZERO to bin/ anywhere —
+    // neither the project nor $HOME/.claude/bin. That is deliberate, not a gap: the block that copies
+    // sovereignEngines is gated `if (scope === 'local' && !selfInstall)` at :845. So verification was
+    // demanding artifacts of an operation the installer had correctly chosen not to perform, then
+    // advising a --force retry that cannot help — --force does not change which scope branch runs.
+    //
+    // The scope-conditional shape was already here, applied to the entry file on the first line of
+    // this array and to nothing else. Extending it is the smaller change; the alternative — making a
+    // global install carry bin/ — is a decision about what global scope MEANS and is deliberately not
+    // taken here. Flagged instead: a global install currently gives a user commands under
+    // ~/.claude/commands/mindforge/ with no Node runtime beside them, and whether that is coherent is
+    // a product question rather than a verification bug.
+    ...(scope === 'local' ? [
+      path.join(process.cwd(), 'bin/governance/policy-engine.js'),
+      path.join(process.cwd(), 'bin/governance/quantum-crypto.js'),
+      path.join(process.cwd(), 'bin/autonomous/intent-harvester.js'),
+      path.join(process.cwd(), 'bin/memory/cli.js'),
+      path.join(process.cwd(), 'bin/models/cost-tracker.js'),
+      path.join(process.cwd(), 'bin/research/research-engine.js'),
+    ] : []),
   ];
 
   const missing = required.filter(f => !fsu.exists(f));
-
-  if (missing.length > 0) {
-    console.error(`\n  ❌  Install verification failed — ${missing.length} required file(s) missing:`);
-    missing.forEach(f => console.error(`      ${f}`));
-    console.error(`\n  Retry: npx mindforge-cc@latest --${runtime} --${scope} --force`);
-    process.exit(1);
-  }
+  // `checked` is reported by the caller ("Install verified (N required files present)"), so it has to
+  // reflect what was actually examined for this scope — 12 local, 6 global. Printing 12 after checking
+  // 6 would be the same class of false claim this function exists to catch.
+  return { ok: missing.length === 0, missing, checked: required.length };
 }
 
 // ── Install single runtime ────────────────────────────────────────────────────
@@ -425,13 +592,39 @@ async function install(runtime, scope, options = {}) {
   const cfg     = RUNTIMES[runtime];
   const baseDir = resolveBaseDir(runtime, scope);
   const cmdsDir = norm(path.join(baseDir, cfg.commandsSubdir));
-  const selfInstall = isSelfInstall();
+  // SCOPE MATTERS, and leaving it out was a regression this commit introduced and then had to fix.
+  //
+  // isSelfInstall() answers only "is the CURRENT DIRECTORY the MindForge repo". The guard's actual
+  // premise is narrower: "the files I am about to write ARE this repository's own tracked files".
+  // That holds for a LOCAL install, whose baseDir is `.claude/` inside the repo. It does NOT hold for
+  // a GLOBAL install, whose baseDir is `~/.claude/` — a directory that has nothing to do with the
+  // checkout you happen to be standing in.
+  //
+  // Measured on `--claude --global` run from a MindForge checkout, with HOME confined:
+  //   develop            exit 0, 225 files written to $HOME/.claude
+  //   with cwd-only gate exit 1, 0 files, then "Retry: ... --force" — which also fails
+  // So gating on cwd alone broke global installs for every MindForge developer, and offered a retry
+  // that could not work. Anchoring on scope as well restores it while keeping the local-install
+  // protection that is the whole point.
+  //
+  // Every downstream gate reads this one binding, so the correction lands at all twelve sites at
+  // once rather than being re-derived (and re-forgotten) at each.
+  const selfInstall = isSelfInstall() && scope === 'local';
   const targetDir = baseDir;
+  // REG-01 result, printed in the final summary. Declared here so the summary cannot reference an
+  // undefined binding when the registration block is skipped (global scope, self-install, etc.).
+  let hookRegistration = { status: 'not-attempted', reason: 'registration block not reached', registered: false };
 
   Theme.printPrompt(`Runtime : ${c.cyan(runtime)}`);
   Theme.printPrompt(`Scope   : ${c.dim(scope)} → ${c.bold(targetDir)}`);
   if (options.dryRun) Theme.printStatus('Mode    : DRY RUN (no changes)', 'warn');
-  if (selfInstall) Theme.printStatus(c.yellow('Self-install detected — skipping framework file copy'), 'warn');
+  // Names what is skipped, because the previous wording was FALSE. It read "skipping framework file
+  // copy" while the code still overwrote the entry file and 149 tracked command files. A message
+  // describing work the code does not do is worse than no message — it is why nobody noticed.
+  if (selfInstall) {
+    Theme.printStatus(c.yellow('Self-install detected — leaving this repository\'s own tracked files alone'), 'warn');
+    Theme.printStatus(c.dim(`    not written: ${cfg.entryFile}, commands, skills, hooks, personas, docs, subagents, memory`), 'info');
+  }
 
   if (dryRun) {
     console.log('\n  Would install:');
@@ -493,12 +686,31 @@ async function install(runtime, scope, options = {}) {
     // ✨ RUNTIME ADAPTATION: Generate specific content for this runtime
     const adaptedContent = generateEntryContent(runtime, content);
 
-    // Keep legacy location based on runtime config
+    // Keep legacy location based on runtime config.
+    //
+    // THE LEAK. This staging file was written and never removed — no unlink, no finally, no exit
+    // handler. Every install left one behind, forever. Measured on this machine: 2,711 orphaned
+    // `/tmp/CLAUDE.md-<ms>.md` files (~21 MB), and 905 more accumulated within a day of clearing
+    // them. Unconditional, unlike the .mindforge excludes below: it fires on an ordinary
+    // `npx mindforge-cc` install too, because os.tmpdir() has nothing to do with the source tree.
+    //
+    // Removed in a `finally` rather than after the last write, so a throw from any of the three
+    // safeCopyClaude calls cannot skip it — a leak on the failure path is how the original one
+    // survived review.
     const tempEntry = path.join(os.tmpdir(), `${cfg.entryFile}-${Date.now()}.md`);
     fsu.write(tempEntry, adaptedContent);
-    
+    try {
+
     const targetPath = path.join(baseDir, cfg.entryFile);
-    safeCopyClaude(tempEntry, targetPath, { force, verbose });
+    // GATED ON !selfInstall, which it was not. The guard existed and stopped one line short: the root
+    // mirror below has always been gated, this write never was. In MindForge's own repository
+    // `.claude/CLAUDE.md` is TRACKED and not gitignored (226 files under .claude/ are tracked), so a
+    // self-install overwrote a committed file. No backup was taken either, and for a reason worth
+    // naming: safeCopyClaude only backs up when the existing content does NOT contain "MindForge" —
+    // and the repo's own entry file does, so it took the silent-replace path every time.
+    if (!selfInstall) {
+      safeCopyClaude(tempEntry, targetPath, { force, verbose });
+    }
 
     // ✨ STANDARD: Inject into project root and IDE-specific rules files
     if (scope === 'local' && !selfInstall) {
@@ -515,8 +727,18 @@ async function install(runtime, scope, options = {}) {
       } else {
         Theme.printResolved(`${c.bold('CLAUDE.md')} (Mirrored to project root)`);
       }
-    } else {
+    } else if (!selfInstall) {
+      // `!selfInstall` added alongside the write gate above. This branch printed the entry file name
+      // as a resolved artifact whenever the root mirror was skipped — including on a self-install,
+      // where the write no longer happens. Gating the write and leaving the print would have replaced
+      // one false claim with another, which is the failure this whole change is about.
       Theme.printResolved(c.bold(cfg.entryFile));
+    }
+
+    } finally {
+      // Best-effort: a staging file we cannot remove is not worth failing an otherwise good install
+      // over, and the next run writes a differently-named one regardless.
+      try { fs.rmSync(tempEntry, { force: true }); } catch { /* nothing further to do */ }
     }
   }
 
@@ -526,29 +748,39 @@ async function install(runtime, scope, options = {}) {
     { src: src('.agent', 'forge'),     namespace: 'forge' }
   ];
 
-  if (runtime === 'claude') {
-    // Claude Code looks in .claude/commands/mindforge. Use .agent/mindforge as the
-    // canonical source — it is always committed, while .claude/ is gitignored. The
-    // previous behaviour of reading from .claude/commands/mindforge/ (itself gitignored)
-    // left CI with an empty command set on a fresh checkout.
-    cmdSources.length = 0;
-    cmdSources.push({ src: src('.agent', 'mindforge'), namespace: 'mindforge' });
-    cmdSources.push({ src: src('.agent', 'forge'),     namespace: 'forge' });
-  }
+  // A `if (runtime === 'claude') { cmdSources.length = 0; ...push the identical two entries... }`
+  // block used to sit here. It was a NO-OP — it cleared the array and pushed back exactly what the
+  // initializer above already contains. Its comment described a historical change (reading from
+  // .agent/mindforge rather than the gitignored .claude/commands/mindforge) that the initializer
+  // already reflects. Removed, because a special case that does nothing implies claude is handled
+  // differently here when it is not.
 
+  // GATED ON !selfInstall for the same reason as the entry file above. Measured on a self-install into
+  // a clone of this repository: 149 TRACKED files under .claude/commands/ overwritten, zero backups,
+  // while the installer printed "Self-install detected — skipping framework file copy". It was not
+  // skipping; it said so and then copied.
+  //
+  // Skipping is correct rather than merely safe. In this repository `.agent/mindforge` and
+  // `.claude/commands/mindforge` are BOTH committed and legitimately differ (an audit measured 146
+  // entries differing between the two tracked copies, mostly frontmatter quoting). Copying does not
+  // "sync" them, it silently picks one side and destroys the other's committed state — inside a git
+  // working tree, with no prompt, under a message saying it did nothing.
+  //
+  // verifyInstall still passes afterwards: every file it requires under cmdsDir (help.md,
+  // init-project.md, health.md, execute-phase.md, security-scan.md) is tracked, so the files it checks
+  // are present from git rather than from this copy. Verified, not assumed.
   let totalCount = 0;
-  cmdSources.forEach(source => {
+  (selfInstall ? [] : cmdSources).forEach(source => {
     if (!fsu.exists(source.src)) return;
 
     const files = fsu.listFiles(source.src).filter(f => f.endsWith('.md'));
     totalCount += files.length;
-    fsu.ensureDir(cmdsDir);
 
     files.forEach(f => {
-      // Logic for naming: antigravity uses namespace:prefix, others use just the file name
-      const targetName = runtime === 'antigravity' ? `${source.namespace}:${f}` : f;
+      const { dir: destDir, name: targetName } = resolveCommandTarget(cmdsDir, runtime, source.namespace, f);
+      fsu.ensureDir(destDir);
       const srcPath = path.join(source.src, f);
-      const dstPath = path.join(cmdsDir, targetName);
+      const dstPath = path.join(destDir, targetName);
 
       if (runtime === 'antigravity') {
         const content = fsu.read(srcPath);
@@ -607,6 +839,16 @@ async function install(runtime, scope, options = {}) {
         Theme.printResolved(`${c.bold(asset.label.padEnd(12))} (Enterprise sync)`);
       }
     });
+
+    // ── 2.1b REG-01: register the hooks we just copied ────────────────────────
+    // Measured before this landed: 0 of 6 harnesses wrote any settings.json, and this file plus
+    // bin/install.js contained ZERO references to settings.json, PreToolUse or a hook dispatcher.
+    // 11 hook scripts landed and none of them could ever fire. register() is deliberately narrow —
+    // claude + local + non-Windows only — and returns a machine-readable status for every other
+    // case rather than writing a config it cannot verify. It EXECUTES all 8 emitted commands before
+    // keeping the file, and rolls back if any deny-class hook fails to deny.
+    hookRegistration = require('./installer/hook-registration')
+      .register({ projectRoot: process.cwd(), repoRoot: SOURCE_ROOT, runtime, scope, selfInstall, dryRun });
   }
 
   // ── 2.2 Install Subagents (native Claude-Code agents, both scopes) ──────────
@@ -630,14 +872,13 @@ async function install(runtime, scope, options = {}) {
     const forgeSrc = src('.mindforge');
     const forgeDst = path.join(process.cwd(), '.mindforge');
     if (fsu.exists(forgeSrc)) {
-      // Define all required enterprise framework folders
-      const standardFrameworkFolders = [
-        'engine', 'org', 'governance', 'integrations', 'personas', 'skills', 
-        'team', 'intelligence', 'memory', 'metrics', 'models', 'plugins', 
-        'dashboard', 'browser', 'monorepo', 'production', 'distribution',
-        'docs/registry'
-      ];
-
+      // An 18-entry `standardFrameworkFolders` list was declared here and never referenced. The
+      // non-minimal branch below copies the whole of .mindforge/ with copyDir, so the list
+      // described a selection that no code performed — deleting it changes nothing. It was the
+      // second dead copy-list in this file; the other was `coreEngines`, which named four
+      // bin/sre/ paths nothing installed. tests/install-module-load.test.js now fails on any
+      // array declared and never used here, because a copy list nothing reads is
+      // indistinguishable from files that are not installed.
       if (minimal) {
         const minimalEntries = new Set([
           'MINDFORGE-SCHEMA.json',
@@ -724,18 +965,38 @@ async function install(runtime, scope, options = {}) {
       Theme.printResolved(`${c.bold('WALKTHROUGH.md')} (updated)`);
     }
 
-    // Sovereign Intelligence v8.2.0: Copy core engines by default
-    const coreEngines = [
-      'bin/engine/nexus-tracer.js',
-      'bin/engine/learning-manager.js',
-      'bin/sre/sentinel.js',
-      'bin/sre/shadow-mirror.js',
-      'bin/sre/adversarial-sre.js',
-      'bin/sre/sli-verifier.js'
-    ];
+    // Engine subtrees copied into the consumer project.
+    //
+    // The first eleven entries are the feature engines. The last four are their DEPENDENCIES,
+    // and their absence was breaking the install: measured on a clean `--claude --local`, 16 of
+    // 119 installed modules failed to load with MODULE_NOT_FOUND, across seven subtrees —
+    //   bin/autonomous/audit-writer.js   -> ../utils/file-lock       (the audit-chain writer)
+    //   bin/autonomous/auto-runner.js    -> ../utils/file-lock
+    //   bin/autonomous/state-manager.js  -> ../utils/file-io
+    //   bin/governance/policy-engine.js  -> ../utils/file-io
+    //   bin/memory/knowledge-graph.js    -> ../utils/file-lock
+    //   bin/models/model-router.js       -> ../utils/mindforge-params
+    //   bin/engine/nexus-tracer.js       -> ../utils/index
+    //   ... and nine more
+    // bin/utils/ alone accounts for all sixteen. revops/, review/ and migrations/ are each
+    // required by an installed engine module too (engine/remediation-engine.js ->
+    // ../revops/remediation-queue, and so on).
+    //
+    // tests/install-module-load.test.js performs a real install and requires every installed
+    // module, so this list cannot silently drift again: adding an engine whose dependency is
+    // absent fails there rather than at a consumer's first run.
     const sovereignEngines = [
-      'governance', 'autonomous', 'memory', 'models', 'research', 
-      'wizard', 'updater', 'dashboard', 'browser', 'skills-builder', 'engine'
+      'governance', 'autonomous', 'memory', 'models', 'research',
+      'wizard', 'updater', 'dashboard', 'browser', 'skills-builder', 'engine',
+      // dependencies of the above — not features
+      'utils', 'revops', 'review', 'migrations',
+      // Required by bin/mindforge-cli.js:171 for the `workflow` verb. Added in the same change that
+      // started shipping the CLI: the router's require is lazy, so the CLI still LOADED without it,
+      // but `mindforge workflow list` exited 1 with MODULE_NOT_FOUND. Caught by
+      // tests/install-module-load.test.js's require-resolution scan the moment the CLI began landing
+      // — the entry point and its dispatch targets are one unit. One file, 4 KB, and its own requires
+      // are `fs` and `path` only.
+      'workflows'
     ];
     sovereignEngines.forEach(engine => {
       const srcDir = src('bin', engine);
@@ -743,6 +1004,88 @@ async function install(runtime, scope, options = {}) {
       if (fsu.exists(srcDir)) {
         fsu.ensureDir(dstDir);
         fsu.copyDir(srcDir, dstDir, { excludePatterns: SENSITIVE_EXCLUDE, noOverwrite: !force });
+      }
+    });
+
+    // Individual top-level bin/ files an installed module requires. hindsight-injector is
+    // required by both bin/dashboard/temporal-api.js and bin/engine/temporal-cli.js, which do
+    // install, so without it those two fail to load.
+    //
+    // This replaces a `coreEngines` array that was declared here and NEVER REFERENCED — six
+    // paths, four of them under bin/sre/, copied by nothing. bin/sre/ stays uninstalled
+    // deliberately: no installed module requires it, so wiring the dead array would have shipped
+    // files nothing loads rather than fixing anything.
+    // bin/mindforge-cli.js is here, not behind --with-utils, because it is the ENTRY POINT the
+    // documentation tells users to run. Measured on a default `--claude --local --skip-wizard`
+    // install before this change: 152 bin/**/*.js landed across 15 subdirectories, but only ONE
+    // top-level file, and `find . -name mindforge-cli.js` returned nothing. So
+    // docs/getting-started.md's promise that "the `mindforge` CLI command is available for runtime
+    // operations" was false on the documented path, and every fix to that CLI was invisible to
+    // anyone who followed the docs.
+    //
+    // Shipping the single file is sufficient, verified rather than assumed: its only load-time
+    // requires are `child_process` and `path`, both Node builtins, and the subdirectories it
+    // dispatches into (bin/utils 11 files, bin/engine 23, bin/wizard 4) already land via
+    // sovereignEngines above.
+    //
+    // The rest of bin/ stays behind --with-utils. This is the entry point, not a bulk copy.
+    // EVERY top-level bin/*.js the router can dispatch to, not just the entry point.
+    //
+    // `sovereignEngines` copies bin/ SUBDIRECTORIES, so the 13 nested scripts in the COMMANDS table
+    // arrive fine. The 6 scripts that live directly in bin/ had no carrier beyond this list, which
+    // held two entries. Measured on the real npx shape — `npm pack`, extract into
+    // node_modules/mindforge-cc, run its installer, then invoke each verb in the installed project —
+    // 11 of 27 routed verbs died in Node's module loader:
+    //
+    //     security-scan   Cannot find module '<proj>/bin/validate-config.js'
+    //     health          Cannot find module '<proj>/bin/installer-core.js'
+    //     classify        Cannot find module '<proj>/bin/change-classifier.js'
+    //     validate-skill  Cannot find module '<proj>/bin/skill-validator.js'
+    //     install-skill / register-skill / audit-skill   bin/skill-registry.js
+    //     spawn / identity / subagent                    bin/spawn-agent.js
+    //     test-memory     tests/memory.test.js
+    //
+    // Two of those matter more than their count. `security-scan` is the verb the protocol mandates
+    // PRE-COMMIT for any Auth/Payment/PII change, and `health` is step 1 of "Verify install" in
+    // docs/getting-started.md:110 — so the documented first thing a new user runs exited non-zero
+    // with a stack trace.
+    //
+    // WHY THIS DID NOT SHOW UP EARLIER. tests/install-module-load.test.js checks that every internal
+    // require inside an INSTALLED module resolves, and it passes: the copied files' own dependencies
+    // are complete. The gap was one level up — files the ROUTER references that were never copied at
+    // all, so there was no installed module whose requires could be checked. And installing from a
+    // working tree hides it entirely, because `src()` then points at the full checkout; only the
+    // packed-tarball shape reproduces it. That is why the new assertion in
+    // tests/install-module-load.test.js drives the expectation off the COMMANDS table instead of a
+    // hardcoded list — a route added without a carrier here will fail immediately.
+    //
+    // tests/memory.test.js is NOT fixable from here: `files[]` excludes tests/, so it is not in the
+    // tarball and the installer has nothing to copy. That verb has to be removed from the router,
+    // which bin/mindforge-cli.js owns.
+    const coreFiles = [
+      'bin/hindsight-injector.js',
+      'bin/mindforge-cli.js',
+      'bin/validate-config.js',
+      'bin/installer-core.js',
+      'bin/change-classifier.js',
+      'bin/skill-validator.js',
+      'bin/skill-registry.js',
+      'bin/spawn-agent.js',
+      // installer-core.js requires ./installer/hook-registration at :825, so installing the former
+      // without this one trades a missing verb for a module-loader crash inside it. Caught by
+      // tests/install-module-load.test.js the moment installer-core.js was added here, which is
+      // exactly what that test is for. Named individually rather than adding 'installer' to
+      // sovereignEngines: that directory also holds harness-adapter-compliance.js and the
+      // install-manifests/install-state pair, which are build- and CI-side and have no business in a
+      // consumer project.
+      'bin/installer/hook-registration.js',
+    ];
+    coreFiles.forEach(rel => {
+      const srcFile = src(...rel.split('/'));
+      const dstFile = path.join(process.cwd(), rel);
+      if (fsu.exists(srcFile)) {
+        fsu.ensureDir(path.dirname(dstFile));
+        fsu.copy(srcFile, dstFile);
       }
     });
 
@@ -778,7 +1121,39 @@ async function install(runtime, scope, options = {}) {
   }
 
   // ── 4. Verify installation ──────────────────────────────────────────────────
-  Theme.printResolved(c.bold('Install verified'));
+  // This line used to print "Install verified" unconditionally, directly under this header,
+  // while verifyInstall() sat unreferenced 400 lines above. The claim is now earned: the check
+  // runs, names what is missing, and exits non-zero rather than reporting success.
+  //
+  // Not reachable on a dry run — that path returns earlier, so nothing is verified against a
+  // tree nothing was written to.
+  const verification = verifyInstall(baseDir, cmdsDir, runtime, scope);
+  if (!verification.ok) {
+    console.error(`\n  ❌  Install verification failed — ${verification.missing.length} of ` +
+      `${verification.checked} required file(s) missing:`);
+    verification.missing.forEach(f => console.error(`      ${f}`));
+    console.error(`\n  Retry: npx mindforge-cc@latest --${runtime} --${scope} --force`);
+    process.exit(1);
+  }
+  Theme.printResolved(c.bold(`Install verified (${verification.checked} required files present)`));
+
+  // ── 4b. REG-01 hook-registration status ─────────────────────────────────────
+  // Printed ALWAYS, in one machine-readable line, including when nothing was registered. A silent
+  // skip is how "0 of 6 harnesses register a hook" went unnoticed for the product's whole life: the
+  // installer exited 0 with a success banner and never mentioned that the gates it had just copied
+  // were inert. Whatever the outcome, the operator is told which it was and why.
+  if (hookRegistration.registered) {
+    Theme.printResolved(c.bold(`Hooks registered: ${hookRegistration.reason}`));
+    Theme.printStatus(c.yellow('Restart your harness — Claude Code snapshots hooks at session start, '
+      + 'so the gates are not live in an already-open session.'), 'warn');
+    if (hookRegistration.backup) {
+      Theme.printStatus(c.dim(`Previous settings backed up to ${hookRegistration.backup}`), 'info');
+    }
+  } else {
+    Theme.printStatus(c.yellow(`Hooks NOT registered (${hookRegistration.status}): ${hookRegistration.reason}`), 'warn');
+    Theme.printStatus(c.dim('The hook scripts are installed but nothing invokes them, so no tool call '
+      + 'is gated. This is stated rather than implied — see docs/troubleshooting.md.'), 'info');
+  }
 }
 
 // ── Uninstall ─────────────────────────────────────────────────────────────────
@@ -944,14 +1319,27 @@ async function run(args) {
   }
 
   if (!isUninstall) {
-    const stats = collectManifestStats();
-    Theme.printSuccessV2(runtime, scope, stats);
+    // collectManifestStats() counts the SOURCE tree, not what was written. For a normal install those
+    // coincide, so the panel is accidentally accurate. For a self-install nothing is copied, and the
+    // panel announced "ACTIONS 221 — Total autonomous commands deployed" and
+    // "Skill Packs (123 verified)" for a run that deployed and verified nothing: a summary of the
+    // repository presenting itself as an installation report. Gating it is the honest minimum. Making
+    // the panel report MEASURED counts on every path is a larger change and is deliberately not
+    // attempted here — it would need the install to return what it wrote.
+    if (isSelfInstall()) {
+      Theme.printResolved(c.bold('Self-install complete — no framework files were written'));
+      Theme.printStatus(c.dim('This repository IS the framework: its committed .claude/ and .agent/ '
+        + 'trees are the source, so there was nothing to deploy.'), 'info');
+    } else {
+      const stats = collectManifestStats();
+      Theme.printSuccessV2(runtime, scope, stats);
+    }
   } else {
     Theme.printResolved(c.bold('MindForge uninstalled'));
   }
 }
 
-module.exports = { run, install, uninstall, RUNTIMES, generateEntryContent, SENSITIVE_EXCLUDE, MINDFORGE_DEV_EXCLUDE };
+module.exports = { run, install, uninstall, verifyInstall, RUNTIMES, generateEntryContent, SENSITIVE_EXCLUDE, MINDFORGE_DEV_EXCLUDE };
 
 if (require.main === module) {
   const args = process.argv.slice(2);

@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-MindForge v11.9.0 is an agentic intelligence framework distributed as the `mindforge-cc` npm package. Two package roots:
+MindForge v11.9.3 is an agentic intelligence framework distributed as the `mindforge-cc` npm package. Two package roots:
 
 - **Root (`/`)** — CLI + framework. Two bin entries: `mindforge-cc` (installer, `bin/install.js`) and `mindforge` (CLI, `bin/mindforge-cli.js`). The `bin/` runtime layer (~22K LOC) is organized by domain: `governance/` (audit hash-chain), `autonomous/` (wave executor, auto-runner), `engine/` (council runtime, nexus tracer, verification runner, OTel exporter), `models/` (provider clients + pricing registry), `memory/` (knowledge graph, sql.js vector hub, RRF fusion), `security/` (trust boundaries), `eval/` (recall@k, nDCG), `hooks/`, `utils/`, `wizard/`.
 - **`sdk/`** — TypeScript SDK (`mindforge-sdk`), own `tsconfig.json` (strict). `tsc` compiles `src/` → `dist/`. Own tests (`cd sdk && npm test`).
@@ -11,7 +11,7 @@ Cross-cutting systems worth understanding before editing:
 
 - **Audit hash-chain** — `bin/governance/audit-hash.js` is the single canonical SHA-256 hasher used by both `bin/autonomous/audit-writer.js` and `bin/governance/audit-verifier.js` (note: writer lives under `autonomous/`, verifier under `governance/`); `.planning/AUDIT.jsonl` is tamper-evident via `previous_hash` linkage. Verify with `node bin/verify-audit.js` (fail-closed, exit 1 on break).
 - **Pricing registry** — `bin/models/pricing-registry.js` is the single source of truth; all three providers call `priceCall()`. Never hardcode per-model prices in providers.
-- **Other roots:** `.mindforge/` (engine configs, ~200 skills, personas, governance), `.agent/` (6 hooks, ~130 workflows, `CLAUDE.md` protocols), `.planning/` (STATE.md, ROADMAP.md, audit), `docs/`, `examples/`, `tests/` (72 `*.test.js`).
+- **Other roots:** `.mindforge/` (engine configs, 232 skills, personas, governance), `.agent/` (9 hooks — 8 registered, 221 workflows, `CLAUDE.md` protocols), `.planning/` (STATE.md, ROADMAP.md, audit), `docs/`, `examples/`, `tests/` (133 `*.test.js`).
 
 ## Build, Test, and Development Commands
 
@@ -28,7 +28,7 @@ cd sdk && npm install && npm run build   # tsc → sdk/dist/
 npm test                                  # pretest runs build first
 ```
 
-Run a single test file: `node tests/sharding.test.js`. Filter the runner: `node tests/run-all.js --filter=security,audit` (case-insensitive filename substring). A test file whose first line is `// @skip: reason` is skipped.
+Run a single test file: `node tests/sharding.test.js`. Filter the runner: `node tests/run-all.js --filter=security,audit` (case-insensitive filename substring); a filter that selects nothing exits 1 — add `--allow-empty` if that is intended. A test file whose first line is `// @skip: reason` is skipped.
 
 Other validators: `node bin/validate-config.js` (MINDFORGE.md vs schema), `npx tsc --noEmit -p sdk/tsconfig.json`.
 
@@ -42,7 +42,7 @@ CI lint gates differ by package: root tolerates warnings (`eslint . --max-warnin
 
 ## Testing Guidelines
 
-Node's built-in `assert` with a custom lightweight harness — no Jest/Mocha. Each file is self-contained and runnable via `node <file>`. CI runs the Node 18/20/22 matrix and gates coverage at 30% lines (`c8 --check-coverage --lines 30`). The Husky pre-commit hook runs `npm test`; all tests must pass to commit. `version-consistency.test.js` asserts the version string across `package.json`, `sdk/package.json`, `.mindforge/config.json`, `MINDFORGE.md` (`[VERSION]` marker), and `sdk/README.md` — bump all five each release.
+Node's built-in `assert` with a custom lightweight harness — no Jest/Mocha. Each file is self-contained and runnable via `node <file>`. CI runs the Node 18/20/22 matrix and gates coverage at 30% lines (`c8 --check-coverage --lines 30`). The Husky pre-commit hook runs `npm test`; all tests must pass to commit. `version-consistency.test.js` asserts every channel `scripts/sync-version.js` derives — 16 channels over 15 files today, plus two build artifacts only a build can write. **Never bump by hand: run `node scripts/sync-version.js`** and follow whatever it reports. Enumerating the set here is what went wrong before: the list said five while the script derived more, and the instruction to hand-bump directly contradicted CLAUDE.md.
 
 ## Commit & Pull Request Guidelines
 

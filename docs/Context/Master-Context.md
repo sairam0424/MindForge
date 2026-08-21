@@ -223,7 +223,7 @@ Built the public distribution, CI/CD, SDK, and monorepo layers:
   - `workspace-detector.md` — Detects: npm workspaces, pnpm workspaces, Nx, Turborepo, Lerna. `WORKSPACE-MANIFEST.json` at `.planning/`. Package metadata extraction
   - `cross-package-planner.md` — Topological sort for package execution order. Per-package PLAN files with `<package>` and `<working-dir>` fields. **Affected package detection uses WORKSPACE-MANIFEST.json paths** (not depth assumption — handles `libs/shared/utils/` deep nesting). Transitive dependency detection
   - `dependency-graph-builder.md` — Cross-package DAG construction
-- **`@mindforge/sdk`** at `sdk/src/`:
+- **`mindforge-sdk`** at `sdk/src/`:
   - `types.ts` — Full TypeScript type definitions: MindForgeConfig, PhaseResult, TaskResult, SecurityFinding, GateResult, HealthReport, MindForgeEvent union type
   - `client.ts` — MindForgeClient: isInitialised(), readState(), readHandoff(), health(), readAuditLog(filter), readSessionMetrics(limit), validateConfig()
   - `events.ts` — MindForgeEventStream SSE server: **localhost-only binding (127.0.0.1)**, non-localhost connection rejection (403), exact CORS origin matching, **Linux inotify fallback** (`ENOSPC` → polling at 2s interval), AUDIT.jsonl file watching and broadcast
@@ -433,7 +433,7 @@ mindforge-cc/                         ← npm package root
 │   │   ├── client.ts                 ← MindForgeClient
 │   │   ├── events.ts                 ← MindForgeEventStream (SSE)
 │   │   └── commands.ts               ← Command string builders
-│   └── package.json                  ← @mindforge/sdk v0.6.0
+│   └── package.json                  ← mindforge-sdk v0.6.0
 │
 ├── tests/                            ← 15 test suites
 │   ├── install.test.js               ← Day 1
@@ -618,7 +618,7 @@ Build a simple Node.js/Express server (`bin/dashboard.js`) that:
 **3. SDK compilation and npm publish**
 - Complete `sdk/tsconfig.json` for proper compilation
 - Build `sdk/dist/index.js` and `sdk/dist/index.d.ts`
-- Publish `@mindforge/sdk` to npm separately from `mindforge-cc`
+- Publish `mindforge-sdk` to npm separately from `mindforge-cc`
 - Update SDK README with working installation and example code
 - Add SDK version sync (SDK version = framework version)
 

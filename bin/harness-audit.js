@@ -20,6 +20,15 @@
  *   node bin/harness-audit.js --format json   # machine-readable
  *   node bin/harness-audit.js --scope security
  *   node bin/harness-audit.js --root /path/to/checkout
+ *   node bin/harness-audit.js --min-score 70        # exit 1 if below threshold
+ *   node bin/harness-audit.js --fail-on-findings    # exit 1 if ANY check fails
+ *
+ * GATE FLAGS (opt-in): without --min-score / --fail-on-findings this command
+ * ALWAYS exited 0 — even at 0/76 against an empty directory — so wiring it into
+ * CI produced a permanently-green required check. The threshold flags are the
+ * only way to make it fail; they are opt-in so existing callers (and the
+ * `harness:audit` npm script) keep their historical exit-0 behaviour verbatim.
+ * `harness:gate` is the CI-facing script that passes a threshold.
  */
 
 const fs = require('fs');
@@ -48,6 +57,22 @@ function normalizeScope(scope) {
   return value;
 }
 
+/**
+ * Coerce a --min-score value to a non-negative finite number, or throw.
+ *
+ * WHY strict instead of defaulting: a silently-ignored threshold (missing value,
+ * NaN, negative) would restore the always-green failure mode this flag exists to
+ * remove, and would do so invisibly in CI. A bad threshold is a hard error.
+ */
+function parseMinScore(raw) {
+  const text = raw === undefined || raw === null ? '' : String(raw).trim();
+  const value = Number(text);
+  if (text === '' || !Number.isFinite(value) || value < 0) {
+    throw new Error(`Invalid --min-score: ${raw}. Use a number >= 0 (points, compared against the scope's max_score).`);
+  }
+  return value;
+}
+
 function parseArgs(argv) {
   const args = argv.slice(2);
   const parsed = {
@@ -55,6 +80,10 @@ function parseArgs(argv) {
     format: 'text',
     help: false,
     root: path.resolve(process.env.AUDIT_ROOT || process.cwd()),
+    // null (not 0) means "no threshold requested". 0 is a legitimate, if
+    // permissive, threshold, so a falsy check here would silently disable it.
+    minScore: null,
+    failOnFindings: false,
   };
 
   for (let index = 0; index < args.length; index += 1) {
@@ -64,6 +93,9 @@ function parseArgs(argv) {
     if (arg === '--format') { parsed.format = (args[index + 1] || '').toLowerCase(); index += 1; continue; }
     if (arg === '--scope') { parsed.scope = normalizeScope(args[index + 1]); index += 1; continue; }
     if (arg === '--root') { parsed.root = path.resolve(args[index + 1] || process.cwd()); index += 1; continue; }
+    if (arg === '--min-score') { parsed.minScore = parseMinScore(args[index + 1]); index += 1; continue; }
+    if (arg === '--fail-on-findings') { parsed.failOnFindings = true; continue; }
+    if (arg.startsWith('--min-score=')) { parsed.minScore = parseMinScore(arg.slice('--min-score='.length)); continue; }
     if (arg.startsWith('--format=')) { parsed.format = arg.split('=')[1].toLowerCase(); continue; }
     if (arg.startsWith('--scope=')) { parsed.scope = normalizeScope(arg.split('=')[1]); continue; }
     if (arg.startsWith('--root=')) { parsed.root = path.resolve(arg.slice('--root='.length)); continue; }
@@ -82,6 +114,25 @@ function fileExists(rootDir, relativePath) {
   return fs.existsSync(path.join(rootDir, relativePath));
 }
 
+/**
+ * True when ANY of `relativePaths` exists under rootDir.
+ *
+ * Several checks below asked for one hardcoded path — `.agent/hooks/mindforge-context-monitor.js`,
+ * `bin/hooks/instinct-capture-hook.js` — which is the SOURCE-REPO layout. The installer copies
+ * `.agent/hooks/` to `<localDir>/hooks/`, and `bin/` is not present in a consumer project at all, so
+ * an installed tree fails these checks while containing the very same working scripts under a
+ * different name. Measured: a fresh `--claude --local` install scores 36/76 largely on checks whose
+ * subject it genuinely has.
+ *
+ * That made the audit unusable as an install-root gate — it under-reported a real install rather
+ * than over-reporting it, which is the safer direction but still wrong. Accepting either layout is a
+ * fix to the CHECK, not a relaxation: each alternative names a specific file that must exist, and
+ * absence of all of them still fails.
+ */
+function fileExistsAny(rootDir, relativePaths) {
+  return relativePaths.some((rel) => fileExists(rootDir, rel));
+}
+
 function readText(rootDir, relativePath) {
   return fs.readFileSync(path.join(rootDir, relativePath), 'utf8');
 }
@@ -93,6 +144,82 @@ function safeRead(rootDir, relativePath) {
 function safeParseJson(text) {
   if (!text || !text.trim()) return null;
   try { return JSON.parse(text); } catch (_error) { return null; }
+}
+
+/**
+ * Is a named hook genuinely WIRED in a settings file, relative to rootDir?
+ *
+ * "Wired" is asserted by three things, not by one substring:
+ *   1. the hook id appears in a command registered under PreToolUse,
+ *   2. that matcher covers Bash, and
+ *   3. every .js path in the command RESOLVES relative to rootDir.
+ *
+ * (3) is the load-bearing part. The previous check was
+ *     claudeSettings.includes('trust-gate-hook') && agentSettings.includes('trust-gate-hook')
+ * — a substring scan over the raw file text, which cannot distinguish a wired hook from one whose
+ * script path resolves to nothing. That distinction is the entire difference between a gate and a
+ * silent permit: .agent/hooks/run-with-flags.js:132-136 prints "Script not found", echoes stdin
+ * and exits 0, which Claude Code reads as ALLOW. Measured against a real
+ * `node bin/install.js --claude --local`, ZERO of the eight registered command paths resolve — yet
+ * the substring check scored this category 10/10, because it was reading the REPO's settings text
+ * rather than checking anything about where the hooks would run.
+ *
+ * Consequence worth stating: pointed at an installed project this check now FAILS, truthfully.
+ * That is the intended behaviour — it is the honest report of the REG-01 gap, and it is why the
+ * check is worth the points it carries.
+ *
+ * @param {string} rootDir
+ * @param {string} settingsRel  e.g. '.claude/settings.json'
+ * @param {string} hookId       substring identifying the hook script, e.g. 'trust-gate-hook'
+ * @returns {{ok: boolean, why: string}}
+ */
+function hookWired(rootDir, settingsRel, hookId) {
+  const parsed = safeParseJson(safeRead(rootDir, settingsRel));
+  if (!parsed) return { ok: false, why: `${settingsRel} missing or unparseable` };
+
+  // Both spellings of the pre-tool event. .claude/settings.json uses Claude Code's PreToolUse;
+  // .agent/settings.json is the Gemini/Antigravity mirror and uses BeforeTool — the same
+  // difference bin/hooks/mindforge-context-monitor.js switches on when GEMINI_API_KEY is set.
+  // Hardcoding PreToolUse made this check report the mirror as unwired, which is a defect in the
+  // check rather than in the mirror; the gate caught it.
+  const PRE_TOOL_EVENTS = ['PreToolUse', 'BeforeTool'];
+  const groups = PRE_TOOL_EVENTS.flatMap((ev) => {
+    const g = parsed.hooks && parsed.hooks[ev];
+    return Array.isArray(g) ? g : [];
+  });
+  if (!groups.length) {
+    return { ok: false, why: `${settingsRel} registers no ${PRE_TOOL_EVENTS.join('/')} groups` };
+  }
+
+  for (const group of groups) {
+    const matcher = String((group && group.matcher) || '');
+    if (!/bash/i.test(matcher) && matcher !== '*' && matcher !== '') continue;
+    for (const entry of (group && group.hooks) || []) {
+      const command = String((entry && entry.command) || '');
+      if (!command.includes(hookId)) continue;
+      // Strip a leading environment anchor before resolving. A registered command may legitimately
+      // be root-anchored rather than cwd-relative — `node "$CLAUDE_PROJECT_DIR/.claude/hooks/..."` —
+      // and Claude Code has set CLAUDE_PROJECT_DIR in the hook environment since 1.0.57. Without
+      // this, path.join(rootDir, '$CLAUDE_PROJECT_DIR/.claude/hooks/x.js') is checked literally, so
+      // an env-anchored registration reads as UNRESOLVED and the check reports a correctly wired
+      // hook as permitting. Handles $VAR/, ${VAR}/ and ${VAR:-default}/.
+      //
+      // Note this only affects the EXISTENCE probe. It is deliberately not a general shell expander:
+      // an anchor pointing somewhere other than the audited root cannot be validated from here, and
+      // pretending otherwise would be the same class of defect as the literal check it replaces.
+      const ENV_ANCHOR = /^\$\{?[A-Z_][A-Z0-9_]*(?::-[^}]*)?\}?\//;
+      const scripts = command.split(/\s+/)
+        .map((t) => t.replace(/^"|"$/g, ''))
+        .map((t) => t.replace(ENV_ANCHOR, ''))
+        .filter((t) => t.endsWith('.js'));
+      const unresolved = scripts.filter((rel) => !fs.existsSync(path.join(rootDir, rel)));
+      if (unresolved.length) {
+        return { ok: false, why: `${hookId} registered but ${unresolved.join(', ')} does not exist under ${rootDir} — run-with-flags exits 0 on a miss, so it permits` };
+      }
+      return { ok: true, why: `${hookId} wired on ${matcher || '*'} with ${scripts.length} resolvable script(s)` };
+    }
+  }
+  return { ok: false, why: `${hookId} is not registered on a Bash PreToolUse matcher in ${settingsRel}` };
 }
 
 function countFiles(rootDir, relativeDir, extension) {
@@ -195,7 +322,9 @@ function getChecks(rootDir) {
       category: 'Context Efficiency', points: 3, scopes: ['repo', 'hooks'],
       path: '.agent/hooks/mindforge-context-monitor.js',
       description: 'Context-monitor hook exists',
-      pass: fileExists(rootDir, '.agent/hooks/mindforge-context-monitor.js'),
+      // Repo layout OR installed layout — the installer copies .agent/hooks/ to <localDir>/hooks/.
+      pass: fileExistsAny(rootDir, ['.agent/hooks/mindforge-context-monitor.js',
+        '.claude/hooks/mindforge-context-monitor.js']),
       fix: 'Implement .agent/hooks/mindforge-context-monitor.js for context-pressure tracking.',
     },
     {
@@ -255,7 +384,9 @@ function getChecks(rootDir) {
       category: 'Memory & Learning', points: 3, scopes: ['repo', 'hooks'],
       path: 'bin/hooks/instinct-capture-hook.js',
       description: 'Instinct-capture hook exists',
-      pass: fileExists(rootDir, 'bin/hooks/instinct-capture-hook.js'),
+      // bin/ does not exist in a consumer project; the installed copy lands under .claude/hooks/.
+      pass: fileExistsAny(rootDir, ['bin/hooks/instinct-capture-hook.js',
+        '.claude/hooks/instinct/instinct-capture-hook.js']),
       fix: 'Add bin/hooks/instinct-capture-hook.js for auto-capture of instincts.',
     },
     {
@@ -307,7 +438,13 @@ function getChecks(rootDir) {
       category: 'Security Guardrails', points: 3, scopes: ['repo', 'hooks', 'security'],
       path: 'bin/security/trust-gate-hook.js',
       description: 'TrustGate Bash guard exists',
-      pass: fileExists(rootDir, 'bin/security/trust-gate-hook.js') && fileExists(rootDir, 'bin/security/trust-boundaries.js'),
+      // Both files must be present, in EITHER the repo layout or the installed one. Requiring one
+      // from each layout would be satisfiable by a half-copied install, so the pairs are evaluated
+      // whole rather than per-file.
+      pass: (fileExists(rootDir, 'bin/security/trust-gate-hook.js')
+        && fileExists(rootDir, 'bin/security/trust-boundaries.js'))
+        || (fileExists(rootDir, '.claude/hooks/security/trust-gate-hook.js')
+          && fileExists(rootDir, '.claude/hooks/security/trust-boundaries.js')),
       fix: 'Restore bin/security/trust-gate-hook.js + trust-boundaries.js.',
     },
     {
@@ -315,7 +452,8 @@ function getChecks(rootDir) {
       category: 'Security Guardrails', points: 2, scopes: ['repo', 'hooks', 'security'],
       path: '.agent/hooks/mindforge-block-no-verify.js',
       description: 'Git-hook-bypass guard exists',
-      pass: fileExists(rootDir, '.agent/hooks/mindforge-block-no-verify.js'),
+      pass: fileExistsAny(rootDir, ['.agent/hooks/mindforge-block-no-verify.js',
+        '.claude/hooks/mindforge-block-no-verify.js']),
       fix: 'Add .agent/hooks/mindforge-block-no-verify.js to block --no-verify.',
     },
     {
@@ -330,9 +468,19 @@ function getChecks(rootDir) {
       id: 'security-bash-guard-both',
       category: 'Security Guardrails', points: 2, scopes: ['repo', 'hooks', 'security'],
       path: '.agent/settings.json',
-      description: 'Bash guards wired in BOTH .claude and the .agent Gemini mirror',
-      pass: claudeSettings.includes('trust-gate-hook') && agentSettings.includes('trust-gate-hook'),
-      fix: 'Wire trust-gate + block-no-verify into both .claude/settings.json and .agent/settings.json.',
+      description: 'Bash guards wired in BOTH .claude and the .agent Gemini mirror (paths resolve)',
+      // The .agent mirror is required only WHEN PRESENT. No install channel writes it, and this
+      // repo's own spec records its BeforeTool/AfterTool events as never firing — so requiring it
+      // unconditionally made this check unpassable on every install root even with Claude Code
+      // enforcement fully wired. It measured layout, not enforcement. Absent mirror: .claude
+      // alone decides. Present mirror: BOTH must be wired, so a half-configured Gemini setup
+      // still fails.
+      pass: hookWired(rootDir, '.claude/settings.json', 'trust-gate-hook').ok
+        && (hookWired(rootDir, '.agent/settings.json', 'trust-gate-hook').ok
+          || !fileExists(rootDir, '.agent/settings.json')),
+      fix: 'Wire trust-gate into a Bash PreToolUse matcher in BOTH .claude/settings.json and '
+        + '.agent/settings.json, with command paths that RESOLVE from the audited root. A '
+        + 'registered command whose script is absent exits 0 and permits — see hookWired().',
     },
     {
       id: 'security-threat-model',
@@ -406,7 +554,7 @@ function getChecks(rootDir) {
       id: 'gov-audit-trail',
       category: 'Governance & Identity', points: 2, scopes: ['repo'],
       path: '.mindforge/audit/',
-      description: 'Merkle-linked audit trail directory exists',
+      description: 'Hash-chained audit trail directory exists',
       pass: fileExists(rootDir, '.mindforge/audit') || fileExists(rootDir, '.planning'),
       fix: 'Ensure the audit-trail directory (.mindforge/audit/) is present.',
     },
@@ -462,7 +610,15 @@ function buildReport(scope, options = {}) {
 }
 
 function printText(report) {
-  console.log(`MindForge Harness Audit (${report.scope}): ${report.overall_score}/${report.max_score}`);
+  // The header names the SCOPE, which is independent of --root. Auditing an installed project with
+  // `--root <dir>` therefore used to print "MindForge Harness Audit (repo)" — so an install-root
+  // score read as a repo score. Measured: the repo scores 76/76 while a fresh `--claude --local`
+  // install of the SAME tree scores 36/76 with Security Guardrails 1/10 and 17 of 31 checks failing.
+  // Two very different numbers under one identical label is how the enforcement gap stayed invisible.
+  // When the audited root is not the cwd, say so in the header rather than only in the Root: line.
+  const auditedElsewhere = path.resolve(report.root_dir) !== path.resolve(process.cwd());
+  const where = auditedElsewhere ? `${report.scope}, external root` : report.scope;
+  console.log(`MindForge Harness Audit (${where}): ${report.overall_score}/${report.max_score}`);
   console.log(`Root: ${report.root_dir}`);
   console.log('');
 
@@ -488,11 +644,58 @@ function printText(report) {
 function showHelp(exitCode = 0) {
   console.log(`
 Usage: node bin/harness-audit.js [scope] [--scope <${SCOPES.join('|')}>] [--format <text|json>] [--root <path>]
+                                 [--min-score <n>] [--fail-on-findings]
 
 Deterministic MindForge harness audit based on explicit file/config checks.
 Audits the current working directory by default.
+
+Gate flags (opt-in — with neither of these the command always exits 0):
+  --min-score <n>      exit 1 when overall_score < n. n is in POINTS and the max
+                       is scope-dependent (repo 76, security 13, agents 4), so a
+                       value above the scope's max_score is rejected as
+                       unsatisfiable. CI uses: npm run harness:gate
+  --fail-on-findings   exit 1 when ANY check fails (strictest: every check added
+                       later becomes blocking the moment it lands)
 `);
   process.exit(exitCode);
+}
+
+/**
+ * Decide whether the report clears the requested gate. Pure: reads only the
+ * report's existing `overall_score` / `max_score` / `checks[].pass` fields and
+ * returns a NEW object — no parallel scoring path, no mutation of `report`.
+ *
+ * WHY an unsatisfiable threshold is itself a failure: --min-score is in POINTS
+ * and the max differs per scope (repo 76, security 13, agents 4), so
+ * `--scope agents --min-score 70` can never pass. Saying so beats a red check
+ * nobody can act on — and beats silently passing it.
+ */
+function evaluateGate(report, options = {}) {
+  const minScore = options.minScore === undefined ? null : options.minScore;
+  const failOnFindings = Boolean(options.failOnFindings);
+  const failures = [];
+
+  if (minScore !== null) {
+    if (minScore > report.max_score) {
+      failures.push(`--min-score ${minScore} exceeds max_score ${report.max_score} for scope "${report.scope}" — unsatisfiable threshold.`);
+    } else if (report.overall_score < minScore) {
+      failures.push(`score ${report.overall_score}/${report.max_score} is below --min-score ${minScore} (scope "${report.scope}").`);
+    }
+  }
+
+  if (failOnFindings) {
+    const failing = report.checks.filter(check => !check.pass);
+    if (failing.length > 0) {
+      failures.push(`--fail-on-findings: ${failing.length} of ${report.checks.length} checks failing (${failing.map(check => check.id).join(', ')}).`);
+    }
+  }
+
+  return {
+    enforced: minScore !== null || failOnFindings,
+    ok: failures.length === 0,
+    failures,
+    exitCode: failures.length === 0 ? 0 : 1,
+  };
 }
 
 function main() {
@@ -507,6 +710,17 @@ function main() {
     } else {
       printText(report);
     }
+
+    // Gate LAST and on stderr, so --format json keeps stdout pure JSON and the
+    // scorecard stays readable when the gate trips. There is deliberately no
+    // explicit process.exit(0) on the success path: falling off main() exits 0
+    // naturally, and a hardcoded exit(0) is how gates start lying.
+    const gate = evaluateGate(report, { minScore: args.minScore, failOnFindings: args.failOnFindings });
+    if (!gate.ok) {
+      console.error('');
+      for (const failure of gate.failures) { console.error(`Gate FAIL: ${failure}`); }
+      process.exit(gate.exitCode);
+    }
   } catch (error) {
     console.error(`Error: ${error.message}`);
     process.exit(1);
@@ -517,4 +731,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { buildReport, parseArgs, getChecks, CATEGORIES, RUBRIC_VERSION };
+module.exports = { buildReport, parseArgs, getChecks, evaluateGate, parseMinScore, hookWired, CATEGORIES, RUBRIC_VERSION };

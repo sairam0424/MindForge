@@ -106,7 +106,15 @@ const Theme = {
     console.log(`  ${this.colors.dim('│')}    ${this.colors.bold('Environment')}: ${this.colors.cyan(runtime)} (${this.colors.dim(scope)})                         ${this.colors.dim('│')}`);
     console.log(`  ${this.colors.dim('│')}                                                                        ${this.colors.dim('│')}`);
     console.log(`  ${this.colors.dim('│')}    ${this.colors.bold('Next steps:')}                                                   ${this.colors.dim('│')}`);
-    console.log(`  ${this.colors.dim('│')}      ${this.colors.bold('mindforge-cc init')}   ${this.colors.dim('— Initialize your first workspace')}      ${this.colors.dim('│')}`);
+    // Was `mindforge-cc init`, which does not exist. mindforge-cc takes flags only and silently
+    // ignored the positional, so obeying this line re-ran the installer against whatever directory
+    // the user was standing in: measured 1,836 files written into an empty temp dir, exit 0, and
+    // this same panel printed again — so it loops. `/mindforge:init-project` is the real command and
+    // the install has just placed it in the harness, so the instruction now names something the
+    // user actually has. bin/install.js rejects stray positionals too: a wrong instruction and a
+    // silent acceptance of it are two separate defects, and fixing either alone leaves a trap.
+    // Padding keeps the visible width at 65 so the box border still lines up.
+    console.log(`  ${this.colors.dim('│')}      ${this.colors.bold('/mindforge:init-project')}  ${this.colors.dim('— Initialize your workspace')}       ${this.colors.dim('│')}`);
     console.log(`  ${this.colors.dim('│')}      ${this.colors.bold('/mindforge:help')}    ${this.colors.dim('— Explore the command suite')}        ${this.colors.dim('│')}`);
     console.log(`  ${this.colors.dim('│')}                                                                        ${this.colors.dim('│')}`);
     console.log(`  ${this.colors.dim('├' + '─'.repeat(boxWidth) + '╯')}\n`);

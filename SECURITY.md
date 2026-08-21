@@ -1,6 +1,6 @@
 # Security Policy
 
-> **Current version:** 11.9.0 | **npm audit:** 0 vulnerabilities across root, sdk, mcp-server
+> **Current version:** 11.9.3 | **npm audit:** 0 vulnerabilities across root, sdk, mcp-server
 
 ## Supported Versions
 
@@ -66,7 +66,9 @@ We follow responsible disclosure practices. We will credit reporters in the rele
 
 ### Audit & Integrity
 
-- **Merkle-chain audit log** — Every entry in `AUDIT.jsonl` includes a SHA-256 hash of the previous entry. Tampering with any historical entry breaks the chain, making modifications detectable.
+- **Hash-chained audit log (SHA-256 back-links)** — Every entry in `AUDIT.jsonl` carries the SHA-256
+  hash of the previous entry. Not a Merkle tree: there is no hash tree and no inclusion proof, so
+  "Merkle" was the wrong word for it. What it detects, and does not, is measured below.
 - **AuditWriter with buffered writes** — Atomic append operations prevent partial writes from corrupting the log.
 - **Log rotation with archival** — AUDIT.jsonl auto-archives beyond 5000 lines with gzip compression, preventing unbounded disk growth.
 - **npm provenance** — Published packages include SLSA Build Level 2 attestation via `--provenance`, proving the package was built from the stated source commit in CI.
@@ -143,7 +145,24 @@ For security questions that are not vulnerability reports, open a GitHub Discuss
 Tier-3 trust in v11.x uses **in-process key simulation** (`bin/governance/ztai-manager.js` `SecureEnclaveProvider`). Key material resides in the Node.js heap — it is NOT hardware-isolated. A real TPM/HSM provider is planned for v12.x. **Do not use Tier-3 trust for production credential workflows in v11.x.**
 
 ## Audit Log Tamper Evidence
-The Merkle chain (`bin/governance/audit-hash.js`) provides tamper-evidence for content and ordering but does not prevent replay of identical entries. Restrict OS-level write access to `.planning/AUDIT.jsonl` to prevent replay attacks.
+The hash chain (`bin/governance/audit-hash.js`) is real and independently verifiable — `node
+bin/verify-audit.js` recomputes it and exits 1 on a break. Measured on a 200-entry chain taken from
+the head of a live log:
+
+| Attack | Detected? | Evidence |
+|---|---|---|
+| Mutate a middle entry | **YES** | `BROKEN at entry 79: hash mismatch (entry mutated)`, exit 1 |
+| Delete a middle entry | **YES** | `BROKEN at entry 79: previous_hash mismatch`, exit 1 |
+| **Truncate the tail** | **NO** | 40 entries removed from the end → `audit chain valid: 160 entries`, **exit 0** |
+| Replay identical entries | **NO** | the chain constrains content and ordering, not multiplicity |
+
+The truncation gap is inherent to a bare hash chain: each entry commits to its predecessor, so a
+prefix of a valid chain is itself a valid chain. Closing it needs a commitment to LENGTH — an external
+anchor, a signed length attestation, or a witnessed head — none of which ships today.
+
+So the accurate claim is **"detects mutation and mid-file deletion"**, not "immutable" or
+"non-repudiable". Restrict OS-level write access to `.planning/AUDIT.jsonl`; the chain does not
+substitute for filesystem permissions.
 
 ## Agent Dispatch (spawn mode)
 `bin/spawn-agent.js` spawn mode exits with an error in v11.x — real agent dispatch is not yet implemented at the shell level. Use Claude Code slash commands (`/mindforge:auto`, `/mindforge:next`) to dispatch agents.

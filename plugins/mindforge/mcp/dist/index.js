@@ -7,7 +7,11 @@ var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __commonJS = (cb, mod) => function __require() {
-  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+  try {
+    return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+  } catch (e) {
+    throw mod = 0, e;
+  }
 };
 var __export = (target, all) => {
   for (var name in all)
@@ -7864,11 +7868,11 @@ function datetimeRegex(args) {
   regex = `${regex}(${opts.join("|")})`;
   return new RegExp(`^${regex}$`);
 }
-function isValidIP(ip, version2) {
-  if ((version2 === "v4" || !version2) && ipv4Regex.test(ip)) {
+function isValidIP(ip, version3) {
+  if ((version3 === "v4" || !version3) && ipv4Regex.test(ip)) {
     return true;
   }
-  if ((version2 === "v6" || !version2) && ipv6Regex.test(ip)) {
+  if ((version3 === "v6" || !version3) && ipv6Regex.test(ip)) {
     return true;
   }
   return false;
@@ -7895,11 +7899,11 @@ function isValidJWT(jwt, alg) {
     return false;
   }
 }
-function isValidCidr(ip, version2) {
-  if ((version2 === "v4" || !version2) && ipv4CidrRegex.test(ip)) {
+function isValidCidr(ip, version3) {
+  if ((version3 === "v4" || !version3) && ipv4CidrRegex.test(ip)) {
     return true;
   }
-  if ((version2 === "v6" || !version2) && ipv6CidrRegex.test(ip)) {
+  if ((version3 === "v6" || !version3) && ipv6CidrRegex.test(ip)) {
     return true;
   }
   return false;
@@ -11643,10 +11647,10 @@ var ksuid = /^[A-Za-z0-9]{27}$/;
 var nanoid = /^[a-zA-Z0-9_-]{21}$/;
 var duration = /^P(?:(\d+W)|(?!.*W)(?=\d|T\d)(\d+Y)?(\d+M)?(\d+D)?(T(?=\d)(\d+H)?(\d+M)?(\d+([.,]\d+)?S)?)?)$/;
 var guid = /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/;
-var uuid = (version2) => {
-  if (!version2)
+var uuid = (version3) => {
+  if (!version3)
     return /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$/;
-  return new RegExp(`^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-${version2}[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$`);
+  return new RegExp(`^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-${version3}[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$`);
 };
 var email = /^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$/;
 var _emoji = `^(\\p{Extended_Pictographic}|\\p{Emoji_Component})+$`;
@@ -21655,7 +21659,36 @@ var WebSocketEventStream = class {
     this.maxReconnectAttempts = 5;
     this.listeners = /* @__PURE__ */ new Map();
   }
+  /**
+   * Dispatch to registered listeners. One dispatch path for messages, reconnect failures and
+   * stream death, so those three cannot drift apart in how they treat a throwing listener.
+   *
+   * A missing 'error' listener does NOT mean silence: a reconnect that fails invisibly leaves the
+   * consumer believing the stream is live, which is the failure mode this class was already in.
+   */
+  emit(eventType, data) {
+    const handlers = this.listeners.get(eventType);
+    if (!handlers || handlers.size === 0) {
+      if (eventType === "error" && typeof process !== "undefined" && process.stderr) {
+        const message = data instanceof Error ? data.message : String(data);
+        process.stderr.write(`[MindForge SDK] event stream error: ${message}
+`);
+      }
+      return;
+    }
+    handlers.forEach((handler) => {
+      try {
+        handler(data);
+      } catch {
+      }
+    });
+  }
   async connect() {
+    if (typeof WebSocket === "undefined") {
+      throw new Error(
+        "WebSocketEventStream requires a global WebSocket: Node 22+, a browser, or the optional 'ws' package installed and assigned to globalThis.WebSocket. This SDK declares no runtime dependencies, so it does not install one for you."
+      );
+    }
     return new Promise((resolve, reject) => {
       this.ws = new WebSocket(this.url);
       this.ws.onopen = () => {
@@ -21665,16 +21698,22 @@ var WebSocketEventStream = class {
       this.ws.onerror = (err) => reject(err);
       this.ws.onmessage = (event) => {
         try {
-          const parsed = JSON.parse(event.data.toString());
-          const handlers = this.listeners.get(parsed.type) || /* @__PURE__ */ new Set();
-          handlers.forEach((handler) => handler(parsed.data));
+          const parsed = JSON.parse(String(event.data));
+          this.emit(parsed.type, parsed.data);
         } catch {
         }
       };
       this.ws.onclose = () => {
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
           this.reconnectAttempts++;
-          setTimeout(() => this.connect(), 1e3 * this.reconnectAttempts);
+          setTimeout(() => {
+            this.connect().catch((err) => this.emit("error", err));
+          }, 1e3 * this.reconnectAttempts);
+        } else if (this.maxReconnectAttempts > 0) {
+          this.emit("close", {
+            reason: "reconnect attempts exhausted",
+            attempts: this.reconnectAttempts
+          });
         }
       };
     });
@@ -21863,7 +21902,8 @@ var MindForgeClient = class extends import_events.EventEmitter {
     await eventSource.connect();
     const chunks = [];
     let resolveNext = null;
-    eventSource.on("stream_chunk", (data) => {
+    eventSource.on("stream_chunk", (raw) => {
+      const data = raw;
       if (resolveNext) {
         resolveNext({ value: data, done: data.type === "done" });
         resolveNext = null;
@@ -21971,6 +22011,9 @@ var MindForgeClient = class extends import_events.EventEmitter {
   }
 };
 
+// package.json
+var version2 = "11.9.3";
+
 // src/index.ts
 var PROJECT_ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 var memory = () => new MindForgeMemory(PROJECT_ROOT);
@@ -21995,7 +22038,7 @@ If MindForge is not set up in this project, run \`npx mindforge-cc@latest --clau
     };
   }
 }
-var server = new McpServer({ name: "mindforge", version: "11.4.0" });
+var server = new McpServer({ name: "mindforge", version: version2 });
 function registerTool(name, config2, handler) {
   server.registerTool(name, config2, handler);
 }

@@ -64,12 +64,149 @@ test('installer backs up existing CLAUDE.md', () => {
   assert.ok(c.includes('backup') || c.includes('.backup-'), 'Should back up CLAUDE.md');
 });
 
-test('installer has self-install detection', () => {
-  const c = read('bin/installer-core.js');
-  assert.ok(
-    c.includes('isSelfInstall') || c.includes('\'mindforge-cc\''),
-    'Should detect self-install scenario'
-  );
+test('a self-install writes NOTHING over the repository\'s own tracked files', () => {
+  // THIS REPLACES A VACUOUS ASSERTION. It read:
+  //   assert.ok(c.includes('isSelfInstall') || c.includes("'mindforge-cc'"), 'Should detect self-install')
+  // — a grep of the source for a string that any COMMENT satisfies. It could not fail while the
+  // detection was broken, and it did not fail while the detection worked and the installer overwrote
+  // 149 tracked files anyway.
+  //
+  // THE DEFECT it now covers. `selfInstall` gated 8 write sites and missed two: the entry-file write
+  // and the entire command copy. So a self-install printed "Self-install detected — skipping framework
+  // file copy" and then overwrote `.claude/CLAUDE.md` plus 149 tracked files under
+  // `.claude/commands/`, with no backup — safeCopyClaude only backs up when the existing content does
+  // NOT contain "MindForge", and this repo's entry file does.
+  //
+  // Asserted against a real clone and real git status, because the property is "the working tree is
+  // untouched" and nothing short of git can establish that.
+  const os = require('os');
+  const path = require('path');
+  const { spawnSync } = require('child_process');
+
+  const REPO = process.cwd();
+  const work = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-selfinstall-')));
+  const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-selfinstall-home-')));
+  const clone = path.join(work, 'repo');
+
+  try {
+    const cloned = spawnSync('git', ['clone', '--quiet', '--no-hardlinks', '--shared', REPO, clone],
+      { encoding: 'utf8' });
+    assert.strictEqual(cloned.status, 0, `could not clone the repo: ${(cloned.stderr || '').slice(0, 200)}`);
+
+    // Carry any UNCOMMITTED installer changes into the clone, then commit them there, so the clone
+    // starts clean AND reflects the tree about to be committed. Without this the test could only ever
+    // describe committed state, which means it cannot go green until after the fix lands — and a gate
+    // you cannot run before committing gets bypassed with --no-verify. In CI the diff is empty and
+    // this is a no-op.
+    const diff = spawnSync('git', ['diff', 'HEAD', '--', 'bin', 'tests'], { cwd: REPO, encoding: 'utf8' });
+    if (diff.stdout && diff.stdout.trim()) {
+      const applied = spawnSync('git', ['apply', '--whitespace=nowarn', '-'],
+        { cwd: clone, encoding: 'utf8', input: diff.stdout });
+      assert.strictEqual(applied.status, 0,
+        `could not carry the working-tree diff into the clone: ${(applied.stderr || '').slice(0, 300)}`);
+      spawnSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-aqm', 'wt'],
+        { cwd: clone, encoding: 'utf8' });
+    }
+
+    // The clone must start clean, or "nothing changed" would be unmeasurable.
+    const before = spawnSync('git', ['status', '--porcelain'], { encoding: 'utf8', cwd: clone });
+    assert.strictEqual(before.stdout.trim(), '',
+      `the clone is not clean, so this test cannot attribute changes: ${before.stdout.slice(0, 200)}`);
+
+    // node_modules is not symlinked: bin/install.js must run on builtins plus its own bin/ tree.
+    const r = spawnSync(process.execPath, ['bin/install.js', '--claude', '--local', '--skip-wizard'], {
+      cwd: clone, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: home, CI: '1' },
+    });
+    assert.strictEqual(r.status, 0, `the self-install failed: ${(r.stderr || '').slice(-300)}`);
+
+    // NON-VACUITY: it must actually have taken the self-install branch. Without this, an install that
+    // errored early or ran as a normal install would also leave... no, a normal install would DIRTY the
+    // tree. But an install that did nothing at all would pass, so require the branch to announce itself.
+    assert.match(r.stdout, /Self-install detected/,
+      `the run did not take the self-install branch, so it proves nothing. Output: ${r.stdout.slice(-300)}`);
+
+    const after = spawnSync('git', ['status', '--porcelain'], { encoding: 'utf8', cwd: clone });
+    const modified = after.stdout.split('\n').filter((l) => l.startsWith(' M') || l.startsWith('M'));
+    assert.deepStrictEqual(modified, [],
+      `${modified.length} TRACKED file(s) were overwritten by a self-install:\n  `
+      + `${modified.slice(0, 8).join('\n  ')}\nThe installer says it is skipping the framework file `
+      + 'copy; it must not then copy. Measured before the gate: 149 files, zero backups.');
+
+    // And it must not claim work it did not do — the summary panel counts the SOURCE tree, so it
+    // announced "221 Total autonomous commands deployed" for a run that deployed none.
+    assert.ok(!/Total autonomous commands deployed/.test(r.stdout),
+      'the self-install printed the deployment summary panel, which reports source-tree counts and so '
+      + 'claims commands were deployed when none were written');
+  } finally {
+    fs.rmSync(work, { recursive: true, force: true });
+    fs.rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test('a GLOBAL install still works when run from inside the repository', () => {
+  // THE REGRESSION THIS CATCHES, which the self-install gate above introduced and an independent
+  // audit found before it merged.
+  //
+  // isSelfInstall() answers only "is the CURRENT DIRECTORY the MindForge repo". The gate's premise is
+  // narrower: "the files I am about to write ARE this repository's tracked files". True for a LOCAL
+  // install (baseDir is `.claude/` in the repo); false for a GLOBAL install (baseDir is
+  // `~/.claude/`). Keying on cwd alone therefore skipped every write of a perfectly legitimate global
+  // install, failed verification, and printed "Retry: ... --force" — which also fails.
+  //
+  // Measured with HOME confined, running `--claude --global` from a MindForge checkout:
+  //     develop              exit 0, 225 files in $HOME/.claude
+  //     cwd-only gate        exit 1,   0 files, then an impossible --force retry
+  //     scope-aware gate     exit 0, 389 files
+  //
+  // Both directions are asserted, because "global installs files" alone is satisfied by removing the
+  // gate entirely, and "local writes nothing" alone is satisfied by breaking global.
+  const os = require('os');
+  const path = require('path');
+  const { spawnSync } = require('child_process');
+
+  const REPO = process.cwd();
+  const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-globalinstall-home-')));
+  const tmp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-globalinstall-tmp-')));
+  const git = (...args) => spawnSync('git', args, { cwd: REPO, encoding: 'utf8' });
+  const dirtyBefore = git('status', '--porcelain').stdout;
+
+  try {
+    // cwd is the repository — exactly the condition that made the cwd-only gate misfire.
+    const r = spawnSync(process.execPath, ['bin/install.js', '--claude', '--global'], {
+      cwd: REPO, encoding: 'utf8', timeout: 180000,
+      env: { PATH: process.env.PATH, HOME: home, CI: '1', TMPDIR: tmp },
+    });
+
+    assert.strictEqual(r.status, 0,
+      `a global install run from the repo must succeed, got ${r.status}. The self-install gate keys on `
+      + `cwd; a global install writes to $HOME and is not a self-install.\n${(r.stdout || '').slice(-400)}`);
+
+    const written = [];
+    (function walk(d) {
+      let entries;
+      try { entries = fs.readdirSync(d, { withFileTypes: true }); } catch { return; }
+      for (const e of entries) {
+        const full = path.join(d, e.name);
+        if (e.isDirectory()) walk(full); else written.push(full);
+      }
+    })(path.join(home, '.claude'));
+    assert.ok(written.length > 100,
+      `a global install wrote only ${written.length} file(s) to ${home}/.claude. Measured on develop `
+      + 'before the gate existed: 225. Zero means every write was skipped as if this were a '
+      + 'self-install.');
+
+    assert.ok(!/Retry:/.test(r.stdout),
+      'the install printed a "Retry: ... --force" suggestion, which means verification failed — and '
+      + 'that retry provably fails too, because --force does not change which branch the gate takes');
+
+    // AND the local-install protection must be intact: a global install must still not touch the repo.
+    assert.strictEqual(git('status', '--porcelain').stdout, dirtyBefore,
+      'a global install modified the repository working tree. It writes to $HOME and must leave the '
+      + 'checkout it was launched from completely alone.');
+  } finally {
+    fs.rmSync(home, { recursive: true, force: true });
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
 });
 
 test('installer excludes sensitive files (*.env, *.key, *.pem)', () => {
@@ -81,11 +218,30 @@ test('installer excludes sensitive files (*.env, *.key, *.pem)', () => {
 });
 
 test('installer verifies install after completing', () => {
+  // Was: c.includes('verifyInstall') || c.includes('verification') — a substring check that
+  // passed for 400 lines of DEAD code. verifyInstall() was declared and called from nowhere,
+  // while install() printed "Install verified" unconditionally. The `|| 'verification'` arm made
+  // it weaker still: that word appears in comments.
   const c = read('bin/installer-core.js');
-  assert.ok(
-    c.includes('verifyInstall') || c.includes('verification'),
-    'Should verify install after completing'
-  );
+  const code = c.split('\n').filter(l => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n');
+
+  // Must match a CALL, not the declaration. My first attempt used /verifyInstall\s*\(\s*baseDir/,
+  // which the line `function verifyInstall(baseDir, ...)` satisfies — so un-wiring the call left
+  // this green. That is precisely the error the original substring check made, reproduced one
+  // level up. Requiring the result to be BOUND to a name distinguishes them.
+  assert.match(code, /=\s*verifyInstall\s*\(/,
+    'installer-core.js must CALL verifyInstall and bind its result, not merely declare it');
+
+  assert.match(code, /if\s*\(\s*!verification\.ok\s*\)/,
+    'the result must be checked — a call whose return value is discarded verifies nothing');
+  assert.match(code, /process\.exit\(1\)/,
+    'a failed verification must exit non-zero');
+  // And the success message must come AFTER the failure branch, so it cannot print on failure.
+  const failIdx = code.indexOf('Install verification failed');
+  const okIdx = code.indexOf('Install verified');
+  assert.ok(failIdx !== -1 && okIdx !== -1 && failIdx < okIdx,
+    'the "Install verified" message must follow the failure branch that exits, or it can print ' +
+    `for a failed install (failIdx=${failIdx}, okIdx=${okIdx})`);
 });
 
 // ── Self-update system ─────────────────────────────────────────────────────────
@@ -347,11 +503,23 @@ test('no command file is empty (> 100 chars)', () => {
 console.log('\nHardening tests:');
 
 test('SENSITIVE_EXCLUDE properly excludes .env and .key files', () => {
-  const SENSITIVE_EXCLUDE = [
-    '.env', /^\.env\..*/, /\.key$/, /\.pem$/, 'secrets', /^secrets$/
-  ];
+  // WAS TAUTOLOGICAL. This test declared its OWN copy of the array:
+  //
+  //     const SENSITIVE_EXCLUDE = ['.env', /^\.env\..*/, /\.key$/, /\.pem$/, 'secrets', /^secrets$/];
+  //
+  // and then asserted against that literal. It never read bin/installer-core.js, so deleting the
+  // production list outright would have left it green. It described what the author believed the
+  // installer excluded, which is not the same claim.
+  //
+  // Now imported from the module, and matched with the SAME rule copyDir uses at installer-core.js:290
+  // — string entries compare against the basename, regex entries are tested against it. Restating that
+  // rule differently here would reintroduce the same gap one level down.
+  const { SENSITIVE_EXCLUDE } = require(require('path').join(process.cwd(), 'bin', 'installer-core.js'));
+  assert.ok(Array.isArray(SENSITIVE_EXCLUDE) && SENSITIVE_EXCLUDE.length > 5,
+    `installer-core must export a populated SENSITIVE_EXCLUDE, got ${JSON.stringify(SENSITIVE_EXCLUDE)}`);
+
   const shouldExclude = (name) =>
-    SENSITIVE_EXCLUDE.some(p => typeof p === 'string' ? p === name : p.test(name));
+    SENSITIVE_EXCLUDE.some(p => (typeof p === 'string' ? name === p : p.test(name)));
 
   assert.ok(shouldExclude('.env'),               '.env should be excluded');
   assert.ok(shouldExclude('.env.local'),         '.env.local should be excluded');
@@ -363,15 +531,70 @@ test('SENSITIVE_EXCLUDE properly excludes .env and .key files', () => {
   assert.ok(!shouldExclude('src'),               'src should NOT be excluded');
 });
 
-test('SENSITIVE_EXCLUDE uses regex for .key and .pem (not glob strings)', () => {
-  const c = fs.readFileSync('bin/installer-core.js', 'utf8');
-  // Should use regex pattern /\.key$/ not string '*.key'
-  assert.ok(!c.includes('\'*.key\''), 'Should not use glob string for .key');
-  assert.ok(!c.includes('\'*.pem\''), 'Should not use glob string for .pem');
-  assert.ok(
-    c.includes('\\.key$') || c.includes('/\\.key$/') || c.includes('/.key$/'),
-    'Should use regex for .key'
-  );
+test('a real install does not copy .env, .key or .pem files', () => {
+  // WAS A SOURCE-TEXT GREP. It checked that installer-core.js CONTAINED the string `\.key$` and did
+  // NOT contain `'*.key'` — the shape of the source, satisfiable by a comment, and silent on the only
+  // question that matters: does the copy actually honour the list? An exclude array that copyDir
+  // ignored would have passed both this and the test above it.
+  //
+  // Now behavioural. `.agent/skills` is copied with SENSITIVE_EXCLUDE (installer-core.js:838), so
+  // planting the sensitive shapes in a throwaway subdirectory there and running a real install
+  // exercises the production list through the production copy function.
+  //
+  // Only a directory this test creates is planted and removed — nothing tracked is touched.
+  const os = require('os');
+  const path = require('path');
+  const { spawnSync } = require('child_process');
+
+  const REPO = process.cwd();
+  const bait = path.join(REPO, '.agent', 'skills', 'zz-exclude-probe');
+  const project = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-excl-')));
+  const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-excl-home-')));
+  const tmp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-excl-tmp-')));
+
+  try {
+    fs.mkdirSync(bait, { recursive: true });
+    fs.writeFileSync(path.join(bait, 'SKILL.md'), '---\nname: zz-exclude-probe\n---\nprobe\n');
+    for (const n of ['.env', '.env.local', 'private.key', 'certificate.pem']) {
+      fs.writeFileSync(path.join(bait, n), 'SECRET-SHAPED-PROBE\n');
+    }
+
+    fs.writeFileSync(path.join(project, 'package.json'),
+      JSON.stringify({ name: 'their-app', version: '1.0.0' }, null, 2));
+    const r = spawnSync(process.execPath, [path.join(REPO, 'bin', 'install.js'), '--claude', '--local'], {
+      cwd: project, encoding: 'utf8', timeout: 180000,
+      env: { PATH: process.env.PATH, HOME: home, CI: '1', TMPDIR: tmp },
+    });
+    assert.strictEqual(r.status, 0, `install failed: ${(r.stderr || '').slice(-300)}`);
+
+    const landed = [];
+    (function walk(d) {
+      let entries;
+      try { entries = fs.readdirSync(d, { withFileTypes: true }); } catch { return; }
+      for (const e of entries) {
+        const full = path.join(d, e.name);
+        if (e.isDirectory()) walk(full);
+        else if (/^\.env|\.key$|\.pem$/.test(e.name)) landed.push(path.relative(project, full));
+      }
+    })(project);
+    assert.deepStrictEqual(landed, [],
+      `${landed.length} sensitive file(s) were copied into the target project: ${landed.join(', ')}. `
+      + 'SENSITIVE_EXCLUDE exists but copyDir is not honouring it.');
+
+    // NON-VACUITY: the probe directory itself must HAVE been copied, or "no secrets landed" is true
+    // only because nothing was copied at all — and the previous grep-based test could not tell the
+    // difference either.
+    const probeArrived = fs.existsSync(
+      path.join(project, '.claude', 'skills', 'zz-exclude-probe', 'SKILL.md'));
+    assert.ok(probeArrived,
+      'the probe skill directory was not installed, so this test cannot distinguish "excluded the '
+      + 'secrets" from "copied nothing". Check the skills asset mapping before trusting the result.');
+  } finally {
+    fs.rmSync(bait, { recursive: true, force: true });
+    fs.rmSync(project, { recursive: true, force: true });
+    fs.rmSync(home, { recursive: true, force: true });
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
 });
 
 test('migration filter uses toVersion range check (not fromVersion)', () => {

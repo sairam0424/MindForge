@@ -1,9 +1,9 @@
-# MINDFORGE.md — Parameter Registry (v11.9.2)
+# MINDFORGE.md — Parameter Registry (v11.9.3)
 
 ## 1. IDENTITY & VERSIONING
 
 [NAME]    = MindForge
-[VERSION] = 11.9.2
+[VERSION] = 11.9.3
 [STABLE]  = true
 [MODE]    = "Platform Sovereign"
 [REQUIRED_CORE_VERSION] = 11.9.1
@@ -98,8 +98,15 @@
 The following parameters cannot be overridden by plugins, agents, or session-level configuration:
 
 - [MIN_SOUL_SCORE] — Minimum SOUL score required for architectural changes
-- [BLOCK_ON_SECURITY] — Security gate enforcement cannot be disabled
-- [COST_HARD_LIMIT_USD] — declared here, but **NOT enforced as of 11.9.2**; do not rely on it as a spend control. `bin/models/cost-tracker.js` reads `MODEL_COST_HARD_LIMIT_USD`, a key this registry does not declare, so `preflight()` returns early and no cap is ever applied. Wiring it is tracked as COST-02 for 11.9.3
+- [BLOCK_ON_SECURITY] — DECLARED, UNREAD. `git grep -l BLOCK_ON_SECURITY -- bin/` returns nothing:
+  no code reads this key, so it changes no behaviour and deleting it fails no validation (the schema
+  lists it as `recommended`, not `required`). What actually blocks a config-weakening edit is the
+  `mindforge-config-protection` hook, which is deny-class and fails closed — see SECURITY.md.
+- [COST_HARD_LIMIT_USD] — **enforced as of 11.9.3** (COST-02). `bin/models/cost-tracker.js` `preflight()` reads this key, adds the call estimate to today's ledger spend, and throws `COST_LIMIT_REACHED`; `bin/models/model-client.js` re-throws it, so the model call is refused. Non-overridable means a plugin or session cannot raise the number — it does not mean a cap always exists: `0`, or the key being absent, legally disables the cap, because an upgrade never rewrites an existing MINDFORGE.md (`bin/installer-core.js:706`) and the schema lists this key as `recommended`, not `required`. A present-but-unreadable value (e.g. `= none`) is a hard config fault — `preflight()` throws `COST_LIMIT_MISCONFIGURED` instead of running uncapped
 - [BLOCK_ON_SECURITY] is non-overridable; PQAS itself is simulated/experimental (inactive by default) and is NOT a non-overridable guarantee — do not rely on it as an enforced control
-- [SOVEREIGN_IDENTITY] — Identity verification is always required
-- [ENABLE_ZTAI] — Zero-trust identity cannot be bypassed
+- [SOVEREIGN_IDENTITY] — DECLARED, UNREAD. No reader in `bin/`. No identity is verified as a result
+  of this key being set.
+- [ENABLE_ZTAI] — DECLARED, UNREAD, and the feature it gates is inactive. No reader in `bin/`;
+  measured on a live 3116-entry AUDIT.jsonl, 0 entries carry a `signature` or `did`. "Cannot be
+  bypassed" overstates a switch that is not wired to anything — see docs/security/ZTAI-OVERVIEW.md,
+  which now leads with a status banner.

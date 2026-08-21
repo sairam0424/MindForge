@@ -1,4 +1,4 @@
-# MindForge Troubleshooting (v11.9.0)
+# MindForge Troubleshooting (v11.9.3)
 
 This page lists common issues and fast fixes. If you get stuck, start with
 `/mindforge:health`.
@@ -117,15 +117,19 @@ rerun migration. See `.mindforge/audit/AUDIT-SCHEMA.md` for expected format.
 
 ### Protocol Step 0 fails to activate
 **Symptom:** Commands proceed without activating `_extended` skills.
-**Fix:** Run `/mindforge:neural-orchestrator --reset`. Ensure all `_extended` skills are present in `.agent/skills/`.
+**Fix:** Ensure all `_extended` skills are present in `.agent/skills/`, then start a fresh session so the
+skill loader re-reads them. There is no orchestrator reset command.
 
 ### Context drift in Parallel Mesh
 **Symptom:** Parallel agents making conflicting decisions.
-**Fix:** Run `/mindforge:parallel-mesh --sync`. This forces a global state re-synchronization across all active worker identities.
+**Fix:** Re-synchronise by re-reading `.planning/HANDOFF.json` and `.planning/auto-state.json` before the
+next wave — the mesh protocol is described in `.mindforge/engine/wave-executor.md`. It is a protocol you
+follow, not a command.
 
 ### Workspace isolation failure
 **Symptom:** Conflicts between feature branches or dirty worktree.
-**Fix:** Run `/mindforge:workspace-isolated --cleanup`. Use `/mindforge:health --repair` if `.git/worktrees/` is corrupt.
+**Fix:** Run `/mindforge:workspace` to inspect worktree state. Use `/mindforge:health --repair` if
+`.git/worktrees/` is corrupt.
 
 ---
 
@@ -133,7 +137,7 @@ rerun migration. See `.mindforge/audit/AUDIT-SCHEMA.md` for expected format.
 If the above doesn’t resolve it:
 - Review `docs/user-guide.md`
 - Check `docs/security/SECURITY.md` for security issues
-- Open a GitHub issue or join the Discord: `/mindforge:join-discord`
+- Open a GitHub issue: https://github.com/sairam0424/MindForge/issues
 - **Architecture**: `docs/architecture/V5-ENTERPRISE.md`
 - **Commands**: `docs/commands-reference.md`
 - **Personas**: `docs/PERSONAS.md`
@@ -203,4 +207,4 @@ All tests must be run from the MindForge project root: `cd /path/to/MindForge &&
 
 **Symptom:** `--version` flag reports "Unknown command" on installs older than v11.9.0.
 
-**Fix:** Upgrade to v11.9.0: `npx mindforge-cc@latest install`
+**Fix:** Upgrade: `npx mindforge-cc@latest --claude --local`

@@ -1,4 +1,4 @@
-# MindForge FAQ (v11.9.0)
+# MindForge FAQ (v11.9.3)
 
 ## Is MindForge tied to Claude only?
 No. MindForge supports Claude Code and Antigravity. Install with `--claude`,
@@ -55,13 +55,21 @@ The `deep-research` workflow was removed before the v11.8.0 release (the superpo
 ## Version & Stability
 
 **Q: What version is current?**
-v11.9.0 — verify with `node bin/mindforge-cli.js --version`
+v11.9.3 — verify with `node bin/mindforge-cli.js --version`
 
 **Q: Is v11.9.0 production-stable?**
 Yes. The IQ200 deep-audit (258 discrete checks across 14 dimensions) shows 258/258 passing. 0 CVEs, 0 test failures, 0 ESLint errors, 0 TypeScript errors.
 
-**Q: What npm dist-tags point to v11.9.0?**
-Both `latest` and `stable`: `npx mindforge-cc@stable` or `npx mindforge-cc@latest`
+**Q: Which npm dist-tag should I install?**
+`latest` is every published release, including patches. `stable` tracks the newest
+non-prerelease and is moved by the release workflow as its final step — forward only, so it
+never regresses to an older version. Prerelease builds keep their own `rc` and `alpha` tags and
+never become `stable`. Use `npx mindforge-cc@latest` unless you specifically want to lag a
+release behind. Check what each points at right now with `npm dist-tag ls mindforge-cc`.
+
+> This answer deliberately names no version. It previously claimed `latest` and `stable` both
+> pointed at v11.9.0; measured, they were 11.9.2 and 11.8.3 — neither. A documented invariant
+> survives releases, a documented value does not.
 
 ## Known Limitations
 
@@ -72,4 +80,16 @@ Spawn dispatch is not yet implemented in v11.9.0. Use `/mindforge:auto` or `/min
 Tier-3 trust uses in-process key simulation in v11.9.0 — this is intentional and safe. `SECURITY_TIER_3_SIMULATED = true` is the documented v11.x behavior. Hardware TPM/HSM is planned for v12.x.
 
 **Q: What is the test coverage?**
-95/97 tests passing (0 failures, 2 permanently env-skipped). Line coverage ~66% — gaps are in `bin/source-loader.js` and `scripts/ci/validate-assets.js`. Target is 80% for v11.9.0.
+133 test files: 131 pass, 0 failures, 2 env-dependent skips (`browser.test.js` needs a Chromium
+daemon, `sre-integration.test.js` needs git worktree support and a clean tree).
+
+The enforced floor is **30% lines**, gated in CI by the `mindforge-quality` job
+(`npx c8 --check-coverage --lines 30 --exclude 'plugins/**' --exclude 'mcp-server/dist/**'`).
+The measured figure is printed by that job and deliberately not restated here. The previous
+answer to this question was wrong in three ways at once — a test count from a much smaller
+suite, a stale coverage figure, and two named coverage gaps that were no longer the gaps — and
+it stayed wrong because none of it was checked by anything. `tests/doc-count-claims.test.js`
+now pins every count this file does state.
+
+Both `--exclude` flags are load-bearing: without them c8 measured the generated `plugins/` tree
+and `mcp-server/dist/` esbuild output, which understated real coverage substantially.

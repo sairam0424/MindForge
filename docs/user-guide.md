@@ -1,8 +1,8 @@
-# MindForge User Guide (v11.9.0)
+# MindForge User Guide (v11.9.3)
 
 This guide gets you from install to productive, with the minimum needed to run MindForge in a real project.
 
-> **v11.9.0 Stats:** 35 workflows · 221 slash commands · 232 engine skills · 216 personas · 0 CVEs · 258/258 IQ200 checks passing
+> **v11.9.3 Stats:** 35 workflows · 221 slash commands · 232 engine skills · 216 personas · 0 CVEs · 258/258 IQ200 checks passing
 
 ## Prerequisites
 
@@ -44,7 +44,7 @@ mindforge health          # Verify project integrity
 mindforge security-scan   # Run security checks
 mindforge headless        # Run agent in non-interactive mode
 mindforge --verbose ...   # Enable verbose output for debugging
-mindforge --version       # Print installed version (e.g. 11.9.0) and exit 0
+mindforge --version       # Print installed version (e.g. 11.9.3) and exit 0
 ```
 
 Use `--verbose` (or `-v`) on any command for detailed diagnostic output. Use `--version` (or `-V`) to print the installed version and exit.
@@ -127,7 +127,7 @@ MindForge features 211 specialized personas. Each persona is optimized for a spe
 To switch personas or see the full list:
 
 ```bash
-/mindforge:personas --list
+ls .mindforge/personas/            # 216 persona briefs; there is no personas command
 ```
 
 ---
@@ -137,7 +137,7 @@ To switch personas or see the full list:
 For complex tasks that require minimal intervention:
 
 ```bash
-/mindforge:autonomous --phase [N]
+/mindforge:auto --phase [N]
 ```
 
 Use the **Steer** command to guide logic without stopping execution:
@@ -153,7 +153,7 @@ Use the **Steer** command to guide logic without stopping execution:
 Observe your agent waves, token spend, and milestone progress in real-time.
 
 ```bash
-/mindforge:dashboard --start --open
+/mindforge:dashboard --open
 ```
 
 The dashboard provides a premium web interface at `http://localhost:7339`.
@@ -179,7 +179,7 @@ Extend MindForge by learning from documentation or authoring custom protocols.
 
 ```bash
 /mindforge:learn https://docs.nextjs.org "nextjs-mastery"
-/mindforge:skill-creation # Author a new high-fidelity protocol
+/mindforge:skills-index   # browse the catalogue; author new skills per the guide in CLAUDE.md
 ```
 
 ---
@@ -189,7 +189,7 @@ Extend MindForge by learning from documentation or authoring custom protocols.
 MindForge features automated PR creation and commit management.
 
 ```bash
-/mindforge:pr-branch "feature/auth-refactor"
+git switch -c feature/auth-refactor   # no pr-branch command; use git, then /mindforge:pr-review
 /mindforge:ship --auto-pr
 ```
 
@@ -202,7 +202,7 @@ MindForge provides mission-critical resilience and sovereign reasoning for enter
 ### Multi-Cloud Arbitrage
 MindForge automatically hedges against provider outages and optimizes for cost/latency.
 ```bash
-/mindforge:settings --cloud-arbitrage on
+# settings live in MINDFORGE.md as [KEY] = value; edit it, then run `mindforge security-scan`
 ```
 
 ### Sovereign Reason Enclaves (SRE)
@@ -214,8 +214,8 @@ Tier 3 (Principal) agents execute reasoning in isolated enclaves to protect sens
 ### Dynamic Human-Agent Handover & Temporal Steering (Pillar VII)
 NEXUS enables sub-second state reconstruction and **Hindsight Injection**. When an agent drifts, roll back its logic via the Dashboard's **Temporal Slider** and inject a steering vector to re-orient the wave.
 ```bash
-/mindforge:temporal status     # View active reasoning snapshots
-/mindforge:temporal inject [ID] # Manual CLI-based hindsight
+mindforge temporal status      # View active reasoning snapshots (a CLI command)
+mindforge temporal inject [ID] # Manual CLI-based hindsight
 ```
 
 ### Agentic Revenue Operations (AgRevOps) (Pillar VIII)
@@ -239,7 +239,7 @@ The **Enterprise Expansion** introduces 14 hardened protocols from the Superpowe
 
 Activate the mesh for any session:
 ```bash
-/mindforge:neural-orchestrator
+# the orchestrator layer is a protocol in .mindforge/engine/, not a command
 ```
 
 ---
@@ -260,7 +260,7 @@ Keep your framework current with the latest personas and library updates:
 
 MindForge allows you to "time-travel" through your agent's reasoning.
 
-1.  **Launch the Dashboard**: `/mindforge:dashboard --start --open`
+1.  **Launch the Dashboard**: `/mindforge:dashboard --open`
 2.  **Navigate to 'Temporal'**: Use the horizontal slider to scrub through reasoning snapshots.
 3.  **Inspect State**: View the exact memory, file diffs, and thought chain at that point in space-time.
 4.  **Inject Hindsight**: If you see a logic error, use the **Hindsight Injector** form to roll back and provide a corrective "Steering Vector."
@@ -283,4 +283,4 @@ Monitor your project's economic performance in real-time via the **RevOps Hub**.
 - **USP & Roadmap**: `docs/usp-features.md`
 - **Commands**: `docs/commands-reference.md`
 - **Troubleshooting**: `docs/troubleshooting.md`
-- **Discord**: `/mindforge:join-discord`
+- **Issues**: https://github.com/sairam0424/MindForge/issues

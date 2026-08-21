@@ -90,16 +90,42 @@ test('mindforge plugin manifest is correct and components live at plugin root', 
   }
 });
 
-test('mindforge plugin bundles the full surface (182 cmds, 164 agents, 74 skills)', () => {
-  assert.strictEqual(listMd(path.join(PLUGIN, 'commands')).length, 182,
-    'expected 182 commands in plugin');
-  assert.strictEqual(listMd(path.join(PLUGIN, 'agents')).length, 164,
-    'expected 164 agents in plugin');
+// Hardcoded counts (182 commands / 74 skills) and no version check used to stand here. They
+// did not DETECT drift — they PINNED it. The sources had grown to 221 commands and 123 skills
+// and the version to 11.9.2 while the committed plugin still held 182, 74 and 11.5.1, and this
+// test passed anyway because it asserted the stale numbers. Compare against the canonical
+// sources instead, so a forgotten `node scripts/build-mindforge-plugin.js` fails the suite.
+test('mindforge plugin surface matches its canonical sources (no generator drift)', () => {
+  const plugCommands = listMd(path.join(PLUGIN, 'commands')).length;
+  const srcCommands = listMd(path.join(ROOT, '.claude', 'commands', 'mindforge')).length;
+  assert.strictEqual(plugCommands, srcCommands,
+    `plugin commands (${plugCommands}) != .claude/commands/mindforge (${srcCommands}) — re-run scripts/build-mindforge-plugin.js`);
+
+  let srcAgents = 0;
+  for (const d of fs.readdirSync(CATEGORIES, { withFileTypes: true })) {
+    if (d.isDirectory()) srcAgents += listMd(path.join(CATEGORIES, d.name)).length;
+  }
+  const plugAgents = listMd(path.join(PLUGIN, 'agents')).length;
+  assert.strictEqual(plugAgents, srcAgents,
+    `plugin agents (${plugAgents}) != subagents/categories (${srcAgents}) — re-run scripts/build-mindforge-plugin.js`);
+
+  const srcSkillsDir = path.join(ROOT, '.agent', 'skills');
+  const srcSkills = fs.readdirSync(srcSkillsDir, { withFileTypes: true })
+    .filter((e) => e.isDirectory() && fs.existsSync(path.join(srcSkillsDir, e.name, 'SKILL.md')));
   const skillDirs = fs.readdirSync(path.join(PLUGIN, 'skills'), { withFileTypes: true })
     .filter((e) => e.isDirectory() && fs.existsSync(path.join(PLUGIN, 'skills', e.name, 'SKILL.md')));
-  assert.strictEqual(skillDirs.length, 74, 'expected 74 skills (73 + mindforge-protocol)');
+  // +1 for mindforge-protocol, which the generator synthesizes from .agent/CLAUDE.md.
+  assert.strictEqual(skillDirs.length, srcSkills.length + 1,
+    `plugin skills (${skillDirs.length}) != .agent/skills + mindforge-protocol (${srcSkills.length + 1}) — re-run scripts/build-mindforge-plugin.js`);
   assert.ok(skillDirs.some((d) => d.name === 'mindforge-protocol'),
     'the CLAUDE.md directive must ship as the mindforge-protocol skill');
+
+  // tests/version-consistency.test.js does not cover the plugin manifest, which is how it
+  // sat at 11.5.1 through four releases while the marketplace advertised that version.
+  const manifestVersion = readJson(path.join(PLUGIN, '.claude-plugin', 'plugin.json')).version;
+  const pkgVersion = readJson(path.join(ROOT, 'package.json')).version;
+  assert.strictEqual(manifestVersion, pkgVersion,
+    `plugin manifest version (${manifestVersion}) != package.json (${pkgVersion}) — re-run scripts/build-mindforge-plugin.js`);
 });
 
 test('mindforge plugin hooks use Claude event names + ${CLAUDE_PLUGIN_ROOT}', () => {
@@ -117,6 +143,371 @@ test('mindforge plugin hooks use Claude event names + ${CLAUDE_PLUGIN_ROOT}', ()
       }
     }
   }
+});
+
+// ── 2b. Hook wiring: every hook must resolve to a script that exists ──────────
+// The bug: scripts/build-mindforge-plugin.js copied .agent/hooks/ FLATLY, so
+// .agent/hooks/lib/ (hook-flags.js, pretooluse-visible-output.js) never reached the plugin and
+// every hook exited 1 with `Cannot find module './lib/hook-flags'` on its first fire. Fixing
+// only the copy would have been WORSE than the crash: run-with-flags.js resolves its
+// target-script argument against ${CLAUDE_PLUGIN_ROOT}, so a command still spelling
+// `.agent/hooks/x.js` resolves to <plugin>/.agent/hooks/x.js, prints "[Hook] Script not
+// found", and exits 0 — mindforge-block-no-verify and trust-gate would then report success
+// while gating nothing. So assert RESOLVABILITY, not hook counts.
+const PLUGIN_ROOT_PREFIX = '${CLAUDE_PLUGIN_ROOT}/';
+
+/** Flatten a settings-style hooks object into { event, command } pairs. */
+function hookCommands(hooksObj) {
+  return Object.entries(hooksObj).flatMap(([event, groups]) =>
+    groups.flatMap((g) => (g.hooks || []).map((h) => ({ event, command: h.command })))
+  );
+}
+
+/** `node <launcher> <hookId> <script> [profiles]` -> { hookId, launcher, script }. */
+function parseHookCommand(command) {
+  const tokens = command.split(' ').map((t) => t.replace(/^"|"$/g, ''));
+  const scripts = tokens.filter((t) => t.endsWith('.js'));
+  return { hookId: tokens[2] || '', launcher: scripts[0], script: scripts[1] };
+}
+
+function assertRepoHooksResolve(label, settingsPath) {
+  const cmds = hookCommands(readJson(settingsPath).hooks);
+  assert.ok(cmds.length > 0, `${label} declares no hooks`);
+  for (const { event, command } of cmds) {
+    const { launcher, script } = parseHookCommand(command);
+    assert.ok(launcher, `${label} ${event}: no launcher script parsed from: ${command}`);
+    for (const rel of [launcher, script].filter(Boolean)) {
+      assert.ok(fs.existsSync(path.join(ROOT, rel)),
+        `${label} ${event}: hook script does not exist: ${rel} — run-with-flags.js prints "Script not found" and exits 0, so the hook is a silent no-op`);
+    }
+  }
+}
+
+// These two resolve against the REPO root, which is the only root where they resolve. The names
+// used to read "every hook ... resolves to a script on disk", which invited exactly the wrong
+// inference: that hooks resolve where they RUN. They do not. Measured on a real
+// `node bin/install.js --claude --local`, ZERO of the eight registered command paths resolve,
+// because the scripts install to .claude/hooks/ while the commands name .agent/hooks/ and bin/.
+// The gap is pinned executably by the test below, so these two cannot be mistaken for evidence
+// that hook enforcement works.
+test('every hook in .claude/settings.json resolves against the REPO root (local dev only)', () => {
+  assertRepoHooksResolve('.claude/settings.json', path.join(ROOT, '.claude', 'settings.json'));
+});
+
+test('every hook in .agent/settings.json resolves against the REPO root (local dev only)', () => {
+  assertRepoHooksResolve('.agent/settings.json', path.join(ROOT, '.agent', 'settings.json'));
+});
+
+test('REG-01 LANDED: an install registers hooks whose paths resolve and which really deny', () => {
+  // This replaces a pinned-gap test that asserted an install writes NO settings.json. Its own failure
+  // message specified the replacement: "every emitted command path must resolve, and a deny payload
+  // must be answered with exit 2." That is what this asserts.
+  //
+  // The gap it recorded was real and worth having pinned: run-with-flags.js echoes stdin and exits 0
+  // on a missing script for ADVISORY ids, which Claude Code reads as ALLOW. That is why a
+  // partially-resolving config would be worse than none — and why the registrar refuses to write one,
+  // running an execution preflight and rolling back if any deny-class hook fails to deny.
+  const { spawnSync } = require('child_process');
+  const os = require('os');
+  const reg = require(path.join(ROOT, 'bin', 'installer', 'hook-registration.js'));
+  const project = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-hookgap-')));
+  try {
+    fs.writeFileSync(path.join(project, 'package.json'),
+      JSON.stringify({ name: 'their-app', version: '1.0.0' }, null, 2));
+    // HOME confined to the scratch project. installer-core.js:253 resolves its registry through
+    // os.homedir(); this call site was the ORIGINAL instance of the leak that put 237 test tmpdirs
+    // into a real ~/.mindforge/registry.json. tests/no-home-leak.test.js bans the pattern repo-wide.
+    const homeDir = path.join(project, '.scratch-home');
+    fs.mkdirSync(homeDir, { recursive: true });
+    const r = spawnSync(process.execPath, [path.join(ROOT, 'bin', 'install.js'), '--claude', '--local'], {
+      cwd: project, encoding: 'utf8',
+      env: { PATH: process.env.PATH, HOME: homeDir, CI: '1' },
+    });
+    assert.strictEqual(r.status, 0, `install failed: ${(r.stderr || '').slice(0, 600)}`);
+
+    // 1. A registration now exists, and it is the PROJECT settings file, not settings.local.json.
+    const settingsPath = path.join(project, '.claude', 'settings.json');
+    assert.ok(fs.existsSync(settingsPath), 'an install must now register hooks in .claude/settings.json');
+    assert.ok(!fs.existsSync(path.join(project, '.agent', 'settings.json')),
+      'no .agent mirror may be written — its BeforeTool/AfterTool events are recorded as never firing, '
+      + 'so emitting one would be decorative config that makes the harness look wired');
+
+    // 2. EVERY path in EVERY emitted command resolves. This is the assertion the pinned gap asked
+    //    for, and it covers BOTH tokens — the dispatcher and the 2nd positional script argument.
+    //    A rewrite that fixed only the first is exactly how the plugin channel broke.
+    const emitted = hookCommands(readJson(settingsPath).hooks);
+    assert.strictEqual(emitted.length, reg.HOOK_SPEC.length,
+      `expected ${reg.HOOK_SPEC.length} registered commands, got ${emitted.length}`);
+    const unresolved = [];
+    for (const { command } of emitted) {
+      for (const token of command.split(/\s+/)) {
+        const rel = token.replace(/^"|"$/g, '').replace(/^\$\{?CLAUDE_PROJECT_DIR\}?\//, '');
+        if (!rel.endsWith('.js')) continue;
+        if (!fs.existsSync(path.join(project, rel))) unresolved.push(rel);
+      }
+    }
+    assert.deepStrictEqual(unresolved, [],
+      `${unresolved.length} emitted path(s) do not resolve in the install: ${unresolved.join(', ')}. `
+      + 'A missing script makes an advisory hook echo stdin and exit 0, which reads as ALLOW.');
+
+    // 3. And it really denies. Payload PAIRED to the hook that guards it — a generic bad payload
+    //    proves nothing, since trust-gate answers only high-impact commands while --no-verify is
+    //    mindforge-block-no-verify's surface.
+    const denyCmd = emitted.map((e) => e.command).find((c) => / mindforge-block-no-verify /.test(c));
+    assert.ok(denyCmd, 'mindforge-block-no-verify must be registered');
+    const denied = spawnSync('/bin/sh', ['-c', denyCmd], {
+      cwd: project, encoding: 'utf8',
+      env: { PATH: process.env.PATH, HOME: homeDir, CLAUDE_PROJECT_DIR: project },
+      input: JSON.stringify({
+        hook_event_name: 'PreToolUse', tool_name: 'Bash',
+        tool_input: { command: 'git commit --no-verify -m x' },
+      }),
+    });
+    assert.strictEqual(denied.status, 2,
+      `the registered command must answer --no-verify with exit 2, got ${denied.status}. Exit 0 is a `
+      + 'permit; exit 1 is outside the 0-allow/2-deny contract and a harness reads it as an error.');
+
+    // 4. The previously-orphaned scripts now ship. trust-gate-hook.js lives in bin/security/, outside
+    //    the .agent/hooks/ tree the installer copies, which is why it reached 0 of 6 harnesses.
+    assert.ok(fs.existsSync(path.join(project, '.claude', 'hooks', 'run-with-flags.js')),
+      'the dispatcher must be present at .claude/hooks/');
+    for (const { dst } of reg.COPY_MANIFEST) {
+      assert.ok(fs.existsSync(path.join(project, dst)),
+        `${dst} must now be copied — it is referenced by a registered command or required by one`);
+    }
+  } finally { fs.rmSync(project, { recursive: true, force: true }); }
+});
+test('every plugin hook resolves under the plugin root, require()d deps included', () => {
+  const cmds = hookCommands(readJson(path.join(PLUGIN, 'hooks', 'hooks.json')).hooks);
+  assert.ok(cmds.length > 0, 'plugin hooks.json declares no hooks');
+  for (const { event, command } of cmds) {
+    const { launcher, script } = parseHookCommand(command);
+    assert.ok(launcher, `${event}: no launcher script parsed from: ${command}`);
+    for (const raw of [launcher, script].filter(Boolean)) {
+      // BOTH halves must be rebased; a bare .agent/hooks/ or bin/ path is the silent no-op.
+      assert.ok(raw.startsWith(PLUGIN_ROOT_PREFIX),
+        `${event}: plugin hook path is not rebased onto \${CLAUDE_PLUGIN_ROOT}: ${raw}`);
+      const rel = raw.slice(PLUGIN_ROOT_PREFIX.length);
+      assert.ok(fs.existsSync(path.join(PLUGIN, rel)),
+        `${event}: script missing from the plugin: ${rel} (re-run scripts/build-mindforge-plugin.js)`);
+    }
+  }
+  // run-with-flags.js require()s these at module scope; the flat copy dropped them, which is
+  // why every plugin hook exited 1 with MODULE_NOT_FOUND.
+  for (const dep of ['lib/hook-flags.js', 'lib/pretooluse-visible-output.js']) {
+    assert.ok(fs.existsSync(path.join(PLUGIN, 'scripts', dep)),
+      `plugins/mindforge/scripts/${dep} is missing — run-with-flags.js cannot load, so every plugin hook dies on its first fire`);
+  }
+});
+
+// ── 2c. Hook parity across the three configs ──────────────────────────────────
+// Measured, not assumed: .claude/settings.json declares 8 hook commands, .agent/settings.json
+// 7, and the generated plugin 7. The gap is exactly ONE hook id — `instinct-capture`
+// (bin/hooks/instinct-capture-hook.js), which commit bbe2e8d wired into .claude/settings.json
+// and never mirrored into .agent/settings.json. So the honest target is NOT "8/8/8": it is
+// (a) plugin == .agent by construction, and (b) the .claude-only set pinned to that one known
+// id so the divergence cannot widen unnoticed. Closing it would enable a data-writing
+// PostToolUse hook on the Gemini runtime AND require bundling its dependency closure
+// (bin/hooks/lib/detect-project.js, bin/utils/file-lock.js, both reached by layout-sensitive
+// relative requires) into the plugin — a behaviour change that belongs in its own review.
+const CLAUDE_ONLY_HOOK_IDS = ['instinct-capture'];
+
+const hookIdSet = (hooksObj) =>
+  new Set(hookCommands(hooksObj).map((c) => parseHookCommand(c.command).hookId));
+
+test('plugin hook ids match .agent/settings.json exactly (translation fidelity)', () => {
+  const agentIds = hookIdSet(readJson(path.join(ROOT, '.agent', 'settings.json')).hooks);
+  const pluginIds = hookIdSet(readJson(path.join(PLUGIN, 'hooks', 'hooks.json')).hooks);
+  assert.deepStrictEqual([...pluginIds].sort(), [...agentIds].sort(),
+    'plugin hooks.json is out of sync with .agent/settings.json — re-run scripts/build-mindforge-plugin.js');
+});
+
+test('.claude and .agent hook sets differ only by the known instinct-capture gap', () => {
+  const claudeIds = hookIdSet(readJson(path.join(ROOT, '.claude', 'settings.json')).hooks);
+  const agentIds = hookIdSet(readJson(path.join(ROOT, '.agent', 'settings.json')).hooks);
+  const claudeOnly = [...claudeIds].filter((id) => !agentIds.has(id)).sort();
+  const agentOnly = [...agentIds].filter((id) => !claudeIds.has(id)).sort();
+  assert.deepStrictEqual(agentOnly, [],
+    `.agent/settings.json declares hooks Claude Code never runs: ${agentOnly.join(', ')}`);
+  assert.deepStrictEqual(claudeOnly, CLAUDE_ONLY_HOOK_IDS.slice().sort(),
+    `.claude vs .agent hook divergence changed (now: ${claudeOnly.join(', ') || 'none'}) — either mirror the hook into .agent/settings.json and bundle its deps into the plugin, or update CLAUDE_ONLY_HOOK_IDS deliberately`);
+});
+
+// ── 2d. CONTENT parity, not identity parity ───────────────────────────────────
+//
+// THE DEFECT THESE CATCH. Commit 277b842 fixed a Bash bypass in .claude/settings.json and 2d3c566
+// fixed a fail-open in bin/security/trust-gate-hook.js. Neither touched .agent/settings.json, which is
+// the generator's INPUT (scripts/build-mindforge-plugin.js:206), so the shipped plugin kept both
+// defects. Measured against the shipped copies before regenerating:
+//
+//     plugins/.../scripts/security/trust-gate-hook.js        1836 bytes   repo: 4934   DRIFTED
+//     plugins/.../scripts/mindforge-config-protection.js     5682 bytes   repo: 9447   DRIFTED
+//     plugin trust-gate, tool_name=Bash  -> DENY  (exit 2)
+//     plugin trust-gate, tool_name=Shell -> PERMIT (exit 0)   <- the fail-open, still shipping
+//
+// Four suites passed straight through it, because every parity check compared IDENTITY rather than
+// CONTENT: hook-ID SETS via hookIdSet(), skill/command COUNTS, and file EXISTENCE. A stale file has
+// the same name and the same id as a fresh one. So these assertions compare bytes and behaviour.
+
+const { HOOK_TREES } = require(path.join(ROOT, 'scripts', 'build-mindforge-plugin.js'));
+// node:crypto explicitly — the bare global `crypto` in modern Node is WebCrypto, which has no
+// createHash, and the failure reads "crypto.createHash is not a function" rather than "not defined".
+const nodeCrypto = require('node:crypto');
+
+/**
+ * The profiles token from a hook command: `node <launcher> <hookId> <script> <profiles>`.
+ * parseHookCommand() above returns only {hookId, launcher, script}, so reading `.profiles` off it
+ * yields undefined — and comparing undefined to undefined made the tuple test below pass VACUOUSLY
+ * until the deny-class assertion exposed it.
+ */
+function profilesOf(command) {
+  const tokens = String(command).trim().split(/\s+/).map((t) => t.replace(/^"|"$/g, ''));
+  const last = tokens[tokens.length - 1] || '';
+  return /^[a-z,]+$/.test(last) && !last.endsWith('.js') ? last : '';
+}
+
+/** Every .js the generator copies, as {src, dst} absolute pairs, derived from the generator itself. */
+function shippedHookScripts() {
+  const pairs = [];
+  const walk = (absSrc, absDst, relBase) => {
+    for (const e of fs.readdirSync(absSrc, { withFileTypes: true })) {
+      if (e.isDirectory()) walk(path.join(absSrc, e.name), path.join(absDst, e.name), `${relBase}/${e.name}`);
+      else if (e.name.endsWith('.js')) {
+        pairs.push({ src: path.join(absSrc, e.name), dst: path.join(absDst, e.name), rel: `${relBase}/${e.name}` });
+      }
+    }
+  };
+  for (const { repoRel, pluginRel } of HOOK_TREES) {
+    walk(path.join(ROOT, ...repoRel.split('/')), path.join(PLUGIN, ...pluginRel.split('/')), pluginRel);
+  }
+  return pairs;
+}
+
+const sha = (f) => nodeCrypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex');
+
+test('every shipped hook script is BYTE-IDENTICAL to its repo source', () => {
+  // The assertion that was missing. HOOK_TREES comes from the generator, so a test cannot drift from
+  // the mapping it is checking.
+  const drifted = [];
+  for (const { src, dst, rel } of shippedHookScripts()) {
+    if (!fs.existsSync(dst)) { drifted.push(`${rel} MISSING from the plugin`); continue; }
+    if (sha(src) !== sha(dst)) {
+      drifted.push(`${rel} (source ${fs.statSync(src).size}B vs shipped ${fs.statSync(dst).size}B)`);
+    }
+  }
+  assert.deepStrictEqual(drifted, [],
+    `${drifted.length} shipped hook script(s) differ from their source — re-run `
+    + `scripts/build-mindforge-plugin.js:\n  ${drifted.join('\n  ')}`);
+});
+
+test('plugin hooks.json matches .agent/settings.json as full TUPLES, not just ids', () => {
+  // hookIdSet() above compares only ids, so a matcher or profile change in the source could not
+  // possibly show up. That is exactly how the plugin shipped config-protection without the Bash
+  // matcher and without the minimal profile after 277b842.
+  const tuples = (hooksObj, eventMap) => {
+    const out = [];
+    for (const [event, groups] of Object.entries(hooksObj)) {
+      for (const g of [].concat(groups)) {
+        for (const h of (g.hooks || [])) {
+          const { hookId } = parseHookCommand(h.command);
+          out.push([eventMap[event] || event, g.matcher || '', hookId, profilesOf(h.command)].join(' | '));
+        }
+      }
+    }
+    return out.sort();
+  };
+  // The generator translates the Gemini event vocabulary to Claude Code's.
+  const AGENT_TO_CLAUDE = { BeforeTool: 'PreToolUse', AfterTool: 'PostToolUse', SessionStart: 'SessionStart' };
+  const agent = tuples(readJson(path.join(ROOT, '.agent', 'settings.json')).hooks, AGENT_TO_CLAUDE);
+  const plugin = tuples(readJson(path.join(PLUGIN, 'hooks', 'hooks.json')).hooks, {});
+  // NON-VACUITY: if profiles parsed as empty on both sides the comparison would hold trivially, which
+  // is how the first version of this test passed while reading `undefined` for every profile.
+  assert.ok(agent.length > 0 && agent.every((t) => t.split(' | ')[3].length > 0),
+    `every tuple must carry a real profiles token, got: ${agent.join(' ;; ')}`);
+  assert.deepStrictEqual(plugin, agent,
+    'plugin hooks.json diverges from .agent/settings.json in matcher or profiles, not only ids — '
+    + 're-run scripts/build-mindforge-plugin.js');
+});
+
+test('.agent and .claude agree on matcher and profiles for every SHARED hook', () => {
+  // The source-of-truth gap itself. .claude/settings.json is what the maintainers edit and what
+  // REG-01 emits; .agent/settings.json is what the plugin is BUILT from. A security fix applied to one
+  // and not the other ships a defect to the plugin channel while the repo tests green.
+  const byId = (hooksObj) => {
+    const m = new Map();
+    for (const groups of Object.values(hooksObj)) {
+      for (const g of [].concat(groups)) {
+        for (const h of (g.hooks || [])) {
+          const { hookId } = parseHookCommand(h.command);
+          m.set(hookId, { matcher: g.matcher || '', profiles: profilesOf(h.command) });
+        }
+      }
+    }
+    return m;
+  };
+  const claude = byId(readJson(path.join(ROOT, '.claude', 'settings.json')).hooks);
+  const agent = byId(readJson(path.join(ROOT, '.agent', 'settings.json')).hooks);
+  const mismatched = [];
+  for (const [id, c] of claude) {
+    if (CLAUDE_ONLY_HOOK_IDS.includes(id)) continue;
+    const a = agent.get(id);
+    if (!a) { mismatched.push(`${id}: absent from .agent/settings.json`); continue; }
+    if (a.matcher !== c.matcher) mismatched.push(`${id}: matcher .claude="${c.matcher}" vs .agent="${a.matcher}"`);
+    if (a.profiles !== c.profiles) mismatched.push(`${id}: profiles .claude="${c.profiles}" vs .agent="${a.profiles}"`);
+  }
+  assert.deepStrictEqual(mismatched, [],
+    `${mismatched.length} hook(s) are wired differently in the two configs, so a fix landed in one `
+    + `channel only:\n  ${mismatched.join('\n  ')}`);
+});
+
+test('the SHIPPED trust-gate denies a non-Bash shell payload', () => {
+  // Behaviour, not bytes. Byte-identity above would also be satisfied if BOTH copies were broken; this
+  // pins that what actually ships enforces. Fragments keep the fixture out of the repo's own guards.
+  const { spawnSync } = require('child_process');
+  const shipped = path.join(PLUGIN, 'scripts', 'security', 'trust-gate-hook.js');
+  assert.ok(fs.existsSync(shipped), 'the plugin must ship the trust gate');
+  const destructive = ['rm', '-rf', '/'].join(' ');
+  for (const tool of ['Bash', 'Shell', 'PowerShell']) {
+    const r = spawnSync(process.execPath, [shipped], {
+      input: JSON.stringify({ hook_event_name: 'PreToolUse', tool_name: tool, tool_input: { command: destructive } }),
+      encoding: 'utf8',
+    });
+    assert.strictEqual(r.status, 2,
+      `the SHIPPED trust-gate permitted a destructive command under tool_name=${tool} (exit ${r.status}). `
+      + 'The plugin channel shipped exactly this fail-open until the generator was re-run.');
+  }
+});
+
+test('every deny-class hook in the shipped hooks.json carries the minimal profile', () => {
+  // A deny-class hook a profile can silently drop is not deny-class. The shipped plugin gave
+  // config-protection standard,strict only, so MINDFORGE_HOOK_PROFILE=minimal skipped it there while
+  // the repo copy fired.
+  const reg = require(path.join(ROOT, 'bin', 'installer', 'hook-registration.js'));
+  const missing = [];
+  for (const groups of Object.values(readJson(path.join(PLUGIN, 'hooks', 'hooks.json')).hooks)) {
+    for (const g of [].concat(groups)) {
+      for (const h of (g.hooks || [])) {
+        const { hookId } = parseHookCommand(h.command);
+        const profiles = profilesOf(h.command);
+        if (reg.DENY_CLASS.has(hookId) && !/\bminimal\b/.test(profiles)) missing.push(`${hookId} -> ${profiles}`);
+      }
+    }
+  }
+  assert.deepStrictEqual(missing, [],
+    `deny-class hook(s) in the shipped plugin omit the minimal profile: ${missing.join(', ')}`);
+});
+
+test('importing the generator does NOT rewrite the plugin tree', () => {
+  // The generator ran at module scope — a bare require() wiped plugins/ and returned without
+  // rebuilding, taking it from 3 dirty files to 524. That made the generator unusable from a test, and
+  // any tool that merely imported it destroyed 526 tracked files. Now behind require.main.
+  const src = fs.readFileSync(path.join(ROOT, 'scripts', 'build-mindforge-plugin.js'), 'utf8');
+  assert.match(src, /require\.main === module/,
+    'the generator must only build when run directly, never as an import side effect');
+  const code = src.split('\n').filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l));
+  const topLevelCalls = code.filter((l) => /^(rmrf|buildMcp|buildManifest|buildCommands|buildAgents|buildSkills|buildHooks)\(/.test(l));
+  assert.deepStrictEqual(topLevelCalls, [],
+    `${topLevelCalls.length} generator call(s) still run at module scope: ${topLevelCalls.join(' ')}`);
 });
 
 // ── 3. Frontmatter validity (the "loads empty" guard) ─────────────────────────

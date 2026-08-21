@@ -43,6 +43,15 @@ node tests/subagent-import.test.js
   (regardless of the test's own depth) and `NODE_ENV=test`. Results are
   aggregated and the runner exits 1 if anything failed.
 - **New `*.test.js` files are picked up automatically — no registration step.**
+- **An empty run is never a pass.** Zero discovered files exits **1** (`RUNNER-FLOOR`).
+  It used to print `No test files found.` and exit **0**, which made a partial checkout
+  of `tests/` or a discovery regression look like a green suite — and that exit
+  code is what the CI coverage gate and `npm test` (the only quality step before
+  `npm publish`) both read. A `--filter` that selects nothing also exits 1; pass
+  `--allow-empty` if the empty selection is deliberate. `--allow-empty` does **not**
+  apply to zero discovery. All of this is asserted by `run-all-floor.test.js`, which
+  also holds a floor of 90 discovered files and cross-checks `discoverTests()` against
+  an independently implemented walk of `tests/`.
 
 Two directives are honoured, and only on the file's **first line**:
 

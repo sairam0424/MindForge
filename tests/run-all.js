@@ -9,6 +9,12 @@
  *   node tests/run-all.js
  *   node tests/run-all.js --filter=sdk
  *   node tests/run-all.js --filter=security,audit
+ *   node tests/run-all.js --filter=sdk --allow-empty
+ *
+ * Exit codes:
+ *   0  every selected file passed (or was skipped)
+ *   1  a file failed, OR nothing was discovered / nothing was selected
+ *      (see RUNNER-FLOOR in main() — an empty run is never a pass)
  *
  * Skip mechanism:
  *   If a test file's first line is `// @skip: reason`, it will be skipped.
@@ -32,6 +38,10 @@ const filterArg = args.find(a => a.startsWith('--filter='));
 const filterPatterns = filterArg
   ? filterArg.replace('--filter=', '').split(',').map(p => p.trim().toLowerCase())
   : null;
+// An empty test selection is a failure by default (see RUNNER-FLOOR in main()).
+// --allow-empty is the explicit opt-out for an exploratory --filter, mirroring the
+// Jest/Vitest --passWithNoTests precedent. It never applies to zero discovery.
+const allowEmpty = args.includes('--allow-empty');
 
 // ── Discover test files ──────────────────────────────────────────────────────
 
@@ -106,11 +116,40 @@ function runTest(filePath) {
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 function main() {
-  const testFiles = discoverTests();
+  // Discovery runs twice when a filter is present: once unfiltered, to prove the
+  // suite exists at all, and once filtered, to choose what to run. discoverTests
+  // stays the single implementation of the match rule; the extra walk is one
+  // readdir of tests/ and costs nothing measurable.
+  const allFiles = discoverTests(null);
+  const testFiles = filterPatterns ? discoverTests(filterPatterns) : allFiles;
 
+  // RUNNER-FLOOR. This branch used to print 'No test files found.' and exit 0, so
+  // an empty suite reported success. Every quality claim in the repo rests on this
+  // exit code: mindforge-ci.yml gates coverage with
+  // `npx c8 --check-coverage --lines 30 node tests/run-all.js`, and
+  // mindforge-release.yml runs `npm test` as the ONLY quality step before
+  // `npm publish`. A partial checkout of tests/, or a discovery regression, would
+  // therefore have shipped green. (A wrong cwd cannot cause this: TESTS_DIR is
+  // resolved from __dirname at line 23, not from process.cwd().) Zero discovered files is never a pass, and
+  // --allow-empty deliberately cannot suppress this branch.
+  if (allFiles.length === 0) {
+    console.error(`\n✗ RUNNER-FLOOR: no *.test.js file discovered under ${TESTS_DIR}`);
+    console.error('  Nothing ran, so nothing passed. This is a discovery/checkout failure, not a green suite.');
+    process.exit(1);
+  }
+
+  // A --filter matching nothing is the same false green in miniature: the caller
+  // asked for a selection and got an empty one. Fail it, and offer --allow-empty
+  // for the deliberate case, rather than silently exiting 0.
   if (testFiles.length === 0) {
-    console.log('No test files found.');
-    process.exit(0);
+    const selector = `--filter=${filterPatterns.join(',')}`;
+    if (allowEmpty) {
+      console.log(`\n○ ${selector} matched 0 of ${allFiles.length} discovered file(s); --allow-empty given, treating as pass.`);
+      return;
+    }
+    console.error(`\n✗ RUNNER-FLOOR: ${selector} matched 0 of ${allFiles.length} discovered file(s)`);
+    console.error('  Nothing ran, so nothing passed. Fix the filter, or pass --allow-empty if an empty selection is intended.');
+    process.exit(1);
   }
 
   console.log(`\nMindForge Test Runner — ${testFiles.length} file(s) discovered\n`);

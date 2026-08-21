@@ -1,6 +1,6 @@
 /**
  * MindForge SDK — Public API
- * @module @mindforge/sdk
+ * @module mindforge-sdk
  */
 
 export { MindForgeClient } from './client';
@@ -26,4 +26,4 @@ export type {
   BatchExecutionResult,
 } from './types';
 
-export const VERSION = '11.9.2';
+export const VERSION = '11.9.3';

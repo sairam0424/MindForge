@@ -10,7 +10,12 @@ const { execSync }         = require('child_process');
 const { compareSemver, upgradeType, fetchLatestVersion } = require('./version-comparator');
 const { fetchChangelog }   = require('./changelog-fetcher');
 
-const CURRENT_VERSION = require('../../package.json').version;
+// MindForge's OWN version, not the host project's. `require('../../package.json')` resolved to
+// the CONSUMER's manifest once bin/updater/ was copied into a project — measured 1.0.0 for an
+// app installed alongside MindForge 11.9.2, which made every upgrade read as MAJOR and fed a
+// bogus "from" version into the migration path below.
+const { resolveMindforgeVersion } = require('../utils/mindforge-version');
+const CURRENT_VERSION = resolveMindforgeVersion({ fromDir: __dirname }).version;
 
 /**
  * Detect where MindForge was originally installed.

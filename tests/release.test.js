@@ -12,10 +12,35 @@ const assert = require('assert');
 const { install, run } = require('../bin/installer-core');
 
 let passed = 0, failed = 0;
+const pending = [];
 
+/**
+ * AWAITS ASYNC TESTS. It did not, and two of the five here are `async`, so their assertions ran in an
+ * un-awaited continuation AFTER the runner had already printed ✅ and after the summary line. A
+ * failure surfaced as an unhandled rejection that terminated the process with the final report still
+ * reading "5 passed, 0 failed" — the assertions could not fail the suite, only crash it.
+ *
+ * Proven while changing the migration below: the old body asserted `migrated.runtime === 'unknown'`,
+ * which is now false, and the output was:
+ *
+ *     ✅  Migration: 1.0.0 → 2.0.0 backfills AUDIT.jsonl
+ *     Results: 5 passed, 0 failed
+ *     ✅  v2.0.0 Release Validation Passed.
+ *     SyntaxError: Unexpected non-whitespace character after JSON ... at release.test.js:76:25
+ *
+ * A green report followed by a stack trace. Queuing the promise and awaiting it before the summary is
+ * what makes an async assertion able to fail.
+ */
 function test(name, fn) {
   try {
-    fn();
+    const out = fn();
+    if (out && typeof out.then === 'function') {
+      pending.push(out.then(
+        () => { console.log(`  ✅  ${name}`); passed++; },
+        (e) => { console.error(`  ❌  ${name}\n      ${e.message}`); failed++; },
+      ));
+      return;
+    }
     console.log(`  ✅  ${name}`);
     passed++;
   } catch (e) {
@@ -61,22 +86,29 @@ test('Installer: Gemini adapter performs model/path substitutions', () => {
   assert.ok(!gemini.includes('claude-3-5-sonnet'), 'Gemini still contains Claude model name');
 });
 
-test('Migration: 1.0.0 → 2.0.0 backfills AUDIT.jsonl', async () => {
+test('Migration: 1.0.0 → 2.0.0 APPENDS to AUDIT.jsonl and rewrites nothing', async () => {
+  // Was 'backfills AUDIT.jsonl', asserting runtime==='unknown' and agent_id==='migrated-v1' on the
+  // rewritten entry. Those fields have zero readers in bin/ outside bin/migrations/, and writing them
+  // rewrote every line of a SHA-256 back-linked log, breaking it at entry 0 while the migration
+  // reported success. The contract is now append-only, so this asserts the original line survives
+  // BYTE-IDENTICAL — a stronger and much simpler statement than field equality.
   const migration = require('../bin/migrations/1.0.0-to-2.0.0');
-  const v1Audit = JSON.stringify({ id: 'v1-1', event: 'test', timestamp: '2023' });
-  
-  // Custom mock for paths
+  const original = JSON.stringify({ id: 'v1-1', event: 'test', timestamp: '2023' });
+
   const testAudit = path.join(TEST_ROOT, 'AUDIT.jsonl');
   const testHandoff = path.join(TEST_ROOT, 'HANDOFF.json');
-  fs.writeFileSync(testAudit, v1Audit + '\n');
+  fs.writeFileSync(testAudit, original + '\n');
   fs.writeFileSync(testHandoff, JSON.stringify({ plugin_api_version: '1.0.0' }));
-  
+
   await migration.run({ audit: testAudit, handoff: testHandoff });
-  
-  const migrated = JSON.parse(fs.readFileSync(testAudit, 'utf8'));
-  assert.strictEqual(migrated.runtime, 'unknown', 'Audit runtime not backfilled');
-  assert.strictEqual(migrated.agent_id, 'migrated-v1', 'Audit agent_id not backfilled');
-  
+
+  const lines = fs.readFileSync(testAudit, 'utf8').split('\n').filter(Boolean);
+  assert.strictEqual(lines[0], original,
+    `the pre-existing entry was REWRITTEN. Got:\n  ${lines[0]}\nexpected byte-identical:\n  ${original}`);
+  assert.strictEqual(lines.length, 2, `expected one appended record, got ${lines.length} line(s)`);
+  assert.strictEqual(JSON.parse(lines[1]).event, 'schema_migrated',
+    'the migration must record itself rather than run silently');
+
   const handoff = JSON.parse(fs.readFileSync(testHandoff, 'utf8'));
   assert.strictEqual(handoff.plugin_api_version, '2.0.0', 'Handoff not upgraded to 2.0.0');
 });
@@ -92,8 +124,13 @@ test('CLI: --runtime opencode parses correctly', async () => {
   assert.strictEqual(runtime, 'opencode', 'Failed to parse --runtime flag');
 });
 
-console.log(`\n${'─'.repeat(55)}`);
-console.log(`Results: ${passed} passed, ${failed} failed`);
+// Drain the async tests BEFORE reporting. Printing the summary first is what let a failing async
+// assertion coexist with "5 passed, 0 failed".
+(async () => {
+  await Promise.all(pending);
+  console.log(`\n${'─'.repeat(55)}`);
+  console.log(`Results: ${passed} passed, ${failed} failed`);
 
-if (failed > 0) process.exit(1);
-else console.log('\n✅  v2.0.0 Release Validation Passed.\n');
+  if (failed > 0) process.exit(1);
+  else console.log('\n✅  v2.0.0 Release Validation Passed.\n');
+})();

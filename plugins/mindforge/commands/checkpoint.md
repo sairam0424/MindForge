@@ -61,7 +61,7 @@ Remove old checkpoints, keeping the last 5.
 
 ## AUDIT linkage
 
-Each create/verify optionally writes a Merkle-linked AUDIT.jsonl entry:
+Each create/verify optionally writes a hash-chained AUDIT.jsonl entry:
 
 ```json
 { "event": "checkpoint_created", "name": "core-done", "sha": "abc1234", "tests_pass_rate": 1.0, "coverage": 0.0 }

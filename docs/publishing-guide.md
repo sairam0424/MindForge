@@ -4,7 +4,7 @@ This guide outlines the standard procedure for publishing a new version of `mind
 
 ## Prerequisites
 
-1. **NPM Permissions**: You must have publish access to the `mindforge-cc` and `@mindforge/sdk` packages.
+1. **NPM Permissions**: You must have publish access to the `mindforge-cc` and `mindforge-sdk` packages.
 2. **Clean State**: Ensure all changes are committed and your working directory is clean.
 3. **Authentication**: Run `npm whoami` to verify you are logged into the correct account.
 
@@ -34,7 +34,12 @@ Then verify from outside the repo:
 
 ```bash
 npm view mindforge-cc@[version] dist --json    # attestations.provenance must be present
-npm view mindforge-cc dist-tags                # latest must be [version], NOT alpha
+npm dist-tag ls mindforge-cc                   # latest must be [version], NOT alpha;
+                                               # stable must also be [version] — the release
+                                               # workflow moves it as its last step. Use
+                                               # `dist-tag ls`, not `npm view`: the latter reads
+                                               # the CDN-cached packument (max-age=300) and can
+                                               # show the pre-release value right after a publish.
 ```
 
 > **Do not publish manually.** See the warning below — it is not a style preference, it is an

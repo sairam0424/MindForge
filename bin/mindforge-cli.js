@@ -167,6 +167,17 @@ const COMMANDS = {
 };
 
 // ── Workflow subcommand (non-script, handled inline) ─────────────────────────
+//
+// Routable but NOT a COMMANDS key, because it dispatches to a module rather than spawning a script.
+// That made the CLI lie about itself: `workflow` is the most-documented verb in the project (126
+// references across the docs) and it works, yet it appeared in neither `--help` nor the
+// "Available commands" list, so a user who mistyped it was told it does not exist. Declared here, next
+// to the handler that makes it real, and consumed by both self-report sites below — one source, so the
+// two cannot drift.
+const INLINE_COMMANDS = ['workflow'];
+/** Every verb the router will actually dispatch: table-driven plus inline. */
+const ROUTABLE = [...Object.keys(COMMANDS), ...INLINE_COMMANDS].sort();
+
 if (COMMAND === 'workflow') {
   const workflowRunner = require('./workflows/workflow-runner');
   workflowRunner.run(COMMAND_ARGS[0], COMMAND_ARGS.slice(1));
@@ -174,8 +185,18 @@ if (COMMAND === 'workflow') {
 }
 
 if (ARGS.includes('--version') || ARGS.includes('-V')) {
-  console.log(require('../package.json').version);
-  process.exit(0);
+  // Resolve by package NAME. In an install this file lands at <project>/bin/mindforge-cli.js, so
+  // '../package.json' is the CONSUMER's manifest and `--version` confidently printed THEIR app's
+  // version as MindForge's — measured: 1.0.0 for a host app at 1.0.0, while MindForge was 11.9.2.
+  // Exit non-zero on an unresolvable version rather than guessing: the whole point of this command
+  // is to be trusted, and a plausible wrong answer is worse than an honest failure.
+  try {
+    console.log(require('./utils/mindforge-version').resolveMindforgeVersion().version);
+    process.exit(0);
+  } catch (err) {
+    console.error(err.message);
+    process.exit(1);
+  }
 }
 
 if (!COMMAND || ARGS.includes('--help') || ARGS.includes('-h')) {
@@ -187,8 +208,10 @@ const target = COMMANDS[COMMAND];
 if (!target) {
   console.error(`Unknown command: ${COMMAND}`);
 
-  // Suggest similar commands using Levenshtein distance
-  const suggestions = Object.keys(COMMANDS)
+  // Suggest similar commands using Levenshtein distance. ROUTABLE, not Object.keys(COMMANDS): a
+  // near-miss on `workflow` (`worklow`, `wokflow`) previously produced no suggestion at all, because
+  // the only verb it resembles was absent from the pool.
+  const suggestions = ROUTABLE
     .map(cmd => ({ cmd, dist: levenshtein(COMMAND, cmd) }))
     .filter(s => s.dist <= 3)
     .sort((a, b) => a.dist - b.dist)
@@ -197,7 +220,7 @@ if (!target) {
   if (suggestions.length > 0) {
     console.error(`\nDid you mean: ${suggestions.map(s => s.cmd).join(', ')}?`);
   } else {
-    console.error('Available commands: ' + Object.keys(COMMANDS).join(', '));
+    console.error('Available commands: ' + ROUTABLE.join(', '));
   }
   process.exit(1);
 }
@@ -213,8 +236,42 @@ const finalArgs = [...(target.defaultArgs || []), ...COMMAND_ARGS];
 
 console.log(`🚀 Executing: ${COMMAND} (${target.description})`);
 
+// The child runs in the USER'S project, not in MindForge's install directory.
+//
+// This was `cwd: ROOT`, which made every routed command operate on the framework's own tree
+// instead of the caller's. The worst case was `security-scan`, the command the protocol mandates
+// pre-commit for any Auth/Payment/PII change: measured against a fixture project whose
+// MINDFORGE.md declared 4 settings including `[MIN_SOUL_SCORE] = 99` (schema maximum is 10) and
+// `[COST_HARD_LIMIT_USD] = not-a-number`, it printed
+//
+//     ✅ MINDFORGE.md valid — 43 settings configured
+//
+// and exited 0. 43 is MindForge's OWN setting count. Two different fixture configs produced
+// byte-identical output, which is the proof it read neither: a security gate that cannot fail,
+// because it never sees the input it claims to check.
+//
+// MEASURED BLAST RADIUS before changing it — all 27 routed commands run under both values against
+// the same fixture. 7 differ, every one of them moving from the vendor's tree to the caller's, and
+// NONE regressed from success to failure:
+//
+//   security-scan                validated MindForge's config      -> reads the caller's
+//   classify                     TIER=2 from MindForge's git diff  -> diffs the caller's repo
+//   pr-review, cross-review      loaded MindForge's ConfigManager  -> looks in the caller's project
+//   learning, record-learning    reported MindForge's state        -> reports the caller's
+//   test-memory                  same ConfigManager shift
+//
+// `classify` deserves its own note: for every consumer it was classifying MindForge's changes.
+//
+// CI is unaffected, checked rather than assumed. control-plane.yml:80 runs `security-scan` as the
+// required ⚖️ Governance Enforcement check and mindforge-ci.yml:46 runs validate-config.js
+// directly; both execute with the repo root as cwd, so ROOT and process.cwd() are the same path
+// there and behaviour is byte-identical.
+//
+// A script that needs the FRAMEWORK's own assets must resolve them from __dirname, which is
+// independent of cwd — see the SCHEMA_PATH note in bin/validate-config.js. Anchoring vendor assets
+// to the process's working directory is what coupled these two unrelated things in the first place.
 const result = spawnSync('node', [scriptPath, ...finalArgs], {
-  cwd: ROOT,
+  cwd: process.cwd(),
   stdio: 'inherit',
   env: { ...process.env, MINDFORGE_CLI: 'true' }
 });
@@ -252,8 +309,12 @@ function printUsage() {
   for (const [name, cfg] of Object.entries(COMMANDS)) {
     console.log(`  ${name.padEnd(15)} ${cfg.description}`);
   }
+  // Listed separately because it dispatches to a module rather than spawning a script, so it has no
+  // COMMANDS entry to carry a description. Omitting it made --help contradict the router.
+  console.log(`  ${'workflow'.padEnd(15)} Run a registered dynamic workflow (see \`workflow list\`)`);
   console.log('\nExamples:');
   console.log('  node bin/mindforge-cli.js security-scan');
   console.log('  node bin/mindforge-cli.js headless --phase 1');
+  console.log('  node bin/mindforge-cli.js workflow list');
   console.log('\n');
 }

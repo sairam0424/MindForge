@@ -20,13 +20,23 @@
 
 'use strict';
 
-const VERSION = require('../package.json').version;
+// Resolved by package NAME, not by relative path. This file is copied into the consumer's project
+// by --with-utils, where '../package.json' is THEIR manifest — so a relative read prints their app's
+// version in the banner and in `--version`. resolveMindforgeVersion walks up for a package.json
+// whose name is 'mindforge-cc', then falls back to <cwd>/.mindforge/config.json.
+const VERSION = require('./utils/mindforge-version').resolveMindforgeVersion().version;
 const ARGS    = process.argv.slice(2);
 const Theme   = require('./wizard/theme');
 const c       = Theme.colors;
 
-// Note: Structural integrity check requires the presence of 'verifyInstall'.
-// The actual logic is now modularized in ./installer-core.js
+// The installation logic lives in ./installer-core.js; this file is the CLI entry point.
+//
+// A line here used to read "Structural integrity check requires the presence of 'verifyInstall'"
+// — a comment whose only purpose was to contain a string that tests/install.test.js grepped for.
+// The test asserted this file mentioned verifyInstall; the function had moved to installer-core.js
+// and was never called from anywhere. The comment satisfied the test, the test protected the
+// comment, and nothing verified an install. That test now asserts the delegation that actually
+// matters, and installer-core.js calls verifyInstall for real.
 
 // ── Minimum Node.js version gate ─────────────────────────────────────────────
 const NODE_MAJOR = parseInt(process.versions.node.split('.')[0], 10);
@@ -48,6 +58,56 @@ if (ARGS.includes('--version') || ARGS.includes('-v')) {
 if (ARGS.includes('--help') || ARGS.includes('-h')) {
   printHelp();
   process.exit(0);
+}
+
+// ── Reject unknown positional arguments ───────────────────────────────────────
+//
+// This installer has NO subcommands — it only takes flags. It also never looked at positionals, so
+// any bare word was silently ignored and the installer just ran. That mattered because the last
+// thing a successful install printed was, verbatim from bin/wizard/theme.js:
+//
+//     Next steps:
+//       mindforge-cc init   — Initialize your first workspace
+//
+// There is no `init`. Obeying the instruction re-ran the installer against whatever directory the
+// user happened to be standing in: measured in an empty temp dir, `node bin/install.js init` wrote
+// 1,836 files, created .claude/ .mindforge/ .planning/ bin/ plus CLAUDE.md, MINDFORGE.md and
+// AGENTS_LEARNING.md, exited 0 — and re-printed the same instruction, so it loops. The real command
+// is the slash command `/mindforge:init-project`, which the install has just placed in the harness.
+//
+// Rejecting is the right response rather than treating a positional as a target directory: this
+// script's whole contract is expressed in flags, and guessing what a stray word meant is how
+// `mindforge-cc /etc` becomes an interesting afternoon.
+//
+// `--runtime` takes its value as a SEPARATE token — installer-core.js's run() reads
+// args[rtIdx + 1] after locating args.indexOf('--runtime') — so that token is skipped here; a
+// naive "anything not starting with -" check would reject the documented `--runtime claude`.
+//
+// Cites the SYMBOL, not a line number. The original said :1112, which was exact when written and
+// wrong by the time it merged: two PRs in the same batch grew installer-core.js from 1173 to 1347
+// lines with 161 of them above that point, so the reference landed on unrelated code. A line
+// number in a comment is a claim with an expiry date and nothing asserts it.
+const VALUE_TAKING_FLAGS = new Set(['--runtime']);
+const POSITIONALS = [];
+for (let i = 0; i < ARGS.length; i++) {
+  if (ARGS[i].startsWith('-')) {
+    if (VALUE_TAKING_FLAGS.has(ARGS[i])) i += 1;
+    continue;
+  }
+  POSITIONALS.push(ARGS[i]);
+}
+if (POSITIONALS.length > 0) {
+  process.stderr.write(
+    `\n${c.red(Theme.chars.cross)}  ${c.bold(`Unknown argument: ${POSITIONALS[0]}`)}\n` +
+    '    mindforge-cc takes flags only — it has no subcommands.\n' +
+    (POSITIONALS[0] === 'init'
+      ? `    To initialise a workspace, run the slash command ${c.cyan('/mindforge:init-project')}\n` +
+        '    inside your AI harness after installing.\n'
+      : '') +
+    `    Install:   ${c.cyan('npx mindforge-cc --claude --local')}\n` +
+    `    All flags: ${c.cyan('npx mindforge-cc --help')}\n\n`
+  );
+  process.exit(1);
 }
 
 // ── Determine execution mode ──────────────────────────────────────────────────

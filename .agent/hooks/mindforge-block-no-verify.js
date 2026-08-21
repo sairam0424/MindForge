@@ -486,34 +486,73 @@ function checkCommand(input) {
 /**
  * Extract the command string from hook input (JSON or plain text).
  */
+/**
+ * Extract the command, and report whether input that LOOKED like JSON failed to parse.
+ *
+ * The parse-failure fallback used to `return trimmed` — scan the raw text for the bypass flag
+ * instead. That is a reasonable defence for genuinely non-JSON input, but on a TRUNCATED JSON
+ * payload it becomes a bypass: the flag is simply absent from the surviving prefix, the scan finds
+ * nothing, and the hook approves. Callers now block instead, matching trust-gate-hook.js, which
+ * prints "parse error (BLOCKING)" and exits 2 — and which is why trust-gate was NOT bypassable
+ * this way while this hook was.
+ *
+ * @returns {{command: string, jsonParseFailed: boolean}}
+ */
 function extractCommand(rawInput) {
   const trimmed = rawInput.trim();
-  if (!trimmed.startsWith('{')) return trimmed;
+  if (!trimmed.startsWith('{')) return { command: trimmed, jsonParseFailed: false };
 
   try {
     const parsed = JSON.parse(trimmed);
-    if (typeof parsed !== 'object' || parsed === null) return trimmed;
+    if (typeof parsed !== 'object' || parsed === null) {
+      return { command: trimmed, jsonParseFailed: false };
+    }
 
     // Claude Code format: { tool_input: { command: "..." } }
     const cmd = parsed.tool_input?.command;
-    if (typeof cmd === 'string') return cmd;
+    if (typeof cmd === 'string') return { command: cmd, jsonParseFailed: false };
 
     // Generic JSON formats
     for (const key of ['command', 'cmd', 'input', 'shell', 'script']) {
-      if (typeof parsed[key] === 'string') return parsed[key];
+      if (typeof parsed[key] === 'string') return { command: parsed[key], jsonParseFailed: false };
     }
 
-    return trimmed;
+    return { command: trimmed, jsonParseFailed: false };
   } catch {
-    return trimmed;
+    return { command: trimmed, jsonParseFailed: true };
   }
 }
 
 /**
  * Exportable run() for in-process execution via run-with-flags.js.
  */
-function run(rawInput) {
-  const command = extractCommand(rawInput);
+function run(rawInput, options = {}) {
+  // A truncated payload cannot be judged: the dispatcher caps stdin at MAX_STDIN, so a caller can
+  // push the git command past the cap and the flag never reaches this hook. MEASURED before this
+  // guard: `git commit --no-verify` preceded by ~1 MiB of padding scored exit 0 (allowed), while
+  // the same command alone scored exit 2. Its sibling mindforge-config-protection.js:66 already
+  // refused on truncation; this hook computed the flag and never read it, and run() took only one
+  // parameter so `options` never arrived at all.
+  if (options.truncated) {
+    return {
+      exitCode: 2,
+      stderr:
+        `BLOCKED: Hook input exceeded ${options.maxStdin || MAX_STDIN} bytes. Refusing to approve ` +
+        'a git command on a truncated payload — the bypass flag this hook looks for may have been ' +
+        'cut off. Retry with a smaller payload.',
+    };
+  }
+
+  const { command, jsonParseFailed } = extractCommand(rawInput);
+  if (jsonParseFailed) {
+    return {
+      exitCode: 2,
+      stderr:
+        'BLOCKED: hook input began with "{" but is not valid JSON, so the command could not be ' +
+        'read. Failing closed rather than scanning a partial payload for the bypass flag.',
+    };
+  }
+
   const result = checkCommand(command);
 
   if (result.blocked) {
@@ -530,21 +569,30 @@ module.exports = { run };
 
 // Stdin fallback for spawnSync execution — only when invoked directly, not via require()
 if (require.main === module) {
+  // Truncation is tracked here too, and seeded from the dispatcher's env flag. This path had the
+  // same bypass as run(): it capped stdin at MAX_STDIN and then judged the surviving prefix,
+  // silently dropping whatever came after. Going through run() keeps ONE decision path for both
+  // invocation modes rather than two that can drift — the same discipline audit-hash.js uses for
+  // its writer and verifier.
+  let truncated = /^(1|true|yes)$/i.test(String(process.env.MINDFORGE_HOOK_INPUT_TRUNCATED || ''));
+
   process.stdin.setEncoding('utf8');
   process.stdin.on('data', chunk => {
     if (raw.length < MAX_STDIN) {
       const remaining = MAX_STDIN - raw.length;
       raw += chunk.substring(0, remaining);
+      if (chunk.length > remaining) truncated = true;
+    } else {
+      truncated = true;
     }
   });
 
   process.stdin.on('end', () => {
-    const command = extractCommand(raw);
-    const result = checkCommand(command);
+    const output = run(raw, { truncated, maxStdin: MAX_STDIN });
 
-    if (result.blocked) {
-      process.stderr.write(result.reason + '\n');
-      process.exit(2);
+    if (Number.isInteger(output.exitCode) && output.exitCode !== 0) {
+      if (output.stderr) process.stderr.write(output.stderr.endsWith('\n') ? output.stderr : output.stderr + '\n');
+      process.exit(output.exitCode);
     }
 
     process.stdout.write(raw);

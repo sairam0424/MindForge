@@ -22,7 +22,7 @@ Context budget: ~15% orchestrator, 100% fresh per subagent.
 
 <execution_context>
 @.agent/workflows/mindforge-execute-phase.md
-@.agent/references/ui-brand.md
+@docs/References/ui-brand.md
 </execution_context>
 
 <context>
