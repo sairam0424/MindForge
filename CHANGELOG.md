@@ -1,5 +1,199 @@
 # Changelog
 
+## [11.9.3] — 2026-08-21 — Honesty: gates that can fail, commands that run, a release path that is checked
+
+Patch release. No new features. Twenty-one fixes, and they all turned out to be the
+same defect: **an instrument reported success while doing nothing.** Gates that could
+not fail, tests satisfied by a comment, docs describing capabilities with no code
+behind them, commands printing success while performing no action, and a publish path
+that no check ever touched.
+
+Contains behaviour changes under a patch bump — several of the things being fixed were
+bugs that a consumer could have been relying on. Read BREAKING before upgrading if you
+script against the CLI or the installer.
+
+### BREAKING
+
+Each of these is a bug fix whose correct behaviour differs from the shipped behaviour.
+
+- **Routed CLI commands now act on YOUR project, not MindForge's own checkout.**
+  `bin/mindforge-cli.js` passed `cwd: ROOT` to every routed command, so `mindforge
+  classify` diffed MindForge's repository instead of yours, and `mindforge health`
+  inspected MindForge's `node_modules`. Measured across all 27 routed commands: 7
+  changed behaviour, all in the correct direction, none regressed. If you parsed output
+  that happened to describe MindForge itself, it now describes your project. (#201)
+
+- **`npx mindforge-cc install` — and any other positional argument — now exits 1.**
+  The installer takes flags only and silently ignored stray words, so
+  `npx mindforge-cc install` appeared to work while installing nothing configured.
+  It now refuses with the correct form. `--runtime`'s value token is still accepted.
+  Use `npx mindforge-cc --claude --local`. (#202)
+
+- **`mindforge verify` now SKIPS unavailable stages instead of failing them.** A project
+  with no ESLint config, no test script or no `bin/verify-audit.js` was reported as
+  FAILING those stages rather than as not having them. If your CI relied on a non-zero
+  exit in those cases, it will now pass. A run in which every stage skipped prints a
+  "NOTHING WAS VERIFIED" banner rather than a clean bill of health. (#204)
+
+- **`scripts/sync-version.js` now exits non-zero when the plugin build artifacts are
+  stale.** A bump used to report `✅ every derivable channel is at <version>` and exit 0
+  while leaving `npm test` red. If you script this, handle the new exit code — it means
+  "run the build chain it just printed". (#211)
+
+- **A self-install no longer writes over your tracked files.** Running the installer
+  inside a MindForge checkout printed that it was skipping and then overwrote 149
+  tracked files, including `CLAUDE.md`, `.claude/**`, `.agent/**` and `.mindforge/**`.
+  The skip is now honoured for local scope. (#200)
+
+- **Releases must be tagged on a commit reachable from `main`.** The release workflow
+  now refuses a tag that is not an ancestor of `origin/main`. The documented flow is
+  develop → release → main; tagging elsewhere previously published, with provenance
+  attesting to that tree. (#216)
+
+### Fixed
+
+**Installer**
+
+- A self-install claimed to skip and then overwrote 149 tracked files. The gate is now
+  scope-aware (`isSelfInstall() && scope === 'local'`). (#200)
+- Every `--global` install reported failure on a correct run: `verifyInstall` demanded
+  six `bin/**` paths regardless of scope, so a global install ended
+  `❌ 6 of 12 required file(s) missing` and exit 1, with a `--force` retry that could
+  not help. A global install writes 389 files to `$HOME/.claude` and, deliberately,
+  zero to `bin/`. (#210)
+- 11 of 27 routed CLI verbs died on `MODULE_NOT_FOUND` in a real install: the router
+  shipped but 6 of the scripts it dispatches to did not. `coreFiles` grew from 2 entries
+  to 8. (#210)
+- Two leaks: `/tmp` staging files left behind on abandoned runs, and developer runtime
+  state (`celestial.db`, `.browser-daemon-token`) copied into consumer projects.
+  `SENSITIVE_EXCLUDE` now covers both. (#210)
+- The forge commands overwrote three `mindforge` commands of the same name. (#197)
+- The documented default install did not deliver the CLI it documents. (#196)
+
+**Versioning and release**
+
+- `sync-version.js --fetch-sha` hashed npm's 404 error body. For an unpublished version
+  the registry answers `{"error":"Not found"}` and `curl -sL` exits 0, so the digest
+  written into the Homebrew formula was the SHA-256 of that error text — the same
+  constant for every unpublished version — and `--check` then passed. Now `curl -fsSL`
+  plus a gzip magic-byte check, and it refuses rather than writing a digest no artifact
+  can match. (#203)
+- The Homebrew formula may now LAG canonical but never LEAD it. Requiring equality
+  before publishing required something impossible: the digest is the hash of a tarball
+  that does not exist yet, and `npm test` blocked the publish that would have made it
+  satisfiable. (#208)
+- Semver comparison is numeric per component. Lexicographically, `11.10.0` reads as
+  *behind* `11.9.2` — wrong on exactly the first release past a `.9` minor. (#208)
+- Three version channels had no writer at all, so `npm test` failed on every bump and
+  the documented remedy could not fix it: `mcp-server/server.json` (both keys, matched
+  by identifier), `AGENTS.md`, and `sdk/README.md`'s second shape. (#207, #211)
+- **No channel covered a document a user receives.** `SECURITY.md` — the security policy
+  at the root of the published package — said "Current version: 11.9.0", and
+  getting-started, faq, troubleshooting, user-guide and sdk-reference all titled
+  themselves v11.9.0: three releases stale, while every npm manifest was correct.
+  `--check` was green throughout, because a channel that does not exist cannot drift.
+  Structural markers now track canonical; narrative measurements deliberately do not.
+  (#211)
+- A bump is not finished when `sync-version.js` exits. Two tracked artifacts are gated
+  against `package.json` and only a build can write them —
+  `plugins/mindforge/.claude-plugin/plugin.json` and
+  `plugins/mindforge/mcp/dist/index.js`. They are now reported under
+  `🔨 REQUIRE A BUILD` with the exact three-command chain, which nothing had documented.
+  (#211)
+- `sync-version.js` reported "a channel is AHEAD of canonical" whenever its exit code
+  was non-zero for any reason, so the `--fetch-sha` refusal for an unpublished tarball
+  claimed the formula LEADS canonical in the same run that printed "DEFERRED until after
+  publish (behind, not ahead)". (#211)
+- `changelogs/index.json`, which `bin/updater/changelog-fetcher.js` reads as the
+  authoritative version list, was missing 11.9.2. (#218)
+
+**Publishing**
+
+- **The tag push that publishes was exempt from every gate.** Publishing is triggered by
+  exactly one event — a `v*` tag push — and the repository's only ruleset targets
+  branches, so its six required checks applied to nothing on the path that ships. GitHub
+  cannot attach required status checks to a tag. A `preflight` job now gates it. (#216)
+- The `stable` npm dist-tag was moved by hand, or not at all — it sat four releases
+  behind `latest` (11.8.3 against 11.9.2), so `npm i mindforge-cc@stable` delivered a
+  build with none of the 11.9.x fixes. The release workflow now moves it as its final
+  step: forward-only, prereleases skipped, and verified against npm's uncached dist-tags
+  endpoint rather than the CDN-cached packument. (#216)
+
+**Dashboard**
+
+- `--status` and `--stop` were documented in nine places and implemented in none; both
+  printed nothing and exited 0. Now implemented, before `express` is required, so they
+  work without the dependency installed. (#206)
+- `--stop` identified the target by the SHAPE of its command line, which matched any
+  `node <anything>/dashboard/server.js` — verified against
+  `node /var/www/unrelated_app/dashboard/server.js`. It now resolves the script's
+  realpath and compares it to its own. (#206)
+- `--status` printed a port it could not know: the PID file records only the pid, so it
+  reported whatever port that invocation happened to receive. Measured, `--status` on a
+  server started with `--port 7466` printed "port 7339". (#206)
+
+**Memory**
+
+- Every abandoned exit left a full copy of the database on disk — 1.8 GB of orphaned
+  `.tmp` files. (#199)
+- The SDK's WebSocket client took the caller's process down on a failed reconnect. (#191)
+
+**Verification**
+
+- `mindforge verify`'s lint stage used `--max-warnings=0`, which made it impossible to
+  pass in the repository it ships from: `npx eslint .` reports 199 problems / 0 errors /
+  199 warnings, so `verify` reported a lint FAILURE on a tree that is green by the
+  project's own contract. Aligned with the project's definition; errors still fail. (#204)
+- `temporal cleanup` printed "🧹 Cleaning up old temporal snapshots..." and
+  "✅ Cleanup complete." with no cleanup between them. Now wired to
+  `TemporalHub.gc({maxSnapshots: 50, maxAgeDays: 30})` with `--dry-run` and honest
+  counts, including zero. (#209)
+
+**Documentation that named things that do not exist**
+
+- The protocol files instructed the agent to run `soul-engine.js` and
+  `shard-controller.js`, neither of which exists anywhere in the package. Those steps
+  are reasoning protocols and now say so. (#205)
+- Fifteen phantom `/mindforge:` slash commands in shipped docs. A reader following
+  `docs/user-guide.md` typed `/mindforge:personas --list` and got nothing. They were not
+  typos: `.agent/workflows/` holds 130 tracked files using those exact names — an old
+  target layout, committed and orphaned, shipping zero files. (#209)
+- Four documented CLI invocations could not be run, each verified by running it:
+  `npx mindforge-cc@latest install` (exit 1), `mindforge-cli.js dashboard` (exit 1),
+  `npx mindforge auto` in a shipped engine doc (`auto` is a slash command, never a CLI
+  verb), and `@mindforge <verb>`, a syntax that exists nowhere. (#213)
+- `workflow` is the most-documented CLI verb in the project and works, but appeared in
+  neither `--help` nor the "Available commands" list, so a user who mistyped it was told
+  it does not exist. (#213)
+- Root `CLAUDE.md` named `bin/hooks/mindforge-context-monitor.js`; the file is under
+  `.agent/hooks/`. (#214)
+
+### Added
+
+- **`preflight` job on the release workflow.** Asserts the tagged commit is an ancestor
+  of `origin/main`, then runs the six gates a tag push never saw, with the publish job
+  behind `needs:`. (#216)
+- **Automatic `stable` dist-tag movement**, forward-only and verified. (#216)
+- **`node bin/dashboard/server.js --status` / `--stop`.** Not CLI verbs —
+  `mindforge-cli.js dashboard` does not route. (#206)
+- **`mindforge temporal cleanup --dry-run`.** (#209)
+- New regression gates, each falsified by mutation before being trusted:
+  `tests/protocol-claims.test.js` (no exemption list, deliberately — a name-keyed
+  allowlist was shown to excuse the exact defect it was written for), the shipped-doc
+  phantom-command gate, the CLI-verb gate, the authority-doc `.js` gate, the
+  version-channel round trips, and assertions that the release preflight itself cannot
+  be silently removed.
+
+### Notes for operators
+
+- `npm run version:check` is the offline drift check. A bump is finished only when
+  `sync-version.js` exits 0 — if it prints `🔨 REQUIRE A BUILD`, run the three commands
+  it names and commit both regenerated files.
+- Releases are now gated on being tagged from `main`. One residual, inherent to
+  tag-triggered workflows: a tag push resolves the workflow from the TAGGED ref, so a
+  tag placed on a commit predating this release runs that commit's workflow and is
+  ungated.
+
 ## [11.9.2] — 2026-08-16 — Correctness: audit-chain integrity, dashboard crash policy, secret scanning
 
 Patch release. No new features. Correctness work closing defects found by a

@@ -157,7 +157,10 @@ test('no shipped doc names a /mindforge: command that does not exist', () => {
     // /mindforge:temporal because that is what v2.6.0 shipped with; rewriting it would falsify the
     // record to satisfy a present-tense check. Same exclusion the audit-terminology sweep used, and
     // for the same reason. Everything a reader would act on TODAY is still in scope.
-    .filter((f) => !f.startsWith('changelogs/') && !/^RELEASENOTES/.test(f));
+    // ROOT CHANGELOG.md TOO. It is the rolling window of the same records changelogs/** holds —
+    // the 11.9.3 entry quotes `/mindforge:personas --list` while describing that a reader who typed
+    // it got nothing. Excluding the archive but not the window was an omission, not a distinction.
+    .filter((f) => !f.startsWith('changelogs/') && !/^RELEASENOTES/.test(f) && f !== 'CHANGELOG.md');
 
   // NON-VACUITY: if the pack output shape changed, an empty list would pass silently.
   assert.ok(shipped.length >= 5,
@@ -263,7 +266,14 @@ test('every CLI invocation printed in a doc names a verb the router will dispatc
     // caught immediately when this gate flagged the handoff doc's own account of the very defect
     // it had just fixed. Same category as changelogs/: rewriting a record to satisfy a
     // present-tense check falsifies the record.
-    .filter((f) => !f.startsWith('.planning/'));
+    .filter((f) => !f.startsWith('.planning/'))
+    // Root CHANGELOG.md, for the reason above: a changelog's most useful sentence is the exact
+    // broken command it fixed, and this gate cannot tell that from an instruction. ACCEPTED COST,
+    // stated rather than hidden: changelog prose is unguarded, so a genuinely wrong invocation can
+    // slip in there. One did — this gate caught `mindforge dashboard --status` in the 11.9.3 entry
+    // before the exclusion was added, which is why the exclusion is narrow and everything else
+    // shipped stays in scope.
+    .filter((f) => f !== 'CHANGELOG.md');
 
   // NON-VACUITY on the corpus: an empty list would pass silently.
   assert.ok(tracked.length >= 500,
