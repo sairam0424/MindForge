@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-MindForge v11.9.3 is an agentic intelligence framework distributed as the `mindforge-cc` npm package. Two package roots:
+MindForge v11.9.4 is an agentic intelligence framework distributed as the `mindforge-cc` npm package. Two package roots:
 
 - **Root (`/`)** — CLI + framework. Two bin entries: `mindforge-cc` (installer, `bin/install.js`) and `mindforge` (CLI, `bin/mindforge-cli.js`). The `bin/` runtime layer (~22K LOC) is organized by domain: `governance/` (audit hash-chain), `autonomous/` (wave executor, auto-runner), `engine/` (council runtime, nexus tracer, verification runner, OTel exporter), `models/` (provider clients + pricing registry), `memory/` (knowledge graph, sql.js vector hub, RRF fusion), `security/` (trust boundaries), `eval/` (recall@k, nDCG), `hooks/`, `utils/`, `wizard/`.
 - **`sdk/`** — TypeScript SDK (`mindforge-sdk`), own `tsconfig.json` (strict). `tsc` compiles `src/` → `dist/`. Own tests (`cd sdk && npm test`).
