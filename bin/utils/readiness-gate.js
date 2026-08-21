@@ -100,12 +100,28 @@ function releaseReadinessChecks(root) {
       pass: Boolean(pkgVersion) && pkgVersion === configVersion,
       fix: `Align versions: package.json=${pkgVersion || '?'} vs config.json=${configVersion || '?'}`,
     },
+    // CHECKS CONTENT, NOT MERE EXISTENCE, and that change has a cost worth naming: from now on every
+    // release needs a RELEASENOTES entry. Six published 11.x versions do not have one (11.0.0, 11.2.0,
+    // 11.2.1, 11.4.0, 11.7.1, 11.9.1) — the file has been curated rather than exhaustive. Those gaps are
+    // unaffected, because this only ever looks for the version being released.
+    //
+    // WHY IT CHANGED. This gate passed on `fileExists` while its changelog sibling three lines down
+    // checked that the version was IN the file. That asymmetry is why both prose surfaces shipped stale
+    // twice running: the immutable 11.9.3 tarball's README said "Latest release v11.9.2", and the
+    // immutable 11.9.4 tarball shipped with no 11.9.4 entry here at all — while README.md offers this
+    // file as the human-readable route to the BREAKING notes. 348a3a2c fixed the identical defect one
+    // release earlier by hand and added no gate, and it recurred immediately.
+    //
+    // Anchored, not `includes`. A substring test for "11.9.4" is also satisfied by "## v11.9.40" and by
+    // "## v11.9.4-notyet" — measured, when the equivalent test assertion was falsified.
     {
       id: 'releasenotes',
-      label: 'RELEASENOTES.md present',
+      label: 'RELEASENOTES.md present and has an entry for the current version',
       points: 2,
-      pass: fileExists(root, 'RELEASENOTES.md'),
-      fix: 'Add RELEASENOTES.md for this release.',
+      pass: fileExists(root, 'RELEASENOTES.md') && Boolean(pkgVersion)
+        && new RegExp(`^## v${pkgVersion.replace(/\./g, '\\.')}(?![\\d.\\w-])`, 'm')
+          .test(safeRead(root, 'RELEASENOTES.md')),
+      fix: `Add a "## v${pkgVersion || '?'}" section to RELEASENOTES.md. README.md links here as the human-readable route to the BREAKING notes, so releasing without one points readers at a file whose newest entry describes a different version.`,
     },
     {
       id: 'changelog',
