@@ -408,6 +408,42 @@ test('the release workflow gates publishing behind preflight, and cannot be sile
   }
 });
 
+test('the release job installs everything the suite needs, matching the CI job that runs it', () => {
+  // THE DEFECT. `npm test` runs in two places: mindforge-ci.yml's Code Quality Gates job, and
+  // mindforge-release.yml's publish job. Code Quality Gates has always installed the SDK's
+  // devDependencies; the release job did root `npm ci` only, and nothing asserted the two agreed.
+  //
+  // That gap cost a release. `npx eslint .` from the repo root discovers sdk/eslint.config.mjs, which
+  // imports `typescript-eslint` from the SDK's devDependencies — so with a root-only install ESLint
+  // cannot LOAD, exits 2, and tests/verification-runner.test.js fails. The v11.9.3 tag push failed at
+  // "Run Full Test Suite" for exactly that reason. It failed SAFELY, before any publish step, but it
+  // failed for an environment difference that a one-line assertion would have caught.
+  //
+  // Asserts the PROPERTY (the release job installs at least what the suite-running CI job does), not a
+  // literal command, so a future change to how the SDK is installed does not need this edited — only a
+  // change that drops it.
+  const rel = releaseCode();
+  const ci = fs.readFileSync(CI, 'utf8').split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
+
+  const ciInstallsSdk = /(?:--prefix\s+sdk|cd\s+sdk)\b/.test(ci);
+  assert.ok(ciInstallsSdk,
+    'mindforge-ci.yml no longer installs the SDK anywhere. If the suite stopped needing it, delete this '
+    + 'test; if the install merely moved, this check needs updating rather than deleting.');
+
+  assert.match(rel, /(?:--prefix\s+sdk|cd\s+sdk)\b/,
+    'mindforge-release.yml does not install the SDK\'s dependencies, but mindforge-ci.yml does and both '
+    + 'run `npm test`. Root `npm ci` alone makes `npx eslint .` fail to LOAD — the root config discovers '
+    + 'sdk/eslint.config.mjs, which imports typescript-eslint — so verification-runner.test.js fails and '
+    + 'the release aborts at the test step. This is what happened on the first v11.9.3 tag push.');
+
+  // And it must happen BEFORE the suite runs, or it does not help.
+  const instIdx = rel.search(/(?:--prefix\s+sdk|cd\s+sdk)\b/);
+  const testIdx = rel.indexOf('run: npm test');
+  assert.ok(testIdx > 0, 'the release job no longer runs `npm test`');
+  assert.ok(instIdx < testIdx,
+    'the SDK install must come BEFORE `npm test` in the release job; installing after it is decoration');
+});
+
 test('the stable dist-tag step is monotonic, verified on the uncached endpoint, and cannot block the release', () => {
   const rel = releaseCode();
   const distIdx = rel.indexOf('- name: Point the stable dist-tag at this release');

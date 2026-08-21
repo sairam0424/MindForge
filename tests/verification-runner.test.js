@@ -75,10 +75,25 @@ test('the lint stage actually passes on this repository', async () => {
   const lint = result.stages.find((s) => s.name === 'lint');
 
   // NON-VACUITY: if the stage were skipped, 'not failed' would be trivially true. Require a verdict.
+  // SHOWS THE HEAD OF THE OUTPUT, NOT THE TAIL. This message used to end with
+  // `String(lint.output).slice(-300)`, and when the v11.9.3 release run failed here it printed four
+  // lines of Node's ESM loader stack while hiding the only line that mattered:
+  // `Cannot find package 'typescript-eslint' imported from sdk/eslint.config.mjs`. A truncation that
+  // keeps the stack and drops the cause turns a two-minute diagnosis into a reproduction.
+  //
+  // THIRD POSSIBILITY NAMED. The original message offered two explanations — an eslint error, or a
+  // warning threshold — and the actual cause was neither: eslint could not LOAD. `npx eslint .` from
+  // the root discovers sdk/eslint.config.mjs, which imports an SDK devDependency, so a root-only
+  // install makes the stage exit 2 (fatal) rather than 1 (lint errors).
+  const out = String(lint.output || '');
+  const cause = out.split('\n').filter((l) => l.trim()).slice(0, 6).join('\n      ');
   assert.strictEqual(lint.status, 'pass',
-    `the lint stage reported "${lint.status}". Either an eslint ERROR was introduced (fix the code) `
-    + 'or a warning threshold came back (fix the stage). Output: '
-    + String(lint.output || '').slice(-300));
+    `the lint stage reported "${lint.status}". Three possibilities, in order of likelihood:\n`
+    + '  1. eslint could not LOAD — run `npm --prefix sdk install`. The root config discovers\n'
+    + '     sdk/eslint.config.mjs, which imports typescript-eslint from the SDK\'s devDependencies.\n'
+    + '  2. an eslint ERROR was introduced — fix the code.\n'
+    + '  3. a warning threshold came back into the stage — fix the stage.\n'
+    + `  Output (first lines):\n      ${cause}`);
 });
 
 // ── The report must not dirty a tracked file ─────────────────────────────────
