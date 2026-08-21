@@ -2,8 +2,8 @@
   "_warning": "DO NOT ADD SECRETS OR SENSITIVE DATA TO THIS FILE. IT IS SYNCED ACROSS SESSIONS.",
   "schema_type": "HANDOFF",
   "schema_version": "1.0.0",
-  "next_task": "Open ONE PR against develop fixing the 8 remaining audit findings (documented CLI verbs that do not run) PLUS the gate that would have caught all of them: extend tests/doc-count-claims.test.js to scan shipped .md/.js for `mindforge <verb>`, `bin/mindforge-cli.js <verb>` and `npx mindforge-cc <bare-word>`, asserting each resolves to a real COMMANDS key or flag. All 12 queued PRs are merged, so this can finally base cleanly on develop.",
-  "current_context": "develop is at 983c0a06 and GREEN: 131 passed / 0 failed / 2 skipped / 133 total, all 7 local gates exit 0, sync-version --check exit 0, eslint 0 errors / 190 warnings. Twelve PRs (#200-#211) merged this session, each verified TWO ways rather than by badge: `git merge-base --is-ancestor <pr-head> origin/develop` (the check that returns FALSE for the historically stranded #198 and TRUE for #199) and a per-PR content anchor grepped against origin/develop. The PR queue is empty. package.json is still 11.9.2; npm latest=11.9.2, stable=11.8.3 (stranded). The theme of every fix this session was one defect class: an instrument that reports success while doing nothing.",
+  "next_task": "Author CHANGELOG.md's 11.9.3 section and changelogs/v11.9.3.md — the only two artifacts a human must write — then cut 11.9.3: bump package.json, `node scripts/sync-version.js`, run the three-command mcp-server build chain it prints, merge develop -> release -> main, and tag. The workflow now gates the tag push and moves the `stable` dist-tag itself. All 8 audit findings and the release-gating hole are closed; the PR queue is empty.",
+  "current_context": "develop is at 1b5302b5 and GREEN both locally (131 passed / 0 failed / 2 skipped / 133 total, all seven gates plus verify:pinning exit 0) and in CI (MindForge CI, Control Plane, Secret scan all success). Sixteen PRs merged this session (#200-#216), each verified by `merge-base --is-ancestor` rather than by badge, because #198 is MERGED with its code absent from develop. package.json is still 11.9.2; npm latest=11.9.2, stable=11.8.3 until the next release moves it automatically.",
   "context_refs": [
     "scratch-pad/daily-logs/2026-08-21.md — the full session narrative, including every self-inflicted harness bug and its control experiment. READ THIS FIRST.",
     "scratch-pad/daily-logs/2026-08-20.md — the preceding session (the 11-PR queue being built).",
@@ -15,11 +15,10 @@
   ],
   "blockers": [
     "11.9.3 RELEASE — CHANGELOG.md has no 11.9.3 section and changelogs/v11.9.3.md does not exist. Two independent gates demand them: bin/utils/readiness-gate.js:115 (a bare `.includes(pkgVersion)` on CHANGELOG.md) and tests/production.test.js:629/:638 (the second is existence-only, so an empty file satisfies it). Without them release:ready drops 14/14 -> 12/14 and npm test fails. These are the ONLY two artifacts a human must author.",
-    "11.9.3 RELEASE — after `node scripts/sync-version.js`, two tracked build artifacts remain stale and sync-version now says so and exits non-zero: plugins/mindforge/.claude-plugin/plugin.json and plugins/mindforge/mcp/dist/index.js. Clear with, IN ORDER: `npm --prefix mcp-server install && npm --prefix mcp-server run build && node scripts/build-mindforge-plugin.js`. All three are required because build-mindforge-plugin.js refuses without mcp-server/dist/index.js, which is gitignored and absent on a fresh clone.",
-    "PUBLISH IS UNGATED — .github/workflows/mindforge-release.yml triggers ONLY on a `v*` tag push, and the sole ruleset (`MindForge protected branches`) has target=branch with include=['refs/heads/main','refs/heads/develop']. So all 6 required status checks are exempt from the one event that publishes. Required status checks CANNOT be attached to a tag; the only real control is a tag ruleset restricting who may create `v*`."
+    "11.9.3 RELEASE — after `node scripts/sync-version.js`, two tracked build artifacts remain stale and sync-version now says so and exits non-zero: plugins/mindforge/.claude-plugin/plugin.json and plugins/mindforge/mcp/dist/index.js. Clear with, IN ORDER: `npm --prefix mcp-server install && npm --prefix mcp-server run build && node scripts/build-mindforge-plugin.js`. All three are required because build-mindforge-plugin.js refuses without mcp-server/dist/index.js, which is gitignored and absent on a fresh clone."
   ],
   "decisions_needed": [
-    "Add a `v*` TAG ruleset (restricting ref creation) and/or a preflight job in mindforge-release.yml that re-runs the 4 npm gates and asserts `git merge-base --is-ancestor $GITHUB_SHA origin/main`, with the publish jobs behind `needs:`. This is the only way to gate the publishing event.",
+    "PARTLY DONE (#216). The preflight job now gates the publishing event: it asserts the tagged commit is an ancestor of origin/main and runs the six gates a tag push never saw, with the publish job behind `needs: preflight`. What remains is repo-settings-only and cannot be done in code: a `v*` TAG ruleset restricting who may CREATE the ref. Required status checks cannot attach to a tag, so that ruleset is about authorship, not verification. KNOWN RESIDUAL, documented in the workflow itself: a tag push resolves the workflow from the TAGGED ref, so a tag placed on a commit predating #216 runs that commit's workflow and is ungated.",
     "RESOLVED, no longer a decision: the release workflow now moves the npm `stable` dist-tag itself, as its last step. Forward-only (refuses to move backward, which a re-run of an older tag would otherwise do silently), prereleases skipped, and verified by reading back /-/package/<pkg>/dist-tags rather than the CDN-cached packument. `stable` is still 11.8.3 on the registry until the next release runs; nothing needs doing by hand to fix that.",
     "NPM_TOKEN is a long-lived repo secret and there are ZERO configured GitHub environments. Adding an `environment:` key with no environment configured publishes exactly as before while LOOKING like a gate — move the token to an environment secret FIRST, then add the key.",
     "mindforge-sdk has no provenance on npm (mindforge-cc does, since 11.9.0). Decide whether to add it.",
@@ -53,6 +52,6 @@
     "CLAUDE.md, .claude/CLAUDE.md, .agent/CLAUDE.md — protocol docs name only real files"
   ],
   "handoffs": [],
-  "last_updated": "2026-08-21T06:20:00Z",
-  "updated_at": "2026-08-21T06:20:00Z"
+  "last_updated": "2026-08-21T10:00:00Z",
+  "updated_at": "2026-08-21T10:00:00Z"
 }
