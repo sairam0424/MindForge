@@ -60,6 +60,51 @@ if (ARGS.includes('--help') || ARGS.includes('-h')) {
   process.exit(0);
 }
 
+// ── Reject unknown positional arguments ───────────────────────────────────────
+//
+// This installer has NO subcommands — it only takes flags. It also never looked at positionals, so
+// any bare word was silently ignored and the installer just ran. That mattered because the last
+// thing a successful install printed was, verbatim from bin/wizard/theme.js:
+//
+//     Next steps:
+//       mindforge-cc init   — Initialize your first workspace
+//
+// There is no `init`. Obeying the instruction re-ran the installer against whatever directory the
+// user happened to be standing in: measured in an empty temp dir, `node bin/install.js init` wrote
+// 1,836 files, created .claude/ .mindforge/ .planning/ bin/ plus CLAUDE.md, MINDFORGE.md and
+// AGENTS_LEARNING.md, exited 0 — and re-printed the same instruction, so it loops. The real command
+// is the slash command `/mindforge:init-project`, which the install has just placed in the harness.
+//
+// Rejecting is the right response rather than treating a positional as a target directory: this
+// script's whole contract is expressed in flags, and guessing what a stray word meant is how
+// `mindforge-cc /etc` becomes an interesting afternoon.
+//
+// `--runtime` takes its value as a SEPARATE token (bin/installer-core.js:1112 reads
+// args[rtIdx + 1]), so that token is skipped here — a naive "anything not starting with -" check
+// would reject the documented `--runtime claude`.
+const VALUE_TAKING_FLAGS = new Set(['--runtime']);
+const POSITIONALS = [];
+for (let i = 0; i < ARGS.length; i++) {
+  if (ARGS[i].startsWith('-')) {
+    if (VALUE_TAKING_FLAGS.has(ARGS[i])) i += 1;
+    continue;
+  }
+  POSITIONALS.push(ARGS[i]);
+}
+if (POSITIONALS.length > 0) {
+  process.stderr.write(
+    `\n${c.red(Theme.chars.cross)}  ${c.bold(`Unknown argument: ${POSITIONALS[0]}`)}\n` +
+    '    mindforge-cc takes flags only — it has no subcommands.\n' +
+    (POSITIONALS[0] === 'init'
+      ? `    To initialise a workspace, run the slash command ${c.cyan('/mindforge:init-project')}\n` +
+        '    inside your AI harness after installing.\n'
+      : '') +
+    `    Install:   ${c.cyan('npx mindforge-cc --claude --local')}\n` +
+    `    All flags: ${c.cyan('npx mindforge-cc --help')}\n\n`
+  );
+  process.exit(1);
+}
+
 // ── Determine execution mode ──────────────────────────────────────────────────
 const NON_INTERACTIVE_FLAGS = [
   '--claude', '--antigravity', '--cursor', '--opencode', '--gemini', '--copilot',
