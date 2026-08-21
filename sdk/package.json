@@ -32,6 +32,11 @@
     "sdk"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sairam0424/MindForge.git",
+    "directory": "sdk"
+  },
   "publishConfig": {
     "access": "public"
   },

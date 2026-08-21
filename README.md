@@ -6,14 +6,21 @@
 
 ## Latest release
 
-**v11.9.3** (2026-08-21) — Honesty: gates that can fail, commands that run, a release path that is
-checked. Twenty-one fixes sharing one defect — an instrument reporting success while doing nothing:
-a self-install that printed "skipping" and overwrote 149 tracked files, 11 of 27 routed CLI verbs
-dying on `MODULE_NOT_FOUND` in a real install, `--fetch-sha` hashing npm's 404 body into the Homebrew
-formula, no version channel covering any document a user receives, and a publish path no check ever
-touched. **Contains behaviour changes under a patch bump** — several fixed bugs whose correct
-behaviour differs from what shipped. See the BREAKING section in
+**v11.9.4** (2026-08-22) — Delivery: the gates register, the tarball matches its tag. 11.9.3
+shipped the hook-registration code and then declined to run it: the installer skipped whenever any
+ancestor directory held a `.claude`, which on a machine that has ever run Claude Code means
+`~/.claude` — so essentially every install copied the enforcement in and wired none of it. Measured
+against the published 11.9.3 tarball: **11 hook scripts installed, 0 registered.** On 11.9.4, the
+same sandbox registers **8, with 3 deny-class hooks verified blocking** at install time. Also: the
+published tarball is now reproducible from its tag (11.9.3 shipped one untracked file), and the
+enforcement table below was corrected — it had been understating what ships.
+
+**Contains a behaviour change under a patch bump**: the installer now writes
+`.claude/settings.json` on projects where it previously declined, merging append-only into any
+existing file and backing it up first. See the BREAKING section in
 [CHANGELOG.md](./CHANGELOG.md), or [RELEASENOTES.md](./RELEASENOTES.md) for human-readable notes.
+
+`mindforge-sdk` did **not** publish in 11.9.4 and remains at 11.8.0 — see the changelog for why.
 
 ---
 
@@ -22,8 +29,9 @@ behaviour differs from what shipped. See the BREAKING section in
 Read this before the install instructions. MindForge ships a large corpus of agent
 instructions — commands, skills, personas, protocols — and those are advisory: they work by
 being in the model's context, and a model can decline them. The parts that would *block* an
-action are hooks. Through 11.9.2 **no channel registered them**; as of 11.9.3 both channels
-register and execute them **on Claude Code**, and nowhere else.
+action are hooks. Through 11.9.2 **no channel registered them.** 11.9.3 added the registration code
+but it declined to run on almost every project, so in practice nothing was enforced there either.
+**As of 11.9.4** both channels register and execute them **on Claude Code**, and nowhere else.
 
 | Capability | Plugin channel | `npx` channel |
 |---|---|---|

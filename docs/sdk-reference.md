@@ -418,13 +418,18 @@ cd sdk && npm install && npm run build
 ## Installation
 ```bash
 npm install mindforge-sdk
-# or: npx mindforge-cc@stable  # installs SDK as part of the framework
 ```
 
-> **`mindforge-sdk` is versioned independently of the framework.** The release workflow
-> (`.github/workflows/mindforge-release.yml`) publishes `mindforge-cc` and
-> `mindforge-mcp-server` only — it has no `sdk` steps — so `sdk/package.json`'s version
-> tracks the monorepo while the published package does not. At the time of writing the
-> latest published SDK is **11.8.0** (`npm view mindforge-sdk versions`), even though the
-> in-repo `sdk/package.json` reads 11.9.2. Install it unpinned, as above; pinning it to a
+> **`mindforge-sdk` lags the framework, and the framework does not contain it.** Installing
+> `mindforge-cc` does **not** give you the SDK: the published package declares exactly two
+> dependencies, `express` and `sql.js`, and ships no `sdk/` directory. A line here previously
+> offered `npx mindforge-cc@stable` as a way to get the SDK "as part of the framework"; that was
+> false and has been removed.
+>
+> The release workflow now has an `sdk` publish step, but its first run (v11.9.4) was rejected by
+> the registry — `sdk/package.json` carried no `repository` field, which npm's provenance check
+> validates server-side at publish time. So the latest published SDK is still **11.8.0**
+> (`npm view mindforge-sdk version`) while `sdk/package.json` tracks the monorepo, because
+> `scripts/sync-version.js` rewrites it to the canonical version. The field is fixed and the SDK's
+> first attested release will be the next one. Install it unpinned, as above; pinning it to a
 > framework version yields `E404 No match found for version …`.

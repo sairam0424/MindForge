@@ -1,5 +1,74 @@
 # Release Notes
 
+## v11.9.4 — 2026-08-22 — Delivery: the gates register, the tarball matches its tag
+
+### The headline
+
+**11.9.3 shipped the hook-registration code and then declined to run it.** The installer skipped
+whenever any ancestor directory contained a `.claude`. On a machine that has ever run Claude Code
+that means `~/.claude`, so essentially every install copied the enforcement in and wired none of it.
+
+Measured against the published tarballs in a confined sandbox, with `~/.claude` as the only ancestor:
+
+```
+11.9.3:  11 hook scripts installed, 0 registered, no settings.json written
+11.9.4:   8 registered, preflight executed 7 of 8, 3 deny-class verified blocking
+```
+
+The reason the installer printed was wrong three separate ways:
+
+1. `~/.claude/settings.json` is the **user tier**, applied in addition to the project tier. Its
+   existence says nothing about whether a project file is read — so the condition that suppressed
+   the gates was satisfied by an ordinary laptop.
+2. For a real project ancestor the claim is false too: that file is not read either. Proved with a
+   marker hook two levels up that never fired across a dozen tool calls. Skipping did not deliver
+   the gates elsewhere; it delivered them nowhere.
+3. The git-boundary guard was dead code, which is why the walk reached `$HOME` at all.
+
+It now warns and registers anyway. A registration that turns out inert costs nothing; a skip is
+guaranteed inert.
+
+### ⚠️ Behaviour change under a patch bump
+
+The installer now writes `.claude/settings.json` on projects where it previously declined — for most
+users, **0 registered hooks becomes 8**, three of which can block a tool call. It merges append-only
+into any existing file, backs the previous one up under `.mindforge/backups/`, and records exactly
+what it did in `.mindforge/hook-registration.json`.
+
+A registered hook is only *live* if the harness has been **restarted** (hooks are snapshotted at
+session start), the project is **trusted** in the harness, and `CLAUDE_PROJECT_DIR` is set with
+`node` on the hook PATH. See *Hooks are installed but nothing is blocked* in
+`docs/troubleshooting.md`.
+
+### Fixes
+
+- The installer's only failure-path pointer led nowhere: it said "see `docs/troubleshooting.md`",
+  where the word *hook* appeared **0** times. That section now exists.
+- The published tarball was not reproducible from its own tag. `.mindforge/memory/sync-manifest.json`
+  — gitignored, written at runtime — was **1 of 1979** shipped files not tracked at `v11.9.3`, so
+  provenance attested to a tree containing a file the repository does not contain.
+- The README understated the product: it still said **no channel registers hooks** and that the
+  plugin dispatcher crashes on every fire. Measured: 14 of 14 plugin path tokens resolve and two
+  deny-class hooks return exit 2. A document that under-claims a security capability is the same
+  defect as one that over-claims it.
+- Defects an 8-agent audit found in the *published* 11.9.3: an empty release page, a shipped CI
+  snippet telling users to `npx` a package we do not own, and a version-source gate that missed a
+  live defect twice.
+- The Homebrew formula carries the real 11.9.3 digest, verified against an independent measurement.
+
+### Known issue in this release
+
+**`mindforge-sdk` did not publish and remains at 11.8.0.** A publish step was added for it and the
+registry rejected it with 422: `sdk/package.json` carried no `repository` field, which npm's
+provenance verification validates **server-side at publish time** — `npm publish --dry-run` does not
+check it, and no gate here did either.
+
+Worse, the step was placed *before* the release-page and dist-tag steps, so its failure skipped
+both. `mindforge-cc@11.9.4` and `mindforge-mcp-server@11.9.4` published correctly with provenance;
+the release page and the `stable` tag were completed by hand afterwards. Both causes are fixed for
+the next release: the missing field, an offline preflight gate that refuses to reach a publish
+without it, and a reordering so the steps that finish a release run ahead of any optional package.
+
 ## v11.9.3 — 2026-08-21 — Honesty: gates that can fail, commands that run, a release path that is checked
 
 ### What's New
