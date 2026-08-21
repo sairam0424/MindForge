@@ -104,7 +104,15 @@ test('a self-install writes NOTHING over the repository\'s own tracked files', (
         { cwd: clone, encoding: 'utf8', input: diff.stdout });
       assert.strictEqual(applied.status, 0,
         `could not carry the working-tree diff into the clone: ${(applied.stderr || '').slice(0, 300)}`);
-      spawnSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-aqm', 'wt'],
+      // `add -A` and NOT `commit -a`. `git diff HEAD` above includes files that are staged but not
+      // yet committed, so a commit ADDING a file under bin/ or tests/ carries a create-file patch
+      // into the clone — and `commit -a` stages only modified and deleted TRACKED files, so that new
+      // file stayed untracked and the clean assertion below failed. Symptom: `?? tests/<new>.test.js`,
+      // pre-commit exit 1, on a tree where every other test passes. Which is precisely the
+      // --no-verify pressure the comment above says this carry exists to avoid, reintroduced for the
+      // one case the carry did not cover.
+      spawnSync('git', ['add', '-A'], { cwd: clone, encoding: 'utf8' });
+      spawnSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'wt'],
         { cwd: clone, encoding: 'utf8' });
     }
 

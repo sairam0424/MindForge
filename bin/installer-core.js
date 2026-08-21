@@ -1152,7 +1152,15 @@ async function install(runtime, scope, options = {}) {
   } else {
     Theme.printStatus(c.yellow(`Hooks NOT registered (${hookRegistration.status}): ${hookRegistration.reason}`), 'warn');
     Theme.printStatus(c.dim('The hook scripts are installed but nothing invokes them, so no tool call '
-      + 'is gated. This is stated rather than implied — see docs/troubleshooting.md.'), 'info');
+      + 'is gated. This is stated rather than implied — see "Hooks are installed but nothing is '
+      + 'blocked" in docs/troubleshooting.md.'), 'info');
+  }
+
+  // Non-fatal advisories. Printed for BOTH outcomes, because the case that produces one today —
+  // an ancestor project with its own settings.json — used to CANCEL registration outright, and the
+  // whole point of demoting it to a warning is that the operator hears it without losing the gates.
+  for (const w of hookRegistration.warnings || []) {
+    Theme.printStatus(c.yellow(w), 'warn');
   }
 }
 
