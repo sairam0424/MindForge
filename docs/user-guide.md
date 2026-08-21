@@ -127,7 +127,7 @@ MindForge features 211 specialized personas. Each persona is optimized for a spe
 To switch personas or see the full list:
 
 ```bash
-/mindforge:personas --list
+ls .mindforge/personas/            # 216 persona briefs; there is no personas command
 ```
 
 ---
@@ -137,7 +137,7 @@ To switch personas or see the full list:
 For complex tasks that require minimal intervention:
 
 ```bash
-/mindforge:autonomous --phase [N]
+/mindforge:auto --phase [N]
 ```
 
 Use the **Steer** command to guide logic without stopping execution:
@@ -179,7 +179,7 @@ Extend MindForge by learning from documentation or authoring custom protocols.
 
 ```bash
 /mindforge:learn https://docs.nextjs.org "nextjs-mastery"
-/mindforge:skill-creation # Author a new high-fidelity protocol
+/mindforge:skills-index   # browse the catalogue; author new skills per the guide in CLAUDE.md
 ```
 
 ---
@@ -189,7 +189,7 @@ Extend MindForge by learning from documentation or authoring custom protocols.
 MindForge features automated PR creation and commit management.
 
 ```bash
-/mindforge:pr-branch "feature/auth-refactor"
+git switch -c feature/auth-refactor   # no pr-branch command; use git, then /mindforge:pr-review
 /mindforge:ship --auto-pr
 ```
 
@@ -202,7 +202,7 @@ MindForge provides mission-critical resilience and sovereign reasoning for enter
 ### Multi-Cloud Arbitrage
 MindForge automatically hedges against provider outages and optimizes for cost/latency.
 ```bash
-/mindforge:settings --cloud-arbitrage on
+# settings live in MINDFORGE.md as [KEY] = value; edit it, then run `mindforge security-scan`
 ```
 
 ### Sovereign Reason Enclaves (SRE)
@@ -214,8 +214,8 @@ Tier 3 (Principal) agents execute reasoning in isolated enclaves to protect sens
 ### Dynamic Human-Agent Handover & Temporal Steering (Pillar VII)
 NEXUS enables sub-second state reconstruction and **Hindsight Injection**. When an agent drifts, roll back its logic via the Dashboard's **Temporal Slider** and inject a steering vector to re-orient the wave.
 ```bash
-/mindforge:temporal status     # View active reasoning snapshots
-/mindforge:temporal inject [ID] # Manual CLI-based hindsight
+mindforge temporal status      # View active reasoning snapshots (a CLI command)
+mindforge temporal inject [ID] # Manual CLI-based hindsight
 ```
 
 ### Agentic Revenue Operations (AgRevOps) (Pillar VIII)
@@ -239,7 +239,7 @@ The **Enterprise Expansion** introduces 14 hardened protocols from the Superpowe
 
 Activate the mesh for any session:
 ```bash
-/mindforge:neural-orchestrator
+# the orchestrator layer is a protocol in .mindforge/engine/, not a command
 ```
 
 ---
@@ -283,4 +283,4 @@ Monitor your project's economic performance in real-time via the **RevOps Hub**.
 - **USP & Roadmap**: `docs/usp-features.md`
 - **Commands**: `docs/commands-reference.md`
 - **Troubleshooting**: `docs/troubleshooting.md`
-- **Discord**: `/mindforge:join-discord`
+- **Issues**: https://github.com/sairam0424/MindForge/issues

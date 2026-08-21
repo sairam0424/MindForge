@@ -10,7 +10,7 @@ Temporal Vision enables high-fidelity "Time-Travel Debugging" by snapshotting th
    - `task_completed`
    - `hindsight_injected`
 2. **Persistence**: Snapshots are stored in `.planning/history/[audit_id]/`.
-3. **Retention**: The system retains snapshots for the current milestone. Completed milestones should be archived or purged using `/mindforge:temporal --cleanup`.
+3. **Retention**: The system retains snapshots for the current milestone. Completed milestones should be archived or purged using `mindforge temporal cleanup`.
 
 ## Hindsight Injection Protocol
 Hindsight Injection is a powerful tool and must be used according to these safety rules:
@@ -37,4 +37,4 @@ Hindsight Injection is a powerful tool and must be used according to these safet
 ## Common Operations
 - `GET /api/temporal/history`: View the timeline.
 - `POST /api/temporal/inject`: Perform hindsight repair.
-- `/mindforge:temporal --status`: Check history size and snapshot count.
+- `mindforge temporal status`: Check history size and snapshot count.

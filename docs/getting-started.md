@@ -140,4 +140,4 @@ MindForge operates on a high-velocity 4-pillar lifecycle:
 
 - Explore the [User Guide](user-guide.md) for advanced features.
 - Switch to a specialized [Persona](PERSONAS.md) for target tasks.
-- Join the community: `/mindforge:join-discord`.
+- Join the community: https://github.com/sairam0424/MindForge/issues.
