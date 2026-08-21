@@ -1,6 +1,6 @@
 {
   "name": "mindforge-cc",
-  "version": "11.9.3",
+  "version": "11.9.4",
   "description": "MindForge — Sovereign Agentic Intelligence Framework. Sovereign Stability: Production-Hardened Agentic Intelligence (v11)",
   "bin": {
     "mindforge-cc": "bin/install.js",

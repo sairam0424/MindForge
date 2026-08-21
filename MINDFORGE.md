@@ -1,9 +1,9 @@
-# MINDFORGE.md — Parameter Registry (v11.9.3)
+# MINDFORGE.md — Parameter Registry (v11.9.4)
 
 ## 1. IDENTITY & VERSIONING
 
 [NAME]    = MindForge
-[VERSION] = 11.9.3
+[VERSION] = 11.9.4
 [STABLE]  = true
 [MODE]    = "Platform Sovereign"
 [REQUIRED_CORE_VERSION] = 11.9.1
