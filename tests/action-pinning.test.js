@@ -91,8 +91,19 @@ test('the gate passes on this repository', () => {
   assert.strictEqual(r.status, 0, `verify:pinning failed:\n${r.out}`);
   assert.match(r.out, /third-party: *1 \(1 pinned\)/,
     `expected exactly one third-party action, pinned. Output:\n${r.out}`);
-  assert.match(r.out, /release path \(mindforge-release\.yml\): 3 refs, 3 pinned/,
-    `every release-path ref must be pinned. Output:\n${r.out}`);
+  // ALL release-path refs pinned, expressed as a backreference rather than a literal count. The
+  // assertion used to hardcode "3 refs, 3 pinned", which broke the moment the release workflow grew a
+  // preflight job whose two actions were BOTH correctly pinned — a change that strictly improved the
+  // thing being measured. `(\d+) refs, \1 pinned` cannot be satisfied by an unpinned ref and does not
+  // need editing when the release path legitimately changes size. The floor below keeps it from
+  // passing on an empty scan.
+  const rel = r.out.match(/release path \(mindforge-release\.yml\): (\d+) refs, (\d+) pinned/);
+  assert.ok(rel, `the gate must report the release-path ref counts. Output:\n${r.out}`);
+  assert.strictEqual(rel[1], rel[2],
+    `every release-path ref must be pinned — ${rel[1]} refs but only ${rel[2]} pinned. Output:\n${r.out}`);
+  assert.ok(Number(rel[1]) >= 3,
+    `only ${rel[1]} release-path ref(s) found. The release workflow uses checkout, setup-node and `
+    + `gh-release at minimum, so a lower number means the scan stopped seeing the file.\n${r.out}`);
 });
 
 test('the gate NAMES every unpinned ref, never just a count', () => {
@@ -329,6 +340,110 @@ test('the release job still publishes with provenance', () => {
   const text = fs.readFileSync(RELEASE, 'utf8');
   assert.match(text, /npm publish[^\n]*--provenance/,
     'the release must publish with --provenance; pinning protects an attested artifact');
+});
+
+// ── the publishing path is gated, and stays gated ─────────────────────────────
+//
+// WHY THIS EXISTS. A preflight job was added to mindforge-release.yml to close a real hole: publishing
+// is triggered ONLY by a `v*` tag push, and the repo's single ruleset is target=branch, so its six
+// required checks never applied to the publishing event — and GitHub cannot attach required checks to a
+// tag, so no ruleset can fix it. An adversarial review of that change pointed out the obvious gap: the
+// gate had NO test, so deleting the entire preflight job would have left the suite green. A gate nobody
+// asserts is the defect class this repo keeps finding.
+//
+// ON ASSERTING TEXT. Elsewhere in this suite, matching source text is the wrong shape — a comment can
+// satisfy it, and the real question is behaviour. Here the subject IS text: a workflow file is a
+// declarative spec that GitHub reads, so its content is the behaviour. There is no runtime to exercise
+// locally, and the alternative (trusting a review) is what let the hole exist for the whole project's
+// life. These assertions are deliberately structural, and each names what breaks if it fails.
+/**
+ * The workflow with full-line `#` comments stripped.
+ *
+ * CAUGHT BY FALSIFYING MY OWN ASSERTION. The first version of the monotonicity check was
+ * `assert.match(rel, /sort -V/)` against the raw file. Removing `| sort -V | tail -1` from the actual
+ * command left the suite GREEN, because the comment above it explains why `sort -V` is used — so the
+ * prose satisfied the assertion for the code. That is precisely the "a comment satisfies the test"
+ * defect this suite exists to eliminate, reproduced by me in the test written to prevent it.
+ *
+ * Only FULL-LINE comments are removed. Trailing `# vX.Y.Z` pin comments are load-bearing for the
+ * pinning assertions above, which deliberately keep reading the raw file.
+ */
+function releaseCode() {
+  return fs.readFileSync(RELEASE, 'utf8')
+    .split('\n')
+    .filter((l) => !/^\s*#/.test(l))
+    .join('\n');
+}
+
+test('the release workflow gates publishing behind preflight, and cannot be silently ungated', () => {
+  const rel = releaseCode();
+
+  assert.match(rel, /^\s{2}preflight:$/m,
+    'mindforge-release.yml has no `preflight:` job. Publishing is triggered only by a v* tag push and '
+    + 'the branch ruleset cannot cover a tag, so without this job a tag reaches npm having passed '
+    + 'nothing but the publish job\'s own `npm test`.');
+  assert.match(rel, /^\s{4}needs:\s*preflight$/m,
+    'the `release:` job does not declare `needs: preflight`. Without it the gate exists but does not '
+    + 'block, which is worse than having no gate — it reads as protection while providing none.');
+
+  // The publish job must come AFTER the gate in the file's job order too, so a future reader is not
+  // misled about sequencing. Index comparison, not a regex, so it cannot pass on a coincidence.
+  assert.ok(rel.indexOf('\n  preflight:') < rel.indexOf('\n  release:'),
+    'the preflight job must be declared before the release job for readability');
+
+  assert.match(rel, /merge-base --is-ancestor/,
+    'preflight no longer asserts the tagged commit is an ancestor of main. Without it any commit — a '
+    + 'feature branch, an unmerged experiment, a reverted commit — can be tagged and published, with '
+    + 'provenance attesting to that tree.');
+
+  // Every gate the branch ruleset enforces on a PR and a tag push never sees.
+  for (const gate of ['harness:audit', 'harness:gate', 'harness:compliance',
+    'validate:assets', 'version:check', 'release:ready']) {
+    assert.ok(rel.includes(`npm run ${gate}`),
+      `preflight no longer runs \`npm run ${gate}\`. That gate runs on every branch push and pull `
+      + 'request and never on a tag, so dropping it here means it does not run on the release path at all.'
+      + (gate === 'release:ready'
+        ? ' release:ready is the check that fails when CHANGELOG.md has no entry for the version being published.'
+        : ''));
+  }
+});
+
+test('the stable dist-tag step is monotonic, verified on the uncached endpoint, and cannot block the release', () => {
+  const rel = releaseCode();
+  const distIdx = rel.indexOf('- name: Point the stable dist-tag at this release');
+  const ghIdx = rel.indexOf('- name: Create GitHub Release');
+  assert.ok(distIdx > 0, 'the stable dist-tag step is gone — `stable` drifted four releases behind '
+    + '`latest` (11.8.3 vs 11.9.2) precisely because nothing automated it');
+  assert.ok(ghIdx > 0, 'the Create GitHub Release step is gone');
+
+  // ORDERING. Moving a dist-tag is cosmetic and always retryable; the GitHub Release carries the notes
+  // and the .tgz. With the dist-tag step first, any dist-tag hiccup cost the release its artifacts on a
+  // run whose npm publishes had already succeeded and cannot be undone.
+  assert.ok(distIdx > ghIdx,
+    'the dist-tag step must come AFTER Create GitHub Release, so a dist-tag failure cannot suppress the '
+    + 'release notes and tarball for a release that already published to npm.');
+
+  // MONOTONICITY. `npm dist-tag add` is idempotent per (package, version, tag) but never version-aware,
+  // so re-running an older tag's workflow after a newer release moves `stable` BACKWARD — and a
+  // read-back confirms the downgrade as success.
+  // The whole pipeline, not the bare token: `sort -V` alone also appears in the comment explaining it,
+  // and matching that is what made the first version of this assertion vacuous.
+  assert.match(rel, /\|\s*sort -V\s*\|\s*tail -1/,
+    'the dist-tag step lost its monotonicity guard. Re-running a published-but-failed older release — '
+    + 'the normal thing to re-run, and 6 of the last 12 release runs were failures — would silently '
+    + 'downgrade every `mindforge-cc@stable` consumer, and the read-back would confirm it as success.');
+  assert.match(rel, /refusing to move it backward/,
+    'the backward-move refusal message is gone; the guard must say why it declined');
+
+  // ENDPOINT. `npm view <pkg> dist-tags.stable` reads the CDN-backed packument (measured
+  // cache-control: public, max-age=300). `npm dist-tag ls` reads /-/package/<pkg>/dist-tags, which is
+  // DYNAMIC and is the same path the write PUTs to. Verifying an uncached write via the cached aggregate
+  // is how a correct move reads back stale and fails a perfect release.
+  assert.match(rel, /npm dist-tag ls mindforge-cc/,
+    'the dist-tag read must use `npm dist-tag ls` (uncached /-/package/<pkg>/dist-tags), not `npm view`');
+  assert.ok(!/npm view mindforge-cc dist-tags\.stable/.test(rel),
+    'the dist-tag step reads `npm view mindforge-cc dist-tags.stable`, which hits the CDN-cached '
+    + 'packument (max-age=300). A correct write can read back stale there and fail the release.');
 });
 
 (async () => {
