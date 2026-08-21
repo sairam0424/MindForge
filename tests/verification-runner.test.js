@@ -133,6 +133,137 @@ test('verify-cli writes the report only with --write', async () => {
   }
 });
 
+// ── Absence must be reported as absence, never as failure ─────────────────────
+//
+// THE DEFECT. Only `typecheck` had an availability check, so `mindforge verify` on a freshly
+// installed, entirely healthy consumer project reported:
+//
+//     | tests     | ❌ fail |      <- no tests/ directory: the package does not ship one
+//     | lint      | ❌ fail |      <- no ESLint config: nothing defines lint for that project
+//     | audit     | ❌ fail |      <- bin/verify-audit.js not installed; a Node loader stack trace
+//     | typecheck | ⏭️ skip |
+//     **Summary:** 0 passed, 3 failed, 1 skipped     exit 1
+//
+// Measured on `node bin/install.js --claude --local` into an empty project: 1,836 files, and none
+// of those three prerequisites — correctly, because the package does not ship them. So every red
+// was the absence of a tool being reported as the failure of what it would have checked.
+//
+// "I cannot check this here" and "this is broken" are opposite claims. A verifier that conflates
+// them is worse than one that runs nothing: it teaches its user to ignore red.
+
+test('every stage reports UNAVAILABLE as a skip, not a failure, in a bare project', async () => {
+  const fs = require('fs');
+  const os = require('os');
+  const path = require('path');
+  const { runVerification, STAGE_DEFS } = require('../bin/engine/verification-runner');
+
+  // A bare project: a package.json and nothing else. No tests/, no ESLint config, no tsconfig,
+  // no bin/verify-audit.js — exactly the shape of a consumer install.
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-verify-bare-')));
+  try {
+    fs.writeFileSync(path.join(dir, 'package.json'),
+      JSON.stringify({ name: 'their-app', version: '1.0.0' }, null, 2));
+
+    const result = await runVerification({ cwd: dir, stages: Object.keys(STAGE_DEFS) });
+
+    const failures = result.stages.filter((s) => s.status === 'fail');
+    assert.deepStrictEqual(failures.map((s) => s.name), [],
+      'a project that simply lacks these tools must produce no FAILURES. Before the availability '
+      + `checks this reported 3: ${failures.map((s) => `${s.name}: ${String(s.output).slice(0, 80)}`).join(' | ')}`);
+
+    // Every skip must say WHY. A bare `⏭️ skip` is nearly as unhelpful as an unexplained failure,
+    // because the reader cannot tell "not applicable" from "quietly broken".
+    for (const s of result.stages.filter((x) => x.status === 'skip')) {
+      assert.ok(s.reason && s.reason.length > 10,
+        `stage '${s.name}' skipped without a reason — the report cannot explain itself`);
+    }
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('the audit stage skips an ABSENT log instead of calling it a broken chain', async () => {
+  // The gap the first version of this guard left, found by an independent audit. The guard checked
+  // only for bin/verify-audit.js and the comment above it claimed "an absent AUDIT.jsonl is a
+  // legitimate empty chain that verify-audit.js reports on correctly".
+  //
+  // Measured: it is not. In an empty project `node bin/verify-audit.js` prints
+  // "❌ audit chain BROKEN at entry 0: unreadable: ENOENT" and exits 1 — corruption, not emptiness.
+  // So wherever the script IS present and the log is not (a --with-utils install, a fresh checkout)
+  // this stage still reported a red for a project that had simply never written an audit entry: the
+  // same absence-as-failure defect the rest of this file removes.
+  const fs = require('fs');
+  const os = require('os');
+  const path = require('path');
+  const { STAGE_DEFS } = require('../bin/engine/verification-runner');
+
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-auditlog-')));
+  try {
+    // Script present, log absent — the exact combination the old guard let through.
+    fs.mkdirSync(path.join(dir, 'bin'), { recursive: true });
+    fs.copyFileSync(path.join(__dirname, '..', 'bin', 'verify-audit.js'),
+      path.join(dir, 'bin', 'verify-audit.js'));
+    assert.ok(!fs.existsSync(path.join(dir, '.planning', 'AUDIT.jsonl')),
+      'fixture precondition: there must be no audit log');
+
+    const skip = STAGE_DEFS.audit.skipIf(dir);
+    assert.ok(skip, 'with the log absent the audit stage must SKIP, not run and report BROKEN');
+    assert.match(String(skip), /AUDIT\.jsonl/,
+      `the reason must name what is missing, got: ${skip}`);
+
+    // NON-VACUITY, and the failure mode of this fix: guard too broadly and the audit chain stops
+    // being verified anywhere. With BOTH present it must run.
+    fs.mkdirSync(path.join(dir, '.planning'), { recursive: true });
+    fs.writeFileSync(path.join(dir, '.planning', 'AUDIT.jsonl'), '');
+    assert.strictEqual(STAGE_DEFS.audit.skipIf(dir), false,
+      'with the script AND the log present the audit stage must run — a guard that always skips is '
+      + 'not a fix, it is a silently disabled check');
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('an all-skipped report REFUSES to read as a pass', async () => {
+  // Adding the availability checks moved a consumer install from "3 failed, exit 1" to
+  // "0 failed, exit 0", and bin/engine/verify-cli.js exits on `failed > 0` — so $? alone now says
+  // success for a run that verified nothing. Whether that should exit non-zero is an open
+  // maintainer decision, deliberately not pre-empted; the report saying so is not optional.
+  const { formatReport } = require('../bin/engine/verification-runner');
+  const report = formatReport({
+    timestamp: '2026-01-01T00:00:00.000Z',
+    stages: [{ name: 'tests', status: 'skip', durationMs: 0, output: 'x', reason: 'no tests here' }],
+    summary: { passed: 0, failed: 0, skipped: 1, totalDurationMs: 0 },
+  });
+  assert.match(report, /NOTHING WAS VERIFIED/,
+    `an all-skipped report must say so outright, or "0 failed" reads as success:\n${report}`);
+
+  // NON-VACUITY: the banner must NOT appear when something actually ran, or it is just noise that
+  // readers learn to skip past.
+  const real = formatReport({
+    timestamp: '2026-01-01T00:00:00.000Z',
+    stages: [{ name: 'tests', status: 'pass', durationMs: 5, output: '' }],
+    summary: { passed: 1, failed: 0, skipped: 0, totalDurationMs: 5 },
+  });
+  assert.ok(!/NOTHING WAS VERIFIED/.test(real),
+    'the banner appeared on a run that genuinely passed a stage');
+});
+
+test('the availability checks do NOT disable the stages in this repository', () => {
+  // The failure mode of a fix like this: guard everything, and `mindforge verify` silently stops
+  // checking anything anywhere. In this repo tests/, an ESLint config and bin/verify-audit.js all
+  // exist, so those three stages must still RUN. Only typecheck legitimately skips — there is no
+  // root tsconfig.json; the SDK has its own.
+  const { STAGE_DEFS } = require('../bin/engine/verification-runner');
+  const mustRun = ['tests', 'lint', 'audit'];
+  for (const name of mustRun) {
+    const skip = STAGE_DEFS[name].skipIf ? STAGE_DEFS[name].skipIf(process.cwd()) : false;
+    // The tests stage also carries a recursion guard, which fires when this suite runs under
+    // run-all.js (NODE_ENV=test). That is correct and separate from availability, so accept it.
+    const isRecursionGuard = typeof skip === 'string' && /recursion/.test(skip);
+    assert.ok(!skip || isRecursionGuard,
+      `stage '${name}' skips in MindForge's own repository (${skip}), where its prerequisite is `
+      + 'present. The availability check is too broad and has disabled a real check.');
+  }
+});
+
 (async () => {
   for (const { name, fn } of tests) {
     try { await fn(); console.log('  ✅  ' + name); passed++; }
