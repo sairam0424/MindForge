@@ -34,7 +34,12 @@ Then verify from outside the repo:
 
 ```bash
 npm view mindforge-cc@[version] dist --json    # attestations.provenance must be present
-npm view mindforge-cc dist-tags                # latest must be [version], NOT alpha
+npm dist-tag ls mindforge-cc                   # latest must be [version], NOT alpha;
+                                               # stable must also be [version] — the release
+                                               # workflow moves it as its last step. Use
+                                               # `dist-tag ls`, not `npm view`: the latter reads
+                                               # the CDN-cached packument (max-age=300) and can
+                                               # show the pre-release value right after a publish.
 ```
 
 > **Do not publish manually.** See the warning below — it is not a style preference, it is an

@@ -60,8 +60,16 @@ v11.9.2 — verify with `node bin/mindforge-cli.js --version`
 **Q: Is v11.9.0 production-stable?**
 Yes. The IQ200 deep-audit (258 discrete checks across 14 dimensions) shows 258/258 passing. 0 CVEs, 0 test failures, 0 ESLint errors, 0 TypeScript errors.
 
-**Q: What npm dist-tags point to v11.9.0?**
-Both `latest` and `stable`: `npx mindforge-cc@stable` or `npx mindforge-cc@latest`
+**Q: Which npm dist-tag should I install?**
+`latest` is every published release, including patches. `stable` tracks the newest
+non-prerelease and is moved by the release workflow as its final step — forward only, so it
+never regresses to an older version. Prerelease builds keep their own `rc` and `alpha` tags and
+never become `stable`. Use `npx mindforge-cc@latest` unless you specifically want to lag a
+release behind. Check what each points at right now with `npm dist-tag ls mindforge-cc`.
+
+> This answer deliberately names no version. It previously claimed `latest` and `stable` both
+> pointed at v11.9.0; measured, they were 11.9.2 and 11.8.3 — neither. A documented invariant
+> survives releases, a documented value does not.
 
 ## Known Limitations
 

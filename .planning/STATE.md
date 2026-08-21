@@ -14,7 +14,9 @@ here is safe, and that separation must not be collapsed.
 
 ## Current version
 v11.9.2 published (npm `latest` = 11.9.2). `develop` carries 12 merged PRs of fixes on top of it and
-is the 11.9.3 candidate. Note `stable` is **stranded on 11.8.3** — no workflow moves that dist-tag.
+is the 11.9.3 candidate. `stable` is currently **11.8.3** (four behind `latest`), which is
+why the release workflow now moves it automatically — forward only, verified on npm's uncached
+dist-tags endpoint. The next release self-heals it; no hand step remains.
 
 ## Current phase
 Post-merge, pre-release. Twelve PRs (#200–#211) landed this session, closing an audit backlog whose
@@ -79,7 +81,8 @@ contradicting "never bump by hand"; and `bin/install.js:82` cites a line number 
    `npm test`.
 4. Merge `develop` → `release` → `main`. **Never PR straight to main.**
 5. After publish: `node scripts/sync-version.js --fetch-sha` for the formula, then commit it.
-6. By hand: `npm dist-tag add mindforge-cc@11.9.3 stable` (nothing automates this).
+6. Nothing by hand. The release workflow points `stable` at the published version as its last
+   step — after the GitHub Release, skipping prereleases, and refusing to move backward.
 
 ## Decisions made
 - Version bumps: `package.json` is canonical; **16 channels over 15 files** are derived. Never bump by

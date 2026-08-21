@@ -10,14 +10,111 @@ permissions:
   id-token: write
 
 jobs:
+  # ── PREFLIGHT ────────────────────────────────────────────────────────────────
+  #
+  # THE HOLE THIS CLOSES. Publishing is triggered by exactly one event: a `v*` tag push. The
+  # repository's only ruleset ("MindForge protected branches") is `target: branch` with
+  # `include: [refs/heads/main, refs/heads/develop]`, so its six required status checks —
+  # Code Quality Gates, MindForge Health Check (20.x), Security Scan, Change Classification,
+  # Governance Enforcement, gitleaks — apply to NOTHING on the path that actually publishes.
+  # GitHub cannot attach required status checks to a tag, so a ruleset can never fix this; the
+  # gate has to live in the workflow itself, ahead of the publish, which is what this job is.
+  #
+  # Before this, the only quality bar between `git tag` and a live npm release was `npm test`
+  # inside the publish job. That left two gaps:
+  #
+  #   1. FOUR GATES NEVER RAN. harness:audit, harness:gate, harness:compliance --check and
+  #      release:ready run on every branch push and pull request, and never on a tag. release:ready
+  #      is the one that matters most here — it is the check that fails when CHANGELOG.md has no
+  #      entry for the version being published.
+  #   2. ANY COMMIT COULD BE PUBLISHED. Nothing asserted the tagged commit was on `main`. Tagging a
+  #      feature branch, an unmerged experiment, or a reverted commit published it, with provenance
+  #      attesting to that exact tree. The documented flow is develop -> release -> main, so
+  #      requiring ancestry of `main` enforces the flow rather than inventing a new rule.
+  #
+  # Kept as a SEPARATE JOB with `needs:` rather than extra steps, so the publish job cannot start
+  # at all until this is green. Steps in one job would also work, but a distinct job shows up as its
+  # own check and cannot be reordered away by a later edit that inserts a step above it.
+  #
+  # KNOWN LIMIT, stated rather than glossed: for a tag push GitHub resolves the workflow file from the
+  # TAGGED ref, so this job only exists on commits that already contain it. A tag placed on an older
+  # commit runs that commit's workflow and is therefore ungated. That is inherent to tag-triggered
+  # workflows and cannot be fixed here; the ancestry check below plus a `v*` tag ruleset restricting who
+  # may create the ref are the two available mitigations.
+  preflight:
+    name: Release Preflight (gates + ancestry)
+    runs-on: ubuntu-latest
+    # LEAST PRIVILEGE. The workflow-level block grants contents: write + id-token: write because the
+    # publish job needs them. This job only reads the tree and runs gates, so it takes neither — an
+    # OIDC-minting capability has no business sitting in front of the gates, holding an `npm ci` that
+    # executes the dependency tree's install lifecycle scripts.
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The tagged commit must be reachable from main. `--is-ancestor` is exact and needs no
+      # string matching; `git fetch origin main` is explicit because a tag-push checkout has no
+      # local main ref even at fetch-depth 0.
+      - name: Tagged commit must be an ancestor of main
+        run: |
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor "${GITHUB_SHA}" origin/main; then
+            echo "::error title=Tag not on main::${GITHUB_REF_NAME} points at ${GITHUB_SHA}, which is not an ancestor of origin/main. Releases must be cut from main (develop -> release -> main). Merge the release branch into main, then move the tag."
+            exit 1
+          fi
+          echo "::notice::${GITHUB_REF_NAME} is on main ✅"
+
+      # The four gates the branch ruleset enforces on every PR and that a tag push never sees.
+      # Run individually rather than chained with && so the log names the one that failed.
+      - name: Harness audit
+        run: npm run harness:audit
+      - name: Harness gate (score floor + findings)
+        run: npm run harness:gate
+      - name: Harness adapter compliance (doc drift)
+        run: npm run harness:compliance -- --check
+      - name: Asset validation
+        run: npm run validate:assets
+      - name: Version channels in sync
+        run: npm run version:check
+      # LAST, because it is the one most likely to fail on a real release attempt: it checks that
+      # CHANGELOG.md contains an entry for the version about to be published.
+      - name: Release readiness
+        run: npm run release:ready
+
   release:
     name: Production Release
+    needs: preflight
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
 
+      # DELIBERATELY STILL 20, after an attempted bump to 22 was reverted.
+      #
+      # The bump was justified in this comment by npm's trusted publishing requiring Node >= 22.14.0.
+      # That justification was wrong: measured, all three registry-writing steps here authenticate with
+      # `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}`, so this workflow does not use trusted publishing and
+      # the floor does not apply to it.
+      #
+      # Worse, the bump added risk. The job that actually runs `tests/run-all.js` in CI is Code Quality
+      # Gates, which uses NODE_VERSION=20 — so the suite has never executed on 22. Pointing the release
+      # job at an unexercised Node major means a 22-only failure would first surface at release time,
+      # with the tag pushed and nothing published. 20 is the version CI proves the suite on.
+      #
+      # Adopting trusted publishing is a real improvement but needs registry-side configuration and a
+      # Node floor bump together; it is a follow-up, not a side effect of this change.
       - name: Setup Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
@@ -131,3 +228,94 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── `stable` dist-tag ──────────────────────────────────────────────────
+      #
+      # No workflow moved this, so it was moved by hand or not at all — and it was not at all.
+      # Measured 2026-08-21 via `npm view mindforge-cc dist-tags --json`:
+      #   { rc: 3.0.0-rc1, alpha: 6.2.0-alpha, stable: 11.8.3, latest: 11.9.2 }
+      # `stable` sat FOUR patch releases behind `latest`, so `npm i mindforge-cc@stable` delivered
+      # 11.8.3 — without any of the fixes in 11.9.0 through 11.9.2.
+      #
+      # PLACED LAST, AFTER `Create GitHub Release`, and that ordering is load-bearing. An earlier draft
+      # put it before, which made a cosmetic and always-retryable concern a hard gate in front of the
+      # release notes and the .tgz asset — for a release whose two npm publishes had already succeeded
+      # and cannot be undone. Moving a dist-tag must never cost a release its artifacts.
+      #
+      # MONOTONIC. `npm dist-tag add` is idempotent per (package, version, tag) but never version-aware,
+      # so without a guard this step moves `stable` BACKWARD on a re-run. Not hypothetical: a
+      # published-but-failed run is the normal thing to re-run here (6 of the last 12 release runs are
+      # failures, and v11.8.3's run shows publish=skipped, mcp_publish=failure, GitHub Release=skipped —
+      # a run whose only outstanding work is the release artifact). Re-running one after a newer version
+      # shipped would silently downgrade every `@stable` consumer, and the read-back would confirm the
+      # downgrade as success. `sort -V` suffices because prereleases are excluded above, and it needs no
+      # dependency — `semver` resolves locally but is in neither dependencies nor devDependencies.
+      #
+      # READS THE SAME ENDPOINT IT WRITES. `npm view <pkg> dist-tags.stable` fetches the PACKUMENT
+      # (registry.npmjs.org/<pkg>), which is CDN-backed: measured `cache-control: public, max-age=300`,
+      # `cf-cache-status: REVALIDATED`. `npm dist-tag ls` fetches `/-/package/<pkg>/dist-tags` —
+      # `cf-cache-status: DYNAMIC`, the same path the write PUTs to. Verifying an uncached write through
+      # the cached aggregate is how a correct move reads back stale and fails a perfect release. Same
+      # lesson as the PyPI publish check: verify on the authoritative endpoint, not the convenient one.
+      #
+      # A READ FAILURE IS NOT A FAILED MOVE. The previous version swallowed stderr into an empty string,
+      # so a 5xx or an expired token reported "dist-tag not moved" — a misattributed cause. Reads retry,
+      # and the two outcomes are reported differently.
+      #
+      # PRERELEASES ARE SKIPPED. v12.0.0-rc1 must not become `stable`; those have their own `rc` and
+      # `alpha` tags, which this deliberately does not touch.
+      - name: Point the stable dist-tag at this release
+        run: |
+          VER="${{ steps.verify_version.outputs.version }}"
+          if [ -z "${VER}" ]; then
+            echo "::error title=No version::verify_version produced no output; refusing to touch dist-tags."
+            exit 1
+          fi
+          case "${VER}" in
+            *-*)
+              echo "::notice::${VER} is a prerelease — leaving the stable dist-tag alone"
+              exit 0
+              ;;
+          esac
+
+          read_stable() {
+            npm dist-tag ls mindforge-cc 2>/dev/null | sed -n 's/^stable: //p'
+          }
+
+          CURRENT=""
+          for attempt in 1 2 3; do
+            CURRENT="$(read_stable)"
+            [ -n "${CURRENT}" ] && break
+            echo "dist-tag read attempt ${attempt} returned nothing; retrying in 5s"
+            sleep 5
+          done
+          echo "stable currently: ${CURRENT:-<unset or unreadable>}"
+
+          if [ -n "${CURRENT}" ] && [ "${CURRENT}" != "${VER}" ]; then
+            NEWEST="$(printf '%s\n%s\n' "${CURRENT}" "${VER}" | sort -V | tail -1)"
+            if [ "${NEWEST}" = "${CURRENT}" ]; then
+              echo "::notice::stable is at ${CURRENT}, newer than ${VER} — refusing to move it backward"
+              exit 0
+            fi
+          fi
+
+          npm dist-tag add "mindforge-cc@${VER}" stable
+
+          AFTER=""
+          for attempt in 1 2 3; do
+            AFTER="$(read_stable)"
+            [ "${AFTER}" = "${VER}" ] && break
+            echo "read-back attempt ${attempt} saw '${AFTER:-<unreadable>}'; retrying in 5s"
+            sleep 5
+          done
+          if [ -z "${AFTER}" ]; then
+            echo "::error title=dist-tag unverifiable::the write was accepted but stable could not be read back. Check manually: npm dist-tag ls mindforge-cc"
+            exit 1
+          fi
+          if [ "${AFTER}" != "${VER}" ]; then
+            echo "::error title=dist-tag not moved::stable reads '${AFTER}' after the update, expected '${VER}'."
+            exit 1
+          fi
+          echo "::notice::stable -> ${VER} ✅"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
