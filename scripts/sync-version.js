@@ -238,6 +238,62 @@ syncByRegex('MINDFORGE.md', /^# MINDFORGE\.md — Parameter Registry \(v(\d+\.\d
 // silently covering nothing.
 syncByRegex('CLAUDE.md', /`mindforge-cc`, v(\d+\.\d+\.\d+)\)/g, 'CLAUDE.md intro');
 
+// ── shipped user-facing docs ──────────────────────────────────────────────────
+//
+// Until these existed, NOT ONE channel covered a doc a user receives. Measured against the tarball
+// (`npm pack --dry-run`, 1978 files) at canonical 11.9.2: SECURITY.md — the security policy at the root
+// of the published package — declared "Current version: 11.9.0", and getting-started, faq,
+// troubleshooting, user-guide and sdk-reference all titled themselves v11.9.0. Three releases stale, in
+// the files a new user reads first, while every npm manifest was correctly in sync. `--check` was green
+// the whole time, because a channel that does not exist cannot drift.
+//
+// THE RULE, and it is the reason this block is a list of narrow anchors rather than a sweep:
+//
+//   STRUCTURAL version markers track canonical — a title, "Current version:", the expected output of
+//   `--version`. They assert "this document describes release X".
+//
+//   NARRATIVE measurements DO NOT — "Tier-3 trust uses in-process key simulation in v11.9.0",
+//   "the SDK achieves 0 typecheck errors in v11.9.0", "installs older than v11.9.0". Rewriting those
+//   would assert that a measurement taken on 11.9.0 was taken on 11.9.3. A stale true statement beats
+//   a fresh false one, and manufacturing the latter is exactly the dishonesty this repo's gates exist
+//   to catch. They are left alone deliberately; rewording them to not name a version is a docs change,
+//   not a sweep.
+//
+// WHAT A GREEDY PATTERN WOULD DESTROY, all of it measured in the shipped set and all of it legitimate:
+//   32 × `min_mindforge_version:` in .mindforge/skills/*/SKILL.md   minimum floors, may lag by design
+//   MINDFORGE.md `[REQUIRED_CORE_VERSION]`                          same, and a documented exclusion
+//   8  × `(v11.0.0+)` / `(v11.9.0)` section since-markers           "available from", not "current"
+//   CHANGELOG.md, changelogs/**, RELEASENOTES                       frozen historical records
+//   bin/** comments citing the version a defect was measured on     forensic evidence
+//   4  × forward references to 11.9.3 ("enforced as of 11.9.3")     deliberately AHEAD of canonical
+// Every anchor below is therefore tied to its exact sentence. tests/version-consistency.test.js has a
+// round trip that seeds a floor, a since-marker and [REQUIRED_CORE_VERSION] and asserts all three come
+// back byte-identical, so a future greedy channel fails a test instead of corrupting 40+ lines.
+syncByRegex('SECURITY.md', /^> \*\*Current version:\*\* (\d+\.\d+\.\d+)/gm, 'SECURITY.md current version');
+syncByRegex('docs/getting-started.md', /^# MindForge — Getting Started \(v(\d+\.\d+\.\d+)\)/gm,
+  'docs/getting-started.md title');
+// The command's own documented output. A user runs `--version`, compares, and concludes the install is
+// broken when the doc is the thing that is stale.
+syncByRegex('docs/getting-started.md', /should print `(\d+\.\d+\.\d+)`/g,
+  'docs/getting-started.md --version example');
+syncByRegex('docs/faq.md', /^# MindForge FAQ \(v(\d+\.\d+\.\d+)\)/gm, 'docs/faq.md title');
+syncByRegex('docs/faq.md', /^v(\d+\.\d+\.\d+) — verify with/gm, 'docs/faq.md --version example');
+syncByRegex('docs/troubleshooting.md', /^# MindForge Troubleshooting \(v(\d+\.\d+\.\d+)\)/gm,
+  'docs/troubleshooting.md title');
+syncByRegex('docs/user-guide.md', /^# MindForge User Guide \(v(\d+\.\d+\.\d+)\)/gm,
+  'docs/user-guide.md title');
+syncByRegex('docs/user-guide.md', /^> \*\*v(\d+\.\d+\.\d+) Stats:\*\*/gm, 'docs/user-guide.md stats banner');
+syncByRegex('docs/user-guide.md', /\(e\.g\. (\d+\.\d+\.\d+)\)/g, 'docs/user-guide.md --version example');
+// sdk-reference mirrors sdk/src/index.ts's exported VERSION, which IS already a channel — so leaving
+// this one out guaranteed the doc and the code it documents would disagree on every bump. Both the
+// prose and the export listing, so the file cannot end up internally inconsistent.
+syncByRegex('docs/sdk-reference.md', /^Current SDK version: `(\d+\.\d+\.\d+)`/gm,
+  'docs/sdk-reference.md current version');
+syncByRegex('docs/sdk-reference.md', /^## SDK Exports \(v(\d+\.\d+\.\d+)\)/gm,
+  'docs/sdk-reference.md exports heading');
+syncByRegex('docs/sdk-reference.md', /VERSION\s+\/\/ '(\d+\.\d+\.\d+)'/g,
+  'docs/sdk-reference.md VERSION listing');
+
 // ── the plugin marketplace entry (ONLY the `mindforge` plugin) ────────────────
 {
   const rel = '.claude-plugin/marketplace.json';

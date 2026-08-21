@@ -612,6 +612,116 @@ test('sync-version.js stays silent about the build artifacts when they are alrea
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 });
 
+// ── a bump must move structural version markers and NOTHING adjacent ──────────────────────────
+//
+// The shipped-docs channels were added because no channel covered a file a user receives: measured
+// against the tarball at canonical 11.9.2, SECURITY.md said "Current version: 11.9.0" and five docs
+// titled themselves v11.9.0 — three releases stale, invisible to --check, because a channel that does
+// not exist cannot drift.
+//
+// The danger a doc channel introduces is the opposite one. The shipped set contains 40+ version strings
+// that are CORRECT while differing from canonical, and a greedy pattern destroys all of them silently:
+//   32 × `min_mindforge_version:` floors in .mindforge/skills/*/SKILL.md
+//   MINDFORGE.md `[REQUIRED_CORE_VERSION]` — the same idea, and a documented exclusion
+//   `(v11.0.0+)` since-markers — "available from", not "current"
+//   CHANGELOG.md headings — frozen historical records
+// Corrupting a floor is worse than the staleness being fixed: it makes a skill demand a core version
+// that did not exist when it was written, and no version assertion would notice, because every value
+// would agree with package.json. That is what this test exists to prevent.
+
+test('a bump moves structural version markers and leaves floors, since-markers and history alone', () => {
+  const tmp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-docchan-')));
+  try {
+    fs.mkdirSync(path.join(tmp, 'scripts'), { recursive: true });
+    fs.mkdirSync(path.join(tmp, 'docs'), { recursive: true });
+    fs.mkdirSync(path.join(tmp, '.mindforge', 'skills', 'probe'), { recursive: true });
+    // Copied from ROOT, not from git, so an uncommitted channel is covered too.
+    fs.copyFileSync(path.join(ROOT, 'scripts', 'sync-version.js'),
+      path.join(tmp, 'scripts', 'sync-version.js'));
+
+    const BUMP = '99.0.0';
+    const OLD = '11.9.0';
+    fs.writeFileSync(path.join(tmp, 'package.json'),
+      JSON.stringify({ name: 'mindforge-cc', version: BUMP }, null, 2) + '\n');
+
+    // MUST MOVE — structural markers, byte-identical to the real files' shapes.
+    const w = (rel, text) => fs.writeFileSync(path.join(tmp, rel), text);
+    w('SECURITY.md',
+      `> **Current version:** ${OLD} | **npm audit:** 0 vulnerabilities\n\n`
+      + '## Security Features (v11.0.0+)\n');
+    w('docs/getting-started.md',
+      `# MindForge — Getting Started (v${OLD})\n\n`
+      + `2. **Check version:** \`node bin/mindforge-cli.js --version\` (should print \`${OLD}\`)\n`);
+    w('docs/faq.md', `# MindForge FAQ (v${OLD})\n\n${OLD ? 'v' + OLD : ''} — verify with \`x\`\n`);
+    w('docs/troubleshooting.md',
+      `# MindForge Troubleshooting (v${OLD})\n\n**Fix:** Upgrade to v${OLD}: \`npx x\`\n`);
+    w('docs/user-guide.md',
+      `# MindForge User Guide (v${OLD})\n\n> **v${OLD} Stats:** 35 workflows\n\n`
+      + `mindforge --version       # Print installed version (e.g. ${OLD}) and exit 0\n\n`
+      + '> **Authentication (v11.0.0+):** requires a bearer token\n');
+    w('docs/sdk-reference.md',
+      `Current SDK version: \`${OLD}\`\n\n## SDK Exports (v${OLD})\n\n`
+      + `  VERSION                 // '${OLD}'\n\n`
+      + `The SDK achieves **0 typecheck errors** in v${OLD}.\n`);
+    w('MINDFORGE.md',
+      `# MINDFORGE.md — Parameter Registry (v${OLD})\n\n`
+      + `[VERSION] = ${OLD}\n[REQUIRED_CORE_VERSION] = 11.9.1\n`);
+
+    // MUST NOT MOVE.
+    w(path.join('.mindforge', 'skills', 'probe', 'SKILL.md'),
+      'name: probe\nmin_mindforge_version: 11.4.0\n');
+    w('CHANGELOG.md', '## [11.9.1] — 2026-07-29 — Packaging Fix\n\n- fixed in v11.9.0\n');
+
+    const r = spawnSync(process.execPath, [path.join(tmp, 'scripts', 'sync-version.js')],
+      { cwd: tmp, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: tmp, TMPDIR: tmp } });
+    const out = `${r.stdout || ''}${r.stderr || ''}`;
+    const read = (rel) => fs.readFileSync(path.join(tmp, rel), 'utf8');
+
+    // ── moved
+    const moved = {
+      'SECURITY.md': `> **Current version:** ${BUMP}`,
+      'docs/getting-started.md': `# MindForge — Getting Started (v${BUMP})`,
+      'docs/faq.md': `# MindForge FAQ (v${BUMP})`,
+      'docs/troubleshooting.md': `# MindForge Troubleshooting (v${BUMP})`,
+      'docs/user-guide.md': `> **v${BUMP} Stats:**`,
+      'docs/sdk-reference.md': `Current SDK version: \`${BUMP}\``,
+    };
+    for (const [rel, want] of Object.entries(moved)) {
+      assert.ok(read(rel).includes(want),
+        `${rel} was not bumped — expected to find "${want}". A shipped doc that titles itself with an `
+        + `old release is what a new user reads first.\n${out}`);
+    }
+    assert.ok(read('docs/getting-started.md').includes(`should print \`${BUMP}\``),
+      'the documented --version output must track, or a user compares it and concludes the install is broken');
+    assert.ok(read('docs/user-guide.md').includes(`(e.g. ${BUMP})`),
+      'the user-guide --version example must track');
+    assert.ok(read('docs/sdk-reference.md').includes(`VERSION                 // '${BUMP}'`),
+      'sdk-reference mirrors sdk/src/index.ts, which IS a channel — leaving it out guarantees the doc '
+      + 'and the code it documents disagree on every bump');
+
+    // ── untouched, and each with the specific damage spelled out
+    assert.ok(read(path.join('.mindforge', 'skills', 'probe', 'SKILL.md'))
+      .includes('min_mindforge_version: 11.4.0'),
+      'a greedy doc channel rewrote a skill\'s min_mindforge_version. That is a FLOOR: bumping it makes '
+      + 'the skill demand a core version that did not exist when it was written, and no version '
+      + `assertion catches it because every value then agrees with package.json.\n${out}`);
+    assert.ok(read('MINDFORGE.md').includes('[REQUIRED_CORE_VERSION] = 11.9.1'),
+      `[REQUIRED_CORE_VERSION] is a minimum floor and a documented exclusion — it may lag, never lead.\n${out}`);
+    assert.ok(read('SECURITY.md').includes('## Security Features (v11.0.0+)'),
+      `a "(v11.0.0+)" since-marker means "available from", not "current" — sweeping it is a lie.\n${out}`);
+    assert.ok(read('docs/user-guide.md').includes('(v11.0.0+):**'),
+      `the user-guide since-marker must survive.\n${out}`);
+    assert.ok(read('CHANGELOG.md').includes('## [11.9.1] —'),
+      `CHANGELOG.md is a frozen historical record.\n${out}`);
+    // Narrative measurements stay put: rewriting them asserts a measurement was taken on a release it
+    // was not. A stale true statement beats a fresh false one.
+    assert.ok(read('docs/sdk-reference.md').includes(`0 typecheck errors** in v${OLD}`),
+      `a narrative measurement was rewritten — that manufactures a claim nobody verified.\n${out}`);
+    assert.ok(read('docs/troubleshooting.md').includes(`Upgrade to v${OLD}`),
+      `"Upgrade to vX" names a historical boundary, not the current release.\n${out}`);
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+});
+
 (async () => {
   for (const { name, fn } of tests) {
     try { await fn(); console.log(`  ✅  ${name}`); passed++; }
