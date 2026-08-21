@@ -210,7 +210,12 @@ function getApprovals() {
   const { verifyRecord } = require('../governance/approval-record');
   let currentVersion = null;
   try {
-    currentVersion = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'package.json'), 'utf8')).version;
+    // MindForge's version, resolved by package NAME. `path.join(__dirname, '..', '..',
+    // 'package.json')` reached <project>/package.json in an install — the CONSUMER's manifest — so
+    // verifyRecord() below compared an approval record against the host app's version (0.4.2, say)
+    // instead of MindForge's. The try/catch stopped it crashing, which is why it went unnoticed:
+    // a wrong binding is quieter than a missing one.
+    currentVersion = require('../utils/mindforge-version').resolveMindforgeVersion(process.cwd()).version;
   } catch { /* version binding is skipped if the manifest is unreadable */ }
 
   const now = Date.now();

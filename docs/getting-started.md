@@ -54,7 +54,13 @@ Run the MindForge MCP server (`mindforge-mcp-server`) over stdio — it exposes 
 claude mcp add mindforge -- npx -y mindforge-mcp-server
 ```
 
-This server is also published to the [MCP Registry](https://registry.modelcontextprotocol.io) as `io.github.sairam0424/mindforge` (currently `11.9.0`, marked latest).
+This server is also published to the [MCP Registry](https://registry.modelcontextprotocol.io) as
+`io.github.sairam0424/mindforge`. **The registry entry lags this package** — it is republished
+manually, so check what it actually serves before relying on it:
+`curl -s 'https://registry.modelcontextprotocol.io/v0/servers?search=io.github.sairam0424/mindforge'`.
+To pin a known version instead, install `mindforge-mcp-server` from npm directly. (The previous
+wording named a specific version and marked it latest; both were wrong in both directions, which
+is why this now describes how to check rather than asserting a number.)
 
 ### 4. Homebrew
 

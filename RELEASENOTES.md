@@ -1,5 +1,68 @@
 # Release Notes
 
+## v11.9.3 — 2026-08-21 — Honesty: gates that can fail, commands that run, a release path that is checked
+
+### What's New
+Nothing. Twenty-one fixes sharing a single defect: **an instrument reported success while doing
+nothing.** Gates that could not fail, tests a comment satisfied, docs naming scripts that do not
+exist, commands printing success while performing no action, and a publish path no check ever
+touched.
+
+### ⚠️ Breaking (under a patch bump)
+Six behaviour changes, each a bug fix whose correct behaviour differs from what shipped. Read these
+if you script against the CLI or the installer.
+
+- **Routed CLI commands now act on YOUR project, not MindForge's checkout.** The router passed
+  `cwd: ROOT`, so `mindforge classify` diffed MindForge's repository instead of yours and
+  `mindforge health` inspected MindForge's `node_modules`. Of 27 routed commands, 7 changed
+  behaviour — all in the correct direction.
+- **`npx mindforge-cc install`, and any other positional argument, now exits 1.** The installer
+  takes flags only and used to ignore stray words silently, so that command appeared to work while
+  configuring nothing. Use `npx mindforge-cc --claude --local`.
+- **`mindforge verify` now SKIPS unavailable stages instead of failing them.** A project with no
+  ESLint config or no test script was reported as FAILING those stages rather than as not having
+  them. CI that relied on a non-zero exit there will now pass. A run where every stage skipped
+  prints a "NOTHING WAS VERIFIED" banner rather than a clean bill of health.
+- **`scripts/sync-version.js` now exits non-zero when the plugin build artifacts are stale.** A bump
+  used to report success and exit 0 while leaving `npm test` red.
+- **A self-install no longer writes over your tracked files.** Running the installer inside a
+  MindForge checkout printed that it was skipping and then overwrote 149 tracked files, including
+  `CLAUDE.md`, `.claude/**`, `.agent/**` and `.mindforge/**`.
+- **Releases must be tagged on a commit reachable from `main`.**
+
+### Fixes
+- **11 of 27 routed CLI verbs died on `MODULE_NOT_FOUND` in a real install.** The router shipped;
+  six of the scripts it dispatches to did not.
+- **Every `--global` install reported failure on a correct run.** Verification demanded six `bin/**`
+  paths regardless of scope, so a global install — which writes 389 files to `$HOME/.claude` and,
+  deliberately, zero to `bin/` — ended `6 of 12 required file(s) missing` and exit 1, with a
+  `--force` retry that could not help.
+- **`--fetch-sha` hashed npm's 404 error body into the Homebrew formula.** For an unpublished
+  version the registry answers `{"error":"Not found"}` and `curl -sL` exits 0, so the digest written
+  was the SHA-256 of that error text — the same constant for every unpublished version — and
+  `--check` then passed. It now fails closed on both status and gzip magic bytes.
+- **No version channel covered a document a user receives.** `SECURITY.md` — the security policy at
+  the root of the published package — said "Current version: 11.9.0", and five docs titled
+  themselves v11.9.0: three releases stale while every npm manifest was correct. A channel that does
+  not exist cannot drift, so `--check` was green the whole time.
+- **The tag push that publishes was exempt from every gate.** Publishing is triggered by exactly one
+  event — a `v*` tag push — and the repository's only ruleset targets branches, so its six required
+  checks applied to nothing on the path that ships. GitHub cannot attach required status checks to a
+  tag, so this had to be fixed in the workflow itself.
+- **The `stable` dist-tag sat three releases behind `latest`** (11.8.3 against 11.9.2), so
+  `npm i mindforge-cc@stable` delivered a build with none of the 11.9.x fixes. The release workflow
+  now moves it as its final step — forward-only, prereleases skipped.
+- **`mindforge dashboard --status` and `--stop` were documented and implemented nowhere.** Both
+  printed nothing useful. `--stop` also identified its target by the SHAPE of a command line, which
+  matched any `node <anything>/dashboard/server.js` — verified against an unrelated app's dashboard.
+- **`temporal cleanup` printed "Cleaning up…" and "Cleanup complete." with no cleanup between them.**
+- **The protocol files instructed the agent to run scripts that do not exist** (`soul-engine.js`,
+  `shard-controller.js`), and 15 phantom `/mindforge:` slash commands appeared in shipped docs. A
+  reader following the user guide typed `/mindforge:personas --list` and got nothing.
+- **Every abandoned exit left a full copy of the database on disk** — 1.8 GB of orphaned `.tmp` files.
+
+Full detail, including the measured evidence for each: [changelogs/v11.9.3.md](./changelogs/v11.9.3.md).
+
 ## v11.9.2 — 2026-08-16 — Correctness: config gate, audit chain, retrieval, cost ledger
 
 ### What's New

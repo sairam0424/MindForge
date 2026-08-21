@@ -47,7 +47,14 @@ Typical GitHub Action setup:
 steps:
   - uses: actions/checkout@v4
   - name: Run MindForge headless
-    run: npx mindforge headless --phase 3
+    # `npx --package=mindforge-cc` PINS the package. Bare `npx mindforge` resolves to an UNRELATED
+    # third-party package on the public registry (mindforge@1.0.21, maintainer william@mindforge.ai) —
+    # not this project, whose npm name is mindforge-cc. In a fresh runner there is no local bin to
+    # shadow it, so npx fetches and unpacks that package, runs any install scripts it has, and then
+    # fails with "could not determine executable to run" because it exposes no `mindforge` bin.
+    # Measured both forms: the pinned one exits 0 with mindforge-cc in the npx cache; the bare one
+    # exits 1 after downloading someone else's package into a job holding MINDFORGE_TOKEN.
+    run: npx --yes --package=mindforge-cc mindforge headless --phase 3
     env:
       MINDFORGE_TOKEN: ${{ secrets.MINDFORGE_TOKEN }}
       AUTO_PUSH_ON_WAVE_COMPLETE: true
