@@ -1,4 +1,4 @@
-# MindForge FAQ (v11.9.0)
+# MindForge FAQ (v11.9.2)
 
 ## Is MindForge tied to Claude only?
 No. MindForge supports Claude Code and Antigravity. Install with `--claude`,
@@ -55,7 +55,7 @@ The `deep-research` workflow was removed before the v11.8.0 release (the superpo
 ## Version & Stability
 
 **Q: What version is current?**
-v11.9.0 — verify with `node bin/mindforge-cli.js --version`
+v11.9.2 — verify with `node bin/mindforge-cli.js --version`
 
 **Q: Is v11.9.0 production-stable?**
 Yes. The IQ200 deep-audit (258 discrete checks across 14 dimensions) shows 258/258 passing. 0 CVEs, 0 test failures, 0 ESLint errors, 0 TypeScript errors.
