@@ -171,6 +171,62 @@ test('the generated plugin skill carries no claim the protocol file has dropped'
   }
 });
 
+// ── the same rule, applied to EVERY doc an agent reads as authority ───────────
+//
+// The check above covers `.claude/CLAUDE.md`, the file the installer writes into consumer projects.
+// That scope let a phantom survive in the ROOT `CLAUDE.md`, which is what an agent working in THIS
+// repo reads at the start of every session: it named `bin/hooks/mindforge-context-monitor.js` as the
+// script that switches hook event names, and no such file exists — the real one is
+// `.agent/hooks/mindforge-context-monitor.js`. Nothing was asserting it, so it sat there.
+//
+// Widened to the whole authority set: the three CLAUDE.md files, MINDFORGE.md, AGENTS.md, SOUL.md if
+// present, and every `.mindforge/engine/**` spec. Measured across 41 documents and 42 backticked .js
+// references at the time of writing.
+//
+// STILL NO EXEMPTION LIST. Widening surfaced two ILLUSTRATIVE references in the root CLAUDE.md
+// alongside the real phantom — `.test.js` and `tmp-foo.test.js`, both examples of a naming pattern
+// rather than scripts to run. They were reworded to `*.test.js` and `tmp-*.test.js`, which is both more
+// accurate (they ARE patterns) and outside this regex, exactly as the four names in the header comment
+// were handled. An allowlist would have been the easy fix and would have gone stale the same way.
+test('every .js file any authority doc names actually exists', () => {
+  const { execFileSync } = require('node:child_process');
+  const engineSpecs = execFileSync('git',
+    ['ls-files', '.mindforge/engine/*.md', '.mindforge/engine/**/*.md'],
+    { cwd: ROOT, encoding: 'utf8', maxBuffer: 1 << 26 })
+    .split('\n').filter(Boolean);
+
+  const docs = ['CLAUDE.md', '.claude/CLAUDE.md', '.agent/CLAUDE.md', 'MINDFORGE.md', 'AGENTS.md',
+    'SOUL.md', ...engineSpecs]
+    .filter((rel) => fs.existsSync(path.join(ROOT, rel)));
+
+  // NON-VACUITY on the corpus. SOUL.md is legitimately absent (generated locally, not shipped), so
+  // the floor is below the full list rather than equal to it.
+  assert.ok(docs.length >= 10,
+    `only ${docs.length} authority doc(s) found — the engine-spec glob or the repo layout changed, so `
+    + 'this check would cover almost nothing');
+
+  const seen = [];
+  const unresolvable = [];
+  for (const rel of docs) {
+    const text = fs.readFileSync(path.join(ROOT, rel), 'utf8');
+    for (const m of new Set([...text.matchAll(/`([a-zA-Z0-9._/-]+\.js)`/g)].map((x) => x[1]))) {
+      seen.push(m);
+      if (!resolvesInRepo(m)) unresolvable.push(`${rel} -> ${m}`);
+    }
+  }
+
+  // NON-VACUITY on the pattern: zero references would satisfy the assertion trivially.
+  assert.ok(seen.length >= 15,
+    `only ${seen.length} backticked .js reference(s) across ${docs.length} authority docs — the pattern `
+    + 'broke, and this check would pass no matter what those docs claim');
+
+  assert.deepStrictEqual(unresolvable, [],
+    `${unresolvable.length} authority doc reference(s) name a script that does not exist:\n  `
+    + `${unresolvable.join('\n  ')}\n`
+    + 'These files are read as instructions at the start of a session. Name a real path, write an '
+    + 'illustrative pattern as a pattern (`*.test.js`), or describe the step as reasoning.');
+});
+
 (async () => {
   for (const { name, fn } of tests) {
     try { await fn(); console.log(`  ✅  ${name}`); passed++; }

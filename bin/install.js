@@ -79,9 +79,14 @@ if (ARGS.includes('--help') || ARGS.includes('-h')) {
 // script's whole contract is expressed in flags, and guessing what a stray word meant is how
 // `mindforge-cc /etc` becomes an interesting afternoon.
 //
-// `--runtime` takes its value as a SEPARATE token (bin/installer-core.js:1112 reads
-// args[rtIdx + 1]), so that token is skipped here — a naive "anything not starting with -" check
-// would reject the documented `--runtime claude`.
+// `--runtime` takes its value as a SEPARATE token — installer-core.js's run() reads
+// args[rtIdx + 1] after locating args.indexOf('--runtime') — so that token is skipped here; a
+// naive "anything not starting with -" check would reject the documented `--runtime claude`.
+//
+// Cites the SYMBOL, not a line number. The original said :1112, which was exact when written and
+// wrong by the time it merged: two PRs in the same batch grew installer-core.js from 1173 to 1347
+// lines with 161 of them above that point, so the reference landed on unrelated code. A line
+// number in a comment is a claim with an expiry date and nothing asserts it.
 const VALUE_TAKING_FLAGS = new Set(['--runtime']);
 const POSITIONALS = [];
 for (let i = 0; i < ARGS.length; i++) {
