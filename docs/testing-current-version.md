@@ -66,7 +66,7 @@ This document provides a step-by-step rigorous testing flow to validate the enti
 
 **Command**:
 ```bash
-/mindforge:dashboard --start --open
+/mindforge:dashboard --open
 ```
 
 **Testing Steps**:
