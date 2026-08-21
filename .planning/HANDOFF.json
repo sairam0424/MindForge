@@ -2,7 +2,7 @@
   "_warning": "DO NOT ADD SECRETS OR SENSITIVE DATA TO THIS FILE. IT IS SYNCED ACROSS SESSIONS.",
   "schema_type": "HANDOFF",
   "schema_version": "1.0.0",
-  "next_task": "11.9.3 is published (npm latest = stable = 11.9.3, both packages with provenance). Post-release fixes are landing on develop for 11.9.4; main is still at the v11.9.3 tag (453eb333). NEXT: the two carried-over artifact items \u2014 the gitignored .mindforge/memory/sync-manifest.json that is packed into the tarball (the only 1 of 1979 shipped files not tracked at the tag, so the published file set is not reproducible from it), and RELEASENOTES.md documenting 11.9.2 but not 11.9.3. Then the operator items that need repo settings rather than code: a v* TAG RULESET restricting who may create the ref, and moving NPM_TOKEN behind a GitHub environment (there are currently ZERO configured, so adding environment: without creating one publishes exactly as before while looking like a gate).",
+  "next_task": "11.9.4 is published but ONE gap is open and needs npm credentials: the `stable` dist-tag still resolves to 11.9.3. Run `npm dist-tag add mindforge-cc@11.9.4 stable` and verify with `npm dist-tag ls mindforge-cc` (NOT `npm view ... dist-tags`, which reads the CDN-cached packument). Everything else is closed: both packages published with provenance attesting 353e8d41, `latest`=11.9.4, and the v11.9.4 GitHub Release now exists with the registry's own tarball attached (digest verified against dist.integrity and both attestation bundles). mindforge-sdk stayed at 11.8.0 \u2014 E422, sdk/package.json had no `repository` field; fixed on develop along with an offline preflight gate and a step reorder, so the SDK's first attested release is 11.9.5. NEXT after the dist-tag: cut 11.9.5 (develop has #228), and the two operator items that need repo settings \u2014 a v* TAG RULESET, and moving NPM_TOKEN behind a GitHub environment (create the environment FIRST; there are zero configured, so adding `environment:` without one publishes exactly as before while looking like a gate). Do NOT move the v11.9.4 tag.",
   "current_context": "develop is at 1b5302b5 and GREEN both locally (131 passed / 0 failed / 2 skipped / 133 total, all seven gates plus verify:pinning exit 0) and in CI (MindForge CI, Control Plane, Secret scan all success). Sixteen PRs merged this session (#200-#216), each verified by `merge-base --is-ancestor` rather than by badge, because #198 is MERGED with its code absent from develop. package.json is still 11.9.2; npm latest=11.9.2, stable=11.8.3 until the next release moves it automatically.",
   "context_refs": [
     "scratch-pad/daily-logs/2026-08-21.md \u2014 the full session narrative, including every self-inflicted harness bug and its control experiment. READ THIS FIRST.",
@@ -52,6 +52,6 @@
     "CLAUDE.md, .claude/CLAUDE.md, .agent/CLAUDE.md \u2014 protocol docs name only real files"
   ],
   "handoffs": [],
-  "last_updated": "2026-08-21T18:00:00Z",
-  "updated_at": "2026-08-21T18:00:00Z"
+  "last_updated": "2026-08-21T21:32:00Z",
+  "updated_at": "2026-08-21T21:32:00Z"
 }
