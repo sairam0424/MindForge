@@ -22,7 +22,8 @@ behaviour differs from what shipped. See the BREAKING section in
 Read this before the install instructions. MindForge ships a large corpus of agent
 instructions — commands, skills, personas, protocols — and those are advisory: they work by
 being in the model's context, and a model can decline them. The parts that would *block* an
-action are hooks, and **no install channel currently registers them.**
+action are hooks. Through 11.9.2 **no channel registered them**; as of 11.9.3 both channels
+register and execute them **on Claude Code**, and nowhere else.
 
 | Capability | Plugin channel | `npx` channel |
 |---|---|---|
@@ -30,34 +31,48 @@ action are hooks, and **no install channel currently registers them.**
 | Skills / personas / protocol docs | Yes | Yes |
 | Subagents | Yes | Yes |
 | Audit hash-chain (`bin/verify-audit.js`) | Yes | Yes |
-| **Hooks enforced (can block a tool call)** | **No** | **No** |
+| **Hooks enforced (can block a tool call)** | **Claude Code only** | **Claude Code + `--local` only** |
 
-Why, specifically:
+What that means, measured rather than asserted:
 
-- **No hook configuration ships, and nothing generates one.** `package.json` `files[]` has 48
-  entries and none contains `settings`, so neither `.claude/settings.json` nor
-  `.agent/settings.json` is published. All references to those paths in `bin/` are reads or
-  metadata strings — there is no code that writes or merges one. `bin/harness-audit.js:335`
-  even offers "wire trust-gate + block-no-verify into both …" as a *fix suggestion*, auditing a
-  wiring nothing creates.
-- **The plugin channel's hooks additionally crash when fired.**
-  `plugins/mindforge/scripts/run-with-flags.js:24` requires `./lib/hook-flags`, and
-  `plugins/mindforge/scripts/lib/` does not exist in the published plugin. Running the
-  dispatcher gives `Error: Cannot find module './lib/hook-flags'` and exit 1. The module it
-  needs does exist at `.agent/hooks/lib/hook-flags.js`; it was never copied in.
+- **The `npx` channel generates the config it never used to ship.** `files[]` has 49 entries and
+  none of them contains `settings`, so no settings file is *published* — instead
+  `bin/installer/hook-registration.js` writes one at install time, merging append-only into any
+  file you already have. Measured on a confined install: **8 hooks registered** into
+  `.claude/settings.json`, of which the installer's own preflight **executed 7 and verified all 3
+  deny-class hooks returning exit 2** before keeping the file. A preflight failure rolls the
+  registration back rather than leaving a config whose commands do not run.
+- **The plugin channel's dispatcher runs.** It previously crashed on every fire —
+  `run-with-flags.js` requires `./lib/hook-flags` and `plugins/mindforge/scripts/lib/` was not
+  copied in. That directory now exists, all **14 path tokens** in
+  `plugins/mindforge/hooks/hooks.json` resolve under the plugin root, and driving the dispatcher by
+  hand returns **exit 2** for `mindforge-block-no-verify` and `mindforge-config-protection`.
 
-So treat MindForge as **governance-by-convention plus a tamper-evident audit log**, not as a
-policy enforcement point. Installing it also expands your repository's trust boundary by a large
-volume of agent instructions — review what you install. Making hook registration real per
-harness is the headline goal of v12; the audit chain is genuinely verifiable today
+Still **not** enforced, deliberately and with a printed reason for each: any runtime other than
+Claude Code (Cursor, Copilot, Gemini/Antigravity, OpenCode), `--global` scope, a self-install
+inside a MindForge checkout, and Windows. Writing a Claude-schema config into `.cursor/` without an
+execution-verified hook contract would be decorative. Every outcome, including "not registered", is
+printed by the installer and written to `.mindforge/hook-registration.json`.
+
+Three things gate whether a registered hook is *live*, none of them in MindForge's control: the
+harness must be **restarted** (hooks are snapshotted at session start), the project must be
+**trusted** in the harness, and `CLAUDE_PROJECT_DIR` must be set with `node` on the hook PATH —
+if it is not, the commands exit 1 and the gate is simply absent, which is a deliberate trade
+against a fail-closed tail that was measured denying benign commands on a fresh clone. See
+*Hooks are installed but nothing is blocked* in `docs/troubleshooting.md`.
+
+So: on Claude Code, treat MindForge as a policy enforcement point for the 8 registered hooks plus
+a tamper-evident audit log; on every other harness, as **governance-by-convention** plus that same
+audit log. Installing it also expands your repository's trust boundary by a large volume of agent
+instructions — review what you install. The audit chain is verifiable today
 (`node bin/verify-audit.js`).
 
 ---
 
 ## Install
 
-Claude Code plugin marketplace (no project files written). **Note:** the plugin's hooks do not
-fire — see *What is actually enforced* above. Slash commands, skills and subagents do work.
+Claude Code plugin marketplace (no project files written). The plugin's hooks now fire — see
+*What is actually enforced* above for what that does and does not cover.
 
 ```bash
 /plugin marketplace add sairam0424/MindForge

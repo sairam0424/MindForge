@@ -29,6 +29,7 @@
     ".mindforge/intelligence/",
     ".mindforge/memory/",
     "!.mindforge/memory/pattern-library.jsonl",
+    "!.mindforge/memory/sync-manifest.json",
     ".mindforge/metrics/",
     "!.mindforge/metrics/token-usage.jsonl",
     ".mindforge/models/",
