@@ -46,8 +46,8 @@ Typical GitHub Action setup:
 ```yaml
 steps:
   - uses: actions/checkout@v4
-  - name: Run MindForge Auto
-    run: npx mindforge auto --phase 3 --headless
+  - name: Run MindForge headless
+    run: npx mindforge headless --phase 3
     env:
       MINDFORGE_TOKEN: ${{ secrets.MINDFORGE_TOKEN }}
       AUTO_PUSH_ON_WAVE_COMPLETE: true

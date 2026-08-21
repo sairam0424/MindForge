@@ -1,11 +1,11 @@
 ---
-description: "@mindforge browse <url | action>"
+description: "/mindforge:browse <url | action>"
 ---
 
 # /mindforge:browse
 
 ## Usage
-`@mindforge browse <url | action>`
+`/mindforge:browse <url | action>`
 
 ## Description
 Controls the persistent MindForge browser daemon. 

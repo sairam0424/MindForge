@@ -167,6 +167,17 @@ const COMMANDS = {
 };
 
 // ── Workflow subcommand (non-script, handled inline) ─────────────────────────
+//
+// Routable but NOT a COMMANDS key, because it dispatches to a module rather than spawning a script.
+// That made the CLI lie about itself: `workflow` is the most-documented verb in the project (126
+// references across the docs) and it works, yet it appeared in neither `--help` nor the
+// "Available commands" list, so a user who mistyped it was told it does not exist. Declared here, next
+// to the handler that makes it real, and consumed by both self-report sites below — one source, so the
+// two cannot drift.
+const INLINE_COMMANDS = ['workflow'];
+/** Every verb the router will actually dispatch: table-driven plus inline. */
+const ROUTABLE = [...Object.keys(COMMANDS), ...INLINE_COMMANDS].sort();
+
 if (COMMAND === 'workflow') {
   const workflowRunner = require('./workflows/workflow-runner');
   workflowRunner.run(COMMAND_ARGS[0], COMMAND_ARGS.slice(1));
@@ -197,8 +208,10 @@ const target = COMMANDS[COMMAND];
 if (!target) {
   console.error(`Unknown command: ${COMMAND}`);
 
-  // Suggest similar commands using Levenshtein distance
-  const suggestions = Object.keys(COMMANDS)
+  // Suggest similar commands using Levenshtein distance. ROUTABLE, not Object.keys(COMMANDS): a
+  // near-miss on `workflow` (`worklow`, `wokflow`) previously produced no suggestion at all, because
+  // the only verb it resembles was absent from the pool.
+  const suggestions = ROUTABLE
     .map(cmd => ({ cmd, dist: levenshtein(COMMAND, cmd) }))
     .filter(s => s.dist <= 3)
     .sort((a, b) => a.dist - b.dist)
@@ -207,7 +220,7 @@ if (!target) {
   if (suggestions.length > 0) {
     console.error(`\nDid you mean: ${suggestions.map(s => s.cmd).join(', ')}?`);
   } else {
-    console.error('Available commands: ' + Object.keys(COMMANDS).join(', '));
+    console.error('Available commands: ' + ROUTABLE.join(', '));
   }
   process.exit(1);
 }
@@ -296,8 +309,12 @@ function printUsage() {
   for (const [name, cfg] of Object.entries(COMMANDS)) {
     console.log(`  ${name.padEnd(15)} ${cfg.description}`);
   }
+  // Listed separately because it dispatches to a module rather than spawning a script, so it has no
+  // COMMANDS entry to carry a description. Omitting it made --help contradict the router.
+  console.log(`  ${'workflow'.padEnd(15)} Run a registered dynamic workflow (see \`workflow list\`)`);
   console.log('\nExamples:');
   console.log('  node bin/mindforge-cli.js security-scan');
   console.log('  node bin/mindforge-cli.js headless --phase 1');
+  console.log('  node bin/mindforge-cli.js workflow list');
   console.log('\n');
 }

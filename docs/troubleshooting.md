@@ -207,4 +207,4 @@ All tests must be run from the MindForge project root: `cd /path/to/MindForge &&
 
 **Symptom:** `--version` flag reports "Unknown command" on installs older than v11.9.0.
 
-**Fix:** Upgrade to v11.9.0: `npx mindforge-cc@latest install`
+**Fix:** Upgrade: `npx mindforge-cc@latest --claude --local`

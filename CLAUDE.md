@@ -25,7 +25,7 @@ node bin/verify-audit.js                 # verify AUDIT.jsonl hash-chain (fail-c
 node bin/validate-config.js              # validate MINDFORGE.md against its JSON schema
 node bin/mindforge-cli.js security-scan  # validate config + run security checks
 node bin/mindforge-cli.js health         # project health / installation integrity check
-node bin/mindforge-cli.js dashboard      # start Express dashboard at localhost:7339
+node bin/dashboard/server.js             # start Express dashboard at localhost:7339 (--port N, --open, --status, --stop). NOT a CLI verb — `mindforge-cli.js dashboard` exits 1
 node bin/mindforge-cli.js headless       # run agent in headless/walk-away mode
 node bin/mindforge-cli.js pr-review      # cross-model PR review
 node bin/mindforge-cli.js classify       # classify changes into governance tiers
