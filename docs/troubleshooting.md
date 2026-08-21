@@ -1,4 +1,4 @@
-# MindForge Troubleshooting (v11.9.2)
+# MindForge Troubleshooting (v11.9.3)
 
 This page lists common issues and fast fixes. If you get stuck, start with
 `/mindforge:health`.

@@ -1,6 +1,6 @@
 # Security Policy
 
-> **Current version:** 11.9.2 | **npm audit:** 0 vulnerabilities across root, sdk, mcp-server
+> **Current version:** 11.9.3 | **npm audit:** 0 vulnerabilities across root, sdk, mcp-server
 
 ## Supported Versions
 

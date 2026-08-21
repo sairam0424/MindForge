@@ -22012,7 +22012,7 @@ var MindForgeClient = class extends import_events.EventEmitter {
 };
 
 // package.json
-var version2 = "11.9.2";
+var version2 = "11.9.3";
 
 // src/index.ts
 var PROJECT_ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();

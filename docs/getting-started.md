@@ -1,4 +1,4 @@
-# MindForge — Getting Started (v11.9.2)
+# MindForge — Getting Started (v11.9.3)
 
 This guide gets you from zero to a working MindForge project in under five minutes.
 
@@ -108,7 +108,7 @@ Or use slash commands: `/mindforge:wf-code-audit`
 ## Your First 5 Minutes with MindForge
 
 1. **Verify install:** `node bin/mindforge-cli.js health`
-2. **Check version:** `node bin/mindforge-cli.js --version` (should print `11.9.2`)
+2. **Check version:** `node bin/mindforge-cli.js --version` (should print `11.9.3`)
 3. **List workflows:** `node bin/mindforge-cli.js workflow list`
 4. **Run first slash command:** Open Claude Code → `/mindforge:status`
 5. **Onboard your codebase:** Open Claude Code → `/mindforge:wf-onboard-codebase`
