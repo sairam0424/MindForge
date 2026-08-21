@@ -248,16 +248,22 @@ test('the layout fix alone accounts for 36 -> 41, separated from registration', 
     reg.unregister(project);
     const withoutReg = buildReport('repo', { rootDir: project }).overall_score;
 
-    assert.strictEqual(withoutReg, 41,
-      `un-registered install must score 41/76 — the layout fix alone. Got ${withoutReg}. The +5 over ` +
+      // 43, not 41, since coreFiles began carrying the six routed top-level bin/ scripts whose absence
+      // killed 11 of 27 verbs. Exactly ONE audit check flipped as a result — quality-skill-validator,
+      // worth 2 — because bin/skill-validator.js is now installed. Established by diffing the per-check
+      // results with and without that change, rather than adjusting the number until it matched: a score
+      // expectation edited without knowing which check moved is no longer an expectation.
+    assert.strictEqual(withoutReg, 43,
+      `un-registered install must score 43/76 — layout fix plus routed-script install. Got ${withoutReg}. The +5 over ` +
       'the old rubric\'s 36 is exactly context-monitor-hook (3) + security-block-no-verify (2), the ' +
       'two checks whose files an install already contained.');
 
     assert.ok(withReg > withoutReg,
       `registration must add score on top of the layout fix: got ${withReg} registered vs ` +
       `${withoutReg} un-registered. If equal, REG-01 registered nothing.`);
-    assert.strictEqual(withReg, 49,
-      `registered install must score 49/76, got ${withReg}. That +8 is enforcement, not rubric — if it ` +
+      // 51, not 49: the same +2 from quality-skill-validator rides along on the registered score.
+    assert.strictEqual(withReg, 51,
+      `registered install must score 51/76, got ${withReg}. That +8 is enforcement, not rubric — if it ` +
       'moved, raise INSTALL_SCORE_FLOOR in scripts/ci/harness-gate-install.js to match.');
   } finally { cleanup(); }
 });

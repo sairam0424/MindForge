@@ -33,7 +33,7 @@ const assert = require('node:assert');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { spawnSync } = require('node:child_process');
+const { spawnSync, execFileSync } = require('node:child_process');
 
 const REPO_ROOT = fs.realpathSync(path.join(__dirname, '..'));
 const INSTALLER = path.join(REPO_ROOT, 'bin', 'install.js');
@@ -167,6 +167,64 @@ test('bin/hindsight-injector.js is installed for the two modules that require it
   // installed. It replaced a `coreEngines` array that was declared and never referenced.
   assert.ok(fs.existsSync(path.join(installedBin, 'hindsight-injector.js')),
     'bin/hindsight-injector.js must be installed');
+});
+
+test('every script the router can dispatch to is actually installed', () => {
+  // THE DEFECT. `sovereignEngines` copies bin/ SUBDIRECTORIES, so the 13 nested scripts in the
+  // COMMANDS table arrive. The 6 that live directly in bin/ had no carrier beyond `coreFiles`, which
+  // held two entries. Measured on a clean install: 11 of 27 routed verbs died in Node's module loader.
+  //
+  //     security-scan   Cannot find module '<proj>/bin/validate-config.js'
+  //     health          Cannot find module '<proj>/bin/installer-core.js'
+  //     classify        Cannot find module '<proj>/bin/change-classifier.js'
+  //     validate-skill  Cannot find module '<proj>/bin/skill-validator.js'
+  //     install-skill / register-skill / audit-skill   bin/skill-registry.js
+  //     spawn / identity / subagent                    bin/spawn-agent.js
+  //     test-memory     tests/memory.test.js
+  //
+  // Two of them carry most of the weight: `security-scan` is the verb the protocol mandates
+  // PRE-COMMIT for Auth/Payment/PII changes, and `health` is step 1 of "Verify install" in
+  // docs/getting-started.md:110 — so the documented first command a new user runs exited non-zero
+  // with a stack trace.
+  //
+  // WHY THE EXISTING CHECKS MISSED IT. The resolution test above walks what WAS installed and
+  // verifies its internal requires; those were complete. The gap was one level up — files the ROUTER
+  // names that were never copied at all, so there was no installed module whose requires could fail.
+  //
+  // DERIVED FROM THE COMMANDS TABLE, never a hardcoded list, so adding a route without adding a
+  // carrier to coreFiles fails here immediately rather than at a user's terminal.
+  const routerSrc = fs.readFileSync(path.join(REPO_ROOT, 'bin', 'mindforge-cli.js'), 'utf8');
+  const table = routerSrc.slice(routerSrc.indexOf('const COMMANDS'),
+    routerSrc.indexOf('// ── Workflow subcommand'));
+  const routed = [...new Set([...table.matchAll(/script:\s*'([^']+)'/g)].map((m) => m[1]))];
+
+  // NON-VACUITY: a broken slice or a changed table shape would otherwise pass by finding nothing.
+  assert.ok(routed.length >= 20,
+    `only ${routed.length} routed script(s) parsed out of bin/mindforge-cli.js — the COMMANDS table `
+    + 'changed shape, so this check would cover almost nothing');
+
+  // The installer can only copy what npm ships. tests/ is excluded from package.json files[], so
+  // tests/memory.test.js is not in the tarball and no installer change can place it — the fix for
+  // that verb is removing it from the router. Split rather than exempted, so the unshippable set is
+  // reported and asserted rather than quietly skipped.
+  const packlist = new Set(JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json'],
+    { cwd: REPO_ROOT, encoding: 'utf8', maxBuffer: 1 << 28 }))[0].files.map((f) => f.path));
+
+  const shippable = routed.filter((r) => packlist.has(r));
+  const unshippable = routed.filter((r) => !packlist.has(r));
+
+  const missing = shippable.filter((r) => !fs.existsSync(path.join(PROJECT, r)));
+  assert.deepStrictEqual(missing, [],
+    `${missing.length} routed script(s) ship in the tarball but were NOT installed, so those verbs `
+    + `die in the module loader:\n  ${missing.join('\n  ')}\n`
+    + 'Add them to coreFiles in bin/installer-core.js.');
+
+  // And the unshippable set is asserted, not ignored: if it grows, a new verb has been pointed at
+  // something npm does not publish, and the router is the place to fix it.
+  assert.deepStrictEqual(unshippable, ['tests/memory.test.js'],
+    `the set of routed scripts that npm does not publish changed to: ${unshippable.join(', ')}. `
+    + 'A verb pointing at an unpublished file can never work in a consumer install — remove the route '
+    + 'from bin/mindforge-cli.js rather than trying to install the file.');
 });
 
 test('the dead coreEngines array has not come back', () => {
@@ -303,6 +361,70 @@ test('verifyInstall DETECTS a missing required file (negative control)', () => {
   }
 });
 
+test('verifyInstall requires bin/ for LOCAL scope only, because global never writes it', () => {
+  // THE DEFECT. Six bin/** paths were required unconditionally against process.cwd(), so every
+  // `--claude --global` install ended:
+  //
+  //     ❌  Install verification failed — 6 of 12 required file(s) missing
+  //         Retry: npx mindforge-cc@latest --claude --global --force
+  //     exit 1
+  //
+  // Measured: a global install writes 389 files to $HOME/.claude and ZERO to bin/ anywhere. That is
+  // deliberate — the block copying sovereignEngines is gated `if (scope === 'local' && !selfInstall)`.
+  // So verification demanded artifacts of an operation the installer had correctly declined to
+  // perform, and then advised a --force retry that cannot help, since --force does not change which
+  // scope branch runs.
+  //
+  // Both directions are asserted. "global passes" alone is satisfied by deleting the requirements
+  // outright; "local still fails" alone is satisfied by leaving global broken.
+  const { verifyInstall, RUNTIMES } = require(path.join(REPO_ROOT, 'bin', 'installer-core.js'));
+  const cwd = process.cwd();
+  const victim = path.join(PROJECT, 'bin', 'governance', 'policy-engine.js');
+  const saved = fs.existsSync(victim) ? fs.readFileSync(victim) : null;
+  assert.ok(saved, 'fixture precondition: the local install must have copied policy-engine.js');
+
+  try {
+    process.chdir(PROJECT);
+    const baseDir = path.join(PROJECT, RUNTIMES.claude.localDir);
+    const cmdsDir = path.join(baseDir, RUNTIMES.claude.commandsSubdir);
+
+    // `checked` is printed to the operator as "Install verified (N required files present)", so it has
+    // to describe what was actually examined for that scope rather than a fixed number.
+    const localAll = verifyInstall(baseDir, cmdsDir, 'claude', 'local');
+    const globalAll = verifyInstall(baseDir, cmdsDir, 'claude', 'global');
+    assert.strictEqual(localAll.checked, 12, `local scope must check 12, got ${localAll.checked}`);
+    assert.strictEqual(globalAll.checked, 6, `global scope must check 6, got ${globalAll.checked}`);
+
+    // Remove a bin/ file: local must notice, global must not care.
+    fs.rmSync(victim);
+    const localMissing = verifyInstall(baseDir, cmdsDir, 'claude', 'local');
+    assert.strictEqual(localMissing.ok, false,
+      'local scope installs bin/, so a missing engine file must still fail verification');
+    assert.ok(localMissing.missing.some((f) => f.includes('policy-engine.js')),
+      `and it must NAME it, got: ${localMissing.missing.join(', ')}`);
+
+    const globalOk = verifyInstall(baseDir, cmdsDir, 'claude', 'global');
+    assert.strictEqual(globalOk.ok, true,
+      'global scope does not write bin/, so its absence must not fail verification — that is the bug '
+      + 'that made every global install exit 1 on a correctly completed run');
+
+    // NON-VACUITY: global must not have gone slack. A missing COMMAND file still has to fail, or this
+    // change replaced a false negative with a check that cannot fail at all.
+    const cmdVictim = path.join(cmdsDir, 'help.md');
+    const cmdSaved = fs.readFileSync(cmdVictim);
+    try {
+      fs.rmSync(cmdVictim);
+      const globalBroken = verifyInstall(baseDir, cmdsDir, 'claude', 'global');
+      assert.strictEqual(globalBroken.ok, false,
+        'global scope must still fail when a required COMMAND file is missing — it verifies 6 things, '
+        + 'not nothing');
+    } finally { fs.writeFileSync(cmdVictim, cmdSaved); }
+  } finally {
+    process.chdir(cwd);
+    if (saved) { fs.mkdirSync(path.dirname(victim), { recursive: true }); fs.writeFileSync(victim, saved); }
+  }
+});
+
 test('verifyInstall does not require files the package never publishes', () => {
   // Its contract used to include docs/registry/COMMANDS.md and docs/registry/PERSONAS.md under the
   // project root. docs/registry/ ships ZERO files in the tarball, so those could never exist in a
@@ -371,16 +493,43 @@ test('the delivered CLI runs, and reports MindForge\'s version not the host app\
   }
 });
 
-test('shipping the entry point did NOT turn --with-utils into a bulk copy', () => {
-  // The fix adds ONE name to coreFiles. If someone "simplifies" it by dropping the withUtils gate,
-  // a default install would start carrying all of bin/ — a far larger payload than the documented
-  // install promises. Pin the boundary in both directions.
-  const topLevel = fs.readdirSync(path.join(PROJECT, 'bin'))
+test('a default install carries coreFiles and NOT all of bin/', () => {
+  // If someone "simplifies" coreFiles by dropping the withUtils gate, a default install would start
+  // carrying all of bin/ — a far larger payload than the documented install promises. Pinned in both
+  // directions.
+  //
+  // DERIVED FROM coreFiles, not a literal. This assertion used to name
+  // ['hindsight-injector.js', 'mindforge-cli.js'] outright, which was correct when coreFiles held two
+  // entries and went red the moment it legitimately grew to eight — the six routed scripts whose
+  // absence killed 11 of 27 verbs. A hardcoded expectation that has to be edited every time the thing
+  // it describes changes is not pinning a boundary, it is duplicating a list. So the expectation is
+  // parsed out of installer-core.js: adding a coreFile updates both sides at once, and the
+  // bulk-copy property is asserted separately as a strict subset.
+  const coreSrc = fs.readFileSync(path.join(REPO_ROOT, 'bin', 'installer-core.js'), 'utf8');
+  const block = coreSrc.slice(coreSrc.indexOf('const coreFiles = ['));
+  const declared = [...block.slice(0, block.indexOf('];')).matchAll(/'([^']+)'/g)].map((m) => m[1]);
+  assert.ok(declared.length >= 2,
+    `parsed ${declared.length} coreFiles entries out of installer-core.js — the declaration changed `
+    + 'shape, so this check would compare against nothing');
+
+  const expected = declared
+    .filter((r) => /^bin\/[^/]+\.js$/.test(r))     // top-level bin/ only; nested ones live elsewhere
+    .map((r) => r.slice('bin/'.length)).sort();
+  const actual = fs.readdirSync(path.join(PROJECT, 'bin'))
     .filter((f) => f.endsWith('.js')).sort();
-  assert.deepStrictEqual(topLevel, ['hindsight-injector.js', 'mindforge-cli.js'],
-    `a default install has top-level bin/ files ${JSON.stringify(topLevel)}. Expected exactly the two `
-    + 'coreFiles entries: MORE means the --with-utils gate was removed rather than the entry point '
-    + 'added; FEWER means the entry point is missing.');
+
+  assert.deepStrictEqual(actual, expected,
+    `a default install has top-level bin/ files ${JSON.stringify(actual)} but coreFiles declares `
+    + `${JSON.stringify(expected)}. MORE means the --with-utils gate was removed rather than a file `
+    + 'added; FEWER means a declared coreFile is not being copied.');
+
+  // And the bulk-copy boundary itself: the repository has strictly more top-level bin/ scripts than a
+  // default install should carry. Without this, growing coreFiles to cover everything would satisfy
+  // the equality above while defeating the purpose of the list.
+  const inRepo = fs.readdirSync(path.join(REPO_ROOT, 'bin')).filter((f) => f.endsWith('.js'));
+  assert.ok(actual.length < inRepo.length,
+    `a default install carries ${actual.length} of the repository's ${inRepo.length} top-level bin/ `
+    + 'scripts. Equal means coreFiles has become a bulk copy of bin/.');
 });
 
 (async () => {

@@ -56,8 +56,17 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
-/** Raise this as installer-side registration lands. Pinned by tests/harness-gate-install.test.js. */
-const INSTALL_SCORE_FLOOR = 49;
+/**
+ * Raise this as installer-side fixes land. Pinned by tests/harness-gate-install.test.js, which also
+ * caps the lag at MAX_FLOOR_LAG so a floor left far below the real score is itself a failure.
+ *
+ * 49 -> 51: coreFiles began carrying the six routed top-level bin/ scripts whose absence made 11 of
+ * 27 verbs die in the module loader. Exactly one audit check flipped as a result —
+ * quality-skill-validator, worth 2 — because bin/skill-validator.js is now installed. Raised rather
+ * than left inside the 8-point lag allowance, because slack in a ratchet is room for the gain to
+ * regress unnoticed.
+ */
+const INSTALL_SCORE_FLOOR = 51;
 
 const REPO_ROOT = fs.realpathSync(path.join(__dirname, '..', '..'));
 const AUDIT = path.join(REPO_ROOT, 'bin', 'harness-audit.js');

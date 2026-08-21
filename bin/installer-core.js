@@ -402,6 +402,26 @@ const SENSITIVE_EXCLUDE = [
   '.git',
   '.DS_Store',
   'browser-daemon.log',
+  // The framework's OWN runtime state, which is not the consumer's and is not small.
+  //
+  // Measured on a `--claude --local` install whose source was this working tree: the target received
+  // celestial.db (11.2 MB, sha256 IDENTICAL to the source, so copied rather than created) plus its
+  // -wal and -shm sidecars and SEVEN orphaned `celestial.db.tmp.<pid>.async` exports at 11.1 MB each
+  // — about 89 MB of the developer's traces, skills and attestations landing in someone else's
+  // project. `browser-daemon.log` was already excluded here; the database beside it was not.
+  //
+  // SCOPE, stated honestly: `npm pack --dry-run` confirms neither celestial.db nor the daemon token
+  // ships in the tarball, so an ordinary `npx mindforge-cc` install has nothing to copy and was never
+  // exposed. This bites installs whose SOURCE is a working tree — a git-clone install, or local
+  // development. It is defence in depth rather than a live consumer leak, and it belongs here because
+  // `files[]` excluding it today is not a guarantee about tomorrow.
+  //
+  // One pattern for the database and every sidecar and orphan: .db, .db-wal, .db-shm,
+  // .db.tmp.<pid>.async, .db.conflict.<pid>.<len>.
+  /^celestial\.db($|[.-])/,
+  // A live capability token. Not a credential for a remote service, but still this machine's handle
+  // to a running daemon, and nothing the target project should receive.
+  /^\.browser-daemon-token$/,
   /audit\.jsonl/i,
   /handoff\.json/i,
   /jira-sync\.json/i,
@@ -522,16 +542,41 @@ function verifyInstall(baseDir, cmdsDir, runtime, scope) {
     path.join(cmdsDir, `${pfx}health.md`),
     path.join(cmdsDir, `${pfx}execute-phase.md`),
     path.join(cmdsDir, `${pfx}security-scan.md`),
-    // Sovereign Engine logic
-    path.join(process.cwd(), 'bin/governance/policy-engine.js'),
-    path.join(process.cwd(), 'bin/governance/quantum-crypto.js'),
-    path.join(process.cwd(), 'bin/autonomous/intent-harvester.js'),
-    path.join(process.cwd(), 'bin/memory/cli.js'),
-    path.join(process.cwd(), 'bin/models/cost-tracker.js'),
-    path.join(process.cwd(), 'bin/research/research-engine.js'),
+    // Sovereign Engine logic — LOCAL SCOPE ONLY, because a global install never writes it.
+    //
+    // These six were required unconditionally against process.cwd(), so every `--claude --global`
+    // install ended:
+    //
+    //     ❌  Install verification failed — 6 of 12 required file(s) missing
+    //         Retry: npx mindforge-cc@latest --claude --global --force
+    //     exit 1
+    //
+    // Measured: a global install writes 389 files to $HOME/.claude and ZERO to bin/ anywhere —
+    // neither the project nor $HOME/.claude/bin. That is deliberate, not a gap: the block that copies
+    // sovereignEngines is gated `if (scope === 'local' && !selfInstall)` at :845. So verification was
+    // demanding artifacts of an operation the installer had correctly chosen not to perform, then
+    // advising a --force retry that cannot help — --force does not change which scope branch runs.
+    //
+    // The scope-conditional shape was already here, applied to the entry file on the first line of
+    // this array and to nothing else. Extending it is the smaller change; the alternative — making a
+    // global install carry bin/ — is a decision about what global scope MEANS and is deliberately not
+    // taken here. Flagged instead: a global install currently gives a user commands under
+    // ~/.claude/commands/mindforge/ with no Node runtime beside them, and whether that is coherent is
+    // a product question rather than a verification bug.
+    ...(scope === 'local' ? [
+      path.join(process.cwd(), 'bin/governance/policy-engine.js'),
+      path.join(process.cwd(), 'bin/governance/quantum-crypto.js'),
+      path.join(process.cwd(), 'bin/autonomous/intent-harvester.js'),
+      path.join(process.cwd(), 'bin/memory/cli.js'),
+      path.join(process.cwd(), 'bin/models/cost-tracker.js'),
+      path.join(process.cwd(), 'bin/research/research-engine.js'),
+    ] : []),
   ];
 
   const missing = required.filter(f => !fsu.exists(f));
+  // `checked` is reported by the caller ("Install verified (N required files present)"), so it has to
+  // reflect what was actually examined for this scope — 12 local, 6 global. Printing 12 after checking
+  // 6 would be the same class of false claim this function exists to catch.
   return { ok: missing.length === 0, missing, checked: required.length };
 }
 
@@ -641,10 +686,21 @@ async function install(runtime, scope, options = {}) {
     // ✨ RUNTIME ADAPTATION: Generate specific content for this runtime
     const adaptedContent = generateEntryContent(runtime, content);
 
-    // Keep legacy location based on runtime config
+    // Keep legacy location based on runtime config.
+    //
+    // THE LEAK. This staging file was written and never removed — no unlink, no finally, no exit
+    // handler. Every install left one behind, forever. Measured on this machine: 2,711 orphaned
+    // `/tmp/CLAUDE.md-<ms>.md` files (~21 MB), and 905 more accumulated within a day of clearing
+    // them. Unconditional, unlike the .mindforge excludes below: it fires on an ordinary
+    // `npx mindforge-cc` install too, because os.tmpdir() has nothing to do with the source tree.
+    //
+    // Removed in a `finally` rather than after the last write, so a throw from any of the three
+    // safeCopyClaude calls cannot skip it — a leak on the failure path is how the original one
+    // survived review.
     const tempEntry = path.join(os.tmpdir(), `${cfg.entryFile}-${Date.now()}.md`);
     fsu.write(tempEntry, adaptedContent);
-    
+    try {
+
     const targetPath = path.join(baseDir, cfg.entryFile);
     // GATED ON !selfInstall, which it was not. The guard existed and stopped one line short: the root
     // mirror below has always been gated, this write never was. In MindForge's own repository
@@ -677,6 +733,12 @@ async function install(runtime, scope, options = {}) {
       // where the write no longer happens. Gating the write and leaving the print would have replaced
       // one false claim with another, which is the failure this whole change is about.
       Theme.printResolved(c.bold(cfg.entryFile));
+    }
+
+    } finally {
+      // Best-effort: a staging file we cannot remove is not worth failing an otherwise good install
+      // over, and the next run writes a differently-named one regardless.
+      try { fs.rmSync(tempEntry, { force: true }); } catch { /* nothing further to do */ }
     }
   }
 
@@ -967,7 +1029,57 @@ async function install(runtime, scope, options = {}) {
     // sovereignEngines above.
     //
     // The rest of bin/ stays behind --with-utils. This is the entry point, not a bulk copy.
-    const coreFiles = ['bin/hindsight-injector.js', 'bin/mindforge-cli.js'];
+    // EVERY top-level bin/*.js the router can dispatch to, not just the entry point.
+    //
+    // `sovereignEngines` copies bin/ SUBDIRECTORIES, so the 13 nested scripts in the COMMANDS table
+    // arrive fine. The 6 scripts that live directly in bin/ had no carrier beyond this list, which
+    // held two entries. Measured on the real npx shape — `npm pack`, extract into
+    // node_modules/mindforge-cc, run its installer, then invoke each verb in the installed project —
+    // 11 of 27 routed verbs died in Node's module loader:
+    //
+    //     security-scan   Cannot find module '<proj>/bin/validate-config.js'
+    //     health          Cannot find module '<proj>/bin/installer-core.js'
+    //     classify        Cannot find module '<proj>/bin/change-classifier.js'
+    //     validate-skill  Cannot find module '<proj>/bin/skill-validator.js'
+    //     install-skill / register-skill / audit-skill   bin/skill-registry.js
+    //     spawn / identity / subagent                    bin/spawn-agent.js
+    //     test-memory     tests/memory.test.js
+    //
+    // Two of those matter more than their count. `security-scan` is the verb the protocol mandates
+    // PRE-COMMIT for any Auth/Payment/PII change, and `health` is step 1 of "Verify install" in
+    // docs/getting-started.md:110 — so the documented first thing a new user runs exited non-zero
+    // with a stack trace.
+    //
+    // WHY THIS DID NOT SHOW UP EARLIER. tests/install-module-load.test.js checks that every internal
+    // require inside an INSTALLED module resolves, and it passes: the copied files' own dependencies
+    // are complete. The gap was one level up — files the ROUTER references that were never copied at
+    // all, so there was no installed module whose requires could be checked. And installing from a
+    // working tree hides it entirely, because `src()` then points at the full checkout; only the
+    // packed-tarball shape reproduces it. That is why the new assertion in
+    // tests/install-module-load.test.js drives the expectation off the COMMANDS table instead of a
+    // hardcoded list — a route added without a carrier here will fail immediately.
+    //
+    // tests/memory.test.js is NOT fixable from here: `files[]` excludes tests/, so it is not in the
+    // tarball and the installer has nothing to copy. That verb has to be removed from the router,
+    // which bin/mindforge-cli.js owns.
+    const coreFiles = [
+      'bin/hindsight-injector.js',
+      'bin/mindforge-cli.js',
+      'bin/validate-config.js',
+      'bin/installer-core.js',
+      'bin/change-classifier.js',
+      'bin/skill-validator.js',
+      'bin/skill-registry.js',
+      'bin/spawn-agent.js',
+      // installer-core.js requires ./installer/hook-registration at :825, so installing the former
+      // without this one trades a missing verb for a module-loader crash inside it. Caught by
+      // tests/install-module-load.test.js the moment installer-core.js was added here, which is
+      // exactly what that test is for. Named individually rather than adding 'installer' to
+      // sovereignEngines: that directory also holds harness-adapter-compliance.js and the
+      // install-manifests/install-state pair, which are build- and CI-side and have no business in a
+      // consumer project.
+      'bin/installer/hook-registration.js',
+    ];
     coreFiles.forEach(rel => {
       const srcFile = src(...rel.split('/'));
       const dstFile = path.join(process.cwd(), rel);

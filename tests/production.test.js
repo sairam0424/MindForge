@@ -503,11 +503,23 @@ test('no command file is empty (> 100 chars)', () => {
 console.log('\nHardening tests:');
 
 test('SENSITIVE_EXCLUDE properly excludes .env and .key files', () => {
-  const SENSITIVE_EXCLUDE = [
-    '.env', /^\.env\..*/, /\.key$/, /\.pem$/, 'secrets', /^secrets$/
-  ];
+  // WAS TAUTOLOGICAL. This test declared its OWN copy of the array:
+  //
+  //     const SENSITIVE_EXCLUDE = ['.env', /^\.env\..*/, /\.key$/, /\.pem$/, 'secrets', /^secrets$/];
+  //
+  // and then asserted against that literal. It never read bin/installer-core.js, so deleting the
+  // production list outright would have left it green. It described what the author believed the
+  // installer excluded, which is not the same claim.
+  //
+  // Now imported from the module, and matched with the SAME rule copyDir uses at installer-core.js:290
+  // — string entries compare against the basename, regex entries are tested against it. Restating that
+  // rule differently here would reintroduce the same gap one level down.
+  const { SENSITIVE_EXCLUDE } = require(require('path').join(process.cwd(), 'bin', 'installer-core.js'));
+  assert.ok(Array.isArray(SENSITIVE_EXCLUDE) && SENSITIVE_EXCLUDE.length > 5,
+    `installer-core must export a populated SENSITIVE_EXCLUDE, got ${JSON.stringify(SENSITIVE_EXCLUDE)}`);
+
   const shouldExclude = (name) =>
-    SENSITIVE_EXCLUDE.some(p => typeof p === 'string' ? p === name : p.test(name));
+    SENSITIVE_EXCLUDE.some(p => (typeof p === 'string' ? name === p : p.test(name)));
 
   assert.ok(shouldExclude('.env'),               '.env should be excluded');
   assert.ok(shouldExclude('.env.local'),         '.env.local should be excluded');
@@ -519,15 +531,70 @@ test('SENSITIVE_EXCLUDE properly excludes .env and .key files', () => {
   assert.ok(!shouldExclude('src'),               'src should NOT be excluded');
 });
 
-test('SENSITIVE_EXCLUDE uses regex for .key and .pem (not glob strings)', () => {
-  const c = fs.readFileSync('bin/installer-core.js', 'utf8');
-  // Should use regex pattern /\.key$/ not string '*.key'
-  assert.ok(!c.includes('\'*.key\''), 'Should not use glob string for .key');
-  assert.ok(!c.includes('\'*.pem\''), 'Should not use glob string for .pem');
-  assert.ok(
-    c.includes('\\.key$') || c.includes('/\\.key$/') || c.includes('/.key$/'),
-    'Should use regex for .key'
-  );
+test('a real install does not copy .env, .key or .pem files', () => {
+  // WAS A SOURCE-TEXT GREP. It checked that installer-core.js CONTAINED the string `\.key$` and did
+  // NOT contain `'*.key'` — the shape of the source, satisfiable by a comment, and silent on the only
+  // question that matters: does the copy actually honour the list? An exclude array that copyDir
+  // ignored would have passed both this and the test above it.
+  //
+  // Now behavioural. `.agent/skills` is copied with SENSITIVE_EXCLUDE (installer-core.js:838), so
+  // planting the sensitive shapes in a throwaway subdirectory there and running a real install
+  // exercises the production list through the production copy function.
+  //
+  // Only a directory this test creates is planted and removed — nothing tracked is touched.
+  const os = require('os');
+  const path = require('path');
+  const { spawnSync } = require('child_process');
+
+  const REPO = process.cwd();
+  const bait = path.join(REPO, '.agent', 'skills', 'zz-exclude-probe');
+  const project = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-excl-')));
+  const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-excl-home-')));
+  const tmp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-excl-tmp-')));
+
+  try {
+    fs.mkdirSync(bait, { recursive: true });
+    fs.writeFileSync(path.join(bait, 'SKILL.md'), '---\nname: zz-exclude-probe\n---\nprobe\n');
+    for (const n of ['.env', '.env.local', 'private.key', 'certificate.pem']) {
+      fs.writeFileSync(path.join(bait, n), 'SECRET-SHAPED-PROBE\n');
+    }
+
+    fs.writeFileSync(path.join(project, 'package.json'),
+      JSON.stringify({ name: 'their-app', version: '1.0.0' }, null, 2));
+    const r = spawnSync(process.execPath, [path.join(REPO, 'bin', 'install.js'), '--claude', '--local'], {
+      cwd: project, encoding: 'utf8', timeout: 180000,
+      env: { PATH: process.env.PATH, HOME: home, CI: '1', TMPDIR: tmp },
+    });
+    assert.strictEqual(r.status, 0, `install failed: ${(r.stderr || '').slice(-300)}`);
+
+    const landed = [];
+    (function walk(d) {
+      let entries;
+      try { entries = fs.readdirSync(d, { withFileTypes: true }); } catch { return; }
+      for (const e of entries) {
+        const full = path.join(d, e.name);
+        if (e.isDirectory()) walk(full);
+        else if (/^\.env|\.key$|\.pem$/.test(e.name)) landed.push(path.relative(project, full));
+      }
+    })(project);
+    assert.deepStrictEqual(landed, [],
+      `${landed.length} sensitive file(s) were copied into the target project: ${landed.join(', ')}. `
+      + 'SENSITIVE_EXCLUDE exists but copyDir is not honouring it.');
+
+    // NON-VACUITY: the probe directory itself must HAVE been copied, or "no secrets landed" is true
+    // only because nothing was copied at all — and the previous grep-based test could not tell the
+    // difference either.
+    const probeArrived = fs.existsSync(
+      path.join(project, '.claude', 'skills', 'zz-exclude-probe', 'SKILL.md'));
+    assert.ok(probeArrived,
+      'the probe skill directory was not installed, so this test cannot distinguish "excluded the '
+      + 'secrets" from "copied nothing". Check the skills asset mapping before trusting the result.');
+  } finally {
+    fs.rmSync(bait, { recursive: true, force: true });
+    fs.rmSync(project, { recursive: true, force: true });
+    fs.rmSync(home, { recursive: true, force: true });
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
 });
 
 test('migration filter uses toVersion range check (not fromVersion)', () => {
