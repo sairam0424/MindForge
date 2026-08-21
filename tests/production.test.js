@@ -64,12 +64,149 @@ test('installer backs up existing CLAUDE.md', () => {
   assert.ok(c.includes('backup') || c.includes('.backup-'), 'Should back up CLAUDE.md');
 });
 
-test('installer has self-install detection', () => {
-  const c = read('bin/installer-core.js');
-  assert.ok(
-    c.includes('isSelfInstall') || c.includes('\'mindforge-cc\''),
-    'Should detect self-install scenario'
-  );
+test('a self-install writes NOTHING over the repository\'s own tracked files', () => {
+  // THIS REPLACES A VACUOUS ASSERTION. It read:
+  //   assert.ok(c.includes('isSelfInstall') || c.includes("'mindforge-cc'"), 'Should detect self-install')
+  // — a grep of the source for a string that any COMMENT satisfies. It could not fail while the
+  // detection was broken, and it did not fail while the detection worked and the installer overwrote
+  // 149 tracked files anyway.
+  //
+  // THE DEFECT it now covers. `selfInstall` gated 8 write sites and missed two: the entry-file write
+  // and the entire command copy. So a self-install printed "Self-install detected — skipping framework
+  // file copy" and then overwrote `.claude/CLAUDE.md` plus 149 tracked files under
+  // `.claude/commands/`, with no backup — safeCopyClaude only backs up when the existing content does
+  // NOT contain "MindForge", and this repo's entry file does.
+  //
+  // Asserted against a real clone and real git status, because the property is "the working tree is
+  // untouched" and nothing short of git can establish that.
+  const os = require('os');
+  const path = require('path');
+  const { spawnSync } = require('child_process');
+
+  const REPO = process.cwd();
+  const work = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-selfinstall-')));
+  const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-selfinstall-home-')));
+  const clone = path.join(work, 'repo');
+
+  try {
+    const cloned = spawnSync('git', ['clone', '--quiet', '--no-hardlinks', '--shared', REPO, clone],
+      { encoding: 'utf8' });
+    assert.strictEqual(cloned.status, 0, `could not clone the repo: ${(cloned.stderr || '').slice(0, 200)}`);
+
+    // Carry any UNCOMMITTED installer changes into the clone, then commit them there, so the clone
+    // starts clean AND reflects the tree about to be committed. Without this the test could only ever
+    // describe committed state, which means it cannot go green until after the fix lands — and a gate
+    // you cannot run before committing gets bypassed with --no-verify. In CI the diff is empty and
+    // this is a no-op.
+    const diff = spawnSync('git', ['diff', 'HEAD', '--', 'bin', 'tests'], { cwd: REPO, encoding: 'utf8' });
+    if (diff.stdout && diff.stdout.trim()) {
+      const applied = spawnSync('git', ['apply', '--whitespace=nowarn', '-'],
+        { cwd: clone, encoding: 'utf8', input: diff.stdout });
+      assert.strictEqual(applied.status, 0,
+        `could not carry the working-tree diff into the clone: ${(applied.stderr || '').slice(0, 300)}`);
+      spawnSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-aqm', 'wt'],
+        { cwd: clone, encoding: 'utf8' });
+    }
+
+    // The clone must start clean, or "nothing changed" would be unmeasurable.
+    const before = spawnSync('git', ['status', '--porcelain'], { encoding: 'utf8', cwd: clone });
+    assert.strictEqual(before.stdout.trim(), '',
+      `the clone is not clean, so this test cannot attribute changes: ${before.stdout.slice(0, 200)}`);
+
+    // node_modules is not symlinked: bin/install.js must run on builtins plus its own bin/ tree.
+    const r = spawnSync(process.execPath, ['bin/install.js', '--claude', '--local', '--skip-wizard'], {
+      cwd: clone, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: home, CI: '1' },
+    });
+    assert.strictEqual(r.status, 0, `the self-install failed: ${(r.stderr || '').slice(-300)}`);
+
+    // NON-VACUITY: it must actually have taken the self-install branch. Without this, an install that
+    // errored early or ran as a normal install would also leave... no, a normal install would DIRTY the
+    // tree. But an install that did nothing at all would pass, so require the branch to announce itself.
+    assert.match(r.stdout, /Self-install detected/,
+      `the run did not take the self-install branch, so it proves nothing. Output: ${r.stdout.slice(-300)}`);
+
+    const after = spawnSync('git', ['status', '--porcelain'], { encoding: 'utf8', cwd: clone });
+    const modified = after.stdout.split('\n').filter((l) => l.startsWith(' M') || l.startsWith('M'));
+    assert.deepStrictEqual(modified, [],
+      `${modified.length} TRACKED file(s) were overwritten by a self-install:\n  `
+      + `${modified.slice(0, 8).join('\n  ')}\nThe installer says it is skipping the framework file `
+      + 'copy; it must not then copy. Measured before the gate: 149 files, zero backups.');
+
+    // And it must not claim work it did not do — the summary panel counts the SOURCE tree, so it
+    // announced "221 Total autonomous commands deployed" for a run that deployed none.
+    assert.ok(!/Total autonomous commands deployed/.test(r.stdout),
+      'the self-install printed the deployment summary panel, which reports source-tree counts and so '
+      + 'claims commands were deployed when none were written');
+  } finally {
+    fs.rmSync(work, { recursive: true, force: true });
+    fs.rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test('a GLOBAL install still works when run from inside the repository', () => {
+  // THE REGRESSION THIS CATCHES, which the self-install gate above introduced and an independent
+  // audit found before it merged.
+  //
+  // isSelfInstall() answers only "is the CURRENT DIRECTORY the MindForge repo". The gate's premise is
+  // narrower: "the files I am about to write ARE this repository's tracked files". True for a LOCAL
+  // install (baseDir is `.claude/` in the repo); false for a GLOBAL install (baseDir is
+  // `~/.claude/`). Keying on cwd alone therefore skipped every write of a perfectly legitimate global
+  // install, failed verification, and printed "Retry: ... --force" — which also fails.
+  //
+  // Measured with HOME confined, running `--claude --global` from a MindForge checkout:
+  //     develop              exit 0, 225 files in $HOME/.claude
+  //     cwd-only gate        exit 1,   0 files, then an impossible --force retry
+  //     scope-aware gate     exit 0, 389 files
+  //
+  // Both directions are asserted, because "global installs files" alone is satisfied by removing the
+  // gate entirely, and "local writes nothing" alone is satisfied by breaking global.
+  const os = require('os');
+  const path = require('path');
+  const { spawnSync } = require('child_process');
+
+  const REPO = process.cwd();
+  const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-globalinstall-home-')));
+  const tmp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-globalinstall-tmp-')));
+  const git = (...args) => spawnSync('git', args, { cwd: REPO, encoding: 'utf8' });
+  const dirtyBefore = git('status', '--porcelain').stdout;
+
+  try {
+    // cwd is the repository — exactly the condition that made the cwd-only gate misfire.
+    const r = spawnSync(process.execPath, ['bin/install.js', '--claude', '--global'], {
+      cwd: REPO, encoding: 'utf8', timeout: 180000,
+      env: { PATH: process.env.PATH, HOME: home, CI: '1', TMPDIR: tmp },
+    });
+
+    assert.strictEqual(r.status, 0,
+      `a global install run from the repo must succeed, got ${r.status}. The self-install gate keys on `
+      + `cwd; a global install writes to $HOME and is not a self-install.\n${(r.stdout || '').slice(-400)}`);
+
+    const written = [];
+    (function walk(d) {
+      let entries;
+      try { entries = fs.readdirSync(d, { withFileTypes: true }); } catch { return; }
+      for (const e of entries) {
+        const full = path.join(d, e.name);
+        if (e.isDirectory()) walk(full); else written.push(full);
+      }
+    })(path.join(home, '.claude'));
+    assert.ok(written.length > 100,
+      `a global install wrote only ${written.length} file(s) to ${home}/.claude. Measured on develop `
+      + 'before the gate existed: 225. Zero means every write was skipped as if this were a '
+      + 'self-install.');
+
+    assert.ok(!/Retry:/.test(r.stdout),
+      'the install printed a "Retry: ... --force" suggestion, which means verification failed — and '
+      + 'that retry provably fails too, because --force does not change which branch the gate takes');
+
+    // AND the local-install protection must be intact: a global install must still not touch the repo.
+    assert.strictEqual(git('status', '--porcelain').stdout, dirtyBefore,
+      'a global install modified the repository working tree. It writes to $HOME and must leave the '
+      + 'checkout it was launched from completely alone.');
+  } finally {
+    fs.rmSync(home, { recursive: true, force: true });
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
 });
 
 test('installer excludes sensitive files (*.env, *.key, *.pem)', () => {
