@@ -1,7 +1,7 @@
 # MindForge — Project State
 
 ## Status
-🟢 Active — `develop` at `983c0a06`, GREEN. npm `latest` = 11.9.2. `package.json` = 11.9.2.
+🟢 Active — `develop` at `1b5302b5`, GREEN (local suite + CI). npm `latest` = 11.9.2. `package.json` = 11.9.2.
 Next release candidate: **11.9.3** (release path clear except two hand-authored changelog files).
 
 ## IMPORTANT
@@ -101,11 +101,14 @@ contradicting "never bump by hand"; and `bin/install.js:82` cites a line number 
 - **11.9.3 needs two hand-authored files:** `CHANGELOG.md`'s 11.9.3 section and
   `changelogs/v11.9.3.md`. Gated by `bin/utils/readiness-gate.js:115` (a bare `.includes(pkgVersion)`)
   and `tests/production.test.js:629`/`:638` (the second is existence-only, so an empty file satisfies it).
-- **Publishing is ungated.** `mindforge-release.yml` triggers only on a `v*` **tag** push, while the
-  sole ruleset (`MindForge protected branches`) is `target=branch` with
-  `include=['refs/heads/main','refs/heads/develop']`. All 6 required checks are therefore exempt from
-  the one event that publishes. Required status checks cannot be attached to a tag — the only real
-  control is a tag ruleset restricting who may create `v*`.
+- ~~Publishing is ungated.~~ **CLOSED (#216).** A `preflight` job now gates the publishing event: it
+  asserts the tagged commit is an ancestor of `origin/main` and runs the six gates a tag push never saw,
+  with the publish job behind `needs: preflight`. The release workflow also moves the `stable` dist-tag
+  itself, forward-only and verified on npm's uncached dist-tags endpoint.
+  Residual, documented in the workflow: a tag push resolves the workflow from the TAGGED ref, so a tag
+  placed on a commit predating #216 runs that commit's workflow and is ungated. Restricting who may
+  create a `v*` ref is a repo-settings change (a tag ruleset) and is the only remaining mitigation —
+  required status checks cannot attach to a tag.
 
 ## Context for next session
 Read `scratch-pad/daily-logs/2026-08-21.md` first — it records not just what changed but every
