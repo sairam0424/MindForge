@@ -1297,11 +1297,31 @@ async function run(args) {
   const options     = { dryRun, force, verbose, withUtils, minimal };
 
   // Get package.json for version
-  const pJSON = JSON.parse(fsu.read(path.join(SOURCE_ROOT, 'package.json')));
+  // MINDFORGE'S VERSION, NOT THE HOST PROJECT'S — and it must not crash when there is no manifest.
+  //
+  // This read was `JSON.parse(fsu.read(path.join(SOURCE_ROOT, 'package.json')))`, and SOURCE_ROOT is
+  // path.resolve(__dirname, '..'). In an install that lands at <project>/bin/, so it read the CONSUMER's
+  // package.json. Measured on the published 11.9.3 tarball: in a project declaring version 0.4.2,
+  // `mindforge health` printed the banner `RELEASE v0.4.2` and then, 26 lines later, `Current : v11.9.3`
+  // — one command, two contradictory versions, exit 0. In a project with NO package.json the whole
+  // command was `Unexpected end of JSON input`, exit 1, no report at all: fsu.read returns empty for a
+  // missing file and JSON.parse throws.
+  //
+  // This is the same defect 11.9.3 fixed for `--version`, in the one verb whose advertised job is
+  // "verify project health and installation integrity". bin/utils/mindforge-version.js already resolves
+  // correctly — by package NAME, which is what distinguishes our manifest from a consumer's — and it
+  // shipped in the same release. It simply was not used here.
+  //
+  // It THROWS rather than guessing, which is right for a version check and wrong for a banner, so the
+  // banner degrades to 'unknown' instead of taking the whole health report down with it.
+  let bannerVersion = 'unknown';
+  try {
+    bannerVersion = require('./utils/mindforge-version').resolveMindforgeVersion(process.cwd()).version;
+  } catch { /* a banner must never be the reason health cannot run */ }
 
   // Print header and brand manifest
   // Print header and brand manifest
-  Theme.printHeader(pJSON.version);
+  Theme.printHeader(bannerVersion);
   Theme.printBrandManifest();
   // Check for updates only
   if (isCheck) {

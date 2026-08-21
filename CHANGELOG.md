@@ -12,6 +12,14 @@ Contains behaviour changes under a patch bump — several of the things being fi
 bugs that a consumer could have been relying on. Read BREAKING before upgrading if you
 script against the CLI or the installer.
 
+> **Corrected after release.** Three measured numbers in this entry were wrong and are fixed above:
+> the count of places `--status`/`--stop` were documented (removed rather than re-guessed — it reads 4,
+> 9 or 15 depending on how you count, which is the argument against stating it); the eslint total, which
+> was 199 on the author's machine and **190** on a clean clone, because 9 problems came from an
+> untracked local directory; and "four releases behind", which is **three** (11.8.3 → 11.9.0 → 11.9.1 →
+> 11.9.2). Found by an adversarial audit of this changelog against the published artifact. A release
+> arguing that measured numbers should be reproducible has to hold its own notes to that standard.
+
 ### BREAKING
 
 Each of these is a bug fix whose correct behaviour differs from the shipped behaviour.
@@ -113,15 +121,16 @@ Each of these is a bug fix whose correct behaviour differs from the shipped beha
   exactly one event — a `v*` tag push — and the repository's only ruleset targets
   branches, so its six required checks applied to nothing on the path that ships. GitHub
   cannot attach required status checks to a tag. A `preflight` job now gates it. (#216)
-- The `stable` npm dist-tag was moved by hand, or not at all — it sat four releases
-  behind `latest` (11.8.3 against 11.9.2), so `npm i mindforge-cc@stable` delivered a
+- The `stable` npm dist-tag was moved by hand, or not at all — it sat three releases
+  behind `latest` (11.8.3 against 11.9.2, via 11.9.0 and 11.9.1), so `npm i mindforge-cc@stable` delivered a
   build with none of the 11.9.x fixes. The release workflow now moves it as its final
   step: forward-only, prereleases skipped, and verified against npm's uncached dist-tags
   endpoint rather than the CDN-cached packument. (#216)
 
 **Dashboard**
 
-- `--status` and `--stop` were documented in nine places and implemented in none; both
+- `--status` and `--stop` were documented across the harness roots and the docs and implemented
+  nowhere; both
   printed nothing and exited 0. Now implemented, before `express` is required, so they
   work without the dependency installed. (#206)
 - `--stop` identified the target by the SHAPE of its command line, which matched any
@@ -141,8 +150,8 @@ Each of these is a bug fix whose correct behaviour differs from the shipped beha
 **Verification**
 
 - `mindforge verify`'s lint stage used `--max-warnings=0`, which made it impossible to
-  pass in the repository it ships from: `npx eslint .` reports 199 problems / 0 errors /
-  199 warnings, so `verify` reported a lint FAILURE on a tree that is green by the
+  pass in the repository it ships from: on a clean clone `npx eslint .` reports 190 problems /
+  0 errors / 190 warnings, so `verify` reported a lint FAILURE on a tree that is green by the
   project's own contract. Aligned with the project's definition; errors still fail. (#204)
 - `temporal cleanup` printed "🧹 Cleaning up old temporal snapshots..." and
   "✅ Cleanup complete." with no cleanup between them. Now wired to

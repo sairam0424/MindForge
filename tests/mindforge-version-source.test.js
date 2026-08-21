@@ -148,6 +148,25 @@ test('the error names every place it looked', () => {
 // was written narrowly enough to miss it.
 const RAW_PARENT_READ = /require\(['"](?:\.\.\/)+package\.json['"]\)/;
 
+// SECOND SHAPE, and it is why this gate missed a live defect twice. The pattern above only matches a
+// bare `require('../package.json')`. installer-core.js read the same manifest as
+// `JSON.parse(fsu.read(path.join(SOURCE_ROOT, 'package.json')))` — different syntax, identical bug —
+// and was recorded here as needing NO version because the only read anyone found was the dead
+// `const VERSION`. Measured on the published 11.9.3 tarball: `mindforge health` printed the banner
+// `RELEASE v0.4.2` in a project declaring 0.4.2, then `Current : v11.9.3` twenty-six lines later.
+//
+// Two more of the same shape surfaced once this pattern existed, both feeding
+// verifyRecord({ currentVersion }): metrics-aggregator.js (`path.join(__dirname,'..','..')`, try/caught
+// so it bound the WRONG version silently) and verify-approvals.js (`path.join(ROOT, …)`, unguarded, so
+// it died with ENOENT on any project without a manifest). A wrong version binding on an approval record
+// is worse than a missing one, because the check still returns a verdict.
+//
+// Anchored on the MODULE's own location — SOURCE_ROOT, ROOT, __dirname — never on cwd. Reading
+// `<cwd>/package.json` is legitimate: that is how you deliberately inspect the CONSUMER's manifest
+// (bin/wizard/environment-detector.js does exactly that, correctly).
+const MODULE_ANCHORED_READ =
+  /path\.join\(\s*(?:SOURCE_ROOT|ROOT|__dirname)\b[^)]*['"]package\.json['"]\s*\)/;
+
 // Must not read raw, AND must resolve by package name.
 const REWIRED = [
   'bin/updater/self-update.js',
@@ -155,13 +174,23 @@ const REWIRED = [
   'bin/wizard/setup-wizard.js',
   'bin/mindforge-cli.js',   // answers `--version`; printed the host app's version
   'bin/install.js',         // banner + `--version`
+  // MOVED FROM NO_VERSION_READ, which is what that entry's own failure message instructed. It does
+  // need a version: Theme.printHeader() displays it, so `mindforge health` was printing the consumer's.
+  'bin/installer-core.js',
+  // Both bind an approval record's version via verifyRecord({ currentVersion }).
+  'bin/dashboard/metrics-aggregator.js',
+  'bin/governance/verify-approvals.js',
 ];
 
-// Must not read raw, and needs no version at all. bin/installer-core.js declared
-// `const VERSION = require('../package.json').version` and never used it — dead, unexported, and
-// the single reason the module could fail to LOAD (MODULE_NOT_FOUND when the consumer has no
-// manifest). Deleted rather than rewired, so requiring the resolver here would be wrong.
-const NO_VERSION_READ = ['bin/installer-core.js'];
+// Must not read raw, and needs no version at all.
+//
+// EMPTY, and deliberately kept rather than deleted. installer-core.js used to be the sole entry, on the
+// grounds that its `const VERSION = require('../package.json').version` was dead code. That was true of
+// THAT read and false of the module: a second read fed the banner, in a syntax the pattern above did not
+// match. The category is still meaningful — a module that needs no version should not acquire one — so
+// the list stays as the place to record the next such case. The floor below is asserted on REWIRED so an
+// empty list here cannot make the gate vacuous.
+const NO_VERSION_READ = [];
 
 const codeOf = (rel) => {
   const src = fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8');
@@ -172,9 +201,9 @@ const codeOf = (rel) => {
 test('no module reads a parent package.json for MindForge\'s version any more', () => {
   // Non-vacuity floor: if the list is emptied or the paths rot, the loop below asserts nothing and
   // passes green. Pin the count so a shrinking list reds instead of quietly covering less.
-  assert.ok(REWIRED.length + NO_VERSION_READ.length >= 6,
-    `only ${REWIRED.length + NO_VERSION_READ.length} files are checked (6 at the time of writing) — `
-    + 'the list shrank, so this gate now covers less than it did. Do not remove entries to make it pass.');
+  assert.ok(REWIRED.length >= 8,
+    `only ${REWIRED.length} rewired file(s) are checked (8 at the time of writing) — the list shrank, `
+    + 'so this gate now covers less than it did. Do not remove entries to make it pass.');
 
   for (const rel of [...REWIRED, ...NO_VERSION_READ]) {
     assert.ok(fs.existsSync(path.join(REPO_ROOT, rel)), `${rel} does not exist — the path rotted`);
@@ -182,6 +211,12 @@ test('no module reads a parent package.json for MindForge\'s version any more', 
     assert.ok(!RAW_PARENT_READ.test(code),
       `${rel} still requires a parent package.json. In an install that is the CONSUMER's manifest: `
       + 'present and wrong (their app version), or absent and fatal.');
+    assert.ok(!MODULE_ANCHORED_READ.test(code),
+      `${rel} still reads package.json relative to its OWN location (SOURCE_ROOT / ROOT / __dirname). `
+      + 'In an install that resolves to the CONSUMER\'s manifest just as surely as `../package.json` '
+      + 'does — this is the shape that escaped the narrower pattern and shipped in 11.9.3. Resolve by '
+      + 'package NAME with resolveMindforgeVersion(), or read <cwd>/package.json if you genuinely want '
+      + 'the consumer\'s.');
   }
 
   for (const rel of REWIRED) {

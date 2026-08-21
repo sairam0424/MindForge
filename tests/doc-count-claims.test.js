@@ -321,6 +321,58 @@ test('every CLI invocation printed in a doc names a verb the router will dispatc
     + 'Run it before documenting it. Name a routable verb, the real script path, or the slash command.');
 });
 
+test('no doc tells a user to npx a package we do not own', () => {
+  // THE GAP THIS CLOSES, and it was a gap in the sibling gate above rather than an absence of one.
+  // That gate validates the VERB against the CLI's COMMANDS table. `.mindforge/engine/autonomous/
+  // headless-adapter.md` shipped `npx mindforge headless --phase 3` as a "Typical GitHub Action setup",
+  // and `headless` IS a valid verb — so the verb gate passed it. Nothing checked the PACKAGE.
+  //
+  // package.json declares two bins: `mindforge-cc` (the installer) and `mindforge` (the CLI). Inside an
+  // install, `mindforge headless` resolves to the local bin and works. In a fresh CI runner with only
+  // actions/checkout there is no local bin, so npx goes to the registry — where `mindforge` is an
+  // UNRELATED package (mindforge@1.0.21, maintainer william@mindforge.ai; ours is mindforge-cc,
+  // maintainer sairamugge-0000).
+  //
+  // Measured both forms, because the severity depends on it:
+  //   npx --yes --package=mindforge-cc mindforge --version  -> exit 0, npx cache contains mindforge-cc
+  //   npx --yes mindforge --version                         -> exit 1, "could not determine executable
+  //                                                            to run" (that package exposes no such bin)
+  // So the shipped snippet fetched and unpacked someone else's package — running whatever install
+  // scripts it carries, in a job holding MINDFORGE_TOKEN — and then failed. It did not execute their
+  // application code, which is why this is a wrong-and-broken doc rather than an exploit.
+  const { execFileSync } = require('child_process');
+  const tracked = execFileSync('git', ['ls-files', '*.md', '*.js', '*.yml', '*.yaml'],
+    { cwd: REPO_ROOT, encoding: 'utf8', maxBuffer: 1 << 28 })
+    .split('\n').filter(Boolean)
+    .filter((f) => !f.startsWith('changelogs/') && !/^RELEASENOTES/.test(f) && f !== 'CHANGELOG.md')
+    .filter((f) => !f.startsWith('.planning/') && !f.startsWith('docs/research/'))
+    .filter((f) => !f.includes('node_modules/'));
+  assert.ok(tracked.length >= 500,
+    `only ${tracked.length} tracked file(s) — this check would cover almost nothing`);
+
+  const offenders = [];
+  for (const rel of tracked) {
+    if (!fs.existsSync(path.join(REPO_ROOT, rel))) continue;
+    const isJs = rel.endsWith('.js');
+    read(rel).split('\n').forEach((line, i) => {
+      // Comments in .js describe; they do not instruct. Same rule as the sibling gate.
+      if (isJs && /^\s*(?:\/\/|\/\*|\*)/.test(line)) return;
+      // A pinned invocation is correct and must not be flagged.
+      if (line.includes('--package=mindforge-cc')) return;
+      // `npx [flags] mindforge` where the package token is bare `mindforge`, not `mindforge-cc`.
+      if (/\bnpx\s+(?:--?[\w=.-]+\s+)*mindforge(?![-\w@])/.test(line)) {
+        offenders.push(`${rel}:${i + 1}  ${line.trim().slice(0, 80)}`);
+      }
+    });
+  }
+  assert.deepStrictEqual(offenders, [],
+    `${offenders.length} line(s) tell a user to npx a package this project does not own:\n  `
+    + `${offenders.join('\n  ')}\n`
+    + 'The bare package name (without the -cc suffix) resolves to an unrelated registry package. '
+    + 'Pin it with the --package=mindforge-cc flag, or call node bin/mindforge-cli.js <verb> '
+    + 'inside an existing install.');
+});
+
 test('no doc advertises the @mindforge invocation form, which does not exist', () => {
   // Two of 221 command files (browse, qa) declared `@mindforge <verb>` in BOTH their frontmatter
   // `description` and their Usage line. It is not a real syntax: the convention is `/mindforge:<name>`

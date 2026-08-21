@@ -72,7 +72,19 @@ function summary(lines) {
 
 function main(argv = process.argv.slice(2)) {
   const args = parseArgs(argv);
-  const currentVersion = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version;
+  // MindForge's version, by package NAME. This read `path.join(ROOT, 'package.json')`, which in an
+  // install is the CONSUMER's manifest — so every approval record was verified against the host
+  // app's version rather than MindForge's, and the command died with ENOENT on any project without
+  // a package.json at all. Version binding is the point of the record; binding it to the wrong
+  // version is worse than not binding it, because the check still reports a verdict.
+  //
+  // Degrades to null rather than throwing: an unresolvable version should make the binding
+  // unverifiable, not make the whole verification unrunnable. verifyRecord treats a null
+  // currentVersion as "do not check the binding".
+  let currentVersion = null;
+  try {
+    currentVersion = require('../utils/mindforge-version').resolveMindforgeVersion(process.cwd()).version;
+  } catch { /* binding unverifiable, reported as such rather than crashing the run */ }
 
   let files = [];
   try {

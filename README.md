@@ -6,11 +6,14 @@
 
 ## Latest release
 
-**v11.9.2** (2026-08-16) — Correctness: the config gate can now fail, the audit chain no longer
-forks under concurrent writers, trace retrieval works, and the cost ledger has one record shape.
-**Contains a breaking change to the dashboard HTTP surface** (loopback-only) — see the BREAKING
-section in [CHANGELOG.md](./CHANGELOG.md), or [RELEASENOTES.md](./RELEASENOTES.md) for
-human-readable notes.
+**v11.9.3** (2026-08-21) — Honesty: gates that can fail, commands that run, a release path that is
+checked. Twenty-one fixes sharing one defect — an instrument reporting success while doing nothing:
+a self-install that printed "skipping" and overwrote 149 tracked files, 11 of 27 routed CLI verbs
+dying on `MODULE_NOT_FOUND` in a real install, `--fetch-sha` hashing npm's 404 body into the Homebrew
+formula, no version channel covering any document a user receives, and a publish path no check ever
+touched. **Contains behaviour changes under a patch bump** — several fixed bugs whose correct
+behaviour differs from what shipped. See the BREAKING section in
+[CHANGELOG.md](./CHANGELOG.md), or [RELEASENOTES.md](./RELEASENOTES.md) for human-readable notes.
 
 ---
 

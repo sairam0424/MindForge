@@ -80,7 +80,18 @@ function approve(opts = {}) {
   const root = opts.root || ROOT;
   const approvalsDir = opts.approvalsDir || APPROVALS_DIR;
 
-  const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+  // TOLERATES A PROJECT WITH NO package.json. This was an unguarded readFileSync, so `mindforge approve`
+  // died with `ENOENT: no such file or directory, open '<project>/package.json'` on any repo that is not
+  // Node — Python, Go, Rust, or any polyglot root. Measured on the published 11.9.3 tarball.
+  //
+  // The FIELDS stay the consumer's on purpose: this record documents a governance decision in the
+  // user's project, so `project` and `version` describing that project is correct. Only the crash was
+  // wrong. Absent values are recorded as null rather than invented — an approval record that guesses
+  // what it is approving is worse than one that admits it does not know.
+  const pkg = (() => {
+    try { return JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')); }
+    catch { return { name: path.basename(root) || null, version: null }; }
+  })();
 
   const id = `MF-AUTH-${Date.now().toString(36).toUpperCase()}`;
   const timestamp = new Date().toISOString();
