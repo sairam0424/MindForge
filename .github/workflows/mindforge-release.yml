@@ -121,8 +121,26 @@ jobs:
           node-version: 20
           registry-url: 'https://registry.npmjs.org'
 
+      # SDK DEPS TOO, and this is not optional — it is what `npm test` needs.
+      #
+      # `npx eslint .` from the repo root discovers sdk/eslint.config.mjs, a nested flat config that
+      # imports `typescript-eslint` — an SDK devDependency, not a root one. With root `npm ci` alone,
+      # ESLint cannot LOAD and exits 2, and tests/verification-runner.test.js (which asserts the lint
+      # stage passes on this repository) fails.
+      #
+      # Found by the v11.9.3 tag: the release run failed at "Run Full Test Suite" with
+      # `Cannot find package 'typescript-eslint' imported from sdk/eslint.config.mjs`. It failed SAFELY —
+      # before any publish step, so nothing reached npm and no dist-tag moved — but it failed for an
+      # environment reason, not a code one. mindforge-ci.yml's Code Quality Gates job has always
+      # installed the SDK for exactly this reason; the release job never did, and no test asserted the
+      # two jobs install the same things.
+      #
+      # `npm install`, not `npm ci`: sdk/package-lock.json is present but the CI job it mirrors uses
+      # install, and matching it exactly is the point.
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          npm --prefix sdk install --no-audit --no-fund
 
       - name: Run Full Test Suite
         run: npm test
