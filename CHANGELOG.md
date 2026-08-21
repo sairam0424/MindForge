@@ -1,5 +1,159 @@
 # Changelog
 
+## [11.9.4] — 2026-08-22 — Delivery: the gates register, the tarball matches its tag, three packages attested
+
+Patch release. 11.9.3 argued that an instrument must not report success while doing
+nothing. 11.9.4 is what an adversarial audit of the **published** 11.9.3 artifact found
+when that standard was applied to the delivery itself: **enforcement that installed and
+then declined to register, a tarball that could not be reproduced from its own tag, and a
+README that understated what shipped.**
+
+Every finding here came from measuring the published package in a confined environment —
+not from reading the repository. That distinction is the whole content of this release.
+
+### BREAKING
+
+- **The installer now registers hooks on projects where it previously declined.** If you
+  install into a project that has an ancestor directory containing a `.claude`, MindForge
+  now writes `.claude/settings.json` (merging append-only into any existing file) instead
+  of skipping. On a machine that has ever run Claude Code, `~/.claude` makes that
+  essentially every project — so most installs go from **0 registered hooks to 8**. Three
+  of them can block a tool call. If you were relying on the installer being inert here,
+  it no longer is; `.mindforge/hook-registration.json` records exactly what was written,
+  and the previous settings file is backed up under `.mindforge/backups/`. (#224)
+
+### Fixed
+
+**Hook registration — the gates shipped installed but inert**
+
+- **`register()` skipped whenever any ancestor held a `.claude` directory.** Measured
+  against the published 11.9.3 tarball, confined HOME, `~/.claude` as the only ancestor:
+  **11 hook scripts installed, 0 registered, no settings file written.** The gates that
+  the shipped `CLAUDE.md` calls MANDATORY were copied in and left unreachable. Same
+  sandbox on 11.9.4: **8 registered, installer preflight executed 7 of 8 and verified all
+  3 deny-class hooks returning exit 2** before keeping the file. (#224)
+
+  The reason it printed — *"the harness will read `<ancestor>/.claude/settings.json`, not
+  this directory"* — was wrong three separate ways:
+
+  1. `~/.claude/settings.json` is the **user tier**, applied in addition to the project
+     tier. Its existence carries no information about whether a project file is read, so
+     the condition that suppressed the gates was satisfied by an ordinary laptop.
+  2. For a genuine project ancestor the claim is false too — that file is not read
+     either. Verified with a natural experiment: an ancestor two levels up carried a
+     `PreToolUse` Bash hook appending a marker to a log; across a dozen tool calls with
+     the inner directory as the project root, the log was never created. Skipping did not
+     deliver the gates elsewhere. It delivered them nowhere.
+  3. The git-boundary guard was **dead code**. `stop` was the git toplevel while the walk
+     began at `dirname(projectRoot)`, so when toplevel equalled projectRoot the stop
+     condition could never be true and the walk ran to the filesystem root every time.
+     The boundary meant to keep the check local is why it reached `$HOME`.
+
+  It now warns and registers anyway: a registration that turns out inert costs nothing and
+  becomes live when the harness is launched there, whereas a skip is guaranteed inert. The
+  check additionally requires a real `settings.json` **file** — the old one accepted any
+  directory named `.claude`, and the one it hit in practice held only markdown. (#224)
+
+- **The installer's only failure-path pointer led nowhere.** It told anyone whose hooks
+  were not registered to "see `docs/troubleshooting.md`", where the word *hook* appeared
+  **0** times. That file now carries the section the message names, separating "not
+  registered" from "registered but not live", and including a copy-paste payload that
+  drives a hook directly so a broken hook can be told apart from an unwired one. (#224)
+
+**Release artifacts**
+
+- **The published tarball could not be reproduced from its tag.**
+  `.mindforge/memory/sync-manifest.json` — gitignored, written at runtime by
+  `bin/memory/semantic-hub.js` — was **1 of 1979** shipped files not tracked at
+  `v11.9.3`, so provenance attested to a tree containing a file the repository does not
+  contain. With a `files[]` allowlist, a **directory** entry ships its contents regardless
+  of `.gitignore`; `files[]` already carried a negation for `pattern-library.jsonl` for
+  exactly this reason, and the manifest's entire content is the sync record *for that
+  already-excluded file*. (#225)
+
+- **`mindforge-sdk` is published again, with provenance.** It sat at **11.8.0** on npm
+  while `sync-version.js` kept `sdk/package.json` at canonical — seven releases of
+  disagreement (11.8.1 through 11.9.3, none published) that nothing detected, because
+  `version:check` verifies the tracked file and not what the registry serves. It was also
+  the only one of the three packages with **no attestation**. The release workflow now
+  publishes it with `--provenance`, after the two proven publishes and before the GitHub
+  Release, so the newest step cannot cost the others their artifacts.
+
+- **The Homebrew formula carries the real 11.9.3 digest.** Verified against an independent
+  measurement rather than the tool's own output, and explicitly confirmed not to be the
+  SHA-256 of npm's 21-byte `{"error":"Not found"}` body — the constant #203 used to write
+  for every unpublished version. (#223)
+
+**Honesty about what is enforced**
+
+- **The README understated the product.** "What is actually enforced" still declared that
+  **no install channel registers hooks**, with a `No / No` table, and stated that the
+  plugin channel's dispatcher crashes on every fire. Measured: the plugin's
+  `scripts/lib/` exists, all **14** path tokens in `plugins/mindforge/hooks/hooks.json`
+  resolve under the plugin root, and driving the dispatcher by hand returns **exit 2** for
+  `mindforge-block-no-verify` and `mindforge-config-protection`. A document that
+  under-claims a security capability is the same defect as one that over-claims it —
+  either way it describes a system that is not the one shipped. Now stated per channel,
+  with the four cases that remain deliberately unenforced and the three liveness
+  preconditions outside MindForge's control. (#225)
+
+**Defects the published-artifact audit found (#222)**
+
+- The **v11.9.3 release page shipped empty**: `changelog-fetcher.js --latest` exits 0
+  while writing zero bytes, so the `||` fallback never fired and a 195-line changelog
+  reached nobody. The step now prefers the in-tree changelog and fails on an empty body.
+- A **shipped CI snippet told users to `npx` a package we do not own**.
+  `npx mindforge …` resolves to an unrelated third-party package; in a fresh runner it is
+  fetched and unpacked, install scripts and all, inside a job holding `MINDFORGE_TOKEN`.
+  Now pinned with `--package=mindforge-cc`.
+- The **version-source gate missed a live defect twice**. `mindforge health` printed
+  `RELEASE v0.4.2` and `Current : v11.9.3` twenty-six lines apart in a project declaring
+  0.4.2, and produced `Unexpected end of JSON input` with no manifest at all — the verb
+  whose job is verifying installation integrity misreporting the installation. Widening
+  the gate surfaced two more of the same shape, one of which bound the **wrong** version
+  silently into approval records, which is worse than no binding because the check still
+  returns a verdict.
+- `mindforge approve` died with ENOENT on any non-Node project. Absent values are now
+  recorded as `null` rather than invented.
+
+**Test infrastructure**
+
+- `tests/production.test.js` carried the uncommitted diff into its clone with
+  `git diff HEAD` (which includes staged files) but committed it with `commit -a` (which
+  stages only modified and deleted **tracked** files). So any commit **adding** a file
+  under `bin/` or `tests/` left the clone dirty and failed the gate's own cleanliness
+  assertion — reintroducing precisely the `--no-verify` pressure that carry exists to
+  avoid, for the one case it did not cover.
+
+### Added
+
+New regression gates, each falsified by reinstating the exact defect and confirming RED,
+with every touched file restored byte-exact afterwards:
+
+- `tests/hook-registration-ancestor.test.js` — six properties, the first of which asserts
+  the ancestor detector fires at all, so the other five cannot pass by never triggering.
+- `every shipped file is tracked in git` — property-based, no name list. It cannot fail on
+  a clean clone, which is how the real leak survived CI, so it is paired with a second
+  test that plants the runtime state in a throwaway clone and then packs.
+- `all three published packages publish with provenance` — counts the `npm publish`
+  invocations rather than matching one, because a single-match regex was satisfied by
+  either of the two packages that already had an attestation while the SDK had none. Also
+  asserts the SDK step is idempotent and ordered after the proven publishes.
+
+### Notes for operators
+
+- **These fixes change installer behaviour on almost every project.** After upgrading,
+  check `.mindforge/hook-registration.json` to see what was registered, and restart the
+  harness — hooks are snapshotted at session start.
+- A registered hook is only *live* if the harness has been restarted, the project is
+  trusted in the harness, and `CLAUDE_PROJECT_DIR` is set with `node` on the hook PATH.
+  None of those three are in MindForge's control; the last is a deliberate trade against a
+  fail-closed shell tail that was measured denying benign commands on a fresh clone.
+- Two gaps remain that require repository settings rather than code, and are recorded
+  rather than claimed fixed: there is no `v*` **tag ruleset** restricting who may create
+  the ref that triggers publishing, and `NPM_TOKEN` is a long-lived repository secret with
+  no GitHub environment in front of it.
+
 ## [11.9.3] — 2026-08-21 — Honesty: gates that can fail, commands that run, a release path that is checked
 
 Patch release. No new features. Twenty-one fixes, and they all turned out to be the
@@ -11,6 +165,14 @@ that no check ever touched.
 Contains behaviour changes under a patch bump — several of the things being fixed were
 bugs that a consumer could have been relying on. Read BREAKING before upgrading if you
 script against the CLI or the installer.
+
+> **Corrected after release.** Three measured numbers in this entry were wrong and are fixed above:
+> the count of places `--status`/`--stop` were documented (removed rather than re-guessed — it reads 4,
+> 9 or 15 depending on how you count, which is the argument against stating it); the eslint total, which
+> was 199 on the author's machine and **190** on a clean clone, because 9 problems came from an
+> untracked local directory; and "four releases behind", which is **three** (11.8.3 → 11.9.0 → 11.9.1 →
+> 11.9.2). Found by an adversarial audit of this changelog against the published artifact. A release
+> arguing that measured numbers should be reproducible has to hold its own notes to that standard.
 
 ### BREAKING
 
@@ -113,15 +275,16 @@ Each of these is a bug fix whose correct behaviour differs from the shipped beha
   exactly one event — a `v*` tag push — and the repository's only ruleset targets
   branches, so its six required checks applied to nothing on the path that ships. GitHub
   cannot attach required status checks to a tag. A `preflight` job now gates it. (#216)
-- The `stable` npm dist-tag was moved by hand, or not at all — it sat four releases
-  behind `latest` (11.8.3 against 11.9.2), so `npm i mindforge-cc@stable` delivered a
+- The `stable` npm dist-tag was moved by hand, or not at all — it sat three releases
+  behind `latest` (11.8.3 against 11.9.2, via 11.9.0 and 11.9.1), so `npm i mindforge-cc@stable` delivered a
   build with none of the 11.9.x fixes. The release workflow now moves it as its final
   step: forward-only, prereleases skipped, and verified against npm's uncached dist-tags
   endpoint rather than the CDN-cached packument. (#216)
 
 **Dashboard**
 
-- `--status` and `--stop` were documented in nine places and implemented in none; both
+- `--status` and `--stop` were documented across the harness roots and the docs and implemented
+  nowhere; both
   printed nothing and exited 0. Now implemented, before `express` is required, so they
   work without the dependency installed. (#206)
 - `--stop` identified the target by the SHAPE of its command line, which matched any
@@ -141,8 +304,8 @@ Each of these is a bug fix whose correct behaviour differs from the shipped beha
 **Verification**
 
 - `mindforge verify`'s lint stage used `--max-warnings=0`, which made it impossible to
-  pass in the repository it ships from: `npx eslint .` reports 199 problems / 0 errors /
-  199 warnings, so `verify` reported a lint FAILURE on a tree that is green by the
+  pass in the repository it ships from: on a clean clone `npx eslint .` reports 190 problems /
+  0 errors / 190 warnings, so `verify` reported a lint FAILURE on a tree that is green by the
   project's own contract. Aligned with the project's definition; errors still fail. (#204)
 - `temporal cleanup` printed "🧹 Cleaning up old temporal snapshots..." and
   "✅ Cleanup complete." with no cleanup between them. Now wired to

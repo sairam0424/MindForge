@@ -266,6 +266,65 @@ test('.mindforge/config.json ships no pre-baked governance.active_did', () => {
     '"No active DID found for signing" error instead of "Agent not registered".');
 });
 
+// ── The published file set must be reproducible from the tag ─────────────────
+//
+// v11.9.3 shipped 1979 files and 1978 of them were byte-identical to tag v11.9.3. The odd one out
+// was .mindforge/memory/sync-manifest.json — gitignored (.gitignore:81), written at runtime by
+// bin/memory/semantic-hub.js, and packed anyway. So the tarball could not be reconstructed from the
+// tag, and provenance attested to a tree containing one file that does not exist in the repository.
+//
+// THE MECHANISM, worth stating because it is counter-intuitive: with a files[] allowlist, a
+// DIRECTORY entry ships that directory's contents regardless of .gitignore. files[] carries
+// ".mindforge/memory/", so everything the semantic hub writes there ships. The codebase already knew
+// this — "!.mindforge/memory/pattern-library.jsonl" is a negation that exists for exactly this
+// reason — so this was one omission next to its own precedent. Doubly so: the manifest records the
+// last sync of pattern-library.jsonl, the file already excluded.
+test('every shipped file is tracked in git — the tarball is reproducible from the tag', () => {
+  const tracked = new Set(
+    execFileSync('git', ['ls-files', '-z'], { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
+      .split('\0').filter(Boolean));
+  assert.ok(tracked.size > 1000, `git ls-files returned ${tracked.size} paths — refusing to compare against an empty set`);
+
+  const untracked = FILES.filter((f) => !tracked.has(f));
+  assert.deepStrictEqual(untracked, [],
+    `${untracked.length} shipped file(s) are not tracked at HEAD, so the published tarball cannot be `
+    + 'reproduced from the tag and provenance attests to a tree the repository does not contain: '
+    + `${untracked.slice(0, 8).join(', ')}. Either track the file or add a "!" negation to files[].`);
+});
+
+// The assertion above can only fire on a machine where the runtime state HAPPENS to exist — on a
+// fresh clone .mindforge/memory/ is empty and it passes vacuously, which is precisely how the real
+// leak survived CI. This one creates the state in a throwaway clone first, so it fails everywhere.
+test('runtime state under a shipped directory stays excluded even when it exists', () => {
+  const work = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-pack-excl-')));
+  const clone = path.join(work, 'repo');
+  try {
+    execFileSync('git', ['clone', '--quiet', '--no-hardlinks', '--shared', ROOT, clone],
+      { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
+    // Carry an uncommitted package.json so this can go green before the fix is committed.
+    fs.copyFileSync(path.join(ROOT, 'package.json'), path.join(clone, 'package.json'));
+
+    const planted = ['.mindforge/memory/sync-manifest.json', '.mindforge/memory/pattern-library.jsonl'];
+    for (const rel of planted) {
+      fs.mkdirSync(path.dirname(path.join(clone, rel)), { recursive: true });
+      fs.writeFileSync(path.join(clone, rel), '{"planted":true}\n');
+      assert.ok(fs.existsSync(path.join(clone, rel)), `could not plant ${rel} — the test would pass by not testing`);
+    }
+
+    const raw = execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'],
+      { cwd: clone, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'], maxBuffer: 64 * 1024 * 1024 });
+    const shipped = new Set((JSON.parse(raw)[0].files || []).map((f) => f.path));
+    assert.ok(shipped.size > 1000, `pack in the clone listed ${shipped.size} files — not a usable measurement`);
+
+    const leaked = planted.filter((rel) => shipped.has(rel));
+    assert.deepStrictEqual(leaked, [],
+      `${leaked.join(', ')} shipped despite being local runtime state. A files[] DIRECTORY entry `
+      + 'ignores .gitignore, so each such file needs its own "!" negation in files[].');
+  } finally {
+    fs.rmSync(work, { recursive: true, force: true });
+  }
+});
+
 (async () => {
   if (!pack.ok) {
     // No silent caps: announce the skip loudly. This test gates releases, so a

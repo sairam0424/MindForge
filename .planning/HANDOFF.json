@@ -2,25 +2,25 @@
   "_warning": "DO NOT ADD SECRETS OR SENSITIVE DATA TO THIS FILE. IT IS SYNCED ACROSS SESSIONS.",
   "schema_type": "HANDOFF",
   "schema_version": "1.0.0",
-  "next_task": "Author CHANGELOG.md's 11.9.3 section and changelogs/v11.9.3.md — the only two artifacts a human must write — then cut 11.9.3: bump package.json, `node scripts/sync-version.js`, run the three-command mcp-server build chain it prints, merge develop -> release -> main, and tag. The workflow now gates the tag push and moves the `stable` dist-tag itself. All 8 audit findings and the release-gating hole are closed; the PR queue is empty.",
+  "next_task": "11.9.3 is published (npm latest = stable = 11.9.3, both packages with provenance). Post-release fixes are landing on develop for 11.9.4; main is still at the v11.9.3 tag (453eb333). NEXT: the two carried-over artifact items \u2014 the gitignored .mindforge/memory/sync-manifest.json that is packed into the tarball (the only 1 of 1979 shipped files not tracked at the tag, so the published file set is not reproducible from it), and RELEASENOTES.md documenting 11.9.2 but not 11.9.3. Then the operator items that need repo settings rather than code: a v* TAG RULESET restricting who may create the ref, and moving NPM_TOKEN behind a GitHub environment (there are currently ZERO configured, so adding environment: without creating one publishes exactly as before while looking like a gate).",
   "current_context": "develop is at 1b5302b5 and GREEN both locally (131 passed / 0 failed / 2 skipped / 133 total, all seven gates plus verify:pinning exit 0) and in CI (MindForge CI, Control Plane, Secret scan all success). Sixteen PRs merged this session (#200-#216), each verified by `merge-base --is-ancestor` rather than by badge, because #198 is MERGED with its code absent from develop. package.json is still 11.9.2; npm latest=11.9.2, stable=11.8.3 until the next release moves it automatically.",
   "context_refs": [
-    "scratch-pad/daily-logs/2026-08-21.md — the full session narrative, including every self-inflicted harness bug and its control experiment. READ THIS FIRST.",
-    "scratch-pad/daily-logs/2026-08-20.md — the preceding session (the 11-PR queue being built).",
-    "CLAUDE.md lines 53-57 — the version-bump contract: 16 channels over 15 files, PLUS the two build artifacts and their 3-command chain.",
-    "scripts/sync-version.js — read the header. Three channel categories: derivable / requires-a-build / deferred.",
-    "tests/version-consistency.test.js — 23 assertions; the round-trip tests are the only shape that can catch a MISSING or GREEDY channel.",
-    ".planning/RELEASE-CHECKLIST.md — pre-existing release steps.",
-    "docs/publishing-guide.md and .agent/workflows/publish-release.md — the documented publish sequence."
+    "scratch-pad/daily-logs/2026-08-21.md \u2014 the full session narrative, including every self-inflicted harness bug and its control experiment. READ THIS FIRST.",
+    "scratch-pad/daily-logs/2026-08-20.md \u2014 the preceding session (the 11-PR queue being built).",
+    "CLAUDE.md lines 53-57 \u2014 the version-bump contract: 16 channels over 15 files, PLUS the two build artifacts and their 3-command chain.",
+    "scripts/sync-version.js \u2014 read the header. Three channel categories: derivable / requires-a-build / deferred.",
+    "tests/version-consistency.test.js \u2014 23 assertions; the round-trip tests are the only shape that can catch a MISSING or GREEDY channel.",
+    ".planning/RELEASE-CHECKLIST.md \u2014 pre-existing release steps.",
+    "docs/publishing-guide.md and .agent/workflows/publish-release.md \u2014 the documented publish sequence."
   ],
   "blockers": [
-    "11.9.3 RELEASE — CHANGELOG.md has no 11.9.3 section and changelogs/v11.9.3.md does not exist. Two independent gates demand them: bin/utils/readiness-gate.js:115 (a bare `.includes(pkgVersion)` on CHANGELOG.md) and tests/production.test.js:629/:638 (the second is existence-only, so an empty file satisfies it). Without them release:ready drops 14/14 -> 12/14 and npm test fails. These are the ONLY two artifacts a human must author.",
-    "11.9.3 RELEASE — after `node scripts/sync-version.js`, two tracked build artifacts remain stale and sync-version now says so and exits non-zero: plugins/mindforge/.claude-plugin/plugin.json and plugins/mindforge/mcp/dist/index.js. Clear with, IN ORDER: `npm --prefix mcp-server install && npm --prefix mcp-server run build && node scripts/build-mindforge-plugin.js`. All three are required because build-mindforge-plugin.js refuses without mcp-server/dist/index.js, which is gitignored and absent on a fresh clone."
+    "11.9.3 RELEASE \u2014 CHANGELOG.md has no 11.9.3 section and changelogs/v11.9.3.md does not exist. Two independent gates demand them: bin/utils/readiness-gate.js:115 (a bare `.includes(pkgVersion)` on CHANGELOG.md) and tests/production.test.js:629/:638 (the second is existence-only, so an empty file satisfies it). Without them release:ready drops 14/14 -> 12/14 and npm test fails. These are the ONLY two artifacts a human must author.",
+    "11.9.3 RELEASE \u2014 after `node scripts/sync-version.js`, two tracked build artifacts remain stale and sync-version now says so and exits non-zero: plugins/mindforge/.claude-plugin/plugin.json and plugins/mindforge/mcp/dist/index.js. Clear with, IN ORDER: `npm --prefix mcp-server install && npm --prefix mcp-server run build && node scripts/build-mindforge-plugin.js`. All three are required because build-mindforge-plugin.js refuses without mcp-server/dist/index.js, which is gitignored and absent on a fresh clone."
   ],
   "decisions_needed": [
     "PARTLY DONE (#216). The preflight job now gates the publishing event: it asserts the tagged commit is an ancestor of origin/main and runs the six gates a tag push never saw, with the publish job behind `needs: preflight`. What remains is repo-settings-only and cannot be done in code: a `v*` TAG ruleset restricting who may CREATE the ref. Required status checks cannot attach to a tag, so that ruleset is about authorship, not verification. KNOWN RESIDUAL, documented in the workflow itself: a tag push resolves the workflow from the TAGGED ref, so a tag placed on a commit predating #216 runs that commit's workflow and is ungated.",
     "RESOLVED, no longer a decision: the release workflow now moves the npm `stable` dist-tag itself, as its last step. Forward-only (refuses to move backward, which a re-run of an older tag would otherwise do silently), prereleases skipped, and verified by reading back /-/package/<pkg>/dist-tags rather than the CDN-cached packument. `stable` is still 11.8.3 on the registry until the next release runs; nothing needs doing by hand to fix that.",
-    "NPM_TOKEN is a long-lived repo secret and there are ZERO configured GitHub environments. Adding an `environment:` key with no environment configured publishes exactly as before while LOOKING like a gate — move the token to an environment secret FIRST, then add the key.",
+    "NPM_TOKEN is a long-lived repo secret and there are ZERO configured GitHub environments. Adding an `environment:` key with no environment configured publishes exactly as before while LOOKING like a gate \u2014 move the token to an environment secret FIRST, then add the key.",
     "mindforge-sdk has no provenance on npm (mindforge-cc does, since 11.9.0). Decide whether to add it.",
     "HANDOFF.json field mismatch (found while writing this file): the writer bin/autonomous/state-manager.js:151 and bin/dashboard/metrics-aggregator.js:85 use `last_updated`, but .claude/commands/mindforge/next.md:14 gates freshness on `updated_at`, which never existed in this file. That gate is therefore ALWAYS false and a fresh handoff is never honoured. This file now writes BOTH keys so it works with every reader; pick one name and fix the other side, with a test.",
     "Carried over, still unresolved: D5 plugin asset contract, D6 is the SDK published, D7 what exit code `verify` should use when every stage skips, D8 whether .planning/VERIFICATION.md should be tracked, D9 whether to governance-gate the release path, and whether a --global install should carry bin/ at all."
@@ -40,18 +40,18 @@
     "ad15a089 Merge #201 fix/cli-router-cwd-pin"
   ],
   "recent_files": [
-    "scripts/sync-version.js — three channel categories; 16 channels + 2 build artifacts + 1 deferred",
-    "tests/version-consistency.test.js — 23 assertions incl. two round trips and a greed guard",
-    "bin/installer-core.js — scope-aware self-install gate, 8 coreFiles, SENSITIVE_EXCLUDE, tmp reaping",
-    "bin/mindforge-cli.js — cwd: process.cwd() (was ROOT)",
-    "bin/dashboard/server.js — --status/--stop with a realpath identity check",
-    "bin/engine/verification-runner.js — stage availability guards, skip vs fail",
-    "bin/engine/temporal-cli.js — cleanup wired to TemporalHub.gc with --dry-run",
-    "tests/production.test.js — SENSITIVE_EXCLUDE now behavioural, not a source grep",
-    "SECURITY.md + docs/{getting-started,faq,troubleshooting,user-guide,sdk-reference}.md — now version channels",
-    "CLAUDE.md, .claude/CLAUDE.md, .agent/CLAUDE.md — protocol docs name only real files"
+    "scripts/sync-version.js \u2014 three channel categories; 16 channels + 2 build artifacts + 1 deferred",
+    "tests/version-consistency.test.js \u2014 23 assertions incl. two round trips and a greed guard",
+    "bin/installer-core.js \u2014 scope-aware self-install gate, 8 coreFiles, SENSITIVE_EXCLUDE, tmp reaping",
+    "bin/mindforge-cli.js \u2014 cwd: process.cwd() (was ROOT)",
+    "bin/dashboard/server.js \u2014 --status/--stop with a realpath identity check",
+    "bin/engine/verification-runner.js \u2014 stage availability guards, skip vs fail",
+    "bin/engine/temporal-cli.js \u2014 cleanup wired to TemporalHub.gc with --dry-run",
+    "tests/production.test.js \u2014 SENSITIVE_EXCLUDE now behavioural, not a source grep",
+    "SECURITY.md + docs/{getting-started,faq,troubleshooting,user-guide,sdk-reference}.md \u2014 now version channels",
+    "CLAUDE.md, .claude/CLAUDE.md, .agent/CLAUDE.md \u2014 protocol docs name only real files"
   ],
   "handoffs": [],
-  "last_updated": "2026-08-21T10:00:00Z",
-  "updated_at": "2026-08-21T10:00:00Z"
+  "last_updated": "2026-08-21T18:00:00Z",
+  "updated_at": "2026-08-21T18:00:00Z"
 }

@@ -490,3 +490,44 @@ test('the stable dist-tag step is monotonic, verified on the uncached endpoint, 
   console.log(`\nAction Pinning: ${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 })();
+
+test('all three published packages publish with provenance, and the newest one cannot cost the others their release', () => {
+  const rel = releaseCode();
+
+  // ONE --provenance IS NOT ENOUGH, which is what the older assertion above actually checks.
+  // mindforge-sdk shipped for its whole life without an attestation while the other two had one, and
+  // a single-match regex over this file was satisfied by either of those two. Count them.
+  const publishes = rel.match(/npm publish[^\n]*/g) || [];
+  assert.strictEqual(publishes.length, 3,
+    'expected 3 npm publish invocations (mindforge-cc, mindforge-mcp-server, mindforge-sdk), found '
+    + `${publishes.length}. If a package was added or removed, update this count deliberately.`);
+  for (const p of publishes) {
+    assert.match(p, /--provenance/,
+      `an npm publish without --provenance: "${p.trim()}". A package that ships unattested cannot be `
+      + 'verified back to this workflow, which is the entire point of the pinning above.');
+  }
+
+  // The SDK step must be idempotent. A release run is routinely RE-RUN after a partial failure (6 of
+  // the last 12 were failures), and npm forbids republishing a version, so an unguarded publish turns
+  // a recoverable re-run into a hard error on a version that is already correct.
+  const sdkStep = rel.slice(rel.indexOf('Publish the SDK to npm'));
+  assert.ok(sdkStep, 'the SDK publish step is gone');
+  assert.match(sdkStep.slice(0, 900), /npm view "mindforge-sdk@\$\{SDK_VER\}" version/,
+    'the SDK publish does not check npm for the version first, so re-running a partially-failed '
+    + 'release fails on a package that is already published correctly.');
+
+  // ORDERING IS LOAD-BEARING. The two proven publishes must precede the newest, least-exercised one,
+  // and the GitHub Release (notes + .tgz asset) must come after all three — so a failure in the newest
+  // step cannot deny the release its artifacts for packages that already reached npm irreversibly.
+  const iCc  = rel.indexOf('name: Publish to npm');
+  const iMcp = rel.indexOf('name: Publish standalone MCP server to npm');
+  const iSdk = rel.indexOf('name: Publish the SDK to npm');
+  const iRel = rel.indexOf('name: Create GitHub Release');
+  assert.ok(iCc > 0 && iMcp > 0 && iSdk > 0 && iRel > 0, 'a publish or release step was renamed');
+  assert.ok(iCc < iMcp && iMcp < iSdk,
+    'the SDK publish must come after the two packages that have shipped for releases, not before — it '
+    + 'is the newest step here and must not be able to abort the run ahead of them.');
+  assert.ok(iSdk < iRel,
+    'Create GitHub Release must come after every publish, or a publish failure leaves npm updated '
+    + 'irreversibly and the release page without its notes or .tgz.');
+});

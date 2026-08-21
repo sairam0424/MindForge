@@ -1,5 +1,5 @@
 {
-  "version": "11.9.3",
+  "version": "11.9.4",
   "environment": "development",
   "governance": {
     "drift_threshold": 0.75,

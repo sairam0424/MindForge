@@ -1,4 +1,4 @@
-# MindForge FAQ (v11.9.3)
+# MindForge FAQ (v11.9.4)
 
 ## Is MindForge tied to Claude only?
 No. MindForge supports Claude Code and Antigravity. Install with `--claude`,
@@ -55,7 +55,7 @@ The `deep-research` workflow was removed before the v11.8.0 release (the superpo
 ## Version & Stability
 
 **Q: What version is current?**
-v11.9.3 — verify with `node bin/mindforge-cli.js --version`
+v11.9.4 — verify with `node bin/mindforge-cli.js --version`
 
 **Q: Is v11.9.0 production-stable?**
 Yes. The IQ200 deep-audit (258 discrete checks across 14 dimensions) shows 258/258 passing. 0 CVEs, 0 test failures, 0 ESLint errors, 0 TypeScript errors.
@@ -80,7 +80,7 @@ Spawn dispatch is not yet implemented in v11.9.0. Use `/mindforge:auto` or `/min
 Tier-3 trust uses in-process key simulation in v11.9.0 — this is intentional and safe. `SECURITY_TIER_3_SIMULATED = true` is the documented v11.x behavior. Hardware TPM/HSM is planned for v12.x.
 
 **Q: What is the test coverage?**
-133 test files: 131 pass, 0 failures, 2 env-dependent skips (`browser.test.js` needs a Chromium
+134 test files: 132 pass, 0 failures, 2 env-dependent skips (`browser.test.js` needs a Chromium
 daemon, `sre-integration.test.js` needs git worktree support and a clean tree).
 
 The enforced floor is **30% lines**, gated in CI by the `mindforge-quality` job

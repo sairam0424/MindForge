@@ -174,11 +174,42 @@ jobs:
             echo "already_published=false" >> "${GITHUB_OUTPUT}"
           fi
 
+      # THE v11.9.3 RELEASE PAGE SHIPPED EMPTY BECAUSE OF THIS STEP.
+      #
+      # `changelog-fetcher.js --latest` exits 0 while writing ZERO bytes (reproduced locally: exit 0,
+      # 0 bytes), so the `||` fallback never fired, /tmp/release-notes.md was empty, and
+      # action-gh-release published a release with a tarball and no notes at all. A 195-line changelog
+      # existed in-tree and reached nobody. That is precisely the defect class 11.9.3 is named for: a
+      # step reporting success having produced nothing.
+      #
+      # Now: prefer the in-tree changelog for the version being released, which is the document a human
+      # actually wrote and which release:ready already proved exists; fall back to the fetcher, then to
+      # git log; and FAIL if all three produce an empty file rather than publishing a blank page.
       - name: Generate CHANGELOG
         run: |
-          # Use internal changelog fetcher if available, or generate from git
-          node bin/updater/changelog-fetcher.js --latest > /tmp/release-notes.md || \
-          git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --pretty=format:"* %s (%h)" > /tmp/release-notes.md
+          VER="${GITHUB_REF_NAME#v}"
+          NOTES=/tmp/release-notes.md
+          : > "${NOTES}"
+
+          if [ -f "changelogs/v${VER}.md" ]; then
+            # Strip the archive file's own `# Changelog` heading; keep the version section.
+            sed -n "/^## \[${VER}\]/,\$p" "changelogs/v${VER}.md" > "${NOTES}" || true
+          fi
+
+          if [ ! -s "${NOTES}" ]; then
+            node bin/updater/changelog-fetcher.js --latest > "${NOTES}" 2>/dev/null || true
+          fi
+
+          if [ ! -s "${NOTES}" ]; then
+            git log "$(git describe --tags --abbrev=0 HEAD^)..HEAD" --pretty=format:"* %s (%h)" > "${NOTES}" || true
+          fi
+
+          if [ ! -s "${NOTES}" ]; then
+            echo "::error title=Empty release notes::All three sources produced nothing. Refusing to publish a release with a blank body."
+            exit 1
+          fi
+          echo "::notice::release notes: $(wc -c < "${NOTES}") bytes from $(wc -l < "${NOTES}") lines"
+          head -3 "${NOTES}"
 
       - name: Build Package
         run: npm pack
@@ -233,6 +264,38 @@ jobs:
           npm install --no-audit --no-fund
           npm run build
           npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # THIRD PACKAGE, and the reason it is here rather than "additive, later": mindforge-sdk sat at
+      # 11.8.0 on npm while sync-version.js kept sdk/package.json at canonical, so the repository and
+      # the registry disagreed by SEVEN releases (11.8.1 through 11.9.3, none published) and nothing
+      # noticed — version:check verifies the tracked file, not what npm serves. It is also the only one
+      # of the three packages with NO provenance attestation, so a consumer could not verify its
+      # origin at all.
+      #
+      # Placed AFTER the two publishes above and BEFORE the GitHub Release, deliberately: it is the
+      # newest step here and the least exercised, so it must not be able to cost the two proven
+      # packages their release artifacts. Same reasoning that put the dist-tag step last.
+      #
+      # `npm ci` because sdk/package-lock.json is present and this is a publish, not the lint-parity
+      # install above — an exact tree is worth more than matching the CI job here. `npm run build`
+      # explicitly rather than relying on prepublishOnly: that hook runs `npm test`, which runs
+      # `pretest` -> build anyway, but a build failure should surface as a build failure.
+      - name: Publish the SDK to npm
+        id: sdk_publish
+        working-directory: sdk
+        run: |
+          SDK_VER="$(node -p "require('./package.json').version")"
+          PUBLISHED="$(npm view "mindforge-sdk@${SDK_VER}" version 2>/dev/null || true)"
+          if [ -n "${PUBLISHED}" ]; then
+            echo "::notice::mindforge-sdk@${SDK_VER} already on npm — skipping"
+            exit 0
+          fi
+          npm ci --no-audit --no-fund
+          npm run build
+          npm publish --access public --provenance
+          echo "::notice::mindforge-sdk@${SDK_VER} published with provenance ✅"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
