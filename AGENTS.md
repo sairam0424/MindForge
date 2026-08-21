@@ -42,7 +42,7 @@ CI lint gates differ by package: root tolerates warnings (`eslint . --max-warnin
 
 ## Testing Guidelines
 
-Node's built-in `assert` with a custom lightweight harness — no Jest/Mocha. Each file is self-contained and runnable via `node <file>`. CI runs the Node 18/20/22 matrix and gates coverage at 30% lines (`c8 --check-coverage --lines 30`). The Husky pre-commit hook runs `npm test`; all tests must pass to commit. `version-consistency.test.js` asserts the version string across `package.json`, `sdk/package.json`, `.mindforge/config.json`, `MINDFORGE.md` (`[VERSION]` marker), and `sdk/README.md` — bump all five each release.
+Node's built-in `assert` with a custom lightweight harness — no Jest/Mocha. Each file is self-contained and runnable via `node <file>`. CI runs the Node 18/20/22 matrix and gates coverage at 30% lines (`c8 --check-coverage --lines 30`). The Husky pre-commit hook runs `npm test`; all tests must pass to commit. `version-consistency.test.js` asserts every channel `scripts/sync-version.js` derives — 16 channels over 15 files today, plus two build artifacts only a build can write. **Never bump by hand: run `node scripts/sync-version.js`** and follow whatever it reports. Enumerating the set here is what went wrong before: the list said five while the script derived more, and the instruction to hand-bump directly contradicted CLAUDE.md.
 
 ## Commit & Pull Request Guidelines
 
