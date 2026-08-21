@@ -60,6 +60,7 @@
  */
 
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
@@ -366,14 +367,48 @@ function probeInner(projectRoot, failures) {
 
 // ── register ─────────────────────────────────────────────────────────────────
 
-/** Would the harness read a DIFFERENT .claude/settings.json than the one we are about to write? */
-function ancestorClaudeDir(projectRoot) {
-  const top = spawnSync('git', ['rev-parse', '--show-toplevel'], { cwd: projectRoot, encoding: 'utf8' });
-  const stop = top.status === 0 ? path.resolve(top.stdout.trim()) : path.parse(projectRoot).root;
+/**
+ * An ancestor project whose OWN .claude/settings.json a harness launched there would read instead of
+ * ours. Advisory only — see the three corrections below. Returns the directory, or null.
+ *
+ * THIS USED TO SKIP REGISTRATION ENTIRELY, and the reason it printed was wrong in three ways:
+ *
+ *   "the harness will read <ancestor>/.claude/settings.json, not this directory"
+ *
+ * 1. IT TRIPPED ON $HOME, so it tripped for essentially every project. ~/.claude/settings.json is the
+ *    USER TIER: Claude Code applies it to every session IN ADDITION TO the project tier, not instead
+ *    of it. Its existence says nothing about whether a project file is read. Measured on the author's
+ *    machine: the user-tier hooks fire on every Bash call while a project settings.json sits below
+ *    them. So the condition that suppressed the gates was satisfied by the normal state of a laptop.
+ *
+ * 2. FOR A REAL PROJECT ANCESTOR THE CLAIM IS ALSO FALSE — the ancestor's file is not read either.
+ *    Measured with a natural experiment: an ancestor two levels up carried a PreToolUse Bash hook
+ *    appending a marker to a log file. Across a dozen Bash calls with the inner directory as the
+ *    project root, that log was never even created. Claude Code reads the project tier from the
+ *    directory it treats as the project root; it does not walk up for settings. So skipping did not
+ *    deliver the gates "over there", it delivered them nowhere.
+ *
+ * 3. THE GIT-BOUNDARY GUARD WAS DEAD CODE. `stop` was the git toplevel, but the walk started at
+ *    path.dirname(projectRoot) — so when toplevel === projectRoot (the normal case) `dir === stop`
+ *    could never be true and the walk ran to the filesystem root every time. The boundary that was
+ *    supposed to keep this local is why it reached $HOME.
+ *
+ * So: WARN, NEVER SKIP. A registration that turns out to be inert costs nothing and becomes live the
+ * moment the harness is launched here; a skip is guaranteed inert. Two narrowings keep the warning
+ * meaningful rather than universal: $HOME is excluded because it is a tier and not a shadow, and an
+ * actual settings.json FILE must exist — the old check accepted any directory named .claude, of which
+ * a docs folder is a perfectly ordinary example.
+ *
+ * The git boundary is deliberately not repaired, just removed: a git toplevel ABOVE projectRoot means
+ * this project is nested inside another repo, which is exactly the case worth warning about, so
+ * stopping the walk there would suppress the one signal this function exists to produce.
+ */
+function shadowingProjectSettings(projectRoot) {
+  const home = os.homedir();
   let dir = path.dirname(path.resolve(projectRoot));
   for (let i = 0; i < 64; i++) {
-    if (fs.existsSync(path.join(dir, '.claude'))) return dir;
-    if (dir === stop || dir === path.dirname(dir)) break;
+    if (dir !== home && fs.existsSync(path.join(dir, SETTINGS_REL))) return dir;
+    if (dir === path.dirname(dir)) break;
     dir = path.dirname(dir);
   }
   return null;
@@ -391,10 +426,15 @@ function register(options = {}) {
   if (selfInstall) return skip('self-install: the repo maintains its own tracked .claude/settings.json');
   if (process.platform === 'win32') return skip('win32 is unverified for the emitted command shape');
 
-  const ancestor = ancestorClaudeDir(projectRoot);
-  if (ancestor) {
-    return skip(`the harness will read ${path.join(ancestor, '.claude', 'settings.json')}, not this directory — re-run the installer there`);
-  }
+  // Advisory, deliberately not a skip — see shadowingProjectSettings for the three measurements that
+  // demoted it from one. The operator is told what to do about it; the gates still get installed.
+  const shadow = shadowingProjectSettings(projectRoot);
+  const warnings = shadow
+    ? [`${path.join(shadow, SETTINGS_REL)} exists in an ancestor project. These hooks are registered `
+       + 'for THIS directory and are live when the harness runs with it as the project root. If you '
+       + `launch the harness in ${shadow} instead, run the installer there too — its project settings `
+       + 'are read from where it starts, not walked up from.']
+    : [];
 
   const copy = applyCopyManifest(projectRoot, repoRoot);
   if (!copy.ok) return skip(copy.reason);
@@ -424,7 +464,7 @@ function register(options = {}) {
 
   const text = `${JSON.stringify(merged.next, null, 2)}\n`;
   if (dryRun) {
-    return { status: 'dry-run', reason: `would write ${HOOK_SPEC.length} hooks to ${SETTINGS_REL}`, registered: false, preview: text };
+    return { status: 'dry-run', reason: `would write ${HOOK_SPEC.length} hooks to ${SETTINGS_REL}`, registered: false, preview: text, warnings };
   }
 
   const existedBefore = fs.existsSync(absSettings);
@@ -452,6 +492,7 @@ function register(options = {}) {
     preflight_skipped: verified.skipped,
     preflight_skip_reason: 'registered but not executed during preflight: spawns a background '
       + 'process and writes under $HOME. Advisory, so a failure there would not have blocked.',
+    warnings,
     residual_risk: 'CLAUDE_PROJECT_DIR unset, or node off the hook PATH, yields exit 1 and the gate is '
       + 'absent (identical to not installing). No fail-closed shell tail is used: measured, it denies '
       + 'benign commands on a fresh clone.',
@@ -466,6 +507,7 @@ function register(options = {}) {
     target: SETTINGS_REL,
     backup: receipt.backup,
     receipt: RECEIPT_REL,
+    warnings,
   };
 }
 
@@ -500,5 +542,6 @@ module.exports = {
   DENY_CLASS, OWNED_RE, KNOWN_IDS,
   commandFor, profilesFor, isOwned,
   applyCopyManifest, mergeSettings, assertNoLoss, probe,
+  shadowingProjectSettings,
   register, unregister,
 };
