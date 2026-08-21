@@ -223,8 +223,42 @@ const finalArgs = [...(target.defaultArgs || []), ...COMMAND_ARGS];
 
 console.log(`🚀 Executing: ${COMMAND} (${target.description})`);
 
+// The child runs in the USER'S project, not in MindForge's install directory.
+//
+// This was `cwd: ROOT`, which made every routed command operate on the framework's own tree
+// instead of the caller's. The worst case was `security-scan`, the command the protocol mandates
+// pre-commit for any Auth/Payment/PII change: measured against a fixture project whose
+// MINDFORGE.md declared 4 settings including `[MIN_SOUL_SCORE] = 99` (schema maximum is 10) and
+// `[COST_HARD_LIMIT_USD] = not-a-number`, it printed
+//
+//     ✅ MINDFORGE.md valid — 43 settings configured
+//
+// and exited 0. 43 is MindForge's OWN setting count. Two different fixture configs produced
+// byte-identical output, which is the proof it read neither: a security gate that cannot fail,
+// because it never sees the input it claims to check.
+//
+// MEASURED BLAST RADIUS before changing it — all 27 routed commands run under both values against
+// the same fixture. 7 differ, every one of them moving from the vendor's tree to the caller's, and
+// NONE regressed from success to failure:
+//
+//   security-scan                validated MindForge's config      -> reads the caller's
+//   classify                     TIER=2 from MindForge's git diff  -> diffs the caller's repo
+//   pr-review, cross-review      loaded MindForge's ConfigManager  -> looks in the caller's project
+//   learning, record-learning    reported MindForge's state        -> reports the caller's
+//   test-memory                  same ConfigManager shift
+//
+// `classify` deserves its own note: for every consumer it was classifying MindForge's changes.
+//
+// CI is unaffected, checked rather than assumed. control-plane.yml:80 runs `security-scan` as the
+// required ⚖️ Governance Enforcement check and mindforge-ci.yml:46 runs validate-config.js
+// directly; both execute with the repo root as cwd, so ROOT and process.cwd() are the same path
+// there and behaviour is byte-identical.
+//
+// A script that needs the FRAMEWORK's own assets must resolve them from __dirname, which is
+// independent of cwd — see the SCHEMA_PATH note in bin/validate-config.js. Anchoring vendor assets
+// to the process's working directory is what coupled these two unrelated things in the first place.
 const result = spawnSync('node', [scriptPath, ...finalArgs], {
-  cwd: ROOT,
+  cwd: process.cwd(),
   stdio: 'inherit',
   env: { ...process.env, MINDFORGE_CLI: 'true' }
 });
