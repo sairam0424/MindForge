@@ -1,10 +1,10 @@
 ---
-description: @mindforge qa [--phase N] [--auto]
+description: /mindforge:qa [--phase N] [--auto]
 ---
 # /mindforge:qa
 
 ## Usage
-`@mindforge qa [--phase N] [--auto]`
+`/mindforge:qa [--phase N] [--auto]`
 
 ## Description
 Runs systematic visual QA on UI surfaces changed in the current phase.

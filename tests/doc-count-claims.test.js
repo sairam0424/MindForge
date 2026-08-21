@@ -189,6 +189,153 @@ test('no shipped doc names a /mindforge: command that does not exist', () => {
     + 'capability where it actually lives.');
 });
 
+// ── Every CLI invocation a doc prints must actually run ───────────────────────
+//
+// The sibling gate above covers `/mindforge:` SLASH commands. This one covers the OTHER command
+// surface the docs use — `mindforge <verb>`, `node bin/mindforge-cli.js <verb>`,
+// `npx mindforge-cc <verb>` — which nothing checked. Written before the fixes, so the violations were
+// enumerated by measurement rather than recalled; it found five, including one a 14-agent audit of the
+// same surface had missed (`validate-config`, which turned out to be correctly documented as NOT a
+// subcommand — see the heading rule below).
+//
+// THE DEFECT it caught, verified by running each:
+//   docs/troubleshooting.md + docs/upgrade.md ×3   `npx mindforge-cc@latest install`
+//       Measured: exit 1, "Unknown argument: install — mindforge-cc takes flags only". The upgrade
+//       remedy in the troubleshooting guide could not be followed.
+//   CLAUDE.md                                      `node bin/mindforge-cli.js dashboard` — exits 1
+//   .mindforge/engine/autonomous/headless-adapter.md  `npx mindforge auto` in a "Typical GitHub Action
+//       setup" — `auto` is a slash command, never a CLI verb. Repointed to `headless`, which routes.
+//   .claude/commands/mindforge/{browse,qa}.md + their .agent mirrors — advertised `@mindforge <verb>`,
+//       a syntax that exists nowhere: 2 of 221 command files used it, the convention is
+//       `/mindforge:<name>`, and no code references it.
+//
+// SCOPE, and every exclusion is a reason rather than an omission:
+//   - ALL TRACKED .md/.js, not just shipped. docs/upgrade.md is unshipped yet holds 3 of the 5
+//     violations, and people read it on GitHub. The slash-command gate above scopes to shipped
+//     deliberately; that argument does not transfer, because a broken shell command is followable from
+//     a web page.
+//   - changelogs/ and RELEASENOTES: frozen historical records. Same exclusion, same reason as above.
+//   - docs/research/**: v12 PROPOSALS. They describe `mindforge doctor`, `mindforge skills add`,
+//     `mindforge context --disable` and `mindforge verify-audit` as things to BUILD. Forward-looking
+//     design is the mirror image of a historical record and equally wrong to rewrite.
+//   - MARKDOWN HEADINGS. `## \`node bin/mindforge-cli.js validate-config\` prints "Unknown command"` is
+//     a troubleshooting entry ABOUT a verb not existing, and its body says so correctly. A heading
+//     names a topic; only body text instructs. Excluding headings is what makes this gate need no
+//     allowlist — and an allowlist is what went stale in tests/protocol-claims.test.js's predecessor.
+//   - CODE CONTEXTS ONLY (inline spans and fenced blocks), and the bare `mindforge <verb>` form must
+//     START its span. Without the anchor, `marketplace mindforge entry (…)` inside an assertion
+//     message in this very suite matched, reporting the verb "entry".
+//
+// The verb set is DERIVED FROM SOURCE, never listed here: COMMANDS keys plus every inline
+// `COMMAND === '<verb>'` handler. `workflow` is exactly that second kind — routable, no table entry —
+// so a hardcoded list would have reported the project's most-documented working verb as broken.
+
+test('every CLI invocation printed in a doc names a verb the router will dispatch', () => {
+  const { execFileSync } = require('child_process');
+  const cliSrc = read('bin/mindforge-cli.js');
+  const tableStart = cliSrc.indexOf('const COMMANDS = {');
+  assert.ok(tableStart > 0, 'could not locate the COMMANDS table — this gate would cover nothing');
+  const table = cliSrc.slice(tableStart, cliSrc.indexOf('\n};', tableStart));
+
+  const verbs = new Set([...table.matchAll(/^ {2}'([a-z][a-z0-9-]*)':/gm)].map((m) => m[1]));
+  // Verbs handled inline, before the table lookup. Derived, not listed, so adding one cannot silently
+  // make this gate wrong in the direction of a false failure.
+  for (const m of cliSrc.matchAll(/COMMAND === '([a-z][a-z0-9-]*)'/g)) verbs.add(m[1]);
+  const flags = new Set(['version', 'V', 'help', 'h', 'verbose', 'v']);
+
+  // NON-VACUITY on the verb set: too few and everything looks broken, too many and nothing does.
+  assert.ok(verbs.size >= 20 && verbs.size <= 60,
+    `derived ${verbs.size} routable verbs, which is implausible — the COMMANDS table shape changed and `
+    + 'this gate is no longer measuring what it claims');
+  assert.ok(verbs.has('workflow'),
+    'the inline-handler scan found no `workflow` verb. It is routed at bin/mindforge-cli.js and is the '
+    + 'most-documented verb in the project, so losing it means this gate would flag correct docs');
+
+  const tracked = execFileSync('git', ['ls-files', '*.md', '*.js'],
+    { cwd: REPO_ROOT, encoding: 'utf8', maxBuffer: 1 << 28 })
+    .split('\n').filter(Boolean)
+    .filter((f) => !f.startsWith('changelogs/') && !/^RELEASENOTES/.test(f))
+    .filter((f) => !f.includes('node_modules/'))
+    .filter((f) => !f.startsWith('docs/research/'));
+
+  // NON-VACUITY on the corpus: an empty list would pass silently.
+  assert.ok(tracked.length >= 500,
+    `only ${tracked.length} tracked .md/.js file(s) found — git ls-files output shape changed, so this `
+    + 'check would cover almost nothing');
+
+  const PROSE = /^(?:is|are|and|the|to|for|with|as|a|an|in|on|of|it|its|has|was|does|will|can|from|by|npm|run|test|init|v\d.*)$/;
+  const PATTERNS = [
+    /\bnpx\s+mindforge-cc(?:@[\w.-]+)?\s+([a-z][a-z0-9-]*)/g,
+    /\bnode\s+\S*bin\/mindforge-cli\.js\s+([a-z][a-z0-9-]*)/g,
+    /^\s*(?:\$\s*)?mindforge\s+([a-z][a-z0-9-]*)/g,
+  ];
+
+  const broken = [];
+  for (const rel of tracked) {
+    const full = path.join(REPO_ROOT, rel);
+    if (!fs.existsSync(full)) continue;
+    const isJs = rel.endsWith('.js');
+    let fenced = false;
+    read(rel).split('\n').forEach((line, i) => {
+      if (/^\s*```/.test(line)) { fenced = !fenced; return; }
+      if (!fenced && /^\s{0,3}#{1,6}\s/.test(line)) return;      // a heading names a topic, not an action
+      // In .js, a COMMENT describes code; a STRING LITERAL instructs. The sibling gate scans .js
+      // precisely because shipped hooks inject the strings they PRINT into the agent's context — that
+      // text lives in literals, never in comments. Without this, the very block above documenting the
+      // five invocations this gate caught made the gate fail on itself, which is not an allowlist
+      // problem but a category error: a record of a past defect is not an instruction to repeat it.
+      // Same reasoning as the heading rule, and as excluding changelogs/.
+      if (isJs && /^\s*(?:\/\/|\/\*|\*)/.test(line)) return;
+      const spans = fenced ? [line] : [...line.matchAll(/`([^`]+)`/g)].map((m) => m[1]);
+      for (const span of spans) {
+        for (const pattern of PATTERNS) {
+          for (const m of span.matchAll(pattern)) {
+            const verb = m[1];
+            if (verbs.has(verb) || flags.has(verb) || PROSE.test(verb)) continue;
+            broken.push(`${rel}:${i + 1}  '${verb}'  in: ${span.trim().slice(0, 70)}`);
+          }
+        }
+      }
+    });
+  }
+  assert.deepStrictEqual([...new Set(broken)], [],
+    `${new Set(broken).size} documented CLI invocation(s) name a verb the router will not dispatch:\n  `
+    + `${[...new Set(broken)].join('\n  ')}\n`
+    + 'Run it before documenting it. Name a routable verb, the real script path, or the slash command.');
+});
+
+test('no doc advertises the @mindforge invocation form, which does not exist', () => {
+  // Two of 221 command files (browse, qa) declared `@mindforge <verb>` in BOTH their frontmatter
+  // `description` and their Usage line. It is not a real syntax: the convention is `/mindforge:<name>`
+  // (38 Usage lines use it), and the only `@mindforge` tokens in code are unrelated — a plugin spec
+  // (`mindforge@mindforge`) and `@mindforge/sdk`, itself a documented never-published defect.
+  //
+  // Kept separate from the gate above because the defect is the FORM, not the verb: `browse` and `qa`
+  // are real slash commands. The gate above happened to flag them for the wrong reason (they are not
+  // CLI verbs), so relying on it would have been a green-for-the-wrong-reason result.
+  const { execFileSync } = require('child_process');
+  const tracked = execFileSync('git', ['ls-files', '*.md'],
+    { cwd: REPO_ROOT, encoding: 'utf8', maxBuffer: 1 << 28 })
+    .split('\n').filter(Boolean)
+    .filter((f) => !f.startsWith('changelogs/') && !/^RELEASENOTES/.test(f) && !f.includes('node_modules/'));
+  assert.ok(tracked.length >= 500,
+    `only ${tracked.length} tracked .md file(s) — this check would cover almost nothing`);
+
+  const offenders = [];
+  for (const rel of tracked) {
+    if (!fs.existsSync(path.join(REPO_ROOT, rel))) continue;
+    read(rel).split('\n').forEach((line, i) => {
+      // `@mindforge` followed by a space and a word is the invocation shape. `mindforge@mindforge`
+      // (a plugin marketplace spec) and `@mindforge/sdk` (a package name) are deliberately not matched.
+      if (/(?:^|[^\w/@-])@mindforge\s+[a-z]/.test(line)) offenders.push(`${rel}:${i + 1}  ${line.trim().slice(0, 70)}`);
+    });
+  }
+  assert.deepStrictEqual(offenders, [],
+    `${offenders.length} line(s) advertise the @mindforge form, which invokes nothing:\n  `
+    + `${offenders.join('\n  ')}\n`
+    + 'Use `/mindforge:<name>` for a slash command, or the CLI form for a CLI verb.');
+});
+
 for (const claim of CLAIMS) {
   test(`${claim.file}: ${claim.what} matches reality`, () => {
     const text = read(claim.file);

@@ -10,7 +10,7 @@ v11.9.1 is a drop-in patch — restores 34 `wf-*` and other slash command files 
 
 ```bash
 # Upgrade via npx:
-npx mindforge-cc@latest install
+npx mindforge-cc@latest --claude --local
 
 # Verify:
 node bin/mindforge-cli.js --version   # should print 11.9.1
@@ -32,7 +32,7 @@ v11.8.3 is a drop-in patch — no breaking changes from v11.8.0 or later.
 
 ```bash
 # Upgrade via npx:
-npx mindforge-cc@latest install
+npx mindforge-cc@latest --claude --local
 
 # Verify:
 node bin/mindforge-cli.js --version   # should print 11.8.3
@@ -53,7 +53,7 @@ v11.8.0 added 20 new workflow scripts. No config migration required.
 Run `node bin/mindforge-cli.js health` after upgrade — it will flag any drift.
 
 ### If upgrading from v11.6.x or earlier
-Follow the v11.7.0 upgrade guide below, then re-run `npx mindforge-cc@latest install`.
+Follow the v11.7.0 upgrade guide below, then re-run `npx mindforge-cc@latest --claude --local`.
 
 ---
 
