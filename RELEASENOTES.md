@@ -1,5 +1,60 @@
 # Release Notes
 
+## v11.9.5 — 2026-08-22 — The release path can no longer strand itself, and the SDK ships
+
+### Why this release exists
+
+11.9.4 published two packages and then failed on the third, and that failure took the release
+page and the `stable` dist-tag with it:
+
+```
+success  Publish to npm                        <- mindforge-cc@11.9.4        (irreversible)
+success  Publish standalone MCP server to npm  <- mindforge-mcp-server@11.9.4 (irreversible)
+failure  Publish the SDK to npm                <- 422: "repository.url" is ""
+skipped  Create GitHub Release
+skipped  Point the stable dist-tag at this release
+```
+
+Two causes, both fixed here.
+
+**The metadata was only ever validated by the registry.** `sdk/package.json` had no
+`repository` field, and npm compares that field against the attestation **server-side at PUT**.
+`npm publish --dry-run` does not check it and nothing here read `repository` at all — so all six
+preflight gates passed on a manifest guaranteed to be rejected. There is now an offline gate in
+*preflight*, ahead of every publish, that discovers the provenance-publishing packages from the
+workflow itself. Run against a worktree at tag `v11.9.4` — the tree the registry rejected — it
+exits 1 and names the file. It would have stopped that release.
+
+**The step order let an optional package strand the release.** The SDK publish sat before the
+release page and the dist-tag move, so its failure skipped both. The same mode had already fired
+on v11.5.1 and v11.8.3. Reordered so the steps that *finish* a release run ahead of any additive
+package publish — which means this release moves `stable` forward even if a package fails again.
+
+### The user-visible part
+
+**`mindforge-sdk` publishes for the first time since 11.8.0, and for the first time with
+provenance.** Everything fixed in the SDK across 11.8.1–11.9.4 had reached nobody, including
+this: `WebSocketEventStream` scheduled a reconnect and nothing handled the returned promise, so
+a failed reconnect was an unhandled rejection — fatal under Node's default mode, **terminating
+the caller's process**. Every consumer on 11.8.0 still has that.
+
+### Also fixed
+
+- `bin/utils/readiness-gate.js` scored `RELEASENOTES.md` on existence while its changelog sibling
+  checked the version was *in* the file. That asymmetry is why both prose surfaces shipped stale
+  in 11.9.3 and again in 11.9.4. Both are now checked, anchored rather than by substring.
+  **Policy change:** every release from here needs an entry in this file.
+- `docs/sdk-reference.md` claimed `npx mindforge-cc@stable` installs the SDK "as part of the
+  framework". Measured false — the published package declares exactly `express` and `sql.js` and
+  ships no `sdk/`. Removed.
+
+### Note on 11.9.4
+
+It is complete, but was finished by hand: its GitHub Release was created at the existing tag from
+the registry's own tarball, verified against `dist.integrity` and both attestation bundles'
+subject digests. The `v11.9.4` tag was deliberately **not** moved, because two published
+packages' provenance attests to the commit it names.
+
 ## v11.9.4 — 2026-08-22 — Delivery: the gates register, the tarball matches its tag
 
 ### The headline

@@ -5,11 +5,11 @@
 # It runs headless, scoping all reads to CLAUDE_PROJECT_DIR (the mounted project).
 #
 # Pin MINDFORGE_MCP_VERSION at build time to the release you are publishing to the catalog:
-#   docker build --build-arg MINDFORGE_MCP_VERSION=11.9.4 -t mindforge-mcp .
+#   docker build --build-arg MINDFORGE_MCP_VERSION=11.9.5 -t mindforge-mcp .
 
 FROM node:22-bookworm-slim AS build
 
-ARG MINDFORGE_MCP_VERSION=11.9.4
+ARG MINDFORGE_MCP_VERSION=11.9.5
 
 WORKDIR /opt/mindforge
 RUN npm init -y >/dev/null 2>&1 \

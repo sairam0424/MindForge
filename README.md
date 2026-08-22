@@ -6,21 +6,24 @@
 
 ## Latest release
 
-**v11.9.4** (2026-08-22) — Delivery: the gates register, the tarball matches its tag. 11.9.3
-shipped the hook-registration code and then declined to run it: the installer skipped whenever any
-ancestor directory held a `.claude`, which on a machine that has ever run Claude Code means
-`~/.claude` — so essentially every install copied the enforcement in and wired none of it. Measured
-against the published 11.9.3 tarball: **11 hook scripts installed, 0 registered.** On 11.9.4, the
-same sandbox registers **8, with 3 deny-class hooks verified blocking** at install time. Also: the
-published tarball is now reproducible from its tag (11.9.3 shipped one untracked file), and the
-enforcement table below was corrected — it had been understating what ships.
+**v11.9.5** (2026-08-22) — The release path can no longer strand itself, and the SDK ships.
+11.9.4 published two packages and then failed on the third; because that step sat *before* the
+release page and the `stable` dist-tag move, its failure skipped both. Fixed two ways: the steps
+that finish a release now run ahead of any additive package publish, and a new offline preflight
+gate refuses to reach a publish that the registry will reject. Verified against a worktree at tag
+`v11.9.4` — the exact tree npm rejected — the gate exits 1 and names the file.
 
-**Contains a behaviour change under a patch bump**: the installer now writes
-`.claude/settings.json` on projects where it previously declined, merging append-only into any
-existing file and backing it up first. See the BREAKING section in
-[CHANGELOG.md](./CHANGELOG.md), or [RELEASENOTES.md](./RELEASENOTES.md) for human-readable notes.
+**`mindforge-sdk` publishes for the first time since 11.8.0, and for the first time with
+provenance.** Everything fixed in it across 11.8.1–11.9.4 had reached nobody, including a
+`WebSocketEventStream` reconnect whose unhandled rejection **terminates the caller's process**.
 
-`mindforge-sdk` did **not** publish in 11.9.4 and remains at 11.8.0 — see the changelog for why.
+The previous release, **v11.9.4**, is where the hook gates started actually registering: 11.9.3
+shipped the code and then declined to run it on essentially every project. Measured against the
+published tarballs — 11.9.3: **11 hook scripts installed, 0 registered**; 11.9.4: **8 registered,
+3 deny-class verified blocking**. That **behaviour change under a patch bump** still applies — the
+installer writes `.claude/settings.json` where it previously declined, merging append-only and
+backing up first. See the BREAKING section in [CHANGELOG.md](./CHANGELOG.md), or
+[RELEASENOTES.md](./RELEASENOTES.md) for human-readable notes.
 
 ---
 
