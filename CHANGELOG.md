@@ -1,5 +1,108 @@
 # Changelog
 
+## [11.9.5] — 2026-08-22 — The release path can no longer strand itself, and the SDK ships
+
+Patch release, and the shortest one in a while. It exists because 11.9.4 published two
+packages and then failed on the third, and that failure took the release page and the
+`stable` dist-tag with it. Both causes are fixed here, and one of them is the reason this
+release is worth cutting rather than waiting: **`mindforge-sdk` publishes for the first
+time in seven versions, with provenance.**
+
+### Fixed
+
+**A publish that cannot finish the release it started**
+
+- **`sdk/package.json` had no `repository` field.** npm's provenance verification compares
+  that field against the attestation **server-side, at PUT** — so the publish was rejected
+  with `422 Unprocessable Entity … "repository.url" is ""` *after* `mindforge-cc` and
+  `mindforge-mcp-server` had already published irreversibly. `npm publish --dry-run` does
+  not perform that comparison, and nothing in this repository read `repository` at all: all
+  six preflight gates passed on a manifest the registry was guaranteed to reject. The field
+  is added, matching the spelling the other two packages use.
+
+- **`scripts/ci/verify-provenance-metadata.js` makes that failure reachable before the
+  point of no return.** It runs in the release **preflight** job, ahead of every publish,
+  and it does not carry a list of packages: it discovers them from the workflow — every
+  step whose `run` contains both `npm publish` and `--provenance`, resolved through its
+  `working-directory` — so a fourth package is covered without editing the gate.
+  Discovering zero targets is a hard failure rather than a pass, on the principle that a
+  check which examined nothing must not report success.
+
+  Verified the only way that means anything: run against a git worktree at tag `v11.9.4` —
+  the exact tree that the registry rejected — it exits 1 and names `sdk/package.json` and
+  the missing field. It would have stopped that release before anything reached npm.
+
+- **The release steps were ordered so that an optional package could strand the release.**
+  The SDK publish sat *before* `Create GitHub Release` and the `stable` dist-tag move.
+  A failing step fails the job, so both were skipped — which is precisely the harm the
+  placement comment claimed to prevent. The same mode had already fired on **v11.5.1** and
+  **v11.8.3** from the MCP publish; v11.9.4 was its third occurrence.
+
+  Reordered to: `Publish to npm` → `Create GitHub Release` → `stable` dist-tag →
+  `mcp-server` → `sdk`. The rule now encoded in `tests/action-pinning.test.js`: **no step
+  whose failure leaves no residue may be able to skip a step that finishes an irreversible
+  one.** That test previously asserted the opposite and had to be inverted in the same
+  commit — because `Run Full Test Suite` is the release job's first step, a reorder shipped
+  alone would have failed the release at its own gate.
+
+  The two finishers carry guards on their own inputs rather than a bare `!cancelled()`,
+  which would publish a release with a 0-byte body and an unmatched `.tgz` glob when
+  `Build Package` fails — the `bodyBytes=0` defect already seen on v11.9.0, .1 and .2. And
+  deliberately not `continue-on-error`: a tolerated failure makes the run conclude
+  **green**, which is the blindness that let the SDK sit seven versions behind, unattested,
+  with nothing noticing.
+
+**Prose surfaces that shipped stale twice running**
+
+- `bin/utils/readiness-gate.js` scored `RELEASENOTES.md` on `fileExists` while its
+  changelog sibling three lines away checked that the version appeared *in* the file. That
+  asymmetry is why the immutable 11.9.3 tarball's README said "Latest release v11.9.2" and
+  the immutable 11.9.4 tarball shipped with no 11.9.4 entry at all — while `README.md`
+  offers that file as the human-readable route to the BREAKING notes. Both are now checked,
+  anchored rather than by substring (`includes('11.9.4')` is also satisfied by
+  `## v11.9.40`).
+
+  **Policy change, stated plainly:** every release from here needs a `RELEASENOTES.md`
+  entry. Six published 11.x versions do not have one, so that file has been curated rather
+  than exhaustive; the gate only ever looks for the version being released, so those gaps
+  are unaffected.
+
+- README's `## Latest release` is deliberately gated by a **test** rather than written by
+  `sync-version.js`. Auto-bumping the version token onto the previous release's paragraph
+  produces the right number attached to the wrong description — a better-disguised
+  falsehood than a visibly stale one.
+
+- `docs/sdk-reference.md` offered `npx mindforge-cc@stable` as a way to get the SDK
+  "as part of the framework". Measured false: the published package declares exactly
+  `express` and `sql.js` and ships no `sdk/` directory. Removed.
+
+### Added
+
+- **`mindforge-sdk` is published, with provenance** — its first release since 11.8.0 and
+  its first ever attested one. This is not cosmetic. Everything fixed in the SDK across
+  11.8.1–11.9.4 reached nobody, including the one that matters most:
+  `WebSocketEventStream` scheduled a reconnect with `setTimeout(() => this.connect(), …)`
+  and nothing handled the returned promise, so a failed reconnect was an unhandled
+  rejection — fatal under Node's default mode, **terminating the caller's process**. Every
+  consumer on 11.8.0 still has that. (#191)
+
+- `npm run provenance:check` — the gate above, runnable offline.
+
+### Notes for operators
+
+- 11.9.4 is complete but was finished by hand: its GitHub Release was created at the
+  existing tag from the registry's own tarball (verified against `dist.integrity` and both
+  attestation bundles' subject digests), and the `v11.9.4` tag was deliberately **not**
+  moved, because two published packages' provenance attests to the commit it names.
+- The `stable` dist-tag lagged at 11.9.3 between the two releases. Because the dist-tag
+  step now runs *ahead* of both additive publishes, this release moves it forward even if a
+  package publish fails again.
+- Still outstanding, and requiring repository settings rather than code: there is no `v*`
+  **tag ruleset** restricting who may create the ref that triggers publishing, and
+  `NPM_TOKEN` remains a long-lived repository secret with no GitHub environment in front of
+  it. Create the environment *first* — adding `environment:` while none exists publishes
+  exactly as before while looking like a gate.
+
 ## [11.9.4] — 2026-08-22 — Delivery: the gates register, the tarball matches its tag
 
 Patch release. 11.9.3 argued that an instrument must not report success while doing

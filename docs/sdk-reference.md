@@ -14,11 +14,11 @@ import {
 } from 'mindforge-sdk';
 ```
 
-Current SDK version: `11.9.4`
+Current SDK version: `11.9.5`
 
 ---
 
-## SDK Exports (v11.9.4)
+## SDK Exports (v11.9.5)
 
 ```javascript
 const {
@@ -28,7 +28,7 @@ const {
   commands,               // Command registry
   batch,                  // Batch execution
   MindForgeMemory,        // Memory interface
-  VERSION                 // '11.9.4'
+  VERSION                 // '11.9.5'
 } = require('mindforge-sdk');
 // or: import { MindForgeClient, VERSION } from 'mindforge-sdk';
 ```
@@ -426,10 +426,11 @@ npm install mindforge-sdk
 > offered `npx mindforge-cc@stable` as a way to get the SDK "as part of the framework"; that was
 > false and has been removed.
 >
-> The release workflow now has an `sdk` publish step, but its first run (v11.9.4) was rejected by
-> the registry — `sdk/package.json` carried no `repository` field, which npm's provenance check
-> validates server-side at publish time. So the latest published SDK is still **11.8.0**
-> (`npm view mindforge-sdk version`) while `sdk/package.json` tracks the monorepo, because
-> `scripts/sync-version.js` rewrites it to the canonical version. The field is fixed and the SDK's
-> first attested release will be the next one. Install it unpinned, as above; pinning it to a
-> framework version yields `E404 No match found for version …`.
+> The release workflow publishes the SDK as of 11.9.5, with provenance. Its first attempt
+> (v11.9.4) was rejected by the registry — `sdk/package.json` carried no `repository` field, which
+> npm's provenance check validates server-side at publish time — so **versions 11.8.1 through
+> 11.9.4 do not exist on npm** and never will. Check what is actually published with
+> `npm view mindforge-sdk version` rather than assuming it matches the framework: the version in
+> `sdk/package.json` tracks the monorepo because `scripts/sync-version.js` rewrites it, whether or
+> not that version reached the registry. Install it unpinned, as above; pinning it to a framework
+> version that was never published yields `E404 No match found for version …`.
