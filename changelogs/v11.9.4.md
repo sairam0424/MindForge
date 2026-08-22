@@ -1,6 +1,6 @@
 # Changelog
 
-## [11.9.4] — 2026-08-22 — Delivery: the gates register, the tarball matches its tag, three packages attested
+## [11.9.4] — 2026-08-22 — Delivery: the gates register, the tarball matches its tag
 
 Patch release. 11.9.3 argued that an instrument must not report success while doing
 nothing. 11.9.4 is what an adversarial audit of the **published** 11.9.3 artifact found
@@ -71,13 +71,36 @@ not from reading the repository. That distinction is the whole content of this r
   exactly this reason, and the manifest's entire content is the sync record *for that
   already-excluded file*. (#225)
 
-- **`mindforge-sdk` is published again, with provenance.** It sat at **11.8.0** on npm
-  while `sync-version.js` kept `sdk/package.json` at canonical — seven releases of
-  disagreement (11.8.1 through 11.9.3, none published) that nothing detected, because
-  `version:check` verifies the tracked file and not what the registry serves. It was also
-  the only one of the three packages with **no attestation**. The release workflow now
-  publishes it with `--provenance`, after the two proven publishes and before the GitHub
-  Release, so the newest step cannot cost the others their artifacts.
+- **`mindforge-sdk` was NOT published in this release. It remains at 11.8.0.** This entry
+  originally claimed it shipped with provenance; that claim was false and is corrected here
+  rather than quietly deleted, because a release arguing for measured claims does not get to
+  misstate a supply-chain property.
+
+  What happened: the SDK sat at **11.8.0** on npm while `sync-version.js` kept
+  `sdk/package.json` at canonical — seven releases of disagreement (11.8.1 through 11.9.3,
+  none published) that nothing detected, because `version:check` verifies the tracked file
+  and not what the registry serves. It was also the only one of the three packages with **no
+  attestation**. A publish step was added for it, and the registry rejected it:
+
+  ```
+  npm error 422 Unprocessable Entity - PUT https://registry.npmjs.org/mindforge-sdk
+    Error verifying sigstore provenance bundle: Failed to validate repository information:
+    package.json: "repository.url" is "", expected to match
+    "https://github.com/sairam0424/MindForge" from provenance
+  ```
+
+  `sdk/package.json` carried no `repository` field. The other two packages both do, which is
+  exactly why they published and it did not. That field is validated **registry-side at PUT**,
+  after two irreversible publishes have already succeeded — `npm publish --dry-run` does not
+  check it and neither did any gate here. Both are fixed for 11.9.5: the field, and an offline
+  preflight gate that refuses to reach a publish without it.
+
+  The step was also badly placed. It ran **before** `Create GitHub Release` and the `stable`
+  dist-tag move, so its failure skipped both — which is the precise harm the placement comment
+  claimed to prevent. `mindforge-cc@11.9.4` and `mindforge-mcp-server@11.9.4` published
+  correctly with provenance attesting commit 353e8d41; the release page and the `stable` tag
+  were completed by hand afterwards. The finishing steps now run ahead of the additive
+  publishes, so no optional package can strand a release again.
 
 - **The Homebrew formula carries the real 11.9.3 digest.** Verified against an independent
   measurement rather than the tool's own output, and explicitly confirmed not to be the

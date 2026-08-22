@@ -1,5 +1,129 @@
 # Release Notes
 
+## v11.9.5 — 2026-08-22 — The release path can no longer strand itself, and the SDK ships
+
+### Why this release exists
+
+11.9.4 published two packages and then failed on the third, and that failure took the release
+page and the `stable` dist-tag with it:
+
+```
+success  Publish to npm                        <- mindforge-cc@11.9.4        (irreversible)
+success  Publish standalone MCP server to npm  <- mindforge-mcp-server@11.9.4 (irreversible)
+failure  Publish the SDK to npm                <- 422: "repository.url" is ""
+skipped  Create GitHub Release
+skipped  Point the stable dist-tag at this release
+```
+
+Two causes, both fixed here.
+
+**The metadata was only ever validated by the registry.** `sdk/package.json` had no
+`repository` field, and npm compares that field against the attestation **server-side at PUT**.
+`npm publish --dry-run` does not check it and nothing here read `repository` at all — so all six
+preflight gates passed on a manifest guaranteed to be rejected. There is now an offline gate in
+*preflight*, ahead of every publish, that discovers the provenance-publishing packages from the
+workflow itself. Run against a worktree at tag `v11.9.4` — the tree the registry rejected — it
+exits 1 and names the file. It would have stopped that release.
+
+**The step order let an optional package strand the release.** The SDK publish sat before the
+release page and the dist-tag move, so its failure skipped both. The same mode had already fired
+on v11.5.1 and v11.8.3. Reordered so the steps that *finish* a release run ahead of any additive
+package publish — which means this release moves `stable` forward even if a package fails again.
+
+### The user-visible part
+
+**`mindforge-sdk` publishes for the first time since 11.8.0, and for the first time with
+provenance.** Everything fixed in the SDK across 11.8.1–11.9.4 had reached nobody, including
+this: `WebSocketEventStream` scheduled a reconnect and nothing handled the returned promise, so
+a failed reconnect was an unhandled rejection — fatal under Node's default mode, **terminating
+the caller's process**. Every consumer on 11.8.0 still has that.
+
+### Also fixed
+
+- `bin/utils/readiness-gate.js` scored `RELEASENOTES.md` on existence while its changelog sibling
+  checked the version was *in* the file. That asymmetry is why both prose surfaces shipped stale
+  in 11.9.3 and again in 11.9.4. Both are now checked, anchored rather than by substring.
+  **Policy change:** every release from here needs an entry in this file.
+- `docs/sdk-reference.md` claimed `npx mindforge-cc@stable` installs the SDK "as part of the
+  framework". Measured false — the published package declares exactly `express` and `sql.js` and
+  ships no `sdk/`. Removed.
+
+### Note on 11.9.4
+
+It is complete, but was finished by hand: its GitHub Release was created at the existing tag from
+the registry's own tarball, verified against `dist.integrity` and both attestation bundles'
+subject digests. The `v11.9.4` tag was deliberately **not** moved, because two published
+packages' provenance attests to the commit it names.
+
+## v11.9.4 — 2026-08-22 — Delivery: the gates register, the tarball matches its tag
+
+### The headline
+
+**11.9.3 shipped the hook-registration code and then declined to run it.** The installer skipped
+whenever any ancestor directory contained a `.claude`. On a machine that has ever run Claude Code
+that means `~/.claude`, so essentially every install copied the enforcement in and wired none of it.
+
+Measured against the published tarballs in a confined sandbox, with `~/.claude` as the only ancestor:
+
+```
+11.9.3:  11 hook scripts installed, 0 registered, no settings.json written
+11.9.4:   8 registered, preflight executed 7 of 8, 3 deny-class verified blocking
+```
+
+The reason the installer printed was wrong three separate ways:
+
+1. `~/.claude/settings.json` is the **user tier**, applied in addition to the project tier. Its
+   existence says nothing about whether a project file is read — so the condition that suppressed
+   the gates was satisfied by an ordinary laptop.
+2. For a real project ancestor the claim is false too: that file is not read either. Proved with a
+   marker hook two levels up that never fired across a dozen tool calls. Skipping did not deliver
+   the gates elsewhere; it delivered them nowhere.
+3. The git-boundary guard was dead code, which is why the walk reached `$HOME` at all.
+
+It now warns and registers anyway. A registration that turns out inert costs nothing; a skip is
+guaranteed inert.
+
+### ⚠️ Behaviour change under a patch bump
+
+The installer now writes `.claude/settings.json` on projects where it previously declined — for most
+users, **0 registered hooks becomes 8**, three of which can block a tool call. It merges append-only
+into any existing file, backs the previous one up under `.mindforge/backups/`, and records exactly
+what it did in `.mindforge/hook-registration.json`.
+
+A registered hook is only *live* if the harness has been **restarted** (hooks are snapshotted at
+session start), the project is **trusted** in the harness, and `CLAUDE_PROJECT_DIR` is set with
+`node` on the hook PATH. See *Hooks are installed but nothing is blocked* in
+`docs/troubleshooting.md`.
+
+### Fixes
+
+- The installer's only failure-path pointer led nowhere: it said "see `docs/troubleshooting.md`",
+  where the word *hook* appeared **0** times. That section now exists.
+- The published tarball was not reproducible from its own tag. `.mindforge/memory/sync-manifest.json`
+  — gitignored, written at runtime — was **1 of 1979** shipped files not tracked at `v11.9.3`, so
+  provenance attested to a tree containing a file the repository does not contain.
+- The README understated the product: it still said **no channel registers hooks** and that the
+  plugin dispatcher crashes on every fire. Measured: 14 of 14 plugin path tokens resolve and two
+  deny-class hooks return exit 2. A document that under-claims a security capability is the same
+  defect as one that over-claims it.
+- Defects an 8-agent audit found in the *published* 11.9.3: an empty release page, a shipped CI
+  snippet telling users to `npx` a package we do not own, and a version-source gate that missed a
+  live defect twice.
+- The Homebrew formula carries the real 11.9.3 digest, verified against an independent measurement.
+
+### Known issue in this release
+
+**`mindforge-sdk` did not publish and remains at 11.8.0.** A publish step was added for it and the
+registry rejected it with 422: `sdk/package.json` carried no `repository` field, which npm's
+provenance verification validates **server-side at publish time** — `npm publish --dry-run` does not
+check it, and no gate here did either.
+
+Worse, the step was placed *before* the release-page and dist-tag steps, so its failure skipped
+both. `mindforge-cc@11.9.4` and `mindforge-mcp-server@11.9.4` published correctly with provenance;
+the release page and the `stable` tag were completed by hand afterwards. Both causes are fixed for
+the next release: the missing field, an offline preflight gate that refuses to reach a publish
+without it, and a reordering so the steps that finish a release run ahead of any optional package.
+
 ## v11.9.3 — 2026-08-21 — Honesty: gates that can fail, commands that run, a release path that is checked
 
 ### What's New

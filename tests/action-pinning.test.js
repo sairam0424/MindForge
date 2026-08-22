@@ -516,18 +516,74 @@ test('all three published packages publish with provenance, and the newest one c
     'the SDK publish does not check npm for the version first, so re-running a partially-failed '
     + 'release fails on a package that is already published correctly.');
 
-  // ORDERING IS LOAD-BEARING. The two proven publishes must precede the newest, least-exercised one,
-  // and the GitHub Release (notes + .tgz asset) must come after all three — so a failure in the newest
-  // step cannot deny the release its artifacts for packages that already reached npm irreversibly.
-  const iCc  = rel.indexOf('name: Publish to npm');
-  const iMcp = rel.indexOf('name: Publish standalone MCP server to npm');
-  const iSdk = rel.indexOf('name: Publish the SDK to npm');
-  const iRel = rel.indexOf('name: Create GitHub Release');
-  assert.ok(iCc > 0 && iMcp > 0 && iSdk > 0 && iRel > 0, 'a publish or release step was renamed');
+  // ORDERING IS LOAD-BEARING, AND THIS ASSERTION USED TO HAVE IT BACKWARDS.
+  //
+  // It required `iSdk < iRel` and justified that with "Create GitHub Release must come after every
+  // publish, or a publish failure leaves npm updated irreversibly and the release page without its
+  // notes or .tgz." That is a description of what the required ordering CAUSES, not prevents. A failing
+  // step fails the job, so every later step is skipped — which is exactly what happened on run
+  // 32519231452 for v11.9.4: the SDK publish returned E422, and `Create GitHub Release` and the
+  // `stable` dist-tag move were both SKIPPED, after mindforge-cc and mindforge-mcp-server had already
+  // published irreversibly. `stable` stayed on 11.9.3 — the build that registers 0 hooks — and there
+  // was no release page. The same failure mode had already fired on v11.5.1 and v11.8.3 from the MCP
+  // publish; this was its third occurrence.
+  //
+  // THE PRINCIPLE, which is what these assertions now encode: no step whose failure leaves no residue
+  // may be able to skip a step that FINISHES an irreversible one. The two finishers (release page,
+  // dist-tag) complete the primary publish. The two additive package publishes are retryable and
+  // therefore go last.
+  const iCc   = rel.indexOf('name: Publish to npm');
+  const iMcp  = rel.indexOf('name: Publish standalone MCP server to npm');
+  const iSdk  = rel.indexOf('name: Publish the SDK to npm');
+  const iRel  = rel.indexOf('name: Create GitHub Release');
+  const iDist = rel.indexOf('name: Point the stable dist-tag at this release');
+  assert.ok(iCc > 0 && iMcp > 0 && iSdk > 0 && iRel > 0 && iDist > 0,
+    'a publish, release or dist-tag step was renamed');
+
+  assert.ok(iCc < iRel && iRel < iDist,
+    'the finishers must follow the primary publish in order: Publish to npm -> Create GitHub Release '
+    + '-> stable dist-tag. The release page and the dist-tag are what COMPLETE that publish.');
+  assert.ok(iMcp > iDist && iSdk > iDist,
+    'an additive package publish (mcp-server, sdk) is ordered BEFORE a finisher. Both are retryable and '
+    + 'neither is required for mindforge-cc to be usable, so a failure in either must not skip the '
+    + 'release page or the dist-tag move. This is the v11.9.4 defect; do not reintroduce it.');
   assert.ok(iCc < iMcp && iMcp < iSdk,
-    'the SDK publish must come after the two packages that have shipped for releases, not before — it '
-    + 'is the newest step here and must not be able to abort the run ahead of them.');
-  assert.ok(iSdk < iRel,
-    'Create GitHub Release must come after every publish, or a publish failure leaves npm updated '
-    + 'irreversibly and the release page without its notes or .tgz.');
+    'the primary publish must still precede both additive ones, and the newest, least-exercised step '
+    + '(sdk) must be last.');
+
+  // THE GUARDS, and specifically that they are not BARE. `!cancelled()` alone would let the release
+  // publish with a 0-byte body and an unmatched .tgz glob when Build Package fails — the bodyBytes=0
+  // defect already seen on v11.9.0/1/2 — so each finisher must also test its own inputs. Conditioning
+  // on `already_published` as well as `cc_publish` is what keeps the re-run path working, where the
+  // publish step's outcome is 'skipped' rather than 'success'.
+  // Each window is bounded by the NEXT step, not by a character count. A fixed-width slice was the
+  // first version and it was self-satisfying: 700 characters from `Create GitHub Release` ran past the
+  // end of that step and into the dist-tag step's guard, so stripping the first finisher's guard
+  // entirely left this test GREEN — it was reading the other step's guard. Caught by falsification.
+  const stepBody = (idx) => {
+    const after = rel.slice(idx);
+    const next = after.indexOf('\n      - name: ');
+    return next === -1 ? after : after.slice(0, next);
+  };
+  for (const [name, idx] of [['Create GitHub Release', iRel], ['Point the stable dist-tag', iDist]]) {
+    const guard = stepBody(idx);
+    assert.match(guard, /!cancelled\(\)/,
+      `${name} has no !cancelled() guard, so a failure in any earlier step skips it even when its own `
+      + 'inputs are fine.');
+    assert.match(guard, /steps\.pack\.outcome/,
+      `${name}'s guard does not check that Build Package succeeded. A bare guard here publishes a `
+      + 'release whose .tgz glob matches nothing.');
+    assert.match(guard, /steps\.changelog\.outcome/,
+      `${name}'s guard does not check that Generate CHANGELOG succeeded, so it can publish a 0-byte body.`);
+    assert.match(guard, /already_published|cc_publish\.outcome/,
+      `${name}'s guard does not tie itself to the primary publish, so it would finish a release for a `
+      + 'package that never reached npm.');
+  }
+
+  // continue-on-error is the wrong tool here and must stay absent: a tolerated failure reports the whole
+  // run GREEN, which is how the SDK sat seven releases behind, unattested, with nothing noticing.
+  assert.doesNotMatch(rel, /continue-on-error/,
+    'continue-on-error appeared in the release workflow. A tolerated failure makes the run conclude '
+    + 'success, so the next unpublished package or unmoved dist-tag would be invisible. Use an explicit '
+    + '`if:` guard, which lets later steps run while still failing the job.');
 });

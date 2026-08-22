@@ -1,6 +1,6 @@
 {
   "name": "mindforge-sdk",
-  "version": "11.9.4",
+  "version": "11.9.5",
   "description": "MindForge SDK — Programmatic API for embedding MindForge in tools",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -32,6 +32,11 @@
     "sdk"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sairam0424/MindForge.git",
+    "directory": "sdk"
+  },
   "publishConfig": {
     "access": "public"
   },

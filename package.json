@@ -1,6 +1,6 @@
 {
   "name": "mindforge-cc",
-  "version": "11.9.4",
+  "version": "11.9.5",
   "description": "MindForge — Sovereign Agentic Intelligence Framework. Sovereign Stability: Production-Hardened Agentic Intelligence (v11)",
   "bin": {
     "mindforge-cc": "bin/install.js",
@@ -68,6 +68,7 @@
     "harness:compliance": "node bin/installer/harness-adapter-compliance.js --check",
     "release:ready": "node bin/utils/readiness-gate.js release",
     "version:check": "node scripts/sync-version.js --check",
+    "provenance:check": "node scripts/ci/verify-provenance-metadata.js",
     "validate:assets": "node scripts/ci/validate-assets.js",
     "eval:retrieval": "node bin/eval/eval-harness.js --set golden-set-retrieval.json --min-recall 0.55",
     "commit": "cz",

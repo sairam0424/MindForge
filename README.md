@@ -6,14 +6,24 @@
 
 ## Latest release
 
-**v11.9.3** (2026-08-21) — Honesty: gates that can fail, commands that run, a release path that is
-checked. Twenty-one fixes sharing one defect — an instrument reporting success while doing nothing:
-a self-install that printed "skipping" and overwrote 149 tracked files, 11 of 27 routed CLI verbs
-dying on `MODULE_NOT_FOUND` in a real install, `--fetch-sha` hashing npm's 404 body into the Homebrew
-formula, no version channel covering any document a user receives, and a publish path no check ever
-touched. **Contains behaviour changes under a patch bump** — several fixed bugs whose correct
-behaviour differs from what shipped. See the BREAKING section in
-[CHANGELOG.md](./CHANGELOG.md), or [RELEASENOTES.md](./RELEASENOTES.md) for human-readable notes.
+**v11.9.5** (2026-08-22) — The release path can no longer strand itself, and the SDK ships.
+11.9.4 published two packages and then failed on the third; because that step sat *before* the
+release page and the `stable` dist-tag move, its failure skipped both. Fixed two ways: the steps
+that finish a release now run ahead of any additive package publish, and a new offline preflight
+gate refuses to reach a publish that the registry will reject. Verified against a worktree at tag
+`v11.9.4` — the exact tree npm rejected — the gate exits 1 and names the file.
+
+**`mindforge-sdk` publishes for the first time since 11.8.0, and for the first time with
+provenance.** Everything fixed in it across 11.8.1–11.9.4 had reached nobody, including a
+`WebSocketEventStream` reconnect whose unhandled rejection **terminates the caller's process**.
+
+The previous release, **v11.9.4**, is where the hook gates started actually registering: 11.9.3
+shipped the code and then declined to run it on essentially every project. Measured against the
+published tarballs — 11.9.3: **11 hook scripts installed, 0 registered**; 11.9.4: **8 registered,
+3 deny-class verified blocking**. That **behaviour change under a patch bump** still applies — the
+installer writes `.claude/settings.json` where it previously declined, merging append-only and
+backing up first. See the BREAKING section in [CHANGELOG.md](./CHANGELOG.md), or
+[RELEASENOTES.md](./RELEASENOTES.md) for human-readable notes.
 
 ---
 
@@ -22,8 +32,9 @@ behaviour differs from what shipped. See the BREAKING section in
 Read this before the install instructions. MindForge ships a large corpus of agent
 instructions — commands, skills, personas, protocols — and those are advisory: they work by
 being in the model's context, and a model can decline them. The parts that would *block* an
-action are hooks. Through 11.9.2 **no channel registered them**; as of 11.9.3 both channels
-register and execute them **on Claude Code**, and nowhere else.
+action are hooks. Through 11.9.2 **no channel registered them.** 11.9.3 added the registration code
+but it declined to run on almost every project, so in practice nothing was enforced there either.
+**As of 11.9.4** both channels register and execute them **on Claude Code**, and nowhere else.
 
 | Capability | Plugin channel | `npx` channel |
 |---|---|---|

@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-MindForge v11.9.4 is an agentic intelligence framework distributed as the `mindforge-cc` npm package. Two package roots:
+MindForge v11.9.5 is an agentic intelligence framework distributed as the `mindforge-cc` npm package. Two package roots:
 
 - **Root (`/`)** — CLI + framework. Two bin entries: `mindforge-cc` (installer, `bin/install.js`) and `mindforge` (CLI, `bin/mindforge-cli.js`). The `bin/` runtime layer (~22K LOC) is organized by domain: `governance/` (audit hash-chain), `autonomous/` (wave executor, auto-runner), `engine/` (council runtime, nexus tracer, verification runner, OTel exporter), `models/` (provider clients + pricing registry), `memory/` (knowledge graph, sql.js vector hub, RRF fusion), `security/` (trust boundaries), `eval/` (recall@k, nDCG), `hooks/`, `utils/`, `wizard/`.
 - **`sdk/`** — TypeScript SDK (`mindforge-sdk`), own `tsconfig.json` (strict). `tsc` compiles `src/` → `dist/`. Own tests (`cd sdk && npm test`).
@@ -11,7 +11,7 @@ Cross-cutting systems worth understanding before editing:
 
 - **Audit hash-chain** — `bin/governance/audit-hash.js` is the single canonical SHA-256 hasher used by both `bin/autonomous/audit-writer.js` and `bin/governance/audit-verifier.js` (note: writer lives under `autonomous/`, verifier under `governance/`); `.planning/AUDIT.jsonl` is tamper-evident via `previous_hash` linkage. Verify with `node bin/verify-audit.js` (fail-closed, exit 1 on break).
 - **Pricing registry** — `bin/models/pricing-registry.js` is the single source of truth; all three providers call `priceCall()`. Never hardcode per-model prices in providers.
-- **Other roots:** `.mindforge/` (engine configs, 232 skills, personas, governance), `.agent/` (9 hooks — 8 registered, 221 workflows, `CLAUDE.md` protocols), `.planning/` (STATE.md, ROADMAP.md, audit), `docs/`, `examples/`, `tests/` (134 `*.test.js`).
+- **Other roots:** `.mindforge/` (engine configs, 232 skills, personas, governance), `.agent/` (9 hooks — 8 registered, 221 workflows, `CLAUDE.md` protocols), `.planning/` (STATE.md, ROADMAP.md, audit), `docs/`, `examples/`, `tests/` (135 `*.test.js`).
 
 ## Build, Test, and Development Commands
 
