@@ -233,3 +233,5 @@ See `.mindforge/production/token-optimiser.md`.
 ## License
 
 MIT © 2026 MindForge Team
+
+<!-- ci-baseline-check: no-op -->
