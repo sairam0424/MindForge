@@ -45,8 +45,37 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         run: |
-          # Auto-detect: use explicit input, then fall back to credential presence
-          if [ "$LLM_PROVIDER" = "bedrock" ] || { [ -z "$ANTHROPIC_API_KEY" ] && [ -n "$AWS_ACCESS_KEY_ID" ]; }; then
+          # Auto-detect: use explicit input, then fall back to credential presence.
+          #
+          # BUG FIXED HERE. `llm_provider` defaults to 'bedrock' (see the `on.workflow_call.inputs`
+          # block above) and control-plane.yml's ai-review job calls this workflow without ever
+          # overriding that input. That meant `[ "$LLM_PROVIDER" = "bedrock" ]` was ALWAYS true,
+          # short-circuiting the `||` before the credential check on the right ever ran — the
+          # "fall back to credential presence" this comment promises was dead code. The
+          # "Skip — no LLM credentials" step further down was consequently unreachable in practice:
+          # this branch always won and always claimed "provider=bedrock" whether or not
+          # AWS_ACCESS_KEY_ID actually had a value.
+          #
+          # That was latent for every PR, but only VISIBLE on ones where secrets are absent.
+          # GitHub does not pass repository Actions secrets (AWS_ACCESS_KEY_ID etc.) to workflow
+          # runs triggered by a pull_request event where the actor is dependabot[bot] — a GitHub
+          # security feature, not a misconfiguration, and it affects every repo this way. On those
+          # runs AWS_ACCESS_KEY_ID is empty, so this step still picked "bedrock" and the next step
+          # failed with "Bedrock Converse error: Could not load credentials from any providers" —
+          # observed on PRs #234-#239 (2026-08-26), all six Dependabot security-remediation PRs.
+          # bin/mindforge-cli.js security-scan (a separate, non-LLM, required gate that runs in
+          # control-plane.yml's governance-gate job on every PR including these) already ran and
+          # passed on all of them; only this LLM-credential-detection bug was wrong.
+          #
+          # Requiring AWS_ACCESS_KEY_ID to actually be present before selecting bedrock makes the
+          # credential check real again, and gets this job to the pre-existing, already-written
+          # "Skip — no LLM credentials" path instead of attempting (and failing) a Bedrock call
+          # with no credentials. This isn't a Dependabot-specific carve-out — it applies identically
+          # to any PR (fork, human, or bot) that runs without LLM credentials configured, matching
+          # the sibling workflow's already-documented, already-tested policy that AI review is
+          # advisory and "not present on this repo (and never on fork/dependabot PRs)" per
+          # .github/workflows/mindforge-ai-review.yml.
+          if [ -n "$AWS_ACCESS_KEY_ID" ] && { [ "$LLM_PROVIDER" = "bedrock" ] || [ -z "$ANTHROPIC_API_KEY" ]; }; then
             echo "provider=bedrock" >> "$GITHUB_OUTPUT"
             echo "::notice::Using AWS Bedrock (us.anthropic.claude-sonnet-4-6)"
           elif [ -n "$ANTHROPIC_API_KEY" ]; then
@@ -54,11 +83,17 @@ jobs:
             echo "::notice::Using Anthropic direct API"
           else
             echo "provider=none" >> "$GITHUB_OUTPUT"
-            echo "::warning::No LLM credentials found — set ANTHROPIC_API_KEY or AWS Bedrock secrets"
+            echo "::warning::No LLM credentials found — set ANTHROPIC_API_KEY or AWS Bedrock secrets. This is expected, and non-blocking, for Dependabot/fork PRs: GitHub never grants them repository secrets."
           fi
 
       - name: Cross-Model Review (Bedrock)
         if: steps.detect_provider.outputs.provider == 'bedrock'
+        # Advisory, not a merge gate — matches mindforge-ai-review.yml's already-tested policy
+        # (tests/ci-gates-wired.test.js) that a cross-model review failure must not red the PR.
+        # This is the safety net for cases the detect_provider fix above doesn't catch: a
+        # transient Bedrock outage, an expired/rotated key, or a throttled request should still
+        # surface as a visible warning annotation in the log, not a required-looking red X.
+        continue-on-error: true
         env:
           MINDFORGE_LLM_PROVIDER: bedrock
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -78,6 +113,8 @@ jobs:
 
       - name: Cross-Model Review (Anthropic)
         if: steps.detect_provider.outputs.provider == 'anthropic'
+        # Same rationale as the Bedrock step above: advisory, not a merge gate.
+        continue-on-error: true
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -101,6 +138,10 @@ jobs:
 
       - name: Publish Review Comment
         if: github.event_name == 'pull_request'
+        # GitHub also caps GITHUB_TOKEN to read-only on pull_request runs authored by
+        # dependabot[bot], regardless of the `permissions:` block above. createComment would
+        # 403 there; that must not fail an otherwise-advisory job either.
+        continue-on-error: true
         uses: actions/github-script@v9
         with:
           script: |
