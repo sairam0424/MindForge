@@ -11,21 +11,21 @@
  *  - projectRoot = CLAUDE_PROJECT_DIR (the user's working dir, where .mindforge/ and
  *    .planning/ live), NOT the ephemeral plugin cache. The MCP server only needs
  *    ${CLAUDE_PLUGIN_DATA} for its own state, which it currently does not use.
- *  - Tool surface: 6 read-only tools + 1 guarded write (mindforge_memory_remember),
- *    annotated honestly (readOnlyHint/destructiveHint) for the third-party-plugin
- *    trust boundary.
+ *  - Tool surface: 6 read-only tools + 1 guarded write (mindforge_memory_remember) +
+ *    1 guarded, open-world browse proxy (mindforge_browse, added to expose the existing
+ *    /mindforge:browse Playwright daemon to any MCP host), annotated honestly
  *  - Every tool degrades gracefully when MindForge is not initialized in the project
  *    (returns an actionable message rather than throwing), since a plugin user may
  *    not have run the npx installer or /mindforge:init-project.
  */
-'use strict';
+"use strict";
 
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { z } from 'zod';
-import { MindForgeMemory, type KnowledgeType } from './vendor/memory.js';
-import { MindForgeClient } from './vendor/client.js';
-import { ensureDaemonRunning, browserRequest } from './browser-client.js';
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { z } from "zod";
+import { MindForgeMemory, type KnowledgeType } from "./vendor/memory.js";
+import { MindForgeClient } from "./vendor/client.js";
+import { ensureDaemonRunning, browserRequest } from "./browser-client.js";
 // serverInfo.version MUST be derived, never typed. A hardcoded '11.4.0' sat here while
 // mcp-server/package.json said 11.9.2, and because mcp-server/dist is gitignored the bundle
 // is compiled at publish time — so the stale literal shipped inside the provenance-attested
@@ -34,7 +34,7 @@ import { ensureDaemonRunning, browserRequest } from './browser-client.js';
 // and tree-shakes the rest of package.json away, so the wire value cannot drift again, and a
 // broken binding fails the BUILD (`tsc --noEmit` plus esbuild resolution) instead of a
 // user's session. Never mark ../package.json external in build.mjs.
-import { version as MCP_SERVER_VERSION } from '../package.json';
+import { version as MCP_SERVER_VERSION } from "../package.json";
 
 // The user's project root. Claude Code sets CLAUDE_PROJECT_DIR for plugin subprocesses;
 // fall back to cwd for direct/MCP-Inspector runs.
@@ -46,27 +46,36 @@ const client = () => new MindForgeClient({ projectRoot: PROJECT_ROOT });
 /** Wrap a tool body so any throw becomes an actionable MCP error result, never a crash. */
 async function safe<T>(
   label: string,
-  fn: () => Promise<T>
-): Promise<{ content: Array<{ type: 'text'; text: string }>; structuredContent?: Record<string, unknown>; isError?: boolean }> {
+  fn: () => Promise<T>,
+): Promise<{
+  content: Array<{ type: "text"; text: string }>;
+  structuredContent?: Record<string, unknown>;
+  isError?: boolean;
+}> {
   try {
     const data = await fn();
     return {
-      content: [{ type: 'text', text: JSON.stringify(data, null, 2) }],
+      content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
       structuredContent: data as unknown as Record<string, unknown>,
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return {
-      content: [{
-        type: 'text',
-        text: `MindForge ${label} failed: ${message}\n\nIf MindForge is not set up in this project, run \`npx mindforge-cc@latest --claude --local\` or \`/mindforge:init-project\` first.`,
-      }],
+      content: [
+        {
+          type: "text",
+          text: `MindForge ${label} failed: ${message}\n\nIf MindForge is not set up in this project, run \`npx mindforge-cc@latest --claude --local\` or \`/mindforge:init-project\` first.`,
+        },
+      ],
       isError: true,
     };
   }
 }
 
-const server = new McpServer({ name: 'mindforge', version: MCP_SERVER_VERSION });
+const server = new McpServer({
+  name: "mindforge",
+  version: MCP_SERVER_VERSION,
+});
 
 /**
  * Tool config + handler types. We register through a single helper whose `config.inputSchema`
@@ -77,7 +86,7 @@ const server = new McpServer({ name: 'mindforge', version: MCP_SERVER_VERSION })
  * the SDK still parses inputSchema before invoking the handler.
  */
 type ToolResult = {
-  content: Array<{ type: 'text'; text: string }>;
+  content: Array<{ type: "text"; text: string }>;
   structuredContent?: Record<string, unknown>;
   isError?: boolean;
 };
@@ -95,59 +104,75 @@ function registerTool(
   // runs, so `any` here is safe and intentional — it gives ergonomic field access without
   // re-triggering the generic inference. Each handler reads only its own declared fields.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handler: (args: any) => Promise<ToolResult>
+  handler: (args: any) => Promise<ToolResult>,
 ): void {
   // Single, intentional boundary cast: the SDK's registerTool generic is the source of the
   // TS2589 depth blowup. Casting the method (not our data) sidesteps the inference while the
   // SDK still enforces inputSchema at runtime.
-  (server.registerTool as unknown as (
-    n: string, c: ToolConfig, h: (a: unknown) => Promise<ToolResult>
-  ) => void)(name, config, handler);
+  (
+    server.registerTool as unknown as (
+      n: string,
+      c: ToolConfig,
+      h: (a: unknown) => Promise<ToolResult>,
+    ) => void
+  )(name, config, handler);
 }
 
 // ── 1. Project health (read-only) ──────────────────────────────────────────────
 registerTool(
-  'mindforge_health',
+  "mindforge_health",
   {
-    title: 'MindForge project health',
+    title: "MindForge project health",
     description:
-      'Run a MindForge health check on the current project: verifies required ' +
-      'planning/governance files exist, validates HANDOFF.json, and reports the ' +
-      'audit-log size. Returns overallStatus (healthy|warning|error) with details.',
+      "Run a MindForge health check on the current project: verifies required " +
+      "planning/governance files exist, validates HANDOFF.json, and reports the " +
+      "audit-log size. Returns overallStatus (healthy|warning|error) with details.",
     inputSchema: {},
-    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false,
+    },
   },
-  async () => safe('health', async () => client().health())
+  async () => safe("health", async () => client().health()),
 );
 
 // ── 2. Project status (read-only) ───────────────────────────────────────────────
 registerTool(
-  'mindforge_status',
+  "mindforge_status",
   {
-    title: 'MindForge project status',
+    title: "MindForge project status",
     description:
-      'Read the current MindForge project status: whether the project is initialized, ' +
-      'the raw STATE.md, the HANDOFF.json contents, and the autonomous-run auto-state.json ' +
-      'if present. Use to understand where a MindForge project currently stands.',
+      "Read the current MindForge project status: whether the project is initialized, " +
+      "the raw STATE.md, the HANDOFF.json contents, and the autonomous-run auto-state.json " +
+      "if present. Use to understand where a MindForge project currently stands.",
     inputSchema: {},
-    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false,
+    },
   },
-  async () => safe('status', async () => {
-    const c = client();
-    return {
-      initialized: c.isInitialised(),
-      databaseInitialized: c.isDatabaseInitialized(),
-      state: c.readState(),
-      handoff: c.readHandoff(),
-      autoState: c.readAutoState(),
-    };
-  })
+  async () =>
+    safe("status", async () => {
+      const c = client();
+      return {
+        initialized: c.isInitialised(),
+        databaseInitialized: c.isDatabaseInitialized(),
+        state: c.readState(),
+        handoff: c.readHandoff(),
+        autoState: c.readAutoState(),
+      };
+    }),
 );
 
 // ── 3. Memory query (read-only) ─────────────────────────────────────────────────
 const KNOWLEDGE_TYPES = [
-  'architectural_decision', 'code_pattern', 'bug_pattern',
-  'team_preference', 'domain_knowledge',
+  "architectural_decision",
+  "code_pattern",
+  "bug_pattern",
+  "team_preference",
+  "domain_knowledge",
 ] as const;
 
 // Schemas are extracted to `const … satisfies ZodRawShape` so TypeScript resolves each
@@ -155,187 +180,324 @@ const KNOWLEDGE_TYPES = [
 // registerTool signature (which otherwise hits TS2589 "excessively deep" on the larger
 // shapes). Runtime validation is unchanged — registerTool still validates against these.
 const memoryQuerySchema = {
-  topic: z.string().optional().describe('Free-text topic to match against entries'),
-  tags: z.array(z.string()).optional().describe('Tags to match (boosts ranking)'),
-  type: z.enum(KNOWLEDGE_TYPES).optional().describe('Restrict to one knowledge type'),
-  minConfidence: z.number().min(0).max(1).optional().describe('Minimum confidence (0-1, default 0.3)'),
-  limit: z.number().int().positive().max(100).optional().describe('Max results (default 20)'),
-  includeGlobal: z.boolean().optional().describe('Include the cross-project global knowledge base'),
+  topic: z
+    .string()
+    .optional()
+    .describe("Free-text topic to match against entries"),
+  tags: z
+    .array(z.string())
+    .optional()
+    .describe("Tags to match (boosts ranking)"),
+  type: z
+    .enum(KNOWLEDGE_TYPES)
+    .optional()
+    .describe("Restrict to one knowledge type"),
+  minConfidence: z
+    .number()
+    .min(0)
+    .max(1)
+    .optional()
+    .describe("Minimum confidence (0-1, default 0.3)"),
+  limit: z
+    .number()
+    .int()
+    .positive()
+    .max(100)
+    .optional()
+    .describe("Max results (default 20)"),
+  includeGlobal: z
+    .boolean()
+    .optional()
+    .describe("Include the cross-project global knowledge base"),
 };
 
 registerTool(
-  'mindforge_memory_query',
+  "mindforge_memory_query",
   {
-    title: 'Query MindForge knowledge base',
+    title: "Query MindForge knowledge base",
     description:
-      'Search the MindForge knowledge graph (architectural decisions, code/bug patterns, ' +
-      'team preferences, domain knowledge) by topic text, tags, and type. Results are ' +
-      'relevance-ranked. Use to recall prior decisions and patterns for the current project.',
+      "Search the MindForge knowledge graph (architectural decisions, code/bug patterns, " +
+      "team preferences, domain knowledge) by topic text, tags, and type. Results are " +
+      "relevance-ranked. Use to recall prior decisions and patterns for the current project.",
     inputSchema: memoryQuerySchema,
-    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false,
+    },
   },
-  async (args) => safe('memory_query', async () => {
-    const results = await memory().query({
-      topic: args.topic,
-      tags: args.tags,
-      type: args.type as KnowledgeType | undefined,
-      minConfidence: args.minConfidence,
-      limit: args.limit,
-      includeGlobal: args.includeGlobal,
-    });
-    return { count: results.length, entries: results };
-  })
+  async (args) =>
+    safe("memory_query", async () => {
+      const results = await memory().query({
+        topic: args.topic,
+        tags: args.tags,
+        type: args.type as KnowledgeType | undefined,
+        minConfidence: args.minConfidence,
+        limit: args.limit,
+        includeGlobal: args.includeGlobal,
+      });
+      return { count: results.length, entries: results };
+    }),
 );
 
 // ── 4. Memory + graph stats (read-only) ─────────────────────────────────────────
 registerTool(
-  'mindforge_memory_stats',
+  "mindforge_memory_stats",
   {
-    title: 'MindForge memory statistics',
+    title: "MindForge memory statistics",
     description:
-      'Report statistics for the MindForge knowledge graph: total/active/deprecated ' +
-      'entries, breakdown by type, average confidence, plus graph metrics (nodes, edges, ' +
-      'edges by type, orphan ratio). Use to gauge how much project memory exists.',
+      "Report statistics for the MindForge knowledge graph: total/active/deprecated " +
+      "entries, breakdown by type, average confidence, plus graph metrics (nodes, edges, " +
+      "edges by type, orphan ratio). Use to gauge how much project memory exists.",
     inputSchema: {},
-    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false,
+    },
   },
-  async () => safe('memory_stats', async () => {
-    const m = memory();
-    return { knowledge: await m.getStats(), graph: await m.getGraphStats() };
-  })
+  async () =>
+    safe("memory_stats", async () => {
+      const m = memory();
+      return { knowledge: await m.getStats(), graph: await m.getGraphStats() };
+    }),
 );
 
 // ── 5. Find related knowledge (read-only) ───────────────────────────────────────
 registerTool(
-  'mindforge_memory_find_related',
+  "mindforge_memory_find_related",
   {
-    title: 'Find related MindForge knowledge',
+    title: "Find related MindForge knowledge",
     description:
-      'Given a free-text query, find related knowledge entries via keyword scoring plus ' +
-      'graph traversal (multi-hop). Returns ranked entry ids with relevance scores. Use to ' +
-      'surface connected decisions/patterns for a task description.',
+      "Given a free-text query, find related knowledge entries via keyword scoring plus " +
+      "graph traversal (multi-hop). Returns ranked entry ids with relevance scores. Use to " +
+      "surface connected decisions/patterns for a task description.",
     inputSchema: {
-      query: z.string().min(1).describe('The task or topic to find related knowledge for'),
-      maxHops: z.number().int().min(0).max(5).optional().describe('Graph traversal depth (default 2)'),
-      topK: z.number().int().positive().max(50).optional().describe('Max results (default 10)'),
+      query: z
+        .string()
+        .min(1)
+        .describe("The task or topic to find related knowledge for"),
+      maxHops: z
+        .number()
+        .int()
+        .min(0)
+        .max(5)
+        .optional()
+        .describe("Graph traversal depth (default 2)"),
+      topK: z
+        .number()
+        .int()
+        .positive()
+        .max(50)
+        .optional()
+        .describe("Max results (default 10)"),
     },
-    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false,
+    },
   },
-  async (args) => safe('memory_find_related', async () => {
-    const results = await memory().findRelated(args.query, { maxHops: args.maxHops, topK: args.topK });
-    return { count: results.length, related: results };
-  })
+  async (args) =>
+    safe("memory_find_related", async () => {
+      const results = await memory().findRelated(args.query, {
+        maxHops: args.maxHops,
+        topK: args.topK,
+      });
+      return { count: results.length, related: results };
+    }),
 );
 
 // ── 6. Audit log (read-only) ────────────────────────────────────────────────────
 const auditLogSchema = {
-  event: z.string().optional().describe('Filter by event type (e.g. task_completed, security_finding)'),
-  phase: z.number().int().optional().describe('Filter by phase number'),
-  limit: z.number().int().positive().max(500).optional().describe('Max entries to return (default 50, newest last)'),
+  event: z
+    .string()
+    .optional()
+    .describe("Filter by event type (e.g. task_completed, security_finding)"),
+  phase: z.number().int().optional().describe("Filter by phase number"),
+  limit: z
+    .number()
+    .int()
+    .positive()
+    .max(500)
+    .optional()
+    .describe("Max entries to return (default 50, newest last)"),
 };
 
 registerTool(
-  'mindforge_audit_log',
+  "mindforge_audit_log",
   {
-    title: 'Read MindForge audit log',
+    title: "Read MindForge audit log",
     description:
-      'Read entries from the MindForge audit log (.planning/AUDIT.jsonl), optionally ' +
-      'filtered by event type or phase. Use to review what the framework has recorded ' +
-      'for this project (task completions, security findings, decisions).',
+      "Read entries from the MindForge audit log (.planning/AUDIT.jsonl), optionally " +
+      "filtered by event type or phase. Use to review what the framework has recorded " +
+      "for this project (task completions, security findings, decisions).",
     inputSchema: auditLogSchema,
-    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false,
+    },
   },
-  async (args) => safe('audit_log', async () => {
-    const all = client().readAuditLog({ event: args.event, phase: args.phase });
-    const limit = args.limit ?? 50;
-    const entries = all.slice(-limit);
-    return { total: all.length, returned: entries.length, entries };
-  })
+  async (args) =>
+    safe("audit_log", async () => {
+      const all = client().readAuditLog({
+        event: args.event,
+        phase: args.phase,
+      });
+      const limit = args.limit ?? 50;
+      const entries = all.slice(-limit);
+      return { total: all.length, returned: entries.length, entries };
+    }),
 );
 
 // ── 7. Remember (guarded write) ─────────────────────────────────────────────────
 registerTool(
-  'mindforge_memory_remember',
+  "mindforge_memory_remember",
   {
-    title: 'Store a MindForge knowledge entry',
+    title: "Store a MindForge knowledge entry",
     description:
-      'Persist a new knowledge entry (decision, pattern, preference, or domain note) into ' +
-      'the project knowledge graph so future sessions can recall it. Append-only and ' +
-      'non-destructive — it never overwrites or deletes existing entries. Returns the new entry id.',
+      "Persist a new knowledge entry (decision, pattern, preference, or domain note) into " +
+      "the project knowledge graph so future sessions can recall it. Append-only and " +
+      "non-destructive — it never overwrites or deletes existing entries. Returns the new entry id.",
     inputSchema: {
-      type: z.enum(KNOWLEDGE_TYPES).describe('The kind of knowledge being stored'),
-      topic: z.string().min(1).describe('Short topic/title (truncated to 80 chars)'),
-      content: z.string().min(1).describe('The knowledge content to remember'),
-      confidence: z.number().min(0).max(1).optional().describe('Confidence 0-1 (default 0.7)'),
-      tags: z.array(z.string()).optional().describe('Tags for later retrieval'),
+      type: z
+        .enum(KNOWLEDGE_TYPES)
+        .describe("The kind of knowledge being stored"),
+      topic: z
+        .string()
+        .min(1)
+        .describe("Short topic/title (truncated to 80 chars)"),
+      content: z.string().min(1).describe("The knowledge content to remember"),
+      confidence: z
+        .number()
+        .min(0)
+        .max(1)
+        .optional()
+        .describe("Confidence 0-1 (default 0.7)"),
+      tags: z.array(z.string()).optional().describe("Tags for later retrieval"),
     },
-    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: false,
+    },
   },
-  async (args) => safe('memory_remember', async () => {
-    const id = await memory().remember({
-      type: args.type as KnowledgeType,
-      topic: args.topic,
-      content: args.content,
-      confidence: args.confidence,
-      tags: args.tags,
-      source: 'mcp',
-    });
-    return { id, stored: true };
-  })
+  async (args) =>
+    safe("memory_remember", async () => {
+      const id = await memory().remember({
+        type: args.type as KnowledgeType,
+        topic: args.topic,
+        content: args.content,
+        confidence: args.confidence,
+        tags: args.tags,
+        source: "mcp",
+      });
+      return { id, stored: true };
+    }),
 );
 
 // ── 8. Browse (guarded, open-world) ─────────────────────────────────────────
-const BROWSE_ACTIONS = ['status', 'navigate', 'click', 'type', 'screenshot', 'assert'] as const;
+const BROWSE_ACTIONS = [
+  "status",
+  "navigate",
+  "click",
+  "type",
+  "screenshot",
+  "assert",
+] as const;
 
 const browseSchema = {
-  action: z.enum(BROWSE_ACTIONS).describe('Browser action to perform'),
-  url: z.string().optional().describe('URL to navigate to (action=navigate)'),
-  selector: z.string().optional().describe('CSS selector (action=click|type|assert)'),
-  text: z.string().optional().describe('Text to type, or fallback click-by-text (action=click|type)'),
-  session: z.string().optional().describe('Named browser session/context (default "default")'),
-  assertType: z.enum(['visible', 'url', 'title']).optional().describe('Assertion kind (action=assert)'),
-  expectedText: z.string().optional().describe('Expected value for the assertion (action=assert)'),
+  action: z.enum(BROWSE_ACTIONS).describe("Browser action to perform"),
+  url: z.string().optional().describe("URL to navigate to (action=navigate)"),
+  selector: z
+    .string()
+    .optional()
+    .describe("CSS selector (action=click|type|assert)"),
+  text: z
+    .string()
+    .optional()
+    .describe("Text to type, or fallback click-by-text (action=click|type)"),
+  session: z
+    .string()
+    .optional()
+    .describe('Named browser session/context (default "default")'),
+  assertType: z
+    .enum(["visible", "url", "title"])
+    .optional()
+    .describe("Assertion kind (action=assert)"),
+  expectedText: z
+    .string()
+    .optional()
+    .describe("Expected value for the assertion (action=assert)"),
 };
 
 registerTool(
-  'mindforge_browse',
+  "mindforge_browse",
   {
-    title: 'Control the MindForge browser daemon',
+    title: "Control the MindForge browser daemon",
     description:
-      'Drive the persistent MindForge Playwright/Chromium daemon (the same one behind ' +
-      '/mindforge:browse): check status, navigate, click, type, screenshot, or assert on the ' +
-      'current page. The daemon binds to 127.0.0.1 only (ADR-024) and must already be running — ' +
-      'start it with `/mindforge:browse --start` first; this tool never spawns it. Arbitrary JS ' +
-      'evaluation and native-browser cookie import are intentionally NOT exposed here.',
+      "Drive the persistent MindForge Playwright/Chromium daemon (the same one behind " +
+      "/mindforge:browse): check status, navigate, click, type, screenshot, or assert on the " +
+      "current page. The daemon binds to 127.0.0.1 only (ADR-024) and must already be running — " +
+      "start it with `/mindforge:browse --start` first; this tool never spawns it. Arbitrary JS " +
+      "evaluation and native-browser cookie import are intentionally NOT exposed here.",
     inputSchema: browseSchema,
-    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: false,
+      openWorldHint: true,
+    },
   },
-  async (args) => safe('browse', async () => {
-    const session = args.session ?? 'default';
-    await ensureDaemonRunning(PROJECT_ROOT);
-    switch (args.action) {
-      case 'status':
-        return browserRequest(PROJECT_ROOT, 'GET', '/status');
-      case 'navigate':
-        if (!args.url) throw new Error('action=navigate requires a `url` argument');
-        return browserRequest(PROJECT_ROOT, 'POST', '/navigate', { url: args.url, session });
-      case 'click':
-        if (!args.selector && !args.text) throw new Error('action=click requires `selector` or `text`');
-        return browserRequest(PROJECT_ROOT, 'POST', '/click', { selector: args.selector, text: args.text, session });
-      case 'type':
-        if (!args.selector || args.text === undefined) throw new Error('action=type requires `selector` and `text`');
-        return browserRequest(PROJECT_ROOT, 'POST', '/type', { selector: args.selector, text: args.text, session });
-      case 'screenshot':
-        return browserRequest(PROJECT_ROOT, 'POST', '/screenshot', { session });
-      case 'assert':
-        if (!args.assertType) throw new Error('action=assert requires `assertType`');
-        return browserRequest(PROJECT_ROOT, 'POST', '/assert', {
-          type: args.assertType, selector: args.selector, expected_text: args.expectedText, session,
-        });
-      default:
-        throw new Error(`Unsupported action: ${String(args.action)}`);
-    }
-  })
+  async (args) =>
+    safe("browse", async () => {
+      const session = args.session ?? "default";
+      await ensureDaemonRunning(PROJECT_ROOT);
+      switch (args.action) {
+        case "status":
+          return browserRequest(PROJECT_ROOT, "GET", "/status");
+        case "navigate":
+          if (!args.url)
+            throw new Error("action=navigate requires a `url` argument");
+          return browserRequest(PROJECT_ROOT, "POST", "/navigate", {
+            url: args.url,
+            session,
+          });
+        case "click":
+          if (!args.selector && !args.text)
+            throw new Error("action=click requires `selector` or `text`");
+          return browserRequest(PROJECT_ROOT, "POST", "/click", {
+            selector: args.selector,
+            text: args.text,
+            session,
+          });
+        case "type":
+          if (!args.selector || args.text === undefined)
+            throw new Error("action=type requires `selector` and `text`");
+          return browserRequest(PROJECT_ROOT, "POST", "/type", {
+            selector: args.selector,
+            text: args.text,
+            session,
+          });
+        case "screenshot":
+          return browserRequest(PROJECT_ROOT, "POST", "/screenshot", {
+            session,
+          });
+        case "assert":
+          if (!args.assertType)
+            throw new Error("action=assert requires `assertType`");
+          return browserRequest(PROJECT_ROOT, "POST", "/assert", {
+            type: args.assertType,
+            selector: args.selector,
+            expected_text: args.expectedText,
+            session,
+          });
+        default:
+          throw new Error(`Unsupported action: ${String(args.action)}`);
+      }
+    }),
 );
 
 async function main(): Promise<void> {
@@ -346,6 +508,8 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  process.stderr.write(`[mindforge-mcp] fatal: ${err instanceof Error ? err.stack : String(err)}\n`);
+  process.stderr.write(
+    `[mindforge-mcp] fatal: ${err instanceof Error ? err.stack : String(err)}\n`,
+  );
   process.exit(1);
 });
