@@ -25,6 +25,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import { MindForgeMemory, type KnowledgeType } from './vendor/memory.js';
 import { MindForgeClient } from './vendor/client.js';
+import { ensureDaemonRunning, browserRequest } from './browser-client.js';
 // serverInfo.version MUST be derived, never typed. A hardcoded '11.4.0' sat here while
 // mcp-server/package.json said 11.9.2, and because mcp-server/dist is gitignored the bundle
 // is compiled at publish time — so the stale literal shipped inside the provenance-attested
@@ -280,6 +281,60 @@ registerTool(
       source: 'mcp',
     });
     return { id, stored: true };
+  })
+);
+
+// ── 8. Browse (guarded, open-world) ─────────────────────────────────────────
+const BROWSE_ACTIONS = ['status', 'navigate', 'click', 'type', 'screenshot', 'assert'] as const;
+
+const browseSchema = {
+  action: z.enum(BROWSE_ACTIONS).describe('Browser action to perform'),
+  url: z.string().optional().describe('URL to navigate to (action=navigate)'),
+  selector: z.string().optional().describe('CSS selector (action=click|type|assert)'),
+  text: z.string().optional().describe('Text to type, or fallback click-by-text (action=click|type)'),
+  session: z.string().optional().describe('Named browser session/context (default "default")'),
+  assertType: z.enum(['visible', 'url', 'title']).optional().describe('Assertion kind (action=assert)'),
+  expectedText: z.string().optional().describe('Expected value for the assertion (action=assert)'),
+};
+
+registerTool(
+  'mindforge_browse',
+  {
+    title: 'Control the MindForge browser daemon',
+    description:
+      'Drive the persistent MindForge Playwright/Chromium daemon (the same one behind ' +
+      '/mindforge:browse): check status, navigate, click, type, screenshot, or assert on the ' +
+      'current page. The daemon binds to 127.0.0.1 only (ADR-024) and must already be running — ' +
+      'start it with `/mindforge:browse --start` first; this tool never spawns it. Arbitrary JS ' +
+      'evaluation and native-browser cookie import are intentionally NOT exposed here.',
+    inputSchema: browseSchema,
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
+  },
+  async (args) => safe('browse', async () => {
+    const session = args.session ?? 'default';
+    await ensureDaemonRunning(PROJECT_ROOT);
+    switch (args.action) {
+      case 'status':
+        return browserRequest(PROJECT_ROOT, 'GET', '/status');
+      case 'navigate':
+        if (!args.url) throw new Error('action=navigate requires a `url` argument');
+        return browserRequest(PROJECT_ROOT, 'POST', '/navigate', { url: args.url, session });
+      case 'click':
+        if (!args.selector && !args.text) throw new Error('action=click requires `selector` or `text`');
+        return browserRequest(PROJECT_ROOT, 'POST', '/click', { selector: args.selector, text: args.text, session });
+      case 'type':
+        if (!args.selector || args.text === undefined) throw new Error('action=type requires `selector` and `text`');
+        return browserRequest(PROJECT_ROOT, 'POST', '/type', { selector: args.selector, text: args.text, session });
+      case 'screenshot':
+        return browserRequest(PROJECT_ROOT, 'POST', '/screenshot', { session });
+      case 'assert':
+        if (!args.assertType) throw new Error('action=assert requires `assertType`');
+        return browserRequest(PROJECT_ROOT, 'POST', '/assert', {
+          type: args.assertType, selector: args.selector, expected_text: args.expectedText, session,
+        });
+      default:
+        throw new Error(`Unsupported action: ${String(args.action)}`);
+    }
   })
 );
 
