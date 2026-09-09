@@ -82,6 +82,14 @@ test('a self-install writes NOTHING over the repository\'s own tracked files', (
   const os = require('os');
   const path = require('path');
   const { spawnSync } = require('child_process');
+  // Hermetic env: strip GIT_* context vars a parent `git commit` exports into hook
+  // subprocesses, which would redirect these clone-targeted git calls at the real
+  // MindForge repo's .git instead of `clone`. Mirrors tests/worktree-engine.test.js.
+  const hermeticGitEnv = () => {
+    const env = { ...process.env };
+    for (const k of ['GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE', 'GIT_PREFIX', 'GIT_COMMON_DIR', 'GIT_OBJECT_DIRECTORY']) delete env[k];
+    return env;
+  };
 
   const REPO = process.cwd();
   const work = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-selfinstall-')));
@@ -90,7 +98,7 @@ test('a self-install writes NOTHING over the repository\'s own tracked files', (
 
   try {
     const cloned = spawnSync('git', ['clone', '--quiet', '--no-hardlinks', '--shared', REPO, clone],
-      { encoding: 'utf8' });
+      { encoding: 'utf8', env: hermeticGitEnv() });
     assert.strictEqual(cloned.status, 0, `could not clone the repo: ${(cloned.stderr || '').slice(0, 200)}`);
 
     // Carry any UNCOMMITTED installer changes into the clone, then commit them there, so the clone
@@ -98,10 +106,10 @@ test('a self-install writes NOTHING over the repository\'s own tracked files', (
     // describe committed state, which means it cannot go green until after the fix lands — and a gate
     // you cannot run before committing gets bypassed with --no-verify. In CI the diff is empty and
     // this is a no-op.
-    const diff = spawnSync('git', ['diff', 'HEAD', '--', 'bin', 'tests'], { cwd: REPO, encoding: 'utf8' });
+    const diff = spawnSync('git', ['diff', 'HEAD', '--', 'bin', 'tests'], { cwd: REPO, encoding: 'utf8', env: hermeticGitEnv() });
     if (diff.stdout && diff.stdout.trim()) {
       const applied = spawnSync('git', ['apply', '--whitespace=nowarn', '-'],
-        { cwd: clone, encoding: 'utf8', input: diff.stdout });
+        { cwd: clone, encoding: 'utf8', input: diff.stdout, env: hermeticGitEnv() });
       assert.strictEqual(applied.status, 0,
         `could not carry the working-tree diff into the clone: ${(applied.stderr || '').slice(0, 300)}`);
       // `add -A` and NOT `commit -a`. `git diff HEAD` above includes files that are staged but not
@@ -111,13 +119,13 @@ test('a self-install writes NOTHING over the repository\'s own tracked files', (
       // pre-commit exit 1, on a tree where every other test passes. Which is precisely the
       // --no-verify pressure the comment above says this carry exists to avoid, reintroduced for the
       // one case the carry did not cover.
-      spawnSync('git', ['add', '-A'], { cwd: clone, encoding: 'utf8' });
+      spawnSync('git', ['add', '-A'], { cwd: clone, encoding: 'utf8', env: hermeticGitEnv() });
       spawnSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'wt'],
-        { cwd: clone, encoding: 'utf8' });
+        { cwd: clone, encoding: 'utf8', env: hermeticGitEnv() });
     }
 
     // The clone must start clean, or "nothing changed" would be unmeasurable.
-    const before = spawnSync('git', ['status', '--porcelain'], { encoding: 'utf8', cwd: clone });
+    const before = spawnSync('git', ['status', '--porcelain'], { encoding: 'utf8', cwd: clone, env: hermeticGitEnv() });
     assert.strictEqual(before.stdout.trim(), '',
       `the clone is not clean, so this test cannot attribute changes: ${before.stdout.slice(0, 200)}`);
 
@@ -133,7 +141,7 @@ test('a self-install writes NOTHING over the repository\'s own tracked files', (
     assert.match(r.stdout, /Self-install detected/,
       `the run did not take the self-install branch, so it proves nothing. Output: ${r.stdout.slice(-300)}`);
 
-    const after = spawnSync('git', ['status', '--porcelain'], { encoding: 'utf8', cwd: clone });
+    const after = spawnSync('git', ['status', '--porcelain'], { encoding: 'utf8', cwd: clone, env: hermeticGitEnv() });
     const modified = after.stdout.split('\n').filter((l) => l.startsWith(' M') || l.startsWith('M'));
     assert.deepStrictEqual(modified, [],
       `${modified.length} TRACKED file(s) were overwritten by a self-install:\n  `

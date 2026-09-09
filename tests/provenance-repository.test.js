@@ -22,6 +22,15 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { test } = require('node:test');
 
+// Hermetic env: strip GIT_* context vars a parent `git commit` exports into hook
+// subprocesses, which would redirect this sandbox's `git init`/`remote add` at the
+// real MindForge repo's .git instead of the sandbox dir. Mirrors tests/worktree-engine.test.js.
+function hermeticGitEnv() {
+  const env = { ...process.env };
+  for (const k of ['GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE', 'GIT_PREFIX', 'GIT_COMMON_DIR', 'GIT_OBJECT_DIRECTORY']) delete env[k];
+  return env;
+}
+
 const ROOT = path.resolve(__dirname, '..');
 const GATE_REL = path.join('scripts', 'ci', 'verify-provenance-metadata.js');
 const WORKFLOW_REL = path.join('.github', 'workflows', 'mindforge-release.yml');
@@ -41,7 +50,7 @@ function sandbox() {
   const origin = spawnSync('git', ['config', '--get', 'remote.origin.url'], { cwd: ROOT, encoding: 'utf8' });
   assert.strictEqual(origin.status, 0, 'could not read the real remote to reproduce in the sandbox');
   for (const args of [['init', '-q'], ['remote', 'add', 'origin', origin.stdout.trim()]]) {
-    const r = spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
+    const r = spawnSync('git', args, { cwd: dir, encoding: 'utf8', env: hermeticGitEnv() });
     assert.strictEqual(r.status, 0, `git ${args[0]} failed in the sandbox: ${r.stderr}`);
   }
   return dir;

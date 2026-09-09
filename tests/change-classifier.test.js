@@ -36,9 +36,18 @@ let failed = 0;
 const tests = [];
 function test(name, fn) { tests.push({ name, fn }); }
 
+// Hermetic env: strip GIT_* context vars a parent `git commit` exports into hook
+// subprocesses, which would redirect these "isolated" scratch-repo git calls at the
+// real MindForge repo's .git instead of `dir`. Mirrors tests/worktree-engine.test.js.
+function hermeticEnv() {
+  const env = { ...process.env };
+  for (const k of ['GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE', 'GIT_PREFIX', 'GIT_COMMON_DIR', 'GIT_OBJECT_DIRECTORY']) delete env[k];
+  return env;
+}
+
 /** Run a git command in `dir`, throwing on failure. */
 function git(dir, ...args) {
-  return execFileSync('git', args, { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  return execFileSync('git', args, { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: hermeticEnv() });
 }
 
 /**
