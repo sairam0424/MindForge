@@ -22381,17 +22381,22 @@ async function safe(label, fn) {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return {
-      content: [{
-        type: "text",
-        text: `MindForge ${label} failed: ${message}
+      content: [
+        {
+          type: "text",
+          text: `MindForge ${label} failed: ${message}
 
 If MindForge is not set up in this project, run \`npx mindforge-cc@latest --claude --local\` or \`/mindforge:init-project\` first.`
-      }],
+        }
+      ],
       isError: true
     };
   }
 }
-var server = new McpServer({ name: "mindforge", version: version2 });
+var server = new McpServer({
+  name: "mindforge",
+  version: version2
+});
 function registerTool(name, config2, handler) {
   server.registerTool(name, config2, handler);
 }
@@ -22401,7 +22406,11 @@ registerTool(
     title: "MindForge project health",
     description: "Run a MindForge health check on the current project: verifies required planning/governance files exist, validates HANDOFF.json, and reports the audit-log size. Returns overallStatus (healthy|warning|error) with details.",
     inputSchema: {},
-    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false
+    }
   },
   async () => safe("health", async () => client().health())
 );
@@ -22411,7 +22420,11 @@ registerTool(
     title: "MindForge project status",
     description: "Read the current MindForge project status: whether the project is initialized, the raw STATE.md, the HANDOFF.json contents, and the autonomous-run auto-state.json if present. Use to understand where a MindForge project currently stands.",
     inputSchema: {},
-    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false
+    }
   },
   async () => safe("status", async () => {
     const c = client();
@@ -22445,7 +22458,11 @@ registerTool(
     title: "Query MindForge knowledge base",
     description: "Search the MindForge knowledge graph (architectural decisions, code/bug patterns, team preferences, domain knowledge) by topic text, tags, and type. Results are relevance-ranked. Use to recall prior decisions and patterns for the current project.",
     inputSchema: memoryQuerySchema,
-    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false
+    }
   },
   async (args) => safe("memory_query", async () => {
     const results = await memory().query({
@@ -22465,7 +22482,11 @@ registerTool(
     title: "MindForge memory statistics",
     description: "Report statistics for the MindForge knowledge graph: total/active/deprecated entries, breakdown by type, average confidence, plus graph metrics (nodes, edges, edges by type, orphan ratio). Use to gauge how much project memory exists.",
     inputSchema: {},
-    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false
+    }
   },
   async () => safe("memory_stats", async () => {
     const m = memory();
@@ -22482,10 +22503,17 @@ registerTool(
       maxHops: external_exports.number().int().min(0).max(5).optional().describe("Graph traversal depth (default 2)"),
       topK: external_exports.number().int().positive().max(50).optional().describe("Max results (default 10)")
     },
-    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false
+    }
   },
   async (args) => safe("memory_find_related", async () => {
-    const results = await memory().findRelated(args.query, { maxHops: args.maxHops, topK: args.topK });
+    const results = await memory().findRelated(args.query, {
+      maxHops: args.maxHops,
+      topK: args.topK
+    });
     return { count: results.length, related: results };
   })
 );
@@ -22500,10 +22528,17 @@ registerTool(
     title: "Read MindForge audit log",
     description: "Read entries from the MindForge audit log (.planning/AUDIT.jsonl), optionally filtered by event type or phase. Use to review what the framework has recorded for this project (task completions, security findings, decisions).",
     inputSchema: auditLogSchema,
-    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false
+    }
   },
   async (args) => safe("audit_log", async () => {
-    const all = client().readAuditLog({ event: args.event, phase: args.phase });
+    const all = client().readAuditLog({
+      event: args.event,
+      phase: args.phase
+    });
     const limit = args.limit ?? 50;
     const entries = all.slice(-limit);
     return { total: all.length, returned: entries.length, entries };
@@ -22521,7 +22556,12 @@ registerTool(
       confidence: external_exports.number().min(0).max(1).optional().describe("Confidence 0-1 (default 0.7)"),
       tags: external_exports.array(external_exports.string()).optional().describe("Tags for later retrieval")
     },
-    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false }
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: false
+    }
   },
   async (args) => safe("memory_remember", async () => {
     const id = await memory().remember({
@@ -22535,7 +22575,14 @@ registerTool(
     return { id, stored: true };
   })
 );
-var BROWSE_ACTIONS = ["status", "navigate", "click", "type", "screenshot", "assert"];
+var BROWSE_ACTIONS = [
+  "status",
+  "navigate",
+  "click",
+  "type",
+  "screenshot",
+  "assert"
+];
 var browseSchema = {
   action: external_exports.enum(BROWSE_ACTIONS).describe("Browser action to perform"),
   url: external_exports.string().optional().describe("URL to navigate to (action=navigate)"),
@@ -22551,7 +22598,12 @@ registerTool(
     title: "Control the MindForge browser daemon",
     description: "Drive the persistent MindForge Playwright/Chromium daemon (the same one behind /mindforge:browse): check status, navigate, click, type, screenshot, or assert on the current page. The daemon binds to 127.0.0.1 only (ADR-024) and must already be running \u2014 start it with `/mindforge:browse --start` first; this tool never spawns it. Arbitrary JS evaluation and native-browser cookie import are intentionally NOT exposed here.",
     inputSchema: browseSchema,
-    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true }
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: false,
+      openWorldHint: true
+    }
   },
   async (args) => safe("browse", async () => {
     const session = args.session ?? "default";
@@ -22560,18 +22612,35 @@ registerTool(
       case "status":
         return browserRequest(PROJECT_ROOT, "GET", "/status");
       case "navigate":
-        if (!args.url) throw new Error("action=navigate requires a `url` argument");
-        return browserRequest(PROJECT_ROOT, "POST", "/navigate", { url: args.url, session });
+        if (!args.url)
+          throw new Error("action=navigate requires a `url` argument");
+        return browserRequest(PROJECT_ROOT, "POST", "/navigate", {
+          url: args.url,
+          session
+        });
       case "click":
-        if (!args.selector && !args.text) throw new Error("action=click requires `selector` or `text`");
-        return browserRequest(PROJECT_ROOT, "POST", "/click", { selector: args.selector, text: args.text, session });
+        if (!args.selector && !args.text)
+          throw new Error("action=click requires `selector` or `text`");
+        return browserRequest(PROJECT_ROOT, "POST", "/click", {
+          selector: args.selector,
+          text: args.text,
+          session
+        });
       case "type":
-        if (!args.selector || args.text === void 0) throw new Error("action=type requires `selector` and `text`");
-        return browserRequest(PROJECT_ROOT, "POST", "/type", { selector: args.selector, text: args.text, session });
+        if (!args.selector || args.text === void 0)
+          throw new Error("action=type requires `selector` and `text`");
+        return browserRequest(PROJECT_ROOT, "POST", "/type", {
+          selector: args.selector,
+          text: args.text,
+          session
+        });
       case "screenshot":
-        return browserRequest(PROJECT_ROOT, "POST", "/screenshot", { session });
+        return browserRequest(PROJECT_ROOT, "POST", "/screenshot", {
+          session
+        });
       case "assert":
-        if (!args.assertType) throw new Error("action=assert requires `assertType`");
+        if (!args.assertType)
+          throw new Error("action=assert requires `assertType`");
         return browserRequest(PROJECT_ROOT, "POST", "/assert", {
           type: args.assertType,
           selector: args.selector,
@@ -22590,7 +22659,9 @@ async function main() {
 `);
 }
 main().catch((err) => {
-  process.stderr.write(`[mindforge-mcp] fatal: ${err instanceof Error ? err.stack : String(err)}
-`);
+  process.stderr.write(
+    `[mindforge-mcp] fatal: ${err instanceof Error ? err.stack : String(err)}
+`
+  );
   process.exit(1);
 });
