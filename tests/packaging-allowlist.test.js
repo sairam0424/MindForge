@@ -24,6 +24,18 @@ const path = require('path');
 const assert = require('assert');
 const { execFileSync } = require('child_process');
 
+// Hermetic env: strip GIT_* context vars a parent `git commit` exports into hook
+// subprocesses. Without this, `git clone` below inherits GIT_DIR/GIT_INDEX_FILE
+// pointing at this worktree's real .git (with no GIT_WORK_TREE override, so git
+// treats cwd — the real worktree root — as the top of that "current" repo) and
+// resets the REAL index to match HEAD as part of setting up the new clone's
+// initial checkout. Mirrors tests/worktree-engine.test.js.
+function hermeticGitEnv() {
+  const env = { ...process.env };
+  for (const k of ['GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE', 'GIT_PREFIX', 'GIT_COMMON_DIR', 'GIT_OBJECT_DIRECTORY']) delete env[k];
+  return env;
+}
+
 let passed = 0, failed = 0, skipped = 0;
 const tests = [];
 function test(name, fn) { tests.push({ name, fn }); }
@@ -300,7 +312,7 @@ test('runtime state under a shipped directory stays excluded even when it exists
   const clone = path.join(work, 'repo');
   try {
     execFileSync('git', ['clone', '--quiet', '--no-hardlinks', '--shared', ROOT, clone],
-      { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
+      { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'], env: hermeticGitEnv() });
     // Carry an uncommitted package.json so this can go green before the fix is committed.
     fs.copyFileSync(path.join(ROOT, 'package.json'), path.join(clone, 'package.json'));
 

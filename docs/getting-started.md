@@ -48,7 +48,7 @@ Prefer just a slice (e.g. Python agents)? Install a focused pack like `mindforge
 
 ### 3. Standalone MCP server
 
-Run the MindForge MCP server (`mindforge-mcp-server`) over stdio — it exposes 7 tools (6 read-only plus 1 guarded write): `mindforge_health`, `mindforge_status`, `mindforge_memory_query`, `mindforge_memory_stats`, `mindforge_memory_find_related`, `mindforge_audit_log`, and `mindforge_memory_remember`.
+Run the MindForge MCP server (`mindforge-mcp-server`) over stdio — it exposes 8 tools (6 read-only, 1 guarded write, plus 1 guarded browse proxy): `mindforge_health`, `mindforge_status`, `mindforge_memory_query`, `mindforge_memory_stats`, `mindforge_memory_find_related`, `mindforge_audit_log`, `mindforge_memory_remember`, and `mindforge_browse`.
 
 ```bash
 claude mcp add mindforge -- npx -y mindforge-mcp-server

@@ -40,13 +40,14 @@ Or add it manually to your MCP host config (Claude Desktop, Cursor, VS Code):
 | `mindforge_memory_find_related` | read-only | Given free text, find related knowledge entries via hybrid (FTS5 + graph-traversal) retrieval. |
 | `mindforge_audit_log` | read-only | Read entries from the tamper-evident audit log (`.planning/AUDIT.jsonl`), optionally filtered by event. |
 | `mindforge_memory_remember` | **write** (guarded) | Persist a new knowledge entry (decision, pattern, or preference) into the graph. |
+| `mindforge_browse` | **write** (guarded, open-world) | Drive the MindForge browser daemon: status/navigate/click/type/screenshot/assert. Requires the daemon to already be running (`/mindforge:browse --start`); never spawns it, and never exposes JS eval or cookie import. |
 
 All tools are annotated with `readOnlyHint` / `destructiveHint` so MCP hosts can enforce the right trust boundary; only `mindforge_memory_remember` writes, and it is append-only.
 
 ## Transport & security
 
 - **Transport:** stdio JSON-RPC (single embedded client).
-- **Scope:** read/append only within `CLAUDE_PROJECT_DIR`; no shell execution, no network egress.
+- **Scope:** read/append only within `CLAUDE_PROJECT_DIR`, plus a loopback-only proxy to the MindForge browser daemon (`mindforge_browse`) — no shell execution. The MCP server process itself only ever talks to `127.0.0.1`; the daemon (a separate, pre-existing process this server never spawns) performs the actual browser network egress when a page navigates.
 - **Self-contained:** the SDK and Zod are bundled into `dist/index.js`; no `node_modules` are needed at runtime.
 
 ## Part of MindForge
