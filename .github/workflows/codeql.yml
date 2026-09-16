@@ -1,0 +1,43 @@
+name: CodeQL
+
+# Static application security testing (SAST). Nothing else in this repo fills this role —
+# ESLint (root + sdk/) is a style/correctness linter, not a security scanner, and mcp-server/src
+# is currently typechecked only (tsc --noEmit), covered by no linter at all. CodeQL's
+# javascript-typescript analysis covers all three JS/TS surfaces (root bin/, sdk/src,
+# mcp-server/src) in one pass with build-mode: none — no compile step needed for an
+# interpreted-language scan.
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Weekly, so a query-pack update surfaces new findings on code that didn't change this week.
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+# Least privilege: this workflow only checks out code and uploads a SARIF result.
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze (javascript-typescript)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
+        with:
+          languages: javascript-typescript
+          build-mode: none
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
+        with:
+          category: "/language:javascript-typescript"

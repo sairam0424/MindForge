@@ -89,8 +89,14 @@ const patch = (dir, file, from, to) => {
 test('the gate passes on this repository', () => {
   const r = runGate();
   assert.strictEqual(r.status, 0, `verify:pinning failed:\n${r.out}`);
-  assert.match(r.out, /third-party: *1 \(1 pinned\)/,
-    `expected exactly one third-party action, pinned. Output:\n${r.out}`);
+  // Backreference rather than a literal count, same reasoning as the release-path check below:
+  // this repo starts with exactly one third-party action (softprops/action-gh-release), but adding
+  // a NEW third-party action that IS pinned is a legitimate, strictly-improving change and must not
+  // fail this test. What must hold is that every third-party action is pinned -- none unpinned.
+  const tp = r.out.match(/third-party: *(\d+) \((\d+) pinned\)/);
+  assert.ok(tp, `the gate must report a third-party count. Output:\n${r.out}`);
+  assert.strictEqual(tp[1], tp[2],
+    `every third-party action must be pinned -- ${tp[1]} third-party but only ${tp[2]} pinned. Output:\n${r.out}`);
   // ALL release-path refs pinned, expressed as a backreference rather than a literal count. The
   // assertion used to hardcode "3 refs, 3 pinned", which broke the moment the release workflow grew a
   // preflight job whose two actions were BOTH correctly pinned — a change that strictly improved the
@@ -303,6 +309,13 @@ test('no workflow grants write beyond what it demonstrably needs', () => {
     // above: allowlisted as pre-existing and named, so it is a known loose end rather than an
     // invisible one.
     'control-plane.yml': new Set(['pull-requests', 'security-events']),
+    // github/codeql-action/analyze uploads the SARIF result to code scanning.
+    'codeql.yml': new Set(['security-events']),
+    // ossf/scorecard-action publishes signed results (id-token) and
+    // github/codeql-action/upload-sarif uploads the SARIF result to code scanning.
+    'scorecard.yml': new Set(['security-events', 'id-token']),
+    // github/codeql-action/upload-sarif uploads the Trivy config-scan SARIF result to code scanning.
+    'trivy-dockerfile.yml': new Set(['security-events']),
   };
   const offenders = [];
   for (const f of workflowFiles()) {

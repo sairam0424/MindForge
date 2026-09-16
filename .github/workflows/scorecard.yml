@@ -1,0 +1,55 @@
+name: OSSF Scorecard
+
+# Free, ongoing supply-chain risk signal for a public, npm-publishing repo. Complements the SLSA
+# provenance mindforge-release.yml already emits with a standing baseline of practices (branch
+# protection, pinned dependencies, dangerous workflow patterns, token permissions, etc.). Results
+# publish to the OpenSSF Scorecard API and the badge, and also upload as a SARIF code-scanning
+# result so findings surface alongside CodeQL's.
+
+on:
+  branch_protection_rule:
+  schedule:
+    # Weekly, per OSSF's own guidance — Scorecard evaluates repository state, not a diff, so it
+    # gains little from running on every push.
+    - cron: '0 8 * * 1'
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  analysis:
+    name: Scorecard analysis
+    runs-on: ubuntu-latest
+    # security-events: write — upload the SARIF result to code scanning.
+    # id-token: write — sign and publish results to the public Scorecard API (publish_results: true).
+    # contents: read — checkout only.
+    permissions:
+      security-events: write
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Run analysis
+        uses: ossf/scorecard-action@2d1146689b8cda280b9bc96326124645441f03bc # v2.4.4
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          publish_results: true
+
+      - name: Upload SARIF results as an artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: SARIF file
+          path: results.sarif
+          retention-days: 5
+
+      - name: Upload SARIF results to code-scanning
+        uses: github/codeql-action/upload-sarif@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
+        with:
+          sarif_file: results.sarif
