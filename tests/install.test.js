@@ -238,9 +238,20 @@ const SECRET_PATTERNS = [
 // Text formats a credential can hide in. `.yml` and `.sh` are the additions that matter.
 const SCAN_EXT = ['.md', '.js', '.json', '.yml', '.yaml', '.ts', '.mjs', '.cjs', '.sh', '.toml', '.txt'];
 
+// Hermetic env: strip GIT_* context vars a parent `git commit` exports into hook
+// subprocesses. Safe unconditionally: when `cwd` is the real repo this is a no-op outside a
+// hook and resolves to the same repo inside one (cwd-based discovery finds it either way);
+// when `cwd` is a throwaway sandbox, this is what makes `git ls-files` see the SANDBOX's own
+// tracked files instead of the real repo's.
+function gitLsFilesEnv() {
+  const env = { ...process.env };
+  for (const k of ['GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE', 'GIT_PREFIX', 'GIT_COMMON_DIR', 'GIT_OBJECT_DIRECTORY']) delete env[k];
+  return env;
+}
+
 // The committed set, NUL-delimited so paths with spaces survive.
 function trackedTextFiles(cwd) {
-  const out = execFileSync('git', ['ls-files', '-z'], { cwd, maxBuffer: 1 << 28 }).toString('utf8');
+  const out = execFileSync('git', ['ls-files', '-z'], { cwd, maxBuffer: 1 << 28, env: gitLsFilesEnv() }).toString('utf8');
   return out.split('\0').filter(Boolean).filter((f) => SCAN_EXT.some((e) => f.endsWith(e)));
 }
 
@@ -285,7 +296,16 @@ test('the scan set is the COMMITTED set — a tracked secret is caught, an ignor
 
   const tmp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-scanset-')));
   try {
-    const git = (...args) => execFileSync('git', args, { cwd: tmp, stdio: 'pipe' });
+    // Hermetic env: strip GIT_* context vars a parent `git commit` exports into hook
+    // subprocesses, which would otherwise redirect this git call at the real MindForge
+    // repo instead of the throwaway scratch repo in `tmp` (this is what committed a
+    // fixture app.js under the message 'init' when this ran inside the pre-commit hook).
+    const hermeticEnv = () => {
+      const env = { ...process.env };
+      for (const k of ['GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE', 'GIT_PREFIX', 'GIT_COMMON_DIR', 'GIT_OBJECT_DIRECTORY']) delete env[k];
+      return env;
+    };
+    const git = (...args) => execFileSync('git', args, { cwd: tmp, stdio: 'pipe', env: hermeticEnv() });
     git('init', '-q');
     git('config', 'user.email', 'test@example.invalid');
     git('config', 'user.name', 'test');
