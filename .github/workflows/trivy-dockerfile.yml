@@ -1,0 +1,53 @@
+name: Dockerfile scan
+
+# No workflow builds or pushes the tracked Dockerfile today — it is built by hand for
+# submission to the Docker MCP Catalog (see the Dockerfile's own header comment). This runs
+# Trivy's `config` scanner against the Dockerfile source directly, on every change, so a
+# misconfiguration (missing USER, embedded secret, risky ADD, etc.) is caught before the image
+# is ever built for submission. It does not build or scan the image itself.
+#
+# Gated on HIGH/CRITICAL only, matching the severity floor of the existing npm audit gate in
+# mindforge-ci.yml. Verified clean at HIGH/CRITICAL when this workflow was added; the only
+# existing finding (DS-0026, missing HEALTHCHECK) is LOW and does not fail the gate.
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'Dockerfile'
+      - '.github/workflows/trivy-dockerfile.yml'
+  pull_request:
+    paths:
+      - 'Dockerfile'
+      - '.github/workflows/trivy-dockerfile.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  trivy-config:
+    name: Trivy config scan (Dockerfile)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Run Trivy config scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: config
+          scan-ref: Dockerfile
+          format: sarif
+          output: trivy-dockerfile.sarif
+          exit-code: '1'
+          severity: HIGH,CRITICAL
+          limit-severities-for-sarif: 'true'
+
+      - name: Upload SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
+        with:
+          sarif_file: trivy-dockerfile.sarif
