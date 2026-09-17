@@ -44,6 +44,7 @@ jobs:
           output: trivy-dockerfile.sarif
           exit-code: '1'
           severity: HIGH,CRITICAL
+          limit-severities-for-sarif: 'true'
 
       - name: Upload SARIF
         if: always()
