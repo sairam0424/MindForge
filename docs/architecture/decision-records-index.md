@@ -7,8 +7,8 @@ directory — a separate numbering series, included below for completeness).
 Note: `.planning/decisions/ADR-001.md` through `ADR-020.md` are a DIFFERENT, unrelated set of
 files — empty scaffolding stubs with no content, not to be confused with the real ADRs below.
 
-| ADR | Title | Status | Day | Key decision |
-|---|---|---|---|---|
+| ADR | Title | Status | Key decision |
+|---|---|---|---|
 | ADR-001 | HANDOFF.json for cross-session state | Accepted | HANDOFF.json as the primary cross-session state artifact |
 | ADR-002 | Markdown-based commands | Accepted | Slash commands as Markdown files (not code) |
 | ADR-003 | Keyword-trigger model for skill loading | Accepted | Deterministic keyword matching over AI-decided selection |

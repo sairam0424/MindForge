@@ -125,16 +125,10 @@ from an unrelated external tool referencing a directory that doesn't exist in th
 
 ### Verified
 
-- `npm test`: 130 passed, 0 newly-failing, 2 env-dependent skips (`browser.test.js`,
-  `sre-integration.test.js`), 3 pre-existing failures unrelated to this release — two
-  (`audit-claims-honesty.test.js`, `vector-hub-clobber.test.js`) are this specific sandbox's
-  `git core.bare=true` breaking `git grep`/`git check-ignore`, not a real gap (confirmed by
-  running the same `git check-ignore` with `GIT_DIR`/`GIT_WORK_TREE` set explicitly: it
-  passes); one (`verification-runner.test.js`) traces to pre-existing lint errors in four
-  files this release never touched (`bin/autonomous/repair-operator.js`,
-  `bin/harness-audit.js`, `bin/installer/harness-adapter-compliance.js`,
-  `bin/installer/install-state.js`) — tracked as separate backlog, not fixed here to keep
-  this release scoped to what it set out to do.
+- `npm test`: 137 passed, 0 failed, 3 env-dependent skips (`browser.test.js`,
+  `browser-daemon-auth-live.test.js`, `sre-integration.test.js` — all three require a
+  Chromium daemon/display or git worktree support this sandbox does not have). Verified
+  clean through the real pre-commit hook, not just a standalone run.
 - `node scripts/sync-version.js`: 27 channels synced; `Formula/mindforge.rb` correctly
   deferred (tarball doesn't exist yet); `plugins/mindforge/.claude-plugin/plugin.json` and
   `plugins/mindforge/mcp/dist/index.js` rebuilt.

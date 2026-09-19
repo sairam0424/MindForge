@@ -26,7 +26,7 @@ async function main() {
     console.log(`\n📚 Learning skill: ${NAME} from ${SOURCE}`);
 
     // 1. Load
-    const { content, metadata } = await Loader.load(SOURCE);
+    const { type, content, metadata } = await Loader.load(SOURCE);
 
     // 2. Generate
     const result = await Generator.generate({
@@ -50,7 +50,7 @@ async function main() {
         skillPath: result.skillPath,
         tier: 'project',
         qualityScore: scoreResult.quality_score,
-        sourceType: /^https?:\/\//i.test(SOURCE) ? 'url' : 'local',
+        sourceType: type,
         source: SOURCE,
       });
       console.log('📝 Registered in MANIFEST.md');

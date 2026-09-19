@@ -1,4 +1,4 @@
-# MindForge — Skill Registry (v11.9.5)
+# MindForge — Skill Registry (v11.9.6)
 
 > **Curated subset.** The real skill catalog has 232 engine-tier skills (`.mindforge/skills/`,
 > auto-triggered) + 123 extended-tier skills (`.agent/skills/`, explicit-activation) = 355 total.

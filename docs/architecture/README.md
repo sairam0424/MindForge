@@ -1,6 +1,6 @@
 # MindForge Architecture Overview
 
-MindForge (current package version 11.9.5) is a markdown-driven agentic framework layered over a
+MindForge (current package version 11.9.6) is a markdown-driven agentic framework layered over a
 real Node.js runtime under `bin/`. The "Pillar" numbering below (V3/V4/V5/V6) refers to historical
 development-era milestones, not the npm package version — don't confuse the two. Several of the
 capabilities below are explicitly simulated or not yet wired to a live command path; see *What is

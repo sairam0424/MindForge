@@ -1,4 +1,4 @@
-# MindForge — Agent Identity Registry (v11.9.5)
+# MindForge — Agent Identity Registry (v11.9.6)
 
 > **Curated subset.** The real subagent library lives at `./plugins/mindforge/agents/` (164 files
 > across 10 categories, installable à-la-carte via the Claude Code plugin marketplace) — see

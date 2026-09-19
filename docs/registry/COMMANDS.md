@@ -1,4 +1,4 @@
-# MindForge — Command Registry (v11.9.5)
+# MindForge — Command Registry (v11.9.6)
 
 > **This is a curated subset, not the exhaustive list of all 221 commands.** For the complete,
 > verified reference, see [docs/commands-reference.md](../commands-reference.md). Entries below

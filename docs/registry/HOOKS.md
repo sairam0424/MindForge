@@ -1,4 +1,4 @@
-# MindForge — Hook Registry (v11.9.5)
+# MindForge — Hook Registry (v11.9.6)
 
 This registry catalogs the real, currently-wired hooks in `.claude/settings.json`/`.agent/settings.json`,
 dispatched through a single shared wrapper (`run-with-flags.js`) that enforces a strict

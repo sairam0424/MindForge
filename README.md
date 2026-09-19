@@ -166,7 +166,7 @@ Full verification walkthrough: [docs/quick-verify.md](docs/quick-verify.md).
 - **Audit events:** [docs/References/audit-events.md](docs/References/audit-events.md)
 - **Upgrade guide:** [docs/upgrade.md](docs/upgrade.md)
 - **Workflow atlas:** [docs/workflow-atlas.md](docs/workflow-atlas.md)
-- **Security:** [SECURITY.md](SECURITY.md) (MindForge never stores credentials in files)
+- **Security:** [SECURITY.md](SECURITY.md) (credentials are read from env vars and never committed to the repository)
 - **Threat model:** [docs/security/threat-model.md](docs/security/threat-model.md)
 - **Architecture:** [docs/architecture/README.md](docs/architecture/README.md)
 - **Contributing:** [docs/contributing/CONTRIBUTING.md](docs/contributing/CONTRIBUTING.md)

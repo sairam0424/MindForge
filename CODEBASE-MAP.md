@@ -6,7 +6,7 @@
 > drift the same way, this page now points to the sources that are kept accurate on every
 > release instead of duplicating them.
 
-**Last verified against `package.json` version 11.9.5:**
+**Last verified against `package.json` version 11.9.6:**
 
 | Item | Count | Verify yourself |
 |---|---|---|

@@ -1,4 +1,4 @@
-# MindForge — Workflow Registry (v11.9.5)
+# MindForge — Workflow Registry (v11.9.6)
 
 > **This is a curated subset**, not the full command list — see
 > [docs/commands-reference.md](../commands-reference.md) for the verified, exhaustive 221-command

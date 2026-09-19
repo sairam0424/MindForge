@@ -16,7 +16,7 @@ in the modules that would implement them. This page now describes what's actuall
 | 0 — Informational | Research/query only | Read-only |
 | 1 — Implementation | Standard feature work | Write access, session-scoped limits |
 | 2 — Specialized | Security/ops-adjacent work | Higher-risk-cap access |
-| 3 — Principal | Architecturally significant changes | Requires a Tier-3 attestation (Ed25519, real and live) or an explicit bypass with `reasoning_proof` |
+| 3 — Principal | Architecturally significant changes | Requires a Tier-3 attestation -- real Ed25519 signing, but the enclave/key storage backing it is in-process simulation, not hardware-isolated (see SECURITY.md's Tier-3 Trust section) -- or an explicit bypass with `reasoning_proof` |
 
 ## 2. Blast-radius scoring
 
