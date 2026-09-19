@@ -1,38 +1,37 @@
-# MindForge — Hook Registry (v11.3.1)
+# MindForge — Hook Registry (v11.9.6)
 
-This registry catalogs the automation and security lifecycle hooks available in the MindForge environment.
+This registry catalogs the real, currently-wired hooks in `.claude/settings.json`/`.agent/settings.json`,
+dispatched through a single shared wrapper (`run-with-flags.js`) that enforces a strict
+0=allow/2=block exit-code contract.
 
-## 🛡️ Framework Governance Hooks
+## 🛡️ Fail-closed (DENY_CLASS — block on any error, not just a real violation)
 
-| Hook | Trigger Event | Primary Security Protocol |
+| Hook | Trigger Event | What it does |
 | :--- | :--- | :--- |
-| **mindforge-session-init_extended** | `Session Start` | "Enterprise-grade context restoration, workspace mounting, and security baseline verification." |
-| **mindforge-workflow-guard** | `Command Invocation` | "Enforcement of phase-based logic, mandatory plan approval, and verification gating." |
-| **mindforge-prompt-guard** | `Token Input` | "Persona integrity enforcement, safety filtering, and prompt injection prevention." |
+| **trust-gate** | `PreToolUse` (Bash) | Blocks high-impact/destructive shell commands, scoped by command content not tool name. |
+| **mindforge-block-no-verify** | `PreToolUse` (Bash) | Blocks `git --no-verify` / `core.hooksPath=` bypass flags. |
+| **mindforge-config-protection** | `PreToolUse` (Write/Edit) | Blocks edits to existing lint/format/tsconfig/commit-governance files. |
 
-## 📊 Operational Visibility & Health
+## 📊 Advisory (fail-open — log/inform, never block)
 
-| Hook | Trigger Event | Primary Security Protocol |
+| Hook | Trigger Event | What it does |
 | :--- | :--- | :--- |
-| **mindforge-statusline** | `Terminal Init / Loop` | "Real-time productivity indicators, token counts, and phase status rendering." |
-| **mindforge-check-update** | `Startup / Interval` | "Automatic framework update detection, changelog retrieval, and version sync." |
-| **mindforge-context-monitor** | `Context Shift` | "Dynamic token optimization, context window management, and memory prioritizing." |
+| **mindforge-session-init_extended** | `SessionStart` | Loads project context and skill index at session start. |
+| **mindforge-context-monitor** | `PostToolUse` | Injects context-budget warnings at 35%/25% remaining. |
+| **instinct-capture-hook** | `PostToolUse` (Bash\|Task) | Captures lightweight behavioral "instincts" (rate-limited per session). |
+| **mindforge-prompt-guard** | `PreToolUse` (Write/Edit into `.planning/`) | Advisory prompt-injection pattern scan. |
+| **mindforge-check-update** | `SessionStart` | Background version-check against the npm registry. |
+| **mindforge-statusline** | Claude Code's `statusLine` renderer (not a lifecycle hook) | Produces the context-remaining % that `mindforge-context-monitor` reads. |
 
-## 🔗 Version Control & Git Hooks
+## ⚠️ Shipped but not currently wired to any event
 
-| Hook | Trigger Event | Primary Security Protocol |
-| :--- | :--- | :--- |
-| **pre-commit-security** | `git commit` | "Run a `--secrets` scan on staged files before commit." |
-| **post-merge-status** | `git merge` | "Re-verify Sovereign framework integrity after code updates." |
-| **pre-push-validation** | `git push` | "Validate that all active plans have an 'Approved' status." |
+| Hook | Status |
+| :--- | :--- |
+| **mindforge-workflow-guard** | Real file, real logic (phase-based enforcement, plan-approval gating) — but not wired into `.claude/settings.json` or `.agent/settings.json` in this version, and no code reads its documented `hooks.workflow_guard` config key yet. |
 
-## 🧠 Reasoning & Memory Hooks
-
-| Hook | Trigger Event | Primary Security Protocol |
-| :--- | :--- | :--- |
-| **nexus-tracer-init** | `Async Start` | "Inject the ZTAI signing protocol into every reasoning cycle." |
-| **memory-load-check** | `Session Start` | "Verify the knowledge graph's semantic integrity." |
-| **intent-harvest-trigger** | `Idle Threshold` | "Activate the Sovereign Homing engine for idle task-claiming." |
+The three "Version Control & Git Hooks" (pre-commit-security, post-merge-status, pre-push-validation)
+previously listed here do not exist as real git hooks anywhere in this repo and have been removed
+from this registry.
 
 ---
-*For more details, see the [MIND-FORGE-REFERENCE-V6.md](../MIND-FORGE-REFERENCE-V6.md).*
+*For the audit hash-chain and its verifier, see `bin/governance/audit-hash.js` / `node bin/verify-audit.js`.*

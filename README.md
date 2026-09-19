@@ -1,29 +1,39 @@
 # MindForge
 
+[![npm version](https://img.shields.io/npm/v/mindforge-cc.svg)](https://www.npmjs.com/package/mindforge-cc)
+[![npm downloads](https://img.shields.io/npm/dm/mindforge-cc.svg)](https://www.npmjs.com/package/mindforge-cc)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Node >=18](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](package.json)
+
 **An agentic intelligence framework for Claude Code** — orchestrates multi-agent workflows with governance, memory, and autonomous execution. Production-hardened with true parallelism, streaming SDK, and zero-trust security. Install once, get structured AI-driven development with built-in quality gates.
+
+**At a glance:** 221 slash commands · 355 skills (232 auto-triggered + 123 explicit) · 218 personas · 164 installable subagents · 35 pre-built multi-agent dynamic workflows · a tamper-evident audit hash-chain · cost-aware routing across Anthropic/OpenAI/Gemini/Bedrock/Ollama · a local-first knowledge graph on zero-native-dependency SQLite (sql.js) · a live Express+SSE dashboard. Ships as an npm package, a Claude Code plugin, and an MCP server.
+
+**Jump to:** [Latest release](#latest-release) · [What is actually enforced](#what-is-actually-enforced) · [Install](#install) · [Quick start](#quick-start-new-project) · [Documentation](#documentation) · [Core workflow](#core-workflow) · [Dynamic workflows](#dynamic-workflow-library)
 
 ---
 
 ## Latest release
 
-**v11.9.5** (2026-08-22) — The release path can no longer strand itself, and the SDK ships.
-11.9.4 published two packages and then failed on the third; because that step sat *before* the
-release page and the `stable` dist-tag move, its failure skipped both. Fixed two ways: the steps
-that finish a release now run ahead of any additive package publish, and a new offline preflight
-gate refuses to reach a publish that the registry will reject. Verified against a worktree at tag
-`v11.9.4` — the exact tree npm rejected — the gate exits 1 and names the file.
+**v11.9.6** (2026-09-20) — The docs stop overselling what the code discloses about itself.
+The release-readiness pass before pointing real, external users at the project: fixed a
+crash in `/mindforge:learn` (wrong argument shape into `skill-registrar.js`), a token-leak
+and inconsistent auth in the browser daemon, three dashboard panels that silently rendered
+nothing, a stale Homebrew formula, and a long-running pattern of docs describing
+PQAS/ZTAI/"Pillar"-numbered subsystems as live security guarantees when the code that
+implements them already self-labels them simulated and off-by-default. No new features.
+See [RELEASENOTES.md](./RELEASENOTES.md) for the human-readable summary, or
+[CHANGELOG.md](./CHANGELOG.md) for the complete, file-by-file list.
 
-**`mindforge-sdk` publishes for the first time since 11.8.0, and for the first time with
-provenance.** Everything fixed in it across 11.8.1–11.9.4 had reached nobody, including a
-`WebSocketEventStream` reconnect whose unhandled rejection **terminates the caller's process**.
-
-The previous release, **v11.9.4**, is where the hook gates started actually registering: 11.9.3
-shipped the code and then declined to run it on essentially every project. Measured against the
-published tarballs — 11.9.3: **11 hook scripts installed, 0 registered**; 11.9.4: **8 registered,
-3 deny-class verified blocking**. That **behaviour change under a patch bump** still applies — the
-installer writes `.claude/settings.json` where it previously declined, merging append-only and
-backing up first. See the BREAKING section in [CHANGELOG.md](./CHANGELOG.md), or
-[RELEASENOTES.md](./RELEASENOTES.md) for human-readable notes.
+The previous release, **v11.9.5**, fixed a release pipeline that could strand itself
+mid-publish and shipped `mindforge-sdk` for the first time since 11.8.0, with provenance.
+**v11.9.4**, before that, is where the hook gates started actually registering: 11.9.3
+shipped the code and then declined to run it on essentially every project. Measured against
+the published tarballs — 11.9.3: **11 hook scripts installed, 0 registered**; 11.9.4:
+**8 registered, 3 deny-class verified blocking**. That **behaviour change under a patch
+bump** still applies — the installer writes `.claude/settings.json` where it previously
+declined, merging append-only and backing up first. See the BREAKING section in
+[CHANGELOG.md](./CHANGELOG.md).
 
 ---
 
@@ -156,7 +166,7 @@ Full verification walkthrough: [docs/quick-verify.md](docs/quick-verify.md).
 - **Audit events:** [docs/References/audit-events.md](docs/References/audit-events.md)
 - **Upgrade guide:** [docs/upgrade.md](docs/upgrade.md)
 - **Workflow atlas:** [docs/workflow-atlas.md](docs/workflow-atlas.md)
-- **Security:** [docs/security/SECURITY.md](docs/security/SECURITY.md) (MindForge never stores credentials in files)
+- **Security:** [SECURITY.md](SECURITY.md) (credentials are read from env vars and never committed to the repository)
 - **Threat model:** [docs/security/threat-model.md](docs/security/threat-model.md)
 - **Architecture:** [docs/architecture/README.md](docs/architecture/README.md)
 - **Contributing:** [docs/contributing/CONTRIBUTING.md](docs/contributing/CONTRIBUTING.md)

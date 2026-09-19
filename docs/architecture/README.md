@@ -1,18 +1,24 @@
 # MindForge Architecture Overview
 
-MindForge v11.9.0 is built on a distributed "Agentic OS" architecture, designed for enterprise-scale intelligence sharing and absolute governance.
+MindForge (current package version 11.9.6) is a markdown-driven agentic framework layered over a
+real Node.js runtime under `bin/`. The "Pillar" numbering below (V3/V4/V5/V6) refers to historical
+development-era milestones, not the npm package version — don't confuse the two. Several of the
+capabilities below are explicitly simulated or not yet wired to a live command path; see *What is
+actually enforced* in the root [README](../../README.md) for the measured, per-feature status.
 
 ---
 
-## 1. Core Architectural Pillars (v11.9.0)
+## 1. Core Architectural Pillars (historical milestone numbering, not the package version)
 
-The framework is focused on eight major pillars, with V6 introducing the **Neural Blast Radius Optimizer (CADIA)**:
+The framework grew through eight major development milestones, with V6 introducing the
+**Blast Radius Optimizer (CADIA)** — a real impact-scoring mechanism (`bin/governance/
+policy-engine.js`, `bin/governance/impact-analyzer.js`), not a neural/ML model:
 
 1. **Federated Intelligence Mesh (FIM)**: Distributed knowledge sharing with delta-sync and cryptographic provenance. [V5-ENTERPRISE.md](./V5-ENTERPRISE.md)
 2. **CADIA Engine (v6.0.0 Alpha)**: Neural Blast Radius Optimizer that calculates real-time architectural risk based on influence, entropy, and alignment.
 3. **Predictive Agentic Reliability (PAR)**: Self-healing reasoning loops and context refactoring. [PAR-ZTS-SURVEY.md](./PAR-ZTS-SURVEY.md)
 4. **Supply Chain Trust (ZTS)**: Agentic SBOM and 7-dimension skill certification. [PAR-ZTS-SURVEY.md](./PAR-ZTS-SURVEY.md)
-5. **Zero-Trust Agentic Identity (ZTAI)**: DID-based cryptographic signing for all agentic actions and tiered trust enforcement.
+5. **Zero-Trust Agentic Identity (ZTAI)**: tiered trust enforcement backed by real Ed25519 identity signing (`bin/governance/ztai-manager.js`) where a channel is live; the module's own `SECURITY_TIER_3_SIMULATED` flag governs which trust tiers are currently simulated versus enforced — check it before relying on Tier-3 as a hard guarantee.
 6. **Adversarial Decision Synthesis (ADS)**: 3-model synthesis loop ensuring architectural integrity.
 7. **Semantic Context Sharding**: Tri-tier memory (Hot/Warm/Cold) for high-fidelity context management.
 8. **Autonomous Execution Engine**: Self-healing wave execution with stuck-detection and repair hierarchies.
@@ -46,7 +52,7 @@ The `file-manifest.json` file in `.agent/` is the single source of truth for the
 3.  **Policy Interception**: The `APO` evaluates the task intent. If not **PERMIT**, the session is halted.
 4.  **Skill Discovery**: Match task intent against the 3-tier skill registry.
 5.  **Execution Wave**: Parallel task execution with continuous FIM synchronization.
-6.  **Audit Pulse**: All actions are cryptographically signed and appended to `.planning/AUDIT.jsonl`.
+6.  **Audit Pulse**: every action is appended to `.planning/AUDIT.jsonl` as an entry in a SHA-256 hash chain (`bin/governance/audit-hash.js`) — tamper-evident against mutation and mid-file deletion, verifiable via `node bin/verify-audit.js`. This is a hash chain, not a cryptographic signature scheme -- not a Merkle tree: no hash tree, no inclusion proof.
 
 ---
 

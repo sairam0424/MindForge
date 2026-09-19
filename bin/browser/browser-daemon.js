@@ -51,7 +51,7 @@ async function init() {
 function checkIdle() {
   if (Date.now() - lastActionAt > TIMEOUT) {
     console.log('[daemon] Idle timeout reached. Shutting down.');
-    process.exit(0);
+    shutdown();
   }
 }
 
@@ -92,7 +92,7 @@ const server = http.createServer(async (req, res) => {
         return send(
           {
             error:
-              'Authentication required. Use the token printed at daemon startup.',
+              'Authentication required. Use the token written to the daemon token file at startup.',
           },
           401,
         );
@@ -183,8 +183,9 @@ init()
   .then(() => {
     server.listen(PORT, '127.0.0.1', () => {
       console.log(`[BrowserDaemon] Listening on port ${PORT}`);
-      console.log(`[BrowserDaemon] Auth token: ${DAEMON_TOKEN}`);
-      console.log(`[BrowserDaemon] Token file: ${DAEMON_TOKEN_FILE}`);
+      console.log(
+        `[BrowserDaemon] Auth token written to: ${DAEMON_TOKEN_FILE}`,
+      );
     });
   })
   .catch((err) => {

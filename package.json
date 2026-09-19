@@ -1,7 +1,7 @@
 {
   "name": "mindforge-cc",
-  "version": "11.9.5",
-  "description": "MindForge — Sovereign Agentic Intelligence Framework. Sovereign Stability: Production-Hardened Agentic Intelligence (v11)",
+  "version": "11.9.6",
+  "description": "Agentic intelligence framework for Claude Code and Antigravity: slash commands, subagents, skills, hooks, governance, memory, and cost-aware model routing for AI-driven development.",
   "bin": {
     "mindforge-cc": "bin/install.js",
     "mindforge": "bin/mindforge-cli.js"
@@ -85,7 +85,10 @@
     "wasm-sqlite",
     "zero-native-deps",
     "agent-orchestration",
-    "sovereign-ai"
+    "ai-agents",
+    "llm-tools",
+    "developer-tools",
+    "mcp-server"
   ],
   "author": "sairamugge",
   "license": "MIT",

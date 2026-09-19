@@ -1,32 +1,35 @@
-# MindForge — Command Registry (v11.3.1)
+# MindForge — Command Registry (v11.9.6)
 
-This registry catalogs every strategic, operational, and governance command available in the MindForge ecosystem.
+> **This is a curated subset, not the exhaustive list of all 221 commands.** For the complete,
+> verified reference, see [docs/commands-reference.md](../commands-reference.md). Entries below
+> were checked against the live `.claude/commands/mindforge/` directory; any command previously
+> listed here with no backing file has been removed (see "not implemented" note at the bottom).
+
+This registry catalogs a curated subset of the strategic, operational, and governance commands
+available in the MindForge ecosystem.
 
 ## 🛡️ Strategic & Governance Commands
 
 | Command | Description | Invocation | Outcome Goal |
 | :--- | :--- | :--- | :--- |
-| `/mindforge:status` | Real-time project and Sovereign health. | `/mindforge:status` | Verified engine manifestation. |
-| `/mindforge:security-scan` | OWASP Top 10 + Sovereign Integrity check. | `/mindforge:security-scan` | Hardened codebase. |
-| `/mindforge:health` | 7-pillar diagnostic of framework integrity. | `/mindforge:health` | 100% module health report. |
-| `/mindforge:approve` | ZK-signed proof for Tier 3 gates. | `/mindforge:approve` | Unlocked high-risk commits. |
-| `/mindforge:audit` | Query historical reasoning and compliance. | `/mindforge:audit` | Traceability and audit trail. |
-| `/mindforge:tokens` | Real-time ROI and cost efficiency analysis. | `/mindforge:tokens` | Balanced resource consumption. |
-| `/mindforge:quantum-verify` | Lattice-based framework integrity check. | `/mindforge:quantum-verify` | Cryptographically proven state. |
-| `/mindforge:metrics` | Real-time velocity and quality aggregation. | `/mindforge:metrics` | Performance trends and KPIs. |
-| `/mindforge:classify` | Governance tier assignment for changes. | `/mindforge:classify` | Risk-aware gate enforcement. |
+| `/mindforge:status` | Real-time project status snapshot. | `/mindforge:status` | Verified project state. |
+| `/mindforge:security-scan` | OWASP Top 10 + dependency/secret audit. | `/mindforge:security-scan` | Hardened codebase. |
+| `/mindforge:health` | Diagnostic of framework/installation integrity. | `/mindforge:health` | Health report, `--repair` fixes what it can. |
+| `/mindforge:approve` | Governance sign-off for gated changes. | `/mindforge:approve` | Unlocked high-risk commits. |
+| `/mindforge:audit` | Query the AUDIT.jsonl hash-chained log. | `/mindforge:audit` | Traceability and audit trail. |
+| `/mindforge:tokens` | Token consumption and cost profiling. | `/mindforge:tokens` | Cost-usage visibility. |
+| `/mindforge:metrics` | Velocity and quality metric aggregation. | `/mindforge:metrics` | Performance trends and KPIs. |
 
 ## 📐 Project & Lifecycle Management
 
 | Command | Description | Invocation | Outcome Goal |
 | :--- | :--- | :--- | :--- |
-| `/mindforge:init-project` | Initialize a new project with the framework. | `/mindforge:init-project` | "Enterprise-Grade" workspace. |
-| `/mindforge:init-org` | Set up organization-level policy standards. | `/mindforge:init-org` | Standardized enterprise config. |
-| `/mindforge:new-project` | Structured project initialization wizard. | `/mindforge:new-project` | Validated project baseline. |
+| `/mindforge:init-project` | Initialize a new project with the framework. | `/mindforge:init-project` | Initialized workspace. |
+| `/mindforge:init-org` | Set up organization-level policy standards. | `/mindforge:init-org` | Standardized org config. |
 | `/mindforge:milestone` | Define and track high-level milestones. | `/mindforge:milestone` | Recorded project roadmap. |
 | `/mindforge:discuss-phase` | Adaptive requirement gathering and discovery. | `/mindforge:discuss-phase` | Approved PLAN.md. |
-| `/mindforge:plan-phase` | High-fidelity execution plan generation. | `/mindforge:plan-phase` | Atomic task blueprint. |
-| `/mindforge:architecture` | Domain modeling and system design orchestration. | `/mindforge:architecture` | UI-SPEC and ARCHITECTURE docs. |
+| `/mindforge:plan-phase` | Execution plan generation. | `/mindforge:plan-phase` | Atomic task blueprint. |
+| `/mindforge:system-design` | Domain modeling and system design orchestration. | `/mindforge:system-design` | Architecture design doc. |
 | `/mindforge:next` | Auto-detect and route the next logical action. | `/mindforge:next` | Zero-friction dev workflow. |
 | `/mindforge:retro` | Performance-driven milestone retrospective. | `/mindforge:retro` | Identified growth areas. |
 | `/mindforge:complete-milestone` | Milestone archival and next cycle preparation. | `/mindforge:complete-milestone` | Clean project state for next. |
@@ -36,13 +39,11 @@ This registry catalogs every strategic, operational, and governance command avai
 | Command | Description | Invocation | Outcome Goal |
 | :--- | :--- | :--- | :--- |
 | `/mindforge:execute-phase` | Wave-based parallel implementation. | `/mindforge:execute-phase` | Completed feature phase. |
-| **mindforge:auto** | Autonomous execution mode (Wave mode). | `/mindforge:auto` | Unattended bulk task completion. |
-| `/mindforge:do` | NLP intent ingestion and dispatching. | `/mindforge:do "[intent]"` | Smart task routing. |
-| `/mindforge:steer` | Mid-execution instruction for active swarms. | `/mindforge:steer "[guide]"` | Remediated autonomous engine. |
-| `/mindforge:headless` | Daemonize MindForge for background operation. | `/mindforge:headless` | Continuous framework uptime. |
+| `/mindforge:auto` | Autonomous execution mode (walk-away). | `/mindforge:auto` | Unattended bulk task completion. |
+| `/mindforge:do` | Natural-language intent dispatching. | `/mindforge:do "[intent]"` | Smart task routing. |
+| `/mindforge:steer` | Mid-execution instruction for a running autonomous session. | `/mindforge:steer "[guide]"` | Redirected autonomous engine. |
 | `/mindforge:quick` | Atomic task execution with validation. | `/mindforge:quick` | Fast, safe bugfixes and tweaks. |
-| `/mindforge:tdd` | Strict Red-Green-Refactor development logic. | `/mindforge:tdd` | 100% tested implementation. |
-| `/mindforge:swarm-execution` | Multi-agent parallel swarm orchestration. | `/mindforge:swarm-execution` | High-velocity implementation. |
+| `/mindforge:tdd` | Red-Green-Refactor development loop. | `/mindforge:tdd` | Tested implementation. |
 | `/mindforge:debug` | RCA investigation and systematic repair. | `/mindforge:debug` | Resolved root-cause defects. |
 | `/mindforge:workstreams` | Parallel feature track isolation and management. | `/mindforge:workstreams` | Isolated, concurrent development. |
 
@@ -50,38 +51,37 @@ This registry catalogs every strategic, operational, and governance command avai
 
 | Command | Description | Invocation | Outcome Goal |
 | :--- | :--- | :--- | :--- |
-| `/mindforge:verify-work` | UAT + Browser testing + Evidence capture. | `/mindforge:verify-work` | Visual proof of functionality. |
-| `/mindforge:validate-phase` | Pillar gap analysis and requirement closure. | `/mindforge:validate-phase` | Quality-certified phase. |
+| `/mindforge:verify-phase` | Human acceptance testing for a completed phase. | `/mindforge:verify-phase` | UAT sign-off. |
+| `/mindforge:verify-loop` | Automated gate pipeline (build/lint/test/audit). | `/mindforge:verify-loop` | Pass/fail per-stage report. |
+| `/mindforge:validate-phase` | Requirement-coverage gap analysis. | `/mindforge:validate-phase` | Quality-certified phase. |
 | `/mindforge:pr-review` | AI-driven pull request review engine. | `/mindforge:pr-review` | Approved code and PR summary. |
-| `/mindforge:ui-review` | Visual audit against DESIGN_SYSTEM.md. | `/mindforge:ui-review` | 10/10 aesthetic compliance. |
-| `/mindforge:benchmark` | Measure skill and agent effectiveness. | `/mindforge:benchmark` | ROI and quality scores. |
-| `/mindforge:test-memory` | Persistent memory suite validation check. | `/mindforge:test-memory` | Knowledge graph integrity. |
+| `/mindforge:ui-review` | Retroactive visual audit against DESIGN_SYSTEM.md. | `/mindforge:ui-review` | Visual/accessibility findings. |
+| `/mindforge:benchmark` | Measure skill and agent effectiveness over time. | `/mindforge:benchmark` | Effectiveness trend report. |
 
 ## 🧠 Knowledge & AI Intelligence
 
 | Command | Description | Invocation | Outcome Goal |
 | :--- | :--- | :--- | :--- |
 | `/mindforge:learn` | Convert raw knowledge into a SKILL.md. | `/mindforge:learn` | New framework capability. |
-| `/mindforge:remember` | Management of the semantic knowledge graph. | `/mindforge:remember` | Evolving framework intelligence. |
-| `/mindforge:memory` | Real-time interaction with framework memory. | `/mindforge:memory` | Semantic context retrieval. |
-| `/mindforge:research` | Deep research across the 1M token window. | `/mindforge:research` | Comprehensive context reports. |
-| `/mindforge:hindsight` | Inject fixes into past state points. | `/mindforge:hindsight` | Repaired state history. |
-| `/mindforge:harvest` | Proactive semantic intent harvesting. | `/mindforge:harvest` | Automated task claiming. |
-| `/mindforge:self-heal` | Autonomous reasoning drift remediation. | `/mindforge:self-heal` | Stabilized swarm logic. |
-| `/mindforge:temporal` | State history and time-travel debugging. | `/mindforge:temporal` | Advanced state traceability. |
+| `/mindforge:remember` | Manage the long-term knowledge graph. | `/mindforge:remember` | Evolving framework knowledge base. |
+| `/mindforge:research` | Deep research using a large context window. | `/mindforge:research` | Comprehensive context reports. |
+
+Time-travel/rollback of `.planning/` state is reachable via the `mindforge temporal <status|cleanup|inject>`
+**CLI subcommand** (not a slash command) — see `node bin/mindforge-cli.js temporal --help`.
 
 ## 📦 Skill & Asset Management
 
 | Command | Description | Invocation | Outcome Goal |
 | :--- | :--- | :--- | :--- |
-| `/mindforge:install-skill` | Install a skill to the designated Tier. | `/mindforge:install-skill` | Deployed capability. |
-| `/mindforge:register-skill` | Register skill in the framework Manifest. | `/mindforge:register-skill` | Discoverable skill asset. |
-| `/mindforge:audit-skill` | Record lifecycle events in the audit log. | `/mindforge:audit-skill` | Compliance and history. |
-| `/mindforge:validate-skill` | High-fidelity skill testing and linting. | `/mindforge:validate-skill` | Certified skill performance. |
+| `/mindforge:install-skill` | Install a skill to the designated tier. | `/mindforge:install-skill` | Deployed capability. |
+| `/mindforge:publish-skill` | Publish a skill to the npm/private registry. | `/mindforge:publish-skill` | Published skill package. |
+| `/mindforge:create-skill` | Author a new skill from a template. | `/mindforge:create-skill` | New SKILL.md scaffold. |
 | `/mindforge:marketplace` | Discover and install community skills. | `/mindforge:marketplace` | Ecosystem expansion. |
-| `/mindforge:spawn` | Direct invocation of a persona essence. | `/mindforge:spawn [persona]` | Cognitive support on demand. |
-| `/mindforge:identity` | Invoke specialized identity from /agents/. | `/mindforge:identity` | Specialized interaction persona. |
-| `/mindforge:plugins` | Manage and audit framework logic plugins. | `/mindforge:plugins` | Customizable framework engine. |
+| `/mindforge:plugins` | Manage and audit installed framework plugins. | `/mindforge:plugins` | Plugin inventory/validation. |
+
+Direct persona invocation is via `node bin/mindforge-cli.js spawn <persona>` — the project's own
+root `CLAUDE.md` documents this CLI verb as **a v1.0 stub**; use `/mindforge:agent <persona>` for
+the real, working equivalent (loads a persona as an in-session role overlay).
 
 ---
-*For more details, see the [MIND-FORGE-REFERENCE-V6.md](../MIND-FORGE-REFERENCE-V6.md).*
+*For the complete, verified command list, see [docs/commands-reference.md](../commands-reference.md).*
