@@ -1,6 +1,13 @@
-# MindForge — Agent Identity Registry (v11.3.1)
+# MindForge — Agent Identity Registry (v11.9.5)
 
-This registry catalogs the specialized agent identities available for direct invocation and autonomous collaboration within the MindForge mesh.
+> **Curated subset.** The real subagent library lives at `./plugins/mindforge/agents/` (164 files
+> across 10 categories, installable à-la-carte via the Claude Code plugin marketplace) — see
+> [docs/commands-reference.md](../commands-reference.md). The `mf-*` personas below are a smaller,
+> separate, legacy persona sub-family distinct from the 164 real subagents; they are loaded via
+> `/mindforge:agent <name>` as in-session role overlays, not spawned as isolated subagents.
+
+This registry catalogs a curated subset of the specialized agent identities available for direct
+invocation and autonomous collaboration within the MindForge framework.
 
 ## 👤 Interaction Layer (Public Identifiers)
 

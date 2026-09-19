@@ -1,37 +1,39 @@
-# MindForge Federated Intelligence Mesh (FIM) (v8.0.0 Celestial)
-MindForge v8.0.0 — Unified, Federated & Hardware-Attested Distributed Intelligence
+# MindForge Memory Federation
 
-## 1. Overview
-The **Federated Intelligence Mesh (FIM)** is the enterprise-grade evolution of the Global Intelligence Mesh. It transitions MindForge from machine-local memory to a distributed organizational intelligence network. In v6.2.0, FIM evolves from a reactive knowledge store to a **Proactive Homing** mesh where agents actively hunt for intents and collaboratively heal reasoning drift.
+Earlier versions of this page described a "Federated Intelligence Mesh" with hardware-attested
+(HSM) mesh operations, quantum-safe signatures protecting "future cryptographic threats," and
+peer agents that "proactively home in" to heal each other's reasoning drift. Most of that is
+either simulated or was itself found to be fabricated in the code it describes — see the caveats
+below.
 
-## 2. Architecture
-The V6 mesh is built on four core pillars:
+## What's real
 
-### A. Mesh Syncer (`mesh-syncer.js`) [Pillar XVI]
-- **Role**: Secure, signed knowledge exchange between MindForge nodes.
-- **MindForge Bundles (.mfb)**: Encapsulated, compressed reasoning traces and skills with ZTAI-signed integrity proofs.
-- **Federated Synthesis**: Merges external knowledge into the local Unified Persistence layer with automatic provenance tracking.
+- **`bin/memory/federated-sync.js`** — a real client for syncing local knowledge with a
+  configurable "Enterprise Intelligence Service" endpoint (`eis-client.js`), with a circuit
+  breaker and a similarity-tiered conflict resolver. No-ops when no endpoint is configured.
+- **`bin/memory/vector-hub.js`** — the real, unified `sql.js` (WASM SQLite) store backing traces,
+  skills, and remediations. Zero native dependencies. This is what "Unified Persistence" refers
+  to in practice.
+- **`bin/engine/skill-evolver.js`** — a real, tested module that mines traces for candidate
+  skills. As of this writing it has zero production callers — it's not wired into any live
+  command path yet.
+- **Identity signing on the parts of the chain that are live** uses real Ed25519
+  (`bin/governance/ztai-manager.js`), not post-quantum crypto.
 
-### B. Federated Sync (`federated-sync.js`)
-- **Role**: Peer-to-peer task handoff and state synchronization.
-- **Hardware Attestation (v8.0.0)**: High-impact mesh operations now require Tier 3 Hardware Enclave (HSM) attestation before propagation.
+## What's simulated or was found to be fabricated
 
-### C. Unified Persistence Bridge (`vector-hub.js`) [Pillar XV]
-- **Role**: High-speed SQL source of truth for the mesh, replacing slow JSONL file-watching with sub-millisecond reasoning retrieval.
+- **"Hardware Attestation" / HSM-gated mesh operations**: no HSM or hardware-attestation code
+  exists anywhere in `bin/`. Treat as aspirational.
+- **"Quantum-Safe Trust" / lattice-based mesh signatures**: `bin/governance/quantum-crypto.js`
+  self-labels this SIMULATED and off the live trust path by default.
+- **Mesh self-healing "peer agents proactively home in"**: `bin/autonomous/mesh-self-healer.js`'s
+  own code comments disclose that an earlier version of this module *fabricated* a hardcoded
+  multi-peer consensus (canned `confidence: 94`, a logged "100% agreement") when no real peer
+  mesh existed. It has since been fixed to degrade honestly to a single-source, null-confidence
+  advisory when there's no live peer to consult — which, in a single-node setup, is effectively
+  always. If you're relying on "proactive mesh healing" as a real distributed capability, verify
+  you actually have multiple registered peers first.
 
-### D. Skill Evolver (`skill-evolver.js`) [Pillar XVII]
-- **Role**: Cross-mesh pattern recognition where peer traces are automatically mined for evolved local skills.
-
-## 3. Workflow & Provenance
-1. **Intent Harvesting**: The `IntentHarvester` proactively claims tasks from the FIM based on skill-affinity.
-2. **Verified Capture**: High-confidence findings are automatically prepared for mesh promotion.
-3. **Identity-Locked Push**: The `FederatedSync` pushes findings to the EIS, signed by the agent's ZTAI/PQAS DID.
-4. **Autonomous Healing**: Peer agents proactively reconcile drifting waves in the mesh.
-
-## 4. Enterprise Value
-- **Zero-Latency Orchestration**: Proactive task claiming eliminates idle time between waves.
-- **Quantum-Safe Trust**: Modern lattice-based signatures protect the mesh from future cryptographic threats.
-- **Distributed Resilience**: The mesh is a self-healing engine where every agent monitors the health of the whole.
-
----
-*Status: V8.0.0 Celestial Pillars XV-XVIII Implemented & Verified (2026-04-11)*
+If you need real cross-team memory federation today, `federated-sync.js` + a real EIS endpoint is
+the honest starting point — everything past that is either not yet wired or explicitly a
+simulation.

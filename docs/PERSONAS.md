@@ -1,16 +1,18 @@
 # MindForge Persona Reference
 
-> A comprehensive guide to the 108 specialized enterprise personas — roles, tools, and orchestration patterns.
+> A guide to specialized personas — roles, tools, and orchestration patterns. `.mindforge/personas/`
+> holds 218 persona files today; the category table and detail entries below cover the
+> majority of them but are not a fully exhaustive 1:1 listing — run
+> `find .mindforge/personas -type f | wc -l` for the live count, and see
+> [docs/registry/PERSONAS.md](registry/PERSONAS.md) for the machine-generated full list.
 
 ---
 
 ## Overview
 
-MindForge uses a multi-agent orchestration model where specialized personas are invoked to handle specific phases of the project lifecycle. Each persona is defined with a unique role, high-fidelity XML-tagged process, and strict tool permissions to ensure security and precision.
+MindForge uses a multi-agent orchestration model where specialized personas are invoked to handle specific phases of the project lifecycle. Each persona is defined with a unique role, high-fidelity XML-tagged process, and strict tool permissions to ensure security and precision. Personas are loaded as an in-session role overlay via `/mindforge:agent <name>` — they run in the current session's context, not as isolated subagents. (For genuine isolated-context subagents, see `subagents/categories/` — 164 Claude-Code-native definitions, a separate mechanism.)
 
-### Persona Categories
-
-| Category | Count | Personas |
+### Persona Categories (illustrative, not exhaustive)
 | :--- | :--- | :--- |
 | **Analyzers & Researchers** | 10 | analyst, assumptions-analyzer, advisor-researcher, assumptions-analyzer-extend, project-researcher, research-synthesizer, ui-researcher, research-agent, phase-researcher, mf-researcher |
 | **Architects & Planners** | 5 | architect, decision-architect, planner, plan-checker, mf-planner |
@@ -811,7 +813,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 
 ### mindforge-sre-auditor (The Elite Gatekeeper)
 
-**Role:** Principal SRE Auditor responsible for the final safety verdict on production remediation. **Locked to Claude 4.5 Opus** for highest-fidelity reasoning.
+**Role:** Principal SRE Auditor responsible for the final safety verdict on production remediation. **Locked to the highest-capability model tier** configured for this project, for highest-fidelity reasoning.
 
 | Property | Value |
 | :--- | :--- |
@@ -1742,9 +1744,13 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 
 ---
 
-## Swarm Clusters (The Agentic Mesh) [v5.0]
+## Swarm Clusters (The Agentic Mesh)
 
-MindForge V4 introduces the ability to spawn dynamic, task-aware clusters of specialist personas. These swarms work in parallel with shared state to solve complex enterprise challenges.
+`.mindforge/engine/swarm-controller.md` describes a protocol for grouping specialist personas
+into task-aware clusters — this is a reasoning pattern the assistant follows manually (deciding
+which personas to load and in what order), not an automated multi-process dispatch mechanism.
+`SwarmController` itself is a role name in that spec, not an importable module — there is no
+backing file by that name anywhere in `bin/`.
 
 ### Enterprise Swarm Templates
 

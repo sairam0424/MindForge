@@ -1,5 +1,48 @@
 # Release Notes
 
+## v11.9.6 — 2026-09-20 — The docs stop overselling what the code discloses about itself
+
+### Why this release exists
+
+This is the readiness pass before pointing real, external users at the project for the
+first time. No new features — it fixes two reproducible bugs, three dashboard panels that
+silently rendered nothing, one stale security policy and one stale Homebrew formula, and a
+long-running pattern where docs described PQAS/ZTAI/"Pillar"-numbered subsystems as live
+security guarantees when the code that implements them (`bin/governance/quantum-crypto.js`,
+`bin/governance/ztai-manager.js`) already self-labels them simulated and off-by-default.
+
+### The user-visible part
+
+**`/mindforge:learn` works again.** It crashed on every skill that scored well enough to
+auto-register — `skill-registrar.js`'s `register()` was called with the wrong argument
+shape, so the CLI printed a bare `❌ Error` and nothing ever reached `MANIFEST.md`.
+
+**The browser daemon no longer leaks its own auth token, and now actually checks it.**
+`/navigate`, `/click`, `/type`, and `/screenshot` had zero authentication before this —
+only `/evaluate` did. The startup log used to print the raw token to stdout (captured into
+a plaintext, non-gitignored log file); now it only prints where the token file lives.
+
+**Three dashboard panels (Memory, Team, and the cost/quality charts) were reading response
+fields the backing API has never produced**, so they rendered as permanently empty with no
+error. They now read the real shapes.
+
+**If you use Homebrew:** `brew install mindforge` was pinned two releases behind
+(`11.9.3`) and is now current. It will lag one release again after this one ships — that's
+expected; the formula can't point at a tarball that doesn't exist yet.
+
+### The documentation part
+
+Six reference docs (`docs/registry/*.md`) were frozen at v11.3.1 with command/skill/
+persona counts off by 2–9x and 14+ slash commands listed that don't exist. `usp-features.md`,
+`CODEBASE-MAP.md`, `docs/architecture/README.md`, and several other pages described
+post-quantum crypto and Zero-Trust Agentic Identity as unconditional, shipped security
+rather than the explicitly-simulated, opt-in-gated features they are in the actual code.
+All rewritten to match the same measured tone the README's *What is actually enforced*
+section and `docs/faq.md`/`docs/troubleshooting.md` already used. Two orphaned scratch
+files that were never real documentation were removed.
+
+See [CHANGELOG.md](./CHANGELOG.md) for the complete, file-by-file list.
+
 ## v11.9.5 — 2026-08-22 — The release path can no longer strand itself, and the SDK ships
 
 ### Why this release exists

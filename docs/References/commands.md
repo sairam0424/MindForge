@@ -1,6 +1,10 @@
-# MindForge v2.0.0 — Complete Commands Reference
+# MindForge — Common Commands Quick Reference
 
-## All 50+ commands
+This page is a curated subset for quick lookup, not an exhaustive list. MindForge ships
+221 slash commands total — see [docs/commands-reference.md](../commands-reference.md) for
+the complete, verified list.
+
+## Commonly used commands
 
 ### Lifecycle commands (core workflow)
 
@@ -95,13 +99,14 @@
 |---|---|---|---|
 | `/mindforge:help` | `help` | Show all available commands and current project status | |
 
-## Command interface contract (v1.0.0 stable)
+## Command interface contract
 
-As of v1.0.0, the following are part of the stable interface:
-- All 36 command names (new commands require MINOR bump)
-- All flags documented here (new flags require MINOR, removed flags require MAJOR)
+The following are part of the stable interface:
+- Existing command names are not renamed without a MAJOR bump; new commands may land in any release
+- Documented flags are not removed without a MAJOR bump
 - HANDOFF.json and AUDIT.jsonl schemas (additions: MINOR, removals: MAJOR)
-- All 10 core skill `name:` values and trigger lists
 - SDK exported types and functions
 
-See ADR-020 for the complete stability contract.
+Note: `.planning/decisions/ADR-020.md` (previously cited here as the stability contract source)
+is a content-free placeholder stub as of this writing — treat this page, not that ADR, as the
+source of truth for the interface contract until a real ADR replaces it.

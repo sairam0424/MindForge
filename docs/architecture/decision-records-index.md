@@ -1,6 +1,11 @@
 # MindForge — Architecture Decision Records Index
 
-All 20 ADRs in chronological order.
+All 24 real, substantive ADRs in chronological order (ADR-001 to ADR-020 and ADR-039 to ADR-041
+live in this directory; ADR-024, ADR-025, ADR-026, and ADR-042 live in the sibling `docs/adr/`
+directory — a separate numbering series, included below for completeness).
+
+Note: `.planning/decisions/ADR-001.md` through `ADR-020.md` are a DIFFERENT, unrelated set of
+files — empty scaffolding stubs with no content, not to be confused with the real ADRs below.
 
 | ADR | Title | Status | Day | Key decision |
 |---|---|---|---|---|
@@ -27,3 +32,7 @@ All 20 ADRs in chronological order.
 | ADR-039 | Multi-runtime platform support | Accepted | Native support for Cursor, Gemini, Copilot, etc. |
 | ADR-040 | Additive schema migration strategy | Accepted | Non-destructive, backup-first backfill logic |
 | ADR-041 | Stable runtime interface contract | Accepted | Exported RUNTIMES and adapters for extensibility |
+| ADR-024 | Browser Daemon Localhost Binding | Accepted | Bind strictly to 127.0.0.1, reject non-loopback `remoteAddress` |
+| ADR-025 | `<verify-visual>` Failure Treatment | Accepted | Visual-verify failure is fatal, same as a `<verify>` shell-command failure |
+| ADR-026 | Browser Session Persistence and Security | Accepted | Session files under `.mindforge/browser/sessions/`, gitignored |
+| ADR-042 | Adversarial Decision Synthesis (ADS) Protocol | Accepted (2026-03-26) | 3-model Blue/Red/Gold loop integrated into `plan-phase` |

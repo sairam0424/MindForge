@@ -1,6 +1,6 @@
 # Security Policy
 
-> **Current version:** 11.9.5 | **npm audit:** 0 vulnerabilities across root, sdk, mcp-server
+> **Current version:** 11.9.6 | **npm audit:** 0 vulnerabilities across root, sdk, mcp-server
 
 ## Supported Versions
 
@@ -70,7 +70,7 @@ We follow responsible disclosure practices. We will credit reporters in the rele
   hash of the previous entry. Not a Merkle tree: there is no hash tree and no inclusion proof, so
   "Merkle" was the wrong word for it. What it detects, and does not, is measured below.
 - **AuditWriter with buffered writes** — Atomic append operations prevent partial writes from corrupting the log.
-- **Log rotation with archival** — AUDIT.jsonl auto-archives beyond 5000 lines with gzip compression, preventing unbounded disk growth.
+- **Unbounded audit log, by design** — A prior AUDIT.jsonl rotation/archival mechanism (5000-line threshold, gzip) was removed: truncating the file broke the hash chain by orphaning `previous_hash` pointers to archived entries. AUDIT.jsonl now grows without bound; chain-aware compaction is a tracked future improvement, not yet shipped.
 - **npm provenance** — Published packages include SLSA Build Level 2 attestation via `--provenance`, proving the package was built from the stated source commit in CI.
 
 ### Input Validation & Injection Prevention

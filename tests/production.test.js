@@ -470,7 +470,9 @@ test('ADR index lists all 20 ADRs', () => {
 });
 
 test('SECURITY.md has responsible disclosure policy', () => {
-  const c = read('docs/security/SECURITY.md');
+  // docs/security/SECURITY.md is now a redirect to the canonical root SECURITY.md
+  // (it used to duplicate this content and drift out of sync -- check the real source).
+  const c = read('SECURITY.md');
   assert.ok(c.includes('disclosure') || c.includes('24 hours'), 'Should have disclosure timeline');
 });
 
