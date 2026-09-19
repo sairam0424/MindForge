@@ -7,7 +7,7 @@
 
 **An agentic intelligence framework for Claude Code** — orchestrates multi-agent workflows with governance, memory, and autonomous execution. Production-hardened with true parallelism, streaming SDK, and zero-trust security. Install once, get structured AI-driven development with built-in quality gates.
 
-**At a glance:** 221 slash commands · 355 skills (232 auto-triggered + 123 explicit) · 216 personas · 164 installable subagents · 35 pre-built multi-agent dynamic workflows · a tamper-evident audit hash-chain · cost-aware routing across Anthropic/OpenAI/Gemini/Bedrock/Ollama · a local-first knowledge graph on zero-native-dependency SQLite (sql.js) · a live Express+SSE dashboard. Ships as an npm package, a Claude Code plugin, and an MCP server.
+**At a glance:** 221 slash commands · 355 skills (232 auto-triggered + 123 explicit) · 218 personas · 164 installable subagents · 35 pre-built multi-agent dynamic workflows · a tamper-evident audit hash-chain · cost-aware routing across Anthropic/OpenAI/Gemini/Bedrock/Ollama · a local-first knowledge graph on zero-native-dependency SQLite (sql.js) · a live Express+SSE dashboard. Ships as an npm package, a Claude Code plugin, and an MCP server.
 
 **Jump to:** [Latest release](#latest-release) · [What is actually enforced](#what-is-actually-enforced) · [Install](#install) · [Quick start](#quick-start-new-project) · [Documentation](#documentation) · [Core workflow](#core-workflow) · [Dynamic workflows](#dynamic-workflow-library)
 
