@@ -456,10 +456,10 @@ Update MindForge to latest version with changelog preview.
 Usage: `/mindforge-update`
 
 **`/mindforge-join-discord`**
-Join the MindForge Discord community.
+Find the current MindForge community/support channel.
 
-- Get help, share what you're building, stay updated
-- Connect with other MindForge users
+- GitHub Discussions for quick questions and discussion
+- Issue templates for a specific bug or feature request
 
 Usage: `/mindforge-join-discord`
 
