@@ -5,7 +5,8 @@
 Patch release. v11.9.7's README rewrite got a literal, end-to-end audit: every command it
 documents actually run — real `npx` installs, a real Homebrew install/uninstall cycle, a
 real `npm i mindforge-sdk`, live registry checks — instead of re-reading the prose. 113
-claims checked: 98 held up, 14 didn't. All 14 fixed here.
+claims checked: 98 held up, 14 didn't, 1 couldn't be verified either way. All 14 confirmed
+failures are fixed here.
 
 ### Fixed
 
@@ -21,7 +22,7 @@ claims checked: 98 held up, 14 didn't. All 14 fixed here.
   `minimalEntries` allowlist in `bin/installer-core.js` explicitly included `'personas'`.
   Removed.
 
-**Eleven documentation inaccuracies**
+**Twelve documentation inaccuracies**
 
 - Removed a `[--ads]` flag hint on `/mindforge:plan-phase` that was never wired into the
   live command spec — it only exists in a much larger, never-ported legacy workflow file.

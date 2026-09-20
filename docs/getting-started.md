@@ -106,7 +106,7 @@ MindForge adapts to your existing engineering environment via runtime flags:
 
 **Run any workflow:**
 ```bash
-node bin/mindforge-cli.js workflow list              # browse all 32
+node bin/mindforge-cli.js workflow list              # browse all 35
 node bin/mindforge-cli.js workflow info code-audit   # details + phases
 ```
 Or use slash commands: `/mindforge:wf-code-audit`

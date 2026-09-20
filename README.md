@@ -174,12 +174,14 @@ Full verification walkthrough: [docs/quick-verify.md](docs/quick-verify.md).
 rewrite got a literal, end-to-end audit: every command it documents actually run — real
 `npx` installs, a real Homebrew install/uninstall cycle, a real `npm i mindforge-sdk`, live
 registry checks — instead of re-read for plausibility. 113 claims checked, 98 held up, 14
-didn't. Two were real bugs: `--runtime claude,cursor` crashed the installer outright, and
-`--minimal` claimed "no persona library" but shipped all 216 anyway. Both fixed. The other
-twelve were documentation catching up to what the code actually does — the auto-detect
-claim, `--repair`, `--profile`, the CLI `spawn` stub, the License holder, the skill-tier
-split, the `bin/` line count, and three Documentation-table rows that overstated their
-linked docs. See [RELEASENOTES.md](./RELEASENOTES.md) or [CHANGELOG.md](./CHANGELOG.md).
+didn't, 1 couldn't be verified either way. Two of the 14 were real bugs:
+`--runtime claude,cursor` crashed the installer outright, and `--minimal` claimed "no
+persona library" but shipped all 216 anyway. Both fixed. The other twelve were
+documentation catching up to what the code actually does — a removed `[--ads]` hint that
+was never real, the auto-detect claim, `--repair`, `--profile`, the CLI `spawn` stub, the
+License holder, the skill-tier split, the `bin/` line count, three Documentation-table rows
+that overstated their linked docs, and the `mindforge-plugin-*` namespace's empty catalog.
+See [RELEASENOTES.md](./RELEASENOTES.md) or [CHANGELOG.md](./CHANGELOG.md).
 
 The previous release, **v11.9.7**, fixed a version self-contradiction and a false "Enabled"
 claim in the install banner, a dead `docs.mindforge.cc` link, and a persona-count doc

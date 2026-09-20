@@ -8,7 +8,7 @@ v11.9.7 shipped a full README rewrite. This release is what happened when that r
 a literal, end-to-end audit — every command it documents actually run in a real environment
 (real `npx` installs, a real Homebrew install/uninstall cycle, a real `npm i mindforge-sdk`,
 live registry checks) rather than re-read for plausibility. Of 113 claims checked, 98 held
-up and 14 didn't.
+up, 14 didn't, and 1 couldn't be verified either way.
 
 ### The user-visible part
 
@@ -25,8 +25,9 @@ non-interactive run defaults to `--claude`), an `--ads` flag on `/mindforge:plan
 that was never real, `/mindforge:health --repair` silently doing nothing, a `--profile`
 flag on `/mindforge:tokens` that doesn't exist, a CLI `spawn` command that's a v1.0 stub,
 the License section's copyright holder, the skill-tier split in the architecture diagram,
-the `bin/` line-count figure, and three Documentation-table rows that overstated what their
-linked docs actually cover.
+the `bin/` line-count figure, three Documentation-table rows that overstated what their
+linked docs actually cover, and the `mindforge-plugin-*` namespace, which has zero
+packages published under it today.
 
 ## v11.9.7 — 2026-09-20 — The install banner stops contradicting itself
 
