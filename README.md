@@ -170,29 +170,35 @@ Full verification walkthrough: [docs/quick-verify.md](docs/quick-verify.md).
 
 ## Latest release
 
-**v11.9.7** (2026-09-20) — The install banner stops contradicting itself. Found by
-actually running v11.9.6's own documented install command in a clean project instead of
-stopping at `--version`: the top banner claimed `SOVEREIGN INTELLIGENCE v8.1.1` while the
-install activation line two screens later said `v8.2.0` for the same subsystem, and claimed
-`PQAS ... Enabled` right before accurately disclosing it's simulated and off by default a
-few lines down. Both fixed, plus a dead `docs.mindforge.cc` link and a persona-count doc
-regression (218 → back to the correct 216) introduced by v11.9.6's own honesty pass. No
-new features. See [RELEASENOTES.md](./RELEASENOTES.md) or [CHANGELOG.md](./CHANGELOG.md).
+**v11.9.8** (2026-09-21) — What the README claims, verified line by line. v11.9.7's README
+rewrite got a literal, end-to-end audit: every command it documents actually run — real
+`npx` installs, a real Homebrew install/uninstall cycle, a real `npm i mindforge-sdk`, live
+registry checks — instead of re-read for plausibility. 113 claims checked, 98 held up, 14
+didn't, 1 couldn't be verified either way. Two of the 14 were real bugs:
+`--runtime claude,cursor` crashed the installer outright, and `--minimal` claimed "no
+persona library" but shipped all 216 anyway. Both fixed. The other twelve were
+documentation catching up to what the code actually does — a removed `[--ads]` hint that
+was never real, the auto-detect claim, `--repair`, `--profile`, the CLI `spawn` stub, the
+License holder, the skill-tier split, the `bin/` line count, three Documentation-table rows
+that overstated their linked docs, and the `mindforge-plugin-*` namespace's empty catalog.
+See [RELEASENOTES.md](./RELEASENOTES.md) or [CHANGELOG.md](./CHANGELOG.md).
 
-The previous release, **v11.9.6**, was the release-readiness pass before pointing real,
-external users at the project for the first time: fixed a crash in `/mindforge:learn`, a
-token-leak in the browser daemon, three dashboard panels that silently rendered nothing, a
-stale Homebrew formula, and docs describing PQAS/ZTAI/"Pillar"-numbered subsystems as live
-guarantees when the code already self-labels them simulated. **v11.9.5** fixed a release
-pipeline that could strand itself mid-publish and shipped `mindforge-sdk` for the first
-time since 11.8.0, with provenance. **v11.9.4**, before that, is where the hook gates
-started actually registering: 11.9.3
-shipped the code and then declined to run it on essentially every project. Measured against
-the published tarballs — 11.9.3: **11 hook scripts installed, 0 registered**; 11.9.4:
-**8 registered, 3 deny-class verified blocking**. That **behaviour change under a patch
-bump** still applies — the installer writes `.claude/settings.json` where it previously
-declined, merging append-only and backing up first. See the BREAKING section in
-[CHANGELOG.md](./CHANGELOG.md).
+The previous release, **v11.9.7**, fixed a version self-contradiction and a false "Enabled"
+claim in the install banner, a dead `docs.mindforge.cc` link, and a persona-count doc
+regression (218 → back to the correct 216) introduced by v11.9.6's own honesty pass.
+**v11.9.6** was the release-readiness pass before pointing real, external users at the
+project for the first time: fixed a crash in `/mindforge:learn`, a token-leak in the
+browser daemon, three dashboard panels that silently rendered nothing, a stale Homebrew
+formula, and docs describing PQAS/ZTAI/"Pillar"-numbered subsystems as live guarantees when
+the code already self-labels them simulated. **v11.9.5** fixed a release pipeline that
+could strand itself mid-publish and shipped `mindforge-sdk` for the first time since
+11.8.0, with provenance. **v11.9.4**, before that, is where the hook gates started actually
+registering: 11.9.3 shipped the code and then declined to run it on essentially every
+project. Measured against the published tarballs — 11.9.3: **11 hook scripts installed, 0
+registered**; 11.9.4: **8 registered, 3 deny-class verified blocking**. That **behaviour
+change under a patch bump** still applies — the installer writes `.claude/settings.json`
+where it previously declined, merging append-only and backing up first. See the BREAKING
+section in [CHANGELOG.md](./CHANGELOG.md).
 
 ---
 

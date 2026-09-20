@@ -1,4 +1,4 @@
-# MindForge FAQ (v11.9.7)
+# MindForge FAQ (v11.9.8)
 
 ## Is MindForge tied to Claude only?
 No. MindForge supports Claude Code and Antigravity. Install with `--claude`,
@@ -39,7 +39,7 @@ Plugins are preferred for sharing and versioning.
 
 ## Dynamic Workflows
 
-**Q: How many workflows does MindForge v11.9.0 include?**
+**Q: How many workflows does MindForge include?**
 35 pre-built multi-agent workflows across 5 tiers: Research (5), Dev (14), Ops (6), Intelligence (7), Beast (3).
 
 **Q: How do I run a workflow?**
@@ -55,10 +55,13 @@ The `deep-research` workflow was removed before the v11.8.0 release (the superpo
 ## Version & Stability
 
 **Q: What version is current?**
-v11.9.7 — verify with `node bin/mindforge-cli.js --version`
+v11.9.8 — verify with `node bin/mindforge-cli.js --version`
 
-**Q: Is v11.9.0 production-stable?**
-Yes. The IQ200 deep-audit (258 discrete checks across 14 dimensions) shows 258/258 passing. 0 CVEs, 0 test failures, 0 ESLint errors, 0 TypeScript errors.
+**Q: Was v11.9.0 production-stable?**
+At that release: yes, by the IQ200 deep-audit (258 discrete checks across 14 dimensions),
+258/258 passing, 0 CVEs, 0 test failures, 0 ESLint errors, 0 TypeScript errors. That was a
+one-time, point-in-time audit rather than a repeated gate, so it is not re-run per release —
+see "What is the test coverage?" below for the number that is.
 
 **Q: Which npm dist-tag should I install?**
 `latest` is every published release, including patches. `stable` tracks the newest
@@ -74,10 +77,10 @@ release behind. Check what each points at right now with `npm dist-tag ls mindfo
 ## Known Limitations
 
 **Q: Why does `spawn architect` exit with an error?**
-Spawn dispatch is not yet implemented in v11.9.0. Use `/mindforge:auto` or `/mindforge:next` from Claude Code instead.
+Spawn dispatch is a v1.0 stub — still not implemented as of v11.9.8. Use `/mindforge:auto` or `/mindforge:next` from Claude Code instead.
 
 **Q: Why does ZTAI show a Tier-3 warning?**
-Tier-3 trust uses in-process key simulation in v11.9.0 — this is intentional and safe. `SECURITY_TIER_3_SIMULATED = true` is the documented v11.x behavior. Hardware TPM/HSM is planned for v12.x.
+Tier-3 trust uses in-process key simulation in v11.x. `bin/governance/ztai-manager.js` warns on this itself: key material resides in the Node.js heap, not hardware-isolated — do not use Tier-3 trust for production credential workflows. `SECURITY_TIER_3_SIMULATED = true` is the documented v11.x behavior. Hardware TPM/HSM is planned for v12.x.
 
 **Q: What is the test coverage?**
 140 test files: 137 pass, 0 failures, 3 env-dependent skips (`browser.test.js` and

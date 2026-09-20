@@ -1,5 +1,34 @@
 # Release Notes
 
+## v11.9.8 — 2026-09-21 — What the README claims, verified line by line
+
+### Why this release exists
+
+v11.9.7 shipped a full README rewrite. This release is what happened when that rewrite got
+a literal, end-to-end audit — every command it documents actually run in a real environment
+(real `npx` installs, a real Homebrew install/uninstall cycle, a real `npm i mindforge-sdk`,
+live registry checks) rather than re-read for plausibility. Of 113 claims checked, 98 held
+up, 14 didn't, and 1 couldn't be verified either way.
+
+### The user-visible part
+
+**Two of the 14 were real bugs, not just wording.** `--runtime claude,cursor` — or any
+comma-separated runtime list — crashed the installer outright; it's fixed, and an unknown
+runtime name now exits cleanly with a clear message instead of a raw crash. `--minimal`
+claimed "no persona library" but silently installed all 216 personas anyway; it now
+installs none, as documented.
+
+**The other twelve are documentation catching up to what the code actually does:** the
+bare `npx mindforge-cc@latest` "auto-detects your runtime" claim (real detection only
+happens inside the interactive wizard, and even there you still confirm it — every
+non-interactive run defaults to `--claude`), an `--ads` flag on `/mindforge:plan-phase`
+that was never real, `/mindforge:health --repair` silently doing nothing, a `--profile`
+flag on `/mindforge:tokens` that doesn't exist, a CLI `spawn` command that's a v1.0 stub,
+the License section's copyright holder, the skill-tier split in the architecture diagram,
+the `bin/` line-count figure, three Documentation-table rows that overstated what their
+linked docs actually cover, and the `mindforge-plugin-*` namespace, which has zero
+packages published under it today.
+
 ## v11.9.7 — 2026-09-20 — The install banner stops contradicting itself
 
 ### Why this release exists

@@ -1,5 +1,55 @@
 # Changelog
 
+## [11.9.8] — 2026-09-21 — What the README claims, verified line by line
+
+Patch release. v11.9.7's README rewrite got a literal, end-to-end audit: every command it
+documents actually run — real `npx` installs, a real Homebrew install/uninstall cycle, a
+real `npm i mindforge-sdk`, live registry checks — instead of re-reading the prose. 113
+claims checked: 98 held up, 14 didn't, 1 couldn't be verified either way. All 14 confirmed
+failures are fixed here.
+
+### Fixed
+
+**Two real bugs, not just docs**
+
+- `--runtime claude,cursor` (or any comma-separated runtime list) crashed the installer
+  outright ("Cannot read properties of undefined (reading 'localDir')"). `--all` already
+  expanded into a real multi-runtime loop; a comma-separated `--runtime` value was never
+  split into it, so it was looked up as the literal key `RUNTIMES['claude,cursor']`, which
+  doesn't exist. Fixed, plus a graceful "Unknown runtime(s)" exit for typos instead of a raw
+  crash.
+- `--minimal` claimed "no persona library" but shipped all 216 personas anyway — the
+  `minimalEntries` allowlist in `bin/installer-core.js` explicitly included `'personas'`.
+  Removed.
+
+**Twelve documentation inaccuracies**
+
+- Removed a `[--ads]` flag hint on `/mindforge:plan-phase` that was never wired into the
+  live command spec — it only exists in a much larger, never-ported legacy workflow file.
+- Reworded the bare `npx mindforge-cc@latest` "auto-detects your runtime" claim: real
+  detection only runs inside the interactive TTY wizard (and even there it's a pre-selected
+  default you still confirm); every non-interactive invocation (CI, piped stdin, scripted)
+  hardcodes `--claude`.
+- Disclosed that `/mindforge:health --repair` is documented in the command spec but not
+  wired into the CLI backing path — the flag is silently dropped, output is byte-identical
+  to plain `health`.
+- Fixed `/mindforge:tokens --profile` — that flag doesn't exist; swapped in a real one
+  (`--optimise`) and listed the actual flag set.
+- Disclosed that `node bin/mindforge-cli.js spawn <persona>` is a v1.0 stub that exits 1
+  with "NOT IMPLEMENTED", not a working scripted path.
+- Corrected the License section's copyright holder to match `LICENSE` exactly.
+- Fixed the architecture diagram's skill count: only 232 of the 355 skills live under
+  `.mindforge/` (engine tier); the other 123 are under `.agent/skills/` (extended tier).
+- Corrected `bin/`'s "~22K LOC" claim to the measured ~32K raw / ~25K stripped-of-comments.
+- Narrowed the Config reference doc-table row — that doc never mentions
+  `.mindforge/config.json`.
+- Reworded the Threat model doc-table row — that file is explicitly historical (v1.0.0-era),
+  not re-reviewed against v11.x, and redirects to `SECURITY.md`.
+- Reworded the USP-features doc-table row — that file has zero competitor comparison
+  content; it's the same honesty pass applied to MindForge's own features.
+- Disclosed that the `mindforge-plugin-*` namespace has zero packages published under it
+  today.
+
 ## [11.9.7] — 2026-09-20 — The install banner stops contradicting itself
 
 Patch release. Found by actually running the documented install command

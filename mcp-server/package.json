@@ -1,6 +1,6 @@
 {
   "name": "mindforge-mcp-server",
-  "version": "11.9.7",
+  "version": "11.9.8",
   "description": "MindForge MCP server — exposes the MindForge engine (knowledge graph, project health, audit log) and the MindForge browser daemon to Claude Code and any MCP host as 8 stdio tools. Self-contained, zero runtime dependencies.",
   "mcpName": "io.github.sairam0424/mindforge",
   "type": "commonjs",
