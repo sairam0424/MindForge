@@ -59,8 +59,12 @@ npx mindforge-cc@latest                       # auto-detects your runtime
 **Global** (system-wide, for your primary AI coding runtime):
 
 ```bash
-npm install -g mindforge-cc@latest
+npx mindforge-cc@latest --claude --global
 ```
+
+(`npm install -g mindforge-cc@latest` only puts the `mindforge-cc`/`mindforge` binaries on your
+PATH — it doesn't select a runtime or write anything. Run the command above, or the equivalent
+`mindforge-cc --claude --global` once installed, to actually scaffold a global setup.)
 
 **Other runtimes** — same flag pattern, swap `--global`/`--local`:
 
@@ -123,6 +127,10 @@ Full install matrix, plugin packs, and team-setup guidance: [docs/getting-starte
 
 ## Verify
 
+These `/mindforge:*` commands require the Claude Code plugin or an `npx`/Homebrew framework
+install — the standalone MCP server exposes MCP tools instead, and `mindforge-sdk` exposes a
+programmatic API; neither installs these slash commands.
+
 ```bash
 /mindforge:health              # framework + installation health check
 /mindforge:health --repair     # fix anything the health check flags
@@ -184,8 +192,8 @@ declined, merging append-only and backing up first. See the BREAKING section in
 
 ## What is actually enforced
 
-Read this before the install instructions. MindForge ships a large corpus of agent
-instructions — commands, skills, personas, protocols — and those are advisory: they work by
+Read this before you rely on anything below blocking a bad command. MindForge ships a large
+corpus of agent instructions — commands, skills, personas, protocols — and those are advisory: they work by
 being in the model's context, and a model can decline them. The parts that would *block* an
 action are hooks. Through 11.9.2 **no channel registered them.** 11.9.3 added the registration code
 but it declined to run on almost every project, so in practice nothing was enforced there either.
