@@ -882,7 +882,10 @@ async function install(runtime, scope, options = {}) {
       if (minimal) {
         const minimalEntries = new Set([
           'MINDFORGE-SCHEMA.json',
-          'engine', 'org', 'governance', 'integrations', 'personas', 'skills', 'team'
+          // 'personas' deliberately excluded: --minimal's whole point is "no persona library"
+          // (README.md, docs/getting-started.md). It was accidentally left in this allowlist,
+          // so a --minimal install shipped the full 216-persona set anyway.
+          'engine', 'org', 'governance', 'integrations', 'skills', 'team'
         ]);
         fsu.ensureDir(forgeDst);
         for (const entry of fs.readdirSync(forgeSrc, { withFileTypes: true })) {
@@ -1338,7 +1341,17 @@ async function run(args) {
     return;
   }
 
-  const runtimes = runtime === 'all' ? Object.keys(RUNTIMES) : [runtime];
+  const runtimes = runtime === 'all'
+    ? Object.keys(RUNTIMES)
+    : runtime.split(',').map((r) => r.trim()).filter(Boolean);
+
+  const unknownRuntimes = runtimes.filter((rt) => !RUNTIMES[rt]);
+  if (unknownRuntimes.length) {
+    console.error(
+      `Unknown runtime(s): ${unknownRuntimes.join(', ')}. Valid: ${Object.keys(RUNTIMES).join(', ')}, all`
+    );
+    process.exit(1);
+  }
 
   for (const rt of runtimes) {
     if (isUninstall)  await uninstall(rt, scope, options);

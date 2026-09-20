@@ -308,7 +308,7 @@ Six categories, read in this order the first time:
 | Command | What it does |
 | :--- | :--- |
 | `/mindforge:init-project` | Requirements interview → creates `PROJECT.md`, `REQUIREMENTS.md`, `STATE.md` |
-| `/mindforge:plan-phase 1 [--ads]` | Discuss scope, research the domain in parallel, create atomic XML task plans |
+| `/mindforge:plan-phase 1` | Discuss scope, research the domain in parallel, create atomic XML task plans |
 | `/mindforge:execute-phase 1` | Wave-based parallel execution, one commit per task, automated verification |
 | `/mindforge:verify-phase 1` | Human acceptance testing, debug agent on failures, UAT sign-off |
 | `/mindforge:ship 1` | Changelog generation, final quality gates, PR creation |
