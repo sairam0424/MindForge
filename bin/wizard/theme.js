@@ -76,7 +76,7 @@ const Theme = {
     console.log(`  ${this.colors.dim('│')}`);
     console.log(`  ${this.colors.dim('│')}  ${this.colors.cyan('⭐ HELP US GROW:')}`);
     console.log(`  ${this.colors.dim('│')}    - GitHub:  ${this.colors.dim('https://github.com/sairam0424/MindForge')}`);
-    console.log(`  ${this.colors.dim('│')}    - Discord: ${this.colors.dim('https://discord.gg/mindforge')}`);
+    console.log(`  ${this.colors.dim('│')}    - Discussions: ${this.colors.dim('https://github.com/sairam0424/MindForge/discussions')}`);
     console.log(`  ${this.colors.dim('│')}    - Docs:    ${this.colors.dim('https://github.com/sairam0424/MindForge#documentation')}`);
     console.log(`  ${this.colors.dim('│')}`);
     console.log(`  ${this.colors.dim('—'.repeat(80))}\n`);

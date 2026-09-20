@@ -1,19 +1,22 @@
 ---
 name: "mindforge-join-discord"
-description: "Join the MindForge Discord community"
+description: "Find the current MindForge community/support channel"
 ---
 
 
 <objective>
-Display the Discord invite link for the MindForge community server.
+Display the current, working channel for MindForge community discussion and support.
 </objective>
 
 <output>
-# Join the MindForge Discord
+# MindForge community & support
 
-Connect with other MindForge users, get help, share what you're building, and stay updated.
+The `discord.gg/mindforge` invite that used to be linked here is no longer valid (verified
+against Discord's own invite API, not just an HTTP redirect check). GitHub Discussions is the
+current, working channel:
 
-**Invite link:** https://discord.gg/mindforge
+**https://github.com/sairam0424/MindForge/discussions**
 
-Click the link or paste it into your browser to join.
+For a specific bug or feature request, use the issue templates instead:
+https://github.com/sairam0424/MindForge/issues/new/choose
 </output>

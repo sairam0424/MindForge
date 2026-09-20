@@ -1,6 +1,6 @@
 # MindForge — Capabilities Manifest
 
-Line-item inventory of what's actually in a MindForge v11.9.6 install. Earlier versions of this
+Line-item inventory of what's actually in a MindForge v11.9.7 install. Earlier versions of this
 page described "Pillars IX-XII" of "Sovereign Intelligence" (PQAS, ZK-Audit, biometric approval
 gates) as live features — they are not. `bin/governance/quantum-crypto.js` labels itself
 SIMULATED and gated off the live trust path by default; no ZK-proof or biometric mechanism exists
@@ -32,13 +32,13 @@ anywhere in `bin/`. See *What is actually enforced* in the root [README](../READ
   store (`celestial.db`) for traces/skills/remediations. Zero native dependencies.
 - `mindforge-sdk` — standalone TypeScript client (`MindForgeClient`, `MindForgeMemory`) for
   reading project state and the knowledge graph without importing `bin/`.
-- `mindforge-mcp-server` — exposes 7 of those same read/write operations as MCP tools.
+- `mindforge-mcp-server` — exposes 8 of those same read/write operations as MCP tools.
 
 ## 4. Integrations
 
-- Jira/Confluence/Slack sync command specs exist as markdown; the underlying wiring is inert
-  (`jira_sync_enabled`/Slack thread maps are empty by default) — treat as a template to fill in,
-  not a working integration out of the box.
+- Jira/Confluence/Slack sync command specs exist as markdown; the underlying wiring is inert —
+  `bin/mindforge-cli.js` explicitly marks jira-sync/confluence-sync as "Planned ... not yet
+  implemented" — treat as a template to fill in, not a working integration out of the box.
 - GitHub Actions: `.github/workflows/mindforge-ci.yml` is the real CI gate suite this project
   runs on itself.
 
