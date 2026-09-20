@@ -215,9 +215,9 @@ Full verification walkthrough: [docs/quick-verify.md](docs/quick-verify.md).
 
 ## Documentation
 
-Four tiers, read in this order the first time:
+Six categories, read in this order the first time:
 
-| Tier | Doc | Read this when |
+| Category | Doc | Read this when |
 |---|---|---|
 | Start here | [Getting started](docs/getting-started.md) | Installing for the first time |
 | Start here | [Quick verify](docs/quick-verify.md) | Right after install — confirm it actually works |
