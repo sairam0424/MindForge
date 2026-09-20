@@ -42,6 +42,118 @@ entry, and an MCP server.
 
 ---
 
+## Install
+
+Pick whichever matches how you work — all of these are real, live channels.
+
+### `npx` (recommended)
+
+Writes `.mindforge/` governance, memory, and planning into your project:
+
+```bash
+npx mindforge-cc@latest --claude --local      # Claude Code, this project only
+npx mindforge-cc@latest --antigravity --local # Antigravity, this project only
+npx mindforge-cc@latest                       # auto-detects your runtime
+```
+
+**Global** (system-wide, for your primary AI coding runtime):
+
+```bash
+npm install -g mindforge-cc@latest
+```
+
+**Other runtimes** — same flag pattern, swap `--global`/`--local`:
+
+| Runtime | Flag |
+|---|---|
+| Claude Code | `--claude` |
+| Antigravity | `--antigravity` |
+| Cursor | `--cursor` |
+| GitHub Copilot | `--copilot` |
+| Gemini CLI | `--gemini` |
+
+**Advanced:** `--runtime claude,cursor` (combined runtimes) · `--with-utils` (installs local `bin/` utilities) · `--minimal` (essential scaffolding only, no persona library) · `--force` (rewrite an existing `.mindforge/MINDFORGE-SCHEMA.json` with the current, stricter schema)
+
+### Claude Code plugin marketplace
+
+No project files written — the plugin's hooks fire, see [What is actually enforced](#what-is-actually-enforced) for what that does and does not cover.
+
+```bash
+/plugin marketplace add sairam0424/MindForge
+/plugin install mindforge@mindforge
+```
+
+Prefer just a slice (e.g. Python agents)? `mindforge-lang@mindforge` and 9 other focused packs exist — see [docs/plugin-installation.md](docs/plugin-installation.md) for all 10, token-budget guidance, and team setup.
+
+### Standalone MCP server
+
+```bash
+claude mcp add mindforge -- npx -y mindforge-mcp-server
+```
+
+Exposes 8 tools over stdio (6 read-only, 1 guarded write, 1 guarded browse proxy). Also listed on
+the [MCP Registry](https://registry.modelcontextprotocol.io) as `io.github.sairam0424/mindforge`
+— that entry is republished manually and can lag; check what it actually serves before relying on
+it, or install `mindforge-mcp-server` from npm directly to pin a version.
+
+### Homebrew
+
+```bash
+brew install sairam0424/tap/mindforge
+```
+
+### SDK
+
+Build on MindForge programmatically:
+
+```bash
+npm i mindforge-sdk
+```
+
+**Upgrading from 11.9.x?** The installer does not overwrite an existing
+`.mindforge/MINDFORGE-SCHEMA.json`, so 11.9.2's armed config validator keeps the older
+permissive schema on a plain upgrade — run with `--force` for the stricter gate. The daily cost
+cap declared as `[COST_HARD_LIMIT_USD]` in `MINDFORGE.md` was **not enforced** in 11.9.2 (11.9.3
+arms it), and an upgrade never rewrites an existing `MINDFORGE.md` — add
+`[COST_HARD_LIMIT_USD] = 25.00` yourself if yours predates the key.
+
+Full install matrix, plugin packs, and team-setup guidance: [docs/getting-started.md](docs/getting-started.md).
+
+---
+
+## Verify
+
+```bash
+/mindforge:health              # framework + installation health check
+/mindforge:health --repair     # fix anything the health check flags
+/mindforge:status              # project status snapshot
+/mindforge:next                # auto-discover your first task
+```
+
+Full verification walkthrough: [docs/quick-verify.md](docs/quick-verify.md).
+
+---
+
+## Quick start (new project)
+
+```bash
+/mindforge:init-project
+/mindforge:plan-phase 1
+/mindforge:execute-phase 1
+/mindforge:verify-phase 1
+/mindforge:ship 1
+```
+
+## Quick start (existing codebase)
+
+```bash
+/mindforge:map-codebase
+/mindforge:do I want to plan the next phase
+/mindforge:plan-phase 1
+```
+
+---
+
 ## Latest release
 
 **v11.9.7** (2026-09-20) — The install banner stops contradicting itself. Found by
@@ -150,66 +262,6 @@ commands and hooks), **Engine specs** (`.mindforge/` — the 355 skills, 216 per
 memory, and dashboard code that actually runs), and **Persistence** (`.planning/` — `STATE.md`,
 the audit chain, resumable `HANDOFF.json`). Edit behavior in layer 2 where possible; layer 3 is
 the only place with real enforcement, per *What is actually enforced* above.
-
----
-
-## Install
-
-Claude Code plugin marketplace (no project files written). The plugin's hooks now fire — see
-*What is actually enforced* above for what that does and does not cover.
-
-```bash
-/plugin marketplace add sairam0424/MindForge
-/plugin install mindforge@mindforge
-```
-
-Or the full framework engine via `npx` (writes `.mindforge/` governance, memory, and planning into your project):
-
-```bash
-npx mindforge-cc@latest --claude --local
-```
-
-All install channels (global, local, Antigravity, Cursor, Copilot, Gemini CLI, MCP server, combined runtimes, `--minimal`): see [docs/getting-started.md](docs/getting-started.md).
-
-**Upgrading from 11.9.x?** The installer does not overwrite an existing
-`.mindforge/MINDFORGE-SCHEMA.json`, so 11.9.2's armed config validator keeps the older
-permissive schema on a plain upgrade. Run with `--force` if you want the stricter gate. The
-daily cost cap declared as `[COST_HARD_LIMIT_USD]` in `MINDFORGE.md` was **not enforced** in
-11.9.2; 11.9.3 arms it. An upgrade never rewrites an existing `MINDFORGE.md`, so if yours
-predates the key the cap stays off — add `[COST_HARD_LIMIT_USD] = 25.00` to turn it on.
-
----
-
-## Verify
-
-```bash
-/mindforge:health              # framework + installation health check
-/mindforge:health --repair     # fix anything the health check flags
-/mindforge:status              # project status snapshot
-/mindforge:next                # auto-discover your first task
-```
-
-Full verification walkthrough: [docs/quick-verify.md](docs/quick-verify.md).
-
----
-
-## Quick start (new project)
-
-```bash
-/mindforge:init-project
-/mindforge:plan-phase 1
-/mindforge:execute-phase 1
-/mindforge:verify-phase 1
-/mindforge:ship 1
-```
-
-## Quick start (existing codebase)
-
-```bash
-/mindforge:map-codebase
-/mindforge:do I want to plan the next phase
-/mindforge:plan-phase 1
-```
 
 ---
 
