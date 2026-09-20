@@ -1,5 +1,24 @@
 # Release Notes
 
+## v11.9.7 — 2026-09-20 — The install banner stops contradicting itself
+
+### Why this release exists
+
+Running v11.9.6's own documented install command in a clean project (instead of stopping
+at `--version`) surfaced two real bugs in the install banner itself, plus a persona-count
+regression introduced by v11.9.6's own doc-honesty pass.
+
+### The user-visible part
+
+**The install banner no longer contradicts itself.** It used to print `SOVEREIGN
+INTELLIGENCE v8.1.1` at the top and `v8.2.0` for the same subsystem two screens later, and
+claim `PQAS ... Enabled` right before accurately disclosing it's simulated and off by
+default. Both fixed. The banner's `Docs:` link no longer points at a domain with no site
+deployed on it.
+
+**Docs say 216 personas again, not 218.** v11.9.6's own persona-count fix used a count that
+accidentally included two non-persona files; reverted to the verified real number.
+
 ## v11.9.6 — 2026-09-20 — The docs stop overselling what the code discloses about itself
 
 ### Why this release exists
