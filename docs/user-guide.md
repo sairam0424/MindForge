@@ -2,7 +2,7 @@
 
 This guide gets you from install to productive, with the minimum needed to run MindForge in a real project.
 
-> **v11.9.6 Stats:** 35 workflows · 221 slash commands · 232 engine skills · 218 personas · 0 CVEs · 258/258 IQ200 checks passing
+> **v11.9.6 Stats:** 35 workflows · 221 slash commands · 232 engine skills · 216 personas · 0 CVEs · 258/258 IQ200 checks passing
 
 ## Prerequisites
 
@@ -127,7 +127,7 @@ MindForge features 211 specialized personas. Each persona is optimized for a spe
 To switch personas or see the full list:
 
 ```bash
-ls .mindforge/personas/            # 218 persona briefs; there is no personas command
+ls .mindforge/personas/            # 216 persona briefs; there is no personas command
 ```
 
 ---

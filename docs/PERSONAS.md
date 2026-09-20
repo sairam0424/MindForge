@@ -1,7 +1,7 @@
 # MindForge Persona Reference
 
 > A guide to specialized personas — roles, tools, and orchestration patterns. `.mindforge/personas/`
-> holds 218 persona files today; the category table and detail entries below cover the
+> holds 216 persona files today; the category table and detail entries below cover the
 > majority of them but are not a fully exhaustive 1:1 listing — run
 > `find .mindforge/personas -type f | wc -l` for the live count, and see
 > [docs/registry/PERSONAS.md](registry/PERSONAS.md) for the machine-generated full list.

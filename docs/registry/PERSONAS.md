@@ -1,6 +1,6 @@
 # MindForge — Persona Registry (v11.9.6)
 
-> **Curated subset.** The real persona library has 218 files under `.mindforge/personas/`. Each is
+> **Curated subset.** The real persona library has 216 files under `.mindforge/personas/`. Each is
 > loaded via `/mindforge:agent <name>` as an in-session role overlay (not an isolated subagent —
 > see [AGENTS.md](./AGENTS.md) for that distinction). The `mf-*` family below is a smaller, separate
 > legacy sub-family.

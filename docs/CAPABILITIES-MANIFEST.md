@@ -44,7 +44,7 @@ anywhere in `bin/`. See *What is actually enforced* in the root [README](../READ
 
 ## 5. Personas, subagents, skills, commands
 
-- **`.mindforge/personas/`** — 218 in-session role-overlay files, loaded via
+- **`.mindforge/personas/`** — 216 in-session role-overlay files, loaded via
   `/mindforge:agent <name>`. Distinct from subagents below; no isolated context.
 - **`subagents/categories/`** — 164 genuine Claude-Code-native subagent definitions with their
   own isolated context, installable as separate marketplace plugins.
