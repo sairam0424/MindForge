@@ -271,8 +271,9 @@ instructions — review what you install. The audit chain is verifiable today
 ```
 
 Four layers underlie this, top to bottom: **Interface** (`.claude/`, `.agent/` — the 221 slash
-commands and hooks), **Engine specs** (`.mindforge/` — the 355 skills, 216 personas, and
-`config.json` runtime knobs), **Execution** (`bin/`, ~22K LOC — the wave executor, governance,
+commands and hooks), **Engine specs** (`.mindforge/` — 232 of the 355 skills plus 216 personas and
+`config.json` runtime knobs; the other 123 skills are extended-tier, under `.agent/skills/`),
+**Execution** (`bin/`, ~32K raw / ~25K stripped-of-comments LOC — the wave executor, governance,
 memory, and dashboard code that actually runs), and **Persistence** (`.planning/` — `STATE.md`,
 the audit chain, resumable `HANDOFF.json`). Edit behavior in layer 2 where possible; layer 3 is
 the only place with real enforcement, per *What is actually enforced* above.
@@ -290,7 +291,7 @@ Six categories, read in this order the first time:
 | Start here | [User guide](docs/user-guide.md) | Learning the day-to-day command loop |
 | Start here | [Full tutorial](docs/tutorial.md) | Want a guided walkthrough instead of reference docs |
 | Reference | [Commands (full)](docs/commands-reference.md) / [Commands (quick)](docs/References/commands.md) | Looking up a specific `/mindforge:*` command |
-| Reference | [Config reference](docs/References/config-reference.md) | Editing `MINDFORGE.md` or `.mindforge/config.json` |
+| Reference | [Config reference](docs/References/config-reference.md) | Editing `MINDFORGE.md` — this doc doesn't cover `.mindforge/config.json` |
 | Reference | [SDK API](docs/References/sdk-api.md) / [Skills API](docs/References/skills-api.md) | Building on `mindforge-sdk` or authoring a new skill |
 | Reference | [Audit events](docs/References/audit-events.md) | Parsing `.planning/AUDIT.jsonl` |
 | Reference | [Workflow atlas](docs/workflow-atlas.md) | Choosing one of the 35 dynamic workflows |
@@ -299,12 +300,12 @@ Six categories, read in this order the first time:
 | When something's wrong | [FAQ](docs/faq.md) | Common questions before filing an issue |
 | When something's wrong | [Upgrade guide](docs/upgrade.md) | Moving between major/minor versions |
 | Security | [SECURITY.md](SECURITY.md) | Reporting a vulnerability; credentials are read from env vars and never committed |
-| Security | [Threat model](docs/security/threat-model.md) | Understanding what MindForge does and doesn't protect against |
+| Security | [Threat model](docs/security/threat-model.md) | Historical only — scoped to the v1.0.0 predecessor, not re-reviewed against v11.x; see [SECURITY.md](SECURITY.md) for what's actually enforced today |
 | Contributing | [Architecture](docs/architecture/README.md) | Understanding the codebase before sending a PR |
 | Contributing | [Contributing guide](docs/contributing/CONTRIBUTING.md) | Sending a PR |
 | Contributing | [CI quickstart](docs/ci-quickstart.md) | Understanding what CI checks before you push |
 | Contributing | [Release checklist](docs/release-checklist-guide.md) | Cutting a release |
-| Reference | [USPs and features](docs/usp-features.md) | Evaluating MindForge against other tools |
+| Reference | [USPs and features](docs/usp-features.md) | The same "measured, not asserted" honesty pass applied to what's actually shipped — no competitor comparison |
 | Release notes | [RELEASENOTES.md](RELEASENOTES.md) | What changed, in prose, per version |
 
 ---
@@ -358,7 +359,8 @@ Run `/mindforge:update` (add `--apply` to install) — see [docs/upgrade.md](doc
 <details>
 <summary><strong>Plugin system (v1.0.0)</strong></summary>
 
-Plugins extend MindForge via the `mindforge-plugin-*` namespace.
+Plugins extend MindForge via the `mindforge-plugin-*` namespace. No packages are currently
+published under it — this is the mechanism, not a catalog.
 
 ```bash
 /mindforge:plugins list
