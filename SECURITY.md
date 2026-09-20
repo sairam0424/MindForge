@@ -90,7 +90,8 @@ We follow responsible disclosure practices. We will credit reporters in the rele
 ### Supply Chain
 
 - **Zero native dependencies** — The removal of `better-sqlite3` eliminates the entire native compilation toolchain (node-gyp, Python, C++ compiler) from the install process, reducing the attack surface.
-- **Dependabot enabled** — Automated weekly scans for vulnerable npm dependencies and monthly GitHub Actions version updates.
+- **Dependabot enabled** — Automated weekly scans for vulnerable npm dependencies (root, `sdk/`, and `mcp-server/` each tracked independently) and monthly GitHub Actions version updates.
+- **SBOM available** — GitHub generates a full SPDX software bill of materials from the dependency graph; export it from the repo's Insights tab or `gh api repos/sairam0424/MindForge/dependency-graph/sbom`.
 - **CODEOWNERS enforcement** — Changes to `bin/governance/`, `bin/engine/`, and the SDK require review from designated security owners.
 - **.npmignore** — Prevents accidental publication of secrets, test fixtures, planning state, and intelligence logs.
 
