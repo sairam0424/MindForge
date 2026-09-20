@@ -1,0 +1,44 @@
+name: Feature request
+description: Propose a new command, skill, subagent, or capability.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: check whether it already exists via `/mindforge:skills-index` (skills) or
+        `docs/registry/` (commands, subagents, workflows) — MindForge ships 221 commands, 355 skills,
+        164 subagents, and 35 dynamic workflows already, so there's a real chance it's covered.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: What are you trying to do that MindForge doesn't currently support?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: A new slash command, skill, subagent category, or a change to existing behavior — whatever fits.
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Where does this fit?
+      options:
+        - New slash command
+        - New skill (.mindforge/skills or .agent/skills)
+        - New subagent
+        - New dynamic workflow
+        - Installer / runtime targets (Cursor, OpenCode, Gemini, Copilot)
+        - Governance / security
+        - Dashboard / observability
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What did you try instead, and why wasn't it enough?

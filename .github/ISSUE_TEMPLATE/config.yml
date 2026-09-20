@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/sairam0424/MindForge/security/policy
+    about: Do not open a public issue for security vulnerabilities — see SECURITY.md for the responsible-disclosure process.
+  - name: Discord
+    url: https://discord.gg/mindforge
+    about: For quick questions, discussion, or help before filing a formal issue.

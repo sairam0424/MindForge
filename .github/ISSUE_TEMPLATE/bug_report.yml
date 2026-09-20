@@ -1,0 +1,64 @@
+name: Bug report
+description: Something in MindForge doesn't work the way it's documented.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. The more precise the repro, the faster it gets fixed.
+  - type: input
+    id: version
+    attributes:
+      label: MindForge version
+      description: Output of `mindforge-cc --version` (or `npx mindforge-cc@latest --version`)
+      placeholder: "11.9.7"
+    validations:
+      required: true
+  - type: dropdown
+    id: install-method
+    attributes:
+      label: Install method
+      options:
+        - npm / npx (mindforge-cc)
+        - Homebrew (sairam0424/tap/mindforge)
+        - Claude Code plugin marketplace
+        - Other / not sure
+    validations:
+      required: true
+  - type: input
+    id: runtime
+    attributes:
+      label: Runtime and OS
+      description: Node version (`node --version`), OS, and the target AI harness (Claude Code, Antigravity, Cursor, etc.) if relevant
+      placeholder: "Node 20.11, macOS 14, Claude Code"
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Exact commands run, in order. If it needs a project to reproduce, describe the minimal setup.
+      placeholder: |
+        1. npx mindforge-cc@latest --claude --local
+        2. /mindforge:learn <url>
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include the exact error output or command output. Redact secrets/tokens first.
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Relevant `.mindforge/config.json` settings, install flags used, or output of `mindforge health` if you can run it.
