@@ -53,8 +53,13 @@ Writes `.mindforge/` governance, memory, and planning into your project:
 ```bash
 npx mindforge-cc@latest --claude --local      # Claude Code, this project only
 npx mindforge-cc@latest --antigravity --local # Antigravity, this project only
-npx mindforge-cc@latest                       # auto-detects your runtime
+npx mindforge-cc@latest                       # interactive wizard, pre-selects a detected runtime
 ```
+
+The bare form only detects anything inside an interactive TTY wizard session, where it pre-selects
+— you still confirm — whichever runtime it finds. Run it non-interactively (CI, piped, scripted,
+or anywhere `stdin` isn't a TTY) and it skips the wizard entirely and installs `--claude` by
+default, regardless of what's actually on the machine.
 
 **Global** (system-wide, for your primary AI coding runtime):
 
@@ -133,7 +138,8 @@ programmatic API; neither installs these slash commands.
 
 ```bash
 /mindforge:health              # framework + installation health check
-/mindforge:health --repair     # fix anything the health check flags
+/mindforge:health --repair     # documented in the command spec, but NOT wired into the CLI
+                                # backing path — silently ignored, output is byte-identical to plain health
 /mindforge:status              # project status snapshot
 /mindforge:next                # auto-discover your first task
 ```
@@ -335,7 +341,9 @@ MindForge supports multiple interaction models to fit your engineering workflow:
 
 - **In-IDE Orchestration**: Use `/mindforge:agent <persona>` for real-time delegation.
 - **Enterprise Workflows**: Specialized commands like `/mindforge:wf-tdd-sprint` and `/mindforge:plan-phase`.
-- **CLI Automation**: Run `node bin/mindforge-cli.js spawn <persona>` for scripted tasks.
+- **CLI Automation**: `node bin/mindforge-cli.js spawn <persona>` exists but is a v1.0 stub — it
+  prints "NOT IMPLEMENTED in v1.0" and exits 1, redirecting you to `/mindforge:auto` or
+  `/mindforge:next` instead.
 
 </details>
 
@@ -365,12 +373,13 @@ Plugins extend MindForge via the `mindforge-plugin-*` namespace.
 ## Token usage profiling
 
 ```
-/mindforge:tokens --profile
+/mindforge:tokens --optimise
 ```
-See `.mindforge/production/token-optimiser.md`.
+(`--profile` doesn't exist; real flags are `--phase N`, `--session ID`, `--window short|medium|long`,
+and `--optimise`.) See `.mindforge/production/token-optimiser.md`.
 
 ---
 
 ## License
 
-MIT © 2026 MindForge Team
+MIT © 2026 Sairam Ugge (GitHub: Sairam0000)
