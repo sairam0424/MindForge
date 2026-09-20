@@ -61,4 +61,4 @@ body:
     id: extra
     attributes:
       label: Anything else
-      description: Relevant `.mindforge/config.json` settings, install flags used, or output of `mindforge-cli.js health` if you can run it.
+      description: Relevant `.mindforge/config.json` settings, install flags used, or output of `mindforge health` if you can run it.

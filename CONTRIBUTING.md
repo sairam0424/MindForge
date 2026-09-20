@@ -33,8 +33,9 @@ npm run coverage                              # npx c8 node tests/run-all.js
 ```
 
 The SDK (`sdk/`) and MCP server (`mcp-server/`) are separate packages with their own
-`package.json`, lockfile, and test suite — `cd` into each and `npm install && npm test`
-independently. Neither is exercised by the root `npm test`.
+`package.json` and lockfile — neither is exercised by the root `npm test`. The SDK has a real
+test suite: `cd sdk && npm install && npm test`. The MCP server has no test script, only
+`build` and `typecheck`: `cd mcp-server && npm install && npm run typecheck`.
 
 ## Making a change
 
