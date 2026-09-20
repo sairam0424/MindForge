@@ -80,7 +80,7 @@ release behind. Check what each points at right now with `npm dist-tag ls mindfo
 Spawn dispatch is a v1.0 stub — still not implemented as of v11.9.8. Use `/mindforge:auto` or `/mindforge:next` from Claude Code instead.
 
 **Q: Why does ZTAI show a Tier-3 warning?**
-Tier-3 trust uses in-process key simulation in v11.x — this is intentional and safe. `SECURITY_TIER_3_SIMULATED = true` is the documented v11.x behavior. Hardware TPM/HSM is planned for v12.x.
+Tier-3 trust uses in-process key simulation in v11.x. `bin/governance/ztai-manager.js` warns on this itself: key material resides in the Node.js heap, not hardware-isolated — do not use Tier-3 trust for production credential workflows. `SECURITY_TIER_3_SIMULATED = true` is the documented v11.x behavior. Hardware TPM/HSM is planned for v12.x.
 
 **Q: What is the test coverage?**
 140 test files: 137 pass, 0 failures, 3 env-dependent skips (`browser.test.js` and
