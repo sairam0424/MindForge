@@ -1,6 +1,6 @@
 {
   "name": "mindforge-cc",
-  "version": "11.9.6",
+  "version": "11.9.7",
   "description": "Agentic intelligence framework for Claude Code and Antigravity: slash commands, subagents, skills, hooks, governance, memory, and cost-aware model routing for AI-driven development.",
   "bin": {
     "mindforge-cc": "bin/install.js",

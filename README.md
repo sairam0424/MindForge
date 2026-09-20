@@ -15,19 +15,23 @@
 
 ## Latest release
 
-**v11.9.6** (2026-09-20) — The docs stop overselling what the code discloses about itself.
-The release-readiness pass before pointing real, external users at the project: fixed a
-crash in `/mindforge:learn` (wrong argument shape into `skill-registrar.js`), a token-leak
-and inconsistent auth in the browser daemon, three dashboard panels that silently rendered
-nothing, a stale Homebrew formula, and a long-running pattern of docs describing
-PQAS/ZTAI/"Pillar"-numbered subsystems as live security guarantees when the code that
-implements them already self-labels them simulated and off-by-default. No new features.
-See [RELEASENOTES.md](./RELEASENOTES.md) for the human-readable summary, or
-[CHANGELOG.md](./CHANGELOG.md) for the complete, file-by-file list.
+**v11.9.7** (2026-09-20) — The install banner stops contradicting itself. Found by
+actually running v11.9.6's own documented install command in a clean project instead of
+stopping at `--version`: the top banner claimed `SOVEREIGN INTELLIGENCE v8.1.1` while the
+install activation line two screens later said `v8.2.0` for the same subsystem, and claimed
+`PQAS ... Enabled` right before accurately disclosing it's simulated and off by default a
+few lines down. Both fixed, plus a dead `docs.mindforge.cc` link and a persona-count doc
+regression (218 → back to the correct 216) introduced by v11.9.6's own honesty pass. No
+new features. See [RELEASENOTES.md](./RELEASENOTES.md) or [CHANGELOG.md](./CHANGELOG.md).
 
-The previous release, **v11.9.5**, fixed a release pipeline that could strand itself
-mid-publish and shipped `mindforge-sdk` for the first time since 11.8.0, with provenance.
-**v11.9.4**, before that, is where the hook gates started actually registering: 11.9.3
+The previous release, **v11.9.6**, was the release-readiness pass before pointing real,
+external users at the project for the first time: fixed a crash in `/mindforge:learn`, a
+token-leak in the browser daemon, three dashboard panels that silently rendered nothing, a
+stale Homebrew formula, and docs describing PQAS/ZTAI/"Pillar"-numbered subsystems as live
+guarantees when the code already self-labels them simulated. **v11.9.5** fixed a release
+pipeline that could strand itself mid-publish and shipped `mindforge-sdk` for the first
+time since 11.8.0, with provenance. **v11.9.4**, before that, is where the hook gates
+started actually registering: 11.9.3
 shipped the code and then declined to run it on essentially every project. Measured against
 the published tarballs — 11.9.3: **11 hook scripts installed, 0 registered**; 11.9.4:
 **8 registered, 3 deny-class verified blocking**. That **behaviour change under a patch
