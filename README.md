@@ -6,11 +6,159 @@
 [![Node >=18](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](package.json)
 [![CI](https://github.com/sairam0424/MindForge/actions/workflows/mindforge-ci.yml/badge.svg)](https://github.com/sairam0424/MindForge/actions/workflows/mindforge-ci.yml)
 
-**An agentic intelligence framework for Claude Code** — orchestrates multi-agent workflows with governance, memory, and autonomous execution. Production-hardened with true parallelism, streaming SDK, and zero-trust security. Install once, get structured AI-driven development with built-in quality gates.
+**A governance and orchestration layer for Claude Code.**
 
-**At a glance:** 221 slash commands · 355 skills (232 auto-triggered + 123 explicit) · 216 personas · 164 installable subagents · 35 pre-built multi-agent dynamic workflows · a tamper-evident audit hash-chain · cost-aware routing across Anthropic/OpenAI/Gemini/Bedrock/Ollama · a local-first knowledge graph on zero-native-dependency SQLite (sql.js) · a live Express+SSE dashboard. Ships as an npm package, a Claude Code plugin, and an MCP server.
+Claude Code alone runs one agent in one context. MindForge adds the parts that don't fit in a
+single context window: skills that auto-load by trigger, personas you can call by name, a
+wave-based executor that fans work out to fresh-context subagents and commits per task, a
+tamper-evident audit chain, and cost-aware routing across providers. Install it once and get
+`/mindforge:plan-phase` → `/mindforge:execute-phase` → `/mindforge:verify-phase` → `/mindforge:ship`
+as your actual working loop, not a slogan.
 
-**Jump to:** [Latest release](#latest-release) · [What is actually enforced](#what-is-actually-enforced) · [Install](#install) · [Quick start](#quick-start-new-project) · [Documentation](#documentation) · [Core workflow](#core-workflow) · [Dynamic workflows](#dynamic-workflow-library)
+<!-- TODO: record a ~30s terminal cast of one real /mindforge:plan-phase -> /mindforge:execute-phase
+     run (asciinema or GIF) and embed it here. Every comparable README in this space leads with a
+     visual in the first 15 lines; this is currently the single biggest gap. -->
+
+**Jump to:** [Latest release](#latest-release) · [What you get](#what-you-get) · [What is actually enforced](#what-is-actually-enforced) · [Install](#install) · [Quick start](#quick-start-new-project) · [Documentation](#documentation) · [Core workflow](#core-workflow) · [Dynamic workflows](#dynamic-workflow-library)
+
+---
+
+## What you get
+
+| | Capability | Detail |
+|---|---|---|
+| 🧩 | **221 slash commands** | `/mindforge:plan-phase`, `/mindforge:execute-phase`, `/mindforge:ship`, and 218 more — [full reference](docs/commands-reference.md) |
+| 🛠️ | **355 skills** | 232 auto-triggered by keyword match (engine tier) + 123 explicit, invoked by name (extended tier) |
+| 🎭 | **216 personas** | In-session role overlays via `/mindforge:agent <name>` — same context, different behavioral spec |
+| 🤖 | **164 subagents** | Genuine isolated-context Claude-Code-native subagent definitions — a separate mechanism from personas, see [docs/PERSONAS.md](docs/PERSONAS.md) |
+| 🔀 | **35 dynamic workflows** | Multi-agent fan-out scripts across 5 tiers (Research, Dev, Ops, Intelligence, Beast) — [workflow atlas](docs/workflow-atlas.md) |
+| 🔒 | **Tamper-evident audit chain** | SHA-256 hash-linked `.planning/AUDIT.jsonl`; verify independently with `node bin/verify-audit.js` |
+| 💸 | **Cost-aware model routing** | Anthropic / OpenAI / Gemini / Bedrock / Ollama, routed by task difficulty tier |
+| 🧠 | **Local-first knowledge graph** | Zero-native-dependency SQLite (`sql.js` / WASM) — no native build step |
+| 📊 | **Live dashboard** | Express + SSE at `localhost:7339` |
+
+Ships three ways: an npm package (`npx mindforge-cc@latest`), a Claude Code plugin marketplace
+entry, and an MCP server.
+
+---
+
+## Install
+
+Pick whichever matches how you work — all of these are real, live channels.
+
+### `npx` (recommended)
+
+Writes `.mindforge/` governance, memory, and planning into your project:
+
+```bash
+npx mindforge-cc@latest --claude --local      # Claude Code, this project only
+npx mindforge-cc@latest --antigravity --local # Antigravity, this project only
+npx mindforge-cc@latest                       # auto-detects your runtime
+```
+
+**Global** (system-wide, for your primary AI coding runtime):
+
+```bash
+npx mindforge-cc@latest --claude --global
+```
+
+(`npm install -g mindforge-cc@latest` only puts the `mindforge-cc`/`mindforge` binaries on your
+PATH — it doesn't select a runtime or write anything. Run the command above, or the equivalent
+`mindforge-cc --claude --global` once installed, to actually scaffold a global setup.)
+
+**Other runtimes** — same flag pattern, swap `--global`/`--local`:
+
+| Runtime | Flag |
+|---|---|
+| Claude Code | `--claude` |
+| Antigravity | `--antigravity` |
+| Cursor | `--cursor` |
+| GitHub Copilot | `--copilot` |
+| Gemini CLI | `--gemini` |
+
+**Advanced:** `--runtime claude,cursor` (combined runtimes) · `--with-utils` (installs local `bin/` utilities) · `--minimal` (essential scaffolding only, no persona library) · `--force` (rewrite an existing `.mindforge/MINDFORGE-SCHEMA.json` with the current, stricter schema)
+
+### Claude Code plugin marketplace
+
+No project files written — the plugin's hooks fire, see [What is actually enforced](#what-is-actually-enforced) for what that does and does not cover.
+
+```bash
+/plugin marketplace add sairam0424/MindForge
+/plugin install mindforge@mindforge
+```
+
+Prefer just a slice (e.g. Python agents)? `mindforge-lang@mindforge` and 9 other focused packs exist — see [docs/plugin-installation.md](docs/plugin-installation.md) for all 10, token-budget guidance, and team setup.
+
+### Standalone MCP server
+
+```bash
+claude mcp add mindforge -- npx -y mindforge-mcp-server
+```
+
+Exposes 8 tools over stdio (6 read-only, 1 guarded write, 1 guarded browse proxy). Also listed on
+the [MCP Registry](https://registry.modelcontextprotocol.io) as `io.github.sairam0424/mindforge`
+— that entry is republished manually and can lag; check what it actually serves before relying on
+it, or install `mindforge-mcp-server` from npm directly to pin a version.
+
+### Homebrew
+
+```bash
+brew install sairam0424/tap/mindforge
+```
+
+### SDK
+
+Build on MindForge programmatically:
+
+```bash
+npm i mindforge-sdk
+```
+
+**Upgrading from 11.9.x?** The installer does not overwrite an existing
+`.mindforge/MINDFORGE-SCHEMA.json`, so 11.9.2's armed config validator keeps the older
+permissive schema on a plain upgrade — run with `--force` for the stricter gate. The daily cost
+cap declared as `[COST_HARD_LIMIT_USD]` in `MINDFORGE.md` was **not enforced** in 11.9.2 (11.9.3
+arms it), and an upgrade never rewrites an existing `MINDFORGE.md` — add
+`[COST_HARD_LIMIT_USD] = 25.00` yourself if yours predates the key.
+
+Full install matrix, plugin packs, and team-setup guidance: [docs/getting-started.md](docs/getting-started.md).
+
+---
+
+## Verify
+
+These `/mindforge:*` commands require the Claude Code plugin or an `npx`/Homebrew framework
+install — the standalone MCP server exposes MCP tools instead, and `mindforge-sdk` exposes a
+programmatic API; neither installs these slash commands.
+
+```bash
+/mindforge:health              # framework + installation health check
+/mindforge:health --repair     # fix anything the health check flags
+/mindforge:status              # project status snapshot
+/mindforge:next                # auto-discover your first task
+```
+
+Full verification walkthrough: [docs/quick-verify.md](docs/quick-verify.md).
+
+---
+
+## Quick start (new project)
+
+```bash
+/mindforge:init-project
+/mindforge:plan-phase 1
+/mindforge:execute-phase 1
+/mindforge:verify-phase 1
+/mindforge:ship 1
+```
+
+## Quick start (existing codebase)
+
+```bash
+/mindforge:map-codebase
+/mindforge:do I want to plan the next phase
+/mindforge:plan-phase 1
+```
 
 ---
 
@@ -44,8 +192,8 @@ declined, merging append-only and backing up first. See the BREAKING section in
 
 ## What is actually enforced
 
-Read this before the install instructions. MindForge ships a large corpus of agent
-instructions — commands, skills, personas, protocols — and those are advisory: they work by
+Read this before you rely on anything below blocking a bad command. MindForge ships a large
+corpus of agent instructions — commands, skills, personas, protocols — and those are advisory: they work by
 being in the model's context, and a model can decline them. The parts that would *block* an
 action are hooks. Through 11.9.2 **no channel registered them.** 11.9.3 added the registration code
 but it declined to run on almost every project, so in practice nothing was enforced there either.
@@ -95,91 +243,63 @@ instructions — review what you install. The audit chain is verifiable today
 
 ---
 
-## Install
+## How it fits together
 
-Claude Code plugin marketplace (no project files written). The plugin's hooks now fire — see
-*What is actually enforced* above for what that does and does not cover.
-
-```bash
-/plugin marketplace add sairam0424/MindForge
-/plugin install mindforge@mindforge
+```
+                     /mindforge:plan-phase N
+                              |
+                              v
+   Skill Loader (trigger-match, tier: Project > Org > Core)
+                              |
+                              v
+        Context Injector (<=60K tokens)  --> Cost Router
+                              |             (Haiku / Sonnet / Opus / Gemini,
+                              v              by task difficulty)
+      Fresh-context Subagent (implement -> self-verify -> commit)
+                              |
+                              v
+   Verification (build / typecheck / lint / test / security / diff)
+                              |
+                              v
+        Handoff (.planning/HANDOFF.json + AUDIT.jsonl)
 ```
 
-Or the full framework engine via `npx` (writes `.mindforge/` governance, memory, and planning into your project):
-
-```bash
-npx mindforge-cc@latest --claude --local
-```
-
-All install channels (global, local, Antigravity, Cursor, Copilot, Gemini CLI, MCP server, combined runtimes, `--minimal`): see [docs/getting-started.md](docs/getting-started.md).
-
-**Upgrading from 11.9.x?** The installer does not overwrite an existing
-`.mindforge/MINDFORGE-SCHEMA.json`, so 11.9.2's armed config validator keeps the older
-permissive schema on a plain upgrade. Run with `--force` if you want the stricter gate. The
-daily cost cap declared as `[COST_HARD_LIMIT_USD]` in `MINDFORGE.md` was **not enforced** in
-11.9.2; 11.9.3 arms it. An upgrade never rewrites an existing `MINDFORGE.md`, so if yours
-predates the key the cap stays off — add `[COST_HARD_LIMIT_USD] = 25.00` to turn it on.
-
----
-
-## Verify
-
-```bash
-/mindforge:health              # framework + installation health check
-/mindforge:health --repair     # fix anything the health check flags
-/mindforge:status              # project status snapshot
-/mindforge:next                # auto-discover your first task
-```
-
-Full verification walkthrough: [docs/quick-verify.md](docs/quick-verify.md).
-
----
-
-## Quick start (new project)
-
-```bash
-/mindforge:init-project
-/mindforge:plan-phase 1
-/mindforge:execute-phase 1
-/mindforge:verify-phase 1
-/mindforge:ship 1
-```
-
-## Quick start (existing codebase)
-
-```bash
-/mindforge:map-codebase
-/mindforge:do I want to plan the next phase
-/mindforge:plan-phase 1
-```
+Four layers underlie this, top to bottom: **Interface** (`.claude/`, `.agent/` — the 221 slash
+commands and hooks), **Engine specs** (`.mindforge/` — the 355 skills, 216 personas, and
+`config.json` runtime knobs), **Execution** (`bin/`, ~22K LOC — the wave executor, governance,
+memory, and dashboard code that actually runs), and **Persistence** (`.planning/` — `STATE.md`,
+the audit chain, resumable `HANDOFF.json`). Edit behavior in layer 2 where possible; layer 3 is
+the only place with real enforcement, per *What is actually enforced* above.
 
 ---
 
 ## Documentation
 
-- **User Guide:** [docs/user-guide.md](docs/user-guide.md)
-- **Getting started:** [docs/getting-started.md](docs/getting-started.md)
-- **Quick verify:** [docs/quick-verify.md](docs/quick-verify.md)
-- **Troubleshooting:** [docs/troubleshooting.md](docs/troubleshooting.md)
-- **FAQ:** [docs/faq.md](docs/faq.md)
-- **Full tutorial:** [docs/tutorial.md](docs/tutorial.md)
-- **Commands reference (full):** [docs/commands-reference.md](docs/commands-reference.md)
-- **Commands (quick):** [docs/References/commands.md](docs/References/commands.md)
-- **Config reference:** [docs/References/config-reference.md](docs/References/config-reference.md)
-- **SDK:** [docs/References/sdk-api.md](docs/References/sdk-api.md)
-- **Skills:** [docs/References/skills-api.md](docs/References/skills-api.md)
-- **Audit events:** [docs/References/audit-events.md](docs/References/audit-events.md)
-- **Upgrade guide:** [docs/upgrade.md](docs/upgrade.md)
-- **Workflow atlas:** [docs/workflow-atlas.md](docs/workflow-atlas.md)
-- **Security:** [SECURITY.md](SECURITY.md) (credentials are read from env vars and never committed to the repository)
-- **Threat model:** [docs/security/threat-model.md](docs/security/threat-model.md)
-- **Architecture:** [docs/architecture/README.md](docs/architecture/README.md)
-- **Contributing:** [docs/contributing/CONTRIBUTING.md](docs/contributing/CONTRIBUTING.md)
-- **Release notes:** [RELEASENOTES.md](RELEASENOTES.md)
-- **CI quickstart:** [docs/ci-quickstart.md](docs/ci-quickstart.md)
-- **Requirements:** [docs/requirements.md](docs/requirements.md)
-- **Release checklist guide:** [docs/release-checklist-guide.md](docs/release-checklist-guide.md)
-- **USPs and features:** [docs/usp-features.md](docs/usp-features.md)
+Six categories, read in this order the first time:
+
+| Category | Doc | Read this when |
+|---|---|---|
+| Start here | [Getting started](docs/getting-started.md) | Installing for the first time |
+| Start here | [Quick verify](docs/quick-verify.md) | Right after install — confirm it actually works |
+| Start here | [User guide](docs/user-guide.md) | Learning the day-to-day command loop |
+| Start here | [Full tutorial](docs/tutorial.md) | Want a guided walkthrough instead of reference docs |
+| Reference | [Commands (full)](docs/commands-reference.md) / [Commands (quick)](docs/References/commands.md) | Looking up a specific `/mindforge:*` command |
+| Reference | [Config reference](docs/References/config-reference.md) | Editing `MINDFORGE.md` or `.mindforge/config.json` |
+| Reference | [SDK API](docs/References/sdk-api.md) / [Skills API](docs/References/skills-api.md) | Building on `mindforge-sdk` or authoring a new skill |
+| Reference | [Audit events](docs/References/audit-events.md) | Parsing `.planning/AUDIT.jsonl` |
+| Reference | [Workflow atlas](docs/workflow-atlas.md) | Choosing one of the 35 dynamic workflows |
+| Reference | [Requirements](docs/requirements.md) | Checking supported Node/OS versions before install |
+| When something's wrong | [Troubleshooting](docs/troubleshooting.md) | A command or hook isn't behaving as documented |
+| When something's wrong | [FAQ](docs/faq.md) | Common questions before filing an issue |
+| When something's wrong | [Upgrade guide](docs/upgrade.md) | Moving between major/minor versions |
+| Security | [SECURITY.md](SECURITY.md) | Reporting a vulnerability; credentials are read from env vars and never committed |
+| Security | [Threat model](docs/security/threat-model.md) | Understanding what MindForge does and doesn't protect against |
+| Contributing | [Architecture](docs/architecture/README.md) | Understanding the codebase before sending a PR |
+| Contributing | [Contributing guide](docs/contributing/CONTRIBUTING.md) | Sending a PR |
+| Contributing | [CI quickstart](docs/ci-quickstart.md) | Understanding what CI checks before you push |
+| Contributing | [Release checklist](docs/release-checklist-guide.md) | Cutting a release |
+| Reference | [USPs and features](docs/usp-features.md) | Evaluating MindForge against other tools |
+| Release notes | [RELEASENOTES.md](RELEASENOTES.md) | What changed, in prose, per version |
 
 ---
 
@@ -208,13 +328,16 @@ Full, verified 35-workflow table by tier: [docs/workflow-atlas.md](docs/workflow
 
 ---
 
-## Execution Modes
+<details>
+<summary><strong>Execution modes</strong></summary>
 
 MindForge supports multiple interaction models to fit your engineering workflow:
 
 - **In-IDE Orchestration**: Use `/mindforge:agent <persona>` for real-time delegation.
 - **Enterprise Workflows**: Specialized commands like `/mindforge:wf-tdd-sprint` and `/mindforge:plan-phase`.
 - **CLI Automation**: Run `node bin/mindforge-cli.js spawn <persona>` for scripted tasks.
+
+</details>
 
 ---
 
@@ -224,15 +347,18 @@ Run `/mindforge:update` (add `--apply` to install) — see [docs/upgrade.md](doc
 
 ---
 
-## Plugin system (v1.0.0)
+<details>
+<summary><strong>Plugin system (v1.0.0)</strong></summary>
 
 Plugins extend MindForge via the `mindforge-plugin-*` namespace.
 
-```
+```bash
 /mindforge:plugins list
 /mindforge:plugins install mindforge-plugin-<name>
 /mindforge:plugins validate
 ```
+
+</details>
 
 ---
 
