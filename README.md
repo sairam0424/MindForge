@@ -30,7 +30,7 @@ as your actual working loop, not a slogan.
 | 🧩 | **221 slash commands** | `/mindforge:plan-phase`, `/mindforge:execute-phase`, `/mindforge:ship`, and 218 more — [full reference](docs/commands-reference.md) |
 | 🛠️ | **355 skills** | 232 auto-triggered by keyword match (engine tier) + 123 explicit, invoked by name (extended tier) |
 | 🎭 | **216 personas** | In-session role overlays via `/mindforge:agent <name>` — same context, different behavioral spec |
-| 🤖 | **164 subagents** | Genuine isolated-context Claude-Code-native subagent definitions — a separate mechanism from personas, see [docs/PERSONAS.md](docs/PERSONAS.md) |
+| 🤖 | **164 subagents** | Genuine isolated-context Claude-Code-native subagent definitions — a separate mechanism from personas, see [docs/PERSONAS.md](docs/PERSONAS.md); 152 adapted from [VoltAgent's `awesome-claude-code-subagents`](https://github.com/VoltAgent/awesome-claude-code-subagents) (MIT), attribution in [subagents/README.md](subagents/README.md) |
 | 🔀 | **35 dynamic workflows** | Multi-agent fan-out scripts across 5 tiers (Research, Dev, Ops, Intelligence, Beast) — [workflow atlas](docs/workflow-atlas.md) |
 | 🔒 | **Tamper-evident audit chain** | SHA-256 hash-linked `.planning/AUDIT.jsonl`; verify independently with `node bin/verify-audit.js` |
 | 💸 | **Cost-aware model routing** | Anthropic / OpenAI / Gemini / Bedrock / Ollama, routed by task difficulty tier |

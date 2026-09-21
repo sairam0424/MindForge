@@ -10,7 +10,7 @@
 
 ## Overview
 
-MindForge uses a multi-agent orchestration model where specialized personas are invoked to handle specific phases of the project lifecycle. Each persona is defined with a unique role, high-fidelity XML-tagged process, and strict tool permissions to ensure security and precision. Personas are loaded as an in-session role overlay via `/mindforge:agent <name>` — they run in the current session's context, not as isolated subagents. (For genuine isolated-context subagents, see `subagents/categories/` — 164 Claude-Code-native definitions, a separate mechanism.)
+MindForge uses a multi-agent orchestration model where specialized personas are invoked to handle specific phases of the project lifecycle. Each persona is defined with a unique role, high-fidelity XML-tagged process, and strict tool permissions to ensure security and precision. Personas are loaded as an in-session role overlay via `/mindforge:agent <name>` — they run in the current session's context, not as isolated subagents. (For genuine isolated-context subagents, see `subagents/categories/` — 164 Claude-Code-native definitions, a separate mechanism. 152 of those are adapted from VoltAgent's MIT-licensed `awesome-claude-code-subagents`; see [`subagents/README.md`](../subagents/README.md) for the full attribution.)
 
 ### Persona Categories (illustrative, not exhaustive)
 | :--- | :--- | :--- |
