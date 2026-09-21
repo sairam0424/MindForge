@@ -15,10 +15,6 @@ tamper-evident audit chain, and cost-aware routing across providers. Install it 
 `/mindforge:plan-phase` → `/mindforge:execute-phase` → `/mindforge:verify-phase` → `/mindforge:ship`
 as your actual working loop, not a slogan.
 
-<!-- TODO: record a ~30s terminal cast of one real /mindforge:plan-phase -> /mindforge:execute-phase
-     run (asciinema or GIF) and embed it here. Every comparable README in this space leads with a
-     visual in the first 15 lines; this is currently the single biggest gap. -->
-
 **Jump to:** [Latest release](#latest-release) · [What you get](#what-you-get) · [What is actually enforced](#what-is-actually-enforced) · [Install](#install) · [Quick start](#quick-start-new-project) · [Documentation](#documentation) · [Core workflow](#core-workflow) · [Dynamic workflows](#dynamic-workflow-library)
 
 ---
