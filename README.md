@@ -295,9 +295,15 @@ section in [CHANGELOG.md](./CHANGELOG.md).
                      pass    |    fail
               +--------------+--------------+
               v                             v
-   Handoff (.planning/HANDOFF.json    Temporal rollback -> awaiting_regeneration
-              + AUDIT.jsonl)              -> re-trigger (back to Skill Loader)
+   Handoff (.planning/HANDOFF.json    Temporal rollback -> sets status
+              + AUDIT.jsonl)              "awaiting_regeneration"
 ```
+
+The fail path is real but partial: `bin/hindsight-injector.js` rolls back `.planning/` state and sets
+`auto-state.json.status = "awaiting_regeneration"` — verified, and hash-chained into the audit log
+like everything else. What is **not** currently true: nothing in `bin/` reads that status back out
+to automatically re-trigger the wave (`awaiting_regeneration` has one writer, zero readers today) —
+regeneration after a rollback is a manual step, not a closed loop.
 
 Four layers underlie this, top to bottom: **Interface** (`.claude/`, `.agent/` — the 221 slash
 commands and hooks), **Engine specs** (`.mindforge/` — 232 of the 355 skills plus 216 personas and
