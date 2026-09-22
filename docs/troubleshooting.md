@@ -23,18 +23,20 @@ Look for `CLAUDE.md.backup-<timestamp>` and merge your content.
 **Fix:** Verify the install location:
 - Claude Code: `~/.claude/commands/mindforge/`
 - Antigravity: `~/.gemini/antigravity/mindforge/`
-Run `/mindforge:health --repair`.
+`--repair` doesn't run an automated fix — it's a documented flag that isn't wired into the CLI
+backing path, silently ignored (byte-identical output to plain `health`). Re-run the install
+command with `--force` instead, or restore the missing directory from git/backup.
 
 ---
 
 ## 2. Health check failures
 
 ### CLAUDE.md drift detected
-**Fix:**
-```
-/mindforge:health --repair
-```
-This restores the canonical MindForge CLAUDE.md.
+**Fix:** `/mindforge:health --repair` is documented in the command spec but not wired into the
+CLI backing path — it's silently ignored, byte-identical output to plain `health`. No automated
+repair exists today. Restore the canonical file yourself: look for a
+`CLAUDE.md.backup-<timestamp>` the installer wrote on your last run, or re-run
+`npx mindforge-cc@latest --claude --local --force`.
 
 ### Missing .planning files
 **Fix:**
@@ -101,7 +103,8 @@ rerun migration. See `.mindforge/audit/AUDIT-SCHEMA.md` for expected format.
 - Reduce file reads or limit to ranges
 - Keep PLAN `<action>` lean (150–400 words)
 - Limit full skill injections to 3
-- Use `/mindforge:tokens --profile`
+- Use `/mindforge:tokens --optimise` (`--profile` doesn't exist; real flags are `--phase N`,
+  `--session ID`, `--window short|medium|long`, `--optimise`)
 
 ---
 
@@ -128,8 +131,9 @@ follow, not a command.
 
 ### Workspace isolation failure
 **Symptom:** Conflicts between feature branches or dirty worktree.
-**Fix:** Run `/mindforge:workspace` to inspect worktree state. Use `/mindforge:health --repair` if
-`.git/worktrees/` is corrupt.
+**Fix:** Run `/mindforge:workspace` to inspect worktree state. `/mindforge:health --repair` does
+not actually run an automated fix (the flag is silently ignored) — if `.git/worktrees/` is
+corrupt, run `git worktree prune` and remove the affected worktree directory manually.
 
 ---
 

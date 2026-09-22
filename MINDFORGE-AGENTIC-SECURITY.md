@@ -167,7 +167,7 @@ If MindForge runs agents autonomously, this is the floor (also folded into `SECU
 | Git-hook bypass | `.agent/hooks/mindforge-block-no-verify.js` |
 | Secret-path reads | `.claude/settings.json` `permissions.deny` baseline |
 | Config weakening | `.agent/hooks/mindforge-config-protection.js` (Wave 3) |
-| Supply-chain (skills/agents) | `bin/skill-validator.js` + provenance schema (Wave 2) + repo-wide validation chain (Wave 3) |
+| Supply-chain (skills/agents) | `bin/skill-validator.js`'s injection check is one case-insensitive literal-string match (`/IGNORE ALL PREVIOUS/i`) — real, but narrow; it won't catch a rephrasing. The CLI's write paths (`install-skill`/`register-skill`/`audit-skill`) are deliberately disabled by omission of `defaultArgs` (refuse with exit 1) rather than gated on validation, after being found to perform no existence/validation checks — see `bin/mindforge-cli.js`'s note above those entries. |
 | Runaway loops | `session-guardian.sh` + heartbeat + Tier-3 governance (Wave 3) |
 | Cross-project memory leak | Project-scoped instincts (Wave 2) |
 | Hidden Unicode payloads | `scripts/ci/check-unicode-safety.js` (Wave 3) |
