@@ -21,7 +21,7 @@ An item is only ✅ when:
 3. **Section C** — Governance gates
 4. **Section D** — Documentation
 5. **Section E** — Test coverage
-6. **Section F** — Release artifacts
+6. **Section F** — v2.0.0 Features
 7. **Section G** — Final packaging
 
 ## Example entry

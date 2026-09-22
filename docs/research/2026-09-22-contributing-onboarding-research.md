@@ -1,5 +1,14 @@
 # Contributor Onboarding & Architecture Docs — Gap Research (2026-09-22)
 
+> **Historical snapshot:** Sections 1.1 and 1.2 describe the pre-remediation documentation
+> state. Both were fixed in the same PR that shipped this report — `docs/contributing/CONTRIBUTING.md`
+> is now a pointer to the stronger root file (and `README.md`'s link was corrected to match), and
+> `docs/architecture/README.md` was rewritten around a real `bin/` codemap. §1.4's
+> recommendations 1-2 (fix the item count, add Section G to the recommended order) are also
+> applied; recommendations 3-4 (restore real verification steps for Sections A-E, regenerate
+> `.planning/RELEASE-CHECKLIST.md`) remain open. Sections 1.3, 1.5, and 2 were not remediated and
+> still describe the current state.
+
 **Scope:** `docs/architecture/README.md`, `docs/contributing/CONTRIBUTING.md`,
 `docs/ci-quickstart.md`, `docs/release-checklist-guide.md`, traced against the live repo
 (`sairam0424/MindForge`, package version 11.9.8) plus external OSS practice, with every
