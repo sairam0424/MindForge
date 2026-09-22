@@ -250,9 +250,14 @@ const BASE64_CANDIDATE = /[A-Za-z0-9+/]{24,}={0,2}/g;
 function decodeBase64Candidates(text) {
   const found = [];
   for (const m of text.match(BASE64_CANDIDATE) || []) {
-    if (m.length % 4 !== 0) continue;
-    const decoded = Buffer.from(m, 'base64').toString('utf8');
-    const roundTrips = Buffer.from(decoded, 'utf8').toString('base64').replace(/=+$/, '') === m.replace(/=+$/, '');
+    // Do NOT reject on `m.length % 4 !== 0` -- valid UNPADDED base64 legitimately has
+    // length % 4 of 2 or 3 (only 1 is truly invalid). An attacker can strip the `=`
+    // padding from an encoded payload to slip past a length%4 gate while Node's own
+    // Buffer.from(..., 'base64') still decodes it correctly. Pad explicitly instead,
+    // and let the round-trip check below be the real correctness gate.
+    const padded = m + '='.repeat((4 - (m.length % 4)) % 4);
+    const decoded = Buffer.from(padded, 'base64').toString('utf8');
+    const roundTrips = Buffer.from(decoded, 'utf8').toString('base64').replace(/=+$/, '') === padded.replace(/=+$/, '');
     if (!roundTrips || decoded.length < 8 || /[\x00-\x08\x0B\x0E-\x1F]/.test(decoded)) continue;
     found.push(decoded);
   }

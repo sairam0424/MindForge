@@ -1,17 +1,16 @@
 # README honesty section vs. competitors — followup after PR #281
 
 Researched 2026-09-22, against MindForge `README.md` as it stands on disk right now (424
-lines, no local git repo initialized in this checkout so no commit SHA is available locally —
-cross-checked instead against the sibling checkout at
-`/Users/sairamugge/Desktop/Not-Humans-World/MindForge` which *does* have git history; see
-"What actually changed" below for the exact commit). This is a **followup** to the existing
-`scratch-pad/research/mindforge-competitive-landscape.md` (dated 2026-09-20, gitignored,
-10-angle research pass that fed PR #281) — that report is re-cited below, not repeated, and
-this document only adds what has changed or wasn't yet checkable as of 2026-09-20.
+lines), read directly from this repo's own git history (`git log --oneline -- README.md`,
+`git show 423df3a8`; see "What actually changed" below for the exact commit). This is a
+**followup** to the existing `scratch-pad/research/mindforge-competitive-landscape.md` (dated
+2026-09-20, gitignored so it isn't shipped or linkable from a tracked path — readers without
+that local scratch directory won't have access to it) — that report is re-cited below, not
+repeated, and this document only adds what has changed or wasn't yet checkable as of 2026-09-20.
 
 ## Method note (primary sources only)
 
-- **MindForge claims**: read directly from the live files in this checkout —
+- **MindForge claims**: read directly from the live files in this repo —
   `README.md` (full file), `docs/usp-features.md`, `bin/review/cross-review-engine.js`,
   `bin/engine/council-runtime.js`, `bin/council-cli.js`, `plugins/mindforge/hooks/hooks.json`,
   `bin/installer/hook-registration.js`, and `git log --oneline -- README.md` /

@@ -24,8 +24,9 @@ there are no URLs to cite.
    summary" section (lines 58–107) — but no verification step.
 4. Section 3 below proposes a concrete, runnable verification step for every one of the 50 A–E
    items, each traced to a real command, test file, or grep already in this repo.
-5. **Six items cannot be honestly given a real verification command today** (C04, C08, E02, E06,
-   D07, E09/E10 partially) — see Section 4. Proposing a fake command for these would violate the
+5. **Five full gaps and two partial gaps cannot be honestly given a real verification command
+   today** (C04, C08, E02, E06, D07 in full; E09 and E10 partially) — see Section 4. Proposing a
+   fake command for these would violate the
    "measured, not asserted" bar this project holds itself to, so I did not.
 
 ---
@@ -178,7 +179,7 @@ paper over.
 |---|---|---|---|---|
 | A01 | bin/install.js has shebang and runs without error | `head -1 bin/install.js` → `#!/usr/bin/env node`; `node bin/install.js --version` exits 0 | `bin/install.js:1`, `:53` (verified: shebang present, `--version` flag handler real) | |
 | A02 | bin/installer-core.js exports run() function | `node -e "console.log(typeof require('./bin/installer-core.js').run)"` → `function` | `bin/installer-core.js:1383` `module.exports = { run, install, uninstall, verifyInstall, ... }` (verified) | |
-| A03 | Installer handles --version flag | `node bin/install.js --version` (documented in root `CLAUDE.md`'s command table as `npx mindforge-cc@latest --version`) | `bin/install.js:53` `if (ARGS.includes('--version') || ARGS.includes('-v'))` (verified) | |
+| A03 | Installer handles --version flag | `node bin/install.js --version` (documented in root `CLAUDE.md`'s command table as `npx mindforge-cc@latest --version`) | `bin/install.js:53` — checks `ARGS.includes('--version')` or `ARGS.includes('-v')` (verified) | |
 | A04 | Node.js version gate (>= 18) | `node tests/install.test.js` (installer smoke tests); gate itself reads `process.versions.node.split('.')[0]` | `bin/install.js:42` (verified); `package.json:117-119` `"engines": {"node": ">=18.0.0"}` (verified) | No test file name is specific to the version gate alone — `install.test.js` is the closest real, run-able artifact |
 | A05 | CI mode detection works | `node tests/ci-mode.test.js` | Real file, header confirms "MindForge Day 6 — CI Mode Tests" (verified) | |
 | A06 | Existing CLAUDE.md backed up before overwrite | `node tests/install.test.js`; backup logic itself: `bin/installer-core.js:495-498` writes `${dst}.backup-${Date.now()}` | Verified directly (grep) | |
@@ -221,7 +222,7 @@ paper over.
 
 | # | Item (as currently worded) | Proposed verification step | Citation | Note |
 |---|---|---|---|---|
-| D01 | docs/reference/commands.md exists | `test -f docs/reference/commands.md && wc -l docs/reference/commands.md` | Verified directly: 76 lines, real content ("MindForge ships 221 slash commands in total") | |
+| D01 | docs/References/commands.md exists | `test -f docs/References/commands.md && wc -l docs/References/commands.md` | Verified directly: real content ("MindForge ships 221 slash commands in total") | |
 | D02 | docs/security/SECURITY.md has disclosure policy | `grep -n -i "disclosure\|report.*vulnerabilit" docs/security/SECURITY.md` | File confirmed to exist at `docs/security/SECURITY.md` (directory listing, verified) | |
 | D03 | docs/security/threat-model.md covers 7 threat actors | `grep -c "^## Threat Actor" docs/security/threat-model.md` → expect `7` | Verified directly: exactly 7 headings, "Threat Actor 1" through "Threat Actor 7" at lines 25/40/54/72/85/101/116 | This item is **accurate as worded** — a rare full match |
 | D04 | docs/architecture/decision-records-index.md lists 20 ADRs | `node tests/production.test.js` (contains `'ADR index lists all 20 ADRs'` at line 464 and `'all 20 ADR files present...'` at line 659, the latter asserting `>= 20`) | Verified directly by reading the index file in full | **The index itself now lists more than 20.** Its own intro line says *"All 24 real, substantive ADRs"*, and a direct count of its table rows gives 27 (ADR-001–020 = 20, plus 039–041 = 3, plus 024–026 = 3, plus 042 = 1). The index's own stated total (24) doesn't even match its own row count (27) — a second, independent drift inside that file. The test's `>= 20` phrasing tolerates growth, but the checklist item's "lists 20 ADRs" wording is now an undercount. Recommend rewording to "ADR index row count matches `tests/production.test.js`'s `>= 20` floor" and separately flagging the index file's own 24-vs-27 mismatch as a documentation bug outside this handoff's scope |
@@ -243,7 +244,7 @@ paper over.
 | E05 | Integration tests pass | `node tests/run-all.js --filter=integration` | Same documented `--filter=` mechanism. Ran directly: discovers `integrations.test.js`, `v7-pillar-integration.test.js`, `v9-integration-chain.test.js` (3 passed) plus `sre-integration.test.js` (correctly auto-skipped per its own documented `@skip` reason) | |
 | E06 | Performance benchmarks pass | **No real command exists.** | Searched `package.json`, `bin/`, and all `tests/*.test.js` for "benchmark" — hits only in `bin/harness-audit.js` (compliance scoring) and `bin/revops/market-evaluator.js` (revenue benchmarking), neither of which is a runtime/perf benchmark | No performance-benchmark test suite exists in this repo today. Recommend rewording the item or explicitly marking it unimplemented rather than implying a runnable check exists |
 | E07 | Regression tests for all fixed bugs | `node tests/regression-writer.test.js` (best available, with caveat) | Header (verified, UC-22): "Guards against green-washing: the generated regression test MUST assert against the actual bug payload... not merely that `<body>` is visible" | This test guards the **regression-test *generator*** itself, not a blanket claim that every fixed bug has a regression test. Treat as the closest real artifact, not a literal match to the item's wording |
-| E08 | CI pipeline green | `gh run list --workflow=mindforge-ci.yml --limit 1` (the `gh` CLI is available in this environment) | README.md line 4 carries a live CI badge pointing at exactly this workflow (verified); workflow file confirmed to exist at `.github/workflows/mindforge-ci.yml` | |
+| E08 | CI pipeline green | `gh run list --workflow=mindforge-ci.yml --commit <release-SHA> --json conclusion` — bind to the exact release commit, not just the most recent run, and require `conclusion == "success"` (the `gh` CLI is available in this environment) | README.md line 4 carries a live CI badge pointing at exactly this workflow (verified); workflow file confirmed to exist at `.github/workflows/mindforge-ci.yml`. `--limit 1` alone only proves *a* recent run exists, not that this specific commit's run succeeded | |
 | E09 | Test isolation verified (no state leaks) | No single dedicated test exists. Proxy: `git status --short` before and after `npm test`, confirm no diff in tracked files | Multiple individual test files use `os.tmpdir()`-based fixtures (e.g. `tests/install.test.js`, `tests/cost-limit.test.js`, `tests/audit-integrity.test.js` — grepped and confirmed the pattern), but no suite-level "isolation" assertion exists | Treat the proxy command as a stand-in, not an equivalent |
 | E10 | Edge case tests for boundary conditions | No single command exists; this is a property of individual test files, not the suite as a whole | — | Recommend this remain a manual spot-check at release-review time rather than a checklist line implying automation |
 

@@ -22,7 +22,7 @@ workflow count, engine-skill count), `README.md` (**only** the `files[]` entry c
 `CLAUDE.md` (test-file/pass/skip counts), and `subagents/.claude-plugin/marketplace.json`
 (subagent count).
 
-**B. Six structural/behavioral gates**, not tied to a specific number: no shipped doc names a
+**B. Seven structural/behavioral gates**, not tied to a specific number: no shipped doc names a
 `/mindforge:` command that doesn't exist (`:140-193`); every printed CLI invocation names a verb
 the router dispatches (`:236-322`); no doc tells a user to `npx` a package this project doesn't
 own (`:324-374`); no doc advertises the dead `@mindforge <verb>` form (`:376-406`); the root
