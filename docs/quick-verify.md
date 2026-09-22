@@ -19,11 +19,11 @@ Expected:
 - `.planning/HANDOFF.json`
 - `.planning/AUDIT.jsonl`
 
-## 4. Optional repair
-If anything looks off:
-```
-/mindforge:health --repair
-```
+## 4. If anything looks off
+`/mindforge:health --repair` is documented in the command spec but not wired into the CLI
+backing path — it's silently ignored, byte-identical output to plain `health`. No automated
+repair exists today; address what the health report flags manually, or re-run the install with
+`--force`.
 
 ## 5. Clean success signal
 Run:

@@ -21,7 +21,8 @@ An item is only ✅ when:
 3. **Section C** — Governance gates
 4. **Section D** — Documentation
 5. **Section E** — Test coverage
-6. **Section F** — Release artifacts
+6. **Section F** — v2.0.0 Features
+7. **Section G** — Final packaging
 
 ## Example entry
 ```
@@ -34,4 +35,6 @@ An item is only ✅ when:
 - Forgetting to update SDK version to match root
 
 ## Final release gate
-Do not tag or publish until **all 55 items** are ✅.
+Do not tag or publish until **all 65 items** are ✅ (Sections A–F at 10 points each, plus
+Section G — final packaging — at 5 points; `.mindforge/production/production-checklist.md` is
+the authoritative source for this count).

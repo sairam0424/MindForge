@@ -13,12 +13,13 @@ Skills are domain knowledge packs loaded on demand. They are stored as
 ```
 
 ## SKILL.md schema (frontmatter)
-Required fields:
+Required fields, enforced by `scripts/ci/validate-assets.js` and `tests/skills-platform.test.js`:
 - `name`: string (stable in 1.x.x)
-- `description`: string
-- `triggers`: array of keywords
 - `version`: semver string
-- `owner`: string (team or org)
+- `status`: string (e.g. `stable`)
+- `triggers`: comma-separated keyword string, minimum 10 terms, unique across all engine skills
+
+`description` and `owner` are commonly present but are **not** enforced as required fields.
 
 Optional fields:
 - `scope`: `core | org | project`
@@ -30,8 +31,9 @@ Example:
 ---
 name: security-review
 version: 1.0.0
+status: stable
 description: Secure coding review checklist and threat modeling prompts
-triggers: ["auth", "payment", "pii", "encryption"]
+triggers: auth, payment, pii, encryption, secrets, credential, oauth, token, session, permission
 owner: mindforge-core
 scope: core
 ---
@@ -53,5 +55,5 @@ Skills can be published to the npm registry under `mindforge-skill-*`.
 See `docs/skills-publishing-guide.md` for full workflow.
 
 ## Stability contract
-As of v1.0.0, the `name` values of the 10 core skills are stable. New optional
-fields may be added in minor versions; removals require a major version bump.
+As of v1.0.0, the `name` values of the 232 engine-tier skills (`.mindforge/skills/`) are stable.
+New optional fields may be added in minor versions; removals require a major version bump.

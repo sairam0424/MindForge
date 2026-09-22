@@ -17,7 +17,8 @@ MindForge ships across several channels. Pick the one that matches how you work 
 Zero-config setup that scaffolds the full framework:
 
 ```bash
-# Recommended (auto-detects your runtime)
+# Interactive wizard (TTY only) -- pre-selects a detected runtime, you confirm it.
+# Non-interactive/CI/piped invocations skip the wizard and default to --claude.
 npx mindforge-cc@latest
 
 # Antigravity (local development)
@@ -28,6 +29,11 @@ npx mindforge-cc@latest --claude --local
 ```
 
 After installation, the `mindforge` CLI command is available for runtime operations (health checks, security scans, headless execution, etc.).
+
+If a `CLAUDE.md` already exists in the target directory, the installer backs it up
+(`CLAUDE.md.backup-<timestamp>`) before writing its own — check that backup if you had custom
+content there. Hooks are snapshotted by Claude Code at session start, so if the harness was
+already open during install, restart it before expecting a newly-registered hook to fire.
 
 **Global install** (system-wide `/mindforge` commands for your primary AI coding runtime):
 

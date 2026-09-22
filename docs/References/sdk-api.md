@@ -1,4 +1,4 @@
-# MindForge SDK API — Reference (v2.0.0-alpha.4)
+# MindForge SDK API — Reference (v11.9.8)
 
 ## Package
 
@@ -9,11 +9,17 @@
 From `sdk/src/index.ts`:
 
 - `MindForgeClient`
-- `MindForgeEventStream`
-- `commands`
+- `MindForgeEventStream` — SSE-based event stream (see below)
+- `WebSocketEventStream` — WebSocket-based alternative; requires a global `WebSocket` (Node 22+,
+  a browser, or the optional `ws` package assigned to `globalThis.WebSocket` — the SDK declares
+  no runtime dependencies, so nothing is installed for you)
+- `commands` — slash-command string builders
+- `batch(commands: string[])` — joins an array of command strings with `&&`
 - `MindForgeMemory`
 - Types: `MindForgeConfig`, `PhaseResult`, `TaskResult`, `SecurityFinding`,
-  `GateResult`, `HealthReport`, `HealthIssue`, `MindForgeEvent`, `CommandOptions`
+  `GateResult`, `HealthReport`, `HealthIssue`, `MindForgeEvent`, `CommandOptions`,
+  `AuditLogEntry`, `WaveExecutionResult`, `MigrationResult`, `StreamChunk`,
+  `StreamingExecutionResult`, `BatchExecutionRequest`, `BatchExecutionResult`
 - `VERSION`
 
 ## MindForgeClient

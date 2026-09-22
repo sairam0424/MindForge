@@ -35,6 +35,11 @@ npx mindforge-cc --antigravity --local
 npx mindforge-cc --runtime <name>
 ```
 
+If a `CLAUDE.md` already exists in the target directory, the installer backs it up
+(`CLAUDE.md.backup-<timestamp>`) before writing its own — check that backup if you had custom
+content there. Hooks are snapshotted by Claude Code at session start, so if the harness was
+already open during install, restart it before expecting a newly-registered hook to fire.
+
 ### Post-Install: The `mindforge` CLI
 
 After installation, the `mindforge` binary is available for runtime commands:
@@ -59,11 +64,10 @@ Open your agentic runtime (Claude Code, Antigravity, etc.) in your project direc
 /mindforge:health
 ```
 
-If health reports issues, run:
-
-```bash
-/mindforge:health --repair
-```
+If health reports issues: `--repair` is documented in the command spec but not wired into the
+CLI backing path — it's silently ignored, byte-identical output to plain `health`. No automated
+repair exists today; address what the health report flags manually, or re-run the install with
+`--force`.
 
 ## 3. Initialize a New Project
 
