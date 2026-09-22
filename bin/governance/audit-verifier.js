@@ -1,6 +1,10 @@
 'use strict';
 /**
- * MindForge — Audit chain verifier (UC-04). Fail-closed: any break => valid:false.
+ * MindForge — Audit chain verifier (UC-04). Fail-closed: any break => valid:false. An ABSENT log
+ * (ENOENT) is reported separately via `missing: true` rather than folded into the generic
+ * `unreadable:` reason below — a project that has never written an audit entry is not evidence of
+ * tampering, and callers (bin/verify-audit.js) use the distinction to avoid crying "BROKEN" at a
+ * brand-new user who has done nothing wrong.
  *
  * Walks the JSONL audit log line-by-line and re-derives each entry's hash from its
  * content plus the prior entry's hash. The chain is valid only if EVERY link holds:
@@ -32,12 +36,17 @@ function hashEntry(entry, previousHash) {
 /**
  * Verifies the integrity of a hash-chained audit log. Fail-closed.
  * @param {string} auditPath — path to the AUDIT.jsonl file
- * @returns {{ valid: boolean, count: number, brokenAt?: number, reason?: string }}
+ * @returns {{ valid: boolean, count: number, brokenAt?: number, reason?: string, missing?: boolean }}
  */
 function verifyAuditChain(auditPath) {
   let lines;
   try { lines = fs.readFileSync(auditPath, 'utf8').split('\n').filter(Boolean); }
-  catch (e) { return { valid: false, count: 0, brokenAt: 0, reason: `unreadable: ${e.message}` }; }
+  catch (e) {
+    if (e.code === 'ENOENT') {
+      return { valid: false, count: 0, missing: true, reason: 'no audit log yet — nothing has been audited' };
+    }
+    return { valid: false, count: 0, brokenAt: 0, reason: `unreadable: ${e.message}` };
+  }
 
   let previousHash = null;
   for (let i = 0; i < lines.length; i++) {

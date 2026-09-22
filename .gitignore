@@ -107,6 +107,7 @@ ROADMAP_V7.md
 .planning/memories/
 .mindforge/audit/AUDIT.jsonl
 .mindforge/audit/manifests/
+.mindforge/engine/instincts/instinct-store.jsonl
 .mindforge/metrics/token-usage.jsonl
 .gstack/
 

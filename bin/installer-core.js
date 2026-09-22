@@ -636,13 +636,16 @@ async function install(runtime, scope, options = {}) {
     const assetMappings = [
       { key: 'skillsSubdir',   src: src('.agent', 'skills'),      label: 'skills' },
       { key: 'hooksSubdir',    src: src('.agent', 'hooks'),       label: 'hooks' },
-      { key: 'personasSubdir', src: src('.mindforge', 'personas'), label: 'personas' },
       // NB: on-disk dirs are capitalized (docs/References, docs/Templates). macOS is
       // case-insensitive so lowercase used to "work" locally, but npm/Linux is
       // case-sensitive — the lookup silently missed in production (UC: REFERENCES 0).
       { key: 'docsSubdir',     src: src('docs', 'References'),    label: 'references' },
       { key: 'docsSubdir',     src: src('docs', 'Templates'),     label: 'templates' }
     ];
+    // Mirrors the real copy logic in Section 2.1: personas are skipped under --minimal.
+    if (!minimal) {
+      assetMappings.push({ key: 'personasSubdir', src: src('.mindforge', 'personas'), label: 'personas' });
+    }
 
     assetMappings.forEach(asset => {
       const subDir = cfg[asset.key];
@@ -813,17 +816,25 @@ async function install(runtime, scope, options = {}) {
     }
   }
 
-  // ── 2.1 Install Enterprise Assets (Skills, Hooks, Personas) ─────────────────
+  // ── 2.1 Install Enterprise Assets (Skills, Hooks, Personas, Docs, Memory, Plugins) ──
   if (scope === 'local' && !selfInstall) {
     const assetTypes = [
       { key: 'skillsSubdir',   src: src('.agent', 'skills'),      label: 'skills' },
       { key: 'hooksSubdir',    src: src('.agent', 'hooks'),       label: 'hooks' },
-      { key: 'personasSubdir', src: src('.mindforge', 'personas'), label: 'personas' },
       { key: 'docsSubdir',     src: src('docs', 'References'),    label: 'references' },
       { key: 'docsSubdir',     src: src('docs', 'Templates'),     label: 'templates' },
       { key: 'memorySubdir',   src: src('.mindforge', 'memory'),   label: 'memory' },
       { key: 'pluginsSubdir',  src: src('.mindforge', 'plugins'),  label: 'plugins' }
     ];
+    // 'personas' is gated on !minimal, not removed: this copy into <runtime>/personas/ (e.g.
+    // .claude/personas/) is a real, tested, documented per-harness asset delivery contract
+    // (bin/installer/harness-adapter-compliance.js's ADAPTER_RECORDS asserts a >=218-file floor
+    // here for every harness except copilot), not dead/unused. The bug was that it ran
+    // unconditionally regardless of --minimal, undermining --minimal's "no persona library"
+    // promise (README.md, docs/getting-started.md) by shipping the full persona set anyway.
+    if (!minimal) {
+      assetTypes.push({ key: 'personasSubdir', src: src('.mindforge', 'personas'), label: 'personas' });
+    }
 
     assetTypes.forEach(asset => {
       const subDir = cfg[asset.key];
@@ -1082,6 +1093,13 @@ async function install(runtime, scope, options = {}) {
       // install-manifests/install-state pair, which are build- and CI-side and have no business in a
       // consumer project.
       'bin/installer/hook-registration.js',
+      // A thin (12-line) entry point whose only require is bin/governance/audit-verifier.js, which
+      // already ships unconditionally via sovereignEngines above -- so this adds zero new surface,
+      // just the one file consumers need to actually run "node bin/verify-audit.js" themselves.
+      // Previously gated behind --with-utils for no functional reason: CLAUDE.md documents
+      // "node bin/verify-audit.js" as a top-level command, not a --with-utils-only one, and a
+      // fresh default install had the doc but not the script.
+      'bin/verify-audit.js',
     ];
     coreFiles.forEach(rel => {
       const srcFile = src(...rel.split('/'));
@@ -1330,17 +1348,6 @@ async function run(args) {
     bannerVersion = require('./utils/mindforge-version').resolveMindforgeVersion(process.cwd()).version;
   } catch { /* a banner must never be the reason health cannot run */ }
 
-  // Print header and brand manifest
-  // Print header and brand manifest
-  Theme.printHeader(bannerVersion);
-  Theme.printBrandManifest();
-  // Check for updates only
-  if (isCheck) {
-    const { checkAndUpdate } = require('./updater/self-update');
-    await checkAndUpdate({ apply: false });
-    return;
-  }
-
   const runtimes = runtime === 'all'
     ? Object.keys(RUNTIMES)
     : runtime.split(',').map((r) => r.trim()).filter(Boolean);
@@ -1351,6 +1358,43 @@ async function run(args) {
       `Unknown runtime(s): ${unknownRuntimes.join(', ')}. Valid: ${Object.keys(RUNTIMES).join(', ')}, all`
     );
     process.exit(1);
+  }
+
+  // Print header and brand manifest
+  Theme.printHeader(bannerVersion);
+  Theme.printBrandManifest();
+  // `health` (routed here via --check — bin/mindforge-cli.js:33-37) advertises itself as "Verify
+  // project health and installation integrity". Until now it only did the first half — this
+  // npm-registry lookup — and returned before touching a single file on disk. Measured: in a fresh
+  // --claude --local install with bin/governance/policy-engine.js deleted by hand, `mindforge health`
+  // printed only "vX.Y.Z is the latest version" and exited 0 — the missing file was invisible to the
+  // one command whose job is to say so.
+  //
+  // verifyInstall() already exists as the real per-runtime file check (used by install() at :1144,
+  // see its own comment for why it was dead code before that). Reusing it here for a project's
+  // EXISTING install — rather than inventing a second checker — means both callers agree on what
+  // "installed" means.
+  if (isCheck) {
+    const { checkAndUpdate } = require('./updater/self-update');
+    await checkAndUpdate({ apply: false });
+
+    let anyMissing = false;
+    for (const rt of runtimes) {
+      const cfg = RUNTIMES[rt];
+      const rtBaseDir = resolveBaseDir(rt, scope);
+      const rtCmdsDir = norm(path.join(rtBaseDir, cfg.commandsSubdir));
+      const verification = verifyInstall(rtBaseDir, rtCmdsDir, rt, scope);
+      if (verification.ok) {
+        Theme.printResolved(c.bold(`${rt} (${scope}): install verified (${verification.checked} required files present)`));
+      } else {
+        anyMissing = true;
+        console.error(`\n  ❌  ${rt} (${scope}): install verification failed — ${verification.missing.length} of ` +
+          `${verification.checked} required file(s) missing:`);
+        verification.missing.forEach(f => console.error(`      ${f}`));
+      }
+    }
+    if (anyMissing) process.exit(1);
+    return;
   }
 
   for (const rt of runtimes) {

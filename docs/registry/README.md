@@ -12,7 +12,7 @@ patterns, and automated guards that power the environment.
 | Registry | Content Scope | Primary Purpose |
 | :--- | :--- | :--- |
 | **[COMMANDS.md](./COMMANDS.md)** | 221 slash commands (this doc lists a curated subset) | Direct terminal interaction reference. |
-| **[SKILLS.md](./SKILLS.md)** | 232 engine-tier + 123 extended-tier = 355 skills (curated subset shown) | Distributed capability and tool mappings. |
+| **[SKILLS.md](./SKILLS.md)** | 232 engine-tier + 122 extended-tier = 354 skills (curated subset shown) | Distributed capability and tool mappings. |
 | **[PERSONAS.md](./PERSONAS.md)** | 216 personas (curated subset shown) | Specialized agent reasoning configurations. |
 | **Subagents** (`./plugins/mindforge/agents/`) | 164 Claude-Code-native agents across 10 categories | Installable à-la-carte or as part of the `mindforge` plugin. |
 | **[WORKFLOWS.md](./WORKFLOWS.md)** | Curated workflow subset (35 dynamic workflows ship under `.mindforge/dynamic-workflows/`) | High-fidelity lifecycle and task flows. |

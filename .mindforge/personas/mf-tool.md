@@ -1,7 +1,7 @@
 ---
 name: mf-tool
 description: Safe interaction layer for external systems, infrastructure, and privileged tool operations.
-tools: Bash, Git, Database, API, task_boundary
+tools: Read, Write, Bash, WebFetch
 color: yellow
 ---
 

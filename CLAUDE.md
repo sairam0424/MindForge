@@ -81,7 +81,7 @@ MindForge ships with two skill tiers. Both are validated by `validate-assets.js`
 
 **Engine tier (`.mindforge/skills/`, strict schema — auto-triggers):** 232 skills total. Requires `name`, `version`, `status`, and `triggers` fields. The skill-loader matches against `triggers:` on every task; matching skills are auto-loaded into context. Includes 30 skills ported from external community sources (software-development, devops, github, research, security, creative, data-science, note-taking categories).
 
-**Extended tier (`.agent/skills/`, lenient schema — explicit activation):** 123 skills total. Requires only `name` + non-empty body. Activated by explicitly requesting "use the [skill-name] skill" or via `/mindforge:skills-index`. Includes all 50 community-sourced skills across the same categories, plus their companion `references/` documentation.
+**Extended tier (`.agent/skills/`, lenient schema — explicit activation):** 122 skills total. Requires only `name` + non-empty body. Activated by explicitly requesting "use the [skill-name] skill" or via `/mindforge:skills-index`. Includes 49 community-sourced skills across the same categories, plus their companion `references/` documentation.
 
 **Discovery:** `/mindforge:skills-index` — browseable catalog of all available skills, grouped by category with one-line descriptions.
 

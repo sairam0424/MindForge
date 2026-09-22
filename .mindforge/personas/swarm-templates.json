@@ -13,8 +13,7 @@
         "a11y-architect",
         "frontend-architect",
         "design-system-engineer",
-        "ux-auditor",
-        "whimsy-injector"
+        "ux-auditor"
       ],
       "focus": "Visual fidelity, interaction states, WCAG 2.2 compliance, and design system consistency.",
       "trust_tier": 1,
@@ -50,7 +49,7 @@
         "developer",
         "authentication-architect",
         "dependency-auditor",
-        "data-privacy-engineer",
+        "privacy-engineer",
         "compliance-auditor"
       ],
       "focus": "OWASP A01-A10 mitigation, secret detection, supply chain security, and trust boundary enforcement.",
@@ -62,11 +61,10 @@
       ]
     },
     "AIEngineeringSwarm": {
-      "leader": "ai-engineer",
+      "leader": "ml-engineer",
       "members": [
         "prompt-engineer",
-        "developer",
-        "model-qa-specialist"
+        "developer"
       ],
       "focus": "Model orchestration, prompt grounding, hallucination mitigation, and inference optimization.",
       "trust_tier": 2,
@@ -77,9 +75,8 @@
       ]
     },
     "DeveloperExperienceSwarm": {
-      "leader": "developer-advocate",
+      "leader": "devops-engineer",
       "members": [
-        "devops-engineer",
         "tech-writer",
         "cli-designer",
         "sdk-designer",
@@ -100,7 +97,6 @@
         "database-expert",
         "search-engineer",
         "ml-engineer",
-        "analytics-reporter",
         "compliance-auditor"
       ],
       "focus": "Data lakehouse patterns, ETL pipelining, search relevance, and semantic layer integrity.",
@@ -112,11 +108,9 @@
       ]
     },
     "IdentityTrustSwarm": {
-      "leader": "agentic-identity-trust-architect",
+      "leader": "security-reviewer",
       "members": [
-        "security-reviewer",
-        "architect",
-        "blockchain-security-auditor"
+        "architect"
       ],
       "focus": "Zero-Trust Agentic Identity (ZTAI), DID-based signing, and authentication bypass mitigation.",
       "trust_tier": 3,
@@ -127,12 +121,8 @@
       ]
     },
     "GrowthAnalyticsSwarm": {
-      "leader": "growth-hacker",
-      "members": [
-        "analytics-reporter",
-        "ui-auditor",
-        "tracking-measurement-specialist"
-      ],
+      "leader": "ui-auditor",
+      "members": [],
       "focus": "A/B testing, conversion funnel optimization, and telemetry instrumentation.",
       "trust_tier": 1,
       "decision_gate": "autonomous",
@@ -161,7 +151,7 @@
     "ComplianceSwarm": {
       "leader": "compliance-auditor",
       "members": [
-        "data-privacy-engineer",
+        "privacy-engineer",
         "architect",
         "security-reviewer",
         "dependency-auditor"

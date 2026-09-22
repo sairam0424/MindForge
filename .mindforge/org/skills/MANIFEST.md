@@ -148,6 +148,38 @@ This file tracks all active, validated, and legacy skills within the MindForge e
 | dns-architecture | .mindforge/skills/dns-architecture/SKILL.md | stable |
 | cdn-optimization | .mindforge/skills/cdn-optimization/SKILL.md | stable |
 | database-sharding-advanced | .mindforge/skills/database-sharding-advanced/SKILL.md | stable |
+| agent-architecture-audit | .mindforge/skills/agent-architecture-audit/SKILL.md | stable |
+| arxiv | .mindforge/skills/arxiv/SKILL.md | stable |
+| blogwatcher | .mindforge/skills/blogwatcher/SKILL.md | stable |
+| code-wiki | .mindforge/skills/code-wiki/SKILL.md | stable |
+| codebase-inspection | .mindforge/skills/codebase-inspection/SKILL.md | stable |
+| concept-diagrams | .mindforge/skills/concept-diagrams/SKILL.md | stable |
+| creative-ideation | .mindforge/skills/creative-ideation/SKILL.md | stable |
+| domain-intel | .mindforge/skills/domain-intel/SKILL.md | stable |
+| duckduckgo-search | .mindforge/skills/duckduckgo-search/SKILL.md | stable |
+| github-code-review | .mindforge/skills/github-code-review/SKILL.md | stable |
+| github-issues | .mindforge/skills/github-issues/SKILL.md | stable |
+| github-pr-workflow | .mindforge/skills/github-pr-workflow/SKILL.md | stable |
+| jupyter-live-kernel | .mindforge/skills/jupyter-live-kernel/SKILL.md | stable |
+| kanban-orchestrator | .mindforge/skills/kanban-orchestrator/SKILL.md | stable |
+| kanban-worker | .mindforge/skills/kanban-worker/SKILL.md | stable |
+| meme-generation | .mindforge/skills/meme-generation/SKILL.md | stable |
+| obsidian | .mindforge/skills/obsidian/SKILL.md | stable |
+| orch-pipeline | .mindforge/skills/orch-pipeline/SKILL.md | stable |
+| osint-investigation | .mindforge/skills/osint-investigation/SKILL.md | stable |
+| oss-forensics | .mindforge/skills/oss-forensics/SKILL.md | stable |
+| pixel-art | .mindforge/skills/pixel-art/SKILL.md | stable |
+| plan | .mindforge/skills/plan/SKILL.md | stable |
+| requesting-code-review | .mindforge/skills/requesting-code-review/SKILL.md | stable |
+| research-paper-writing | .mindforge/skills/research-paper-writing/SKILL.md | stable |
+| scrapling | .mindforge/skills/scrapling/SKILL.md | stable |
+| sherlock | .mindforge/skills/sherlock/SKILL.md | stable |
+| simplify-code | .mindforge/skills/simplify-code/SKILL.md | stable |
+| spike | .mindforge/skills/spike/SKILL.md | stable |
+| subagent-driven-development | .mindforge/skills/subagent-driven-development/SKILL.md | stable |
+| systematic-debugging | .mindforge/skills/systematic-debugging/SKILL.md | stable |
+| test-driven-development | .mindforge/skills/test-driven-development/SKILL.md | stable |
+| web-pentest | .mindforge/skills/web-pentest/SKILL.md | stable |
 
 ## Multi-Agent Skills
 

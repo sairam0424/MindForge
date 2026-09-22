@@ -12,7 +12,7 @@
 |---|---|---|
 | Slash commands | 221 | `ls .claude/commands/mindforge/*.md \| wc -l` |
 | Engine-tier skills | 232 | `ls .mindforge/skills/ \| wc -l` |
-| Extended-tier skills | 123 | `ls .agent/skills/ \| wc -l` |
+| Extended-tier skills | 122 | `ls .agent/skills/ \| wc -l` |
 | Personas | 218 | `find .mindforge/personas -type f \| wc -l` |
 | Subagents | 164 | `find subagents/categories -name '*.md' -not -name README.md \| wc -l` |
 | Tests | 135 | `find tests -name '*.test.js' \| wc -l` |
