@@ -14,7 +14,7 @@ available in the MindForge ecosystem.
 | :--- | :--- | :--- | :--- |
 | `/mindforge:status` | Real-time project status snapshot. | `/mindforge:status` | Verified project state. |
 | `/mindforge:security-scan` | OWASP Top 10 + dependency/secret audit. | `/mindforge:security-scan` | Hardened codebase. |
-| `/mindforge:health` | Diagnostic of framework/installation integrity. | `/mindforge:health` | Health report, `--repair` fixes what it can. |
+| `/mindforge:health` | Diagnostic of framework/installation integrity. | `/mindforge:health` | Health report. `--repair` is documented but not wired into the CLI backing path — silently ignored, byte-identical to plain `health`. |
 | `/mindforge:approve` | Governance sign-off for gated changes. | `/mindforge:approve` | Unlocked high-risk commits. |
 | `/mindforge:audit` | Query the AUDIT.jsonl hash-chained log. | `/mindforge:audit` | Traceability and audit trail. |
 | `/mindforge:tokens` | Token consumption and cost profiling. | `/mindforge:tokens` | Cost-usage visibility. |

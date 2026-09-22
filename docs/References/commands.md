@@ -36,7 +36,7 @@ the complete, verified list.
 | `/mindforge:note` | `note <text> [list|promote N]` | Zero-friction idea capture and todo promotion | v2.0.0 |
 | `/mindforge:quick` | `quick` | Run a small, single-task plan without a full phase | |
 | `/mindforge:status` | `status` | Show current phase, plan status, and next action | |
-| `/mindforge:health` | `health [--repair]` | Validate installation and repair drift | |
+| `/mindforge:health` | `health` | Validate installation. `--repair` is documented but not wired into the CLI backing path — it's silently ignored, byte-identical to plain `health`. | |
 | `/mindforge:review` | `review [N]` | Run a structured review pass for a phase | |
 | `/mindforge:debug` | `debug [plan-id]` | Debug a failed plan with root-cause workflow | |
 | `/mindforge:add-backlog` | `add-backlog <desc>` | Park ideas in 999.x "parking lot" | v2.0.0 |
@@ -70,7 +70,7 @@ the complete, verified list.
 | `/mindforge:metrics` | `metrics [--phase N]` | Compute quality and throughput metrics | |
 | `/mindforge:profile-team` | `profile-team` | Generate team skill and ownership profile | |
 | `/mindforge:benchmark` | `benchmark [--skill X]` | Measure skill effectiveness | |
-| `/mindforge:tokens` | `tokens [--profile] [--summary]` | Token usage profiling and optimisation | |
+| `/mindforge:tokens` | `tokens [--phase N] [--session ID] [--window short\|medium\|long] [--optimise]` | Token usage profiling and optimisation (`--profile`/`--summary` don't exist) | |
 
 ### Integrations & distribution
 
