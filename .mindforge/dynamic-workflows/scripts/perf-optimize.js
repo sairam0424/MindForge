@@ -84,6 +84,9 @@ const profile = await agent(
   `Identify the slowest code paths and performance bottleneck hypothesis for: "${target}"\n\nWhat are the likely slow endpoints/functions? What profiling commands should be run? What is your initial bottleneck hypothesis?`,
   { schema: PROFILE_SCHEMA, label: 'profile' }
 );
+if (!profile) {
+  return { target, error: 'profile-agent-null' };
+}
 log(`${profile.slowestPaths.length} slow paths identified, hypothesis: ${profile.bottleneckHypothesis.slice(0, 80)}`);
 
 phase('Identify');
@@ -108,6 +111,9 @@ const fixPlan = await agent(
   `Prioritize this performance fix backlog by impact-to-effort ratio:\n${issueList}\n\nRank by: high impact + low effort first. List quick wins (can implement in <1 hour) separately. Include implementation guidance for each.`,
   { schema: FIX_PLAN_SCHEMA, label: 'plan' }
 );
+if (!fixPlan) {
+  return { target, profile, bottlenecks: bottlenecks.filter(Boolean), error: 'fixPlan-agent-null' };
+}
 
 phase('Benchmark');
 const topFixes = fixPlan.prioritized.slice(0, 5).map(f => `${f.rank}. ${f.fix} (expected: ${f.expectedImprovement})`).join('\n');

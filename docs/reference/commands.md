@@ -1,6 +1,8 @@
 # MindForge Command Reference
 
-Complete reference for all 36 MindForge slash commands.
+Quick reference for the most commonly used commands. MindForge ships 221 slash commands
+in total — see [docs/commands-reference.md](../commands-reference.md) for the complete,
+verified list.
 
 ## Core Commands
 

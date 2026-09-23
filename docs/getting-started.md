@@ -1,4 +1,4 @@
-# MindForge — Getting Started (v11.9.5)
+# MindForge — Getting Started (v11.9.9)
 
 This guide gets you from zero to a working MindForge project in under five minutes.
 
@@ -17,7 +17,8 @@ MindForge ships across several channels. Pick the one that matches how you work 
 Zero-config setup that scaffolds the full framework:
 
 ```bash
-# Recommended (auto-detects your runtime)
+# Interactive wizard (TTY only) -- pre-selects a detected runtime, you confirm it.
+# Non-interactive/CI/piped invocations skip the wizard and default to --claude.
 npx mindforge-cc@latest
 
 # Antigravity (local development)
@@ -28,6 +29,11 @@ npx mindforge-cc@latest --claude --local
 ```
 
 After installation, the `mindforge` CLI command is available for runtime operations (health checks, security scans, headless execution, etc.).
+
+If a `CLAUDE.md` already exists in the target directory, the installer backs it up
+(`CLAUDE.md.backup-<timestamp>`) before writing its own — check that backup if you had custom
+content there. Hooks are snapshotted by Claude Code at session start, so if the harness was
+already open during install, restart it before expecting a newly-registered hook to fire.
 
 **Global install** (system-wide `/mindforge` commands for your primary AI coding runtime):
 
@@ -48,7 +54,7 @@ Prefer just a slice (e.g. Python agents)? Install a focused pack like `mindforge
 
 ### 3. Standalone MCP server
 
-Run the MindForge MCP server (`mindforge-mcp-server`) over stdio — it exposes 7 tools (6 read-only plus 1 guarded write): `mindforge_health`, `mindforge_status`, `mindforge_memory_query`, `mindforge_memory_stats`, `mindforge_memory_find_related`, `mindforge_audit_log`, and `mindforge_memory_remember`.
+Run the MindForge MCP server (`mindforge-mcp-server`) over stdio — it exposes 8 tools (6 read-only, 1 guarded write, plus 1 guarded browse proxy): `mindforge_health`, `mindforge_status`, `mindforge_memory_query`, `mindforge_memory_stats`, `mindforge_memory_find_related`, `mindforge_audit_log`, `mindforge_memory_remember`, and `mindforge_browse`.
 
 ```bash
 claude mcp add mindforge -- npx -y mindforge-mcp-server
@@ -106,7 +112,7 @@ MindForge adapts to your existing engineering environment via runtime flags:
 
 **Run any workflow:**
 ```bash
-node bin/mindforge-cli.js workflow list              # browse all 32
+node bin/mindforge-cli.js workflow list              # browse all 35
 node bin/mindforge-cli.js workflow info code-audit   # details + phases
 ```
 Or use slash commands: `/mindforge:wf-code-audit`
@@ -114,7 +120,7 @@ Or use slash commands: `/mindforge:wf-code-audit`
 ## Your First 5 Minutes with MindForge
 
 1. **Verify install:** `node bin/mindforge-cli.js health`
-2. **Check version:** `node bin/mindforge-cli.js --version` (should print `11.9.5`)
+2. **Check version:** `node bin/mindforge-cli.js --version` (should print `11.9.9`)
 3. **List workflows:** `node bin/mindforge-cli.js workflow list`
 4. **Run first slash command:** Open Claude Code → `/mindforge:status`
 5. **Onboard your codebase:** Open Claude Code → `/mindforge:wf-onboard-codebase`

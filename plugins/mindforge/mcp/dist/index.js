@@ -3110,7 +3110,6 @@ var require_utils = __commonJS({
     "use strict";
     var isUUID = RegExp.prototype.test.bind(/^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/iu);
     var isIPv4 = RegExp.prototype.test.bind(/^(?:(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]\d|\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]\d|\d)$/u);
-    var isPort = RegExp.prototype.test.bind(/^\d*$/u);
     var isHexPair = RegExp.prototype.test.bind(/^[\da-f]{2}$/iu);
     var isUnreserved = RegExp.prototype.test.bind(/^[\da-z\-._~]$/iu);
     var isPathCharacter = RegExp.prototype.test.bind(/^[A-Za-z0-9\-._~!$&'()*+,;=:@/]$/u);
@@ -3263,8 +3262,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path3) {
-      let input = path3;
+    function removeDotSegments(path4) {
+      let input = path4;
       const output = [];
       let nextSlash = -1;
       let len = 0;
@@ -3576,12 +3575,8 @@ var require_utils = __commonJS({
         uriTokens.push(host);
       }
       if (typeof component.port === "number" || typeof component.port === "string") {
-        const port = String(component.port);
-        if (!isPort(port)) {
-          throw new TypeError("URI port is malformed.");
-        }
         uriTokens.push(":");
-        uriTokens.push(port);
+        uriTokens.push(String(component.port));
       }
       return uriTokens.length ? uriTokens.join("") : void 0;
     }
@@ -3673,8 +3668,8 @@ var require_schemes = __commonJS({
       }
       if (wsComponent.resourceName) {
         const queryIndex = wsComponent.resourceName.indexOf("?");
-        const path3 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
-        wsComponent.path = path3 && path3 !== "/" ? path3 : void 0;
+        const path4 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
+        wsComponent.path = path4 && path4 !== "/" ? path4 : void 0;
         wsComponent.query = queryIndex === -1 ? void 0 : wsComponent.resourceName.slice(queryIndex + 1);
         wsComponent.resourceName = void 0;
       }
@@ -3733,7 +3728,7 @@ var require_schemes = __commonJS({
       urnComponent.nss = (uuidComponent.uuid || "").toLowerCase();
       return urnComponent;
     }
-    var http = (
+    var http2 = (
       /** @type {SchemeHandler} */
       {
         scheme: "http",
@@ -3746,7 +3741,7 @@ var require_schemes = __commonJS({
       /** @type {SchemeHandler} */
       {
         scheme: "https",
-        domainHost: http.domainHost,
+        domainHost: http2.domainHost,
         parse: httpParse,
         serialize: httpSerialize
       }
@@ -3790,7 +3785,7 @@ var require_schemes = __commonJS({
     var SCHEMES = (
       /** @type {Record<SchemeName, SchemeHandler>} */
       {
-        http,
+        http: http2,
         https,
         ws,
         wss,
@@ -4024,15 +4019,12 @@ var require_fast_uri = __commonJS({
       }
       return false;
     }
-    function isIPLiteral(host) {
-      return host[0] === "[" && host[host.length - 1] === "]";
-    }
     function hasMalformedComponentPercentEncoding(matches) {
       const host = matches[4];
-      return hasMalformedPercentEncoding(matches[3]) || host !== void 0 && !isIPLiteral(host) && hasMalformedPercentEncoding(host) || hasMalformedPercentEncoding(matches[6]) || hasMalformedPercentEncoding(matches[7]) || hasMalformedPercentEncoding(matches[8]);
+      return hasMalformedPercentEncoding(matches[3]) || host !== void 0 && !(host[0] === "[" && host[host.length - 1] === "]") && hasMalformedPercentEncoding(host) || hasMalformedPercentEncoding(matches[6]) || hasMalformedPercentEncoding(matches[7]) || hasMalformedPercentEncoding(matches[8]);
     }
     function canonicalizeHost(parsed, options, schemeHandler, isIP) {
-      if (!options.unicodeSupport && (!schemeHandler || !schemeHandler.unicodeSupport) && parsed.host && !isIPLiteral(parsed.host) && (options.domainHost || schemeHandler && schemeHandler.domainHost) && isIP === false && nonSimpleDomain(parsed.host)) {
+      if (!options.unicodeSupport && (!schemeHandler || !schemeHandler.unicodeSupport) && parsed.host && parsed.host[0] !== "[" && (options.domainHost || schemeHandler && schemeHandler.domainHost) && isIP === false && nonSimpleDomain(parsed.host)) {
         try {
           parsed.host = new URL("http://" + parsed.host).hostname;
         } catch (e) {
@@ -4119,11 +4111,10 @@ var require_fast_uri = __commonJS({
         if (parsed.host) {
           const ipv4result = isIPv4(parsed.host);
           if (ipv4result === false) {
-            const bracketedIPLiteral = isIPLiteral(parsed.host);
-            const hasIPLiteralBracket = parsed.host.indexOf("[") !== -1 || parsed.host.indexOf("]") !== -1;
+            const bracketedIPLiteral = parsed.host[0] === "[" && parsed.host[parsed.host.length - 1] === "]";
             const ipv6result = normalizeIPv6(parsed.host);
             isIP = ipv6result.isIPV6 || ipv6result.isIPVFuture === true;
-            malformedIPLiteral = hasIPLiteralBracket && (!bracketedIPLiteral || ipv6result.error === true);
+            malformedIPLiteral = bracketedIPLiteral && ipv6result.error === true;
             parsed.host = isIP ? ipv6result.host : ipv6result.host.toLowerCase();
             if (malformedIPLiteral) {
               parsed.error = parsed.error || "URI host is malformed.";
@@ -4146,17 +4137,14 @@ var require_fast_uri = __commonJS({
           parsed.error = parsed.error || "URI is not a " + options.reference + " reference.";
         }
         const schemeHandler = getSchemeHandler(options.scheme || parsed.scheme);
-        if (!malformedIPLiteral) {
-          malformedHost = canonicalizeHost(parsed, options, schemeHandler, isIP);
-        }
-        if (uri.indexOf("%") !== -1 && parsed.host !== void 0 && !malformedIPLiteral) {
-          let host = isIP ? parsed.host : normalizePercentEncoding(parsed.host, true);
-          if (!isIP) {
-            host = normalizePercentEncoding(host.toLowerCase());
-          }
-          parsed.host = reescapeHostDelimiters(host, isIP);
-        }
+        malformedHost = canonicalizeHost(parsed, options, schemeHandler, isIP);
         if (!schemeHandler || schemeHandler && !schemeHandler.skipNormalize) {
+          if (uri.indexOf("%") !== -1) {
+            if (parsed.host !== void 0 && !malformedIPLiteral) {
+              const host = isIP ? parsed.host : normalizePercentEncoding(parsed.host, true);
+              parsed.host = reescapeHostDelimiters(host, isIP);
+            }
+          }
           if (parsed.path) {
             parsed.path = normalizePathEncoding(parsed.path);
           }
@@ -7187,12 +7175,12 @@ var require_dist = __commonJS({
         throw new Error(`Unknown format "${name}"`);
       return f;
     };
-    function addFormats(ajv, list, fs3, exportName) {
+    function addFormats(ajv, list, fs4, exportName) {
       var _a;
       var _b;
       (_a = (_b = ajv.opts.code).formats) !== null && _a !== void 0 ? _a : _b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
       for (const f of list)
-        ajv.addFormat(f, fs3[f]);
+        ajv.addFormat(f, fs4[f]);
     }
     module2.exports = exports2 = formatsPlugin;
     Object.defineProperty(exports2, "__esModule", { value: true });
@@ -7678,8 +7666,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path3, errorMaps, issueData } = params;
-  const fullPath = [...path3, ...issueData.path || []];
+  const { data, path: path4, errorMaps, issueData } = params;
+  const fullPath = [...path4, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -7795,11 +7783,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path3, key) {
+  constructor(parent, value, path4, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path3;
+    this._path = path4;
     this._key = key;
   }
   get path() {
@@ -11436,10 +11424,10 @@ function assignProp(target, prop, value) {
     configurable: true
   });
 }
-function getElementAtPath(obj, path3) {
-  if (!path3)
+function getElementAtPath(obj, path4) {
+  if (!path4)
     return obj;
-  return path3.reduce((acc, key) => acc?.[key], obj);
+  return path4.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -11759,11 +11747,11 @@ function aborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path3, issues) {
+function prefixIssues(path4, issues) {
   return issues.map((iss) => {
     var _a;
     (_a = iss).path ?? (_a.path = []);
-    iss.path.unshift(path3);
+    iss.path.unshift(path4);
     return iss;
   });
 }
@@ -17303,17 +17291,17 @@ var CompleteRequestSchema = RequestSchema.extend({
   method: literal("completion/complete"),
   params: CompleteRequestParamsSchema
 });
-function assertCompleteRequestPrompt(request) {
-  if (request.params.ref.type !== "ref/prompt") {
-    throw new TypeError(`Expected CompleteRequestPrompt, but got ${request.params.ref.type}`);
+function assertCompleteRequestPrompt(request2) {
+  if (request2.params.ref.type !== "ref/prompt") {
+    throw new TypeError(`Expected CompleteRequestPrompt, but got ${request2.params.ref.type}`);
   }
-  void request;
+  void request2;
 }
-function assertCompleteRequestResourceTemplate(request) {
-  if (request.params.ref.type !== "ref/resource") {
-    throw new TypeError(`Expected CompleteRequestResourceTemplate, but got ${request.params.ref.type}`);
+function assertCompleteRequestResourceTemplate(request2) {
+  if (request2.params.ref.type !== "ref/resource") {
+    throw new TypeError(`Expected CompleteRequestResourceTemplate, but got ${request2.params.ref.type}`);
   }
-  void request;
+  void request2;
 }
 var CompleteResultSchema = ResultSchema.extend({
   completion: looseObject({
@@ -18820,8 +18808,8 @@ var Protocol = class {
     this._taskStore = _options?.taskStore;
     this._taskMessageQueue = _options?.taskMessageQueue;
     if (this._taskStore) {
-      this.setRequestHandler(GetTaskRequestSchema, async (request, extra) => {
-        const task = await this._taskStore.getTask(request.params.taskId, extra.sessionId);
+      this.setRequestHandler(GetTaskRequestSchema, async (request2, extra) => {
+        const task = await this._taskStore.getTask(request2.params.taskId, extra.sessionId);
         if (!task) {
           throw new McpError(ErrorCode.InvalidParams, "Failed to retrieve task: Task not found");
         }
@@ -18829,9 +18817,9 @@ var Protocol = class {
           ...task
         };
       });
-      this.setRequestHandler(GetTaskPayloadRequestSchema, async (request, extra) => {
+      this.setRequestHandler(GetTaskPayloadRequestSchema, async (request2, extra) => {
         const handleTaskResult = async () => {
-          const taskId = request.params.taskId;
+          const taskId = request2.params.taskId;
           if (this._taskMessageQueue) {
             let queuedMessage;
             while (queuedMessage = await this._taskMessageQueue.dequeue(taskId, extra.sessionId)) {
@@ -18882,9 +18870,9 @@ var Protocol = class {
         };
         return await handleTaskResult();
       });
-      this.setRequestHandler(ListTasksRequestSchema, async (request, extra) => {
+      this.setRequestHandler(ListTasksRequestSchema, async (request2, extra) => {
         try {
-          const { tasks, nextCursor } = await this._taskStore.listTasks(request.params?.cursor, extra.sessionId);
+          const { tasks, nextCursor } = await this._taskStore.listTasks(request2.params?.cursor, extra.sessionId);
           return {
             tasks,
             nextCursor,
@@ -18894,20 +18882,20 @@ var Protocol = class {
           throw new McpError(ErrorCode.InvalidParams, `Failed to list tasks: ${error2 instanceof Error ? error2.message : String(error2)}`);
         }
       });
-      this.setRequestHandler(CancelTaskRequestSchema, async (request, extra) => {
+      this.setRequestHandler(CancelTaskRequestSchema, async (request2, extra) => {
         try {
-          const task = await this._taskStore.getTask(request.params.taskId, extra.sessionId);
+          const task = await this._taskStore.getTask(request2.params.taskId, extra.sessionId);
           if (!task) {
-            throw new McpError(ErrorCode.InvalidParams, `Task not found: ${request.params.taskId}`);
+            throw new McpError(ErrorCode.InvalidParams, `Task not found: ${request2.params.taskId}`);
           }
           if (isTerminal(task.status)) {
             throw new McpError(ErrorCode.InvalidParams, `Cannot cancel task in terminal status: ${task.status}`);
           }
-          await this._taskStore.updateTaskStatus(request.params.taskId, "cancelled", "Client cancelled task execution.", extra.sessionId);
-          this._clearTaskQueue(request.params.taskId);
-          const cancelledTask = await this._taskStore.getTask(request.params.taskId, extra.sessionId);
+          await this._taskStore.updateTaskStatus(request2.params.taskId, "cancelled", "Client cancelled task execution.", extra.sessionId);
+          this._clearTaskQueue(request2.params.taskId);
+          const cancelledTask = await this._taskStore.getTask(request2.params.taskId, extra.sessionId);
           if (!cancelledTask) {
-            throw new McpError(ErrorCode.InvalidParams, `Task not found after cancellation: ${request.params.taskId}`);
+            throw new McpError(ErrorCode.InvalidParams, `Task not found after cancellation: ${request2.params.taskId}`);
           }
           return {
             _meta: {},
@@ -19028,14 +19016,14 @@ var Protocol = class {
     }
     Promise.resolve().then(() => handler(notification)).catch((error2) => this._onerror(new Error(`Uncaught error in notification handler: ${error2}`)));
   }
-  _onrequest(request, extra) {
-    const handler = this._requestHandlers.get(request.method) ?? this.fallbackRequestHandler;
+  _onrequest(request2, extra) {
+    const handler = this._requestHandlers.get(request2.method) ?? this.fallbackRequestHandler;
     const capturedTransport = this._transport;
-    const relatedTaskId = request.params?._meta?.[RELATED_TASK_META_KEY]?.taskId;
+    const relatedTaskId = request2.params?._meta?.[RELATED_TASK_META_KEY]?.taskId;
     if (handler === void 0) {
       const errorResponse = {
         jsonrpc: "2.0",
-        id: request.id,
+        id: request2.id,
         error: {
           code: ErrorCode.MethodNotFound,
           message: "Method not found"
@@ -19053,17 +19041,17 @@ var Protocol = class {
       return;
     }
     const abortController = new AbortController();
-    this._requestHandlerAbortControllers.set(request.id, abortController);
-    const taskCreationParams = isTaskAugmentedRequestParams(request.params) ? request.params.task : void 0;
-    const taskStore = this._taskStore ? this.requestTaskStore(request, capturedTransport?.sessionId) : void 0;
+    this._requestHandlerAbortControllers.set(request2.id, abortController);
+    const taskCreationParams = isTaskAugmentedRequestParams(request2.params) ? request2.params.task : void 0;
+    const taskStore = this._taskStore ? this.requestTaskStore(request2, capturedTransport?.sessionId) : void 0;
     const fullExtra = {
       signal: abortController.signal,
       sessionId: capturedTransport?.sessionId,
-      _meta: request.params?._meta,
+      _meta: request2.params?._meta,
       sendNotification: async (notification) => {
         if (abortController.signal.aborted)
           return;
-        const notificationOptions = { relatedRequestId: request.id };
+        const notificationOptions = { relatedRequestId: request2.id };
         if (relatedTaskId) {
           notificationOptions.relatedTask = { taskId: relatedTaskId };
         }
@@ -19073,7 +19061,7 @@ var Protocol = class {
         if (abortController.signal.aborted) {
           throw new McpError(ErrorCode.ConnectionClosed, "Request was cancelled");
         }
-        const requestOptions = { ...options, relatedRequestId: request.id };
+        const requestOptions = { ...options, relatedRequestId: request2.id };
         if (relatedTaskId && !requestOptions.relatedTask) {
           requestOptions.relatedTask = { taskId: relatedTaskId };
         }
@@ -19084,7 +19072,7 @@ var Protocol = class {
         return await this.request(r, resultSchema, requestOptions);
       },
       authInfo: extra?.authInfo,
-      requestId: request.id,
+      requestId: request2.id,
       requestInfo: extra?.requestInfo,
       taskId: relatedTaskId,
       taskStore,
@@ -19094,16 +19082,16 @@ var Protocol = class {
     };
     Promise.resolve().then(() => {
       if (taskCreationParams) {
-        this.assertTaskHandlerCapability(request.method);
+        this.assertTaskHandlerCapability(request2.method);
       }
-    }).then(() => handler(request, fullExtra)).then(async (result) => {
+    }).then(() => handler(request2, fullExtra)).then(async (result) => {
       if (abortController.signal.aborted) {
         return;
       }
       const response = {
         result,
         jsonrpc: "2.0",
-        id: request.id
+        id: request2.id
       };
       if (relatedTaskId && this._taskMessageQueue) {
         await this._enqueueTaskMessage(relatedTaskId, {
@@ -19120,7 +19108,7 @@ var Protocol = class {
       }
       const errorResponse = {
         jsonrpc: "2.0",
-        id: request.id,
+        id: request2.id,
         error: {
           code: Number.isSafeInteger(error2["code"]) ? error2["code"] : ErrorCode.InternalError,
           message: error2.message ?? "Internal error",
@@ -19137,8 +19125,8 @@ var Protocol = class {
         await capturedTransport?.send(errorResponse);
       }
     }).catch((error2) => this._onerror(new Error(`Failed to send response: ${error2}`))).finally(() => {
-      if (this._requestHandlerAbortControllers.get(request.id) === abortController) {
-        this._requestHandlerAbortControllers.delete(request.id);
+      if (this._requestHandlerAbortControllers.get(request2.id) === abortController) {
+        this._requestHandlerAbortControllers.delete(request2.id);
       }
     });
   }
@@ -19242,11 +19230,11 @@ var Protocol = class {
    *
    * @experimental Use `client.experimental.tasks.requestStream()` to access this method.
    */
-  async *requestStream(request, resultSchema, options) {
+  async *requestStream(request2, resultSchema, options) {
     const { task } = options ?? {};
     if (!task) {
       try {
-        const result = await this.request(request, resultSchema, options);
+        const result = await this.request(request2, resultSchema, options);
         yield { type: "result", result };
       } catch (error2) {
         yield {
@@ -19258,7 +19246,7 @@ var Protocol = class {
     }
     let taskId;
     try {
-      const createResult = await this.request(request, CreateTaskResultSchema, options);
+      const createResult = await this.request(request2, CreateTaskResultSchema, options);
       if (createResult.task) {
         taskId = createResult.task.taskId;
         yield { type: "taskCreated", task: createResult.task };
@@ -19306,7 +19294,7 @@ var Protocol = class {
    *
    * Do not use this method to emit notifications! Use notification() instead.
    */
-  request(request, resultSchema, options) {
+  request(request2, resultSchema, options) {
     const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options ?? {};
     return new Promise((resolve, reject) => {
       const earlyReject = (error2) => {
@@ -19318,9 +19306,9 @@ var Protocol = class {
       }
       if (this._options?.enforceStrictCapabilities === true) {
         try {
-          this.assertCapabilityForMethod(request.method);
+          this.assertCapabilityForMethod(request2.method);
           if (task) {
-            this.assertTaskCapability(request.method);
+            this.assertTaskCapability(request2.method);
           }
         } catch (e) {
           earlyReject(e);
@@ -19330,16 +19318,16 @@ var Protocol = class {
       options?.signal?.throwIfAborted();
       const messageId = this._requestMessageId++;
       const jsonrpcRequest = {
-        ...request,
+        ...request2,
         jsonrpc: "2.0",
         id: messageId
       };
       if (options?.onprogress) {
         this._progressHandlers.set(messageId, options.onprogress);
         jsonrpcRequest.params = {
-          ...request.params,
+          ...request2.params,
           _meta: {
-            ...request.params?._meta || {},
+            ...request2.params?._meta || {},
             progressToken: messageId
           }
         };
@@ -19543,8 +19531,8 @@ var Protocol = class {
   setRequestHandler(requestSchema, handler) {
     const method = getMethodLiteral(requestSchema);
     this.assertRequestHandlerCapability(method);
-    this._requestHandlers.set(method, (request, extra) => {
-      const parsed = parseWithCompat(requestSchema, request);
+    this._requestHandlers.set(method, (request2, extra) => {
+      const parsed = parseWithCompat(requestSchema, request2);
       return Promise.resolve(handler(parsed, extra));
     });
   }
@@ -19659,19 +19647,19 @@ var Protocol = class {
       }, { once: true });
     });
   }
-  requestTaskStore(request, sessionId) {
+  requestTaskStore(request2, sessionId) {
     const taskStore = this._taskStore;
     if (!taskStore) {
       throw new Error("No task store configured");
     }
     return {
       createTask: async (taskParams) => {
-        if (!request) {
+        if (!request2) {
           throw new Error("No request provided");
         }
-        return await taskStore.createTask(taskParams, request.id, {
-          method: request.method,
-          params: request.params
+        return await taskStore.createTask(taskParams, request2.id, {
+          method: request2.method,
+          params: request2.params
         }, sessionId);
       },
       getTask: async (taskId) => {
@@ -19832,8 +19820,8 @@ var ExperimentalServerTasks = class {
    *
    * @experimental
    */
-  requestStream(request, resultSchema, options) {
-    return this._server.requestStream(request, resultSchema, options);
+  requestStream(request2, resultSchema, options) {
+    return this._server.requestStream(request2, resultSchema, options);
   }
   /**
    * Sends a sampling request and returns an AsyncGenerator that yields response messages.
@@ -20078,12 +20066,12 @@ var Server = class extends Protocol {
     this._capabilities = options?.capabilities ?? {};
     this._instructions = options?.instructions;
     this._jsonSchemaValidator = options?.jsonSchemaValidator ?? new AjvJsonSchemaValidator();
-    this.setRequestHandler(InitializeRequestSchema, (request) => this._oninitialize(request));
+    this.setRequestHandler(InitializeRequestSchema, (request2) => this._oninitialize(request2));
     this.setNotificationHandler(InitializedNotificationSchema, () => this.oninitialized?.());
     if (this._capabilities.logging) {
-      this.setRequestHandler(SetLevelRequestSchema, async (request, extra) => {
+      this.setRequestHandler(SetLevelRequestSchema, async (request2, extra) => {
         const transportSessionId = extra.sessionId || extra.requestInfo?.headers["mcp-session-id"] || void 0;
-        const { level } = request.params;
+        const { level } = request2.params;
         const parseResult = LoggingLevelSchema.safeParse(level);
         if (parseResult.success) {
           this._loggingLevels.set(transportSessionId, parseResult.data);
@@ -20142,14 +20130,14 @@ var Server = class extends Protocol {
     }
     const method = methodValue;
     if (method === "tools/call") {
-      const wrappedHandler = async (request, extra) => {
-        const validatedRequest = safeParse2(CallToolRequestSchema, request);
+      const wrappedHandler = async (request2, extra) => {
+        const validatedRequest = safeParse2(CallToolRequestSchema, request2);
         if (!validatedRequest.success) {
           const errorMessage = validatedRequest.error instanceof Error ? validatedRequest.error.message : String(validatedRequest.error);
           throw new McpError(ErrorCode.InvalidParams, `Invalid tools/call request: ${errorMessage}`);
         }
         const { params } = validatedRequest.data;
-        const result = await Promise.resolve(handler(request, extra));
+        const result = await Promise.resolve(handler(request2, extra));
         if (params.task) {
           const taskValidationResult = safeParse2(CreateTaskResultSchema, result);
           if (!taskValidationResult.success) {
@@ -20280,10 +20268,10 @@ var Server = class extends Protocol {
     }
     assertToolsCallTaskCapability(this._capabilities.tasks?.requests, method, "Server");
   }
-  async _oninitialize(request) {
-    const requestedVersion = request.params.protocolVersion;
-    this._clientCapabilities = request.params.capabilities;
-    this._clientVersion = request.params.clientInfo;
+  async _oninitialize(request2) {
+    const requestedVersion = request2.params.protocolVersion;
+    this._clientCapabilities = request2.params.capabilities;
+    this._clientVersion = request2.params.clientInfo;
     const protocolVersion = SUPPORTED_PROTOCOL_VERSIONS.includes(requestedVersion) ? requestedVersion : LATEST_PROTOCOL_VERSION;
     return {
       protocolVersion,
@@ -20610,33 +20598,33 @@ var McpServer = class {
         return toolDefinition;
       })
     }));
-    this.server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
+    this.server.setRequestHandler(CallToolRequestSchema, async (request2, extra) => {
       try {
-        const tool = this._registeredTools[request.params.name];
+        const tool = this._registeredTools[request2.params.name];
         if (!tool) {
-          throw new McpError(ErrorCode.InvalidParams, `Tool ${request.params.name} not found`);
+          throw new McpError(ErrorCode.InvalidParams, `Tool ${request2.params.name} not found`);
         }
         if (!tool.enabled) {
-          throw new McpError(ErrorCode.InvalidParams, `Tool ${request.params.name} disabled`);
+          throw new McpError(ErrorCode.InvalidParams, `Tool ${request2.params.name} disabled`);
         }
-        const isTaskRequest = !!request.params.task;
+        const isTaskRequest = !!request2.params.task;
         const taskSupport = tool.execution?.taskSupport;
         const isTaskHandler = "createTask" in tool.handler;
         if ((taskSupport === "required" || taskSupport === "optional") && !isTaskHandler) {
-          throw new McpError(ErrorCode.InternalError, `Tool ${request.params.name} has taskSupport '${taskSupport}' but was not registered with registerToolTask`);
+          throw new McpError(ErrorCode.InternalError, `Tool ${request2.params.name} has taskSupport '${taskSupport}' but was not registered with registerToolTask`);
         }
         if (taskSupport === "required" && !isTaskRequest) {
-          throw new McpError(ErrorCode.MethodNotFound, `Tool ${request.params.name} requires task augmentation (taskSupport: 'required')`);
+          throw new McpError(ErrorCode.MethodNotFound, `Tool ${request2.params.name} requires task augmentation (taskSupport: 'required')`);
         }
         if (taskSupport === "optional" && !isTaskRequest && isTaskHandler) {
-          return await this.handleAutomaticTaskPolling(tool, request, extra);
+          return await this.handleAutomaticTaskPolling(tool, request2, extra);
         }
-        const args = await this.validateToolInput(tool, request.params.arguments, request.params.name);
+        const args = await this.validateToolInput(tool, request2.params.arguments, request2.params.name);
         const result = await this.executeToolHandler(tool, args, extra);
         if (isTaskRequest) {
           return result;
         }
-        await this.validateToolOutput(tool, result, request.params.name);
+        await this.validateToolOutput(tool, result, request2.params.name);
         return result;
       } catch (error2) {
         if (error2 instanceof McpError) {
@@ -20737,11 +20725,11 @@ var McpServer = class {
   /**
    * Handles automatic task polling for tools with taskSupport 'optional'.
    */
-  async handleAutomaticTaskPolling(tool, request, extra) {
+  async handleAutomaticTaskPolling(tool, request2, extra) {
     if (!extra.taskStore) {
       throw new Error("No task store provided for task-capable tool.");
     }
-    const args = await this.validateToolInput(tool, request.params.arguments, request.params.name);
+    const args = await this.validateToolInput(tool, request2.params.arguments, request2.params.name);
     const handler = tool.handler;
     const taskExtra = { ...extra, taskStore: extra.taskStore };
     const createTaskResult = args ? await Promise.resolve(handler.createTask(args, taskExtra)) : (
@@ -20769,21 +20757,21 @@ var McpServer = class {
     this.server.registerCapabilities({
       completions: {}
     });
-    this.server.setRequestHandler(CompleteRequestSchema, async (request) => {
-      switch (request.params.ref.type) {
+    this.server.setRequestHandler(CompleteRequestSchema, async (request2) => {
+      switch (request2.params.ref.type) {
         case "ref/prompt":
-          assertCompleteRequestPrompt(request);
-          return this.handlePromptCompletion(request, request.params.ref);
+          assertCompleteRequestPrompt(request2);
+          return this.handlePromptCompletion(request2, request2.params.ref);
         case "ref/resource":
-          assertCompleteRequestResourceTemplate(request);
-          return this.handleResourceCompletion(request, request.params.ref);
+          assertCompleteRequestResourceTemplate(request2);
+          return this.handleResourceCompletion(request2, request2.params.ref);
         default:
-          throw new McpError(ErrorCode.InvalidParams, `Invalid completion reference: ${request.params.ref}`);
+          throw new McpError(ErrorCode.InvalidParams, `Invalid completion reference: ${request2.params.ref}`);
       }
     });
     this._completionHandlerInitialized = true;
   }
-  async handlePromptCompletion(request, ref) {
+  async handlePromptCompletion(request2, ref) {
     const prompt = this._registeredPrompts[ref.name];
     if (!prompt) {
       throw new McpError(ErrorCode.InvalidParams, `Prompt ${ref.name} not found`);
@@ -20795,7 +20783,7 @@ var McpServer = class {
       return EMPTY_COMPLETION_RESULT;
     }
     const promptShape = getObjectShape(prompt.argsSchema);
-    const field = promptShape?.[request.params.argument.name];
+    const field = promptShape?.[request2.params.argument.name];
     if (!isCompletable(field)) {
       return EMPTY_COMPLETION_RESULT;
     }
@@ -20803,22 +20791,22 @@ var McpServer = class {
     if (!completer) {
       return EMPTY_COMPLETION_RESULT;
     }
-    const suggestions = await completer(request.params.argument.value, request.params.context);
+    const suggestions = await completer(request2.params.argument.value, request2.params.context);
     return createCompletionResult(suggestions);
   }
-  async handleResourceCompletion(request, ref) {
+  async handleResourceCompletion(request2, ref) {
     const template = Object.values(this._registeredResourceTemplates).find((t) => t.resourceTemplate.uriTemplate.toString() === ref.uri);
     if (!template) {
       if (this._registeredResources[ref.uri]) {
         return EMPTY_COMPLETION_RESULT;
       }
-      throw new McpError(ErrorCode.InvalidParams, `Resource template ${request.params.ref.uri} not found`);
+      throw new McpError(ErrorCode.InvalidParams, `Resource template ${request2.params.ref.uri} not found`);
     }
-    const completer = template.resourceTemplate.completeCallback(request.params.argument.name);
+    const completer = template.resourceTemplate.completeCallback(request2.params.argument.name);
     if (!completer) {
       return EMPTY_COMPLETION_RESULT;
     }
-    const suggestions = await completer(request.params.argument.value, request.params.context);
+    const suggestions = await completer(request2.params.argument.value, request2.params.context);
     return createCompletionResult(suggestions);
   }
   setResourceRequestHandlers() {
@@ -20833,7 +20821,7 @@ var McpServer = class {
         listChanged: true
       }
     });
-    this.server.setRequestHandler(ListResourcesRequestSchema, async (request, extra) => {
+    this.server.setRequestHandler(ListResourcesRequestSchema, async (request2, extra) => {
       const resources = Object.entries(this._registeredResources).filter(([_, resource]) => resource.enabled).map(([uri, resource]) => ({
         uri,
         name: resource.name,
@@ -20863,8 +20851,8 @@ var McpServer = class {
       }));
       return { resourceTemplates };
     });
-    this.server.setRequestHandler(ReadResourceRequestSchema, async (request, extra) => {
-      const uri = new URL(request.params.uri);
+    this.server.setRequestHandler(ReadResourceRequestSchema, async (request2, extra) => {
+      const uri = new URL(request2.params.uri);
       const resource = this._registeredResources[uri.toString()];
       if (resource) {
         if (!resource.enabled) {
@@ -20903,21 +20891,21 @@ var McpServer = class {
         };
       })
     }));
-    this.server.setRequestHandler(GetPromptRequestSchema, async (request, extra) => {
-      const prompt = this._registeredPrompts[request.params.name];
+    this.server.setRequestHandler(GetPromptRequestSchema, async (request2, extra) => {
+      const prompt = this._registeredPrompts[request2.params.name];
       if (!prompt) {
-        throw new McpError(ErrorCode.InvalidParams, `Prompt ${request.params.name} not found`);
+        throw new McpError(ErrorCode.InvalidParams, `Prompt ${request2.params.name} not found`);
       }
       if (!prompt.enabled) {
-        throw new McpError(ErrorCode.InvalidParams, `Prompt ${request.params.name} disabled`);
+        throw new McpError(ErrorCode.InvalidParams, `Prompt ${request2.params.name} disabled`);
       }
       if (prompt.argsSchema) {
         const argsObj = normalizeObjectSchema(prompt.argsSchema);
-        const parseResult = await safeParseAsync2(argsObj, request.params.arguments);
+        const parseResult = await safeParseAsync2(argsObj, request2.params.arguments);
         if (!parseResult.success) {
           const error2 = "error" in parseResult ? parseResult.error : "Unknown error";
           const errorMessage = getParseErrorMessage(error2);
-          throw new McpError(ErrorCode.InvalidParams, `Invalid arguments for prompt ${request.params.name}: ${errorMessage}`);
+          throw new McpError(ErrorCode.InvalidParams, `Invalid arguments for prompt ${request2.params.name}: ${errorMessage}`);
         }
         const args = parseResult.data;
         const cb = prompt.callback;
@@ -22244,12 +22232,12 @@ var MindForgeClient = class extends import_events.EventEmitter {
     return { phaseId: phase, taskId: options?.taskFilter || "*", stream };
   }
   // ── v11 Phase 5B: Batch execution with semaphore-based concurrency ────────
-  async batchExecute(request) {
+  async batchExecute(request2) {
     const startTime = Date.now();
-    const maxConcurrency = request.maxConcurrency || 3;
+    const maxConcurrency = request2.maxConcurrency || 3;
     const results = [];
     let running = 0;
-    const queue = [...request.tasks];
+    const queue = [...request2.tasks];
     await new Promise((resolve) => {
       const processNext = () => {
         if (queue.length === 0 && running === 0) {
@@ -22321,8 +22309,63 @@ var MindForgeClient = class extends import_events.EventEmitter {
   }
 };
 
+// src/browser-client.ts
+var http = __toESM(require("http"));
+var fs3 = __toESM(require("fs"));
+var path3 = __toESM(require("path"));
+var BROWSER_PORT = Number(process.env.BROWSER_PORT) || 7338;
+function readDaemonToken(projectRoot) {
+  const tokenPath = path3.join(projectRoot, ".mindforge", ".browser-daemon-token");
+  try {
+    return fs3.readFileSync(tokenPath, "utf8").trim();
+  } catch {
+    return null;
+  }
+}
+function browserRequest(projectRoot, method, endpoint, body = null) {
+  return new Promise((resolve, reject) => {
+    const token = readDaemonToken(projectRoot);
+    const headers = { "Content-Type": "application/json" };
+    if (token) headers.Authorization = `Bearer ${token}`;
+    const req = http.request(
+      { hostname: "127.0.0.1", port: BROWSER_PORT, path: endpoint, method, headers },
+      (res) => {
+        let data = "";
+        res.on("data", (chunk) => {
+          data += chunk;
+        });
+        res.on("end", () => {
+          try {
+            resolve(JSON.parse(data));
+          } catch {
+            resolve({ success: false, error: "Invalid JSON response" });
+          }
+        });
+      }
+    );
+    req.setTimeout(1e4, () => req.destroy(new Error("Browser daemon request timed out")));
+    req.on("error", reject);
+    if (body) req.write(JSON.stringify(body));
+    req.end();
+  });
+}
+async function isDaemonRunning(projectRoot) {
+  try {
+    const result = await browserRequest(projectRoot, "GET", "/status");
+    return result.alive === true;
+  } catch {
+    return false;
+  }
+}
+var DAEMON_NOT_RUNNING_HINT = "The MindForge browser daemon is not running. Start it first with `/mindforge:browse --start` (requires a full `npx mindforge-cc@latest --claude --local` install in this project \u2014 this MCP tool never spawns the daemon itself).";
+async function ensureDaemonRunning(projectRoot) {
+  if (!await isDaemonRunning(projectRoot)) {
+    throw new Error(DAEMON_NOT_RUNNING_HINT);
+  }
+}
+
 // package.json
-var version2 = "11.9.5";
+var version2 = "11.9.9";
 
 // src/index.ts
 var PROJECT_ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
@@ -22338,17 +22381,22 @@ async function safe(label, fn) {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return {
-      content: [{
-        type: "text",
-        text: `MindForge ${label} failed: ${message}
+      content: [
+        {
+          type: "text",
+          text: `MindForge ${label} failed: ${message}
 
 If MindForge is not set up in this project, run \`npx mindforge-cc@latest --claude --local\` or \`/mindforge:init-project\` first.`
-      }],
+        }
+      ],
       isError: true
     };
   }
 }
-var server = new McpServer({ name: "mindforge", version: version2 });
+var server = new McpServer({
+  name: "mindforge",
+  version: version2
+});
 function registerTool(name, config2, handler) {
   server.registerTool(name, config2, handler);
 }
@@ -22358,7 +22406,11 @@ registerTool(
     title: "MindForge project health",
     description: "Run a MindForge health check on the current project: verifies required planning/governance files exist, validates HANDOFF.json, and reports the audit-log size. Returns overallStatus (healthy|warning|error) with details.",
     inputSchema: {},
-    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false
+    }
   },
   async () => safe("health", async () => client().health())
 );
@@ -22368,7 +22420,11 @@ registerTool(
     title: "MindForge project status",
     description: "Read the current MindForge project status: whether the project is initialized, the raw STATE.md, the HANDOFF.json contents, and the autonomous-run auto-state.json if present. Use to understand where a MindForge project currently stands.",
     inputSchema: {},
-    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false
+    }
   },
   async () => safe("status", async () => {
     const c = client();
@@ -22402,7 +22458,11 @@ registerTool(
     title: "Query MindForge knowledge base",
     description: "Search the MindForge knowledge graph (architectural decisions, code/bug patterns, team preferences, domain knowledge) by topic text, tags, and type. Results are relevance-ranked. Use to recall prior decisions and patterns for the current project.",
     inputSchema: memoryQuerySchema,
-    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false
+    }
   },
   async (args) => safe("memory_query", async () => {
     const results = await memory().query({
@@ -22422,7 +22482,11 @@ registerTool(
     title: "MindForge memory statistics",
     description: "Report statistics for the MindForge knowledge graph: total/active/deprecated entries, breakdown by type, average confidence, plus graph metrics (nodes, edges, edges by type, orphan ratio). Use to gauge how much project memory exists.",
     inputSchema: {},
-    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false
+    }
   },
   async () => safe("memory_stats", async () => {
     const m = memory();
@@ -22439,10 +22503,17 @@ registerTool(
       maxHops: external_exports.number().int().min(0).max(5).optional().describe("Graph traversal depth (default 2)"),
       topK: external_exports.number().int().positive().max(50).optional().describe("Max results (default 10)")
     },
-    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false
+    }
   },
   async (args) => safe("memory_find_related", async () => {
-    const results = await memory().findRelated(args.query, { maxHops: args.maxHops, topK: args.topK });
+    const results = await memory().findRelated(args.query, {
+      maxHops: args.maxHops,
+      topK: args.topK
+    });
     return { count: results.length, related: results };
   })
 );
@@ -22457,10 +22528,17 @@ registerTool(
     title: "Read MindForge audit log",
     description: "Read entries from the MindForge audit log (.planning/AUDIT.jsonl), optionally filtered by event type or phase. Use to review what the framework has recorded for this project (task completions, security findings, decisions).",
     inputSchema: auditLogSchema,
-    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false
+    }
   },
   async (args) => safe("audit_log", async () => {
-    const all = client().readAuditLog({ event: args.event, phase: args.phase });
+    const all = client().readAuditLog({
+      event: args.event,
+      phase: args.phase
+    });
     const limit = args.limit ?? 50;
     const entries = all.slice(-limit);
     return { total: all.length, returned: entries.length, entries };
@@ -22478,7 +22556,12 @@ registerTool(
       confidence: external_exports.number().min(0).max(1).optional().describe("Confidence 0-1 (default 0.7)"),
       tags: external_exports.array(external_exports.string()).optional().describe("Tags for later retrieval")
     },
-    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false }
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: false
+    }
   },
   async (args) => safe("memory_remember", async () => {
     const id = await memory().remember({
@@ -22492,6 +22575,83 @@ registerTool(
     return { id, stored: true };
   })
 );
+var BROWSE_ACTIONS = [
+  "status",
+  "navigate",
+  "click",
+  "type",
+  "screenshot",
+  "assert"
+];
+var browseSchema = {
+  action: external_exports.enum(BROWSE_ACTIONS).describe("Browser action to perform"),
+  url: external_exports.string().optional().describe("URL to navigate to (action=navigate)"),
+  selector: external_exports.string().optional().describe("CSS selector (action=click|type|assert)"),
+  text: external_exports.string().optional().describe("Text to type, or fallback click-by-text (action=click|type)"),
+  session: external_exports.string().optional().describe('Named browser session/context (default "default")'),
+  assertType: external_exports.enum(["visible", "url", "title"]).optional().describe("Assertion kind (action=assert)"),
+  expectedText: external_exports.string().optional().describe("Expected value for the assertion (action=assert)")
+};
+registerTool(
+  "mindforge_browse",
+  {
+    title: "Control the MindForge browser daemon",
+    description: "Drive the persistent MindForge Playwright/Chromium daemon (the same one behind /mindforge:browse): check status, navigate, click, type, screenshot, or assert on the current page. The daemon binds to 127.0.0.1 only (ADR-024) and must already be running \u2014 start it with `/mindforge:browse --start` first; this tool never spawns it. Arbitrary JS evaluation and native-browser cookie import are intentionally NOT exposed here.",
+    inputSchema: browseSchema,
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: false,
+      openWorldHint: true
+    }
+  },
+  async (args) => safe("browse", async () => {
+    const session = args.session ?? "default";
+    await ensureDaemonRunning(PROJECT_ROOT);
+    switch (args.action) {
+      case "status":
+        return browserRequest(PROJECT_ROOT, "GET", "/status");
+      case "navigate":
+        if (!args.url)
+          throw new Error("action=navigate requires a `url` argument");
+        return browserRequest(PROJECT_ROOT, "POST", "/navigate", {
+          url: args.url,
+          session
+        });
+      case "click":
+        if (!args.selector && !args.text)
+          throw new Error("action=click requires `selector` or `text`");
+        return browserRequest(PROJECT_ROOT, "POST", "/click", {
+          selector: args.selector,
+          text: args.text,
+          session
+        });
+      case "type":
+        if (!args.selector || args.text === void 0)
+          throw new Error("action=type requires `selector` and `text`");
+        return browserRequest(PROJECT_ROOT, "POST", "/type", {
+          selector: args.selector,
+          text: args.text,
+          session
+        });
+      case "screenshot":
+        return browserRequest(PROJECT_ROOT, "POST", "/screenshot", {
+          session
+        });
+      case "assert":
+        if (!args.assertType)
+          throw new Error("action=assert requires `assertType`");
+        return browserRequest(PROJECT_ROOT, "POST", "/assert", {
+          type: args.assertType,
+          selector: args.selector,
+          expected_text: args.expectedText,
+          session
+        });
+      default:
+        throw new Error(`Unsupported action: ${String(args.action)}`);
+    }
+  })
+);
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
@@ -22499,7 +22659,9 @@ async function main() {
 `);
 }
 main().catch((err) => {
-  process.stderr.write(`[mindforge-mcp] fatal: ${err instanceof Error ? err.stack : String(err)}
-`);
+  process.stderr.write(
+    `[mindforge-mcp] fatal: ${err instanceof Error ? err.stack : String(err)}
+`
+  );
   process.exit(1);
 });

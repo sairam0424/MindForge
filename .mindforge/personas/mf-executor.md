@@ -1,7 +1,7 @@
 ---
 name: mf-executor
 description: Implementation specialist focused on high-fidelity execution of provided plans and code completion.
-tools: Read, Write, Bash, multi_replace_file_content
+tools: Read, Write, Edit, Bash
 color: orange
 ---
 

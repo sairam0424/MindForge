@@ -1,5 +1,280 @@
 # Changelog
 
+## [11.9.9] — 2026-09-23 — Release-readiness audit: 5 CRITICAL + 9 HIGH findings fixed
+
+Patch release. An 8-agent audit workflow tested every MindForge surface (slash commands,
+skills, personas, subagents, dynamic workflows, CLI/MCP, live install/verify/health) as a
+release gate before shipping to real external users. Every finding was independently
+re-verified against live code/commands before fixing, not trusted from the audit report
+alone.
+
+### Fixed
+
+**CRITICAL**
+
+- Removed the `godmode` skill entirely — a real, complete LLM jailbreak toolkit that was
+  shipping unconditionally in the published npm tarball, undisclosed anywhere in the docs.
+- Rewrote `help.md`/`status.md`/`health.md`/`security-scan.md`: they claimed
+  PQAS/biometric-bypass/lattice-crypto signature verification was "active by default,"
+  directly contradicted by `quantum-crypto.js`'s own comments (simulated, off by default).
+- Fixed `--minimal`: a second, unguarded persona-copy path in `installer-core.js` shipped
+  the full 218-file persona set regardless of `--minimal`. Gated on `!minimal` rather than
+  removed outright — the copy is a real, tested per-harness delivery contract, confirmed
+  against `harness-adapter-compliance.js`'s `ADAPTER_RECORDS`.
+- Fixed `security-scan.md`'s "Sovereign Integrity Check," which called a CLI flag on a
+  module with no CLI entrypoint (always exits 0) — a CRITICAL gate that could never fail.
+  Replaced with the one real check (policy-engine tamper detection).
+- Disclosed `bin/engine/skill-loader.js` as dead code (4 lines, zero callers). The real
+  trigger-matching mechanism is an LLM-followed protocol spec
+  (`.mindforge/engine/skills/loader.md`), not deterministic code.
+
+**HIGH**
+
+- `install-skill.md`: documented the literal action token (`install`/`register`/`audit`)
+  `bin/skill-registry.js` deliberately requires with no default.
+- `marketplace.md`: disclosed that zero published packages exist today; labeled sample
+  output as illustrative, not reproducible.
+- `status.md`: fixed a nonexistent-file reference (`AutoRunner.js` -> the real
+  `bin/autonomous/auto-runner.js`).
+- `pr-review`/`cross-review`: was an unqualified alias with descriptions implying different
+  behavior — now honestly documented as the same 2-model adversarial review engine.
+- 8 dynamic-workflow scripts (`feature-planner`, `tdd-sprint`, `onboard-codebase`,
+  `incident-response`, `release-prep`, `perf-optimize`, `refactor-plan`,
+  `verification-loop`): added null-guards after every dependent `agent()` call, matching
+  the pattern ~27 other scripts already use.
+- `MANIFEST.md`: registered 32 engine-tier skills that existed on disk but were never
+  listed in the registration source of truth (`systematic-debugging`,
+  `test-driven-development`, and 30 others).
+- 3 MF-series personas (`mf-tool`, `mf-memory`, `mf-executor`): replaced fictional tool
+  grants (`Database`, `API`, `task_boundary`, `commit_memory`,
+  `multi_replace_file_content`) with the real Claude Code tool vocabulary.
+- `swarm-templates.json`: reconciled 11 dangling persona references (2 fixed by name
+  correction, 9 removed with no real equivalent); updated `docs/PERSONAS.md`'s
+  `data-privacy-engineer` writeup to match the real `privacy-engineer.md` persona it now
+  points to.
+- `health` command: wired to `verifyInstall()` so it actually checks installation
+  integrity instead of only an npm-version lookup.
+- `AUDIT.jsonl`: distinguished "no audit log yet" from "chain broken" so a brand-new
+  install doesn't report a false BROKEN status; shipped `verify-audit.js` by default (its
+  only dependencies already shipped unconditionally).
+
+## [11.9.8] — 2026-09-21 — What the README claims, verified line by line
+
+Patch release. v11.9.7's README rewrite got a literal, end-to-end audit: every command it
+documents actually run — real `npx` installs, a real Homebrew install/uninstall cycle, a
+real `npm i mindforge-sdk`, live registry checks — instead of re-reading the prose. 113
+claims checked: 98 held up, 14 didn't, 1 couldn't be verified either way. All 14 confirmed
+failures are fixed here.
+
+### Fixed
+
+**Two real bugs, not just docs**
+
+- `--runtime claude,cursor` (or any comma-separated runtime list) crashed the installer
+  outright ("Cannot read properties of undefined (reading 'localDir')"). `--all` already
+  expanded into a real multi-runtime loop; a comma-separated `--runtime` value was never
+  split into it, so it was looked up as the literal key `RUNTIMES['claude,cursor']`, which
+  doesn't exist. Fixed, plus a graceful "Unknown runtime(s)" exit for typos instead of a raw
+  crash.
+- `--minimal` claimed "no persona library" but shipped all 216 personas anyway — the
+  `minimalEntries` allowlist in `bin/installer-core.js` explicitly included `'personas'`.
+  Removed.
+
+**Twelve documentation inaccuracies**
+
+- Removed a `[--ads]` flag hint on `/mindforge:plan-phase` that was never wired into the
+  live command spec — it only exists in a much larger, never-ported legacy workflow file.
+- Reworded the bare `npx mindforge-cc@latest` "auto-detects your runtime" claim: real
+  detection only runs inside the interactive TTY wizard (and even there it's a pre-selected
+  default you still confirm); every non-interactive invocation (CI, piped stdin, scripted)
+  hardcodes `--claude`.
+- Disclosed that `/mindforge:health --repair` is documented in the command spec but not
+  wired into the CLI backing path — the flag is silently dropped, output is byte-identical
+  to plain `health`.
+- Fixed `/mindforge:tokens --profile` — that flag doesn't exist; swapped in a real one
+  (`--optimise`) and listed the actual flag set.
+- Disclosed that `node bin/mindforge-cli.js spawn <persona>` is a v1.0 stub that exits 1
+  with "NOT IMPLEMENTED", not a working scripted path.
+- Corrected the License section's copyright holder to match `LICENSE` exactly.
+- Fixed the architecture diagram's skill count: only 232 of the 355 skills live under
+  `.mindforge/` (engine tier); the other 123 are under `.agent/skills/` (extended tier).
+- Corrected `bin/`'s "~22K LOC" claim to the measured ~32K raw / ~25K stripped-of-comments.
+- Narrowed the Config reference doc-table row — that doc never mentions
+  `.mindforge/config.json`.
+- Reworded the Threat model doc-table row — that file is explicitly historical (v1.0.0-era),
+  not re-reviewed against v11.x, and redirects to `SECURITY.md`.
+- Reworded the USP-features doc-table row — that file has zero competitor comparison
+  content; it's the same honesty pass applied to MindForge's own features.
+- Disclosed that the `mindforge-plugin-*` namespace has zero packages published under it
+  today.
+
+## [11.9.7] — 2026-09-20 — The install banner stops contradicting itself
+
+Patch release. Found by actually running the documented install command
+(`npx mindforge-cc@latest --claude --local`) in a clean project instead of stopping at
+`--version` — the check that should have caught the v11.9.6 regressions below before they
+shipped.
+
+### Fixed
+
+**Two real bugs in the install banner itself, both live in every v11.9.6 install**
+
+- **Version self-contradiction.** The top banner (`bin/wizard/theme.js`'s
+  `printBrandManifest()`) hardcoded `SOVEREIGN INTELLIGENCE v8.1.1`, while the install
+  activation line two screens later (`bin/installer-core.js`) prints `v8.2.0` for the same
+  subsystem — one command, two version numbers. Standardized on `v8.2.0`.
+- **False "Enabled" claim.** The same top banner said `PQAS & Proactive Homing Enabled`
+  unconditionally, directly contradicting the accurate disclosure a few lines later in the
+  same run: "available in simulated/experimental mode (inactive by default)". Changed to
+  `PQAS (simulated) & Proactive Homing`. `bin/engine/learning-manager.js` carried the
+  identical string; fixed there too.
+- **Dead docs link.** The banner's `Docs: https://docs.mindforge.cc` fails TLS handshake —
+  DNS resolves but no site was ever deployed there. Repointed to the real, verified-live
+  `https://github.com/sairam0424/MindForge#documentation`.
+
+**Doc regression from the v11.9.6 pass, self-inflicted**
+
+- The persona-count reconciliation in v11.9.6 used a naive
+  `find .mindforge/personas -type f | wc -l` (218), which silently swept in
+  `swarm-templates.json` and `overrides/README.md` — neither is a persona. The installer's
+  own `collectManifestStats()` counts top-level `.md` files only: **216**, matching the
+  preserved 2026-08-16 codebase-index snapshot. Reverted `README.md`,
+  `docs/CAPABILITIES-MANIFEST.md`, `docs/user-guide.md`, `docs/PERSONAS.md`,
+  `docs/registry/PERSONAS.md`, and `docs/registry/README.md`.
+
+## [11.9.6] — 2026-09-20 — The docs stop overselling what the code discloses about itself
+
+Patch release. No new features — this is the release-readiness pass before pointing real
+users at the project for the first time, and it found the same pattern one more time:
+code that honestly labels its own simulated/dormant parts, sitting under docs that hadn't
+caught up. Every fix below was hand-verified against the live source or a real command
+run, not carried over from a prior audit's prose.
+
+### Fixed
+
+**Two real, reproducible bugs**
+
+- **`/mindforge:learn` crashed on every skill that scored high enough to register.**
+  `bin/skills-builder/learn-cli.js` called `skill-registrar.js`'s `register()` with two
+  positional string arguments (`skillPath`, `'project'`); `register()` destructures a
+  single options object, so every call threw inside it, silently swallowed by the CLI's
+  generic catch. A validly-generated `SKILL.md` never reached `MANIFEST.md`, and the CLI
+  reported a bare `❌ Error`. Fixed the call site to pass `{ skillName, skillPath, tier,
+  qualityScore, sourceType, source }`, matching `register()`'s real signature.
+
+- **`bin/browser/browser-daemon.js` printed its own bearer token to stdout** (captured
+  verbatim into the persistent `.planning/browser-daemon.log` by `daemon-manager.js`),
+  and gated only `/evaluate` — `/navigate`, `/click`, `/type`, and `/screenshot` had no
+  auth check at all. The idle-timeout path also called `process.exit(0)` directly,
+  bypassing the token-file cleanup in `shutdown()`. Fixed all three: the startup log now
+  prints only the token's file path, the auth check runs once before dispatch and covers
+  every route but `/status`, and the idle path calls the real `shutdown()`.
+
+**A test with a blind spot for the exact bug it exists to catch**
+
+- `tests/sdk-exports.test.js` guards against any tracked file instructing
+  `require('@mindforge/sdk')` — the unpublished, wrong package name (`sdk/package.json`
+  publishes as `mindforge-sdk`). Its scan used `git ls-files -z '*.md' '*.ts'`, which
+  cannot match `.js` files — so it did not, and could not, catch the live occurrence in
+  `examples/sdk-integration/index.js`. Fixed both: the import, and the pathspec (now also
+  `*.js`/`*.mjs`/`*.cjs`, with `tests/` added to the same "records, not instructions"
+  allowlist as `changelogs/`, since this file's own `WRONG` string literal would otherwise
+  self-flag).
+
+**A dashboard that rendered success while showing nothing**
+
+- Three more panels in `bin/dashboard/frontend/app.js` read response fields their real
+  backing functions in `metrics-aggregator.js` have never produced — the same bug class
+  already fixed once for the avg-quality tile, left unaddressed here. `refreshMemory()`
+  read `data.graph`/`data.count`; the real shape is `{ entries, total }`. `refreshTeam()`
+  called `.map()` on the whole response object; the real shape is `{ active, conflicts }`
+  with `email`/`last_seen`/`current_task` fields, not `user`/`action`/`timestamp`.
+  `drawCharts()` read `state.costs`/`state.quality`, fields `/api/metrics` never returns;
+  the real per-session series is `state.sessions[].cost_usd` /
+  `state.sessions[].quality_score`. All three failed silently behind an empty `catch`, so
+  the panels looked idle rather than broken. Fixed to read the real shapes.
+
+**Two shipped documents that stated the opposite of the code**
+
+- `SECURITY.md` claimed `AUDIT.jsonl` "auto-archives beyond 5000 lines with gzip
+  compression" — that rotation mechanism was removed in an earlier release specifically
+  because truncating the file broke the hash chain (it orphans `previous_hash` pointers to
+  archived entries). The log grows unbounded by design; the doc now says so.
+- `docs/security/SECURITY.md` had drifted into a second, independent copy of this policy
+  with a `5.x.x`/`4.x.x`/`< 4.0.0` support table — years behind the real `11.x` line the
+  root `/SECURITY.md` (the canonical file) documents. Replaced with a pointer to the root
+  file so this can't re-drift.
+
+**A stale Homebrew formula**
+
+- `Formula/mindforge.rb` was pinned to `11.9.3` (url, sha256, and the version-assertion
+  test) — two releases behind, so `brew install mindforge` installed an old build with
+  none of 11.9.4/11.9.5's fixes. Re-pinned to the real published `11.9.5` tarball with its
+  actual sha256 (fetched and hashed directly, not carried over). This is the same drift
+  class the project has hit twice before (11.9.2 shipped with this file and `Dockerfile`
+  four releases behind); `Formula/mindforge.rb` will lag one release again until
+  `node scripts/sync-version.js --fetch-sha` runs after this version publishes — expected,
+  not a regression.
+
+### Changed — a documentation honesty pass
+
+The following describe MindForge's own PQAS (post-quantum crypto), ZTAI (Zero-Trust
+Agentic Identity), and "Pillar"-numbered subsystems as live, unconditional security
+guarantees. They are not: `bin/governance/quantum-crypto.js` and
+`bin/governance/ztai-manager.js` self-label these SIMULATED and gate them off the live
+trust path by default (`SECURITY_TIER_3_SIMULATED = true`), and `SwarmController` /
+`PersonaFactory` / `WaveExecutor` are role names in markdown specs with no backing file —
+a distinction this repo's own `.claude/CLAUDE.md` already draws, just not everywhere yet.
+Rewrote each to match the same "measured, not asserted" tone already used in
+`docs/faq.md` and `docs/troubleshooting.md` and the root README's *What is actually
+enforced* section:
+
+`docs/usp-features.md`, `CODEBASE-MAP.md`, `docs/architecture/README.md`,
+`docs/CAPABILITIES-MANIFEST.md`, `docs/governance-guide.md`,
+`docs/MIND-FORGE-REFERENCE-V6.md`, `docs/INTELLIGENCE-MESH.md`, `docs/PERSONAS.md`,
+`docs/security/threat-model.md`, `docs/security/penetration-test-results.md` (the latter
+two now banner-marked as scoped to an earlier, materially smaller predecessor system, not
+a current assessment — no new pentest content was fabricated to replace them).
+
+**Six reference docs (`docs/registry/*.md`) were stuck at v11.3.1** (six releases behind)
+with command/skill/persona/subagent counts off by 2–9x against the live filesystem, and
+listed 14+ slash commands with no backing file (`/mindforge:quantum-verify`,
+`/mindforge:hindsight`, `/mindforge:harvest`, `/mindforge:self-heal`,
+`/mindforge:swarm-execution`, `/mindforge:identity`, and others) — each individually
+re-verified against `.claude/commands/mindforge/` before being removed or reworded.
+Updated all six to the real, live-verified counts (221 commands, 232+123 skills, 217
+personas, 164 subagents) and pointed each at `docs/commands-reference.md` as the
+canonical source, so staleness here is lower-stakes going forward.
+
+Also corrected: `docs/plugin-installation.md` and `docs/reference(s)/commands.md` (stale
+hand-typed counts), `docs/References/{decimal-phase-calculation,git-integration,
+git-planning-commit}.md` (wrong CLI path — real tool is `.agent/bin/mindforge-tools.cjs`,
+not `.agent/mindforge/bin/...`), `docs/References/model-profile-resolution.md` (dead
+`@`-include path), and a fabricated `"Claude 4.5 Opus"` model-name literal in two docs
+(no such string exists anywhere in `bin/`) replaced with the real "highest-capability
+tier configured" language. Deleted two orphaned scratch files that were never real
+documentation: `docs/testing-current-version.md` (a pre-release scratch file hardcoding
+a personal machine path) and `docs/commands-skills/DISCOVERED_SKILLS.md` (stale output
+from an unrelated external tool referencing a directory that doesn't exist in this repo).
+
+### Changed — discoverability
+
+- Root `README.md`: npm-version/downloads/license/Node-version badges, an "at a glance"
+  capability summary with real counts, and jump links to the existing sections.
+- `package.json`: `description` rewritten from marketing language ("Sovereign Agentic
+  Intelligence Framework... Production-Hardened... (v11)") to concrete, keyword-bearing
+  text; added `ai-agents`, `llm-tools`, `developer-tools`, `mcp-server` to `keywords`.
+
+### Verified
+
+- `npm test`: 137 passed, 0 failed, 3 env-dependent skips (`browser.test.js`,
+  `browser-daemon-auth-live.test.js`, `sre-integration.test.js` — all three require a
+  Chromium daemon/display or git worktree support this sandbox does not have). Verified
+  clean through the real pre-commit hook, not just a standalone run.
+- `node scripts/sync-version.js`: 27 channels synced; `Formula/mindforge.rb` correctly
+  deferred (tarball doesn't exist yet); `plugins/mindforge/.claude-plugin/plugin.json` and
+  `plugins/mindforge/mcp/dist/index.js` rebuilt.
+
 ## [11.9.5] — 2026-08-22 — The release path can no longer strand itself, and the SDK ships
 
 Patch release, and the shortest one in a while. It exists because 11.9.4 published two

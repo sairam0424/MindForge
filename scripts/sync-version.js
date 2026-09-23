@@ -284,6 +284,12 @@ syncByRegex('docs/user-guide.md', /^# MindForge User Guide \(v(\d+\.\d+\.\d+)\)/
   'docs/user-guide.md title');
 syncByRegex('docs/user-guide.md', /^> \*\*v(\d+\.\d+\.\d+) Stats:\*\*/gm, 'docs/user-guide.md stats banner');
 syncByRegex('docs/user-guide.md', /\(e\.g\. (\d+\.\d+\.\d+)\)/g, 'docs/user-guide.md --version example');
+// CAPABILITIES-MANIFEST.md's version wasn't tracked here, so it silently drifted for a
+// release — the honesty-audit pass that caught it also found this is the only channel
+// missing a hook.
+syncByRegex('docs/CAPABILITIES-MANIFEST.md',
+  /^Line-item inventory of what's actually in a MindForge v(\d+\.\d+\.\d+) install\./gm,
+  'docs/CAPABILITIES-MANIFEST.md intro line');
 // sdk-reference mirrors sdk/src/index.ts's exported VERSION, which IS already a channel — so leaving
 // this one out guaranteed the doc and the code it documents would disagree on every bump. Both the
 // prose and the export listing, so the file cannot end up internally inconsistent.

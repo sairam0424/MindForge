@@ -13,6 +13,12 @@ marketplace — a curated layer on top of the npm registry.
 The marketplace is the shortcut: instead of learning from documentation yourself,
 install skills that the community has already created, validated, and battle-tested.
 
+**Status: no packages are published today.** Checked live against the npm registry —
+zero `mindforge-skill-*` packages exist. Every result, install count, and quality score
+shown in the examples below (`prisma-advanced`, `847 installs this week`, etc.) is
+illustrative sample output showing the intended format once skills are published, not
+a result you can reproduce right now.
+
 ## Sub-commands
 
 ### search [query]

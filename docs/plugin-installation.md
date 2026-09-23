@@ -6,8 +6,8 @@ commands, subagents, and skills into Claude Code — no project files written, o
 install, and automatic updates.
 
 > **Plugin vs. npx installer — which do I use?**
-> - **Plugin** (`/plugin install`): the cleanest way to get the 174 commands, 154
->   subagents, 73 skills, and governance hooks. Lives in Claude Code's plugin cache,
+> - **Plugin** (`/plugin install`): the cleanest way to get the 221 commands, 164
+>   subagents, 124 skills, and governance hooks. Lives in Claude Code's plugin cache,
 >   updates via `/plugin update`. Best for most users.
 > - **npx installer** (`npx mindforge-cc@latest --claude --local`): also writes the full
 >   `.mindforge/` framework engine (governance, memory/SQLite, planning scaffolding) into
@@ -27,13 +27,13 @@ install, and automatic updates.
 ```
 
 That's it. Run `/help` to see the MindForge commands (namespaced as `/mindforge:*`),
-and `/agents` to see the 154 subagents.
+and `/agents` to see the 164 subagents.
 
 ## What you get
 
 | Plugin | Contents | Install |
 |--------|----------|---------|
-| **`mindforge`** | The full framework: 174 commands, 154 subagents, 73 skills, the `mindforge-protocol` skill, and governance hooks | `/plugin install mindforge@mindforge` |
+| **`mindforge`** | The full framework: 221 commands, 164 subagents, 124 skills, and governance hooks | `/plugin install mindforge@mindforge` |
 | `mindforge-core-dev` | 11 core development agents (backend, frontend, fullstack, mobile, API) | `/plugin install mindforge-core-dev@mindforge` |
 | `mindforge-lang` | 30 language specialists (Python, TypeScript, Go, Rust, Java, React, …) | `/plugin install mindforge-lang@mindforge` |
 | `mindforge-infra` | 16 DevOps/cloud/SRE agents | `/plugin install mindforge-infra@mindforge` |
@@ -48,7 +48,7 @@ and `/agents` to see the 154 subagents.
 ### Token-budget note
 
 The comprehensive `mindforge` plugin loads ~16.7k tokens into every session (the
-descriptions of 248 skill entries + 154 agents — this is the always-on listing cost,
+descriptions of 124 skill entries + 164 agents — this is the always-on listing cost,
 not per-use). If you only need a slice — say Python work — install just the focused pack
 (`mindforge-lang`, 30 agents) instead of the full plugin to keep your context budget low.
 Check a plugin's cost before installing with `claude plugin details <name>@mindforge`.

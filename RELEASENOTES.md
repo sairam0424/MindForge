@@ -1,5 +1,124 @@
 # Release Notes
 
+## v11.9.9 — 2026-09-23 — Release-readiness audit: 5 CRITICAL + 9 HIGH findings fixed
+
+### Why this release exists
+
+An 8-agent audit workflow tested every MindForge surface — slash commands, skills,
+personas, subagents, dynamic workflows, CLI/MCP, and a live install/verify/health cycle —
+as a release gate before shipping to real external users. Every finding was independently
+re-verified against live code and commands before being fixed, not trusted from the audit
+report alone.
+
+### The user-visible part
+
+**Five CRITICAL findings, all ship-blocking:** a real, complete LLM jailbreak toolkit
+(`godmode`) that was shipping unconditionally in the published package is gone; `help.md`,
+`status.md`, `health.md`, and `security-scan.md` stop claiming PQAS/biometric/lattice-crypto
+verification is "active by default" when the code itself says it's simulated and off;
+`--minimal` now actually skips the persona set instead of shipping all 218 files anyway; a
+"Sovereign Integrity Check" that called a CLI flag on a script with no CLI entrypoint (and
+so could never fail) is replaced with a real check; and a dead 4-line stub standing in for
+"232 auto-triggered skills" is now disclosed as what it is.
+
+**Nine HIGH-severity findings:** corrected CLI invocation docs, disclosed the marketplace
+has zero published packages today, added crash-guards to 8 dynamic workflows, registered 32
+skills that existed on disk but were never in the manifest, fixed three personas granting
+tools that don't exist, reconciled 11 dangling swarm-template references, wired the `health`
+command to an actual integrity check, and stopped a brand-new install's audit log from
+reporting a false "BROKEN" status.
+
+## v11.9.8 — 2026-09-21 — What the README claims, verified line by line
+
+### Why this release exists
+
+v11.9.7 shipped a full README rewrite. This release is what happened when that rewrite got
+a literal, end-to-end audit — every command it documents actually run in a real environment
+(real `npx` installs, a real Homebrew install/uninstall cycle, a real `npm i mindforge-sdk`,
+live registry checks) rather than re-read for plausibility. Of 113 claims checked, 98 held
+up, 14 didn't, and 1 couldn't be verified either way.
+
+### The user-visible part
+
+**Two of the 14 were real bugs, not just wording.** `--runtime claude,cursor` — or any
+comma-separated runtime list — crashed the installer outright; it's fixed, and an unknown
+runtime name now exits cleanly with a clear message instead of a raw crash. `--minimal`
+claimed "no persona library" but silently installed all 216 personas anyway; it now
+installs none, as documented.
+
+**The other twelve are documentation catching up to what the code actually does:** the
+bare `npx mindforge-cc@latest` "auto-detects your runtime" claim (real detection only
+happens inside the interactive wizard, and even there you still confirm it — every
+non-interactive run defaults to `--claude`), an `--ads` flag on `/mindforge:plan-phase`
+that was never real, `/mindforge:health --repair` silently doing nothing, a `--profile`
+flag on `/mindforge:tokens` that doesn't exist, a CLI `spawn` command that's a v1.0 stub,
+the License section's copyright holder, the skill-tier split in the architecture diagram,
+the `bin/` line-count figure, three Documentation-table rows that overstated what their
+linked docs actually cover, and the `mindforge-plugin-*` namespace, which has zero
+packages published under it today.
+
+## v11.9.7 — 2026-09-20 — The install banner stops contradicting itself
+
+### Why this release exists
+
+Running v11.9.6's own documented install command in a clean project (instead of stopping
+at `--version`) surfaced two real bugs in the install banner itself, plus a persona-count
+regression introduced by v11.9.6's own doc-honesty pass.
+
+### The user-visible part
+
+**The install banner no longer contradicts itself.** It used to print `SOVEREIGN
+INTELLIGENCE v8.1.1` at the top and `v8.2.0` for the same subsystem two screens later, and
+claim `PQAS ... Enabled` right before accurately disclosing it's simulated and off by
+default. Both fixed. The banner's `Docs:` link no longer points at a domain with no site
+deployed on it.
+
+**Docs say 216 personas again, not 218.** v11.9.6's own persona-count fix used a count that
+accidentally included two non-persona files; reverted to the verified real number.
+
+## v11.9.6 — 2026-09-20 — The docs stop overselling what the code discloses about itself
+
+### Why this release exists
+
+This is the readiness pass before pointing real, external users at the project for the
+first time. No new features — it fixes two reproducible bugs, three dashboard panels that
+silently rendered nothing, one stale security policy and one stale Homebrew formula, and a
+long-running pattern where docs described PQAS/ZTAI/"Pillar"-numbered subsystems as live
+security guarantees when the code that implements them (`bin/governance/quantum-crypto.js`,
+`bin/governance/ztai-manager.js`) already self-labels them simulated and off-by-default.
+
+### The user-visible part
+
+**`/mindforge:learn` works again.** It crashed on every skill that scored well enough to
+auto-register — `skill-registrar.js`'s `register()` was called with the wrong argument
+shape, so the CLI printed a bare `❌ Error` and nothing ever reached `MANIFEST.md`.
+
+**The browser daemon no longer leaks its own auth token, and now actually checks it.**
+`/navigate`, `/click`, `/type`, and `/screenshot` had zero authentication before this —
+only `/evaluate` did. The startup log used to print the raw token to stdout (captured into
+a plaintext, non-gitignored log file); now it only prints where the token file lives.
+
+**Three dashboard panels (Memory, Team, and the cost/quality charts) were reading response
+fields the backing API has never produced**, so they rendered as permanently empty with no
+error. They now read the real shapes.
+
+**If you use Homebrew:** `brew install mindforge` was pinned two releases behind
+(`11.9.3`) and is now current. It will lag one release again after this one ships — that's
+expected; the formula can't point at a tarball that doesn't exist yet.
+
+### The documentation part
+
+Six reference docs (`docs/registry/*.md`) were frozen at v11.3.1 with command/skill/
+persona counts off by 2–9x and 14+ slash commands listed that don't exist. `usp-features.md`,
+`CODEBASE-MAP.md`, `docs/architecture/README.md`, and several other pages described
+post-quantum crypto and Zero-Trust Agentic Identity as unconditional, shipped security
+rather than the explicitly-simulated, opt-in-gated features they are in the actual code.
+All rewritten to match the same measured tone the README's *What is actually enforced*
+section and `docs/faq.md`/`docs/troubleshooting.md` already used. Two orphaned scratch
+files that were never real documentation were removed.
+
+See [CHANGELOG.md](./CHANGELOG.md) for the complete, file-by-file list.
+
 ## v11.9.5 — 2026-08-22 — The release path can no longer strand itself, and the SDK ships
 
 ### Why this release exists

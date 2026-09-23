@@ -94,7 +94,7 @@ Lists all skills available in this MindForge installation. Skills in the **Engin
 `llm-wiki` · `polymarket` · `parallel-cli`
 
 ### Security
-`godmode` · `1password-skill`
+`1password-skill`
 
 ### Creative
 `hyperframes` · `article-illustrator` · `comic-creator` · `video-orchestrator`

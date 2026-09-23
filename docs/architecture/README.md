@@ -1,78 +1,71 @@
 # MindForge Architecture Overview
 
-MindForge v11.9.0 is built on a distributed "Agentic OS" architecture, designed for enterprise-scale intelligence sharing and absolute governance.
+MindForge (current package version 11.9.8) is a Node.js runtime under `bin/` that reads
+declarative specs under `.mindforge/` and `.claude/`/`.agent/`, and writes state under
+`.planning/`. This file is a codemap of what's actually there — for the full task lifecycle,
+config hierarchy, and the two single-sources-of-truth this repo enforces, see the root
+[`CLAUDE.md`](../../CLAUDE.md), which this file links to rather than duplicates.
+
+Historical "Pillar" numbering (FIM/CADIA/PAR/ZTS/ZTAI/ADS) that used to appear here referred to
+development-era milestones, not live subsystems with that shape today. See
+[*What is actually enforced*](../../README.md#what-is-actually-enforced) in the root README for
+the measured, per-feature status of what's simulated versus real.
 
 ---
 
-## 1. Core Architectural Pillars (v11.9.0)
+## Four layers
 
-The framework is focused on eight major pillars, with V6 introducing the **Neural Blast Radius Optimizer (CADIA)**:
-
-1. **Federated Intelligence Mesh (FIM)**: Distributed knowledge sharing with delta-sync and cryptographic provenance. [V5-ENTERPRISE.md](./V5-ENTERPRISE.md)
-2. **CADIA Engine (v6.0.0 Alpha)**: Neural Blast Radius Optimizer that calculates real-time architectural risk based on influence, entropy, and alignment.
-3. **Predictive Agentic Reliability (PAR)**: Self-healing reasoning loops and context refactoring. [PAR-ZTS-SURVEY.md](./PAR-ZTS-SURVEY.md)
-4. **Supply Chain Trust (ZTS)**: Agentic SBOM and 7-dimension skill certification. [PAR-ZTS-SURVEY.md](./PAR-ZTS-SURVEY.md)
-5. **Zero-Trust Agentic Identity (ZTAI)**: DID-based cryptographic signing for all agentic actions and tiered trust enforcement.
-6. **Adversarial Decision Synthesis (ADS)**: 3-model synthesis loop ensuring architectural integrity.
-7. **Semantic Context Sharding**: Tri-tier memory (Hot/Warm/Cold) for high-fidelity context management.
-8. **Autonomous Execution Engine**: Self-healing wave execution with stuck-detection and repair hierarchies.
-
----
-
-## 2. Directory Hierarchy
-
-MindForge uses a "Tiered Configuration" model allowing for global, organizational, and project-specific rules.
-
-| Directory | Scope | Purpose |
-| :--- | :--- | :--- |
-| **EIS / Mesh** | `bin/memory` | Core FIM implementation (eis-client, federated-sync). |
-| **Governance** | `bin/governance` | Core APO implementation (policy-engine, rbac-manager). |
-| `.mindforge/` | System/Global | Core personas, core skills, and engine protocols. |
-| `.agent/` | Project/Local | Project-specific configuration, hooks, and local skill overrides. |
-| `.planning/` | Session/State | Ephemeral state, task blocks, and session handoffs. |
+1. **Interface** (`.claude/`, `.agent/`) — the 221 `/mindforge:*` slash commands
+   (`.claude/commands/mindforge/*.md`) and the two hook configs (`.claude/settings.json` for real
+   Claude Code events, `.agent/settings.json` for the Gemini-CLI/Antigravity mirror). These two
+   configs must be kept in sync.
+2. **Engine specs** (`.mindforge/`) — declarative content published in the npm package:
+   `engine/` (spec docs), `skills/` (232 engine-tier `SKILL.md`), `personas/` (216),
+   `config.json` (runtime knobs). Edit behavior here, not in code, where possible.
+3. **Execution** (`bin/`, ~32K raw / ~25K stripped-of-comments LOC) — the Node runtime that
+   actually runs. See the domain breakdown below.
+4. **Persistence** (`.planning/`) — `STATE.md`, `HANDOFF.json` (resumable), `AUDIT.jsonl`
+   (tamper-evident, gitignored), `history/` snapshots.
 
 ---
 
-## 3. The Unified Registry (`file-manifest.json`)
+## `bin/` domain breakdown
 
-The `file-manifest.json` file in `.agent/` is the single source of truth for the framework's file system mapping. It allows MindForge to resolve command paths, skills, and templates regardless of whether it's running in Claude Code, Antigravity, or Cursor.
+| Domain | What lives there |
+| :--- | :--- |
+| `autonomous/` | Wave executor, `auto-runner.js` (the `/mindforge:auto` engine), stuck-detection, repair, Temporal snapshot capture/rollback (`hindsight-injector.js`) |
+| `engine/` | `council-runtime.js` (4-voice decision council), `nexus-tracer.js`, `verification-runner.js`, `temporal-hindsight.js`, `otel-exporter.js` |
+| `memory/` | Knowledge graph, vector hub, RRF fusion, embedding, instinct capture |
+| `governance/` | `policy-engine.js`, `audit-hash.js` / `audit-verifier.js` (the audit hash-chain), `rbac-manager.js`, `quantum-crypto.js` (simulated), `ztai-manager.js` |
+| `models/` | Provider clients (Anthropic/OpenAI/Gemini/Bedrock/Ollama) and `pricing-registry.js` |
+| `dashboard/` | Express + SSE server, port 7339, `frontend/` |
+| `security/` | `trust-boundaries.js`, `trust-gate-hook.js` |
+| `browser/` | Playwright-backed QA daemon (loopback-only) |
+| `eval/` | Retrieval/golden-set evaluation harness |
+| `review/` | `cross-review-engine.js` (two-model adversarial PR review) |
+| `installer/`, `wizard/` | The `npx` install flow, hook registration, interactive setup wizard |
+| `revops/`, `learning/`, `research/`, `updater/`, `workflows/`, `worktree/`, `sre/`, `migrations/`, `skills-builder/`, `hooks/`, `utils/` | Narrower, single-purpose domains — see each directory's own files for detail |
 
----
-
-## 4. Runtime Execution Flow (V5 Hardened)
-
-1.  **Context Loading**: Load `MINDFORGE.md` and `file-manifest.json`.
-2.  **Identity Verification**: Resolve the agent's ZTAI identity and trust tier.
-3.  **Policy Interception**: The `APO` evaluates the task intent. If not **PERMIT**, the session is halted.
-4.  **Skill Discovery**: Match task intent against the 3-tier skill registry.
-5.  **Execution Wave**: Parallel task execution with continuous FIM synchronization.
-6.  **Audit Pulse**: All actions are cryptographically signed and appended to `.planning/AUDIT.jsonl`.
-
----
-
-## 5. Decision Records & Stability
-
-MindForge provides stable interfaces for extension while documenting every major design shift via ADRs.
-
-- **ADR Index**: See [decision-records-index.md](./decision-records-index.md).
-- **V3 Core**: See [V3-CORE.md](./V3-CORE.md).
-- **V4 Mesh**: See [V4-SWARM-MESH.md](./V4-SWARM-MESH.md).
-- **V5 Enterprise**: See [V5-ENTERPRISE.md](./V5-ENTERPRISE.md).
-
----
-
-## 6. Semantic Memory Tiering (V3/V4)
-
-| Tier | Storage | Purpose | Retrieval |
-| :--- | :--- | :--- | :--- |
-| **HOT** | `HANDOFF.json` | Immediate task state and core ADRs (SRD > 0.8). | Loaded every session. |
-| **WARM** | `.planning/memories/` | Phase-specific shards and active project context (SRD 0.5-0.8). | Proactive retrieval. |
-| **COLD** | `.mindforge/memory` | Global knowledge base and historical logs (SRD < 0.5). | Federated search (FIM). |
+**Two single-sources-of-truth, do not bypass:**
+- **Audit hash-chain:** `bin/governance/audit-hash.js` is the only canonical SHA-256 hasher; both
+  the writer (`bin/autonomous/audit-writer.js`) and verifier (`bin/governance/audit-verifier.js`)
+  use it. `.planning/AUDIT.jsonl` links entries via `previous_hash` — a hash chain, not a Merkle
+  tree (no hash tree, no inclusion proof).
+- **Pricing:** `bin/models/pricing-registry.js`; every provider calls `priceCall()`. No provider
+  hardcodes a per-model price.
 
 ---
 
-## 7. Adversarial Decision Synthesis (ADS)
+## Task lifecycle (the core control flow)
 
-MindForge v3.0.0 introduces **Adversarial Decision Synthesis (ADS)**, a 3-model synthesis loop that ensures every architectural decision is battle-tested using the **SOUL.md** scoring algorithm.
+command/plan → pre-flight → skill loader (trigger-match → tier-prioritize Project > Org > Core →
+resolve `compose:` deps) → context injector (≤60K tokens) → cost router (difficulty →
+Haiku/Sonnet/Opus/Gemini tier) → fresh-context subagent (implement → self-verify → commit) →
+verification (build/typecheck/lint/test/security/diff) → stuck detection → instinct capture →
+handoff (`HANDOFF.json` + `AUDIT.jsonl`).
 
 ---
+
+## Decision records
+
+- **ADR Index**: [decision-records-index.md](./decision-records-index.md)

@@ -18,11 +18,15 @@ If `.planning/PROJECT.md` is missing, treat the project as "Not initialised".
 | /mindforge:init-project      | ...                                          |
 | ...                          | ...                                          |
 
-## Sovereign Intelligence (v6.2.0-alpha)
-MindForge now operates with **Sovereign Intelligence** enabled by default:
-- **PQAS**: Post-Quantum Agentic Security is active. High-risk operations require biometric/executive bypass.
-- **Proactive Homing**: The swarm now proactively harvests intent and self-heals reasoning drifts.
-- **Integrity**: Every `security-scan` now verifies framework signatures using lattice-based cryptography.
+## Sovereign Intelligence (v6.2.0-alpha) — status
+- **PQAS**: Post-Quantum Agentic Security is simulated/inactive by default (`pqas_enabled=false`,
+  gated behind `experimental.pqc_demo` in `.mindforge/config.json`; see MINDFORGE.md
+  `[PQAS_ENFORCED]`). There is no biometric/executive bypass gate. Tier-3 trust uses real Ed25519
+  signing, not PQAS.
+- **Proactive Homing**: advisory framing around `bin/autonomous/intent-harvester.js` — not a
+  verified drift-detection guarantee.
+- **Integrity**: `/mindforge:security-scan` does not verify framework signatures via lattice-based
+  cryptography — see that command's own Step 1.5 for what it actually checks.
 
 4. After the table, print:
    "Current project: [read PROJECT.md first line, or 'Not initialised']"

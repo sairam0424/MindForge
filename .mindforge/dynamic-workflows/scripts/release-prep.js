@@ -64,6 +64,9 @@ const readiness = await agent(
   `Check release readiness for: "${context}"\n\nVerify: are there uncommitted changes? Any failing tests? Any security vulnerabilities in dependencies? Any open critical bugs that should block release? List any blockers and warnings.`,
   { schema: READINESS_SCHEMA, label: 'check' }
 );
+if (!readiness) {
+  return { context, error: 'readiness-agent-null' };
+}
 if (!readiness.ready && readiness.blockers.length > 0) {
   log(`BLOCKED: ${readiness.blockers.join(', ')}`);
 }
@@ -74,6 +77,9 @@ const changelog = await agent(
   `Generate a changelog for this release of: "${context}"\n\nAnalyze recent commits (look for conventional commit format: feat/fix/chore/refactor/docs/test/perf/ci). Separate into: breaking changes, new features, bug fixes, chores. Write a highlights summary (2-3 sentences).`,
   { schema: CHANGELOG_SCHEMA, label: 'changelog' }
 );
+if (!changelog) {
+  return { context, readiness, error: 'changelog-agent-null' };
+}
 log(`Changelog: ${changelog.breaking.length} breaking, ${changelog.features.length} features, ${changelog.fixes.length} fixes`);
 
 phase('Bump');
@@ -82,6 +88,9 @@ const version = await agent(
   `Determine the next semantic version for: "${context}"\nChanges: ${changelogSummary}\nHighlights: ${changelog.highlights}\n\nUse semver rules: breaking change = major bump, new features = minor bump, fixes only = patch bump. List all files that need version updated.`,
   { schema: VERSION_SCHEMA, label: 'bump' }
 );
+if (!version) {
+  return { context, readiness, changelog, error: 'version-agent-null' };
+}
 log(`Version: ${version.current} → ${version.next} (${version.bumpType})`);
 
 phase('PR');

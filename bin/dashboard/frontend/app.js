@@ -33,21 +33,33 @@
 
 // ── State ─────────────────────────────────────────────────────────────────
 let currentApprovals = [];
-let state = { costs: [], quality: [] };
+let state = { sessions: [] }; // replaced wholesale by refreshData() with the /api/metrics response
 
 function showPage(id) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document
+    .querySelectorAll('.page')
+    .forEach((p) => p.classList.remove('active'));
+  document
+    .querySelectorAll('.tab')
+    .forEach((t) => t.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  const tab = Array.from(document.querySelectorAll('.tab')).find(t => t.innerText.toLowerCase() === id.toLowerCase());
+  const tab = Array.from(document.querySelectorAll('.tab')).find(
+    (t) => t.innerText.toLowerCase() === id.toLowerCase(),
+  );
   if (tab) tab.classList.add('active');
-  
+
   if (id === 'metrics') drawCharts();
 }
 
 function escapeHtml(str) {
   if (!str) return '';
-  return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', '\'':'&#39;' }[m]));
+  return String(str).replace(
+    /[&<>"']/g,
+    (m) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', '\'': '&#39;' })[
+        m
+      ],
+  );
 }
 
 // ── WebSocket / SSE ───────────────────────────────────────────────────────
@@ -95,9 +107,11 @@ async function refreshData() {
     refreshTeam();
     refreshRevOps();
     if (document.getElementById('temporal').classList.contains('active')) {
-        refreshTemporal();
+      refreshTemporal();
     }
-  } catch(e) { console.error('Refresh fail', e); }
+  } catch (e) {
+    console.error('Refresh fail', e);
+  }
 }
 
 async function refreshRevOps() {
@@ -105,9 +119,11 @@ async function refreshRevOps() {
     const res = await fetch('/api/revops/overview');
     const data = await res.json();
     if (data.success) {
-        updateRevOpsUI(data);
+      updateRevOpsUI(data);
     }
-  } catch { /* one panel failing must not abort the rest of the refresh; it keeps its last value */ }
+  } catch {
+    /* one panel failing must not abort the rest of the refresh; it keeps its last value */
+  }
 }
 
 let temporalHistory = [];
@@ -117,7 +133,9 @@ async function refreshTemporal() {
     const data = await res.json();
     temporalHistory = data;
     renderTemporalTimeline();
-  } catch { /* one panel failing must not abort the rest of the refresh; it keeps its last value */ }
+  } catch {
+    /* one panel failing must not abort the rest of the refresh; it keeps its last value */
+  }
 }
 
 async function refreshApprovals() {
@@ -126,16 +144,25 @@ async function refreshApprovals() {
     const data = await res.json();
     currentApprovals = data;
     renderApprovals();
-  } catch { /* one panel failing must not abort the rest of the refresh; it keeps its last value */ }
+  } catch {
+    /* one panel failing must not abort the rest of the refresh; it keeps its last value */
+  }
 }
 
 async function refreshMemory() {
   try {
     const res = await fetch('/api/memory');
+    // Metrics.getMemory() returns { entries, total } — a flat, confidence-sorted knowledge-base
+    // list, not a graph. This panel used to read `data.graph`/`data.count`, fields that endpoint
+    // has never produced, so it always rendered "{}" and "0 Items Indexed".
     const data = await res.json();
-    document.getElementById('memory-map').innerHTML = `<pre>${escapeHtml(JSON.stringify(data.graph || {}, null, 2))}</pre>`;
-    document.getElementById('memory-stats-list').innerHTML = `<div class="stat-value">${data.count || 0} <span class="stat-unit">Items Indexed</span></div>`;
-  } catch { /* one panel failing must not abort the rest of the refresh; it keeps its last value */ }
+    document.getElementById('memory-map').innerHTML =
+      `<pre>${escapeHtml(JSON.stringify(data.entries || [], null, 2))}</pre>`;
+    document.getElementById('memory-stats-list').innerHTML =
+      `<div class="stat-value">${data.total || 0} <span class="stat-unit">Items Indexed</span></div>`;
+  } catch {
+    /* one panel failing must not abort the rest of the refresh; it keeps its last value */
+  }
 }
 
 async function refreshTeam() {
@@ -143,7 +170,9 @@ async function refreshTeam() {
     const res = await fetch('/api/team');
     const data = await res.json();
     renderTeam(data);
-  } catch { /* one panel failing must not abort the rest of the refresh; it keeps its last value */ }
+  } catch {
+    /* one panel failing must not abort the rest of the refresh; it keeps its last value */
+  }
 }
 
 // decide() and submitDecision() are removed along with POST /api/approve/:id. They sent
@@ -153,25 +182,32 @@ async function refreshTeam() {
 // by bin/governance/approve.js, which takes identity from git and fails closed without a GPG
 // key unless MINDFORGE_ALLOW_UNVERIFIED_APPROVAL=1.
 
-
 function closeConfirm() {
   document.getElementById('confirm-overlay').style.display = 'none';
 }
 
 // ── UI Rendering ──────────────────────────────────────────────────────────
 function updateStatusUI(data) {
-  document.getElementById('project-name').textContent = `PROJ: ${data.project_name || 'UNSET'}`;
+  document.getElementById('project-name').textContent =
+    `PROJ: ${data.project_name || 'UNSET'}`;
   document.getElementById('stat-phase').textContent = data.phase || '0';
-  document.getElementById('stat-status').textContent = (data.auto_status || 'IDLE').toUpperCase();
-  document.getElementById('stat-tasks').textContent = `${data.tasks_completed || 0}/${data.tasks_total || 0}`;
-  document.getElementById('stat-elapsed').textContent = data.elapsed_ms ? (data.elapsed_ms / 1000).toFixed(1) + 's' : '0s';
+  document.getElementById('stat-status').textContent = (
+    data.auto_status || 'IDLE'
+  ).toUpperCase();
+  document.getElementById('stat-tasks').textContent =
+    `${data.tasks_completed || 0}/${data.tasks_total || 0}`;
+  document.getElementById('stat-elapsed').textContent = data.elapsed_ms
+    ? (data.elapsed_ms / 1000).toFixed(1) + 's'
+    : '0s';
 }
 
 function updateMetricsUI(data) {
   // /api/metrics returns { sessions, avg_quality, avg_cost_usd, ... } — see
   // bin/dashboard/metrics-aggregator.js getMetrics(). It has never returned
   // `costs` or `quality`, so these tiles used to render "$0.0000" and "NaN".
-  document.getElementById('stat-avg-quality').textContent = (data.avg_quality ?? 0).toFixed(1);
+  document.getElementById('stat-avg-quality').textContent = (
+    data.avg_quality ?? 0
+  ).toFixed(1);
 }
 
 // Cumulative spend comes from the usage ledger via /api/costs (already wired
@@ -184,14 +220,22 @@ async function refreshCosts() {
     // and genuine zero spend look identical under the "Cost (7d)" label.
     if (!res.ok) throw new Error(`/api/costs ${res.status}`);
     const data = await res.json();
-    document.getElementById('stat-total-cost').textContent = `${(data.total_usd ?? 0).toFixed(2)}`;
-  } catch (e) { console.error('Cost refresh failed', e); }
+    document.getElementById('stat-total-cost').textContent =
+      `${(data.total_usd ?? 0).toFixed(2)}`;
+  } catch (e) {
+    console.error('Cost refresh failed', e);
+  }
 }
 
 function appendAuditEvent(data) {
   const div = document.createElement('div');
   div.className = `event type-${data.event}`;
-  const time = new Date(data.timestamp).toLocaleTimeString([], { hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  const time = new Date(data.timestamp).toLocaleTimeString([], {
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
   div.innerHTML = `<span class="event-time">${time}</span><span class="event-type type-${data.event}">${data.event}</span><span class="event-msg">${escapeHtml(data.message || data.task || '')}</span>`;
   feed.prepend(div);
   if (feed.children.length > 200) feed.lastChild.remove();
@@ -208,22 +252,33 @@ function renderApprovals() {
   const list = document.getElementById('approval-list');
   const records = Array.isArray(currentApprovals) ? currentApprovals : [];
   if (records.length === 0) {
-    list.innerHTML = '<div style="text-align:center; padding: 40px; color:var(--muted)">'
-      + 'No approval records. Tier-3 review is a recorded human acknowledgement; '
-      + 'authorization is enforced by branch protection, not from here.</div>';
+    list.innerHTML =
+      '<div style="text-align:center; padding: 40px; color:var(--muted)">' +
+      'No approval records. Tier-3 review is a recorded human acknowledgement; ' +
+      'authorization is enforced by branch protection, not from here.</div>';
     return;
   }
 
-  const colour = { valid: 'var(--green)', stale: 'var(--purple)', corrupt: 'var(--red)' };
-  list.innerHTML = records.map(a => {
-    const hrs = a.hours_remaining;
-    const life = (hrs === null || hrs === undefined) ? ''
-      : hrs > 0 ? `${hrs.toFixed(1)}h remaining` : `expired ${Math.abs(hrs).toFixed(1)}h ago`;
-    const problems = (a.problems || []).length
-      ? '<ul style="margin:8px 0 0 16px; font-size:11px; color:var(--red)">'
-        + a.problems.map(x => `<li>${escapeHtml(x)}</li>`).join('') + '</ul>'
-      : '';
-    return `
+  const colour = {
+    valid: 'var(--green)',
+    stale: 'var(--purple)',
+    corrupt: 'var(--red)',
+  };
+  list.innerHTML = records
+    .map((a) => {
+      const hrs = a.hours_remaining;
+      const life =
+        hrs === null || hrs === undefined
+          ? ''
+          : hrs > 0
+            ? `${hrs.toFixed(1)}h remaining`
+            : `expired ${Math.abs(hrs).toFixed(1)}h ago`;
+      const problems = (a.problems || []).length
+        ? '<ul style="margin:8px 0 0 16px; font-size:11px; color:var(--red)">' +
+          a.problems.map((x) => `<li>${escapeHtml(x)}</li>`).join('') +
+          '</ul>'
+        : '';
+      return `
     <div class="card approval-card">
       <div class="card-body">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
@@ -241,33 +296,64 @@ function renderApprovals() {
         ${problems}
       </div>
     </div>`;
-  }).join('');
+    })
+    .join('');
 }
 
 function renderTeam(data) {
+  // Metrics.getTeamActivity() returns { active, conflicts } (not a flat array), and each
+  // `active` entry has email/last_seen/current_task/event fields, not user/action/timestamp.
+  // Reading `data.length`/`data.map()` on that object never rendered anything: `.length` is
+  // undefined so the empty-state guard below never fired, and `.map()` on a plain object threw,
+  // silently swallowed by refreshTeam()'s catch.
   const list = document.getElementById('team-activity-list');
-  if (!data || data.length === 0) {
-    list.innerHTML = '<div style="text-align:center; padding: 40px; color:var(--muted)">No recent team activity</div>';
+  const active = Array.isArray(data?.active) ? data.active : [];
+  if (active.length === 0) {
+    list.innerHTML =
+      '<div style="text-align:center; padding: 40px; color:var(--muted)">No recent team activity</div>';
     return;
   }
-  list.innerHTML = data.map(ev => `
+  list.innerHTML = active
+    .map(
+      (ev) => `
     <div class="activity-row">
-      <div class="avatar">${(ev.user || '?').charAt(0).toUpperCase()}</div>
+      <div class="avatar">${(ev.email || '?').charAt(0).toUpperCase()}</div>
       <div class="activity-info">
-        <div><span class="activity-user">${escapeHtml(ev.user)}</span> <span class="activity-action">${escapeHtml(ev.action)}</span></div>
-        <div class="activity-time">${new Date(ev.timestamp).toLocaleString()}</div>
+        <div><span class="activity-user">${escapeHtml(ev.email)}</span> <span class="activity-action">${escapeHtml(ev.current_task || ev.event || '')}</span></div>
+        <div class="activity-time">${new Date(ev.last_seen).toLocaleString()}</div>
       </div>
     </div>
-  `).join('');
+  `,
+    )
+    .join('');
 }
 
 // ── Simple Charts Implementation ──────────────────────────────────────────
 function drawCharts() {
-  drawCanvasChart('chart-costs', state.costs?.map(c => c.cost) || [], varColor('--accent'));
-  drawCanvasChart('chart-quality', state.quality?.map(q => q.score) || [], varColor('--green'), 100);
+  // refreshData() does `state = data` with the raw /api/metrics response, which is
+  // { sessions, avg_quality, avg_cost_usd, ... } — it has never had `costs`/`quality`
+  // properties, so state.costs/state.quality were always undefined past the first load
+  // and these charts rendered permanently empty. The real per-session series lives at
+  // state.sessions[].cost_usd / state.sessions[].quality_score.
+  const sessions = state.sessions || [];
+  drawCanvasChart(
+    'chart-costs',
+    sessions.map((s) => s.cost_usd),
+    varColor('--accent'),
+  );
+  drawCanvasChart(
+    'chart-quality',
+    sessions.map((s) => s.quality_score),
+    varColor('--green'),
+    100,
+  );
 }
 
-function varColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function varColor(name) {
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim();
+}
 
 function drawCanvasChart(id, data, color, maxVal = null) {
   const canvas = document.getElementById(id);
@@ -280,27 +366,30 @@ function drawCanvasChart(id, data, color, maxVal = null) {
 
   const w = canvas.offsetWidth;
   const h = canvas.offsetHeight;
-  ctx.clearRect(0,0,w,h);
-  
+  ctx.clearRect(0, 0, w, h);
+
   if (data.length < 2) return;
-  
+
   const max = maxVal || Math.max(...data) * 1.2 || 1;
   const step = w / (data.length - 1);
-  
+
   ctx.beginPath();
   ctx.strokeStyle = color;
   ctx.lineWidth = 2;
   ctx.lineJoin = 'round';
-  
+
   data.forEach((val, i) => {
     const x = i * step;
     const y = h - (val / max) * h;
-    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
   });
   ctx.stroke();
 
   // Area fill
-  ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath();
+  ctx.lineTo(w, h);
+  ctx.lineTo(0, h);
+  ctx.closePath();
   ctx.fillStyle = color.replace(')', ', 0.1)').replace('rgb', 'rgba');
   ctx.fill();
 }
@@ -309,7 +398,7 @@ function drawCanvasChart(id, data, color, maxVal = null) {
 function renderTemporalTimeline() {
   const slider = document.getElementById('temporal-slider');
   const count = document.getElementById('timeline-count');
-  
+
   if (temporalHistory.length === 0) {
     slider.max = 0;
     count.textContent = '0 Snapshots';
@@ -318,11 +407,11 @@ function renderTemporalTimeline() {
 
   slider.max = temporalHistory.length - 1;
   count.textContent = `${temporalHistory.length} Snapshots`;
-  
+
   // Default to latest if not touching
   if (slider.value == 0 && temporalHistory.length > 0) {
-      onSliderChange(temporalHistory.length - 1);
-      slider.value = temporalHistory.length - 1;
+    onSliderChange(temporalHistory.length - 1);
+    slider.value = temporalHistory.length - 1;
   }
 }
 
@@ -332,16 +421,19 @@ async function onSliderChange(index) {
   if (!snap) return;
 
   selectedSnapshot = snap;
-  document.getElementById('slider-current').textContent = `Point: ${snap.id.slice(0, 8)} (${new Date(snap.timestamp).toLocaleTimeString()})`;
+  document.getElementById('slider-current').textContent =
+    `Point: ${snap.id.slice(0, 8)} (${new Date(snap.timestamp).toLocaleTimeString()})`;
   document.getElementById('inject-btn').disabled = false;
 
   // Fetch sample audit file for this snapshot
   try {
     const res = await fetch(`/api/temporal/snapshot/${snap.id}/AUDIT.jsonl`);
     const content = await res.text();
-    document.getElementById('snapshot-viewer').textContent = content || 'No audit log available for this point.';
-  } catch(e) {
-    document.getElementById('snapshot-viewer').textContent = 'Failed to load snapshot details.';
+    document.getElementById('snapshot-viewer').textContent =
+      content || 'No audit log available for this point.';
+  } catch (e) {
+    document.getElementById('snapshot-viewer').textContent =
+      'Failed to load snapshot details.';
   }
 }
 
@@ -349,8 +441,8 @@ async function injectHindsight() {
   if (!selectedSnapshot) return;
   const instruction = document.getElementById('steering-input').value;
   if (!instruction) {
-      alert('Please provide a steering instruction for the hindsight injection.');
-      return;
+    alert('Please provide a steering instruction for the hindsight injection.');
+    return;
   }
 
   const btn = document.getElementById('inject-btn');
@@ -363,50 +455,59 @@ async function injectHindsight() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         auditId: selectedSnapshot.id,
-        fixDescription: instruction
-      })
+        fixDescription: instruction,
+      }),
     });
     const result = await res.json();
     if (result.success) {
-        alert('Hindsight Injection Successful. Agent state rolled back and awaiting re-optimization.');
-        showPage('activity');
+      alert(
+        'Hindsight Injection Successful. Agent state rolled back and awaiting re-optimization.',
+      );
+      showPage('activity');
     } else {
-        alert('Injection failed: ' + result.error);
+      alert('Injection failed: ' + result.error);
     }
-  } catch(e) {
-      alert('Failed to connect to temporal engine.');
+  } catch (e) {
+    alert('Failed to connect to temporal engine.');
   } finally {
-      btn.disabled = false;
-      btn.textContent = 'Rewind & Inject Fix';
+    btn.disabled = false;
+    btn.textContent = 'Rewind & Inject Fix';
   }
 }
 
 // ── RevOps Logic ─────────────────────────────────────────────────────────
 function updateRevOpsUI(data) {
-    const { roi, velocity, debt } = data;
-    
-    document.getElementById('rev-roi').textContent = `${roi.roi_percentage}%`;
-    document.getElementById('rev-net').textContent = `$${roi.net_value}`;
-    document.getElementById('rev-velocity').innerHTML = `${velocity.avg_seconds_per_task} <span class="stat-unit">sec/task</span>`;
-    document.getElementById('rev-eta').textContent = `ETA: ${velocity.eta}`;
-    document.getElementById('rev-health').textContent = debt.security_health_score;
-    
-    const healthStatus = document.getElementById('rev-health-status');
-    healthStatus.textContent = `STATUS: ${debt.governance_status.toUpperCase()}`;
-    healthStatus.style.background = debt.security_health_score > 80 ? 'rgba(63, 185, 80, 0.15)' : 'rgba(248, 81, 73, 0.15)';
-    healthStatus.style.color = debt.security_health_score > 80 ? 'var(--green)' : 'var(--red)';
+  const { roi, velocity, debt } = data;
 
-    document.getElementById('roi-hours').textContent = `${roi.hours_saved}h`;
-    document.getElementById('roi-gross').textContent = `$${roi.gross_value}`;
-    document.getElementById('roi-burn').textContent = `$${roi.token_cost}`;
-    document.getElementById('roi-total-pct').textContent = `${roi.roi_percentage}%`;
+  document.getElementById('rev-roi').textContent = `${roi.roi_percentage}%`;
+  document.getElementById('rev-net').textContent = `$${roi.net_value}`;
+  document.getElementById('rev-velocity').innerHTML =
+    `${velocity.avg_seconds_per_task} <span class="stat-unit">sec/task</span>`;
+  document.getElementById('rev-eta').textContent = `ETA: ${velocity.eta}`;
+  document.getElementById('rev-health').textContent =
+    debt.security_health_score;
 
-    document.getElementById('debt-critical').textContent = debt.critical_findings;
-    document.getElementById('debt-tier3').textContent = debt.tier3_approvals;
-    const riskBadge = document.getElementById('debt-risk');
-    riskBadge.textContent = debt.debt_level.toUpperCase();
-    riskBadge.className = `badge ${debt.debt_level === 'Minimal' ? 'badge-live' : ''}`;
-    if (debt.debt_level !== 'Minimal') riskBadge.style.color = 'var(--yellow)';
+  const healthStatus = document.getElementById('rev-health-status');
+  healthStatus.textContent = `STATUS: ${debt.governance_status.toUpperCase()}`;
+  healthStatus.style.background =
+    debt.security_health_score > 80
+      ? 'rgba(63, 185, 80, 0.15)'
+      : 'rgba(248, 81, 73, 0.15)';
+  healthStatus.style.color =
+    debt.security_health_score > 80 ? 'var(--green)' : 'var(--red)';
+
+  document.getElementById('roi-hours').textContent = `${roi.hours_saved}h`;
+  document.getElementById('roi-gross').textContent = `$${roi.gross_value}`;
+  document.getElementById('roi-burn').textContent = `$${roi.token_cost}`;
+  document.getElementById('roi-total-pct').textContent =
+    `${roi.roi_percentage}%`;
+
+  document.getElementById('debt-critical').textContent = debt.critical_findings;
+  document.getElementById('debt-tier3').textContent = debt.tier3_approvals;
+  const riskBadge = document.getElementById('debt-risk');
+  riskBadge.textContent = debt.debt_level.toUpperCase();
+  riskBadge.className = `badge ${debt.debt_level === 'Minimal' ? 'badge-live' : ''}`;
+  if (debt.debt_level !== 'Minimal') riskBadge.style.color = 'var(--yellow)';
 }
 
 window.onresize = drawCharts;
@@ -421,9 +522,13 @@ document.querySelectorAll('nav .tab[data-page]').forEach((btn) => {
   btn.addEventListener('click', () => showPage(btn.dataset.page));
 });
 const __slider = document.getElementById('temporal-slider');
-if (__slider) __slider.addEventListener('input', (e) => onSliderChange(e.target.value));
+if (__slider)
+  __slider.addEventListener('input', (e) => onSliderChange(e.target.value));
 document.querySelectorAll('[data-action]').forEach((el) => {
-  const fns = { 'inject-hindsight': () => injectHindsight(), 'close-confirm': () => closeConfirm() };
+  const fns = {
+    'inject-hindsight': () => injectHindsight(),
+    'close-confirm': () => closeConfirm(),
+  };
   const fn = fns[el.dataset.action];
   if (fn) el.addEventListener('click', fn);
 });

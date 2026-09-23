@@ -169,7 +169,7 @@ if (require.main === module) {
           context: 'CLI Manual Test',
           category: 'Architecture'
         });
-        console.log('  │  🛡️  SOVEREIGN INTELLIGENCE v8.2.0 — PQAS & Proactive Homing Enabled');
+        console.log('  │  🛡️  SOVEREIGN INTELLIGENCE v8.2.0 — PQAS (simulated) & Proactive Homing');
         const status = await manager.getStatus();
         console.log('📊 Learning System Status:', status);
       } else {

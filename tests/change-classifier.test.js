@@ -37,10 +37,8 @@ const tests = [];
 function test(name, fn) { tests.push({ name, fn }); }
 
 // Hermetic env: strip GIT_* context vars a parent `git commit` exports into hook
-// subprocesses, which would otherwise redirect every `git` call below at the real
-// MindForge repo instead of the throwaway scratch repo in `dir`. Without this, running
-// this suite from inside the pre-commit hook commits fixture history ('base',
-// 'feat(auth): login', 'nine sensitive files', ...) onto whatever branch is checked out.
+// subprocesses, which would redirect these "isolated" scratch-repo git calls at the
+// real MindForge repo's .git instead of `dir`. Mirrors tests/worktree-engine.test.js.
 function hermeticEnv() {
   const env = { ...process.env };
   for (const k of ['GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE', 'GIT_PREFIX', 'GIT_COMMON_DIR', 'GIT_OBJECT_DIRECTORY']) delete env[k];

@@ -7,7 +7,7 @@ Commit planning artifacts using MindForge-tools CLI, which automatically checks 
 Always use `mindforge-tools.cjs commit` for `.planning/` files — it handles `commit_docs` and gitignore checks automatically:
 
 ```bash
-node ".agent/mindforge/bin/mindforge-tools.cjs" commit "docs({scope}): {description}" --files .planning/STATE.md .planning/ROADMAP.md
+node ".agent/bin/mindforge-tools.cjs" commit "docs({scope}): {description}" --files .planning/STATE.md .planning/ROADMAP.md
 ```
 
 The CLI will return `skipped` (with reason) if `commit_docs` is `false` or `.planning/` is gitignored. No manual conditional checks needed.
@@ -17,7 +17,7 @@ The CLI will return `skipped` (with reason) if `commit_docs` is `false` or `.pla
 To fold `.planning/` file changes into the previous commit:
 
 ```bash
-node ".agent/mindforge/bin/mindforge-tools.cjs" commit "" --files .planning/codebase/*.md --amend
+node ".agent/bin/mindforge-tools.cjs" commit "" --files .planning/codebase/*.md --amend
 ```
 
 ## Commit Message Patterns

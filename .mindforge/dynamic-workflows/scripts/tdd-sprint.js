@@ -65,6 +65,9 @@ const spec = await agent(
   `Write a precise behavioral specification for: "${requirement}"\n\nUse Given-When-Then format. Be explicit about inputs, outputs, and edge cases. List what is OUT of scope to keep this focused.`,
   { schema: SPEC_SCHEMA, label: 'spec' }
 );
+if (!spec) {
+  return { requirement, error: 'spec-agent-null' };
+}
 log(`Spec: ${spec.behaviorName} | ${spec.acceptanceCriteria.length} acceptance criteria, ${spec.edgeCases.length} edge cases`);
 
 phase('Red');
@@ -73,6 +76,9 @@ const test = await agent(
   `Write a FAILING test for this behavior specification:\n${specText}\n\nWrite the minimal test that will fail because the implementation doesn't exist yet. Explain WHY it fails. Use the project's test framework (detect from file extensions or state Jest/Vitest/Node assert).`,
   { schema: TEST_SCHEMA, label: 'red' }
 );
+if (!test) {
+  return { requirement, spec, error: 'test-agent-null' };
+}
 log(`[RED] Test: "${test.testDescription}" — fails because: ${test.whyItFails}`);
 
 phase('Green');
@@ -81,6 +87,9 @@ const impl = await agent(
   `Write the MINIMUM implementation to make this test pass:\n${testContext}\n\nWrite ONLY what is needed to make the test go green. No extra features, no future-proofing. Explain why this is the minimal solution.`,
   { schema: IMPL_SCHEMA, label: 'green' }
 );
+if (!impl) {
+  return { requirement, spec, test, error: 'impl-agent-null' };
+}
 log(`[GREEN] Minimal implementation: ${impl.minimalityRationale}`);
 
 phase('Refactor');
@@ -89,6 +98,9 @@ const refactored = await agent(
   `Refactor this passing implementation for clarity and maintainability, keeping all tests green:\n${greenContext}\n\nList specific improvements made (naming, structure, extraction, simplification). The tests MUST still pass after refactoring.`,
   { schema: REFACTOR_SCHEMA, label: 'refactor' }
 );
+if (!refactored) {
+  return { requirement, spec, test, implementation: impl, error: 'refactored-agent-null' };
+}
 log(`[REFACTOR] ${refactored.improvements.length} improvements, tests still pass: ${refactored.testsStillPass}`);
 
 return {

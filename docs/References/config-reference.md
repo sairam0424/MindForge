@@ -24,7 +24,7 @@ and be followed by `=`. Prose bullets that merely mention `[KEY]` are not parsed
 
 | Key | Example |
 | :--- | :--- |
-| `[VERSION]` | `11.9.2` — must match `^\d+\.\d+\.\d+$` |
+| `[VERSION]` | `11.9.8` — must match `^\d+\.\d+\.\d+$` |
 | `[REACTIVE_MODE]` | `true` |
 | `[PLANNER]` | `claude-opus-4-7` |
 | `[EXECUTOR]` | `claude-sonnet-4-6` |
@@ -56,6 +56,9 @@ for older configs.
 | `[VERIFIER]` | `VERIFIER_MODEL` | Testing and UAT verification. | `claude-sonnet-4-6` |
 | `[SECURITY]` | `SECURITY_MODEL` | Sensitive security scanning. | `claude-opus-4-7` |
 | `[DEBUG]` | — | Debugging and root-cause analysis. | `claude-opus-4-7` |
+| `[RESEARCH]` | `RESEARCH_MODEL` | Domain research during planning. | `gemini-2.5-pro` |
+| `[QA]` | `QA_MODEL` | Quality-assurance / test-writing tasks. | `claude-sonnet-4-6` |
+| `[QUICK]` | `QUICK_MODEL` | Tier-1 budget-biased tasks. | — |
 
 **Values are free-form strings** — the schema does not constrain them to a list, so a new model
 id works without a framework upgrade. The ids shipped in `MINDFORGE.md` today are
@@ -91,13 +94,15 @@ than editing your registry to satisfy it.
 
 These settings control the `/mindforge:auto` engine's behavior and performance.
 
+> [!WARNING]
+> `AUTONOMOUS_MODE_ENABLED`, `STUCK_DETECTION_TIMEOUT_MS`, `STEERING_CHECK_INTERVAL_MS`, and
+> `NODE_REPAIR_ENABLED` do not appear anywhere in `.mindforge/MINDFORGE-SCHEMA.json`, and nothing
+> in `bin/autonomous/` reads them — they are not currently configurable keys. Only the two rows
+> below are real.
+
 | Key | Description | Default |
 | :--- | :--- | :--- |
-| `AUTONOMOUS_MODE_ENABLED` | Global toggle for autonomous task execution. | `true` |
 | `MAX_TASKS_PER_PHASE` | Limit on task expansion during planning. | `15` |
-| `STUCK_DETECTION_TIMEOUT_MS` | Time before an agent is considered "looping" or stuck. | `300000` |
-| `STEERING_CHECK_INTERVAL_MS` | How often the engine checks for user guidance. | `5000` |
-| `NODE_REPAIR_ENABLED` | If true, the engine attempts to self-heal on failures. | `true` |
 | `COMPACTION_THRESHOLD_PCT` | The context usage percentage at which to trigger compaction. | `70` |
 
 ---
@@ -111,8 +116,7 @@ Define the rules that code must follow to pass the `VERIFY` phase.
 | `MIN_TEST_COVERAGE_PCT` | Required test coverage for any new module. | `80` |
 | `MAX_FUNCTION_LINES` | Maximum lines allowed for a single function. | `40` |
 | `MAX_CYCLOMATIC_COMPLEXITY` | Maximum complexity score (McCune) allowed. | `10` |
-| `BLOCK_ON_MEDIUM_SECURITY` | Fail the gate if any medium security findings exist. | `true` |
-| `ANTIPATTERN_SENSITIVITY` | Frequency at which suspicious patterns are flagged. | `0.7` |
+| `BLOCK_ON_MEDIUM_SECURITY_FINDINGS` | Fail the gate if any medium security findings exist. | `true` |
 
 ---
 
@@ -136,37 +140,18 @@ Control reasoning snapshot retention for the Temporal Steering system.
 | Key | Description | Default |
 | :--- | :--- | :--- |
 | `temporal.max_snapshots` | Maximum number of reasoning snapshots retained per session. | `50` |
-| `temporal.max_age_days` | Snapshots older than this value (in days) are auto-pruned. | `30` |
+| `temporal.max_age_days` | Snapshots older than this value (in days) are auto-pruned. | `7` |
 
 ---
 
-## 6. Rate Limiting (v11.0.0+)
+## 6. Rate Limiting, Session Configuration, Wave Execution
 
-Configure request rate limits for the dashboard and API endpoints.
-
-| Key | Description | Default |
-| :--- | :--- | :--- |
-| `rate_limiting.dashboard_rpm` | Maximum requests per minute to dashboard endpoints. | `120` |
-
----
-
-## 7. Session Configuration (v11.0.0+)
-
-Control session token behaviour for dashboard authentication.
-
-| Key | Description | Default |
-| :--- | :--- | :--- |
-| `session.token_expiry_hours` | Hours before a dashboard bearer token expires. | `24` |
-
----
-
-## 8. Wave Execution (v11.0.0+)
-
-Tune parallel wave execution behaviour.
-
-| Key | Description | Default |
-| :--- | :--- | :--- |
-| `wave_execution.max_concurrency` | Maximum number of tasks executed in parallel within a wave. | `6` |
+> [!WARNING]
+> `rate_limiting.dashboard_rpm`, `session.token_expiry_hours`, and
+> `wave_execution.max_concurrency` are not present in the current `.mindforge/config.json` and
+> nothing in the live `bin/` runtime reads them. The first two only ever existed as one-time
+> values written by a historical migration (`bin/migrations/10.7.0-to-11.0.0.js`); the third
+> doesn't appear anywhere in the codebase. Do not rely on setting any of these three today.
 
 ---
 
@@ -181,4 +166,4 @@ To ensure enterprise safety, several rules **cannot** be disabled via `MINDFORGE
 5. **Critical Security Blocks:** High/Critical findings *will* block the `SHIP` command.
 
 > [!WARNING]
-> Attempting to disable these rules in your configuration will result in a silent enforcement of the defaults. See [ADR-013](../adr/ADR-013-immutable-governance.md) for architectural details.
+> Attempting to disable these rules in your configuration will result in a silent enforcement of the defaults.

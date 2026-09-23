@@ -29,6 +29,7 @@ export default [
       // Donor/upstream repos (gitignored, never shipped) — not MindForge's lint posture.
       'ECC/',
       'awesome-claude-code-subagents/',
+      'hermes-agent/',
       '.serena/',
       // Dynamic-workflow scripts are a DSL body for the Claude Code Workflow
       // tool's own

@@ -1,4 +1,4 @@
-# MindForge v11.9.0 — Full Tutorial (Install → Advanced Usage)
+# MindForge v11.9.8 — Full Tutorial (Install → Advanced Usage)
 
 This tutorial walks a new user from installation to advanced usage. It is written for engineers who want to adopt MindForge in a real codebase.
 
@@ -46,11 +46,10 @@ Open your agentic runtime (Claude Code, Antigravity, etc.) in your repo and run:
 /mindforge:health
 ```
 
-If anything is wrong, run the repair command:
-
-```bash
-/mindforge:health --repair
-```
+If anything is wrong: `--repair` is documented in the command spec but not wired into the CLI
+backing path — it's silently ignored, byte-identical output to plain `health`. No automated
+repair exists today; address what the health report flags manually, or re-run the install with
+`--force`.
 
 ---
 
@@ -96,10 +95,9 @@ MindForge uses a 4-pillar iterative cycle:
 
 ## 6. High-Performance Personas
 
-MindForge v11.9.0 ships 211 specialized personas. Each is a "digital twin" of a senior role.
-
-- To list all personas: `/mindforge:personas --list`
-- To switch persona: `/mindforge:personas --set executor`
+MindForge v11.9.8 ships 216 specialized personas. Each is a "digital twin" of a senior role,
+loaded as an in-session role overlay via `/mindforge:agent <name>` — there is no
+`/mindforge:personas --list`/`--set` command; those don't exist.
 
 ---
 
@@ -169,7 +167,7 @@ If you hit issues, consult these specialized guides:
 
 ## 13. Using Dynamic Workflows
 
-MindForge v11.9.0 ships 35 pre-built multi-agent workflows. Browse them with `/mindforge:wf-catalog`.
+MindForge v11.9.8 ships 35 pre-built multi-agent workflows. Browse them with `/mindforge:wf-catalog`.
 
 ### Quick start — run a workflow
 
@@ -337,4 +335,4 @@ The 4-pillar lifecycle (`plan-phase` → `execute-phase` → `verify-phase` → 
 
 1. Configure your team preferences in `docs/Templates/Profile/user-profile.md`.
 2. Start your first Phase 1 planning.
-3. Join our community: `/mindforge:join-discord`.
+3. Questions or issues: https://github.com/sairam0424/MindForge/issues
