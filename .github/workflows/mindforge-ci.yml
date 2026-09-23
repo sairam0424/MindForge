@@ -103,6 +103,24 @@ jobs:
           }
           echo "::endgroup::"
 
+          # sdk/ and mcp-server/ are independently published packages (mindforge-sdk,
+          # mindforge-mcp-server) with their own package-lock.json and dependency tree; the
+          # gate above only ever covered the root package. npm audit reads the lockfile
+          # directly -- no `npm ci` needed first.
+          echo "::group::Dependency Audit (sdk)"
+          (cd sdk && npm audit --omit=dev --audit-level=high) 2>&1 || {
+            echo "::error::High/critical vulnerabilities found in sdk/ production dependencies. Run: npm --prefix sdk audit fix"
+            exit 1
+          }
+          echo "::endgroup::"
+
+          echo "::group::Dependency Audit (mcp-server)"
+          (cd mcp-server && npm audit --omit=dev --audit-level=high) 2>&1 || {
+            echo "::error::High/critical vulnerabilities found in mcp-server/ production dependencies. Run: npm --prefix mcp-server audit fix"
+            exit 1
+          }
+          echo "::endgroup::"
+
   mindforge-quality:
     name: Code Quality Gates
     runs-on: ubuntu-latest

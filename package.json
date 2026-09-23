@@ -19,6 +19,7 @@
     ".mindforge/config.json",
     ".mindforge/imported-agents.jsonl",
     ".mindforge/engine/",
+    "!.mindforge/engine/instincts/instinct-store.jsonl",
     ".mindforge/manifests/",
     ".mindforge/schemas/",
     ".mindforge/personas/",
