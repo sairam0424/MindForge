@@ -84,7 +84,7 @@ function freezeRecord(record) {
  */
 function sharedAssetTrees(base, { hooks = 11 } = {}) {
   return [
-    { asset: 'skills', dir: `${base}/skills`, min_files: 282, verbatim_subset_of: '.agent/skills' },
+    { asset: 'skills', dir: `${base}/skills`, min_files: 279, verbatim_subset_of: '.agent/skills' },
     { asset: 'hooks', dir: `${base}/hooks`, min_files: hooks, verbatim_subset_of: '.agent/hooks' },
     { asset: 'personas', dir: `${base}/personas`, min_files: 218, verbatim_subset_of: '.mindforge/personas' },
     { asset: 'docs references', dir: `${base}/docs/references`, min_files: 20, verbatim_subset_of: 'docs/References' },

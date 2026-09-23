@@ -1,6 +1,12 @@
-# MindForge — Persona Registry (v11.3.1)
+# MindForge — Persona Registry (v11.9.6)
 
-This registry catalogs the specialized agent essences available for direct interaction and autonomous reasoning.
+> **Curated subset.** The real persona library has 216 files under `.mindforge/personas/`. Each is
+> loaded via `/mindforge:agent <name>` as an in-session role overlay (not an isolated subagent —
+> see [AGENTS.md](./AGENTS.md) for that distinction). The `mf-*` family below is a smaller, separate
+> legacy sub-family.
+
+This registry catalogs a curated subset of the personas available for direct interaction and
+autonomous reasoning.
 
 ## 🧠 Strategic Reason Enclaves
 

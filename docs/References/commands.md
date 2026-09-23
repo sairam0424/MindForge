@@ -1,6 +1,10 @@
-# MindForge v2.0.0 — Complete Commands Reference
+# MindForge — Common Commands Quick Reference
 
-## All 50+ commands
+This page is a curated subset for quick lookup, not an exhaustive list. MindForge ships
+221 slash commands total — see [docs/commands-reference.md](../commands-reference.md) for
+the complete, verified list.
+
+## Commonly used commands
 
 ### Lifecycle commands (core workflow)
 
@@ -32,7 +36,7 @@
 | `/mindforge:note` | `note <text> [list|promote N]` | Zero-friction idea capture and todo promotion | v2.0.0 |
 | `/mindforge:quick` | `quick` | Run a small, single-task plan without a full phase | |
 | `/mindforge:status` | `status` | Show current phase, plan status, and next action | |
-| `/mindforge:health` | `health [--repair]` | Validate installation and repair drift | |
+| `/mindforge:health` | `health` | Validate installation. `--repair` is documented but not wired into the CLI backing path — it's silently ignored, byte-identical to plain `health`. | |
 | `/mindforge:review` | `review [N]` | Run a structured review pass for a phase | |
 | `/mindforge:debug` | `debug [plan-id]` | Debug a failed plan with root-cause workflow | |
 | `/mindforge:add-backlog` | `add-backlog <desc>` | Park ideas in 999.x "parking lot" | v2.0.0 |
@@ -66,7 +70,7 @@
 | `/mindforge:metrics` | `metrics [--phase N]` | Compute quality and throughput metrics | |
 | `/mindforge:profile-team` | `profile-team` | Generate team skill and ownership profile | |
 | `/mindforge:benchmark` | `benchmark [--skill X]` | Measure skill effectiveness | |
-| `/mindforge:tokens` | `tokens [--profile] [--summary]` | Token usage profiling and optimisation | |
+| `/mindforge:tokens` | `tokens [--phase N] [--session ID] [--window short\|medium\|long] [--optimise]` | Token usage profiling and optimisation (`--profile`/`--summary` don't exist) | |
 
 ### Integrations & distribution
 
@@ -95,13 +99,14 @@
 |---|---|---|---|
 | `/mindforge:help` | `help` | Show all available commands and current project status | |
 
-## Command interface contract (v1.0.0 stable)
+## Command interface contract
 
-As of v1.0.0, the following are part of the stable interface:
-- All 36 command names (new commands require MINOR bump)
-- All flags documented here (new flags require MINOR, removed flags require MAJOR)
+The following are part of the stable interface:
+- Existing command names are not renamed without a MAJOR bump; new commands may land in any release
+- Documented flags are not removed without a MAJOR bump
 - HANDOFF.json and AUDIT.jsonl schemas (additions: MINOR, removals: MAJOR)
-- All 10 core skill `name:` values and trigger lists
 - SDK exported types and functions
 
-See ADR-020 for the complete stability contract.
+Note: `.planning/decisions/ADR-020.md` (previously cited here as the stability contract source)
+is a content-free placeholder stub as of this writing — treat this page, not that ADR, as the
+source of truth for the interface contract until a real ADR replaces it.

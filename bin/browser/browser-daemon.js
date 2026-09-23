@@ -5,37 +5,33 @@
  */
 'use strict';
 
-const http      = require('http');
-const crypto    = require('crypto');
+const http = require('http');
+const crypto = require('crypto');
 const playwright = require('playwright-core');
-const fs        = require('fs');
-const path      = require('path');
+const fs = require('fs');
+const path = require('path');
+const { requiresAuth, isAuthValid } = require('./daemon-auth');
 
-const PORT      = process.env.BROWSER_PORT || 7338;
-const HEADLESS  = process.env.BROWSER_HEADLESS !== 'false';
-const TIMEOUT   = (parseInt(process.env.BROWSER_IDLE_TIMEOUT_MINUTES) || 30) * 60 * 1000;
+const PORT = process.env.BROWSER_PORT || 7338;
+const HEADLESS = process.env.BROWSER_HEADLESS !== 'false';
+const TIMEOUT =
+  (parseInt(process.env.BROWSER_IDLE_TIMEOUT_MINUTES) || 30) * 60 * 1000;
 
 // ── Bearer token authentication ──────────────────────────────────────────────
 const DAEMON_TOKEN = crypto.randomBytes(32).toString('hex');
-const DAEMON_TOKEN_FILE = path.join(process.cwd(), '.mindforge', '.browser-daemon-token');
+const DAEMON_TOKEN_FILE = path.join(
+  process.cwd(),
+  '.mindforge',
+  '.browser-daemon-token',
+);
 
 // Write token to file with restrictive permissions (owner-only read/write)
 fs.mkdirSync(path.dirname(DAEMON_TOKEN_FILE), { recursive: true });
 fs.writeFileSync(DAEMON_TOKEN_FILE, DAEMON_TOKEN, { mode: 0o600 });
 
-/**
- * Validate bearer token from Authorization header.
- * Returns true if valid, false otherwise.
- */
-function isAuthValid(req) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) return false;
-  const provided = authHeader.slice(7);
-  if (provided.length !== DAEMON_TOKEN.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(DAEMON_TOKEN));
-}
-
-let browser, lastActionAt = Date.now(), isLaunching = false;
+let browser,
+  lastActionAt = Date.now(),
+  isLaunching = false;
 const sessions = new Map(); // name -> { context, page }
 
 async function init() {
@@ -44,7 +40,7 @@ async function init() {
   try {
     browser = await playwright.chromium.launch({
       headless: HEADLESS,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--no-first-run']
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--no-first-run'],
     });
     setInterval(checkIdle, 60000);
   } finally {
@@ -55,14 +51,14 @@ async function init() {
 function checkIdle() {
   if (Date.now() - lastActionAt > TIMEOUT) {
     console.log('[daemon] Idle timeout reached. Shutting down.');
-    process.exit(0);
+    shutdown();
   }
 }
 
 async function getOrCreateSession(name = 'default') {
   if (sessions.has(name)) return sessions.get(name);
   const context = await browser.newContext();
-  const page    = await context.newPage();
+  const page = await context.newPage();
   const s = { context, page };
   sessions.set(name, s);
   return s;
@@ -77,33 +73,64 @@ const server = http.createServer(async (req, res) => {
 
   // Only allow localhost
   const remote = req.socket.remoteAddress;
-  if (remote !== '127.0.0.1' && remote !== '::1' && remote !== '::ffff:127.0.0.1') {
+  if (
+    remote !== '127.0.0.1' &&
+    remote !== '::1' &&
+    remote !== '::ffff:127.0.0.1'
+  ) {
     return send({ error: 'Forbidden: Localhost only' }, 403);
   }
 
   let body = '';
-  req.on('data', chunk => body += chunk);
+  req.on('data', (chunk) => (body += chunk));
   req.on('end', async () => {
     try {
-      const { url, session: sessionName, selector, text, script, type, expected_text, name } = body ? JSON.parse(body) : {};
+      if (
+        requiresAuth(req.url) &&
+        !isAuthValid(req.headers.authorization, DAEMON_TOKEN)
+      ) {
+        return send(
+          {
+            error:
+              'Authentication required. Use the token written to the daemon token file at startup.',
+          },
+          401,
+        );
+      }
+      const {
+        url,
+        session: sessionName,
+        selector,
+        text,
+        script,
+        type,
+        expected_text,
+        name,
+      } = body ? JSON.parse(body) : {};
       const { page, context } = await getOrCreateSession(sessionName);
 
       if (req.url === '/status' && req.method === 'GET') {
-        return send({ alive: true, sessions: Array.from(sessions.keys()), uptime: process.uptime() });
+        return send({
+          alive: true,
+          sessions: Array.from(sessions.keys()),
+          uptime: process.uptime(),
+        });
       }
 
       if (req.url === '/navigate' && req.method === 'POST') {
         const start = Date.now();
         const r = await page.goto(url, { waitUntil: 'load', timeout: 30000 });
-        return send({ 
-          success: true, 
-          status_code: r ? r.status() : 200, 
-          load_time_ms: Date.now() - start 
+        return send({
+          success: true,
+          status_code: r ? r.status() : 200,
+          load_time_ms: Date.now() - start,
         });
       }
 
       if (req.url === '/click' && req.method === 'POST') {
-        const target = selector ? page.locator(selector) : page.getByText(text, { exact: false });
+        const target = selector
+          ? page.locator(selector)
+          : page.getByText(text, { exact: false });
         await target.first().click({ timeout: 5000 });
         return send({ success: true, element_found: true });
       }
@@ -119,9 +146,6 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (req.url === '/evaluate' && req.method === 'POST') {
-        if (!isAuthValid(req)) {
-          return send({ error: 'Authentication required. Use the token printed at daemon startup.' }, 401);
-        }
         const result = await page.evaluate(script);
         return send({ success: true, result });
       }
@@ -131,11 +155,20 @@ const server = http.createServer(async (req, res) => {
           const loc = page.locator(selector).first();
           const visible = await loc.isVisible();
           const actual = visible ? await loc.innerText() : '';
-          const passed = visible && (!expected_text || actual.includes(expected_text));
+          const passed =
+            visible && (!expected_text || actual.includes(expected_text));
           return send({ passed, actual_text: actual });
         }
-        if (type === 'url') return send({ passed: page.url().includes(expected_text), actual_url: page.url() });
-        if (type === 'title') return send({ passed: (await page.title()).includes(expected_text), actual_title: await page.title() });
+        if (type === 'url')
+          return send({
+            passed: page.url().includes(expected_text),
+            actual_url: page.url(),
+          });
+        if (type === 'title')
+          return send({
+            passed: (await page.title()).includes(expected_text),
+            actual_title: await page.title(),
+          });
         if (type === 'no_console_errors') return send({ passed: true }); // simplified
       }
 
@@ -146,16 +179,19 @@ const server = http.createServer(async (req, res) => {
   });
 });
 
-init().then(() => {
-  server.listen(PORT, '127.0.0.1', () => {
-    console.log(`[BrowserDaemon] Listening on port ${PORT}`);
-    console.log(`[BrowserDaemon] Auth token: ${DAEMON_TOKEN}`);
-    console.log(`[BrowserDaemon] Token file: ${DAEMON_TOKEN_FILE}`);
+init()
+  .then(() => {
+    server.listen(PORT, '127.0.0.1', () => {
+      console.log(`[BrowserDaemon] Listening on port ${PORT}`);
+      console.log(
+        `[BrowserDaemon] Auth token written to: ${DAEMON_TOKEN_FILE}`,
+      );
+    });
+  })
+  .catch((err) => {
+    console.error('[daemon] Initialization failed:', err);
+    process.exit(1);
   });
-}).catch(err => {
-  console.error('[daemon] Initialization failed:', err);
-  process.exit(1);
-});
 
 async function shutdown() {
   console.log('[daemon] Shutting down gracefully...');

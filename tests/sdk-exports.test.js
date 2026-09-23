@@ -49,15 +49,23 @@ test('no doc instructs installing or importing a package name that does not exis
   // acts on a changelog line, so correcting it would rewrite history to no one's benefit. The
   // distinction that matters is not old-versus-new, it is whether a reader ACTS on the text:
   // RELEASENOTES migration notes say "import from X", so those were corrected.
-  const RECORDS_ONLY = /^changelogs\//;
+  //
+  // tests/ was added when the *.js pathspec below started matching this very file: WRONG's own
+  // string literal, and doc-count-claims.test.js's comments about this same historical defect, both
+  // legitimately contain the text "@mindforge/sdk" as data being tested/described, not an instruction
+  // a reader would act on. Same non-instructional rationale as changelogs/, different reason.
+  //
+  // Root CHANGELOG.md is the same "records" case as changelogs/: it narrates a past bug by naming
+  // the exact wrong string a reader hit, not an instruction to use it -- same rationale, same exemption.
+  const RECORDS_ONLY = /^changelogs\/|^tests\/|^CHANGELOG\.md$/;
 
-  const tracked = execFileSync('git', ['ls-files', '-z', '*.md', '*.ts'], { cwd: REPO, maxBuffer: 1 << 28 })
+  const tracked = execFileSync('git', ['ls-files', '-z', '*.md', '*.ts', '*.js', '*.mjs', '*.cjs'], { cwd: REPO, maxBuffer: 1 << 28 })
     .toString('utf8').split('\0').filter(Boolean);
 
   // NON-VACUITY FLOOR, first. If git ls-files fails or the pathspec stops matching, the loop below
   // scans nothing and the deepStrictEqual passes green having read no files at all.
   assert.ok(tracked.length >= 200,
-    `only ${tracked.length} tracked .md/.ts files enumerated (measured well over 200). The SCAN is `
+    `only ${tracked.length} tracked .md/.ts/.js/.mjs/.cjs files enumerated (measured well over 200). The SCAN is `
     + 'broken, not the docs clean. Do not lower this floor to make it pass.');
 
   const instructional = [];

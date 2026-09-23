@@ -1,6 +1,6 @@
 # Security Policy
 
-> **Current version:** 11.9.5 | **npm audit:** 0 vulnerabilities across root, sdk, mcp-server
+> **Current version:** 11.9.9 | **npm audit:** 0 vulnerabilities across root, sdk, mcp-server
 
 ## Supported Versions
 
@@ -70,7 +70,7 @@ We follow responsible disclosure practices. We will credit reporters in the rele
   hash of the previous entry. Not a Merkle tree: there is no hash tree and no inclusion proof, so
   "Merkle" was the wrong word for it. What it detects, and does not, is measured below.
 - **AuditWriter with buffered writes** — Atomic append operations prevent partial writes from corrupting the log.
-- **Log rotation with archival** — AUDIT.jsonl auto-archives beyond 5000 lines with gzip compression, preventing unbounded disk growth.
+- **Unbounded audit log, by design** — A prior AUDIT.jsonl rotation/archival mechanism (5000-line threshold, gzip) was removed: truncating the file broke the hash chain by orphaning `previous_hash` pointers to archived entries. AUDIT.jsonl now grows without bound; chain-aware compaction is a tracked future improvement, not yet shipped.
 - **npm provenance** — Published packages include SLSA Build Level 2 attestation via `--provenance`, proving the package was built from the stated source commit in CI.
 
 ### Input Validation & Injection Prevention
@@ -90,7 +90,8 @@ We follow responsible disclosure practices. We will credit reporters in the rele
 ### Supply Chain
 
 - **Zero native dependencies** — The removal of `better-sqlite3` eliminates the entire native compilation toolchain (node-gyp, Python, C++ compiler) from the install process, reducing the attack surface.
-- **Dependabot enabled** — Automated weekly scans for vulnerable npm dependencies and monthly GitHub Actions version updates.
+- **Dependabot enabled** — Automated weekly scans for vulnerable npm dependencies (root, `sdk/`, and `mcp-server/` each tracked independently) and monthly GitHub Actions version updates.
+- **SBOM available** — GitHub generates a full SPDX software bill of materials from the dependency graph; export it from the repo's Insights tab, or via the API: `gh api repos/sairam0424/MindForge/dependency-graph/sbom/generate-report` returns an `sbom_url`, poll it until it 302s to a download. (The older single-call `.../dependency-graph/sbom` endpoint still works today but GitHub is retiring it on 2026-11-13 — use the generate/fetch flow above for anything meant to keep working past that date.)
 - **CODEOWNERS enforcement** — Changes to `bin/governance/`, `bin/engine/`, and the SDK require review from designated security owners.
 - **.npmignore** — Prevents accidental publication of secrets, test fixtures, planning state, and intelligence logs.
 

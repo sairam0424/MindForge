@@ -1,8 +1,8 @@
-# MindForge User Guide (v11.9.5)
+# MindForge User Guide (v11.9.9)
 
 This guide gets you from install to productive, with the minimum needed to run MindForge in a real project.
 
-> **v11.9.5 Stats:** 35 workflows · 221 slash commands · 232 engine skills · 216 personas · 0 CVEs · 258/258 IQ200 checks passing
+> **v11.9.9 Stats:** 35 workflows · 221 slash commands · 232 engine skills · 216 personas · 0 CVEs · 258/258 IQ200 checks passing
 
 ## Prerequisites
 
@@ -35,6 +35,11 @@ npx mindforge-cc --antigravity --local
 npx mindforge-cc --runtime <name>
 ```
 
+If a `CLAUDE.md` already exists in the target directory, the installer backs it up
+(`CLAUDE.md.backup-<timestamp>`) before writing its own — check that backup if you had custom
+content there. Hooks are snapshotted by Claude Code at session start, so if the harness was
+already open during install, restart it before expecting a newly-registered hook to fire.
+
 ### Post-Install: The `mindforge` CLI
 
 After installation, the `mindforge` binary is available for runtime commands:
@@ -44,7 +49,7 @@ mindforge health          # Verify project integrity
 mindforge security-scan   # Run security checks
 mindforge headless        # Run agent in non-interactive mode
 mindforge --verbose ...   # Enable verbose output for debugging
-mindforge --version       # Print installed version (e.g. 11.9.5) and exit 0
+mindforge --version       # Print installed version (e.g. 11.9.9) and exit 0
 ```
 
 Use `--verbose` (or `-v`) on any command for detailed diagnostic output. Use `--version` (or `-V`) to print the installed version and exit.
@@ -59,11 +64,10 @@ Open your agentic runtime (Claude Code, Antigravity, etc.) in your project direc
 /mindforge:health
 ```
 
-If health reports issues, run:
-
-```bash
-/mindforge:health --repair
-```
+If health reports issues: `--repair` is documented in the command spec but not wired into the
+CLI backing path — it's silently ignored, byte-identical output to plain `health`. No automated
+repair exists today; address what the health report flags manually, or re-run the install with
+`--force`.
 
 ## 3. Initialize a New Project
 

@@ -1,5 +1,10 @@
 # MindForge v1.0.0 — Penetration Test Results
 
+> **STATUS: HISTORICAL — scoped to the v1.0.0-era predecessor system, not the current v11.x
+> architecture.** These findings have not been re-run against the live `bin/` runtime. Retained
+> for historical reference only. For current security status, see the root
+> [`SECURITY.md`](../../SECURITY.md).
+
 **Date:** 2026-03-22
 **Scope:** MindForge v1.0.0 threat model (7 threat actors)
 **Method:** Manual adversarial review + targeted negative tests

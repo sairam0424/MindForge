@@ -1,4 +1,4 @@
-const { MindForgeClient, MindForgeEventStream } = require('@mindforge/sdk');
+const { MindForgeClient, MindForgeEventStream } = require('mindforge-sdk');
 
 async function main() {
   const client = new MindForgeClient();

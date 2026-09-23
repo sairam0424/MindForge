@@ -23,8 +23,17 @@ If you installed v11.9.0 and are missing `/mindforge:wf-*` slash commands, this 
 
 | Version | Date | Key changes |
 |---------|------|-------------|
+| v11.9.8 | 2026-09-21 | Literal end-to-end README audit — 14 fixed inaccuracies (2 real installer bugs, 12 doc corrections) |
+| v11.9.7 | 2026-09-20 | Install-banner version self-contradiction and false "Enabled" claim fixed; dead docs link removed |
+| v11.9.6 | 2026-09-20 | Release-readiness honesty pass — `/mindforge:learn` crash fixed, browser-daemon token leak fixed, PQAS/ZTAI/"Pillar" claims corrected to match simulated status |
+| v11.9.5 | 2026-08-22 | Release pipeline hardened against stranding mid-publish; `mindforge-sdk` shipped for the first time since 11.8.0, with provenance |
+| v11.9.4 | 2026-08-22 | **BREAKING** (shipped under a patch bump) — hook gates actually start registering: installer now writes `.claude/settings.json` where it previously declined, merging append-only and backing up first. 11.9.3 shipped the registration code but it declined to run on almost every project; measured on published tarballs, 11.9.3 was 11 hook scripts installed / 0 registered, 11.9.4 is 8 registered / 3 deny-class verified blocking |
+| v11.9.3 | 2026-08-21 | **BREAKING** — routed CLI commands (`mindforge classify`, `mindforge health`, etc.) now act on *your* project instead of MindForge's own checkout; a bug fix, but output that previously described MindForge itself now describes yours. Also: gates that can fail, commands that run, a checked release path |
+| v11.9.2 | 2026-08-16 | **BREAKING** (shipped under a patch bump) — dashboard error-response shape changed on 15 endpoints (`detail`/raw errno strings removed, `correlation_id` added) after those fields were found leaking absolute filesystem paths in an unauthenticated response body; also audit-chain integrity and secret-scanning fixes |
 | v11.9.1 | 2026-07-29 | Packaging fix — restores 34 `.claude/commands/mindforge/` files (mostly `wf-*` workflow commands) missing from the v11.9.0 npm tarball |
 | v11.9.0 | 2026-07-27 | AWS Bedrock provider; full dry-run audit of all commands/personas/skills — resolved phantom-tool references and broken asset paths across 40 personas and 66 skills |
+
+Full detail for every version: [CHANGELOG.md](../CHANGELOG.md) or [RELEASENOTES.md](../RELEASENOTES.md).
 
 ## Upgrading to v11.8.3 (from any v11.8.x)
 

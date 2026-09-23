@@ -1,6 +1,10 @@
-# MindForge — Skill Registry (v11.3.1)
+# MindForge — Skill Registry (v11.9.6)
 
-This registry catalogs the high-fidelity SkillStacks available to the MindForge Intelligence Mesh.
+> **Curated subset.** The real skill catalog has 232 engine-tier skills (`.mindforge/skills/`,
+> auto-triggered) + 122 extended-tier skills (`.agent/skills/`, explicit-activation) = 354 total.
+> Discover the full, current list with `/mindforge:skills-index`.
+
+This registry catalogs a curated subset of the skills available to MindForge.
 
 ## 🧠 Technical Architecture & Engineering
 

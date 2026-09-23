@@ -368,9 +368,10 @@ const MERKLE_ALLOWLIST = [
  */
 const MERKLE_LIVE_WITH_CORRECTIONS = [
   'SECURITY.md',
+  'docs/architecture/README.md',
   'docs/architecture/V4-SWARM-MESH.md',
-  'docs/security/SECURITY.md',
   'docs/security/ZTAI-OVERVIEW.md',
+  'docs/usp-features.md',
 ];
 
 /**

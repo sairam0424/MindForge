@@ -65,6 +65,9 @@ const characterization = await agent(
   `Characterize this production incident: "${incident}"\n\nDetermine severity (P0=total outage, P1=major degradation, P2=partial impact, P3=minor), list affected systems, symptoms, and your initial hypothesis about the root cause.`,
   { schema: CHARACTERIZE_SCHEMA, label: 'characterize' }
 );
+if (!characterization) {
+  return { incident, error: 'characterization-agent-null' };
+}
 log(`[${characterization.severity}] ${characterization.incidentTitle} — ${characterization.symptoms.length} symptoms identified`);
 
 phase('Investigate');
@@ -87,6 +90,9 @@ const mitigation = await agent(
   `Based on these investigation findings, identify IMMEDIATE mitigation actions:\n${investigationSummary}\n\nPrioritize actions that restore service quickly. Include rollback steps and estimate recovery time.`,
   { schema: MITIGATE_SCHEMA, label: 'mitigate' }
 );
+if (!mitigation) {
+  return { incident, characterization, investigations: investigations.filter(Boolean), error: 'mitigation-agent-null' };
+}
 
 phase('RCA');
 const allContext = `Incident: ${characterization.incidentTitle}\nInvestigations:\n${investigationSummary}\nMitigation: ${mitigation.immediateActions.map(a => a.action).join(', ')}`;

@@ -1,5 +1,11 @@
 # MindForge v1.0.0 — Threat Model
 
+> **STATUS: HISTORICAL — scoped to the v1.0.0-era predecessor system (March 2026), not the
+> current v11.x architecture.** File/asset paths, the plugin model, and the enumerated threat
+> actors below describe that earlier, materially smaller system. It is retained for historical
+> reference only and has not been re-reviewed against the live `bin/` runtime. For what is
+> actually enforced today, see the root [`SECURITY.md`](../../SECURITY.md).
+
 ## Scope
 All attack surfaces introduced by MindForge across 7 days of development.
 Last reviewed: v1.0.0 release (March 2026).
