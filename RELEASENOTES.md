@@ -1,5 +1,33 @@
 # Release Notes
 
+## v11.9.9 — 2026-09-23 — Release-readiness audit: 5 CRITICAL + 9 HIGH findings fixed
+
+### Why this release exists
+
+An 8-agent audit workflow tested every MindForge surface — slash commands, skills,
+personas, subagents, dynamic workflows, CLI/MCP, and a live install/verify/health cycle —
+as a release gate before shipping to real external users. Every finding was independently
+re-verified against live code and commands before being fixed, not trusted from the audit
+report alone.
+
+### The user-visible part
+
+**Five CRITICAL findings, all ship-blocking:** a real, complete LLM jailbreak toolkit
+(`godmode`) that was shipping unconditionally in the published package is gone; `help.md`,
+`status.md`, `health.md`, and `security-scan.md` stop claiming PQAS/biometric/lattice-crypto
+verification is "active by default" when the code itself says it's simulated and off;
+`--minimal` now actually skips the persona set instead of shipping all 218 files anyway; a
+"Sovereign Integrity Check" that called a CLI flag on a script with no CLI entrypoint (and
+so could never fail) is replaced with a real check; and a dead 4-line stub standing in for
+"232 auto-triggered skills" is now disclosed as what it is.
+
+**Nine HIGH-severity findings:** corrected CLI invocation docs, disclosed the marketplace
+has zero published packages today, added crash-guards to 8 dynamic workflows, registered 32
+skills that existed on disk but were never in the manifest, fixed three personas granting
+tools that don't exist, reconciled 11 dangling swarm-template references, wired the `health`
+command to an actual integrity check, and stopped a brand-new install's audit log from
+reporting a false "BROKEN" status.
+
 ## v11.9.8 — 2026-09-21 — What the README claims, verified line by line
 
 ### Why this release exists

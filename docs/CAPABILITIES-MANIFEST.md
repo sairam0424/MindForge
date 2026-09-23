@@ -1,6 +1,6 @@
 # MindForge — Capabilities Manifest
 
-Line-item inventory of what's actually in a MindForge v11.9.8 install. Earlier versions of this
+Line-item inventory of what's actually in a MindForge v11.9.9 install. Earlier versions of this
 page described "Pillars IX-XII" of "Sovereign Intelligence" (PQAS, ZK-Audit, biometric approval
 gates) as live features — they are not. `bin/governance/quantum-crypto.js` labels itself
 SIMULATED and gated off the live trust path by default; no ZK-proof or biometric mechanism exists

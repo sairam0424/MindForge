@@ -22365,7 +22365,7 @@ async function ensureDaemonRunning(projectRoot) {
 }
 
 // package.json
-var version2 = "11.9.8";
+var version2 = "11.9.9";
 
 // src/index.ts
 var PROJECT_ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
