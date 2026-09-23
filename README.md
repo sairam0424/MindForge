@@ -25,7 +25,7 @@ tamper-evident audit chain, and cost-aware routing across providers. Install it 
 `/mindforge:plan-phase` → `/mindforge:execute-phase` → `/mindforge:verify-phase` → `/mindforge:ship`
 as your actual working loop, not a slogan.
 
-221 commands · 355 skills · 216 personas · 164 subagents · 35 workflows
+221 commands · 354 skills · 216 personas · 164 subagents · 35 workflows
 
 **Jump to:** [Latest release](#latest-release) · [What you get](#what-you-get) · [What is actually enforced](#what-is-actually-enforced) · [Install](#install) · [Verify](#verify) · [Quick start (new)](#quick-start-new-project) · [Quick start (existing)](#quick-start-existing-codebase) · [How it fits together](#how-it-fits-together) · [Documentation](#documentation) · [Core workflow](#core-workflow) · [Dynamic workflows](#dynamic-workflow-library) · [Updates](#updates-and-migrations) · [Token usage](#token-usage-profiling) · [License](#license)
 
@@ -36,7 +36,7 @@ as your actual working loop, not a slogan.
 | | Capability | Detail |
 |---|---|---|
 | 🧩 | **221 slash commands** | `/mindforge:plan-phase`, `/mindforge:execute-phase`, `/mindforge:ship`, and 218 more — [full reference](docs/commands-reference.md) |
-| 🛠️ | **355 skills** | 232 auto-triggered by keyword match (engine tier) + 123 explicit, invoked by name (extended tier) |
+| 🛠️ | **354 skills** | 232 auto-triggered by keyword match (engine tier) + 122 explicit, invoked by name (extended tier) |
 | 🎭 | **216 personas** | In-session role overlays via `/mindforge:agent <name>` — same context, different behavioral spec |
 | 🤖 | **164 subagents** | Genuine isolated-context Claude-Code-native subagent definitions — a separate mechanism from personas, see [docs/PERSONAS.md](docs/PERSONAS.md); 152 adapted from [VoltAgent's `awesome-claude-code-subagents`](https://github.com/VoltAgent/awesome-claude-code-subagents) (MIT), attribution in [subagents/README.md](subagents/README.md) |
 | 🔀 | **35 dynamic workflows** | Multi-agent fan-out scripts across 5 tiers (Research, Dev, Ops, Intelligence, Beast) — [workflow atlas](docs/workflow-atlas.md) |
@@ -306,8 +306,8 @@ to automatically re-trigger the wave (`awaiting_regeneration` has one writer, ze
 regeneration after a rollback is a manual step, not a closed loop.
 
 Four layers underlie this, top to bottom: **Interface** (`.claude/`, `.agent/` — the 221 slash
-commands and hooks), **Engine specs** (`.mindforge/` — 232 of the 355 skills plus 216 personas and
-`config.json` runtime knobs; the other 123 skills are extended-tier, under `.agent/skills/`),
+commands and hooks), **Engine specs** (`.mindforge/` — 232 of the 354 skills plus 216 personas and
+`config.json` runtime knobs; the other 122 skills are extended-tier, under `.agent/skills/`),
 **Execution** (`bin/`, ~32K raw / ~25K stripped-of-comments LOC — the wave executor, governance,
 memory, and dashboard code that actually runs), and **Persistence** (`.planning/` — `STATE.md`,
 the audit chain, resumable `HANDOFF.json`). Edit behavior in layer 2 where possible; layer 3 is

@@ -14,10 +14,13 @@ Run all seven health-engine categories from `.mindforge/intelligence/health-engi
 - informational signals
 
 ## Sovereign Intelligence Checks (v6.2.0-alpha)
-- **PQAS Verification**: Check `bin/governance/quantum-crypto.js` presence
-- **Homing Verification**: Check `bin/autonomous/intent-harvester.js` presence
-- **Self-Healer Verification**: Check `bin/autonomous/mesh-self-healer.js` presence
-- **Policy Check**: Verify `bin/governance/policy-engine.js` is Sovereign-configured
+These are file-presence checks only, not functional verification — PQAS is simulated/inactive by
+default (`pqas_enabled=false` in `.mindforge/config.json`; see MINDFORGE.md `[PQAS_ENFORCED]`).
+- **PQAS file present**: Check `bin/governance/quantum-crypto.js` exists (the module itself has no
+  CLI entrypoint and performs no framework-signature verification)
+- **Homing file present**: Check `bin/autonomous/intent-harvester.js` exists
+- **Self-Healer file present**: Check `bin/autonomous/mesh-self-healer.js` exists
+- **Policy check**: Read `bin/governance/policy-engine.js` for illegal bypass additions
 
 ## Flags
 - `--repair`: apply safe auto-repair only

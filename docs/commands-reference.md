@@ -171,8 +171,8 @@ mindforge <command> [options]
 | `security-scan` | Validate configuration and run security checks |
 | `health` | Verify project health and installation integrity |
 | `headless` | Run MindForge agent in headless (non-interactive) mode |
-| `pr-review` | Run standard PR review logic |
-| `cross-review` | Run advanced cross-model architecture review |
+| `pr-review` | Alias for `cross-review` — same 2-model adversarial review engine |
+| `cross-review` | Run the 2-model adversarial cross-review engine (architect + security auditor) |
 | `classify` | Classify changes into governance tiers |
 | `approve` | Generate a governance approval signature to unblock Tier 3 gates |
 | `validate-skill` | Run Level 1 & 2 validation on a SKILL.md file |

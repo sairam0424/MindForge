@@ -41,11 +41,11 @@ const COMMANDS = {
   },
   'pr-review': {
     script: 'bin/review/cross-review-engine.js',
-    description: 'Run standard PR review logic'
+    description: 'Alias for cross-review -- runs the same 2-model adversarial review engine'
   },
   'cross-review': {
     script: 'bin/review/cross-review-engine.js',
-    description: 'Run advanced cross-model review'
+    description: 'Run the 2-model adversarial cross-review engine (architect + security auditor)'
   },
   'classify': {
     script: 'bin/change-classifier.js',

@@ -20,10 +20,15 @@ This command runs entirely in security mode. Do not switch personas.
 
 ## Step 1.5 — Sovereign Integrity Check (v6.2.0-alpha)
 
-Before scanning user code, verify the integrity of the MindForge Sovereign Engine:
-1.  **Quantum Signature Verification**: Run `node bin/governance/quantum-crypto.js --verify .mindforge/engine/`.
-2.  **Policy Integrity**: Ensure `bin/governance/policy-engine.js` has not been tampered with (check for illegal bypass additions).
-3.  **Result**: If integrity check fails, mark the entire scan as **FAILED (CRITICAL)** and alert the user of a potential framework compromise.
+`bin/governance/quantum-crypto.js` has no CLI entrypoint — running it with `--verify` (or any
+argument) silently ignores the argument and exits 0. It cannot detect tampering and must not be
+treated as a gate. Do the one integrity check that is real instead:
+1.  **Policy Integrity**: Read `bin/governance/policy-engine.js` and check for illegal bypass
+    additions (e.g. an unconditional `return true` short-circuit, a hardcoded allowlist added
+    outside `.mindforge/config.json`).
+2.  **Result**: If policy tampering is found, mark the entire scan as **FAILED (CRITICAL)** and
+    alert the user of a potential framework compromise. Do not fail the scan based on the
+    quantum-crypto step — it performs no real verification.
 
 ```bash
 # Default: staged + unstaged changes

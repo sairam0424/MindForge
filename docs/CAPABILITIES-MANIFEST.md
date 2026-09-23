@@ -49,8 +49,8 @@ anywhere in `bin/`. See *What is actually enforced* in the root [README](../READ
 - **`subagents/categories/`** — 164 genuine Claude-Code-native subagent definitions with their
   own isolated context, installable as separate marketplace plugins.
 - **`.claude/commands/mindforge/`** — 221 slash commands.
-- **Skills** — 232 engine-tier (`.mindforge/skills/`, auto-triggered) + 123 extended-tier
-  (`.agent/skills/`, explicit activation) = 355 total.
+- **Skills** — 232 engine-tier (`.mindforge/skills/`, auto-triggered) + 122 extended-tier
+  (`.agent/skills/`, explicit activation) = 354 total.
 
 For the exhaustive, currently-verified command list see
 [docs/commands-reference.md](commands-reference.md).

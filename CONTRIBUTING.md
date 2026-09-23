@@ -94,7 +94,7 @@ for a security report.
 Use the issue templates — they ask for the specific version, install method, and repro steps
 that make a bug actually actionable. Before filing a feature request, a quick check of
 `/mindforge:skills-index` or `docs/registry/` is worth it: MindForge already ships 221 slash
-commands, 355 skills, 164 subagents, and 35 dynamic workflows, so there's a real chance
+commands, 354 skills, 164 subagents, and 35 dynamic workflows, so there's a real chance
 what you want already exists.
 
 ## License

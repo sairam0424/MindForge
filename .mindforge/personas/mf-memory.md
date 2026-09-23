@@ -1,7 +1,7 @@
 ---
 name: mf-memory
 description: Long-term memory management and knowledge graph synchronization for persistent context.
-tools: Read, Write, commit_memory (Skill-based)
+tools: Read, Write, Grep, Glob
 color: cyan
 ---
 

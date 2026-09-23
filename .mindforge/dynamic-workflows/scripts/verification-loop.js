@@ -96,10 +96,16 @@ for (let round = 1; round <= maxRounds; round++) {
     : `Task: ${task}\n${metric ? `Metric the scorer will grade against: ${metric}\n` : 'State the metric you are optimizing for, then '}Produce a first complete attempt at the artifact.`;
 
   const revision = await agent(revisePrompt, { label: `implement:r${round}`, phase: 'Round', schema: REVISE_SCHEMA });
+  if (!revision) {
+    return { task, metric: metric || '(scorer-inferred)', finalArtifact: currentArtifact, scoreHistory: scoreHistory.map((s, i) => ({ round: i + 1, score: s.score, topFixes: s.topFixes })), error: 'revision-agent-null' };
+  }
   currentArtifact = revision.artifact;
 
   const scorePrompt = `Score this artifact against the task's metric. Be strict and consistent with how you'd score any round of this same task — same rubric every time, do not grade on a curve relative to the previous round.\n\nTask: ${task}\n${metric ? `Metric: ${metric}\n` : ''}\nArtifact:\n${currentArtifact}`;
   const scored = await agent(scorePrompt, { label: `score:r${round}`, phase: 'Round', schema: SCORE_SCHEMA });
+  if (!scored) {
+    return { task, metric: metric || '(scorer-inferred)', finalArtifact: currentArtifact, scoreHistory: scoreHistory.map((s, i) => ({ round: i + 1, score: s.score, topFixes: s.topFixes })), error: 'scored-agent-null' };
+  }
 
   scoreHistory.push(scored);
   log(`Round ${round}: score ${scored.score}/100`);

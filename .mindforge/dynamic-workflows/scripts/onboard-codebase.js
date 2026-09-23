@@ -67,6 +67,9 @@ const map = await agent(
   `Map the structure of this codebase: "${repo}"\n\nIdentify: primary language, frameworks, entry points (main files, index, CLI), test frameworks, and the purpose of each top-level directory. Be specific — list actual file paths.`,
   { schema: MAP_SCHEMA, label: 'map' }
 );
+if (!map) {
+  return { repo, error: 'map-agent-null' };
+}
 log(`${map.primaryLanguage} codebase, ${map.frameworks.join('+')} — ${map.keyDirectories.length} key directories`);
 
 phase('Domain');
@@ -75,6 +78,9 @@ const domain = await agent(
   `Identify the business domains and core abstractions in: "${repo}"\n${mapSummary}\n\nWhat problem does this software solve? What are the main domain concepts? What are the key abstractions (models, services, controllers, etc.)?`,
   { schema: DOMAIN_SCHEMA, label: 'domain' }
 );
+if (!domain) {
+  return { repo, map, error: 'domain-agent-null' };
+}
 log(`${domain.domains.length} domains: ${domain.domains.map(d => d.name).join(', ')}`);
 
 phase('Architecture');
@@ -83,6 +89,9 @@ const arch = await agent(
   `Map the technical architecture of: "${repo}"\n${domainSummary}\n\nWhat architecture style (MVC, layered, event-driven, microservices)? What are the layers? How does data flow? What key patterns and gotchas should a new developer know?`,
   { schema: ARCH_SCHEMA, label: 'architecture' }
 );
+if (!arch) {
+  return { repo, map, domain, error: 'arch-agent-null' };
+}
 
 phase('Tour');
 const archSummary = `Style: ${arch.architectureStyle}\nLayers: ${arch.layers.map(l => l.name).join(' → ')}\nPatterns: ${arch.keyPatterns.join(', ')}`;

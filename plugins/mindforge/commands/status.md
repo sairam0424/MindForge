@@ -88,13 +88,14 @@ Open Issues
 ```
 Sovereign Intelligence (v6.2.0-alpha)
 ───────────────────────────────────────────────────────
-  🛡️  PQAS Security : [ACTIVE | PASSIVE] (Dilithium-5)
+  🛡️  PQAS Security : SIMULATED / INACTIVE (pqas_enabled=false — see MINDFORGE.md [PQAS_ENFORCED])
   🎯  Proactive Homing: [ENABLED | DISABLED]
   🧠  Drift Recovery : [N] remediation events
-  🧬  Biometric Gate : [LOCKED | BYPASSED]
 ```
-- PQAS Status: Check if `bin/governance/quantum-crypto.js` exists and if `PolicyEngine.js` has `highRiskBypass` enabled.
-- Proactive Homing: Check if `bin/autonomous/intent-harvester.js` is active in `AutoRunner.js`.
+- PQAS Status: report from MINDFORGE.md `[PQAS_ENFORCED]` and `.mindforge/config.json`
+  `pqas_enabled` — never report ACTIVE unless that config key is literally `true`. There is no
+  biometric gate; do not report one.
+- Proactive Homing: Check if `bin/autonomous/intent-harvester.js` is active in `bin/autonomous/auto-runner.js`.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```

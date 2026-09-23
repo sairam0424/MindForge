@@ -101,6 +101,9 @@ const prioritized = await agent(
   `Prioritize this refactoring backlog by risk. Items with narrow blast radius + good test coverage = tackle first (low risk). Wide blast radius + no coverage = tackle last or skip.\n\nDebts:\n${debtList}`,
   { schema: PRIORITY_SCHEMA, label: 'prioritize' }
 );
+if (!prioritized) {
+  return { target, debtItems: allDebts.length, error: 'prioritized-agent-null' };
+}
 
 phase('Sequence');
 const topItems = prioritized.prioritized.slice(0, 10).map(p => `${p.rank}. [${p.risk}] ${p.description}: ${p.rationale}`).join('\n');

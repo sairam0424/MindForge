@@ -24,7 +24,7 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 | **Neural Protocols** | 6 | brainstormer, swarm-pilot, mesh-orchestrator, workspace-manager, skill-author, tdd-master |
 | **Debuggers** | 2 | debugger, rca-expert |
 | **Mapping** | 2 | codebase-mapper, codebase-mapper-extend |
-| **Security & Compliance** | 6 | authentication-architect, compliance-auditor, data-privacy-engineer, dependency-auditor, incident-commander (+ existing security-reviewer) |
+| **Security & Compliance** | 6 | authentication-architect, compliance-auditor, privacy-engineer, dependency-auditor, incident-commander (+ existing security-reviewer) |
 | **Architecture & System Design** | 8 | api-designer, api-gateway-architect, cloud-architect, domain-modeler, event-driven-architect, monorepo-architect, queue-architect, state-machine-designer |
 | **Frontend & UX** | 10 | a11y-architect, accessibility-tester, browser-extension-architect, design-system-engineer, frontend-architect, internationalization-expert, react-specialist, tailwind-specialist, ux-auditor, seo-specialist |
 | **Performance & Reliability** | 5 | api-load-tester, caching-strategist, chaos-engineer, performance-optimizer, build-optimizer |
@@ -860,15 +860,15 @@ MindForge uses a multi-agent orchestration model where specialized personas are 
 
 ---
 
-### mindforge-data-privacy-engineer (The PII Guardian)
+### mindforge-privacy-engineer (The PII Guardian)
 
-**Role:** Protects user data through engineering controls — classification, masking, retention, and encryption.
+**Role:** Protects user data through engineering controls — differential privacy, k-anonymity/anonymization, and consent management — balancing privacy guarantees with data utility.
 
 | Property | Value |
 | :--- | :--- |
-| **Spawned by** | `/mindforge:agent data-privacy-engineer` |
-| **Tools** | Read, Write, Bash, Grep, Glob, CommandStatus |
-| **Color** | `red` |
+| **Spawned by** | `/mindforge:agent privacy-engineer` |
+| **Tools** | Read, Write, Bash, Grep, Glob |
+| **Color** | `shield-gray` |
 | **Trust Tier** | `3` |
 
 ---
