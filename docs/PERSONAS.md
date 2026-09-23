@@ -1756,15 +1756,55 @@ backing file by that name anywhere in `bin/`.
 
 | Swarm | Leader | Members | Focus |
 | :--- | :--- | :--- | :--- |
-| **UISwarm** | ui-auditor | developer, accessibility, whimsy-injector | Visual fidelity, interaction, WCAG 2.2 |
-| **BackendSwarm** | architect | developer, security-reviewer, db-optimizer | Architecture, performance, API versioning |
-| **SecuritySwarm** | security-reviewer | architect, developer, threat-detection | OWASP mitigation, secret detection |
-| **AIEngineeringSwarm** | ai-engineer | prompt-engineer, developer, model-qa | Hallucination mitigation, grounding |
-| **IncidentResponse** | sre-engineer | developer, incident-commander, debugger | RCA, hotfix, post-mortem |
-| **ComplianceSwarm** | compliance-auditor | legal-compliance, architect, security | GDPR/SOC2 alignment, PII masking |
-| **IdentityTrustSwarm** | identity-architect | security-reviewer, architect, blockchain | Zero-Trust, DID-based signing |
-| **DataMeshSwarm** | data-engineer | db-optimizer, analyst, compliance | Lakehouse patterns, ETL integrity |
-| **NeuralSwarm** | mesh-orchestrator | brainstormer, swarm-pilot, workspace-manager | High-fidelity protocol execution |
+| **UISwarm** | ui-auditor | developer, a11y-architect, frontend-architect, design-system-engineer, ux-auditor | Visual fidelity, interaction states, WCAG 2.2 compliance, and design system consistency. |
+| **BackendSwarm** | architect | developer, security-reviewer, database-expert, api-designer, api-gateway-architect, event-driven-architect, queue-architect | Architectural alignment, performance, API versioning, and event-driven patterns. |
+| **SecuritySwarm** | security-reviewer | architect, developer, authentication-architect, dependency-auditor, privacy-engineer, compliance-auditor | OWASP A01-A10 mitigation, secret detection, supply chain security, and trust boundary enforcement. |
+| **AIEngineeringSwarm** | ml-engineer | prompt-engineer, developer | Model orchestration, prompt grounding, hallucination mitigation, and inference optimization. |
+| **DeveloperExperienceSwarm** | devops-engineer | tech-writer, cli-designer, sdk-designer, onboarding-guide, git-workflow-expert | CI/CD pipeline ergonomics, DX documentation, CLI/SDK design, and internal tool optimization. |
+| **DataMeshSwarm** | data-engineer | database-expert, search-engineer, ml-engineer, compliance-auditor | Data lakehouse patterns, ETL pipelining, search relevance, and semantic layer integrity. |
+| **IdentityTrustSwarm** | security-reviewer | architect | Zero-Trust Agentic Identity (ZTAI), DID-based signing, and authentication bypass mitigation. |
+| **GrowthAnalyticsSwarm** | ui-auditor | — | A/B testing, conversion funnel optimization, and telemetry instrumentation. |
+| **IncidentResponseSwarm** | incident-commander | developer, debug-specialist, observability-engineer, kubernetes-debugger, logging-architect | Rapid root cause analysis (RCA), hotfix deployment, observability triage, and post-mortem drafting. |
+| **ComplianceSwarm** | compliance-auditor | privacy-engineer, architect, security-reviewer, dependency-auditor | GDPR/SOC2 alignment, PII masking, supply chain compliance, and regulatory audit trail verification. |
+| **QualityAssuranceSwarm** | qa-engineer | developer, verifier, contract-tester, test-data-engineer, accessibility-tester | End-to-end regression, contract testing, edge-case fuzzing, and coverage-gap analysis. |
+| **FullStackSwarm** | architect | ui-auditor, developer, security-reviewer, tech-writer | End-to-end feature delivery with unified UI, API security, and documentation. |
+| **ArchitectureSwarm** | architect | cloud-architect, domain-modeler, api-gateway-architect, monorepo-architect, state-machine-designer | System design, domain modeling, cloud architecture, and structural patterns. |
+| **PerformanceSwarm** | performance-optimizer | caching-strategist, build-optimizer, api-load-tester, chaos-engineer, concurrency-expert | Performance profiling, cache optimization, load testing, chaos engineering, and build speed. |
+| **InfrastructureSwarm** | devops-engineer | kubernetes-debugger, observability-engineer, logging-architect, backup-recovery-specialist, config-management-expert | Infrastructure automation, container orchestration, observability, and disaster recovery. |
+| **AccessibilitySwarm** | a11y-architect | accessibility-tester, frontend-architect, internationalization-expert, ux-auditor | WCAG compliance, inclusive design, i18n/l10n, and assistive technology compatibility. |
+| **ReviewSwarm** | senior-reviewer | spec-reviewer, refactoring-expert, tech-debt-analyst, code-archeologist | Code quality, specification completeness, refactoring safety, and technical debt governance. |
+| **MigrationSwarm** | migration-specialist | database-expert, domain-modeler, contract-tester, git-forensics | Safe database migrations, schema evolution, contract validation, and incremental cutover. |
+| **CouncilSwarm** | council-architect | council-skeptic, council-pragmatist, council-critic | Multi-voice architectural decision making with structured debate and verdict synthesis. |
+| **VerificationSwarm** | qa-engineer | developer, security-reviewer, build-optimizer, coverage-specialist | 6-phase quality gate execution with parallel build, type-check, lint, test, security scan, and diff review. |
+| **LearningSwarm** | instinct-curator | analyst, developer | Session observation, pattern detection, instinct creation and confidence scoring, skill promotion. |
+| **EvalSwarm** | eval-judge | mf-reviewer, qa-engineer, anti-pattern-hunter | Structured evaluation using rubrics, pass@k metrics, regression detection, and anti-pattern identification. |
+| **OnboardingSwarm** | onboarding-navigator | codebase-mapper, advisor-researcher, doc-auditor | Codebase exploration, knowledge graph construction, entry point identification, and documentation gap analysis. |
+| **RFCSwarm** | rfc-architect | architect, developer, analyst | Specification decomposition, dependency DAG construction, parallel execution planning, and merge conflict recovery. |
+| **DeploymentSwarm** | deployment-captain | developer, qa-engineer, security-reviewer | Staged rollout execution, canary monitoring, rollback decisions, and post-deploy verification. |
+| **ForgeSwarm** | skill-smith | eval-judge, quality-scorer, developer | Meta-skill creation, evaluation loop optimization, trigger description tuning, and quality scoring. |
+| **ArchDesignSwarm** | system-designer | architect, event-driven-architect, developer, api-gateway-architect | Large-scale system design, microservice boundaries, distributed architecture patterns, and capacity planning. |
+| **ProductSwarm** | product-owner | business-analyst, market-analyst, ux-auditor | Product strategy, business requirements, market sizing, and user journey mapping. |
+| **DocumentationSwarm** | proofreader | doc-auditor, tech-writer, onboarding-navigator | Content quality, documentation completeness, tone consistency, and readability scoring. |
+| **PromptEngineeringSwarm** | prompt-architect | agent-orchestrator, developer, eval-judge | Prompt design, context engineering, agent orchestration patterns, and eval-driven prompt optimization. |
+| **SRESwarm** | sre-lead | devops-engineer, chaos-engineer, observability-engineer | Site reliability, observability stack design, incident management, chaos engineering, and SLO-driven operations. |
+| **FrontendSwarm** | design-system-lead | react-specialist, a11y-architect, ui-auditor | Design system architecture, responsive patterns, state management, and accessibility compliance. |
+| **TestingDeepSwarm** | contract-tester | qa-engineer, performance-optimizer, anti-pattern-hunter | Deep testing patterns: contract testing, load testing, mutation testing, visual regression, and test anti-pattern detection. |
+| **PlatformSwarm** | platform-engineer | pipeline-engineer, devops-engineer, dx-engineer | Internal platform capabilities: feature flags, zero-downtime migrations, monorepo management, and developer experience optimization. |
+| **MLOpsSwarm** | ml-ops-engineer | data-architect, cost-optimizer, eval-judge | ML/AI operations: RAG pipeline architecture, fine-tuning workflows, LLM cost optimization, and model lifecycle management. |
+| **StreamingSwarm** | streaming-engineer | event-architect, performance-optimizer, cache-architect | Real-time streaming architecture, message queue topology, backpressure management, and stream processing patterns. |
+| **ResilienceSwarm** | resilience-engineer | sre-lead, chaos-engineer, cache-architect | Graceful degradation design, idempotency patterns, rate limiting, and failure engineering. |
+| **GovernanceSwarm** | multi-tenancy-architect | compliance-engineer, auth-engineer, data-architect | Multi-tenant isolation, audit logging, compliance verification, and data governance. |
+| **DecisionSwarm** | decision-architect | council-architect, council-skeptic, council-pragmatist | Engineering decision quality: build-vs-buy, technology radar, architecture tradeoff analysis, and quantified decision-making. |
+| **TeamDesignSwarm** | team-coach | product-owner, dx-engineer, technical-writer-lead | Team topology design, sprint retrospectives, knowledge sharing systems, estimation techniques, and on-call rotation. |
+| **AgentMetaSwarm** | agent-evaluator | prompt-architect, agent-orchestrator, eval-judge | Agent self-improvement: memory architecture, evaluation frameworks, tool selection optimization, and human-in-the-loop calibration. |
+| **EdgeScaleSwarm** | edge-engineer | cdn-architect, performance-optimizer, streaming-engineer | Edge computing architecture, CDN optimization, serverless patterns, and latency-critical system design. |
+| **DistributedSwarm** | consensus-engineer | data-pipeline-architect, sre-lead, resilience-engineer | Distributed consensus, data pipeline architecture, DNS-based routing, database sharding, and strong consistency patterns. |
+| **IndustryVerticalSwarm** | fintech-architect | healthcare-engineer, ecommerce-engineer, gaming-engineer, iot-architect, marketplace-engineer | Domain-specific architecture review ensuring compliance, scalability, and industry-standard integration patterns. |
+| **LeadershipSwarm** | tech-lead-coach | communication-architect, hiring-strategist, mentorship-lead, meeting-designer, change-agent | Engineering leadership decisions, team topology, hiring strategy, and organizational change management. |
+| **MobileSwarm** | mobile-architect | react-native-engineer, flutter-engineer, offline-specialist, mobile-security-engineer, pwa-architect | Cross-platform mobile architecture, offline-first design, performance optimization, and mobile security hardening. |
+| **AIFrontierSwarm** | agent-architect | multimodal-engineer, ai-safety-engineer, embedding-architect, llm-orchestrator, ai-economist | Advanced AI system architecture, safety alignment, multi-model orchestration, and cost-optimized inference pipelines. |
+| **DataAlchemySwarm** | data-mesh-architect | causal-scientist, stream-engineer, lakehouse-architect, privacy-engineer, analytics-engineer | End-to-end data architecture from ingestion through real-time analytics, with privacy-by-design and causal rigor. |
+| **PlatformSwarmV2** | platform-lead | build-engineer, environment-engineer, productivity-analyst, secrets-engineer, migration-architect | Internal developer platform design, golden path creation, build optimization, and zero-downtime migration orchestration. |
 
 ### Swarm Governance Protocols
 

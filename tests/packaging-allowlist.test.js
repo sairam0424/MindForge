@@ -278,6 +278,40 @@ test('.mindforge/config.json ships no pre-baked governance.active_did', () => {
     '"No active DID found for signing" error instead of "Agent not registered".');
 });
 
+// ── 12. Removed jailbreak skill (godmode) must never reship ──────────────────
+// This session removed `godmode`, a real LLM jailbreak toolkit that was shipping in the npm
+// tarball. Nothing in the automated suite asserted its absence, so a bad merge, a stale branch,
+// or an accidental re-add — under this name or a different one reusing the same asset paths —
+// would ship again silently. Guard both the real tarball contents and the user-facing skill
+// catalog, since either could regress independently of the other.
+test('does NOT ship any godmode/god-mode asset path in the tarball', () => {
+  const offenders = FILES.filter(f => /godmode|god-mode/i.test(f));
+  assert.deepStrictEqual(offenders, [],
+    `a godmode/god-mode jailbreak asset must never ship: ${offenders.join(', ')}`);
+});
+
+test('no installed skill directory (engine or extended tier) is named godmode/god-mode', () => {
+  // Mirrors getAllSkillPaths() in tests/skills-platform.test.js — reused rather than
+  // reimplemented so this shares the same notion of "a skill" as the rest of the suite.
+  const skillDirs = ['.mindforge/skills', '.agent/skills'].flatMap((base) => {
+    const abs = path.join(ROOT, base);
+    if (!fs.existsSync(abs)) return [];
+    return fs.readdirSync(abs).map((dir) => `${base}/${dir}`);
+  });
+  assert.ok(skillDirs.length > 0, 'no skill directories found under .mindforge/skills or .agent/skills — cannot check');
+  const offenders = skillDirs.filter((d) => /godmode|god-mode/i.test(d));
+  assert.deepStrictEqual(offenders, [],
+    `a godmode/god-mode skill directory must not exist: ${offenders.join(', ')}`);
+});
+
+test('the user-facing skill catalog (.agent/mindforge/skills-index.md) does not list godmode', () => {
+  const indexPath = path.join(ROOT, '.agent', 'mindforge', 'skills-index.md');
+  assert.ok(fs.existsSync(indexPath), 'skills-index.md missing on disk — cannot check the skill catalog');
+  const body = fs.readFileSync(indexPath, 'utf8');
+  assert.ok(!/godmode|god-mode/i.test(body),
+    'skills-index.md must not list a godmode/god-mode skill — it was removed for shipping a real LLM jailbreak toolkit');
+});
+
 // ── The published file set must be reproducible from the tag ─────────────────
 //
 // v11.9.3 shipped 1979 files and 1978 of them were byte-identical to tag v11.9.3. The odd one out

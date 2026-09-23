@@ -142,6 +142,12 @@ const EVENT_MAP = { SessionStart: 'SessionStart', BeforeTool: 'PreToolUse', Afte
 const HOOK_TREES = [
   { repoRel: '.agent/hooks', pluginRel: 'scripts' },
   { repoRel: 'bin/security', pluginRel: 'scripts/security' },
+  // instinct-capture-hook.js (registered in .agent/settings.json alongside the .agent/hooks/
+  // scripts above) lives under bin/hooks/, not .agent/hooks/, and requires ../utils/redact-secrets
+  // + ../utils/file-lock -- both fully self-contained (Node builtins only, verified before adding
+  // this entry). Bundling both trees here preserves that same relative path shape in the plugin.
+  { repoRel: 'bin/hooks', pluginRel: 'scripts/hooks' },
+  { repoRel: 'bin/utils', pluginRel: 'scripts/utils' },
 ];
 
 /**

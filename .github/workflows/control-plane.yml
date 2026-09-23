@@ -36,10 +36,12 @@ jobs:
         run: node bin/change-classifier.js
 
       - name: Tier Summary
+        env:
+          TIER: ${{ steps.classifier.outputs.tier }}
         run: |
           echo "### 🔍 Change Classification Result" >> $GITHUB_STEP_SUMMARY
-          echo "- **Governance Tier:** ${{ steps.classifier.outputs.tier }}" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.classifier.outputs.tier }}" == "3" ]; then
+          echo "- **Governance Tier:** $TIER" >> $GITHUB_STEP_SUMMARY
+          if [ "$TIER" == "3" ]; then
             echo "- ⚠️ **High Risk Changes Detected** — Tier 3 Governance Gate Enforced." >> $GITHUB_STEP_SUMMARY
           fi
 

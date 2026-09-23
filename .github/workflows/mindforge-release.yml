@@ -360,12 +360,19 @@ jobs:
 
           npm dist-tag add "mindforge-cc@${VER}" stable
 
+          # npm's own dist-tag write notice says the change "may take a few minutes to take
+          # effect" — the registry accepts the write immediately but converges asynchronously.
+          # 10 attempts x 15s = up to 150s of retrying, comfortably inside that window; the prior
+          # 3 attempts x 5s (~15-20s total) was an order of magnitude short and failed this step
+          # on every one of the last 4 real releases (v11.9.6-v11.9.9) despite the write always
+          # succeeding (confirmed via `npm view mindforge-cc dist-tags --json` converging within
+          # minutes every time).
           AFTER=""
-          for attempt in 1 2 3; do
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
             AFTER="$(read_stable)"
             [ "${AFTER}" = "${VER}" ] && break
-            echo "read-back attempt ${attempt} saw '${AFTER:-<unreadable>}'; retrying in 5s"
-            sleep 5
+            echo "read-back attempt ${attempt} saw '${AFTER:-<unreadable>}'; npm said this can take a few minutes to take effect — retrying in 15s"
+            sleep 15
           done
           if [ -z "${AFTER}" ]; then
             echo "::error title=dist-tag unverifiable::the write was accepted but stable could not be read back. Check manually: npm dist-tag ls mindforge-cc"

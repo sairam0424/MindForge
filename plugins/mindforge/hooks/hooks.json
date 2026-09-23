@@ -24,6 +24,16 @@
             "timeout": 10000
           }
         ]
+      },
+      {
+        "matcher": "Bash|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run-with-flags.js\" instinct-capture \"${CLAUDE_PLUGIN_ROOT}/scripts/hooks/instinct-capture-hook.js\" standard,strict",
+            "timeout": 5000
+          }
+        ]
       }
     ],
     "PreToolUse": [

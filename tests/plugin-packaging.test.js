@@ -301,16 +301,19 @@ test('every plugin hook resolves under the plugin root, require()d deps included
 });
 
 // ── 2c. Hook parity across the three configs ──────────────────────────────────
-// Measured, not assumed: .claude/settings.json declares 8 hook commands, .agent/settings.json
-// 7, and the generated plugin 7. The gap is exactly ONE hook id — `instinct-capture`
-// (bin/hooks/instinct-capture-hook.js), which commit bbe2e8d wired into .claude/settings.json
-// and never mirrored into .agent/settings.json. So the honest target is NOT "8/8/8": it is
-// (a) plugin == .agent by construction, and (b) the .claude-only set pinned to that one known
-// id so the divergence cannot widen unnoticed. Closing it would enable a data-writing
-// PostToolUse hook on the Gemini runtime AND require bundling its dependency closure
-// (bin/hooks/lib/detect-project.js, bin/utils/file-lock.js, both reached by layout-sensitive
-// relative requires) into the plugin — a behaviour change that belongs in its own review.
-const CLAUDE_ONLY_HOOK_IDS = ['instinct-capture'];
+// Was: .claude/settings.json declared 8 hook commands, .agent/settings.json 7, and the
+// generated plugin 7 — a one-id gap (`instinct-capture`, bin/hooks/instinct-capture-hook.js)
+// that commit bbe2e8d wired into .claude/settings.json and never mirrored into
+// .agent/settings.json. Closed in a pre-v12.0.0 audit pass: instinct-capture is now
+// registered in .agent/settings.json (AfterTool, matcher Bash|Task, same shape as the
+// .claude/settings.json PostToolUse entry), and its dependency closure
+// (bin/hooks/lib/detect-project.js, bin/utils/redact-secrets.js, bin/utils/file-lock.js --
+// all Node-builtin-only, no further transitive requires) is bundled into the plugin via two
+// new HOOK_TREES entries (bin/hooks -> scripts/hooks, bin/utils -> scripts/utils). All three
+// configs now declare the same 8 hook ids; this list stays empty as the ratchet catching any
+// future divergence, rather than being deleted, so a new one-off hook can't silently reopen
+// the same gap.
+const CLAUDE_ONLY_HOOK_IDS = [];
 
 const hookIdSet = (hooksObj) =>
   new Set(hookCommands(hooksObj).map((c) => parseHookCommand(c.command).hookId));

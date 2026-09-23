@@ -1123,7 +1123,8 @@ async function install(runtime, scope, options = {}) {
       Theme.printStatus(c.dim('  - Post-Quantum Agentic Security (PQAS): available in simulated/experimental '
         + 'mode (inactive by default — set experimental.pqc_demo=true to enable the simulated demo)'), 'info');
     }
-    Theme.printStatus(c.dim('  - Proactive Semantic Intent Harvesting active'), 'info');
+    Theme.printStatus(c.dim('  - Proactive Semantic Intent Harvesting: available in simulated/experimental '
+      + 'mode (the underlying scan/claim logic is not yet wired to run automatically)'), 'info');
 
     // bin/ utilities (remaining non-engine scripts)
     if (withUtils) {
@@ -1404,17 +1405,25 @@ async function run(args) {
   }
 
   if (!isUninstall) {
-    // collectManifestStats() counts the SOURCE tree, not what was written. For a normal install those
-    // coincide, so the panel is accidentally accurate. For a self-install nothing is copied, and the
-    // panel announced "ACTIONS 221 — Total autonomous commands deployed" and
-    // "Skill Packs (123 verified)" for a run that deployed and verified nothing: a summary of the
-    // repository presenting itself as an installation report. Gating it is the honest minimum. Making
+    // collectManifestStats() counts the SOURCE tree, not what was written. For a normal LOCAL install
+    // those coincide, so the panel is accidentally accurate. For a self-install nothing is copied, and
+    // for a GLOBAL install Section 2.1 (skills/hooks/personas/docs/memory/plugins) and Section 3
+    // (.mindforge/ engine, .planning/, bin/) never ran — both are gated `scope === 'local'` above — so
+    // the panel announced "Personas (216 active)" / "Skill Packs (122 verified)" / a full PAYLOAD
+    // MANIFEST for a run that deployed and verified none of them: a summary of the repository
+    // presenting itself as an installation report. Gating on scope too is the honest minimum. Making
     // the panel report MEASURED counts on every path is a larger change and is deliberately not
     // attempted here — it would need the install to return what it wrote.
-    if (isSelfInstall()) {
+    if (isSelfInstall() && scope === 'local') {
       Theme.printResolved(c.bold('Self-install complete — no framework files were written'));
       Theme.printStatus(c.dim('This repository IS the framework: its committed .claude/ and .agent/ '
         + 'trees are the source, so there was nothing to deploy.'), 'info');
+    } else if (scope !== 'local') {
+      Theme.printResolved(c.bold('Global install complete'));
+      Theme.printStatus(c.dim('A --global install writes only the entry file, slash commands, and '
+        + 'native subagents into your home directory. Skills, personas, hooks, and the .mindforge/ '
+        + 'framework engine are NOT part of a global install by design — run a --local install in a '
+        + 'project directory to get those.'), 'info');
     } else {
       const stats = collectManifestStats();
       Theme.printSuccessV2(runtime, scope, stats);

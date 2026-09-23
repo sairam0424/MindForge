@@ -54,10 +54,13 @@ class ConfigManager {
 
     for (let i = 0; i < keys.length - 1; i++) {
       const k = keys[i];
+      if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
       if (!target[k]) target[k] = {};
       target = target[k];
     }
-    target[keys[keys.length - 1]] = value;
+    const lastKey = keys[keys.length - 1];
+    if (lastKey === '__proto__' || lastKey === 'constructor' || lastKey === 'prototype') return value;
+    target[lastKey] = value;
     
     this._save();
     return value;

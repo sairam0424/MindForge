@@ -24,6 +24,16 @@
             "timeout": 10000
           }
         ]
+      },
+      {
+        "matcher": "Bash|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .agent/hooks/run-with-flags.js instinct-capture bin/hooks/instinct-capture-hook.js standard,strict",
+            "timeout": 5000
+          }
+        ]
       }
     ],
     "BeforeTool": [

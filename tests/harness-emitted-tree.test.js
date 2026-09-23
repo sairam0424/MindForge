@@ -429,6 +429,48 @@ test('the copilot install DOES receive the shared .mindforge skill and persona t
     + '(measured 218)');
 });
 
+// ── 7. --minimal ships zero personas, in the harness personas dir AND .mindforge/personas/ ──
+//
+// bin/installer-core.js gates 'personas' behind `!minimal` in two independent places: the real
+// copy allowlist for <runtime>/personas/ (installer-core.js ~835-837) and the .mindforge/
+// minimalEntries allowlist (installer-core.js ~893-899, which deliberately excludes 'personas'
+// from the set --minimal copies). Nothing in the suite exercised --minimal before this test —
+// `grep -rn -- '--minimal' bin/ tests/` found it only under bin/. The floor assertion above (>=
+// 200 personas, non-minimal install) would NOT catch a regression where --minimal started
+// shipping personas again, since it never installs with --minimal at all.
+test('--minimal ships zero personas, in both <runtime>/personas/ and .mindforge/personas/', () => {
+  const scratch = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-emit-minimal-')));
+  try {
+    const project = path.join(scratch, 'project');
+    const home = path.join(scratch, 'home');
+    fs.mkdirSync(project, { recursive: true });
+    fs.mkdirSync(home, { recursive: true });
+    fs.writeFileSync(path.join(project, 'package.json'),
+      JSON.stringify({ name: 'emit-probe-minimal', version: '1.0.0' }, null, 2));
+
+    // HOME confined, same reason as installAll() above: an unconfined run appends to the
+    // developer's real ~/.mindforge/registry.json.
+    const r = spawnSync(process.execPath, [INSTALLER, '--claude', '--local', '--minimal'], {
+      cwd: project, encoding: 'utf8',
+      env: { PATH: process.env.PATH, HOME: home, CI: '1' },
+    });
+    assert.strictEqual(r.status, 0,
+      `install --claude --local --minimal exited ${r.status}: ${(r.stderr || '').slice(0, 500)}`);
+
+    const runtimePersonas = path.join(project, '.claude', 'personas');
+    const runtimeCount = fs.existsSync(runtimePersonas) ? listFiles(runtimePersonas).length : 0;
+    assert.strictEqual(runtimeCount, 0,
+      `--minimal must ship 0 files under .claude/personas/, found ${runtimeCount}`);
+
+    const forgePersonas = path.join(project, '.mindforge', 'personas');
+    const forgeCount = fs.existsSync(forgePersonas) ? listFiles(forgePersonas).length : 0;
+    assert.strictEqual(forgeCount, 0,
+      `--minimal must ship 0 files under .mindforge/personas/, found ${forgeCount}`);
+  } finally {
+    fs.rmSync(scratch, { recursive: true, force: true });
+  }
+});
+
 test('the claude install writes its own, larger .claude/ — not the mirror', () => {
   const claudeTree = path.join(installs.get('claude-code').project, '.claude');
   const mirrorTree = path.join(installs.get('cursor').project, '.claude');

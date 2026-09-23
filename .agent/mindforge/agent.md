@@ -8,7 +8,7 @@ allowed-tools:
 ---
 
 <objective>
-Provide an on-demand mechanism to "spawn" any of the 13+ standardized MindForge personas. This allows the user to switch the AI assistant's context, role, and process to a specific specialized mode (e.g., Roadmapper, Security Reviewer, Analyst).
+Provide an on-demand mechanism to "spawn" any of the 216 standardized MindForge personas. This allows the user to switch the AI assistant's context, role, and process to a specific specialized mode (e.g., Roadmapper, Security Reviewer, Analyst).
 </objective>
 
 <execution_context>

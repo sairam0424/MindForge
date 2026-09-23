@@ -41,7 +41,7 @@ const Theme = {
     '╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═════╝ ╚═╝      ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝'
   ].join('\n'),
 
-  tagline: 'THE AUTONOMOUS ENTERPRISE AGENTIC ECOSYSTEM',
+  tagline: 'AI-NATIVE AGENTIC FRAMEWORK FOR CLAUDE CODE',
 
   /**
    * Print a styled header with BMad-style border flare
@@ -66,9 +66,8 @@ const Theme = {
     console.log(`  ${this.colors.dim('│')}  ${this.colors.bold('THE PLATFORM VISION:')}`);
     console.log(`  ${this.colors.dim('│')}    - Unified Enterprise Agentic Ecosystem`);
     console.log(`  ${this.colors.dim('│')}    - Modular Skills & Persona Architecture`);
-    // Added Sovereign Intelligence as a core pillar
-    console.log(`  ${this.colors.dim('│')}    - ${this.colors.magenta('Sovereign Intelligence')}: PQ-Safe & Proactive Swarms`);
-    console.log(`  ${this.colors.dim('│')}    - Autonomous Governance & Self-Healing`);
+    console.log(`  ${this.colors.dim('│')}    - ${this.colors.magenta('Post-Quantum Security')} (simulated) & Proactive Task Homing`);
+    console.log(`  ${this.colors.dim('│')}    - Governance, Audit, and Verification Gates`);
     console.log(`  ${this.colors.dim('│')}`);
     console.log(`  ${this.colors.dim('│')}  ${this.colors.yellow('🌟 100% FREE & OPEN SOURCE')}`);
     console.log(`  ${this.colors.dim('│')}    - No paywalls. No gated content.`);
