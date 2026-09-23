@@ -1,4 +1,4 @@
-# MindForge — Persona Registry (v11.9.6)
+# MindForge — Persona Registry (v11.9.9)
 
 > **Curated subset.** The real persona library has 216 files under `.mindforge/personas/`. Each is
 > loaded via `/mindforge:agent <name>` as an in-session role overlay (not an isolated subagent —
@@ -34,7 +34,7 @@ autonomous reasoning.
 | Persona | Identifier | Cognitive Focus | Primary Directive |
 | :--- | :--- | :--- | :--- |
 | **mf-reviewer** | Quality Lead | Correctness & Performance | "Find the bugs and antipatterns before they ship." |
-| **security-reviewer** | Threat Hunter | PQAS & OWASP | "Harden the framework against all agentic threats." |
+| **security-reviewer** | Threat Hunter | PQAS (simulated) & OWASP | "Harden the framework against all agentic threats." |
 | **nyquist-auditor** | Requirement Auditor | Gaps & Edge Cases | "Ensure every requirement has a verification plan." |
 | **verifier** | UAT Specialist | Evidence & Validation | "Prove the feature works with visual evidence." |
 | **qa-engineer** | QA Specialist | Adversarial Testing | "Think adversarially to find failure modes and logic gaps." |

@@ -7,7 +7,7 @@
 # Pin MINDFORGE_MCP_VERSION at build time to the release you are publishing to the catalog:
 #   docker build --build-arg MINDFORGE_MCP_VERSION=11.9.9 -t mindforge-mcp .
 
-FROM node:25-bookworm-slim AS build
+FROM node:22-bookworm-slim AS build
 
 ARG MINDFORGE_MCP_VERSION=11.9.9
 
@@ -15,7 +15,7 @@ WORKDIR /opt/mindforge
 RUN npm init -y >/dev/null 2>&1 \
     && npm install --omit=dev --no-audit --no-fund "mindforge-mcp-server@${MINDFORGE_MCP_VERSION}"
 
-FROM node:25-bookworm-slim AS runtime
+FROM node:22-bookworm-slim AS runtime
 
 LABEL org.opencontainers.image.title="MindForge MCP Server" \
       org.opencontainers.image.description="Read the MindForge engine — knowledge graph, project health, and audit log — over the Model Context Protocol (stdio)." \

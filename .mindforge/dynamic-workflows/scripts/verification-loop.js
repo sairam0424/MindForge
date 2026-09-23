@@ -128,6 +128,9 @@ for (let round = 1; round <= maxRounds; round++) {
 }
 
 phase('Report');
+if (scoreHistory.length === 0) {
+  return { task, metric: metric || '(scorer-inferred)', finalArtifact: currentArtifact, scoreHistory: [], error: 'no-rounds-completed' };
+}
 const finalScore = scoreHistory.at(-1);
 log(`Final score: ${finalScore.score}/100 across ${scoreHistory.length} round(s)`);
 

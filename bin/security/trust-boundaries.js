@@ -199,6 +199,18 @@ function isHighImpact(command) {
 
     // ── #14 Power-state commands ────────────────────────────────────────────
     /\b(shutdown|reboot|halt|poweroff)\b/i,
+
+    // ── #16 Download -> chmod +x -> direct execution (dropper chain) ───────
+    // curl/wget fetches a payload, chmod +x makes it executable, then the
+    // SAME command line invokes it directly by path with no interpreter
+    // keyword in that final step — so neither #4 (pipe-to-shell) nor #5
+    // (interpreter + untrusted path) above ever see it. Requires all three
+    // in order: a curl/wget call, a chmod ... +x on that call's command
+    // segment, and a later bare invocation of an absolute, /tmp, /var/tmp,
+    // /dev/shm, or ~/-rooted path as its own command (introduced by a
+    // separator or the start of the line) — i.e. the path being run, not
+    // merely referenced as an argument (audit finding, pre-release review).
+    /\b(curl|wget)\b[\s\S]*?\bchmod\b[^;&|\n]*\+x\b[\s\S]*?(^|[;&|\n]\s*)(~\/|\/tmp\/|\/var\/tmp\/|\/dev\/shm\/|\/)\S+/i,
   ];
   return patterns.some(pattern => pattern.test(sanitized));
 }

@@ -34,3 +34,11 @@ updates:
     labels:
       - "dependencies"
       - "docker"
+    ignore:
+      # Node's release line alternates LTS (even majors: 18/20/22/24...) with
+      # Current-only releases (odd majors: 19/21/23/25...) that lose support in
+      # ~6 months. Dependabot has no "even major only" filter, so block ALL major
+      # bumps of the base image and require a human to intentionally re-pin to the
+      # next LTS major (see e3bfdacc, which auto-bumped to non-LTS node:25).
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
