@@ -1,5 +1,63 @@
 # Changelog
 
+## [11.9.9] — 2026-09-23 — Release-readiness audit: 5 CRITICAL + 9 HIGH findings fixed
+
+Patch release. An 8-agent audit workflow tested every MindForge surface (slash commands,
+skills, personas, subagents, dynamic workflows, CLI/MCP, live install/verify/health) as a
+release gate before shipping to real external users. Every finding was independently
+re-verified against live code/commands before fixing, not trusted from the audit report
+alone.
+
+### Fixed
+
+**CRITICAL**
+
+- Removed the `godmode` skill entirely — a real, complete LLM jailbreak toolkit that was
+  shipping unconditionally in the published npm tarball, undisclosed anywhere in the docs.
+- Rewrote `help.md`/`status.md`/`health.md`/`security-scan.md`: they claimed
+  PQAS/biometric-bypass/lattice-crypto signature verification was "active by default,"
+  directly contradicted by `quantum-crypto.js`'s own comments (simulated, off by default).
+- Fixed `--minimal`: a second, unguarded persona-copy path in `installer-core.js` shipped
+  the full 218-file persona set regardless of `--minimal`. Gated on `!minimal` rather than
+  removed outright — the copy is a real, tested per-harness delivery contract, confirmed
+  against `harness-adapter-compliance.js`'s `ADAPTER_RECORDS`.
+- Fixed `security-scan.md`'s "Sovereign Integrity Check," which called a CLI flag on a
+  module with no CLI entrypoint (always exits 0) — a CRITICAL gate that could never fail.
+  Replaced with the one real check (policy-engine tamper detection).
+- Disclosed `bin/engine/skill-loader.js` as dead code (4 lines, zero callers). The real
+  trigger-matching mechanism is an LLM-followed protocol spec
+  (`.mindforge/engine/skills/loader.md`), not deterministic code.
+
+**HIGH**
+
+- `install-skill.md`: documented the literal action token (`install`/`register`/`audit`)
+  `bin/skill-registry.js` deliberately requires with no default.
+- `marketplace.md`: disclosed that zero published packages exist today; labeled sample
+  output as illustrative, not reproducible.
+- `status.md`: fixed a nonexistent-file reference (`AutoRunner.js` -> the real
+  `bin/autonomous/auto-runner.js`).
+- `pr-review`/`cross-review`: was an unqualified alias with descriptions implying different
+  behavior — now honestly documented as the same 2-model adversarial review engine.
+- 8 dynamic-workflow scripts (`feature-planner`, `tdd-sprint`, `onboard-codebase`,
+  `incident-response`, `release-prep`, `perf-optimize`, `refactor-plan`,
+  `verification-loop`): added null-guards after every dependent `agent()` call, matching
+  the pattern ~27 other scripts already use.
+- `MANIFEST.md`: registered 32 engine-tier skills that existed on disk but were never
+  listed in the registration source of truth (`systematic-debugging`,
+  `test-driven-development`, and 30 others).
+- 3 MF-series personas (`mf-tool`, `mf-memory`, `mf-executor`): replaced fictional tool
+  grants (`Database`, `API`, `task_boundary`, `commit_memory`,
+  `multi_replace_file_content`) with the real Claude Code tool vocabulary.
+- `swarm-templates.json`: reconciled 11 dangling persona references (2 fixed by name
+  correction, 9 removed with no real equivalent); updated `docs/PERSONAS.md`'s
+  `data-privacy-engineer` writeup to match the real `privacy-engineer.md` persona it now
+  points to.
+- `health` command: wired to `verifyInstall()` so it actually checks installation
+  integrity instead of only an npm-version lookup.
+- `AUDIT.jsonl`: distinguished "no audit log yet" from "chain broken" so a brand-new
+  install doesn't report a false BROKEN status; shipped `verify-audit.js` by default (its
+  only dependencies already shipped unconditionally).
+
 ## [11.9.8] — 2026-09-21 — What the README claims, verified line by line
 
 Patch release. v11.9.7's README rewrite got a literal, end-to-end audit: every command it

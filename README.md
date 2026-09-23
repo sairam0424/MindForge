@@ -239,23 +239,33 @@ Full verification walkthrough: [docs/quick-verify.md](docs/quick-verify.md).
 
 ## Latest release
 
-**v11.9.8** (2026-09-21) — What the README claims, verified line by line. v11.9.7's README
-rewrite got a literal, end-to-end audit: every command it documents actually run — real
-`npx` installs, a real Homebrew install/uninstall cycle, a real `npm i mindforge-sdk`, live
-registry checks — instead of re-read for plausibility. 113 claims checked, 98 held up, 14
-didn't, 1 couldn't be verified either way. Two of the 14 were real bugs:
-`--runtime claude,cursor` crashed the installer outright, and `--minimal` claimed "no
-persona library" but shipped all 216 anyway. Both fixed. The other twelve were
-documentation catching up to what the code actually does — a removed `[--ads]` hint that
-was never real, the auto-detect claim, `--repair`, `--profile`, the CLI `spawn` stub, the
-License holder, the skill-tier split, the `bin/` line count, three Documentation-table rows
-that overstated their linked docs, and the `mindforge-plugin-*` namespace's empty catalog.
-See [RELEASENOTES.md](./RELEASENOTES.md) or [CHANGELOG.md](./CHANGELOG.md).
+**v11.9.9** (2026-09-23) — Release-readiness audit: 5 CRITICAL + 9 HIGH findings fixed. An
+8-agent audit workflow tested every surface (commands, skills, personas, subagents,
+dynamic workflows, CLI/MCP, live install/verify/health) as a release gate before pointing
+real external users at the project. Every finding was independently re-verified against
+live code before fixing, not trusted from the audit report alone. Five were ship-blocking:
+a real LLM jailbreak toolkit (`godmode`) shipping unconditionally in the package is gone;
+`help.md`/`status.md`/`health.md`/`security-scan.md` stop claiming PQAS/biometric/
+lattice-crypto verification is "active by default" when the code says the opposite;
+`--minimal` now actually skips the persona set instead of shipping all 218 files anyway; a
+"Sovereign Integrity Check" that called a CLI flag on a script with no CLI entrypoint (and
+so could never fail) is replaced with a real check; and a dead 4-line stub standing in for
+"232 auto-triggered skills" is now disclosed as what it is. Nine more: corrected CLI
+invocation docs, disclosed the marketplace's zero published packages, crash-guards on 8
+dynamic workflows, 32 unregistered skills added to the manifest, 3 personas granting
+tools that don't exist fixed, 11 dangling swarm-template references reconciled, `health`
+wired to a real integrity check, and a brand-new install's audit log no longer reporting a
+false "BROKEN" status. See [RELEASENOTES.md](./RELEASENOTES.md) or
+[CHANGELOG.md](./CHANGELOG.md).
 
 <details>
 <summary><strong>Earlier releases</strong></summary>
 
-The previous release, **v11.9.7**, fixed a version self-contradiction and a false "Enabled"
+**v11.9.8** fixed two real bugs found by a literal, end-to-end README audit (113 claims
+checked, 98 held up): `--runtime claude,cursor` crashed the installer outright, and
+`--minimal` claimed "no persona library" but shipped all 216 anyway. The other twelve
+findings were documentation catching up to what the code actually does. The previous
+release, **v11.9.7**, fixed a version self-contradiction and a false "Enabled"
 claim in the install banner, a dead `docs.mindforge.cc` link, and a persona-count doc
 regression (218 → back to the correct 216) introduced by v11.9.6's own honesty pass.
 **v11.9.6** was the release-readiness pass before pointing real, external users at the
