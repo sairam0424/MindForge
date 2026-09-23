@@ -1,5 +1,41 @@
 # Release Notes
 
+## v12.0.0 — 2026-09-24 — First release aimed at real external users
+
+### Why this release exists
+
+This is the first MindForge release deliberately cut for real external users, not just
+internal iteration — the major-version bump marks that shift, not a breaking change (there
+isn't one; every item below is a fix). Ahead of it, a second independent 8-agent audit
+checked whether v11.9.9 actually cleared that bar: security/STRIDE review, a fresh
+staff-engineer code review, a dependency and license audit, a live production dry-run
+across all 6 supported runtimes, a docs-accuracy pass, re-verification of the prior
+release's deferred backlog, a test-coverage-gap sweep, and a full trace of the release
+pipeline itself. It found 1 CRITICAL and 4 HIGH issue still standing in the way, plus 8
+MEDIUM/LOW issues worth closing before this exact cutover — all adversarially re-verified
+(10/10 confirmed, 0 refuted) before being fixed.
+
+### The user-visible part
+
+**The one CRITICAL:** `--global` installs printed a fabricated success banner claiming 216
+personas and 122 skills were "active," when a global install writes none of them by
+design — now prints an honest description of what it actually writes.
+
+**Four HIGH fixes:** the install banner also claimed a "Proactive Semantic Intent
+Harvesting" feature was "active" when it's a confirmed no-op, and carried marketing
+language ("Autonomous Enterprise Agentic Ecosystem," "Sovereign Intelligence") this project
+doesn't otherwise stand behind — both reworded to match the honesty bar the rest of the
+docs already hold to. A dynamic-workflow script could still crash on an edge case its own
+null-guard commit missed. Two real test-coverage gaps (nothing guarded the removed
+`godmode` skill or the `--minimal` persona fix against regressing) are closed.
+
+**Eight more, lower severity:** a security dropper-chain pattern gap, a latent
+prototype-pollution path, a CodeQL-flagged incomplete regex escape, a non-LTS Node base
+image that slipped in via an unconstrained Dependabot config, a docs table citing 16
+personas that don't exist, a release-pipeline step that's failed cosmetically on the last 4
+releases, a cross-runtime hook-registration parity gap, and a handful of GitHub Actions and
+documentation hygiene fixes. Full list in [CHANGELOG.md](./CHANGELOG.md).
+
 ## v11.9.9 — 2026-09-23 — Release-readiness audit: 5 CRITICAL + 9 HIGH findings fixed
 
 ### Why this release exists

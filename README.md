@@ -239,33 +239,37 @@ Full verification walkthrough: [docs/quick-verify.md](docs/quick-verify.md).
 
 ## Latest release
 
-**v11.9.9** (2026-09-23) — Release-readiness audit: 5 CRITICAL + 9 HIGH findings fixed. An
-8-agent audit workflow tested every surface (commands, skills, personas, subagents,
-dynamic workflows, CLI/MCP, live install/verify/health) as a release gate before pointing
-real external users at the project. Every finding was independently re-verified against
-live code before fixing, not trusted from the audit report alone. Five were ship-blocking:
-a real LLM jailbreak toolkit (`godmode`) shipping unconditionally in the package is gone;
-`help.md`/`status.md`/`health.md`/`security-scan.md` stop claiming PQAS/biometric/
-lattice-crypto verification is "active by default" when the code says the opposite;
-`--minimal` now actually skips the persona set instead of shipping all 218 files anyway; a
-"Sovereign Integrity Check" that called a CLI flag on a script with no CLI entrypoint (and
-so could never fail) is replaced with a real check; and a dead 4-line stub standing in for
-"232 auto-triggered skills" is now disclosed as what it is. Nine more: corrected CLI
-invocation docs, disclosed the marketplace's zero published packages, crash-guards on 8
-dynamic workflows, 32 unregistered skills added to the manifest, 3 personas granting
-tools that don't exist fixed, 11 dangling swarm-template references reconciled, `health`
-wired to a real integrity check, and a brand-new install's audit log no longer reporting a
-false "BROKEN" status. See [RELEASENOTES.md](./RELEASENOTES.md) or
-[CHANGELOG.md](./CHANGELOG.md).
+**v12.0.0** (2026-09-24) — First release aimed at real external users. The major-version
+bump marks that shift, not a breaking change — there isn't one; every item here is a fix.
+A second, independent 8-agent audit checked whether v11.9.9 actually cleared that bar
+(security/STRIDE, staff-engineer code review, deps+license, a live production dry-run
+across all 6 supported runtimes, docs accuracy, re-verification of the prior release's
+deferred backlog, test-coverage gaps, and a full trace of the release pipeline) and found
+1 CRITICAL + 4 HIGH issues still standing in the way. The CRITICAL: `--global` installs
+printed a fabricated banner claiming 216 personas/122 skills were "active" while writing
+none of them — now prints an honest description of what a global install actually writes.
+The four HIGH: an unhedged "active" claim for a confirmed no-op feature plus unearned
+"Autonomous Enterprise/Sovereign" marketing language in the install banner, both reworded;
+a dynamic-workflow script's own null-guard commit missed one crash-causing edge case, now
+covered; and two real test-coverage gaps (nothing guarded the removed `godmode` skill or
+the `--minimal` persona fix against regressing) are closed. Eight more, lower severity: a
+security dropper-chain pattern gap, a latent prototype-pollution path, a CodeQL-flagged
+regex-escape bug, a non-LTS Node base image that slipped in via Dependabot, a docs table
+citing 16 nonexistent personas, a release-pipeline step that's failed cosmetically on the
+last 4 releases, a cross-runtime hook-registration parity gap, and CI/doc hygiene fixes.
+See [RELEASENOTES.md](./RELEASENOTES.md) or [CHANGELOG.md](./CHANGELOG.md).
 
 <details>
 <summary><strong>Earlier releases</strong></summary>
 
-**v11.9.8** fixed two real bugs found by a literal, end-to-end README audit (113 claims
-checked, 98 held up): `--runtime claude,cursor` crashed the installer outright, and
-`--minimal` claimed "no persona library" but shipped all 216 anyway. The other twelve
-findings were documentation catching up to what the code actually does. The previous
-release, **v11.9.7**, fixed a version self-contradiction and a false "Enabled"
+**v11.9.9** ran the first release-readiness audit as a gate before pointing real external
+users at the project for the first time — 5 CRITICAL findings (including a shipped LLM
+jailbreak skill and a `--minimal` flag that shipped the full persona set anyway) and 9 HIGH
+findings, all fixed. **v11.9.8** fixed two real bugs found by a literal, end-to-end README
+audit (113 claims checked, 98 held up): `--runtime claude,cursor` crashed the installer
+outright, and `--minimal` claimed "no persona library" but shipped all 216 anyway. The
+other twelve findings were documentation catching up to what the code actually does. The
+release before that, **v11.9.7**, fixed a version self-contradiction and a false "Enabled"
 claim in the install banner, a dead `docs.mindforge.cc` link, and a persona-count doc
 regression (218 → back to the correct 216) introduced by v11.9.6's own honesty pass.
 **v11.9.6** was the release-readiness pass before pointing real, external users at the

@@ -14,11 +14,11 @@ import {
 } from 'mindforge-sdk';
 ```
 
-Current SDK version: `11.9.9`
+Current SDK version: `12.0.0`
 
 ---
 
-## SDK Exports (v11.9.9)
+## SDK Exports (v12.0.0)
 
 ```javascript
 const {
@@ -28,7 +28,7 @@ const {
   commands,               // Command registry
   batch,                  // Batch execution
   MindForgeMemory,        // Memory interface
-  VERSION                 // '11.9.9'
+  VERSION                 // '12.0.0'
 } = require('mindforge-sdk');
 // or: import { MindForgeClient, VERSION } from 'mindforge-sdk';
 ```
