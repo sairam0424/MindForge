@@ -119,7 +119,7 @@ function releaseReadinessChecks(root) {
       label: 'RELEASENOTES.md present and has an entry for the current version',
       points: 2,
       pass: fileExists(root, 'RELEASENOTES.md') && Boolean(pkgVersion)
-        && new RegExp(`^## v${pkgVersion.replace(/\./g, '\\.')}(?![\\d.\\w-])`, 'm')
+        && new RegExp(`^## v${pkgVersion.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\d.\\w-])`, 'm')
           .test(safeRead(root, 'RELEASENOTES.md')),
       fix: `Add a "## v${pkgVersion || '?'}" section to RELEASENOTES.md. README.md links here as the human-readable route to the BREAKING notes, so releasing without one points readers at a file whose newest entry describes a different version.`,
     },
