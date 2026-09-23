@@ -70,7 +70,7 @@ but it declined to run on almost every project, so in practice nothing was enfor
 
 What that means, measured rather than asserted:
 
-- **The `npx` channel generates the config it never used to ship.** `files[]` has 52 entries and
+- **The `npx` channel generates the config it never used to ship.** `files[]` has 53 entries and
   none of them contains `settings`, so no settings file is *published* — instead
   `bin/installer/hook-registration.js` writes one at install time, merging append-only into any
   file you already have. Measured on a confined install: **8 hooks registered** into
