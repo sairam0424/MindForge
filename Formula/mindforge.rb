@@ -1,8 +1,8 @@
 class Mindforge < Formula
   desc "Agentic-intelligence framework for Claude Code — commands, subagents, governance"
   homepage "https://github.com/sairam0424/MindForge"
-  url "https://registry.npmjs.org/mindforge-cc/-/mindforge-cc-11.9.9.tgz"
-  sha256 "851257b0757ce62f1a3f16b82ec80d9940524a6f82c8d13d83acd026f4f4cacb"
+  url "https://registry.npmjs.org/mindforge-cc/-/mindforge-cc-12.0.0.tgz"
+  sha256 "40b2c18f55ff6813d556cde938d22c366232ae473c03be02503852f9c1a1d6f6"
   license "MIT"
 
   depends_on "node"
@@ -15,6 +15,6 @@ class Mindforge < Formula
   test do
     # mindforge-cc installs the framework into a target project; --version
     # must work without a project context.
-    assert_match "11.9.9", shell_output("#{bin}/mindforge --version 2>&1", 0)
+    assert_match "12.0.0", shell_output("#{bin}/mindforge --version 2>&1", 0)
   end
 end
