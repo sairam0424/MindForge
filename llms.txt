@@ -1,0 +1,27 @@
+# MindForge
+
+> Agentic-intelligence framework for Claude Code and Antigravity: slash commands, subagents, skills, hooks, governance, memory, and cost-aware model routing for AI-driven development. Ships as the npm package `mindforge-cc` (pure JS runtime, zero native dependencies) plus a Claude Code plugin marketplace entry.
+
+MindForge installs into a project via `npx mindforge-cc@latest` and adds an interface layer (slash commands, subagents), a declarative engine spec (skills, personas, config), a Node runtime (autonomous wave execution, memory, governance, model routing), and a persistence layer (audit trail, state, sql.js-backed knowledge graph). It also ships a standalone MCP server (`mindforge-mcp-server`) and a TypeScript SDK (`mindforge-sdk`).
+
+## Docs
+
+- [README](https://github.com/sairam0424/MindForge/blob/main/README.md): overview, install, quickstart, what's actually enforced
+- [Getting Started](https://github.com/sairam0424/MindForge/blob/main/docs/getting-started.md): first-run setup
+- [User Guide](https://github.com/sairam0424/MindForge/blob/main/docs/user-guide.md): day-to-day usage
+- [Commands Reference](https://github.com/sairam0424/MindForge/blob/main/docs/commands-reference.md): all `/mindforge:*` slash commands
+- [SDK Reference](https://github.com/sairam0424/MindForge/blob/main/docs/sdk-reference.md): `mindforge-sdk` API
+- [Troubleshooting](https://github.com/sairam0424/MindForge/blob/main/docs/troubleshooting.md)
+- [FAQ](https://github.com/sairam0424/MindForge/blob/main/docs/faq.md)
+- [CHANGELOG](https://github.com/sairam0424/MindForge/blob/main/CHANGELOG.md): release history
+
+## Packages
+
+- [mindforge-cc](https://www.npmjs.com/package/mindforge-cc): the framework — install into a project
+- [mindforge-mcp-server](https://www.npmjs.com/package/mindforge-mcp-server): standalone MCP server exposing the MindForge engine over stdio
+- [mindforge-sdk](https://www.npmjs.com/package/mindforge-sdk): TypeScript SDK
+
+## Optional
+
+- [Security policy](https://github.com/sairam0424/MindForge/blob/main/SECURITY.md)
+- [License (MIT)](https://github.com/sairam0424/MindForge/blob/main/LICENSE)
