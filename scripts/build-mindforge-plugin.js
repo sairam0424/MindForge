@@ -162,6 +162,25 @@ const HOOK_TREES = [
 ];
 
 /**
+ * Individual files bundled alongside HOOK_TREES, for a hook dependency that lives in a bin/
+ * directory NOT wholesale-copied. mindforge-lifecycle-audit-hook.js requires exactly one
+ * function from bin/autonomous/audit-writer.js; bin/autonomous/ itself has 17 files
+ * (auto-runner, mesh-self-healer, a shell script, ...), most unrelated to any hook and with
+ * their own unaudited transitive deps -- bundling the whole tree the way HOOK_TREES does would
+ * ship 16 files nothing needs. So these two are copied individually, at
+ * scripts/autonomous/audit-writer.js and scripts/governance/audit-hash.js: placing them as
+ * siblings under scripts/ (mirroring how `autonomous` and `governance` are siblings under bin/)
+ * means audit-writer.js's own `require('../governance/audit-hash')` and
+ * `require('../utils/file-lock')` resolve unchanged in the plugin tree -- ../utils/file-lock
+ * already lands at scripts/utils/file-lock.js via the bin/utils HOOK_TREES entry above, so no
+ * third file is needed.
+ */
+const HOOK_FILES = [
+  { repoRel: 'bin/autonomous/audit-writer.js', pluginRel: 'scripts/autonomous/audit-writer.js' },
+  { repoRel: 'bin/governance/audit-hash.js', pluginRel: 'scripts/governance/audit-hash.js' },
+];
+
+/**
  * Copy every hook source tree into the plugin and return a repoRel -> pluginRel map of
  * every .js file copied, keyed the way the settings files spell paths (POSIX separators).
  *
@@ -179,6 +198,14 @@ function copyHookTrees() {
     }
     copyDirRecursive(src, path.join(PLUGIN, ...pluginRel.split('/')));
     for (const rel of listJsRecursive(src)) rewrite.set(`${repoRel}/${rel}`, `${pluginRel}/${rel}`);
+  }
+  for (const { repoRel, pluginRel } of HOOK_FILES) {
+    const src = path.join(ROOT, ...repoRel.split('/'));
+    if (!fs.existsSync(src)) {
+      throw new Error(`build-mindforge-plugin: hook dependency file missing: ${repoRel}`);
+    }
+    copyFile(src, path.join(PLUGIN, ...pluginRel.split('/')));
+    rewrite.set(repoRel, pluginRel);
   }
   return rewrite;
 }
@@ -396,4 +423,4 @@ if (require.main === module) {
 // Exported so tests can derive the source -> shipped mapping from the generator itself rather than
 // re-declaring it. A test that hardcodes its own copy of this list stops testing the generator and
 // starts testing its own duplicate — which is how the stale trust-gate-hook.js shipped unnoticed.
-module.exports = { build, HOOK_TREES };
+module.exports = { build, HOOK_TREES, HOOK_FILES };
