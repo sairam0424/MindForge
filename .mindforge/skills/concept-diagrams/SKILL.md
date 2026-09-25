@@ -5,6 +5,7 @@ version: 0.1.0
 status: stable
 min_mindforge_version: 11.5.1
 triggers: concept diagram, educational diagram, SVG diagram, visual explanation, create diagram, draw diagram, make a diagram, svg visual, flat diagram, educational visual, diagram generation, visual concept
+disable-model-invocation: true
 ---
 
 # Concept Diagrams

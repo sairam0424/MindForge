@@ -386,6 +386,38 @@ registerTool(
   },
   async (args) =>
     safe("memory_remember", async () => {
+      // Require explicit user confirmation via MCP elicitation before writing. Clients
+      // that don't advertise elicitation support (form mode) get a thrown Error from
+      // the SDK itself (see server/index.js elicitInput), which `safe()` below turns
+      // into an isError result — the write never happens, and there is no crash.
+      const content = String(args.content);
+      const contentPreview =
+        content.length > 200
+          ? `${content.slice(0, 200)}… [${content.length - 200} characters omitted]`
+          : content;
+      const confirmation = await server.server.elicitInput({
+        message:
+          `Confirm: store this as a new "${args.type}" knowledge entry? ` +
+          `Content: ${contentPreview}`,
+        requestedSchema: {
+          type: "object",
+          properties: {
+            confirm: {
+              type: "boolean",
+              description: "True to store, false to cancel",
+            },
+          },
+          required: ["confirm"],
+        },
+      });
+      if (
+        confirmation.action !== "accept" ||
+        confirmation.content?.confirm !== true
+      ) {
+        throw new Error(
+          "Write declined — client did not confirm (no elicitation support, or user declined).",
+        );
+      }
       const id = await memory().remember({
         type: args.type as KnowledgeType,
         topic: args.topic,
@@ -498,6 +530,37 @@ registerTool(
           throw new Error(`Unsupported action: ${String(args.action)}`);
       }
     }),
+);
+
+// ── Prompts ──────────────────────────────────────────────────────────────────
+// MCP Prompts (registerPrompt) are a distinct capability from Tools — a prompt
+// returns message templates for the *client* to send to its own model, not a
+// tool-call result. This is the server's first prompt. Sampling/Roots are NOT
+// adopted (deprecated, MCP spec 2026-07-28 SEP-2577); Elicitation is the other
+// adopted capability, on mindforge_memory_remember above.
+server.registerPrompt(
+  "project-health-briefing",
+  {
+    title: "MindForge project health briefing",
+    description:
+      "Produces a one-message briefing from this project's MindForge health check " +
+      "(required-file presence, HANDOFF.json schema_version, AUDIT.jsonl entry count) " +
+      "for the calling model to read before starting work.",
+  },
+  async () => {
+    const report = await safe("health_briefing", async () => client().health());
+    const text = report.isError
+      ? `MindForge health check failed: ${report.content[0]?.text ?? "unknown error"}`
+      : `Project health report:\n\n${report.content[0]?.text ?? "(empty)"}`;
+    return {
+      messages: [
+        {
+          role: "user",
+          content: { type: "text", text },
+        },
+      ],
+    };
+  },
 );
 
 async function main(): Promise<void> {

@@ -5,6 +5,7 @@ version: 2.0.0
 status: stable
 min_mindforge_version: 11.5.1
 triggers: request code review, code review protocol, review this PR, ask for review, prepare for review, submit for review, code review checklist, pr review request, review readiness, code review preparation, review workflow, get code reviewed
+disable-model-invocation: true
 ---
 
 # Pre-Commit Code Verification

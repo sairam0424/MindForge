@@ -54,7 +54,7 @@ Measured on a `git clone --no-hardlinks` of the tree at commit `963902d`, one
 `node bin/install.js --<runtime> --local` per harness into a fresh `mktemp -d`
 with `HOME` confined to a second fresh `mktemp -d`:
 
-- shared `.claude/` mirror: **388 files / 1544476 bytes**, identical for
+- shared `.claude/` mirror: **388 files / 1544766 bytes**, identical for
   antigravity, cursor, opencode, gemini and copilot.
 - it contains **only** `commands/` (224: 221 from `.agent/mindforge` plus 3
   namespaced under `commands/forge`) and `agents/` (164 subagents).
@@ -88,10 +88,13 @@ and `security-scan.md` to stop claiming PQAS/biometric/lattice-crypto verificati
 default, and trimmed a `godmode` reference out of `skills-index.md`. It rose again to 1544476
 (net +689 bytes) from further honesty/correctness fixes to `install-skill.md` (documenting the
 required literal action token), `marketplace.md` (disclosing zero published packages today), and
-`status.md` (a corrected file path). That is the gate working: a document stating a MEASURED size
+`status.md` (a corrected file path). It rose again to 1544766 (net +290 bytes) when
+`codebase-orchestrator.md`, `ui-ux-tester.md` and `wordpress-master.md` each gained a
+`disallowedTools:` + `isolation: worktree` frontmatter pair as part of a subagent hardening pilot.
+That is the gate working: a document stating a MEASURED size
 goes stale the moment content changes, and the test catches it rather than letting the number rot.
 
-The **mirror size** in that block — `388 files / 1544476 bytes` — is asserted
+The **mirror size** in that block — `388 files / 1544766 bytes` — is asserted
 against a real install by `tests/harness-emitted-tree.test.js`, so editing either
 the doc or the installer without the other turns the suite red. The 973/975
 figures in the last bullet are explanatory only and deliberately unasserted; they

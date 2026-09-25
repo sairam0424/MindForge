@@ -133,7 +133,18 @@ function buildProtocolSkill(skillsDst) {
 // ── 4. Hooks: copy scripts + translate settings to a plugin hooks.json ────────────
 // Map the Gemini-CLI event vocabulary used in .agent/settings.json to Claude Code's
 // plugin hook events. A hook under an unrecognized event name silently never fires.
-const EVENT_MAP = { SessionStart: 'SessionStart', BeforeTool: 'PreToolUse', AfterTool: 'PostToolUse' };
+// PreCompact/SubagentStart/SubagentStop are deliberate IDENTITY mappings, not an
+// oversight: unlike SessionStart/BeforeTool/AfterTool, these three events have no
+// Gemini-CLI vocabulary equivalent, so .agent/settings.json already registers them
+// under their real Claude names and the map just passes them through unchanged.
+const EVENT_MAP = {
+  SessionStart: 'SessionStart',
+  BeforeTool: 'PreToolUse',
+  AfterTool: 'PostToolUse',
+  PreCompact: 'PreCompact',
+  SubagentStart: 'SubagentStart',
+  SubagentStop: 'SubagentStop',
+};
 
 // Every source tree a hook command may name, and where it lands under the plugin.
 // bin/security is here because .agent/settings.json's trust-gate hook points at
@@ -148,6 +159,25 @@ const HOOK_TREES = [
   // this entry). Bundling both trees here preserves that same relative path shape in the plugin.
   { repoRel: 'bin/hooks', pluginRel: 'scripts/hooks' },
   { repoRel: 'bin/utils', pluginRel: 'scripts/utils' },
+];
+
+/**
+ * Individual files bundled alongside HOOK_TREES, for a hook dependency that lives in a bin/
+ * directory NOT wholesale-copied. mindforge-lifecycle-audit-hook.js requires exactly one
+ * function from bin/autonomous/audit-writer.js; bin/autonomous/ itself has 17 files
+ * (auto-runner, mesh-self-healer, a shell script, ...), most unrelated to any hook and with
+ * their own unaudited transitive deps -- bundling the whole tree the way HOOK_TREES does would
+ * ship 16 files nothing needs. So these two are copied individually, at
+ * scripts/autonomous/audit-writer.js and scripts/governance/audit-hash.js: placing them as
+ * siblings under scripts/ (mirroring how `autonomous` and `governance` are siblings under bin/)
+ * means audit-writer.js's own `require('../governance/audit-hash')` and
+ * `require('../utils/file-lock')` resolve unchanged in the plugin tree -- ../utils/file-lock
+ * already lands at scripts/utils/file-lock.js via the bin/utils HOOK_TREES entry above, so no
+ * third file is needed.
+ */
+const HOOK_FILES = [
+  { repoRel: 'bin/autonomous/audit-writer.js', pluginRel: 'scripts/autonomous/audit-writer.js' },
+  { repoRel: 'bin/governance/audit-hash.js', pluginRel: 'scripts/governance/audit-hash.js' },
 ];
 
 /**
@@ -168,6 +198,14 @@ function copyHookTrees() {
     }
     copyDirRecursive(src, path.join(PLUGIN, ...pluginRel.split('/')));
     for (const rel of listJsRecursive(src)) rewrite.set(`${repoRel}/${rel}`, `${pluginRel}/${rel}`);
+  }
+  for (const { repoRel, pluginRel } of HOOK_FILES) {
+    const src = path.join(ROOT, ...repoRel.split('/'));
+    if (!fs.existsSync(src)) {
+      throw new Error(`build-mindforge-plugin: hook dependency file missing: ${repoRel}`);
+    }
+    copyFile(src, path.join(PLUGIN, ...pluginRel.split('/')));
+    rewrite.set(repoRel, pluginRel);
   }
   return rewrite;
 }
@@ -385,4 +423,4 @@ if (require.main === module) {
 // Exported so tests can derive the source -> shipped mapping from the generator itself rather than
 // re-declaring it. A test that hardcodes its own copy of this list stops testing the generator and
 // starts testing its own duplicate — which is how the stale trust-gate-hook.js shipped unnoticed.
-module.exports = { build, HOOK_TREES };
+module.exports = { build, HOOK_TREES, HOOK_FILES };

@@ -5,6 +5,7 @@ version: 2.0.0
 status: stable
 min_mindforge_version: 11.5.1
 triggers: write a plan, plan mode, implementation planning, plan before coding, plan this feature, create a plan, markdown plan, task planning, planning phase, write plan creation, break down task, plan the work
+disable-model-invocation: true
 ---
 
 # Plan Mode

@@ -352,7 +352,7 @@ test('.claude and .agent hook sets differ only by the known instinct-capture gap
 // CONTENT: hook-ID SETS via hookIdSet(), skill/command COUNTS, and file EXISTENCE. A stale file has
 // the same name and the same id as a fresh one. So these assertions compare bytes and behaviour.
 
-const { HOOK_TREES } = require(path.join(ROOT, 'scripts', 'build-mindforge-plugin.js'));
+const { HOOK_TREES, HOOK_FILES } = require(path.join(ROOT, 'scripts', 'build-mindforge-plugin.js'));
 // node:crypto explicitly — the bare global `crypto` in modern Node is WebCrypto, which has no
 // createHash, and the failure reads "crypto.createHash is not a function" rather than "not defined".
 const nodeCrypto = require('node:crypto');
@@ -382,6 +382,15 @@ function shippedHookScripts() {
   };
   for (const { repoRel, pluginRel } of HOOK_TREES) {
     walk(path.join(ROOT, ...repoRel.split('/')), path.join(PLUGIN, ...pluginRel.split('/')), pluginRel);
+  }
+  // HOOK_FILES bundles individual files (not whole directories), so each is its own {src, dst}
+  // pair rather than something walk() would discover.
+  for (const { repoRel, pluginRel } of HOOK_FILES) {
+    pairs.push({
+      src: path.join(ROOT, ...repoRel.split('/')),
+      dst: path.join(PLUGIN, ...pluginRel.split('/')),
+      rel: pluginRel,
+    });
   }
   return pairs;
 }
@@ -430,6 +439,49 @@ test('plugin hooks.json matches .agent/settings.json as full TUPLES, not just id
   assert.deepStrictEqual(plugin, agent,
     'plugin hooks.json diverges from .agent/settings.json in matcher or profiles, not only ids — '
     + 're-run scripts/build-mindforge-plugin.js');
+});
+
+test('plugin hooks.json registers the new lifecycle audit events', () => {
+  const hooks = readJson(path.join(PLUGIN, 'hooks', 'hooks.json')).hooks;
+  for (const evt of ['PreCompact', 'SubagentStart', 'SubagentStop']) {
+    assert.ok(hooks[evt] && hooks[evt].length > 0, `missing ${evt} in built hooks.json`);
+  }
+});
+
+test('the SHIPPED lifecycle-audit hook runs cleanly from inside the plugin tree', () => {
+  // THE DEFECT THIS CATCHES. mindforge-lifecycle-audit-hook.js's own require of its one real
+  // dependency (bin/autonomous/audit-writer.js) is copied byte-identical into the plugin, but
+  // .agent/hooks/ (2 levels deep from repo root) flattens to scripts/ (1 level deep from the
+  // plugin root) -- so a naive relative require that worked in the repo crashed with
+  // MODULE_NOT_FOUND the moment this exact script ran from inside plugins/mindforge/scripts/.
+  // Every other check in this file compares hooks.json TUPLES or byte-identity; none of them
+  // actually EXECUTE a shipped hook script from the plugin tree, so none would have caught this.
+  const os = require('os');
+  const { spawnSync } = require('child_process');
+  const shipped = path.join(PLUGIN, 'scripts', 'mindforge-lifecycle-audit-hook.js');
+  assert.ok(fs.existsSync(shipped), 'the plugin must ship the lifecycle-audit hook script');
+
+  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-plugin-lifecycle-audit-'));
+  fs.mkdirSync(path.join(cwd, '.planning'), { recursive: true });
+
+  const r = spawnSync(process.execPath, [shipped], {
+    input: JSON.stringify({ hook_event_name: 'PreCompact' }),
+    encoding: 'utf8',
+    cwd,
+  });
+
+  assert.strictEqual(r.status, 0,
+    `the SHIPPED lifecycle-audit hook exited ${r.status} from inside the plugin tree ` +
+    `(stderr: ${r.stderr || '<empty>'}). It must never throw -- a crash here silently drops ` +
+    'every audit entry for anyone who installed MindForge via /plugin install.');
+  assert.strictEqual(r.stderr || '', '',
+    `the SHIPPED lifecycle-audit hook wrote to stderr on a clean run: ${r.stderr}`);
+
+  const auditFile = path.join(cwd, '.planning', 'AUDIT.jsonl');
+  assert.ok(fs.existsSync(auditFile), 'the shipped hook must actually append an audit entry, not just exit 0');
+  const lastLine = fs.readFileSync(auditFile, 'utf8').trim().split('\n').pop();
+  const entry = JSON.parse(lastLine);
+  assert.strictEqual(entry.event, 'PreCompact');
 });
 
 test('.agent and .claude agree on matcher and profiles for every SHARED hook', () => {
