@@ -390,10 +390,15 @@ registerTool(
       // that don't advertise elicitation support (form mode) get a thrown Error from
       // the SDK itself (see server/index.js elicitInput), which `safe()` below turns
       // into an isError result — the write never happens, and there is no crash.
+      const content = String(args.content);
+      const contentPreview =
+        content.length > 200
+          ? `${content.slice(0, 200)}… [${content.length - 200} characters omitted]`
+          : content;
       const confirmation = await server.server.elicitInput({
         message:
           `Confirm: store this as a new "${args.type}" knowledge entry? ` +
-          `Content: ${String(args.content).slice(0, 200)}`,
+          `Content: ${contentPreview}`,
         requestedSchema: {
           type: "object",
           properties: {
@@ -530,17 +535,17 @@ registerTool(
 // ── Prompts ──────────────────────────────────────────────────────────────────
 // MCP Prompts (registerPrompt) are a distinct capability from Tools — a prompt
 // returns message templates for the *client* to send to its own model, not a
-// tool-call result. This is the server's first prompt; see docs/research/
-// mcp-spec-gaps.md for why Elicitation is the other adopted capability (Task 2)
-// and why Sampling/Roots are NOT adopted (deprecated, MCP spec 2026-07-28 SEP-2577).
+// tool-call result. This is the server's first prompt. Sampling/Roots are NOT
+// adopted (deprecated, MCP spec 2026-07-28 SEP-2577); Elicitation is the other
+// adopted capability, on mindforge_memory_remember above.
 server.registerPrompt(
   "project-health-briefing",
   {
     title: "MindForge project health briefing",
     description:
-      "Produces a one-message briefing summarizing this project's MindForge health " +
-      "report (audit chain status, config validity, install integrity) for the " +
-      "calling model to read before starting work.",
+      "Produces a one-message briefing from this project's MindForge health check " +
+      "(required-file presence, HANDOFF.json schema_version, AUDIT.jsonl entry count) " +
+      "for the calling model to read before starting work.",
   },
   async () => {
     const report = await safe("health_briefing", async () => client().health());

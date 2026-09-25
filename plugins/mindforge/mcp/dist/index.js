@@ -22564,8 +22564,10 @@ registerTool(
     }
   },
   async (args) => safe("memory_remember", async () => {
+    const content = String(args.content);
+    const contentPreview = content.length > 200 ? `${content.slice(0, 200)}\u2026 [${content.length - 200} characters omitted]` : content;
     const confirmation = await server.server.elicitInput({
-      message: `Confirm: store this as a new "${args.type}" knowledge entry? Content: ${String(args.content).slice(0, 200)}`,
+      message: `Confirm: store this as a new "${args.type}" knowledge entry? Content: ${contentPreview}`,
       requestedSchema: {
         type: "object",
         properties: {
@@ -22674,7 +22676,7 @@ server.registerPrompt(
   "project-health-briefing",
   {
     title: "MindForge project health briefing",
-    description: "Produces a one-message briefing summarizing this project's MindForge health report (audit chain status, config validity, install integrity) for the calling model to read before starting work."
+    description: "Produces a one-message briefing from this project's MindForge health check (required-file presence, HANDOFF.json schema_version, AUDIT.jsonl entry count) for the calling model to read before starting work."
   },
   async () => {
     const report = await safe("health_briefing", async () => client().health());

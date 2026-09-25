@@ -144,13 +144,23 @@ plugins that registered those tools.
 > Is `defer_loading` a Messages-API-level parameter (controlled by whoever calls the API),
 > or something a Claude Code plugin manifest/command can request?
 
-**It is a Messages-API-level parameter, full stop.** The plugin manifest schema has no field
-shaped like it, no field named `tools` or `toolSearch` at all, and the one tool-related field
-that does exist (`commands[].allowedTools`) governs invocation permission, not
-context-loading order. `mindforge-cc` cannot request, hint at, or influence `defer_loading`
-from inside a plugin — not through `plugin.json`, not through a command's frontmatter, and
-not through the `mcpServers` block. This is not "hard to do from a plugin"; there is no
-request surface for it at all on the plugin side of the interface.
+**It is a Messages-API-level parameter for direct control.** The plugin manifest schema has no
+field shaped like it, no field named `tools` or `toolSearch` at all, and the one tool-related
+field that does exist (`commands[].allowedTools`) governs invocation permission, not
+context-loading order. `mindforge-cc` cannot set, hint at, or override `defer_loading` from
+inside a plugin — not through `plugin.json`, not through a command's frontmatter.
+
+**Correction after a follow-up review pass:** `http`/`ws`-type MCP server entries (which a
+plugin's `mcpServers` block can declare inline) support an `alwaysLoad` field. Its documented
+effect isn't fully specified, but it plausibly forces that server's tools to connect/load
+upfront rather than lazily on first tool call — i.e. an *indirect* lever over loading order for
+a plugin's own MCP tools, distinct from setting the Messages API's `defer_loading` field
+directly. So the precise claim is: `mindforge-cc` cannot set `defer_loading` itself from a
+plugin, but its own `mcp-server/`'s `.mcp.json`/plugin-inline config could opt into `alwaysLoad`
+if MindForge ever wanted its own tools to skip the deferred/first-use-connect path — a much
+narrower, already-available lever than the Tool Search Tool capability this document is
+actually scoping. Re-verify `alwaysLoad`'s exact semantics against
+`https://code.claude.com/docs/en/mcp#scale-with-mcp-tool-search` before building against it.
 
 ## Disposition
 

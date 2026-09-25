@@ -61,7 +61,7 @@ function main() {
     appendAuditEntrySync(auditPath, {
       type: 'lifecycle',
       event: eventName,
-      subagent_type: payload.subagent_type || null,
+      agent_type: payload.agent_type || null,
     });
   } catch {
     // Audit append failure must not block the lifecycle event — log to stderr only.
