@@ -67,6 +67,39 @@
           }
         ]
       }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .agent/hooks/run-with-flags.js mindforge-lifecycle-audit .agent/hooks/mindforge-lifecycle-audit-hook.js minimal,standard,strict",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .agent/hooks/run-with-flags.js mindforge-lifecycle-audit .agent/hooks/mindforge-lifecycle-audit-hook.js minimal,standard,strict",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .agent/hooks/run-with-flags.js mindforge-lifecycle-audit .agent/hooks/mindforge-lifecycle-audit-hook.js minimal,standard,strict",
+            "timeout": 5000
+          }
+        ]
+      }
     ]
   }
 }

@@ -432,6 +432,13 @@ test('plugin hooks.json matches .agent/settings.json as full TUPLES, not just id
     + 're-run scripts/build-mindforge-plugin.js');
 });
 
+test('plugin hooks.json registers the new lifecycle audit events', () => {
+  const hooks = readJson(path.join(PLUGIN, 'hooks', 'hooks.json')).hooks;
+  for (const evt of ['PreCompact', 'SubagentStart', 'SubagentStop']) {
+    assert.ok(hooks[evt] && hooks[evt].length > 0, `missing ${evt} in built hooks.json`);
+  }
+});
+
 test('.agent and .claude agree on matcher and profiles for every SHARED hook', () => {
   // The source-of-truth gap itself. .claude/settings.json is what the maintainers edit and what
   // REG-01 emits; .agent/settings.json is what the plugin is BUILT from. A security fix applied to one

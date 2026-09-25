@@ -133,7 +133,18 @@ function buildProtocolSkill(skillsDst) {
 // ── 4. Hooks: copy scripts + translate settings to a plugin hooks.json ────────────
 // Map the Gemini-CLI event vocabulary used in .agent/settings.json to Claude Code's
 // plugin hook events. A hook under an unrecognized event name silently never fires.
-const EVENT_MAP = { SessionStart: 'SessionStart', BeforeTool: 'PreToolUse', AfterTool: 'PostToolUse' };
+// PreCompact/SubagentStart/SubagentStop are deliberate IDENTITY mappings, not an
+// oversight: unlike SessionStart/BeforeTool/AfterTool, these three events have no
+// Gemini-CLI vocabulary equivalent, so .agent/settings.json already registers them
+// under their real Claude names and the map just passes them through unchanged.
+const EVENT_MAP = {
+  SessionStart: 'SessionStart',
+  BeforeTool: 'PreToolUse',
+  AfterTool: 'PostToolUse',
+  PreCompact: 'PreCompact',
+  SubagentStart: 'SubagentStart',
+  SubagentStop: 'SubagentStop',
+};
 
 // Every source tree a hook command may name, and where it lands under the plugin.
 // bin/security is here because .agent/settings.json's trust-gate hook points at
