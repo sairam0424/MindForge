@@ -386,6 +386,33 @@ registerTool(
   },
   async (args) =>
     safe("memory_remember", async () => {
+      // Require explicit user confirmation via MCP elicitation before writing. Clients
+      // that don't advertise elicitation support (form mode) get a thrown Error from
+      // the SDK itself (see server/index.js elicitInput), which `safe()` below turns
+      // into an isError result — the write never happens, and there is no crash.
+      const confirmation = await server.server.elicitInput({
+        message:
+          `Confirm: store this as a new "${args.type}" knowledge entry? ` +
+          `Content: ${String(args.content).slice(0, 200)}`,
+        requestedSchema: {
+          type: "object",
+          properties: {
+            confirm: {
+              type: "boolean",
+              description: "True to store, false to cancel",
+            },
+          },
+          required: ["confirm"],
+        },
+      });
+      if (
+        confirmation.action !== "accept" ||
+        confirmation.content?.confirm !== true
+      ) {
+        throw new Error(
+          "Write declined — client did not confirm (no elicitation support, or user declined).",
+        );
+      }
       const id = await memory().remember({
         type: args.type as KnowledgeType,
         topic: args.topic,

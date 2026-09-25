@@ -22564,6 +22564,24 @@ registerTool(
     }
   },
   async (args) => safe("memory_remember", async () => {
+    const confirmation = await server.server.elicitInput({
+      message: `Confirm: store this as a new "${args.type}" knowledge entry? Content: ${String(args.content).slice(0, 200)}`,
+      requestedSchema: {
+        type: "object",
+        properties: {
+          confirm: {
+            type: "boolean",
+            description: "True to store, false to cancel"
+          }
+        },
+        required: ["confirm"]
+      }
+    });
+    if (confirmation.action !== "accept" || confirmation.content?.confirm !== true) {
+      throw new Error(
+        "Write declined \u2014 client did not confirm (no elicitation support, or user declined)."
+      );
+    }
     const id = await memory().remember({
       type: args.type,
       topic: args.topic,
@@ -22651,6 +22669,27 @@ registerTool(
         throw new Error(`Unsupported action: ${String(args.action)}`);
     }
   })
+);
+server.registerPrompt(
+  "project-health-briefing",
+  {
+    title: "MindForge project health briefing",
+    description: "Produces a one-message briefing summarizing this project's MindForge health report (audit chain status, config validity, install integrity) for the calling model to read before starting work."
+  },
+  async () => {
+    const report = await safe("health_briefing", async () => client().health());
+    const text = report.isError ? `MindForge health check failed: ${report.content[0]?.text ?? "unknown error"}` : `Project health report:
+
+${report.content[0]?.text ?? "(empty)"}`;
+    return {
+      messages: [
+        {
+          role: "user",
+          content: { type: "text", text }
+        }
+      ]
+    };
+  }
 );
 async function main() {
   const transport = new StdioServerTransport();
