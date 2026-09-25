@@ -144,6 +144,30 @@ skillPaths.forEach(skillPath => {
   });
 });
 
+// Populated from Task 4 Step 1's discovery output.
+const SIDE_EFFECTING_SKILLS = [
+  'codebase-onboarding',
+  'concept-diagrams',
+  'github-pr-workflow',
+  'plan',
+  'research-paper-writing',
+  'requesting-code-review',
+  'spike',
+  'subagent-driven-development',
+];
+
+console.log('\nSide-effecting skill invocation hardening:');
+
+SIDE_EFFECTING_SKILLS.forEach(skillName => {
+  test(`${skillName}: side-effecting skill disables auto-invocation`, () => {
+    const skillPath = `.mindforge/skills/${skillName}/SKILL.md`;
+    assert.ok(fs.existsSync(skillPath), `Missing: ${skillPath}`);
+    const fm = parseSkillFrontmatter(skillPath);
+    assert.strictEqual(fm['disable-model-invocation'], 'true', `${skillName}: missing disable-model-invocation: true`);
+    assert.ok(fm.triggers, `${skillName}: triggers must remain present for manual /name invocation`);
+  });
+});
+
 console.log('\nManifest validation:');
 
 test('MANIFEST.md exists', () => {

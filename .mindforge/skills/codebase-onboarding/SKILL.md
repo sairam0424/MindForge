@@ -4,6 +4,7 @@ version: 1.0.0
 min_mindforge_version: 10.0.4
 status: stable
 triggers: onboarding, new repo, unfamiliar codebase, codebase summary, knowledge graph, entry points, learning path, repo overview, architecture discovery, codebase map, project familiarization, code exploration
+disable-model-invocation: true
 ---
 
 # Skill — Codebase Onboarding

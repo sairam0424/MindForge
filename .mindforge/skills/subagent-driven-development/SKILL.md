@@ -5,6 +5,7 @@ version: 1.1.0
 status: stable
 min_mindforge_version: 11.5.1
 triggers: subagent driven development, delegate to subagent, multi-agent implementation, spawn subagents, agent delegation, subagent task, delegate work, parallel implementation, multi-agent workflow, agent-driven development, subagent coordination
+disable-model-invocation: true
 ---
 
 # Subagent-Driven Development

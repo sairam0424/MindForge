@@ -5,6 +5,7 @@ version: 1.1.0
 status: stable
 min_mindforge_version: 11.5.1
 triggers: github pr workflow, pull request lifecycle, open PR, merge PR, create pull request, github pull request, pr workflow, pr process, pull request process, github merge, submit pull request, pr lifecycle
+disable-model-invocation: true
 ---
 
 # GitHub Pull Request Workflow

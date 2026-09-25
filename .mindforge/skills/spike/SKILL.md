@@ -5,6 +5,7 @@ version: 1.0.0
 status: stable
 min_mindforge_version: 11.5.1
 triggers: technical spike, time-boxed spike, explore this problem, spike on, spike investigation, research spike, exploration task, proof of concept spike, spike design, bounded exploration, investigate approach, spike timeboxed
+disable-model-invocation: true
 ---
 
 # Spike

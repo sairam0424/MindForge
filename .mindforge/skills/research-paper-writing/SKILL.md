@@ -5,6 +5,7 @@ version: 1.1.0
 status: stable
 min_mindforge_version: 11.5.1
 triggers: research paper, academic paper, write paper, arxiv paper, NeurIPS paper, scientific paper, paper writing, academic writing, research writing, write research, write academic paper, paper authoring
+disable-model-invocation: true
 ---
 
 # Research Paper Writing Pipeline
