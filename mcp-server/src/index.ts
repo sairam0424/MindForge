@@ -500,6 +500,37 @@ registerTool(
     }),
 );
 
+// ── Prompts ──────────────────────────────────────────────────────────────────
+// MCP Prompts (registerPrompt) are a distinct capability from Tools — a prompt
+// returns message templates for the *client* to send to its own model, not a
+// tool-call result. This is the server's first prompt; see docs/research/
+// mcp-spec-gaps.md for why Elicitation is the other adopted capability (Task 2)
+// and why Sampling/Roots are NOT adopted (deprecated, MCP spec 2026-07-28 SEP-2577).
+server.registerPrompt(
+  "project-health-briefing",
+  {
+    title: "MindForge project health briefing",
+    description:
+      "Produces a one-message briefing summarizing this project's MindForge health " +
+      "report (audit chain status, config validity, install integrity) for the " +
+      "calling model to read before starting work.",
+  },
+  async () => {
+    const report = await safe("health_briefing", async () => client().health());
+    const text = report.isError
+      ? `MindForge health check failed: ${report.content[0]?.text ?? "unknown error"}`
+      : `Project health report:\n\n${report.content[0]?.text ?? "(empty)"}`;
+    return {
+      messages: [
+        {
+          role: "user",
+          content: { type: "text", text },
+        },
+      ],
+    };
+  },
+);
+
 async function main(): Promise<void> {
   const transport = new StdioServerTransport();
   await server.connect(transport);
