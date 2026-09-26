@@ -3,7 +3,18 @@ name: "codebase-orchestrator"
 description: "Use this agent when you need repository-wide refactor governance with explicit approval loops, weighted risk prioritization, diff previews, and deterministic fallback strategies."
 tools: Read, Write, Edit, Bash, Glob, Grep, WebFetch, airis-mcp-gateway, context-manager, error-coordinator, pied-piper, subagent-catalog:search, subagent-catalog:fetch
 model: opus
-disallowedTools: [Bash(git push --force*), Bash(git reset --hard*), Bash(rm -rf *)]
+# disallowedTools with Bash(...) specifiers previously here removed 2026-09-26:
+# per Claude Code's own docs, a specifier entry removes the WHOLE Bash tool,
+# not just the matching pattern -- this subagent's `tools:` line grants bare
+# Bash, so the entries silently stripped all Bash access rather than scoping
+# it. The 3 patterns this was trying to block (git push --force, git reset
+# --hard, rm -rf) are covered for Claude Code installations by the existing
+# PreToolUse trust gate (bin/security/trust-boundaries.js isHighImpact(),
+# wired in .claude/settings.json). Non-Claude harness mirrors (antigravity,
+# cursor, opencode, gemini, copilot) do not carry .claude/settings.json at
+# all, so they never registered this hook either way -- this removal loses
+# no real protection on any harness, but "project-wide" would overclaim
+# coverage for non-Claude installs specifically.
 isolation: worktree
 ---
 
