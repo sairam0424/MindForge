@@ -155,7 +155,13 @@ if (require.main === module) {
       return;
     }
 
-    const result = await healer.homeIn(agentDid, Number(driftScoreArg));
+    const driftScore = Number(driftScoreArg);
+    if (!Number.isFinite(driftScore)) {
+      console.error(`[HOMING-HEAL] Invalid driftScore: "${driftScoreArg}" is not a number.`);
+      process.exit(1);
+    }
+
+    const result = await healer.homeIn(agentDid, driftScore);
     console.log(
       result
         ? JSON.stringify(result, null, 2)

@@ -224,6 +224,11 @@ if (require.main === module) {
   const daysArg = args.find((a) => a.startsWith('--days='));
   const days = daysArg ? parseInt(daysArg.split('=')[1], 10) : 7;
 
+  if (!Number.isFinite(days) || days <= 0) {
+    console.error(`Invalid --days value: "${daysArg.split('=')[1]}" — must be a positive integer.`);
+    process.exit(1);
+  }
+
   const summary = getSummary({ days });
   console.log(`💰  Token Cost Report — last ${days} day(s)`);
   console.log(`    Total spend: $${summary.total_usd.toFixed(4)}`);
