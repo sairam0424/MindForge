@@ -138,3 +138,37 @@ class MeshSelfHealer {
 }
 
 module.exports = new MeshSelfHealer();
+
+// CLI Support — `mindforge self-heal` (see bin/mindforge-cli.js's dispatch table).
+// Was previously a silent no-op: this file exported an already-constructed
+// instance and nothing ever called a method on it when spawned directly.
+if (require.main === module) {
+  (async () => {
+    const healer = new MeshSelfHealer();
+    const [agentDid, driftScoreArg] = process.argv.slice(2);
+
+    if (!agentDid || !driftScoreArg) {
+      console.log('[HOMING-HEAL] No drifting agent specified — nothing to heal.');
+      console.log('    Usage: mindforge self-heal <agentDid> <driftScore>');
+      console.log('    (This is normally invoked automatically by the stuck-monitor on real drift;');
+      console.log('     driftScore >= 80 triggers a real peer-reasoning pass when run manually.)');
+      return;
+    }
+
+    const driftScore = Number(driftScoreArg);
+    if (!Number.isFinite(driftScore)) {
+      console.error(`[HOMING-HEAL] Invalid driftScore: "${driftScoreArg}" is not a number.`);
+      process.exit(1);
+    }
+
+    const result = await healer.homeIn(agentDid, driftScore);
+    console.log(
+      result
+        ? JSON.stringify(result, null, 2)
+        : '[HOMING-HEAL] Drift score below threshold (80) — no action taken.',
+    );
+  })().catch((err) => {
+    console.error('[HOMING-HEAL] failed:', err.message);
+    process.exit(1);
+  });
+}

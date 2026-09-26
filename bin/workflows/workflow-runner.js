@@ -51,13 +51,33 @@ function cmdList() {
   console.log('  Run `node bin/mindforge-cli.js workflow info <name>` for details.\n');
 }
 
+/**
+ * findWorkflow — resolve a user-typed identifier against the registry.
+ *
+ * `workflow list` displays each entry's full slash command (e.g.
+ * "/mindforge:wf-code-audit"), but `info`/`run` looked up only the bare
+ * registry name ("code-audit"). Copy-pasting straight from `list`'s own
+ * output into `info`/`run` produced "Workflow not found" — fixed by
+ * accepting the bare name, the full command, or the command with its
+ * "/mindforge:wf-" prefix stripped.
+ *
+ * @param {Array<Object>} workflows
+ * @param {string} input
+ * @returns {Object|undefined}
+ */
+function findWorkflow(workflows, input) {
+  if (!input) return undefined;
+  const stripped = input.replace(/^\/mindforge:wf-/, '');
+  return workflows.find(w => w.name === input || w.command === input || w.name === stripped);
+}
+
 function cmdInfo(name) {
   if (!name) {
     console.error('Usage: workflow info <name>');
     process.exit(1);
   }
   const workflows = loadRegistry();
-  const wf = workflows.find(w => w.name === name);
+  const wf = findWorkflow(workflows, name);
   if (!wf) {
     console.error(`Workflow not found: ${name}`);
     console.error(`Available: ${workflows.map(w => w.name).join(', ')}`);
@@ -83,9 +103,10 @@ function cmdRun(name, args) {
     process.exit(1);
   }
   const workflows = loadRegistry();
-  const wf = workflows.find(w => w.name === name);
+  const wf = findWorkflow(workflows, name);
   if (!wf) {
     console.error(`Workflow not found: ${name}`);
+    console.error(`Available: ${workflows.map(w => w.name).join(', ')}`);
     process.exit(1);
   }
 

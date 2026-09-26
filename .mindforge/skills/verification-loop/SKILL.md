@@ -95,3 +95,31 @@ git diff --staged  # or git diff main...HEAD
 ### After verification passes
 - Log verification result in AUDIT with per-phase timing
 - Report: "All 6 verification gates passed (+ Phase 6.5 advisory). Safe to proceed."
+
+### Edge cases and error handling
+- Empty diff (nothing staged/changed): skip Phase 6 diff review, still run Phases 1-5 against the working tree.
+- No `npm test`/`npm run build`/`npm run lint` script defined for the project: treat that phase as a documented skip, not a silent pass — report which script was missing.
+- Flaky test on first run: retry once; if it fails a second time, treat it as a real Phase 4 failure (do not average away real signal).
+- Security scan (Phase 5) finds a secret already committed in history, not just the diff: escalate immediately — this is a Tier 3 event, not an advisory.
+- De-Slop Scan (Phase 6.5) throws or is unavailable: log the failure and continue — it's informational-only and must never block Phases 1-6.
+
+### Example
+```
+$ /mindforge:verify-loop
+Phase 1 (Build)........ ✅
+Phase 2 (Type Check).... ✅
+Phase 3 (Lint).......... ✅
+Phase 4 (Test).......... ✅ (138 passed, 0 failed, 3 skipped)
+Phase 5 (Security)...... ✅
+Phase 6 (Diff Review).... ✅
+Phase 6.5 (De-Slop)...... ℹ️  2 findings (advisory only)
+→ All 6 verification gates passed (+ Phase 6.5 advisory). Safe to proceed.
+```
+
+### Pre-ship self-check
+- [ ] Build produced zero errors
+- [ ] Type check produced zero errors
+- [ ] Lint produced zero errors (or documented `--fix`)
+- [ ] Tests: zero failures, no undocumented skips
+- [ ] Security scan clean (no secrets, no injection/XSS/SQL-concat patterns introduced)
+- [ ] Diff reviewed line-by-line for debug code, unintended file changes, sensitive data
