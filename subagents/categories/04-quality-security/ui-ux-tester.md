@@ -7,10 +7,13 @@ model: sonnet
 # per Claude Code's own docs, a specifier entry removes the WHOLE Bash tool,
 # not just the matching pattern -- this subagent's `tools:` line grants bare
 # Bash, so the entries silently stripped all Bash access rather than scoping
-# it. 2 of the 3 patterns this was trying to block are covered project-wide
-# by the existing PreToolUse trust gate (bin/security/trust-boundaries.js
-# isHighImpact(), wired in .claude/settings.json): rm -rf, and sudo (added
-# there 2026-09-26 for exactly this). The 3rd, `git push*` with no --force
+# it. 2 of the 3 patterns this was trying to block are covered for Claude
+# Code installations by the existing PreToolUse trust gate
+# (bin/security/trust-boundaries.js isHighImpact(), wired in
+# .claude/settings.json): rm -rf, and sudo (added there 2026-09-26 for
+# exactly this). Non-Claude harness mirrors (antigravity, cursor, opencode,
+# gemini, copilot) do not carry .claude/settings.json at all, so they never
+# registered this hook either way -- nothing is lost there by this removal. The 3rd, `git push*` with no --force
 # qualifier, is intentionally narrower here than the original entry: the
 # global gate only blocks FORCED pushes (git push --force/-f), matching the
 # other 2 hardened subagents' patterns, not a plain git push. If blocking

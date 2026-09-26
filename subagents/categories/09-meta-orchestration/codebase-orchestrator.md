@@ -8,9 +8,13 @@ model: opus
 # not just the matching pattern -- this subagent's `tools:` line grants bare
 # Bash, so the entries silently stripped all Bash access rather than scoping
 # it. The 3 patterns this was trying to block (git push --force, git reset
-# --hard, rm -rf) are covered project-wide by the existing PreToolUse trust
-# gate (bin/security/trust-boundaries.js isHighImpact(), wired in
-# .claude/settings.json), so removing this entry loses no real protection.
+# --hard, rm -rf) are covered for Claude Code installations by the existing
+# PreToolUse trust gate (bin/security/trust-boundaries.js isHighImpact(),
+# wired in .claude/settings.json). Non-Claude harness mirrors (antigravity,
+# cursor, opencode, gemini, copilot) do not carry .claude/settings.json at
+# all, so they never registered this hook either way -- this removal loses
+# no real protection on any harness, but "project-wide" would overclaim
+# coverage for non-Claude installs specifically.
 isolation: worktree
 ---
 
