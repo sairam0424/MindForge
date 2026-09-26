@@ -54,7 +54,7 @@ Measured on a `git clone --no-hardlinks` of the tree at commit `963902d`, one
 `node bin/install.js --<runtime> --local` per harness into a fresh `mktemp -d`
 with `HOME` confined to a second fresh `mktemp -d`:
 
-- shared `.claude/` mirror: **388 files / 1544766 bytes**, identical for
+- shared `.claude/` mirror: **388 files / 1547682 bytes**, identical for
   antigravity, cursor, opencode, gemini and copilot.
 - it contains **only** `commands/` (224: 221 from `.agent/mindforge` plus 3
   namespaced under `commands/forge`) and `agents/` (164 subagents).
@@ -91,10 +91,17 @@ required literal action token), `marketplace.md` (disclosing zero published pack
 `status.md` (a corrected file path). It rose again to 1544766 (net +290 bytes) when
 `codebase-orchestrator.md`, `ui-ux-tester.md` and `wordpress-master.md` each gained a
 `disallowedTools:` + `isolation: worktree` frontmatter pair as part of a subagent hardening pilot.
-That is the gate working: a document stating a MEASURED size
+It rose again to 1546892 (net +2126 bytes) when those same 3 files' `disallowedTools:` lines were
+replaced with a multi-line explanatory comment each: the pilot's Bash(...) specifier entries were
+found to remove the WHOLE Bash tool per Claude Code's own docs (not scope to the matching pattern),
+so they were removed in favor of the PreToolUse trust gate, which already covers the same patterns
+(plus `sudo`, added to it the same day). It rose again to 1547682 (net +790 bytes) when a CodeRabbit
+review pass narrowed those same 3 comments' coverage claim from "project-wide" to "Claude Code
+installations" specifically, since non-Claude harness mirrors never carry `.claude/settings.json`
+and so never registered that hook either way. That is the gate working: a document stating a MEASURED size
 goes stale the moment content changes, and the test catches it rather than letting the number rot.
 
-The **mirror size** in that block — `388 files / 1544766 bytes` — is asserted
+The **mirror size** in that block — `388 files / 1547682 bytes` — is asserted
 against a real install by `tests/harness-emitted-tree.test.js`, so editing either
 the doc or the installer without the other turns the suite red. The 973/975
 figures in the last bullet are explanatory only and deliberately unasserted; they

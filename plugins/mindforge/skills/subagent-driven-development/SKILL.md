@@ -2,6 +2,7 @@
 name: subagent-driven-development
 description: "Execute plans via Agent subagents (2-stage review)."
 version: 1.1.0
+disable-model-invocation: true
 ---
 
 # Subagent-Driven Development

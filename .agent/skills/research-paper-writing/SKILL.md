@@ -4,6 +4,7 @@ title: Research Paper Writing Pipeline
 description: "Write ML papers for NeurIPS/ICML/ICLR: design→submit."
 version: 1.1.0
 dependencies: [semanticscholar, arxiv, habanero, requests, scipy, numpy, matplotlib, SciencePlots]
+disable-model-invocation: true
 ---
 
 # Research Paper Writing Pipeline

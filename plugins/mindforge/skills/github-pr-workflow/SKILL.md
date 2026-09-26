@@ -2,6 +2,7 @@
 name: github-pr-workflow
 description: "GitHub PR lifecycle: branch, commit, open, CI, merge."
 version: 1.1.0
+disable-model-invocation: true
 ---
 
 # GitHub Pull Request Workflow
