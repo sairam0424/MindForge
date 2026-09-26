@@ -412,3 +412,18 @@ module.exports = {
   getCosts,
   checkHeapHealth
 };
+
+// CLI Support — `mindforge metrics` (see bin/mindforge-cli.js's dispatch table).
+// Was previously a silent no-op: this file only exported functions and nothing ever
+// called them when spawned directly.
+if (require.main === module) {
+  const metrics = getMetrics();
+  console.log('📈  MindForge Velocity & Quality Metrics');
+  console.log(`    Sessions tracked:   ${metrics.sessions.length}`);
+  console.log(`    Avg quality score:  ${metrics.avg_quality}`);
+  console.log(`    Avg cost/session:   $${metrics.avg_cost_usd}`);
+  console.log(`    Total tasks done:   ${metrics.total_tasks}`);
+  console.log(`    Node repair rate:   ${metrics.node_repair_rate}`);
+  const sf = metrics.security_findings;
+  console.log(`    Security findings:  CRITICAL=${sf.CRITICAL} HIGH=${sf.HIGH} MEDIUM=${sf.MEDIUM} LOW=${sf.LOW}`);
+}

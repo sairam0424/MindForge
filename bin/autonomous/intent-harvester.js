@@ -78,3 +78,22 @@ class IntentHarvester {
 }
 
 module.exports = new IntentHarvester();
+
+// CLI Support — `mindforge harvest` (see bin/mindforge-cli.js's dispatch table).
+// Was previously a silent no-op: this file exported an already-constructed
+// instance and nothing ever called a method on it when spawned directly.
+if (require.main === module) {
+  (async () => {
+    const harvester = new IntentHarvester();
+    const tasks = await harvester.idleScan();
+    if (tasks.length === 0) {
+      console.log('[HOMING-SCAN] No unassigned intent found in .planning/BACKLOG.json or HANDOFF.json.');
+    } else {
+      console.log(`[HOMING-SCAN] Found ${tasks.length} unassigned intent(s):`);
+      tasks.forEach((t) => console.log(`  - ${t.description || t.id || JSON.stringify(t)}`));
+    }
+  })().catch((err) => {
+    console.error('[HOMING-SCAN] failed:', err.message);
+    process.exit(1);
+  });
+}

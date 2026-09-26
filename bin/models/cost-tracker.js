@@ -215,3 +215,27 @@ function getSummary(params = { days: 7 }) {
 }
 
 module.exports = { record, preflight, getTodaySpend, getTodaySpendCached, getSummary };
+
+// CLI Support — `mindforge tokens --report` (see bin/mindforge-cli.js's dispatch table).
+// Was previously a silent no-op: this file only exported functions and nothing ever
+// called them when spawned directly.
+if (require.main === module) {
+  const args = process.argv.slice(2);
+  const daysArg = args.find((a) => a.startsWith('--days='));
+  const days = daysArg ? parseInt(daysArg.split('=')[1], 10) : 7;
+
+  const summary = getSummary({ days });
+  console.log(`💰  Token Cost Report — last ${days} day(s)`);
+  console.log(`    Total spend: $${summary.total_usd.toFixed(4)}`);
+  console.log(`    API calls:   ${summary.calls || 0}`);
+
+  const models = Object.entries(summary.by_model || {});
+  if (models.length === 0) {
+    console.log('    No usage recorded in this window.');
+  } else {
+    console.log('    By model:');
+    for (const [model, stats] of models) {
+      console.log(`      ${model}: $${stats.cost.toFixed(4)} (${stats.calls} calls, ${stats.tokens} tokens)`);
+    }
+  }
+}
