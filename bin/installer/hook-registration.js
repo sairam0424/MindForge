@@ -72,11 +72,21 @@ const BACKUP_DIR_REL = '.mindforge/backups';
 const DENY_CLASS = new Set(['trust-gate', 'mindforge-block-no-verify', 'mindforge-config-protection']);
 const DENY_PROFILES = 'minimal,standard,strict';
 const ADVISORY_PROFILES = 'standard,strict';
+// Audit-only, never blocks -- but unlike ADVISORY hooks, this one is meant to fire at every
+// profile level (including 'minimal') because audit visibility shouldn't be gated by security
+// profile the way a deny-class gate is. Same profile STRING as DENY_PROFILES today, kept as a
+// separate name because the two mean different things: DENY = can block; ALWAYS_ON = never
+// blocks, always records. Mirrors the tracked .claude/settings.json entries for this hookId.
+const ALWAYS_ON_CLASS = new Set(['mindforge-lifecycle-audit']);
+const ALWAYS_ON_PROFILES = 'minimal,standard,strict';
 
 /**
- * The 8 registrations, mirroring the tracked .claude/settings.json.
+ * The 11 registrations, mirroring the tracked .claude/settings.json.
  * `script` is relative to the PROJECT ROOT, because that is what hookRoot resolves to for the
- * installed dispatcher. tests/hook-spec-parity.test.js pins this set against the tracked file.
+ * installed dispatcher. tests/hook-spec-parity.test.js pins this set against the tracked file --
+ * added 2026-09-26 after the 3 lifecycle-audit rows below (PreCompact/SubagentStart/SubagentStop)
+ * shipped in .claude/settings.json without a matching HOOK_SPEC update, so an install silently
+ * never registered them (script landed at .claude/hooks/, nothing in settings.json called it).
  */
 // config-protection carries Bash in addition to Write|Edit|MultiEdit. Measured: an Edit targeting an
 // existing tsconfig.json returned exit 2 while `echo {} > tsconfig.json` returned exit 0, and
@@ -92,6 +102,15 @@ const HOOK_SPEC = [
   { event: 'PostToolUse', matcher: 'Bash|Task', hookId: 'instinct-capture', script: `${HOOK_ROOT}/instinct/instinct-capture-hook.js` },
   { event: 'SessionStart', matcher: '*', hookId: 'mindforge-session-init', script: `${HOOK_ROOT}/mindforge-session-init_extended.js` },
   { event: 'SessionStart', matcher: '*', hookId: 'mindforge-check-update', script: `${HOOK_ROOT}/mindforge-check-update.js` },
+  // Added 2026-09-26 (fixes the missed-wiring gap described in the header comment above).
+  // mindforge-lifecycle-audit-hook.js is already bulk-copied to .claude/hooks/ by the existing
+  // .agent/hooks -> hooksDir copy in installer-core.js (it lives under .agent/hooks/ like every
+  // other hook script here, so it needs no new COPY_MANIFEST entry) -- only HOOK_SPEC was
+  // missing these 3 rows. No matcher: these 3 events have no matcher field in the tracked
+  // .claude/settings.json, so none is set here either.
+  { event: 'PreCompact', hookId: 'mindforge-lifecycle-audit', script: `${HOOK_ROOT}/mindforge-lifecycle-audit-hook.js` },
+  { event: 'SubagentStart', hookId: 'mindforge-lifecycle-audit', script: `${HOOK_ROOT}/mindforge-lifecycle-audit-hook.js` },
+  { event: 'SubagentStop', hookId: 'mindforge-lifecycle-audit', script: `${HOOK_ROOT}/mindforge-lifecycle-audit-hook.js` },
 ];
 
 /**
@@ -110,7 +129,9 @@ const COPY_MANIFEST = [
 ];
 
 function profilesFor(hookId) {
-  return DENY_CLASS.has(hookId) ? DENY_PROFILES : ADVISORY_PROFILES;
+  if (DENY_CLASS.has(hookId)) return DENY_PROFILES;
+  if (ALWAYS_ON_CLASS.has(hookId)) return ALWAYS_ON_PROFILES;
+  return ADVISORY_PROFILES;
 }
 
 /** The ONLY place a command string is built. Both paths derive from HOOK_ROOT. */
@@ -124,7 +145,7 @@ function commandFor(row) {
  *
  * A dispatcher-substring test would delete a user's own `node tools/run-with-flags.js`. A hookId test
  * would claim a user's hand-written entry for the same id. This regex matches only the exact shape
- * this module emits, with one of the 8 known ids and one of the 2 profile strings — so a user's
+ * this module emits, with one of the 11 known ids and one of the 2 profile strings — so a user's
  * `node .claude/hooks/run-with-flags.js my-audit-hook standard,strict` is NOT owned and survives.
  */
 const KNOWN_IDS = HOOK_SPEC.map((r) => r.hookId);
@@ -456,8 +477,17 @@ function register(options = {}) {
   const noLoss = assertNoLoss(before, merged.next, merged.removed);
   if (!noLoss.ok) return skip(noLoss.reason);
 
-  const emitted = new Set(Object.values(merged.next.hooks).flat()
-    .flatMap((g) => (g && g.hooks) || []).map((h) => h && h.command).filter(isOwned));
+  // Keyed by {event}::{command}, NOT command alone: mindforge-lifecycle-audit (added
+  // 2026-09-26) legitimately registers the SAME command under 3 different events
+  // (PreCompact/SubagentStart/SubagentStop), mirroring the tracked .claude/settings.json,
+  // which a bare Set-of-commands collapsed into one entry -- underflowing this count and
+  // skipping registration entirely (a real regression caught live: "emitted 9 owned
+  // commands, expected 11" on a fresh install, immediately after these 3 rows were added).
+  const emitted = new Set(Object.entries(merged.next.hooks).flatMap(([event, groups]) =>
+    (groups || []).flatMap((g) => (g && g.hooks) || [])
+      .map((h) => h && h.command)
+      .filter(isOwned)
+      .map((command) => `${event}::${command}`)));
   if (emitted.size !== HOOK_SPEC.length) {
     return skip(`emitted ${emitted.size} owned commands, expected ${HOOK_SPEC.length}`);
   }

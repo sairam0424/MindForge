@@ -2,6 +2,7 @@
 name: plan
 description: "Plan mode: write an actionable markdown plan to .planning/plans/, no execution. Bite-sized tasks, exact paths, complete code."
 version: 2.0.0
+disable-model-invocation: true
 ---
 
 # Plan Mode

@@ -40,6 +40,7 @@ const HALT = j('ha', 'lt');
 const POWEROFF = j('power', 'off');
 const TRUNCATE = j('trun', 'cate');
 const TABLE = j('tab', 'le');
+const SUDO = j('su', 'do');
 const SLASH = '/';
 const ETC = j('/et', 'c');
 const DEV = j('/de', 'v');
@@ -295,6 +296,18 @@ test('#15 NEGATIVE: benign uses of the word truncate stay allowed', () => {
   assert.strictEqual(isHighImpact(j(TRUNCATE, 'd output ready')), false);
   assert.strictEqual(isHighImpact(j('npm run ', TRUNCATE, '-logs')), false);
   assert.strictEqual(isHighImpact(j(TRUNCATE, ' -v file')), false);
+});
+
+// ── #17 Privilege escalation ─────────────────────────────────────────────────────
+test('#17 detects sudo as high-impact', () => {
+  assert.strictEqual(isHighImpact(j(SUDO, ' rm -rf /tmp/x')), true, 'sudo <anything> must be blocked');
+  assert.strictEqual(isHighImpact(j(SUDO, ' -u root whoami')), true);
+  assert.strictEqual(isHighImpact(j(SUDO, ' apt-get install foo')), true);
+});
+
+test('#17 NEGATIVE: words containing sudo as a substring stay allowed', () => {
+  assert.strictEqual(isHighImpact('echo pseudo-random'), false);
+  assert.strictEqual(isHighImpact('npm run build:pseudonym'), false);
 });
 
 // ── Existing-coverage regression: original patterns must still fire ───────────

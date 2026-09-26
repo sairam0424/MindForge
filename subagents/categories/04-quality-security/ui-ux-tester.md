@@ -3,7 +3,22 @@ name: "ui-ux-tester"
 description: "Use this agent when you need exhaustive UI and UX functionality testing driven by documented user flows, with browser or desktop interaction tooling and structured defect reporting."
 tools: Read, Write, Edit, Bash, Glob, Grep, WebSearch, chrome-mcp, computer-use
 model: sonnet
-disallowedTools: [Bash(git push*), Bash(rm -rf *), Bash(sudo *)]
+# disallowedTools with Bash(...) specifiers previously here removed 2026-09-26:
+# per Claude Code's own docs, a specifier entry removes the WHOLE Bash tool,
+# not just the matching pattern -- this subagent's `tools:` line grants bare
+# Bash, so the entries silently stripped all Bash access rather than scoping
+# it. 2 of the 3 patterns this was trying to block are covered project-wide
+# by the existing PreToolUse trust gate (bin/security/trust-boundaries.js
+# isHighImpact(), wired in .claude/settings.json): rm -rf, and sudo (added
+# there 2026-09-26 for exactly this). The 3rd, `git push*` with no --force
+# qualifier, is intentionally narrower here than the original entry: the
+# global gate only blocks FORCED pushes (git push --force/-f), matching the
+# other 2 hardened subagents' patterns, not a plain git push. If blocking
+# ALL push (forced or not) specifically for this subagent is required, use a
+# per-subagent PreToolUse frontmatter hook (Claude Code docs, "Conditional
+# rules with hooks") -- not implemented here, since it needs its own
+# cross-channel path verification across both the plugin and npm-install
+# distribution channels.
 isolation: worktree
 ---
 

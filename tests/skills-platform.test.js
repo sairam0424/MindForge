@@ -168,6 +168,50 @@ SIDE_EFFECTING_SKILLS.forEach(skillName => {
   });
 });
 
+console.log('\nSide-effecting skill hardening reaches the REAL shipped artifact (not just .mindforge/skills/):');
+
+// Found 2026-09-26 pre-release gate: the check above only ever asserted against
+// .mindforge/skills/ (the engine-tier spec store), which has zero runtime consumer
+// anywhere in bin/. Both real distribution channels -- the npm CLI installer
+// (installer-core.js sources skills from .agent/skills/) and the plugin build
+// (scripts/build-mindforge-plugin.js: SRC.skills = .agent/skills/) -- never read
+// .mindforge/skills/ at all, so the field had zero observable effect for any real
+// user on either channel despite the commit message framing it as shipped. Fixed
+// by porting the field onto the 7 of 8 skills that have a real .agent/skills/
+// counterpart (the 8th, codebase-onboarding, has NO .agent/skills/ or plugin
+// counterpart at all -- see the dedicated test below, which documents that as a
+// separate, pre-existing, orthogonal gap rather than silently skipping it).
+const SHIPPED_SIDE_EFFECTING_SKILLS = SIDE_EFFECTING_SKILLS.filter(
+  (name) => name !== 'codebase-onboarding',
+);
+
+SHIPPED_SIDE_EFFECTING_SKILLS.forEach(skillName => {
+  test(`${skillName}: .agent/skills/ (the real npm-CLI + plugin-build source) also disables auto-invocation`, () => {
+    const skillPath = `.agent/skills/${skillName}/SKILL.md`;
+    assert.ok(fs.existsSync(skillPath), `Missing: ${skillPath} -- the npm CLI installer and plugin build both source skills from here, not .mindforge/skills/`);
+    const fm = parseSkillFrontmatter(skillPath);
+    assert.strictEqual(fm['disable-model-invocation'], 'true', `${skillName}: .agent/skills/ copy is missing disable-model-invocation: true -- the field has zero real effect until it reaches this file`);
+  });
+
+  test(`${skillName}: built plugin mirror (plugins/mindforge/skills/) also disables auto-invocation`, () => {
+    const skillPath = `plugins/mindforge/skills/${skillName}/SKILL.md`;
+    assert.ok(fs.existsSync(skillPath), `Missing: ${skillPath} -- run node scripts/build-mindforge-plugin.js`);
+    const fm = parseSkillFrontmatter(skillPath);
+    assert.strictEqual(fm['disable-model-invocation'], 'true', `${skillName}: built plugin copy is missing disable-model-invocation: true -- rebuild the plugin after editing .agent/skills/`);
+  });
+});
+
+test('codebase-onboarding: documented gap -- no .agent/skills/ or plugin counterpart exists, so this skill ships to neither real distribution channel regardless of disable-model-invocation', () => {
+  assert.ok(
+    !fs.existsSync('.agent/skills/codebase-onboarding/SKILL.md'),
+    'codebase-onboarding now has an .agent/skills/ counterpart -- update SIDE_EFFECTING_SKILLS filtering above and add it to SHIPPED_SIDE_EFFECTING_SKILLS instead of excluding it',
+  );
+  assert.ok(
+    !fs.existsSync('plugins/mindforge/skills/codebase-onboarding/SKILL.md'),
+    'codebase-onboarding now ships in the plugin tree -- update SIDE_EFFECTING_SKILLS filtering above',
+  );
+});
+
 console.log('\nManifest validation:');
 
 test('MANIFEST.md exists', () => {

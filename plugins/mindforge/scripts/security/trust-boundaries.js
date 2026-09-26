@@ -211,6 +211,14 @@ function isHighImpact(command) {
     // separator or the start of the line) — i.e. the path being run, not
     // merely referenced as an argument (audit finding, pre-release review).
     /\b(curl|wget)\b[\s\S]*?\bchmod\b[^;&|\n]*\+x\b[\s\S]*?(^|[;&|\n]\s*)(~\/|\/tmp\/|\/var\/tmp\/|\/dev\/shm\/|\/)\S+/i,
+
+    // ── #17 Privilege escalation ─────────────────────────────────────────────
+    // Any `sudo` invocation. No legitimate command in this repo's own
+    // test/build/lint tooling needs root (confirmed: zero matches for "sudo"
+    // across bin/, scripts/, tests/, package.json before this pattern was
+    // added), so this is a project-wide catch-all rather than a scoped
+    // command-specific pattern like the others above.
+    /\bsudo\b/i,
   ];
   return patterns.some(pattern => pattern.test(sanitized));
 }

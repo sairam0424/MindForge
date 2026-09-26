@@ -3,7 +3,14 @@ name: "wordpress-master"
 description: "Use this agent when you need to architect, optimize, or troubleshoot WordPress implementations ranging from custom theme/plugin development to enterprise-scale multisite platforms. Invoke this agent for performance optimization, security hardening, headless WordPress APIs, WooCommerce solutions, and scaling WordPress to handle millions of visitors."
 tools: Read, Write, Edit, Bash, Glob, Grep, WebFetch, WebSearch
 model: sonnet
-disallowedTools: [Bash(rm -rf *), Bash(git push --force*), Bash(DROP DATABASE*)]
+# disallowedTools with Bash(...) specifiers previously here removed 2026-09-26:
+# per Claude Code's own docs, a specifier entry removes the WHOLE Bash tool,
+# not just the matching pattern -- this subagent's `tools:` line grants bare
+# Bash, so the entries silently stripped all Bash access rather than scoping
+# it. The 3 patterns this was trying to block (rm -rf, git push --force,
+# DROP DATABASE) are covered project-wide by the existing PreToolUse trust
+# gate (bin/security/trust-boundaries.js isHighImpact(), wired in
+# .claude/settings.json), so removing this entry loses no real protection.
 isolation: worktree
 ---
 
