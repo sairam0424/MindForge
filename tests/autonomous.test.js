@@ -150,4 +150,30 @@ runTest('Pre-flight (UC-03/FIX4): dangling depends_on fails loud as unknown-dep 
   );
 });
 
+runTest('headless.js CLI entrypoint refuses to report success with no task executor wired', () => {
+  // THE DEFECT this replaces: bin/mindforge-cli.js's `headless` verb and the daily
+  // mindforge-autonomous.yml cron both invoke this file directly. Before the fix, it defined
+  // setupHeadlessMode() and reached end-of-file with no dispatch, no error, and exit 0 -- a false
+  // claim of completed work every single day. Spawned as a REAL subprocess (not required in-process)
+  // because the fix is specifically about behavior at the process entrypoint, per
+  // `require.main === module` -- an in-process require() would never trip that guard.
+  const { spawnSync } = require('child_process');
+  const path = require('path');
+  const script = path.join(__dirname, '..', 'bin', 'autonomous', 'headless.js');
+  const result = spawnSync(process.execPath, [script, '--phase', '1'], { encoding: 'utf8', timeout: 30000 });
+  assert.notStrictEqual(result.status, 0,
+    'headless.js must NOT exit 0 when invoked directly -- it has no real task executor wired, so '
+    + `silent success is a false claim of completed work. Got exit ${result.status}, stdout: ${result.stdout}`);
+  assert.match(result.stderr, /no real task executor|DEL-02/,
+    `expected a clear explanation on stderr, got: ${result.stderr}`);
+});
+
+runTest('headless.js still exports setupHeadlessMode for its real caller (auto-runner.js)', () => {
+  // NON-REGRESSION for the guard above: requiring this file as a MODULE (how auto-runner.js:17
+  // actually uses it) must be entirely unaffected, since require.main is the process's entry
+  // script, not whatever a require() call happens to load.
+  const headlessAdapter = require('../bin/autonomous/headless');
+  assert.strictEqual(typeof headlessAdapter.setupHeadlessMode, 'function');
+});
+
 console.log('--- All Tests Passed ---');
