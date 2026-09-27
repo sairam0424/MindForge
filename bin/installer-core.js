@@ -799,11 +799,13 @@ async function install(runtime, scope, options = {}) {
   // init-project.md, health.md, execute-phase.md, security-scan.md) is tracked, so the files it checks
   // are present from git rather than from this copy. Verified, not assumed.
   let totalCount = 0;
+  const namespaceCounts = [];
   (selfInstall ? [] : cmdSources).forEach(source => {
     if (!fsu.exists(source.src)) return;
 
     const files = fsu.listFiles(source.src).filter(f => f.endsWith('.md'));
     totalCount += files.length;
+    namespaceCounts.push({ namespace: source.namespace, count: files.length });
 
     files.forEach(f => {
       const { dir: destDir, name: targetName } = resolveCommandTarget(cmdsDir, runtime, source.namespace, f);
@@ -835,10 +837,19 @@ async function install(runtime, scope, options = {}) {
   });
 
   if (totalCount > 0) {
+    // The PAYLOAD MANIFEST's ACTIONS row deliberately counts only the `mindforge` namespace
+    // (matching the "221 slash commands" figure cited everywhere else in this project's docs),
+    // while totalCount here sums every namespace actually copied (mindforge + forge). Presented
+    // side by side with no label, a user sees "224 commands" here and "ACTIONS 221" moments
+    // later and has no way to tell those aren't a contradiction. Naming the breakdown here,
+    // where the larger number appears, resolves it without touching the canonical 221 figure.
+    const breakdown = namespaceCounts.length > 1
+      ? ` (${namespaceCounts.map(n => `${n.count} ${n.namespace}:`).join(' + ')})`
+      : '';
     if (scope === 'local' && runtime !== 'claude' && !selfInstall) {
-      Theme.printResolved(`${c.bold(totalCount)} commands (Mirrored to .claude/commands/)`);
+      Theme.printResolved(`${c.bold(totalCount)} commands${breakdown} (Mirrored to .claude/commands/)`);
     } else {
-      Theme.printResolved(`${c.bold(totalCount)} commands`);
+      Theme.printResolved(`${c.bold(totalCount)} commands${breakdown}`);
     }
   }
 
