@@ -88,7 +88,7 @@
       "decision_gate": "autonomous",
       "resource_budget": "low",
       "required_skills": [
-        "developer-productivity-metrics"
+        "cli-design"
       ]
     },
     "DataMeshSwarm": {
@@ -178,7 +178,7 @@
       "decision_gate": "autonomous",
       "resource_budget": "medium",
       "required_skills": [
-        "test-driven-development"
+        "contract-testing"
       ]
     },
     "FullStackSwarm": {

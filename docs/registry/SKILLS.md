@@ -23,7 +23,7 @@ This registry catalogs a curated subset of the skills available to MindForge.
 | **threat-modeling** | Hardening | Attack-tree construction, trust-boundary analysis, and risk scoring. |
 | **supply-chain-security** | Dependencies | Package auditing, build integrity, and SBOM/supply-chain defense. |
 | **compliance-as-code** | Regulation | Automated compliance verification and audit-evidence generation. |
-| **data-privacy** | Legal | Personal-data handling, consent management, and privacy-by-design review. |
+| **data-privacy** | Legal | Personal-data handling, consent management, and data-minimization review. |
 
 ## 🤖 AI & Data Intelligence
 

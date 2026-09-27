@@ -367,16 +367,24 @@ test('all MANIFEST.md skill paths resolve to existing files', () => {
 // which is exactly why the second test below needs its own fixture-based proof that the scanner
 // mechanism works, rather than asserting non-vacuity against a real file that may legitimately have
 // nothing checked at any given time.
+//
+// Shared between both tests deliberately (not hand-copied): the fixture test's entire purpose is to
+// prove THIS mechanism works before the real-file test relies on it, so if they ever used two
+// separately-typed literals they could silently diverge. \s* before the checkbox (not just after
+// "-") allows an indented "  - [x] name" entry to still match -- an earlier version anchored on
+// column 0 only and would have silently skipped any indented checklist item.
+const CHECKED_CHECKLIST_ITEM_RE = /^\s*-\s*\[x\]\s+([\w-]+)/gim;
 
 test('the checklist scanner extracts checked entries and ignores unchecked ones', () => {
   const fixture = [
     '- [x] real-skill-one',
     '- [ ] not-yet-built-skill',
     '- [x] real-skill-two (Tier 1)',
+    '  - [x] indented-real-skill',
   ].join('\n');
-  const checked = [...fixture.matchAll(/^- \[x\]\s+([\w-]+)/gim)].map(m => m[1]);
-  assert.deepStrictEqual(checked, ['real-skill-one', 'real-skill-two'],
-    'scanner must extract checked names (including ones with a trailing parenthetical) and skip unchecked ones');
+  const checked = [...fixture.matchAll(CHECKED_CHECKLIST_ITEM_RE)].map(m => m[1]);
+  assert.deepStrictEqual(checked, ['real-skill-one', 'real-skill-two', 'indented-real-skill'],
+    'scanner must extract checked names (including indented and parenthetical-suffixed ones) and skip unchecked ones');
 });
 
 test('MANIFEST.md checklist-style entries (no path column) also resolve to a real skill', () => {
@@ -385,7 +393,7 @@ test('MANIFEST.md checklist-style entries (no path column) also resolve to a rea
   // Zero checked entries today is a valid, honest state (both fabricated sections were deleted
   // rather than replaced) -- the test above proves the scanner itself isn't silently broken.
   const content = fs.readFileSync('.mindforge/org/skills/MANIFEST.md', 'utf8');
-  const checked = [...content.matchAll(/^- \[x\]\s+([\w-]+)/gim)].map(m => m[1]);
+  const checked = [...content.matchAll(CHECKED_CHECKLIST_ITEM_RE)].map(m => m[1]);
   checked.forEach(name => {
     const exists = fs.existsSync(`.mindforge/skills/${name}/SKILL.md`) || fs.existsSync(`.agent/skills/${name}/SKILL.md`);
     assert.ok(exists, `MANIFEST.md checklist claims "${name}" (checked) but no backing SKILL.md exists under .mindforge/skills/ or .agent/skills/`);
