@@ -805,7 +805,10 @@ async function install(runtime, scope, options = {}) {
 
     const files = fsu.listFiles(source.src).filter(f => f.endsWith('.md'));
     totalCount += files.length;
-    namespaceCounts.push({ namespace: source.namespace, count: files.length });
+    // Only record namespaces that actually contributed a file. A namespace dir that exists but
+    // is currently empty would otherwise render a spurious "0 <namespace>:" segment in the
+    // breakdown below.
+    if (files.length > 0) namespaceCounts.push({ namespace: source.namespace, count: files.length });
 
     files.forEach(f => {
       const { dir: destDir, name: targetName } = resolveCommandTarget(cmdsDir, runtime, source.namespace, f);

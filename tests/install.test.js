@@ -419,9 +419,20 @@ test('the "commands" line names its namespace breakdown when it sums more than o
   // (221, matching every other doc in this project). Presented back to back with no label, a
   // user has no way to tell "224 commands" and "ACTIONS 221" aren't a contradiction. The
   // breakdown must name both namespaces and their counts must sum to the total actually printed.
+  //
+  // Both the breakdown's mindforge part AND the ACTIONS figure are checked against an
+  // INDEPENDENTLY MEASURED filesystem count (matching this repo's own tests/doc-count-claims.test.js
+  // idiom of measuring ground truth rather than trusting a tool's own printed output) -- not just
+  // against each other. Two printed values agreeing is not proof either is correct; comparing each
+  // to a real directory listing is.
   const work = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-cmdbreak-')));
   const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-cmdbreak-home-')));
   try {
+    const realMindforgeCount = fs.readdirSync(path.join(REPO_ROOT_FOR_GUARD, '.agent', 'mindforge'))
+      .filter((f) => f.endsWith('.md')).length;
+    const realForgeCount = fs.readdirSync(path.join(REPO_ROOT_FOR_GUARD, '.agent', 'forge'))
+      .filter((f) => f.endsWith('.md')).length;
+
     const r = require('child_process').spawnSync(
       process.execPath, [path.join(REPO_ROOT_FOR_GUARD, 'bin', 'install.js'), '--claude', '--local'],
       { cwd: work, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: home, CI: 'true' } });
@@ -434,6 +445,10 @@ test('the "commands" line names its namespace breakdown when it sums more than o
     assert.ok(m, `expected a namespace breakdown in parens, got: ${commandsLine}`);
 
     const total = Number(m[1]);
+    assert.strictEqual(total, realMindforgeCount + realForgeCount,
+      `printed total (${total}) must match the real on-disk file count `
+      + `(${realMindforgeCount} mindforge + ${realForgeCount} forge = ${realMindforgeCount + realForgeCount})`);
+
     const parts = m[2].split('+').map((p) => p.trim());
     assert.ok(parts.length >= 2, `expected at least 2 namespaces in the breakdown, got: ${m[2]}`);
     const sum = parts.reduce((acc, p) => {
@@ -444,13 +459,17 @@ test('the "commands" line names its namespace breakdown when it sums more than o
     assert.strictEqual(sum, total,
       `breakdown parts (${m[2]}) must sum to the printed total (${total}), got ${sum}`);
 
+    const mindforgePart = parts.find((p) => p.includes('mindforge:'));
+    assert.ok(mindforgePart, `breakdown must include a "mindforge:" part, got: ${m[2]}`);
+    assert.match(mindforgePart, new RegExp(`^${realMindforgeCount}\\s+mindforge:$`),
+      `the breakdown's mindforge count (${mindforgePart}) must match the real on-disk count `
+      + `(${realMindforgeCount}), independent of what ACTIONS separately claims`);
+
     const actionsMatch = r.stdout.match(/ACTIONS\s+(\d+)/);
     if (actionsMatch) {
-      const mindforgePart = parts.find((p) => p.includes('mindforge:'));
-      assert.ok(mindforgePart, `breakdown must include a "mindforge:" part when ACTIONS is printed, got: ${m[2]}`);
-      assert.match(mindforgePart, new RegExp(`^${actionsMatch[1]}\\s+mindforge:$`),
-        `the breakdown's mindforge count (${mindforgePart}) must match ACTIONS (${actionsMatch[1]}) `
-        + '— they are meant to be the same number, just labeled differently.');
+      assert.strictEqual(Number(actionsMatch[1]), realMindforgeCount,
+        `ACTIONS (${actionsMatch[1]}) must match the real on-disk mindforge count `
+        + `(${realMindforgeCount}), independent of what the breakdown separately claims`);
     }
   } finally {
     fs.rmSync(work, { recursive: true, force: true });
