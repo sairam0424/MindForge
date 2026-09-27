@@ -33,6 +33,12 @@ const PATHS = {
   mindforgemd: path.join(process.cwd(), 'MINDFORGE.md'),
 };
 
+// Exported so a test can assert directly that no memory JSONL path is ever backed up/restored,
+// rather than relying on a specific migration failing and tracing whether byte-identical content
+// after a run actually proves anything -- see tests/migration.test.js's "PATHS never includes a
+// memory JSONL path" test.
+module.exports.PATHS = PATHS;
+
 /**
  * Run all needed migrations from fromVersion to toVersion.
  * Creates a backup first. Restores on failure.

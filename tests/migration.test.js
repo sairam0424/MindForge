@@ -519,17 +519,40 @@ test('migrate.js CLI warns and skips rather than silently no-opping when schema_
   }
 });
 
+test('migrate.js PATHS never includes a memory JSONL path', () => {
+  // THE DEFECT this replaces (HIGH severity, caught by a second review round): the isolation test
+  // below proves memory files survive one specific unrelated-migration-failure scenario, but its
+  // byte-identical assertions don't actually discriminate "fixed" from "reverted" -- backing up and
+  // then restoring UNCHANGED content looks identical to never backing it up at all, since nothing in
+  // that scenario ever mutates the memory files between backup and restore. This test is the direct,
+  // static discriminator: it fails immediately if the memory paths are ever reintroduced into PATHS,
+  // with no dependency on a specific migration's failure mode or execution tracing.
+  const { PATHS } = require('../bin/migrations/migrate');
+  const memoryFileNames = ['knowledge-base.jsonl', 'global-knowledge-base.jsonl', 'graph-edges.jsonl'];
+  for (const [key, filePath] of Object.entries(PATHS)) {
+    for (const name of memoryFileNames) {
+      assert.ok(!filePath.includes(name),
+        `PATHS.${key} (${filePath}) must never reference a memory JSONL file (${name}) -- `
+        + 'v9-unified-memory only reads these, and backing them up protects nothing while risking '
+        + 'a stale restore clobbering a concurrent write from another project/session');
+    }
+  }
+});
+
 test('an unrelated migration failure does NOT touch memory JSONL files -- they carry no backup/restore of their own', () => {
   // THE DEFECT this replaces (HIGH severity, caught by review): an earlier revision of this fix
   // added the memory JSONL paths (including the home-directory-scoped global file, shared across
   // every MindForge project on the machine) to migrate.js's shared PATHS backup/restore set. Since
   // runMigrations() restores EVERY backed-up file on ANY migration failure in the batch -- not just
-  // files the failing migration touched -- an unrelated schema-migration failure (0.1.0-to-0.5.0
-  // here, triggered by a genuinely malformed HANDOFF.json, not a mock) would silently overwrite the
+  // files the failing migration touched -- an unrelated schema-migration failure (triggered here by
+  // a genuinely malformed HANDOFF.json, not a mock) would silently overwrite the
   // shared global memory file with a stale pre-run snapshot, discarding any real concurrent write to
-  // it from a different project/session. Proof of the fix: the memory files must be BYTE-IDENTICAL
-  // after the failure to what they were before, because they were never backed up in the first place
-  // (nothing to restore FROM), not because a restore happened to put back the right content.
+  // it from a different project/session. The byte-identical checks below are a basic sanity check
+  // (no unexpected mutation happened); they do NOT by themselves prove the fix, since backup+restore
+  // of UNCHANGED content is indistinguishable from never backing it up at all in this
+  // no-concurrent-write scenario. The real proof is the backupDirs listing check further down, plus
+  // the direct PATHS assertion in the test above -- both fail immediately if the memory paths are
+  // ever reintroduced.
   const { spawnSync } = require('child_process');
   const os = require('os');
   const REPO_ROOT = path.join(__dirname, '..');
@@ -547,9 +570,10 @@ test('an unrelated migration failure does NOT touch memory JSONL files -- they c
     fs.writeFileSync(localKbPath, localKbContent);
     fs.writeFileSync(globalKbPath, globalKbContent);
 
-    // Genuinely malformed -- 0.1.0-to-0.5.0.js's real run(paths) does JSON.parse(readFileSync(...))
-    // on this exact file and will throw a real SyntaxError. Not a mock: this is a real migration,
-    // failing for a real reason, exercising the real restore-on-failure path in runMigrations().
+    // Genuinely malformed -- whichever migration module runs first for this --from/--to range does
+    // JSON.parse(readFileSync(paths.handoff)) and will throw a real SyntaxError on this exact file.
+    // Not a mock: this is a real migration module, failing for a real reason, exercising the real
+    // restore-on-failure path in runMigrations().
     fs.writeFileSync(path.join(project, '.planning', 'HANDOFF.json'), '{not valid json');
 
     const run = spawnSync(process.execPath,
@@ -569,6 +593,9 @@ test('an unrelated migration failure does NOT touch memory JSONL files -- they c
     // must contain none of the memory filenames -- confirming they were never swept into it at all.
     const backupDirs = fs.readdirSync(path.join(project, '.planning'))
       .filter(f => f.startsWith('migration-backup-'));
+    assert.ok(backupDirs.length > 0,
+      'expected a backup directory to have been created for the 4 real schema files this batch '
+      + 'touches -- if this is empty, the checks below run zero times and silently prove nothing');
     for (const dir of backupDirs) {
       const backed = fs.readdirSync(path.join(project, '.planning', dir));
       assert.ok(!backed.includes('knowledge-base.jsonl') && !backed.includes('global-knowledge-base.jsonl'),
