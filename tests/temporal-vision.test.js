@@ -132,11 +132,11 @@ async function runTests() {
     // THE DEFECT. captureState() copied every .md/.json/.yml/.yaml/.log file directly under
     // .planning/ into each new snapshot, with no secret-scrubbing step. bin/browser/browser-daemon.js
     // once (briefly) logged its own bearer DAEMON_TOKEN to .planning/browser-daemon.log; even after
-    // that logging bug was fixed, the STALE log file already on disk kept getting swept into every
-    // subsequent snapshot forever, because captureState() has no concept of "this file is operational
-    // output, not planning state" -- it just globs by extension. Confirmed on a real checkout: ~19
-    // .planning/history/*/browser-daemon.log copies, all byte-identical, none regenerated per snapshot.
-    // The fix drops '.log' from the captured extension list entirely.
+    // that logging bug was fixed (9ec35976 / v11.9.6), the STALE log file already on disk kept getting
+    // swept into every subsequent snapshot forever, because captureState() has no concept of "this
+    // file is operational output, not planning state" -- it just globs by extension. Confirmed on a
+    // real checkout: 51 .planning/history/*/browser-daemon.log copies, all byte-identical, none
+    // regenerated per snapshot. The fix drops '.log' from the captured extension list entirely.
     //
     // SPAWNED WITH A TEMP CWD, same reasoning as the cleanup block above: captureState() resolves
     // PLANNING_DIR from process.cwd() at require time, so an in-process call from this test's own cwd
@@ -149,8 +149,10 @@ async function runTests() {
       try {
         fs.mkdirSync(planningDir, { recursive: true });
         fs.writeFileSync(path.join(planningDir, 'STATE.md'), '# fixture');
-        fs.writeFileSync(path.join(planningDir, 'browser-daemon.log'),
-          '[BrowserDaemon] Auth token: deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef\n');
+        // A benign placeholder is enough here: this assertion only proves .log files are never even
+        // read, so the fixture's content is irrelevant to it (the redaction assertion below is what
+        // needs a genuinely secret-shaped fixture).
+        fs.writeFileSync(path.join(planningDir, 'browser-daemon.log'), '[BrowserDaemon] started\n');
 
         const script = `
           const TemporalHub = require(${JSON.stringify(path.join(__dirname, '..', 'bin', 'engine', 'temporal-hub.js'))});
@@ -172,6 +174,53 @@ async function runTests() {
       } finally { fs.rmSync(work, { recursive: true, force: true }); }
     }
     console.log('  ✅ captureState excludes .log files, stopping secret residue from propagating');
+
+    // ── captureState() must redact secret-shaped content in files it DOES still capture ───
+    //
+    // Excluding .log alone only closes the ONE observed leak path. A credential pasted into a
+    // captured .md/.json/.yml/.yaml file (a scratch note, a config dump) would hit the exact same
+    // forever-propagation mechanism under a different extension. containsSecretShape() proves the
+    // fixture is genuinely secret-shaped BEFORE relying on it, so this test cannot pass because its
+    // fixture was inert. The fixture itself uses a test-only key name (MF_TEST_*), not a realistic
+    // vendor-token prefix, to avoid tripping unrelated secret scanners on this tracked test file.
+    {
+      const { spawnSync } = require('child_process');
+      const os = require('os');
+      const { containsSecretShape } = require('../bin/utils/redact-secrets');
+      const work = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-temporal-redact-')));
+      const planningDir = path.join(work, '.planning');
+      try {
+        fs.mkdirSync(planningDir, { recursive: true });
+        const secretLine = 'MF_TEST_API_KEY=abcdefghijklmnopqrstuvwxyz0123456789';
+        assert.ok(containsSecretShape(secretLine),
+          'fixture must actually be secret-shaped, or this test proves nothing');
+        fs.writeFileSync(path.join(planningDir, 'STATE.md'), `# fixture\n${secretLine}\n`);
+
+        const script = `
+          const TemporalHub = require(${JSON.stringify(path.join(__dirname, '..', 'bin', 'engine', 'temporal-hub.js'))});
+          TemporalHub.captureState('22222222-2222-2222-2222-222222222222', {}).then((dir) => {
+            process.stdout.write(dir || 'NULL');
+          });
+        `;
+        const run = spawnSync(process.execPath, ['-e', script],
+          { cwd: work, encoding: 'utf8', timeout: 60000 });
+        assert.strictEqual(run.status, 0, `captureState child failed: ${run.stderr}`);
+        const snapshotDir = run.stdout.trim();
+        const capturedPath = path.join(snapshotDir, 'STATE.md');
+        assert.ok(fs.existsSync(capturedPath), `captured STATE.md must exist: ${capturedPath}`);
+        const capturedContent = fs.readFileSync(capturedPath, 'utf8');
+
+        assert.ok(!capturedContent.includes('abcdefghijklmnopqrstuvwxyz0123456789'),
+          'captureState() must redact secret-shaped content even in a still-captured file type, ' +
+          `not just exclude .log by extension. Got: ${capturedContent}`);
+        assert.match(capturedContent, /MF_TEST_API_KEY=<redacted:/,
+          'redaction must preserve the key name so the snapshot still reads as the same shape of ' +
+          `file: ${capturedContent}`);
+        assert.match(capturedContent, /# fixture/,
+          'non-secret content in the same file must survive redaction untouched');
+      } finally { fs.rmSync(work, { recursive: true, force: true }); }
+    }
+    console.log('  ✅ captureState redacts secret-shaped content in captured files');
 
     console.log('\n✨ ALL TEMPORAL TESTS PASSED ✨');
   } catch (err) {

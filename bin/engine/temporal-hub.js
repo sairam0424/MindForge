@@ -15,6 +15,7 @@ const fsPromises = require('fs/promises');
 const path = require('path');
 const crypto = require('crypto');
 const { execSync } = require('child_process');
+const { redactSecrets } = require('../utils/redact-secrets');
 
 const PLANNING_DIR = path.join(process.cwd(), '.planning');
 const HISTORY_DIR  = path.join(PLANNING_DIR, 'history');
@@ -82,22 +83,22 @@ class TemporalHub {
       for (const entry of allEntries) {
         if (entry.isDirectory()) continue;
         const ext = path.extname(entry.name).toLowerCase();
-        // .log is deliberately excluded: it is operational output, not planning state, and
-        // captureState() has no secret-scrubbing step -- a stale plaintext credential written to
-        // a .log file here would otherwise be copied forward into every future snapshot forever
-        // (this is exactly how a leaked browser-daemon.js auth token propagated into ~19 dated
-        // snapshot directories before this fix).
+        // .log is deliberately excluded: it is operational output, not planning state. The
+        // leaked-token incident that motivated this (bin/browser/browser-daemon.js briefly logged
+        // its own bearer DAEMON_TOKEN, fixed in 9ec35976 / v11.9.6) propagated the stale file
+        // forward into 51 snapshot directories on a real checkout before this fix, because
+        // captureState() had no secret-scrubbing step of its own. Still-captured extensions get
+        // one below via redactSecrets(), so a credential landing in a .md/.json/.yml/.yaml file
+        // doesn't reopen the same propagation path under a different extension.
         if (['.md', '.json', '.yml', '.yaml'].includes(ext)) {
           files.push(entry.name);
         }
       }
 
-      await Promise.all(files.map(file =>
-        fsPromises.copyFile(
-          path.join(PLANNING_DIR, file),
-          path.join(snapshotDir, file)
-        )
-      ));
+      await Promise.all(files.map(async (file) => {
+        const raw = await fsPromises.readFile(path.join(PLANNING_DIR, file), 'utf8');
+        await fsPromises.writeFile(path.join(snapshotDir, file), redactSecrets(raw));
+      }));
 
       const meta = {
         id: auditId,
@@ -288,8 +289,8 @@ class TemporalHub {
     }
     if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
 
-    if (stdout) fs.writeFileSync(path.join(logDir, 'stdout.log'), stdout);
-    if (stderr) fs.writeFileSync(path.join(logDir, 'stderr.log'), stderr);
+    if (stdout) fs.writeFileSync(path.join(logDir, 'stdout.log'), redactSecrets(stdout));
+    if (stderr) fs.writeFileSync(path.join(logDir, 'stderr.log'), redactSecrets(stderr));
   }
 }
 
