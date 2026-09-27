@@ -127,6 +127,52 @@ async function runTests() {
     }
     console.log('  ✅ temporal cleanup deletes expired snapshots and reports the real count');
 
+    // ── captureState() must not perpetuate stale secrets via .log files ────────
+    //
+    // THE DEFECT. captureState() copied every .md/.json/.yml/.yaml/.log file directly under
+    // .planning/ into each new snapshot, with no secret-scrubbing step. bin/browser/browser-daemon.js
+    // once (briefly) logged its own bearer DAEMON_TOKEN to .planning/browser-daemon.log; even after
+    // that logging bug was fixed, the STALE log file already on disk kept getting swept into every
+    // subsequent snapshot forever, because captureState() has no concept of "this file is operational
+    // output, not planning state" -- it just globs by extension. Confirmed on a real checkout: ~19
+    // .planning/history/*/browser-daemon.log copies, all byte-identical, none regenerated per snapshot.
+    // The fix drops '.log' from the captured extension list entirely.
+    //
+    // SPAWNED WITH A TEMP CWD, same reasoning as the cleanup block above: captureState() resolves
+    // PLANNING_DIR from process.cwd() at require time, so an in-process call from this test's own cwd
+    // would snapshot THIS repo's real .planning/, not a fixture.
+    {
+      const { spawnSync } = require('child_process');
+      const os = require('os');
+      const work = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-temporal-logfile-')));
+      const planningDir = path.join(work, '.planning');
+      try {
+        fs.mkdirSync(planningDir, { recursive: true });
+        fs.writeFileSync(path.join(planningDir, 'STATE.md'), '# fixture');
+        fs.writeFileSync(path.join(planningDir, 'browser-daemon.log'),
+          '[BrowserDaemon] Auth token: deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef\n');
+
+        const script = `
+          const TemporalHub = require(${JSON.stringify(path.join(__dirname, '..', 'bin', 'engine', 'temporal-hub.js'))});
+          TemporalHub.captureState('11111111-1111-1111-1111-111111111111', {}).then((dir) => {
+            process.stdout.write(dir || 'NULL');
+          });
+        `;
+        const run = spawnSync(process.execPath, ['-e', script],
+          { cwd: work, encoding: 'utf8', timeout: 60000 });
+        assert.strictEqual(run.status, 0, `captureState child failed: ${run.stderr}`);
+        const snapshotDir = run.stdout.trim();
+        assert.ok(fs.existsSync(snapshotDir), `snapshot dir must exist: ${snapshotDir}`);
+
+        assert.ok(fs.existsSync(path.join(snapshotDir, 'STATE.md')),
+          'planning docs (.md) must still be captured');
+        assert.ok(!fs.existsSync(path.join(snapshotDir, 'browser-daemon.log')),
+          '.log files must NOT be captured into snapshots -- this is exactly how a stale secret ' +
+          'kept propagating forward into every new snapshot indefinitely');
+      } finally { fs.rmSync(work, { recursive: true, force: true }); }
+    }
+    console.log('  ✅ captureState excludes .log files, stopping secret residue from propagating');
+
     console.log('\n✨ ALL TEMPORAL TESTS PASSED ✨');
   } catch (err) {
     console.error('\n❌ TEST FAILED:', err.message);

@@ -82,7 +82,12 @@ class TemporalHub {
       for (const entry of allEntries) {
         if (entry.isDirectory()) continue;
         const ext = path.extname(entry.name).toLowerCase();
-        if (['.md', '.json', '.yml', '.yaml', '.log'].includes(ext)) {
+        // .log is deliberately excluded: it is operational output, not planning state, and
+        // captureState() has no secret-scrubbing step -- a stale plaintext credential written to
+        // a .log file here would otherwise be copied forward into every future snapshot forever
+        // (this is exactly how a leaked browser-daemon.js auth token propagated into ~19 dated
+        // snapshot directories before this fix).
+        if (['.md', '.json', '.yml', '.yaml'].includes(ext)) {
           files.push(entry.name);
         }
       }
