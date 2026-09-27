@@ -399,6 +399,89 @@ test('migrate.js exports runMigrations function', () => {
   assert.strictEqual(typeof runMigrations, 'function', 'runMigrations should be a function');
 });
 
+test('migrate.js exports getMigrationsToRun function', () => {
+  const { getMigrationsToRun } = require('../bin/migrations/migrate');
+  assert.strictEqual(typeof getMigrationsToRun, 'function', 'getMigrationsToRun should be a function');
+  const plan = getMigrationsToRun('8.2.1', '9.0.0');
+  assert.strictEqual(plan.length, 1, 'v8.2.1 -> v9.0.0 should select exactly the v9-unified-memory migration');
+  assert.strictEqual(plan[0].toVersion, '9.0.0');
+});
+
+// -- CLI entrypoint end-to-end, including the global-path fix ------------------------
+//
+// THE DEFECT this replaces: `node bin/migrations/migrate.js` had no entrypoint at all (defined
+// exports and exited 0 doing nothing) -- the ONLY real caller of runMigrations() anywhere in this
+// codebase was self-update.js's internal version-bump flow. Separately, v9-unified-memory.js's
+// "global" knowledge path was hardcoded to process.cwd()/.mindforge/memory/global-knowledge-base.jsonl,
+// which can never be the real global path (knowledge-store.js's own getPaths() puts it at
+// os.homedir()/.mindforge/global-knowledge-base.jsonl, no /memory/ nesting) -- so global entries were
+// silently skipped by every run, forever. This test seeds one LOCAL entry and one entry at the REAL
+// global path with distinct, checkable content, spawns the real CLI end to end, and queries the
+// resulting SQLite DB directly -- proving both the entrypoint wiring and the path fix together,
+// the same way a real operator's migration would actually need both to work.
+test('migrate.js CLI runs end-to-end: entrypoint works and BOTH local and real-global entries migrate', () => {
+  const { spawnSync } = require('child_process');
+  const os = require('os');
+  const REPO_ROOT = path.join(__dirname, '..');
+  const project = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-migtest-')));
+  const homeDir = path.join(project, '.scratch-home');
+  try {
+    fs.mkdirSync(path.join(homeDir, '.mindforge'), { recursive: true });
+    fs.mkdirSync(path.join(project, '.mindforge', 'memory'), { recursive: true });
+    fs.mkdirSync(path.join(project, '.planning'), { recursive: true });
+
+    fs.writeFileSync(path.join(project, '.mindforge', 'memory', 'knowledge-base.jsonl'),
+      JSON.stringify({ id: 'local-1', type: 'insight', content: 'local test entry', confidence: 0.9 }) + '\n');
+    // The REAL global path -- os.homedir()/.mindforge/global-knowledge-base.jsonl, NOT nested under
+    // memory/. Writing here (not under the old wrong nested path) is what proves the fix: if the
+    // path bug ever reappears, this entry silently fails to migrate and the assertion below catches it.
+    fs.writeFileSync(path.join(homeDir, '.mindforge', 'global-knowledge-base.jsonl'),
+      JSON.stringify({ id: 'global-1', type: 'insight', content: 'global test entry', confidence: 0.8 }) + '\n');
+    fs.writeFileSync(path.join(project, '.planning', 'HANDOFF.json'),
+      JSON.stringify({ schema_version: '8.2.1' }));
+
+    const run = (args) => spawnSync(process.execPath, [path.join(REPO_ROOT, 'bin', 'migrations', 'migrate.js'), ...args],
+      { cwd: project, encoding: 'utf8', timeout: 60000, env: { PATH: process.env.PATH, HOME: homeDir } });
+
+    const dry = run(['--dry-run']);
+    assert.strictEqual(dry.status, 0, `dry-run failed: ${dry.stderr}`);
+    assert.match(dry.stdout, /Dry run/, `expected dry-run output, got: ${dry.stdout}`);
+    assert.match(dry.stdout, /v9-unified-memory|Unified Memory/i,
+      `dry-run should name the pending migration, got: ${dry.stdout}`);
+    assert.ok(!fs.existsSync(path.join(project, '.mindforge', 'celestial.db')),
+      '--dry-run must not create the database -- it should make NO changes');
+
+    const real = run([]);
+    assert.strictEqual(real.status, 0, `real run failed: ${real.stderr}\n${real.stdout}`);
+    assert.match(real.stdout, /"status": "migrated"/, `expected a migrated result, got: ${real.stdout}`);
+
+    // vector-hub.js resolves its DB path from process.cwd() at require time, so querying it directly
+    // in THIS process (whose cwd is the test runner's, not the scratch project) would open the wrong
+    // database. Spawn a query child with cwd/HOME matching the migration run instead.
+    const marker = '__ROWS__:';
+    const query = spawnSync(process.execPath, ['-e', `
+      const vectorHub = require(${JSON.stringify(path.join(REPO_ROOT, 'bin', 'memory', 'vector-hub'))});
+      vectorHub.init().then(() => {
+        const rows = vectorHub.query('SELECT id, content, source FROM knowledge ORDER BY id');
+        console.log(${JSON.stringify('__ROWS__:')} + JSON.stringify(rows));
+      });
+    `], { cwd: project, encoding: 'utf8', timeout: 30000, env: { PATH: process.env.PATH, HOME: homeDir } });
+    assert.strictEqual(query.status, 0, `query child failed: ${query.stderr}`);
+    // VectorHub.init() logs its own "[VectorHub] Initialized..." line to stdout, so the marker
+    // isolates the actual payload from that unrelated diagnostic output rather than assuming stdout
+    // is pure JSON.
+    const markerLine = query.stdout.split('\n').find(l => l.startsWith(marker));
+    assert.ok(markerLine, `expected a marked JSON line in query output, got: ${query.stdout}`);
+    const rows = JSON.parse(markerLine.slice(marker.length));
+    assert.deepStrictEqual(rows.map(r => r.id), ['global-1', 'local-1'],
+      `expected BOTH the local and the real-global entry to have migrated, got: ${query.stdout}`);
+    assert.strictEqual(rows.find(r => r.id === 'global-1').source, 'global');
+    assert.strictEqual(rows.find(r => r.id === 'local-1').source, 'project');
+  } finally {
+    fs.rmSync(project, { recursive: true, force: true });
+  }
+});
+
 console.log(`\n${'─'.repeat(55)}`);
 console.log(`Results: ${passed} passed, ${failed} failed`);
 if (failed > 0) {

@@ -6,6 +6,7 @@
 'use strict';
 
 const fs   = require('fs');
+const os   = require('os');
 const path = require('path');
 
 // Re-export for use by self-update.js
@@ -19,6 +20,13 @@ const PATHS = {
   state:      path.join(PLANNING_DIR, 'STATE.md'),
   audit:      path.join(PLANNING_DIR, 'AUDIT.jsonl'),
   mindforgemd: path.join(process.cwd(), 'MINDFORGE.md'),
+  // v9-unified-memory reads these three JSONL files (via knowledge-store.js's own getPaths(), not
+  // this list -- it never receives PATHS as an argument). They're backed up here anyway because
+  // "always back up" otherwise only covered files that migration never touches, leaving the actual
+  // migrated data with no restore-on-failure safety net.
+  memoryKb:       path.join(process.cwd(), '.mindforge', 'memory', 'knowledge-base.jsonl'),
+  memoryGlobalKb: path.join(os.homedir(), '.mindforge', 'global-knowledge-base.jsonl'),
+  memoryGraph:    path.join(process.cwd(), '.mindforge', 'memory', 'graph-edges.jsonl'),
 };
 
 /**
@@ -39,20 +47,7 @@ async function runMigrations(fromVersion, toVersion) {
     return { status: 'no-migration-needed' };
   }
 
-  // Determine which migrations to run
-  const allMigrations = [
-    require('./0.1.0-to-0.5.0'),
-    require('./0.5.0-to-0.6.0'),
-    require('./0.6.0-to-1.0.0'),
-    require('./v9-unified-memory'),
-  ];
-
-  // A migration should run if its DESTINATION VERSION falls within the range:
-  // (fromVersion, toVersion] — i.e., greater than fromVersion AND at most toVersion
-  const migrationsToRun = allMigrations.filter(m =>
-    compareSemver(m.toVersion, fromVersion) > 0 &&
-    compareSemver(m.toVersion, toVersion)   <= 0
-  );
+  const migrationsToRun = getMigrationsToRun(fromVersion, toVersion);
 
   if (migrationsToRun.length === 0) {
     console.log('  ✅  No applicable migrations');
@@ -153,4 +148,83 @@ async function runMigrations(fromVersion, toVersion) {
   return { status: 'migrated', from: fromVersion, to: toVersion, backupDir };
 }
 
+/**
+ * All registered migrations, in no particular order -- selection is by version range, not position.
+ * Exported so a --dry-run caller can show the same plan runMigrations() would actually execute,
+ * without duplicating the version-range filter logic.
+ */
+function allMigrations() {
+  return [
+    require('./0.1.0-to-0.5.0'),
+    require('./0.5.0-to-0.6.0'),
+    require('./0.6.0-to-1.0.0'),
+    require('./v9-unified-memory'),
+  ];
+}
+
+/**
+ * A migration should run if its DESTINATION VERSION falls within the range:
+ * (fromVersion, toVersion] — i.e., greater than fromVersion AND at most toVersion.
+ */
+function getMigrationsToRun(fromVersion, toVersion) {
+  return allMigrations().filter(m =>
+    compareSemver(m.toVersion, fromVersion) > 0 &&
+    compareSemver(m.toVersion, toVersion)   <= 0
+  );
+}
+
 module.exports.runMigrations = runMigrations;
+module.exports.getMigrationsToRun = getMigrationsToRun;
+
+// -- CLI entrypoint --------------------------------------------------------------
+//
+// THE DEFECT this replaces: this file exported runMigrations() but had no entrypoint of its own, so
+// `node bin/migrations/migrate.js` -- exactly what .claude/commands/mindforge/migrate.md tells
+// /mindforge:migrate to run, and exactly what self-update.js's own catch block tells an operator to
+// run manually when auto-migration fails -- defined functions and exited 0 doing nothing. The ONLY
+// real caller of runMigrations() anywhere in this codebase was self-update.js's own internal
+// version-bump flow; there was no way to trigger a migration from outside that flow, including from
+// this framework's own dev checkout.
+if (require.main === module) {
+  (async () => {
+    const args = process.argv.slice(2);
+    const flag = (name) => {
+      const idx = args.indexOf(`--${name}`);
+      return idx !== -1 ? args[idx + 1] : null;
+    };
+    const dryRun = args.includes('--dry-run');
+
+    const { resolveMindforgeVersion } = require('../utils/mindforge-version');
+    const frameworkVersion = resolveMindforgeVersion({ fromDir: __dirname }).version;
+
+    let schemaVersion = null;
+    if (fs.existsSync(PATHS.handoff)) {
+      try { schemaVersion = JSON.parse(fs.readFileSync(PATHS.handoff, 'utf8')).schema_version || null; }
+      catch { /* malformed HANDOFF.json -- fall through to frameworkVersion below */ }
+    }
+
+    const fromVersion = flag('from') || schemaVersion || frameworkVersion;
+    const toVersion = flag('to') || frameworkVersion;
+
+    if (dryRun) {
+      const plan = getMigrationsToRun(fromVersion, toVersion);
+      console.log(`  Dry run: v${fromVersion} -> v${toVersion}. No changes will be made.`);
+      if (plan.length === 0) {
+        console.log('  No applicable migrations.');
+      } else {
+        console.log(`  Migrations that would run (${plan.length}):`);
+        plan.forEach(m => console.log(`    - v${m.fromVersion} -> v${m.toVersion}: ${m.description}`));
+      }
+      process.exit(0);
+    }
+
+    try {
+      const result = await runMigrations(fromVersion, toVersion);
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(0);
+    } catch (err) {
+      console.error(err.message);
+      process.exit(1);
+    }
+  })();
+}
