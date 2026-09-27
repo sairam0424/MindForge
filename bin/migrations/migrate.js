@@ -6,7 +6,6 @@
 'use strict';
 
 const fs   = require('fs');
-const os   = require('os');
 const path = require('path');
 
 // Re-export for use by self-update.js
@@ -15,18 +14,23 @@ module.exports.compareSemver = compareSemver;
 
 const PLANNING_DIR = path.join(process.cwd(), '.planning');
 
+// THE DEFECT THIS REPLACES. An earlier revision of this fix added v9-unified-memory's
+// three JSONL source paths (including the home-directory-scoped global knowledge base, shared across
+// every MindForge project on the machine) to this same backup/restore set, reasoning that "always
+// back up" should cover them too. Review caught the actual effect: runMigrations()'s restore-on-
+// failure step restores EVERY backed-up file whenever ANY migration in the batch fails -- including
+// migrations (0.1.0-to-0.5.0, 0.5.0-to-0.6.0, 0.6.0-to-1.0.0) that never touch memory at all. Since
+// v9-unified-memory only ever READS these three files (writes go to celestial.db, never back to the
+// JSONL sources), backing them up for "restore on failure" protects nothing real, while the shared
+// global file's inclusion meant an unrelated schema-migration failure in Project A could silently
+// overwrite a concurrent legitimate write from Project B with a stale snapshot. Removed entirely --
+// a read-only input needs no restore-on-failure safety net, and giving it one here was actively
+// unsafe for a file this migration doesn't even own.
 const PATHS = {
   handoff:    path.join(PLANNING_DIR, 'HANDOFF.json'),
   state:      path.join(PLANNING_DIR, 'STATE.md'),
   audit:      path.join(PLANNING_DIR, 'AUDIT.jsonl'),
   mindforgemd: path.join(process.cwd(), 'MINDFORGE.md'),
-  // v9-unified-memory reads these three JSONL files (via knowledge-store.js's own getPaths(), not
-  // this list -- it never receives PATHS as an argument). They're backed up here anyway because
-  // "always back up" otherwise only covered files that migration never touches, leaving the actual
-  // migrated data with no restore-on-failure safety net.
-  memoryKb:       path.join(process.cwd(), '.mindforge', 'memory', 'knowledge-base.jsonl'),
-  memoryGlobalKb: path.join(os.homedir(), '.mindforge', 'global-knowledge-base.jsonl'),
-  memoryGraph:    path.join(process.cwd(), '.mindforge', 'memory', 'graph-edges.jsonl'),
 };
 
 /**
@@ -178,7 +182,7 @@ module.exports.getMigrationsToRun = getMigrationsToRun;
 
 // -- CLI entrypoint --------------------------------------------------------------
 //
-// THE DEFECT this replaces: this file exported runMigrations() but had no entrypoint of its own, so
+// THE DEFECT THIS REPLACES. This file exported runMigrations() but had no entrypoint of its own, so
 // `node bin/migrations/migrate.js` -- exactly what .claude/commands/mindforge/migrate.md tells
 // /mindforge:migrate to run, and exactly what self-update.js's own catch block tells an operator to
 // run manually when auto-migration fails -- defined functions and exited 0 doing nothing. The ONLY
@@ -187,38 +191,68 @@ module.exports.getMigrationsToRun = getMigrationsToRun;
 // this framework's own dev checkout.
 if (require.main === module) {
   (async () => {
-    const args = process.argv.slice(2);
-    const flag = (name) => {
-      const idx = args.indexOf(`--${name}`);
-      return idx !== -1 ? args[idx + 1] : null;
-    };
-    const dryRun = args.includes('--dry-run');
-
-    const { resolveMindforgeVersion } = require('../utils/mindforge-version');
-    const frameworkVersion = resolveMindforgeVersion({ fromDir: __dirname }).version;
-
-    let schemaVersion = null;
-    if (fs.existsSync(PATHS.handoff)) {
-      try { schemaVersion = JSON.parse(fs.readFileSync(PATHS.handoff, 'utf8')).schema_version || null; }
-      catch { /* malformed HANDOFF.json -- fall through to frameworkVersion below */ }
-    }
-
-    const fromVersion = flag('from') || schemaVersion || frameworkVersion;
-    const toVersion = flag('to') || frameworkVersion;
-
-    if (dryRun) {
-      const plan = getMigrationsToRun(fromVersion, toVersion);
-      console.log(`  Dry run: v${fromVersion} -> v${toVersion}. No changes will be made.`);
-      if (plan.length === 0) {
-        console.log('  No applicable migrations.');
-      } else {
-        console.log(`  Migrations that would run (${plan.length}):`);
-        plan.forEach(m => console.log(`    - v${m.fromVersion} -> v${m.toVersion}: ${m.description}`));
-      }
-      process.exit(0);
-    }
-
     try {
+      const args = process.argv.slice(2);
+      const flag = (name) => {
+        const idx = args.indexOf(`--${name}`);
+        return idx !== -1 ? args[idx + 1] : null;
+      };
+      const dryRun = args.includes('--dry-run');
+
+      // Printed before anything else: this tool resolves its target purely from process.cwd(), with
+      // no project-marker check, and self-update.js's own failure path tells an operator to run this
+      // by hand from wherever they happen to be. Echoing the resolved directory is the only way that
+      // operator can catch "I'm in the wrong directory" before a real run acts on it.
+      console.log(`  Target: ${PLANNING_DIR}`);
+
+      const { resolveMindforgeVersion } = require('../utils/mindforge-version');
+      const frameworkVersion = resolveMindforgeVersion({ fromDir: __dirname }).version;
+
+      let schemaVersion = null;
+      if (fs.existsSync(PATHS.handoff)) {
+        try { schemaVersion = JSON.parse(fs.readFileSync(PATHS.handoff, 'utf8')).schema_version || null; }
+        catch { /* malformed HANDOFF.json -- fall through to frameworkVersion below */ }
+      }
+
+      // THE DEFECT THIS CLOSES. This file's own doc comment says it exists for "exactly what
+      // self-update.js's own catch block tells an operator to run manually when auto-migration
+      // fails" -- i.e. AFTER the npx apply step has already overwritten the local install with the
+      // NEW version. At that point resolveMindforgeVersion() can only ever return the new version,
+      // so if HANDOFF.json is also missing schema_version (fresh installs, or installs that predate
+      // schema_version tracking), fromVersion and toVersion silently collapse to the same value and
+      // runMigrations() no-ops with zero indication anything was skipped -- in exactly the recovery
+      // scenario this entrypoint was built to serve. Fail loudly instead: without --from, tell the
+      // operator why nothing will run rather than silently doing nothing.
+      if (!flag('from') && !schemaVersion) {
+        console.warn(
+          '  ⚠️  No schema_version found in HANDOFF.json, and no --from given -- cannot determine '
+          + 'which version to migrate FROM. This commonly happens right after an update, since the '
+          + 'local install is already the NEW version by the time this runs. Pass --from explicitly '
+          + '(e.g. --from 8.2.1), or migrations will be skipped without running.'
+        );
+      }
+
+      const fromVersion = flag('from') || schemaVersion || frameworkVersion;
+      const toVersion = flag('to') || frameworkVersion;
+
+      if (dryRun) {
+        // Agrees with the guard runMigrations() itself checks first, so --dry-run never reports a
+        // plan that a real run from this same directory would immediately refuse to execute.
+        if (!fs.existsSync(PLANNING_DIR)) {
+          console.log('  Dry run: no .planning/ directory found here -- a real run would do nothing.');
+          process.exit(0);
+        }
+        const plan = getMigrationsToRun(fromVersion, toVersion);
+        console.log(`  Dry run: v${fromVersion} -> v${toVersion}. No changes will be made.`);
+        if (plan.length === 0) {
+          console.log('  No applicable migrations.');
+        } else {
+          console.log(`  Migrations that would run (${plan.length}):`);
+          plan.forEach(m => console.log(`    - v${m.fromVersion} -> v${m.toVersion}: ${m.description}`));
+        }
+        process.exit(0);
+      }
+
       const result = await runMigrations(fromVersion, toVersion);
       console.log(JSON.stringify(result, null, 2));
       process.exit(0);

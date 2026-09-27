@@ -419,7 +419,7 @@ test('migrate.js exports getMigrationsToRun function', () => {
 // global path with distinct, checkable content, spawns the real CLI end to end, and queries the
 // resulting SQLite DB directly -- proving both the entrypoint wiring and the path fix together,
 // the same way a real operator's migration would actually need both to work.
-test('migrate.js CLI runs end-to-end: entrypoint works and BOTH local and real-global entries migrate', () => {
+test('migrate.js CLI runs end-to-end: entrypoint works, echoes target, and migrates BOTH KB entries and a graph edge', () => {
   const { spawnSync } = require('child_process');
   const os = require('os');
   const REPO_ROOT = path.join(__dirname, '..');
@@ -437,6 +437,10 @@ test('migrate.js CLI runs end-to-end: entrypoint works and BOTH local and real-g
     // path bug ever reappears, this entry silently fails to migrate and the assertion below catches it.
     fs.writeFileSync(path.join(homeDir, '.mindforge', 'global-knowledge-base.jsonl'),
       JSON.stringify({ id: 'global-1', type: 'insight', content: 'global test entry', confidence: 0.8 }) + '\n');
+    // Graph edges: previously untested entirely, and previously read via a second hardcoded path
+    // expression rather than knowledge-graph.js's own getPaths().EDGES_PATH.
+    fs.writeFileSync(path.join(project, '.mindforge', 'memory', 'graph-edges.jsonl'),
+      JSON.stringify({ id: 'edge-1', source_id: 'local-1', target_id: 'global-1', edge_type: 'RELATED_TO' }) + '\n');
     fs.writeFileSync(path.join(project, '.planning', 'HANDOFF.json'),
       JSON.stringify({ schema_version: '8.2.1' }));
 
@@ -445,6 +449,8 @@ test('migrate.js CLI runs end-to-end: entrypoint works and BOTH local and real-g
 
     const dry = run(['--dry-run']);
     assert.strictEqual(dry.status, 0, `dry-run failed: ${dry.stderr}`);
+    assert.match(dry.stdout, new RegExp(`Target: ${project.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`),
+      `dry-run must echo the resolved target directory so an operator can confirm it, got: ${dry.stdout}`);
     assert.match(dry.stdout, /Dry run/, `expected dry-run output, got: ${dry.stdout}`);
     assert.match(dry.stdout, /v9-unified-memory|Unified Memory/i,
       `dry-run should name the pending migration, got: ${dry.stdout}`);
@@ -462,8 +468,9 @@ test('migrate.js CLI runs end-to-end: entrypoint works and BOTH local and real-g
     const query = spawnSync(process.execPath, ['-e', `
       const vectorHub = require(${JSON.stringify(path.join(REPO_ROOT, 'bin', 'memory', 'vector-hub'))});
       vectorHub.init().then(() => {
-        const rows = vectorHub.query('SELECT id, content, source FROM knowledge ORDER BY id');
-        console.log(${JSON.stringify('__ROWS__:')} + JSON.stringify(rows));
+        const knowledge = vectorHub.query('SELECT id, content, source FROM knowledge ORDER BY id');
+        const edges = vectorHub.query('SELECT id, source_id, target_id FROM graph_edges ORDER BY id');
+        console.log(${JSON.stringify('__ROWS__:')} + JSON.stringify({ knowledge, edges }));
       });
     `], { cwd: project, encoding: 'utf8', timeout: 30000, env: { PATH: process.env.PATH, HOME: homeDir } });
     assert.strictEqual(query.status, 0, `query child failed: ${query.stderr}`);
@@ -472,11 +479,101 @@ test('migrate.js CLI runs end-to-end: entrypoint works and BOTH local and real-g
     // is pure JSON.
     const markerLine = query.stdout.split('\n').find(l => l.startsWith(marker));
     assert.ok(markerLine, `expected a marked JSON line in query output, got: ${query.stdout}`);
-    const rows = JSON.parse(markerLine.slice(marker.length));
-    assert.deepStrictEqual(rows.map(r => r.id), ['global-1', 'local-1'],
+    const { knowledge, edges } = JSON.parse(markerLine.slice(marker.length));
+    assert.deepStrictEqual(knowledge.map(r => r.id), ['global-1', 'local-1'],
       `expected BOTH the local and the real-global entry to have migrated, got: ${query.stdout}`);
-    assert.strictEqual(rows.find(r => r.id === 'global-1').source, 'global');
-    assert.strictEqual(rows.find(r => r.id === 'local-1').source, 'project');
+    assert.strictEqual(knowledge.find(r => r.id === 'global-1').source, 'global');
+    assert.strictEqual(knowledge.find(r => r.id === 'local-1').source, 'project');
+    assert.strictEqual(edges.length, 1, `expected the graph edge to have migrated via knowledge-graph.js's getPaths(), got: ${query.stdout}`);
+    assert.strictEqual(edges[0].id, 'edge-1');
+  } finally {
+    fs.rmSync(project, { recursive: true, force: true });
+  }
+});
+
+test('migrate.js CLI warns and skips rather than silently no-opping when schema_version is missing', () => {
+  // THE DEFECT this replaces: fromVersion fell back to frameworkVersion (read fresh from disk) when
+  // schema_version was absent, which -- in the exact recovery scenario this entrypoint's own doc
+  // comment says it exists for (run AFTER self-update.js's npx apply step already bumped the local
+  // install to the NEW version) -- collapsed fromVersion and toVersion to the same value and made
+  // runMigrations() report "no-migration-needed" with zero indication anything was skipped.
+  const { spawnSync } = require('child_process');
+  const os = require('os');
+  const REPO_ROOT = path.join(__dirname, '..');
+  const project = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-migtest-noschema-')));
+  try {
+    fs.mkdirSync(path.join(project, '.planning'), { recursive: true });
+    // No HANDOFF.json at all -- the most common real case (fresh install, or one that predates
+    // schema_version tracking), not just an empty/malformed one.
+    const run = spawnSync(process.execPath, [path.join(REPO_ROOT, 'bin', 'migrations', 'migrate.js')],
+      { cwd: project, encoding: 'utf8', timeout: 30000 });
+    assert.strictEqual(run.status, 0, `expected a clean exit even when skipping, got: ${run.stderr}`);
+    // The warning is console.warn (stderr), while the rest of this tool's routine output is
+    // console.log (stdout) -- check both, the way a real terminal shows them interleaved.
+    const combined = run.stdout + run.stderr;
+    assert.match(combined, /No schema_version found.*no --from given/s,
+      `expected an explicit warning explaining why nothing will run, got stdout: ${run.stdout}\nstderr: ${run.stderr}`);
+    assert.match(combined, /--from/, `warning must tell the operator the escape hatch, got stdout: ${run.stdout}\nstderr: ${run.stderr}`);
+  } finally {
+    fs.rmSync(project, { recursive: true, force: true });
+  }
+});
+
+test('an unrelated migration failure does NOT touch memory JSONL files -- they carry no backup/restore of their own', () => {
+  // THE DEFECT this replaces (HIGH severity, caught by review): an earlier revision of this fix
+  // added the memory JSONL paths (including the home-directory-scoped global file, shared across
+  // every MindForge project on the machine) to migrate.js's shared PATHS backup/restore set. Since
+  // runMigrations() restores EVERY backed-up file on ANY migration failure in the batch -- not just
+  // files the failing migration touched -- an unrelated schema-migration failure (0.1.0-to-0.5.0
+  // here, triggered by a genuinely malformed HANDOFF.json, not a mock) would silently overwrite the
+  // shared global memory file with a stale pre-run snapshot, discarding any real concurrent write to
+  // it from a different project/session. Proof of the fix: the memory files must be BYTE-IDENTICAL
+  // after the failure to what they were before, because they were never backed up in the first place
+  // (nothing to restore FROM), not because a restore happened to put back the right content.
+  const { spawnSync } = require('child_process');
+  const os = require('os');
+  const REPO_ROOT = path.join(__dirname, '..');
+  const project = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-migtest-isolation-')));
+  const homeDir = path.join(project, '.scratch-home');
+  try {
+    fs.mkdirSync(path.join(homeDir, '.mindforge'), { recursive: true });
+    fs.mkdirSync(path.join(project, '.mindforge', 'memory'), { recursive: true });
+    fs.mkdirSync(path.join(project, '.planning'), { recursive: true });
+
+    const localKbContent = JSON.stringify({ id: 'local-1', content: 'must survive' }) + '\n';
+    const globalKbContent = JSON.stringify({ id: 'global-1', content: 'must survive too' }) + '\n';
+    const localKbPath = path.join(project, '.mindforge', 'memory', 'knowledge-base.jsonl');
+    const globalKbPath = path.join(homeDir, '.mindforge', 'global-knowledge-base.jsonl');
+    fs.writeFileSync(localKbPath, localKbContent);
+    fs.writeFileSync(globalKbPath, globalKbContent);
+
+    // Genuinely malformed -- 0.1.0-to-0.5.0.js's real run(paths) does JSON.parse(readFileSync(...))
+    // on this exact file and will throw a real SyntaxError. Not a mock: this is a real migration,
+    // failing for a real reason, exercising the real restore-on-failure path in runMigrations().
+    fs.writeFileSync(path.join(project, '.planning', 'HANDOFF.json'), '{not valid json');
+
+    const run = spawnSync(process.execPath,
+      [path.join(REPO_ROOT, 'bin', 'migrations', 'migrate.js'), '--from', '0.1.0', '--to', '9.0.0'],
+      { cwd: project, encoding: 'utf8', timeout: 30000, env: { PATH: process.env.PATH, HOME: homeDir } });
+
+    assert.notStrictEqual(run.status, 0, `expected the migration to fail on malformed HANDOFF.json, got exit 0: ${run.stdout}`);
+
+    assert.strictEqual(fs.readFileSync(localKbPath, 'utf8'), localKbContent,
+      'local knowledge-base.jsonl must be untouched by an unrelated migration failure');
+    assert.strictEqual(fs.readFileSync(globalKbPath, 'utf8'), globalKbContent,
+      'global knowledge-base.jsonl (shared across every project on the machine) must be untouched by '
+      + 'an unrelated migration failure in THIS project -- this is the exact cross-project data-loss '
+      + 'scenario the fix closes');
+
+    // The backup that DOES get created (for the 4 real schema files this migration batch touches)
+    // must contain none of the memory filenames -- confirming they were never swept into it at all.
+    const backupDirs = fs.readdirSync(path.join(project, '.planning'))
+      .filter(f => f.startsWith('migration-backup-'));
+    for (const dir of backupDirs) {
+      const backed = fs.readdirSync(path.join(project, '.planning', dir));
+      assert.ok(!backed.includes('knowledge-base.jsonl') && !backed.includes('global-knowledge-base.jsonl'),
+        `migration backup must not contain memory JSONL files, found: ${backed.join(', ')}`);
+    }
   } finally {
     fs.rmSync(project, { recursive: true, force: true });
   }
