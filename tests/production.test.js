@@ -74,8 +74,10 @@ test('a self-install writes NOTHING over the repository\'s own tracked files', (
   // THE DEFECT it now covers. `selfInstall` gated 8 write sites and missed two: the entry-file write
   // and the entire command copy. So a self-install printed "Self-install detected — skipping framework
   // file copy" and then overwrote `.claude/CLAUDE.md` plus 149 tracked files under
-  // `.claude/commands/`, with no backup — safeCopyClaude only backs up when the existing content does
-  // NOT contain "MindForge", and this repo's entry file does.
+  // `.claude/commands/`, with no backup — safeCopyClaude at the time only backed up when the
+  // existing content did NOT contain "MindForge", and this repo's entry file does. (safeCopyClaude
+  // has since been fixed to compare actual content instead of that substring heuristic; this test
+  // still guards the separate `!selfInstall` gate, which stays as defense-in-depth.)
   //
   // Asserted against a real clone and real git status, because the property is "the working tree is
   // untouched" and nothing short of git can establish that.

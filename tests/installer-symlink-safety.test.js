@@ -181,6 +181,60 @@ test('a real regular file is still backed up and replaced', () => {
   } finally { fs.rmSync(project, { recursive: true, force: true }); }
 });
 
+test('an existing CLAUDE.md that mentions MindForge AND carries other content is still backed up', () => {
+  // THE DEFECT, live: safeCopyClaude's backup check used to be `!existing.includes('MindForge')`.
+  // Any MindForge-managed CLAUDE.md mentions "MindForge" by construction, so that check skipped the
+  // backup for every one of them -- including a real file that has MindForge's own protocol content
+  // followed by unrelated, hand-appended sections from other tools. Reproduced against a real global
+  // install (a fresh --claude --global run at HEAD, before this fix, silently dropped exactly this
+  // shape of appended content with zero backup).
+  const project = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-mixed-')));
+  try {
+    fs.writeFileSync(
+      path.join(project, 'CLAUDE.md'),
+      '# MindForge Protocol\nSome MindForge content here.\n\n## My Other Tool (Global)\nkeep this section too\n',
+    );
+    const r = installInto(project);
+    assert.strictEqual(r.status, 0, `install over a mixed-content file must succeed: ${r.out.slice(-300)}`);
+    const backups = fs.readdirSync(project).filter((f) => f.startsWith('CLAUDE.md.backup-'));
+    assert.strictEqual(backups.length, 1,
+      'a CLAUDE.md that mentions MindForge but also carries other content must still be backed up, '
+      + `found ${backups.length} backup(s)`);
+    assert.match(fs.readFileSync(path.join(project, backups[0]), 'utf8'), /keep this section too/,
+      'the backup must preserve the non-MindForge section, not just whatever mentions "MindForge"');
+  } finally { fs.rmSync(project, { recursive: true, force: true }); }
+});
+
+test('a second install does NOT spuriously back up over confidence-percentage churn alone', () => {
+  // THE DEFECT this guards against: local-scope installs append a "Knowledge Context
+  // (Auto-loaded)" block rendering each memory entry's confidence percentage, and
+  // SessionMemoryLoader's underlying reinforce() bumps that confidence on every read -- so the
+  // exact bytes of that block differ between two back-to-back installs even with zero real user
+  // customization. The exact-content-equality fix in safeCopyClaude would, on its own, treat
+  // that churn as "something changed" and write a fresh backup on every such reinstall,
+  // unbounded, for any project with active team_preference memory. Confirmed live before this
+  // test existed: two installs against a seeded preference produced a real spurious backup.
+  const project = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-memchurn-')));
+  try {
+    const store = require('../bin/memory/knowledge-store');
+    store.setBaseDir(project);
+    store.add({ type: 'team_preference', topic: 'test pref', content: 'always use tabs', confidence: 0.7 });
+
+    const first = installInto(project);
+    assert.strictEqual(first.status, 0, `first install must succeed: ${first.out.slice(-300)}`);
+    const claudeMd = fs.readFileSync(path.join(project, 'CLAUDE.md'), 'utf8');
+    assert.match(claudeMd, /Knowledge Context/,
+      'the seeded preference must actually trigger the auto-loaded block, or this test proves nothing');
+
+    const second = installInto(project);
+    assert.strictEqual(second.status, 0, `second install must succeed: ${second.out.slice(-300)}`);
+    const backups = fs.readdirSync(project).filter((f) => f.startsWith('CLAUDE.md.backup-'));
+    assert.deepStrictEqual(backups, [],
+      'a second install with no real customization must not create a backup purely from '
+      + `confidence-percentage churn, found: ${backups.join(', ')}`);
+  } finally { fs.rmSync(project, { recursive: true, force: true }); }
+});
+
 // ── the guard is wired where it matters ──────────────────────────────────────
 
 test('both write primitives AND safeCopyClaude consult the guard', () => {
