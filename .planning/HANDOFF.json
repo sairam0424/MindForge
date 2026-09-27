@@ -3,21 +3,21 @@
   "schema_type": "HANDOFF",
   "schema_version": "1.0.0",
   "current_phase": "verify-punch-list",
-  "phase_description": "Fixing findings from a full /verify sweep against v12.0.0, one at a time: commit -> PR -> multi-agent review -> CI -> user go-ahead -> merge.",
-  "next_task": "Continue the /verify punch list: next up is the two unsynced memory tiers (JSONL knowledge-store.js vs SQLite vector-hub.js, v9-unified-memory migration never actually run on this checkout, 0 rows in celestial.db's _migrations table). After that: bin/models/model-broker.js dead code with its own hardcoded pricing table (violates the single-pricing-source rule), and a SECURITY.md internal version-table contradiction. See PR #304-#309 descriptions for the fixes already shipped this cycle -- there is no separate persisted findings doc.",
-  "current_context": "main is at 1d45230a (PR #309 merged), v12.0.0, GREEN both locally (140 passed / 0 failed / 3 skipped / 143 total, lint 0 errors, validate-assets exit 0) and in CI. Six PRs merged this cycle (#304-#309), each fixing one /verify finding, each reviewed by this repo's own multi-agent workflow before merge. Two of the six required a follow-up commit after review caught a real problem in the first attempt: #306's registry fix was redesigned from existence-checking to recency-capping after review found existsSync() false-positives on unmounted/permission-denied paths would silently drop real projects; #307's broader secret-redaction attempt was reverted (not patched) after review found it could permanently corrupt legitimate snapshot data via a generic high-entropy regex matching ordinary git SHAs/UUIDs. package.json and npm's published latest/stable both read 12.0.0 -- no version drift.",
+  "phase_description": "Fixing findings from a full /verify sweep against v12.0.0, one at a time: commit → PR → multi-agent review → CI → user go-ahead → merge.",
+  "next_task": "Continue the /verify punch list: next up is the two unsynced memory tiers (JSONL knowledge-store.js vs SQLite vector-hub.js, v9-unified-memory migration never actually run on this checkout, 0 rows in celestial.db's _migrations table). After that: bin/models/model-broker.js dead code with its own hardcoded pricing table (violates the single-pricing-source rule), and a SECURITY.md internal version-table contradiction. See PR #304-#309 descriptions for the fixes already shipped this cycle — there is no separate persisted findings doc.",
+  "current_context": "main is at 1d45230a (PR #309 merged), v12.0.0, GREEN both locally (140 passed / 0 failed / 3 skipped / 143 total, lint 0 errors, validate-assets exit 0) and in CI. Six PRs merged this cycle (#304-#309), each fixing one /verify finding, each reviewed by this repo's own multi-agent workflow before merge. Every one of the six received at least one review-driven follow-up commit — none shipped clean on the first attempt. Two required a full redesign or revert, not just a patch: #306's registry fix was redesigned from existence-checking to recency-capping after review found existsSync() false-positives on unmounted/permission-denied paths would silently drop real projects; #307's broader secret-redaction attempt was reverted (not patched) after review found it could permanently corrupt legitimate snapshot data via a generic high-entropy regex matching ordinary git SHAs/UUIDs. The other four (#304, #305, #308, #309) got a smaller follow-up commit fixing real findings without a full redesign — see each PR's own commit history for specifics, not summarized here since it drifts easily (an earlier revision of this file undercounted this as \"two of six\" and a review caught it). package.json and npm's published latest/stable both read 12.0.0 — no version drift.",
   "context_refs": [
-    "gh pr list --state merged --limit 10 -- fastest way to reconstruct this cycle's context; PR bodies for #304-#309 each document one finding's full fix arc.",
-    ".planning/STATE.md -- narrative summary of the same cycle, written alongside this file.",
-    "CLAUDE.md lines 53-57 -- the version-bump contract: 16 channels over 15 files, PLUS the two build artifacts and their 3-command chain.",
-    "docs/research/2026-08-v12-upgrade-report.md -- DEL-02 is the source of the headless.js honest-failure decision (PR #308)."
+    "gh pr list --state merged --limit 10 — fastest way to reconstruct this cycle's context; PR bodies for #304-#309 each document one finding's full fix arc, including every follow-up commit and why it happened.",
+    ".planning/STATE.md — narrative summary of the same cycle, written alongside this file.",
+    "CLAUDE.md lines 53-57 — the version-bump contract: 16 channels over 15 files, PLUS the two build artifacts and their 3-command chain.",
+    "docs/research/2026-08-v12-upgrade-report.md — DEL-02 is the source of the headless.js honest-failure decision (PR #308)."
   ],
   "blockers": [],
   "decisions_needed": [
     "Whether to re-sync .claude/worktrees/release-v12.0.1 (now 19 commits behind main) or abandon it for a fresh release cut when v12.0.1 is actually ready to ship. Not resolved this update.",
-    "Whether the develop -> release -> main three-branch flow this file used to describe is still intended policy: every PR in the current cycle (#304-#309) merged directly to main, and develop has drifted to 52 commits behind / 10 ahead. Not confirmed as a deliberate change -- flagging so it isn't assumed either way.",
-    "Carried over from 2026-08-21, status NOT re-verified this update (out of scope for a staleness fix -- do not trust these as current without re-checking): D5 plugin asset contract, D6 whether the SDK is published with provenance, D7 what exit code `verify` should use when every stage skips, D8 whether .planning/VERIFICATION.md should be tracked, D9 whether to governance-gate the release path, and whether a --global install should carry bin/ at all.",
-    "HANDOFF.json field mismatch (found 2026-08-21, still true): the writer bin/autonomous/state-manager.js and bin/dashboard/metrics-aggregator.js use `last_updated`, but .claude/commands/mindforge/next.md gates freshness on `updated_at`. This file writes BOTH keys so either reader works; the underlying mismatch itself was never fixed on either reader's side."
+    "Whether the develop → release → main three-branch flow this file used to describe is still intended policy: every PR in the current cycle (#304-#309) merged directly to main, and develop has drifted to 52 commits behind / 10 ahead. Not confirmed as a deliberate change — flagging so it isn't assumed either way.",
+    "Carried over from 2026-08-21, status NOT re-verified this update (out of scope for a staleness fix — do not trust these as current without re-checking): D5 plugin asset contract, D6 whether the SDK is published with provenance, D7 what exit code `verify` should use when every stage skips, D8 whether .planning/VERIFICATION.md should be tracked, D9 whether to governance-gate the release path, and whether a --global install should carry bin/ at all.",
+    "HANDOFF.json field mismatch (found 2026-08-21) — PARTLY FIXED this update: bin/autonomous/state-manager.js's writeHandoff() now writes both `last_updated` and `updated_at`, so .claude/commands/mindforge/next.md's freshness gate on `updated_at` will actually see a value once this function has a real caller. It still has zero callers anywhere in the repo (confirmed via grep) — wiring it up is unresolved, separate work."
   ],
   "recent_commits": [
     "1d45230a Merge #309 fix/fabricated-agency-skills",
@@ -29,14 +29,15 @@
     "16f5280f Merge #303 fix/verify-loop-cli-and-skill-findings"
   ],
   "recent_files": [
-    "bin/installer-core.js -- CLAUDE.md backup content-comparison, command-count namespace breakdown, registry recency cap",
-    "bin/engine/temporal-hub.js -- captureState() excludes .log from captured extensions",
-    "bin/autonomous/headless.js -- require.main guard, refuses to report success with no task executor",
-    ".github/workflows/execution-plane.yml, mindforge-autonomous.yml -- contained headless.js fix's CI blast radius",
-    "docs/registry/SKILLS.md, .mindforge/org/skills/MANIFEST.md, .mindforge/personas/swarm-templates.json -- fabricated agency-* skill references replaced with real ones",
-    "tests/no-home-leak.test.js, tests/temporal-vision.test.js, tests/autonomous.test.js, tests/skills-platform.test.js -- regression coverage for each fix above"
+    "bin/installer-core.js — CLAUDE.md backup content-comparison, command-count namespace breakdown, registry recency cap",
+    "bin/engine/temporal-hub.js — captureState() excludes .log from captured extensions",
+    "bin/autonomous/headless.js — require.main guard, refuses to report success with no task executor",
+    ".github/workflows/execution-plane.yml, mindforge-autonomous.yml — contained headless.js fix's CI blast radius",
+    "docs/registry/SKILLS.md, .mindforge/org/skills/MANIFEST.md, .mindforge/personas/swarm-templates.json — fabricated agency-* skill references replaced with real ones",
+    "bin/autonomous/state-manager.js — writeHandoff() now writes both last_updated and updated_at",
+    "tests/no-home-leak.test.js, tests/temporal-vision.test.js, tests/autonomous.test.js, tests/skills-platform.test.js, tests/version-consistency.test.js — regression coverage for each fix above"
   ],
   "handoffs": [],
-  "last_updated": "2026-09-27T17:40:20Z",
-  "updated_at": "2026-09-27T17:40:20Z"
+  "last_updated": "2026-09-27T18:32:22Z",
+  "updated_at": "2026-09-27T18:32:22Z"
 }

@@ -81,9 +81,12 @@ end-to-end through the remaining findings.
 - npm `files[]` overrides `.npmignore`: runtime state must be NEGATED inside `files[]`.
 - Multi-agent PR review (this cycle's pattern): 3-dimension parallel review (correctness/security/
   consistency) + adversarial verify pass per finding, before asking the user for a merge go-ahead.
-  When a review finds a fundamental flaw in a fix (not just a nit), redesign properly or revert to
-  the narrower correct scope — do not patch around it under time pressure. Happened twice this cycle
-  (#306's existence-check redesign, #307's reverted redaction attempt).
+  Every one of #304-#309 got at least one review-driven follow-up commit — none shipped clean on
+  the first attempt. Most were smaller fixes for real-but-not-fundamental findings. Two needed more
+  than a patch: when a review finds a fundamental flaw (not just a nit), redesign properly or revert
+  to the narrower correct scope — do not patch around it under time pressure. That full-redesign-or-
+  revert bar was hit twice this cycle (#306's existence-check redesign, #307's reverted redaction
+  attempt); the other four's follow-ups were ordinary fixes, not redesigns.
 
 ## Active blockers
 None release-blocking right now — no release is in flight. The `release/v12.0.1` worktree drift
@@ -103,4 +106,4 @@ list in a fresh session, `gh pr list --state merged --limit 10` and reading thos
 fastest way to reconstruct context.
 
 ## Last updated
-2026-09-27T17:40:20Z
+2026-09-27T18:32:22Z

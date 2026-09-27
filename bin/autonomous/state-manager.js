@@ -147,8 +147,15 @@ function createStateManager(planningDir) {
    * @param {object} data — The handoff object to persist
    */
   function writeHandoff(data) {
+    // Both keys, deliberately: .claude/commands/mindforge/next.md gates freshness on `updated_at`,
+    // while this function (and the dashboard reader, bin/dashboard/metrics-aggregator.js) has always
+    // used `last_updated`. Writing only one lets the two silently drift the moment this function is
+    // wired to a real caller -- see tests/version-consistency.test.js's staleness regression test,
+    // which asserts the two agree and would start failing the first time that happened.
+    const now = new Date().toISOString();
     const timestamped = Object.assign(Object.create(null), data, {
-      last_updated: new Date().toISOString(),
+      last_updated: now,
+      updated_at: now,
     });
     atomicWriteJSON(handoffPath, timestamped);
     return timestamped;

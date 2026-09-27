@@ -752,6 +752,15 @@ test('HANDOFF.json is not stale: last_updated agrees with updated_at and is rece
   assert.ok(!Number.isNaN(updated.getTime()),
     `HANDOFF.json's last_updated is not a valid date: ${handoff.last_updated}`);
   const ageDays = (Date.now() - updated.getTime()) / (1000 * 60 * 60 * 24);
+  // Lower bound too, not just upper: a future-dated last_updated (typo'd year, or someone hand-
+  // editing the timestamp forward specifically to dodge the staleness check below) makes ageDays
+  // negative, which would otherwise trivially satisfy "< 60" while being just as dishonest as a
+  // stale one. -1 tolerates ordinary clock skew between the machine that wrote this and the one
+  // running the test, without opening the door to a deliberately-future timestamp.
+  assert.ok(ageDays >= -1,
+    `HANDOFF.json's last_updated (${handoff.last_updated}) is ${Math.round(-ageDays)} day(s) in the `
+    + 'future. A future timestamp is not "fresh" -- it is wrong, whether by typo or by someone '
+    + 'trying to satisfy the staleness check below without doing the actual update.');
   assert.ok(ageDays < 60,
     `HANDOFF.json's last_updated is ${Math.round(ageDays)} day(s) old (>= 60). This exact file went `
     + '37 days stale once already with nothing catching it -- this threshold exists to force a real '
