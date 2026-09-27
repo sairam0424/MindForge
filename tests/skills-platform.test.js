@@ -358,6 +358,71 @@ test('all MANIFEST.md skill paths resolve to existing files', () => {
   });
 });
 
+// THE DEFECT the next two tests replace: a "## Multi-Agent Skills" / "## Enterprise Governance"
+// checklist section listed 5 checked-off skills (agency-agents-orchestrator, agency-senior-developer,
+// agency-software-architect, sovereign-integrity-checker, proactive-intent-harvester) with no
+// .mindforge/skills/.../SKILL.md path alongside them -- so the path-regex test above, which only
+// matches that literal path pattern, was structurally blind to them. None had a backing file
+// anywhere in the repo. Both fabricated sections were removed, leaving zero checked entries today --
+// which is exactly why the second test below needs its own fixture-based proof that the scanner
+// mechanism works, rather than asserting non-vacuity against a real file that may legitimately have
+// nothing checked at any given time.
+//
+// Shared between both tests deliberately (not hand-copied): the fixture test's entire purpose is to
+// prove THIS mechanism works before the real-file test relies on it, so if they ever used two
+// separately-typed literals they could silently diverge. \s* before the checkbox (not just after
+// "-") allows an indented "  - [x] name" entry to still match -- an earlier version anchored on
+// column 0 only and would have silently skipped any indented checklist item.
+const CHECKED_CHECKLIST_ITEM_RE = /^\s*-\s*\[x\]\s+([\w-]+)/gim;
+
+test('the checklist scanner extracts checked entries and ignores unchecked ones', () => {
+  const fixture = [
+    '- [x] real-skill-one',
+    '- [ ] not-yet-built-skill',
+    '- [x] real-skill-two (Tier 1)',
+    '  - [x] indented-real-skill',
+  ].join('\n');
+  const checked = [...fixture.matchAll(CHECKED_CHECKLIST_ITEM_RE)].map(m => m[1]);
+  assert.deepStrictEqual(checked, ['real-skill-one', 'real-skill-two', 'indented-real-skill'],
+    'scanner must extract checked names (including indented and parenthetical-suffixed ones) and skip unchecked ones');
+});
+
+test('MANIFEST.md checklist-style entries (no path column) also resolve to a real skill', () => {
+  // Any FUTURE checked ("- [x] <name>") checklist item must name a skill that actually exists.
+  // An unchecked "- [ ] <name>" is an honest not-yet-done marker and is deliberately exempt.
+  // Zero checked entries today is a valid, honest state (both fabricated sections were deleted
+  // rather than replaced) -- the test above proves the scanner itself isn't silently broken.
+  const content = fs.readFileSync('.mindforge/org/skills/MANIFEST.md', 'utf8');
+  const checked = [...content.matchAll(CHECKED_CHECKLIST_ITEM_RE)].map(m => m[1]);
+  checked.forEach(name => {
+    const exists = fs.existsSync(`.mindforge/skills/${name}/SKILL.md`) || fs.existsSync(`.agent/skills/${name}/SKILL.md`);
+    assert.ok(exists, `MANIFEST.md checklist claims "${name}" (checked) but no backing SKILL.md exists under .mindforge/skills/ or .agent/skills/`);
+  });
+});
+
+test('swarm-templates.json required_skills all resolve to a real skill', () => {
+  // THE DEFECT this replaces: 16 of 86 distinct required_skills values across
+  // .mindforge/personas/swarm-templates.json's swarm templates named no real skill anywhere in the
+  // repo -- 9 under an "agency-*" naming convention (agency-ai-engineer, agency-data-engineer, etc.)
+  // plus 7 more under unrelated invented names (system-architecture, security-engineer, gsd-debug,
+  // ui-ux-pro-max, performance-engineer, code-review-excellence, database-migration,
+  // accessibility-compliance). Each was mapped to a real, thematically-matching skill directory.
+  const data = JSON.parse(fs.readFileSync('.mindforge/personas/swarm-templates.json', 'utf8'));
+  const skills = new Set();
+  (function collect(obj) {
+    if (Array.isArray(obj)) { obj.forEach(collect); return; }
+    if (obj && typeof obj === 'object') {
+      if (Array.isArray(obj.required_skills)) obj.required_skills.forEach(s => skills.add(s));
+      Object.values(obj).forEach(collect);
+    }
+  })(data);
+  assert.ok(skills.size > 20, `expected a substantial required_skills surface, found ${skills.size}`);
+  skills.forEach(name => {
+    const exists = fs.existsSync(`.mindforge/skills/${name}/SKILL.md`) || fs.existsSync(`.agent/skills/${name}/SKILL.md`);
+    assert.ok(exists, `swarm-templates.json required_skills names "${name}" but no backing SKILL.md exists`);
+  });
+});
+
 test('database-patterns SKILL.md has compound cursor documentation', () => {
   const content = fs.readFileSync('.mindforge/skills/database-patterns/SKILL.md', 'utf8');
   assert.ok(

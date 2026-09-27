@@ -20,7 +20,7 @@
       "decision_gate": "autonomous",
       "resource_budget": "medium",
       "required_skills": [
-        "ui-ux-pro-max"
+        "design-system"
       ]
     },
     "BackendSwarm": {
@@ -39,7 +39,7 @@
       "decision_gate": "autonomous",
       "resource_budget": "medium",
       "required_skills": [
-        "system-architecture"
+        "system-design"
       ]
     },
     "SecuritySwarm": {
@@ -57,7 +57,7 @@
       "decision_gate": "hitl",
       "resource_budget": "high",
       "required_skills": [
-        "security-engineer"
+        "security-review"
       ]
     },
     "AIEngineeringSwarm": {
@@ -71,7 +71,7 @@
       "decision_gate": "autonomous",
       "resource_budget": "high",
       "required_skills": [
-        "agency-ai-engineer"
+        "llm-orchestration"
       ]
     },
     "DeveloperExperienceSwarm": {
@@ -88,7 +88,7 @@
       "decision_gate": "autonomous",
       "resource_budget": "low",
       "required_skills": [
-        "agency-developer-advocate"
+        "cli-design"
       ]
     },
     "DataMeshSwarm": {
@@ -104,7 +104,7 @@
       "decision_gate": "hitl",
       "resource_budget": "medium",
       "required_skills": [
-        "agency-data-engineer"
+        "data-mesh"
       ]
     },
     "IdentityTrustSwarm": {
@@ -117,7 +117,7 @@
       "decision_gate": "hitl",
       "resource_budget": "high",
       "required_skills": [
-        "agency-agentic-identity-trust-architect"
+        "zero-trust-architecture"
       ]
     },
     "GrowthAnalyticsSwarm": {
@@ -128,7 +128,7 @@
       "decision_gate": "autonomous",
       "resource_budget": "medium",
       "required_skills": [
-        "agency-growth-hacker"
+        "analytics-instrumentation"
       ]
     },
     "IncidentResponseSwarm": {
@@ -145,7 +145,7 @@
       "decision_gate": "hitl",
       "resource_budget": "high",
       "required_skills": [
-        "gsd-debug"
+        "incident-response"
       ]
     },
     "ComplianceSwarm": {
@@ -161,7 +161,7 @@
       "decision_gate": "hitl",
       "resource_budget": "medium",
       "required_skills": [
-        "agency-legal-compliance-checker"
+        "compliance-as-code"
       ]
     },
     "QualityAssuranceSwarm": {
@@ -178,7 +178,7 @@
       "decision_gate": "autonomous",
       "resource_budget": "medium",
       "required_skills": [
-        "gsd-add-tests"
+        "contract-testing"
       ]
     },
     "FullStackSwarm": {
@@ -194,8 +194,8 @@
       "decision_gate": "autonomous",
       "resource_budget": "high",
       "required_skills": [
-        "system-architecture",
-        "ui-ux-pro-max"
+        "system-design",
+        "design-system"
       ]
     },
     "ArchitectureSwarm": {
@@ -212,7 +212,7 @@
       "decision_gate": "autonomous",
       "resource_budget": "high",
       "required_skills": [
-        "system-architecture"
+        "system-design"
       ]
     },
     "PerformanceSwarm": {
@@ -229,7 +229,7 @@
       "decision_gate": "autonomous",
       "resource_budget": "high",
       "required_skills": [
-        "performance-engineer"
+        "performance"
       ]
     },
     "InfrastructureSwarm": {
@@ -246,7 +246,7 @@
       "decision_gate": "hitl",
       "resource_budget": "high",
       "required_skills": [
-        "agency-devops-engineer"
+        "infrastructure-as-code"
       ]
     },
     "AccessibilitySwarm": {
@@ -262,7 +262,7 @@
       "decision_gate": "autonomous",
       "resource_budget": "medium",
       "required_skills": [
-        "accessibility-compliance"
+        "accessibility"
       ]
     },
     "ReviewSwarm": {
@@ -278,7 +278,7 @@
       "decision_gate": "autonomous",
       "resource_budget": "medium",
       "required_skills": [
-        "code-review-excellence"
+        "code-review-methodology"
       ]
     },
     "MigrationSwarm": {
@@ -294,7 +294,7 @@
       "decision_gate": "hitl",
       "resource_budget": "medium",
       "required_skills": [
-        "database-migration"
+        "migration-strategies"
       ]
     },
     "CouncilSwarm": {

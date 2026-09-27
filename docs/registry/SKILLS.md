@@ -10,37 +10,37 @@ This registry catalogs a curated subset of the skills available to MindForge.
 
 | Skill | Primary Domain | Primary Capability |
 | :--- | :--- | :--- |
-| **agency-senior-developer** | Implementation | "Enterprise-Grade" styling and robust logic. |
-| **agency-software-architect** | System Design | Architectural pattern selection and complexity control. |
-| **agency-backend-architect** | Core Logic | Database schema design and high-performance API logic. |
-| **agency-frontend-developer** | Web Interface | Fluid components and interactive design systems. |
-| **agency-mobile-app-builder** | Native Apps | Multi-platform mobile development (iOS/Android). |
+| **code-quality** | Code Review | Maintains quality standards during review, refactoring, and implementation. |
+| **system-design** | System Design | Large-scale architecture, scaling strategy, and distributed infrastructure decisions. |
+| **api-design** | Core Logic | API endpoint design, request/response schemas, and contract definition. |
+| **state-management** | Web Interface | State architecture, caching strategy, and optimistic-update design. |
+| **react-native-patterns** | Native Apps | React Native navigation, native module bridges, and Hermes performance work. |
 
 ## 🛡️ Security & Compliance
 
 | Skill | Primary Domain | Primary Capability |
 | :--- | :--- | :--- |
-| **agency-security-engineer** | Hardening | Threat detection and post-quantum security modeling. |
-| **agency-blockchain-security** | Smart Contracts | Vulnerability detection and formal verification. |
-| **agency-compliance-auditor** | Regulation | SOC 2 / ISO 27001 readiness and evidence gathering. |
-| **agency-legal-compliance** | Legal | Jurisdiction-aware data handling and licensing review. |
+| **threat-modeling** | Hardening | Attack-tree construction, trust-boundary analysis, and risk scoring. |
+| **supply-chain-security** | Dependencies | Package auditing, build integrity, and SBOM/supply-chain defense. |
+| **compliance-as-code** | Regulation | Automated compliance verification and audit-evidence generation. |
+| **data-privacy** | Legal | Personal-data handling, consent management, and data-minimization review. |
 
 ## 🤖 AI & Data Intelligence
 
 | Skill | Primary Domain | Primary Capability |
 | :--- | :--- | :--- |
-| **agency-ai-engineer** | ML Integration | Agentic steering and model optimization. |
-| **agency-data-engineer** | Pipelines | Scalable ETL/ELT and lakehouse architecture. |
-| **agency-database-optimizer** | Performance | Query optimization and indexing strategies. |
-| **agency-analytics-reporter** | Insights | Data-driven storytelling and KPI dashboards. |
+| **agent-orchestration-patterns** | Multi-Agent Systems | Coordination topologies, handoff protocols, and agent-to-agent debugging. |
+| **data-lakehouse** | Pipelines | Lakehouse architecture with ACID guarantees, schema evolution, and time travel. |
+| **database-performance** | Performance | Query optimization, index strategy, and EXPLAIN-plan analysis. |
+| **real-time-analytics** | Insights | Sub-second analytical queries and live-dashboard/OLAP design. |
 
 ## 🎨 Design & Experience
 
 | Skill | Primary Domain | Primary Capability |
 | :--- | :--- | :--- |
-| **agency-ui-designer** | Visual Identity | Pixel-perfect components and consistent branding. |
-| **agency-ux-architect** | Human Interface | Fluid animations and intuitive user flows. |
-| **agency-whimsy-injector** | Personality | Interactive delight and playful brand experiences. |
+| **design-system** | Visual Identity | Building and maintaining a cohesive design system. |
+| **responsive-patterns** | Human Interface | Responsive layout architecture and multi-viewport adaptive design. |
+| **creative-ideation** | Personality | Generating project ideas via creative constraints. |
 
 ## 🛠️ MindForge Atomic Skills (Exhaustive)
 
@@ -134,7 +134,7 @@ These atomic skills are the underlying mechanics of the framework, providing spe
 | :--- | :--- |
 | `mindforge-neural-orchestrator` | Automated skill discovery and tool invocation protocol. |
 | `mindforge-thread` | Persistent cross-session context and thread management. |
-| `mindforge-memory` | Semantic clerk for long-term knowledge graph access. |
+| `mindforge-remember` | Semantic clerk for long-term knowledge graph access. |
 | `mindforge-skill-creation` | Learn, validate, and commit new framework capabilities. |
 | `mindforge-forensics` | Post-mortem analysis of failed workflows and state. |
 | `mindforge-system-architecture` | Multi-service design and scaling decision support. |
