@@ -175,6 +175,75 @@ test('installer-core still resolves its registry through os.homedir()', () => {
     'every HOME-confining test — the confinement may no longer confine anything.');
 });
 
+test('registerProject caps the registry by recency instead of growing forever', () => {
+  // THE DEFECT this test's own file history already measured: registerProject() only ever
+  // appended, never bounded, so registry.json grows unbounded across the lifetime of the machine
+  // (245 entries, 97% dead tmpdir signatures, per the file-level comment above -- from test-suite
+  // writes alone, before those were confined).
+  //
+  // AN EARLIER VERSION OF THIS FIX pruned by fs.existsSync() -- "gone from disk means gone for
+  // good." A review caught that this is false: existsSync also returns false for a
+  // permission-denied ancestor directory, an unmounted external drive, or an offline network
+  // share, none of which mean the project is actually gone. That version would have silently and
+  // irreversibly dropped a real project's registration the moment its volume was unreachable.
+  // The fix instead caps by RECENCY (matching bin/engine/temporal-hub.js's TemporalHub.gc()
+  // idiom for the same class of bug) -- no existence check, no false positives possible. This
+  // test seeds placeholder path STRINGS specifically because they never need to exist on disk
+  // under this mechanism; if this test ever needed real directories again, that itself would be
+  // a sign the implementation regressed back toward existence-checking.
+  const project = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-regcap-')));
+  const homeDir = path.join(project, '.scratch-home');
+  const regDir = path.join(homeDir, '.mindforge');
+  fs.mkdirSync(regDir, { recursive: true });
+  try {
+    fs.writeFileSync(path.join(project, 'package.json'),
+      JSON.stringify({ name: 'their-app', version: '1.0.0' }, null, 2));
+
+    const cap = 200;
+    const fakeEntries = Array.from({ length: cap }, (_, i) => `/tmp/mf-regcap-fake-${i}`);
+    fs.writeFileSync(path.join(regDir, 'registry.json'), JSON.stringify({ projects: fakeEntries }, null, 2));
+
+    const r = spawnSync(process.execPath, [path.join(REPO_ROOT, 'bin', 'install.js'), '--claude', '--local'],
+      { cwd: project, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: homeDir, CI: '1' } });
+    assert.strictEqual(r.status, 0, `install failed: ${(r.stderr || '').slice(0, 400)}`);
+    assert.match(r.stdout, /Dropped: 1 \(oldest/,
+      'expected the installer to report dropping exactly 1 entry (cap + 1 new = cap + 1, over by 1), '
+      + `got:\n${r.stdout.slice(-500)}`);
+
+    const reg = JSON.parse(fs.readFileSync(path.join(regDir, 'registry.json'), 'utf8'));
+    assert.strictEqual(reg.projects.length, cap, `registry must stay capped at ${cap} entries`);
+    assert.ok(!reg.projects.includes('/tmp/mf-regcap-fake-0'),
+      'the OLDEST fake entry must have been dropped to make room');
+    assert.ok(reg.projects.includes(`/tmp/mf-regcap-fake-${cap - 1}`),
+      'the newest fake entry must be retained -- the cap drops from the front, not at random');
+    assert.ok(reg.projects.includes(project), 'the newly registered project must be present');
+  } finally {
+    fs.rmSync(project, { recursive: true, force: true });
+  }
+});
+
+test('registerProject does not drop anything when under the cap', () => {
+  // NON-VACUITY for the test above: prove the "nothing to drop" path really reports nothing
+  // dropped, rather than the assertions above passing by coincidence.
+  const project = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-regnocap-')));
+  const homeDir = path.join(project, '.scratch-home');
+  try {
+    fs.writeFileSync(path.join(project, 'package.json'),
+      JSON.stringify({ name: 'their-app', version: '1.0.0' }, null, 2));
+
+    const r = spawnSync(process.execPath, [path.join(REPO_ROOT, 'bin', 'install.js'), '--claude', '--local'],
+      { cwd: project, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: homeDir, CI: '1' } });
+    assert.strictEqual(r.status, 0, `install failed: ${(r.stderr || '').slice(0, 400)}`);
+    assert.doesNotMatch(r.stdout, /Dropped:/,
+      `a fresh registry with 1 entry is nowhere near the cap; nothing should be reported dropped, got:\n${r.stdout.slice(-500)}`);
+
+    const reg = JSON.parse(fs.readFileSync(path.join(homeDir, '.mindforge', 'registry.json'), 'utf8'));
+    assert.deepStrictEqual(reg.projects, [project]);
+  } finally {
+    fs.rmSync(project, { recursive: true, force: true });
+  }
+});
+
 (async () => {
   for (const { name, fn } of tests) {
     try { await fn(); console.log(`  ✅  ${name}`); passed++; }

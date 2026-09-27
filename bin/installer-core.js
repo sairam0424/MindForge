@@ -350,6 +350,23 @@ function importedSubagentBasenames() {
 }
 
 // ── Registry Management ────────────────────────────────────────────────────────
+// MAX_REGISTRY_ENTRIES bounds registry.json's growth by RECENCY, not by existence-checking.
+// An earlier version of this fix pruned entries whose path failed fs.existsSync(), on the
+// premise that a failed existence check means "gone forever." That premise is false:
+// fs.existsSync() also returns false for a permission-denied ancestor directory, an unmounted
+// external/USB drive, or an offline network share -- none of which mean the project is gone,
+// all of which are indistinguishable from "deleted" to that check. Pruning on it would silently
+// and irreversibly drop a real, still-existing project's registration the moment its volume
+// happened to be unreachable during an unrelated install elsewhere.
+//
+// This repo already has an established, tested idiom for exactly this class of bug --
+// bin/engine/temporal-hub.js's `TemporalHub.gc()` bounds .planning/history/ the same way: keep
+// the most recent N, drop the rest, no I/O-fallible existence check involved. Applied here:
+// registry.projects is a plain path-string array with no per-entry timestamp, but push() already
+// appends in registration order, so "most recently registered" is simply "the last N in the
+// array" -- no mtime tracking needed.
+const MAX_REGISTRY_ENTRIES = 200;
+
 const RegistryManager = {
   getRegistryPath: () => path.join(os.homedir(), '.mindforge', 'registry.json'),
 
@@ -365,10 +382,26 @@ const RegistryManager = {
         console.error('  ⚠️  Registry file corrupted, recreating...');
       }
     }
+    if (!Array.isArray(registry.projects)) registry.projects = [];
 
-    if (!registry.projects.includes(projectPath)) {
+    const alreadyRegistered = registry.projects.includes(projectPath);
+    if (!alreadyRegistered) {
       registry.projects.push(projectPath);
+    }
+
+    const beforeCount = registry.projects.length;
+    if (registry.projects.length > MAX_REGISTRY_ENTRIES) {
+      registry.projects = registry.projects.slice(-MAX_REGISTRY_ENTRIES);
+    }
+    const droppedCount = beforeCount - registry.projects.length;
+
+    if (droppedCount > 0 || !alreadyRegistered) {
       fsu.write(regPath, JSON.stringify(registry, null, 2));
+    }
+    if (droppedCount > 0) {
+      console.log(`  🧹  Dropped: ${droppedCount} (oldest, over the ${MAX_REGISTRY_ENTRIES}-entry cap)`);
+    }
+    if (!alreadyRegistered) {
       console.log(`  ✅  Registered project in ${regPath}`);
     }
   }
