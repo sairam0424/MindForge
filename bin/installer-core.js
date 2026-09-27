@@ -490,8 +490,15 @@ function safeCopyClaude(src, dst, options = {}) {
     const existing = fsu.read(dst);
 
     if (!force) {
-      // Back up non-MindForge CLAUDE.md files
-      if (!existing.includes('MindForge')) {
+      // Back up whenever the write would actually change the file -- not just when the
+      // existing content "looks foreign". The prior heuristic (`!existing.includes('MindForge')`)
+      // skipped the backup for ANY file that merely mentions MindForge anywhere, which is true
+      // of every MindForge-managed CLAUDE.md by construction -- including a real global
+      // ~/.claude/CLAUDE.md that has MindForge's own protocol content followed by unrelated,
+      // hand-appended sections from other tools. That is exactly the file a backup exists to
+      // protect, and the old check silently skipped it on every reinstall/update.
+      const incoming = fsu.read(src);
+      if (existing !== incoming) {
         const backup = `${dst}.backup-${Date.now()}`;
         fsu.copy(dst, backup);
         const sizeKb = (existing.length / 1024).toFixed(1);

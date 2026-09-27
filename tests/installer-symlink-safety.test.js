@@ -181,6 +181,30 @@ test('a real regular file is still backed up and replaced', () => {
   } finally { fs.rmSync(project, { recursive: true, force: true }); }
 });
 
+test('an existing CLAUDE.md that mentions MindForge AND carries other content is still backed up', () => {
+  // THE DEFECT, live: safeCopyClaude's backup check used to be `!existing.includes('MindForge')`.
+  // Any MindForge-managed CLAUDE.md mentions "MindForge" by construction, so that check skipped the
+  // backup for every one of them -- including a real file that has MindForge's own protocol content
+  // followed by unrelated, hand-appended sections from other tools. Reproduced against a real global
+  // install (a fresh --claude --global run at HEAD, before this fix, silently dropped exactly this
+  // shape of appended content with zero backup).
+  const project = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-mixed-')));
+  try {
+    fs.writeFileSync(
+      path.join(project, 'CLAUDE.md'),
+      '# MindForge Protocol\nSome MindForge content here.\n\n## My Other Tool (Global)\nkeep this section too\n',
+    );
+    const r = installInto(project);
+    assert.strictEqual(r.status, 0, `install over a mixed-content file must succeed: ${r.out.slice(-300)}`);
+    const backups = fs.readdirSync(project).filter((f) => f.startsWith('CLAUDE.md.backup-'));
+    assert.strictEqual(backups.length, 1,
+      'a CLAUDE.md that mentions MindForge but also carries other content must still be backed up, '
+      + `found ${backups.length} backup(s)`);
+    assert.match(fs.readFileSync(path.join(project, backups[0]), 'utf8'), /keep this section too/,
+      'the backup must preserve the non-MindForge section, not just whatever mentions "MindForge"');
+  } finally { fs.rmSync(project, { recursive: true, force: true }); }
+});
+
 // ── the guard is wired where it matters ──────────────────────────────────────
 
 test('both write primitives AND safeCopyClaude consult the guard', () => {
