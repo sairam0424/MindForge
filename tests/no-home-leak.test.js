@@ -175,6 +175,41 @@ test('installer-core still resolves its registry through os.homedir()', () => {
     'every HOME-confining test — the confinement may no longer confine anything.');
 });
 
+test('registerProject prunes stale paths instead of growing the registry forever', () => {
+  // THE DEFECT this test's own file history already measured: registerProject() only ever
+  // appended, never pruned, so registry.json grows unbounded across the lifetime of the machine
+  // (245 entries, 97% dead tmpdir signatures, per the file-level comment above -- from test-suite
+  // writes alone, before those were confined). Existence on disk is an unambiguous signal: a path
+  // that's gone can never be a real project again, so pruning by it never removes anything valid.
+  const project = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-regprune-')));
+  const homeDir = path.join(project, '.scratch-home');
+  const regDir = path.join(homeDir, '.mindforge');
+  fs.mkdirSync(regDir, { recursive: true });
+  try {
+    fs.writeFileSync(path.join(project, 'package.json'),
+      JSON.stringify({ name: 'their-app', version: '1.0.0' }, null, 2));
+
+    // A path that was real once and is now genuinely gone, plus two that never existed at all.
+    const deletedProject = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-regprune-deleted-')));
+    fs.rmSync(deletedProject, { recursive: true, force: true });
+    const staleEntries = ['/tmp/mf-regprune-never-existed-1', '/tmp/mf-regprune-never-existed-2', deletedProject];
+    fs.writeFileSync(path.join(regDir, 'registry.json'),
+      JSON.stringify({ projects: [...staleEntries, project] }, null, 2));
+
+    const r = spawnSync(process.execPath, [path.join(REPO_ROOT, 'bin', 'install.js'), '--claude', '--local'],
+      { cwd: project, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: homeDir, CI: '1' } });
+    assert.strictEqual(r.status, 0, `install failed: ${(r.stderr || '').slice(0, 400)}`);
+    assert.match(r.stdout, /Pruned 3 stale project path\(s\)/,
+      `expected the installer to report pruning the 3 stale entries, got:\n${r.stdout.slice(-500)}`);
+
+    const reg = JSON.parse(fs.readFileSync(path.join(regDir, 'registry.json'), 'utf8'));
+    assert.deepStrictEqual(reg.projects, [project],
+      `the registry must contain only the still-real project after pruning, got: ${JSON.stringify(reg.projects)}`);
+  } finally {
+    fs.rmSync(project, { recursive: true, force: true });
+  }
+});
+
 (async () => {
   for (const { name, fn } of tests) {
     try { await fn(); console.log(`  ✅  ${name}`); passed++; }

@@ -366,9 +366,28 @@ const RegistryManager = {
       }
     }
 
-    if (!registry.projects.includes(projectPath)) {
+    // Prune entries whose project directory no longer exists. Without this, registry.json only
+    // ever grows across the lifetime of the machine -- every scratch/temp/deleted project stays
+    // registered forever (measured on a real machine: 245 entries, 97% dead tmpdir signatures
+    // from test-suite runs alone, see tests/no-home-leak.test.js's own history). Existence is an
+    // unambiguous prune signal: a path that's gone can never be a real project again, so this
+    // never removes anything still valid.
+    const beforeCount = registry.projects.length;
+    registry.projects = registry.projects.filter(p => fsu.exists(p));
+    const prunedCount = beforeCount - registry.projects.length;
+
+    const alreadyRegistered = registry.projects.includes(projectPath);
+    if (!alreadyRegistered) {
       registry.projects.push(projectPath);
+    }
+
+    if (prunedCount > 0 || !alreadyRegistered) {
       fsu.write(regPath, JSON.stringify(registry, null, 2));
+    }
+    if (prunedCount > 0) {
+      console.log(`  🧹  Pruned ${prunedCount} stale project path(s) from the registry`);
+    }
+    if (!alreadyRegistered) {
       console.log(`  ✅  Registered project in ${regPath}`);
     }
   }
