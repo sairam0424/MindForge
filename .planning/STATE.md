@@ -1,8 +1,8 @@
 # MindForge — Project State
 
 ## Status
-🟢 Active — `develop` at `1b5302b5`, GREEN (local suite + CI). npm `latest` = 11.9.2. `package.json` = 11.9.2.
-Next release candidate: **11.9.3** (release path clear except two hand-authored changelog files).
+🟢 Active — `main` at `1d45230a` (PR #309 merged), GREEN (local suite + CI). npm `latest` = 12.0.0,
+`stable` = 12.0.0 (both current, no drift).
 
 ## IMPORTANT
 HANDOFF.json is committed to git. Never write secrets or credentials into it.
@@ -13,76 +13,59 @@ The repo's own `.planning/` is **not** published — verified `npm pack --dry-ru
 here is safe, and that separation must not be collapsed.
 
 ## Current version
-v11.9.2 published (npm `latest` = 11.9.2). `develop` carries 12 merged PRs of fixes on top of it and
-is the 11.9.3 candidate. `stable` is currently **11.8.3** (four behind `latest`), which is
-why the release workflow now moves it automatically — forward only, verified on npm's uncached
-dist-tags endpoint. The next release self-heals it; no hand step remains.
+v12.0.0 published and matches `package.json`. No release is in flight right now.
+
+**Known drift, tracked separately, not fixed by this update:** a `release/v12.0.1` worktree
+(`.claude/worktrees/release-v12.0.1`) exists but is now 19 commits behind `main` and only 2 ahead —
+it predates PRs #304–#309 entirely. Whether to re-sync it or abandon it in favor of a fresh release
+cut is an open decision, not resolved here.
 
 ## Current phase
-Post-merge, pre-release. Twelve PRs (#200–#211) landed this session, closing an audit backlog whose
-findings all shared one defect class: **an instrument that reports success while doing nothing.**
-Gates that could not fail, tests asserting on source text (a comment satisfied them), docs describing
-capabilities with no code reader, commands printing success while performing no action.
+Working a punch list of findings from a full `/verify` sweep (run against v12.0.0), fixing one at a
+time with commit → PR → multi-agent review → CI → explicit user go-ahead → merge for each. Shipped
+so far: #304 (CLAUDE.md backup heuristic dropped user content), #305 (command-count display
+ambiguity), #306 (registry.json unbounded growth — redesigned after review caught a false-positive
+existence-check class), #307 (stale secret residue in temporal snapshots — a broader "add
+content-level redaction" attempt was reverted after review found it risked corrupting legitimate
+data; kept to the narrow, correct fix), #308 (`headless.js` silently reported success for autonomous
+work that never ran — now fails loudly per this repo's own DEL-02 decision; a second commit
+contained the fix's CI blast radius after review caught it broke the on-every-push pipeline check),
+#309 (22 fabricated `agency-*` skill references across the skill registry, replaced with real
+skills; a follow-up commit fixed two thematic-fit misses the review caught in the replacements
+themselves).
+
+Remaining, not yet started: two unsynced memory tiers (JSONL vs SQLite, migration never ran), dead
+code in `bin/models/model-broker.js` violating the single-pricing-source rule, and a `SECURITY.md`
+internal version contradiction.
 
 ## Verification state (measured, not assumed)
-On `develop` @ `983c0a06`, in a clean detached worktree with `HOME` outside the tree and `TMPDIR` at
-the system default:
+On `main` @ `1d45230a`:
 
-- `node tests/run-all.js` → **131 passed / 0 failed / 2 skipped / 133 total**
-- `harness:audit`, `harness:gate`, `harness:gate:install`, `harness:compliance -- --check`,
-  `release:ready`, `version:check`, `validate:assets` → all exit **0**
-- `node scripts/sync-version.js --check` → exit **0**
-- `eslint .` → **0 errors**, 190 warnings (warnings are tolerated by the project's own contract)
-- The 2 skips are env-dependent and expected: `browser.test.js` (Chromium + display),
-  `sre-integration.test.js` (worktree support + clean tree)
-- Remote CI agrees: 15/16 checks SUCCESS, including MindForge Health Check on **18.x, 20.x and 22.x**.
-  The one failure is `security/snyk`, a third-party app in ERROR (integration could not run), and it
-  is **not** one of the 6 required checks.
+- `node tests/run-all.js` → **140 passed / 0 failed / 3 skipped / 143 total**
+- `npm run lint` → **0 errors**, 380 warnings (tolerated by the project's own contract)
+- `node scripts/ci/validate-assets.js` → exit **0**
+- The 3 skips are env-dependent and expected: `browser.test.js` and
+  `browser-daemon-auth-live.test.js` (Chromium + display), `sre-integration.test.js` (worktree
+  support + clean tree)
+- Remote CI agrees: every PR in the #304–#309 run landed with all real checks green (Trelix, a
+  third-party review app, posts inconsistently — sometimes late, occasionally not at all for a given
+  commit; absence is not treated as failure, but its claims are independently verified before acting
+  on them, since it has produced confirmed false `[failure]`-level claims multiple times this cycle).
 
-**Two environment traps that produce false failures — do not misread them as defects:**
-1. Setting `HOME` to the worktree under test makes children write into that tree (`.npm/`, `mf-cfg-*/`)
-   and trips every clean-tree assertion. 8 phantom failures came from this.
-2. Pointing `TMPDIR` *inside* `$HOME` breaks 6 install/harness tests. A `/tmp`-based `TMPDIR` and an
-   empty `HOME` both pass. The variable is TMPDIR-inside-HOME, **not** HOME.
+**One observation worth a deliberate decision, not acted on here:** every PR this cycle (#304–#309)
+merged directly to `main`. The `develop` branch still exists but has drifted to 52 commits behind
+`main` / only 10 ahead. Whether the three-branch `develop → release → main` flow described in this
+file's older revisions is still the intended policy, or whether direct-to-`main` is now the real
+practice, is not confirmed either way — flagging so the next session doesn't assume the old flow is
+still followed just because this file used to describe it.
 
 ## Last completed task
-Merged all 12 queued PRs into `develop`, sequentially, verifying each **two independent ways** because
-a MERGED badge is not evidence — #198 was once marked MERGED while its content never reached develop:
-- `git merge-base --is-ancestor <pr-head> origin/develop` (returns FALSE for #198, TRUE for #199)
-- a per-PR content anchor grepped against `origin/develop`
-
-All 12 passed both. PR queue is now empty.
+Merged PR #309 (fabricated skill-registry fix). Standard cleanup done: branch deleted locally and
+remotely, `main` fast-forwarded.
 
 ## Next action
-One PR against `develop` fixing the 8 remaining audit findings — documented CLI invocations that do
-not run — **plus the gate that would have caught all of them**: extend
-`tests/doc-count-claims.test.js` to scan shipped `.md`/`.js` for `mindforge <verb>`,
-`bin/mindforge-cli.js <verb>` and `npx mindforge-cc <bare-word>`, asserting each resolves to a real
-`COMMANDS` key or flag. This was deliberately held back until the queue merged, because it spans
-files that were owned by #201, #202, #205 and #209.
-
-The findings: the CLI does **not** route `dashboard` (root `CLAUDE.md` documents it; it exits 1);
-`CLAUDE.md` names a nonexistent `bin/hooks/mindforge-context-monitor.js` (should be `.agent/hooks/…`);
-`workflow` is the most-documented verb (126 references) and works, but is missing from `--help` and
-the available-commands list; `docs/troubleshooting.md` tells users to run
-`npx mindforge-cc@latest install`, which #202 correctly made exit 1; a shipped engine doc uses
-`npx mindforge auto` (should be `headless`); `AGENTS.md:45` says "bump all five each release",
-contradicting "never bump by hand"; and `bin/install.js:82` cites a line number three PRs invalidated.
-
-## Release runbook for 11.9.3
-1. Bump `package.json`, then `node scripts/sync-version.js` — writes 15 files, **defers** the Homebrew
-   formula (correct: its digest is the hash of a tarball that does not exist yet).
-2. `npm --prefix mcp-server install && npm --prefix mcp-server run build && node scripts/build-mindforge-plugin.js`
-   — all three, in order. `sync-version` now prints this chain under `🔨 REQUIRE A BUILD` and exits
-   non-zero until it is done. It is required because `build-mindforge-plugin.js` refuses without
-   `mcp-server/dist/index.js`, which is gitignored and absent on a fresh clone.
-3. Author `CHANGELOG.md`'s 11.9.3 section and `changelogs/v11.9.3.md`. **These are the only two
-   artifacts a human must write.** Skipping them drops `release:ready` 14/14 → 12/14 and fails
-   `npm test`.
-4. Merge `develop` → `release` → `main`. **Never PR straight to main.**
-5. After publish: `node scripts/sync-version.js --fetch-sha` for the formula, then commit it.
-6. Nothing by hand. The release workflow points `stable` at the published version as its last
-   step — after the GitHub Release, skipping prereleases, and refusing to move backward.
+Continue the `/verify` punch list: two unsynced memory tiers next, per user instruction to proceed
+end-to-end through the remaining findings.
 
 ## Decisions made
 - Version bumps: `package.json` is canonical; **16 channels over 15 files** are derived. Never bump by
@@ -96,36 +79,28 @@ contradicting "never bump by hand"; and `bin/install.js:82` cites a line number 
 - `.planning/` templates ship from `examples/starter-project/.planning`, never the repo's own live
   `.planning/`. Guarded by `tests/packaging-allowlist.test.js`.
 - npm `files[]` overrides `.npmignore`: runtime state must be NEGATED inside `files[]`.
+- Multi-agent PR review (this cycle's pattern): 3-dimension parallel review (correctness/security/
+  consistency) + adversarial verify pass per finding, before asking the user for a merge go-ahead.
+  When a review finds a fundamental flaw in a fix (not just a nit), redesign properly or revert to
+  the narrower correct scope — do not patch around it under time pressure. Happened twice this cycle
+  (#306's existence-check redesign, #307's reverted redaction attempt).
 
 ## Active blockers
-- **11.9.3 needs two hand-authored files:** `CHANGELOG.md`'s 11.9.3 section and
-  `changelogs/v11.9.3.md`. Gated by `bin/utils/readiness-gate.js:115` (a bare `.includes(pkgVersion)`)
-  and `tests/production.test.js:629`/`:638` (the second is existence-only, so an empty file satisfies it).
-- ~~Publishing is ungated.~~ **CLOSED (#216).** A `preflight` job now gates the publishing event: it
-  asserts the tagged commit is an ancestor of `origin/main` and runs the six gates a tag push never saw,
-  with the publish job behind `needs: preflight`. The release workflow also moves the `stable` dist-tag
-  itself, forward-only and verified on npm's uncached dist-tags endpoint.
-  Residual, documented in the workflow: a tag push resolves the workflow from the TAGGED ref, so a tag
-  placed on a commit predating #216 runs that commit's workflow and is ungated. Restricting who may
-  create a `v*` ref is a repo-settings change (a tag ruleset) and is the only remaining mitigation —
-  required status checks cannot attach to a tag.
+None release-blocking right now — no release is in flight. The `release/v12.0.1` worktree drift
+(above) is the closest thing to a blocker, but only for cutting that specific release, not for any
+work on `main`.
 
 ## Context for next session
-Read `scratch-pad/daily-logs/2026-08-21.md` first — it records not just what changed but every
-self-inflicted measurement error and the control experiment that caught it. The recurring lesson,
-earned about sixteen times: **verify the instrument before the subject, and change one variable at a
-time.** Every correct diagnosis this session came from a control that isolated a single variable;
-every wrong one came from changing two and blaming one.
+This file and `HANDOFF.json` were 37 days stale (last real update 2026-08-21) before this pass —
+`main` had moved ~85 PRs and a major version bump (11.9.2 → 12.0.0) past what they described. If you
+are reading this and it looks similarly out of date again, check `git log -5 --oneline` and
+`package.json`'s version against what is written above before trusting any of it.
 
-Two mechanical traps worth knowing before touching CI or the queue again:
-- **Retargeting a PR's base does not trigger its workflows.** `control-plane.yml` and
-  `mindforge-ci.yml` declare `on: pull_request: branches: [main, develop]` with no `types:`, so they
-  default to `[opened, synchronize, reopened]`; a base change is `edited`. Use
-  `gh pr close && gh pr reopen` — it fires `reopened`, touches neither branch nor diff, and took
-  #207's check count from 6 to 17. The tell was that **5 of 6** required checks were missing, not all
-  6: `gitleaks` has no branch filter, so it alone had run.
-- `gh pr view --json mergeable` returns `UNKNOWN` while GitHub computes it. Poll for a definite
-  `MERGEABLE`/`CONFLICTING` instead of treating one snapshot as a conflict.
+The full `/verify` findings list and the reasoning behind each fix (including the two reverted/
+redesigned attempts) live only in this session's conversation history and the individual PR
+descriptions for #304–#309 — there is no single persisted findings doc. If continuing this punch
+list in a fresh session, `gh pr list --state merged --limit 10` and reading those PR bodies is the
+fastest way to reconstruct context.
 
 ## Last updated
-2026-08-21T06:20:00Z
+2026-09-27T17:40:20Z
