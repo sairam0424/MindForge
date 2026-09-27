@@ -477,6 +477,22 @@ function resolveBaseDir(runtime, scope) {
 }
 
 // ── CLAUDE.md safe copy ───────────────────────────────────────────────────────
+// Local-scope installs append a "Knowledge Context (Auto-loaded)" block to the entry file
+// (see install()'s `if (scope === 'local')` memory injection above). SessionMemoryLoader's
+// underlying reinforce() bumps each loaded entry's confidence on every read, so the rendered
+// percentages in that block -- and therefore its exact bytes -- can differ between two
+// back-to-back reinstalls with ZERO real user customization. Comparing full file bytes
+// against that churn would fire a spurious backup on every such reinstall, unbounded, with no
+// cleanup. safeCopyClaude compares content with this block stripped from both sides instead,
+// so it still catches every case a backup exists to protect (a changed template, or real
+// hand-appended content before this marker) without treating confidence-percentage noise as
+// something worth backing up.
+const KNOWLEDGE_CONTEXT_MARKER = '## 🧠 Knowledge Context (Auto-loaded)';
+function stripAutoLoadedContext(text) {
+  const idx = text.indexOf(KNOWLEDGE_CONTEXT_MARKER);
+  return idx === -1 ? text : text.slice(0, idx);
+}
+
 function safeCopyClaude(src, dst, options = {}) {
   const { force = false, verbose = false } = options;
 
@@ -498,7 +514,7 @@ function safeCopyClaude(src, dst, options = {}) {
       // hand-appended sections from other tools. That is exactly the file a backup exists to
       // protect, and the old check silently skipped it on every reinstall/update.
       const incoming = fsu.read(src);
-      if (existing !== incoming) {
+      if (stripAutoLoadedContext(existing) !== stripAutoLoadedContext(incoming)) {
         const backup = `${dst}.backup-${Date.now()}`;
         fsu.copy(dst, backup);
         const sizeKb = (existing.length / 1024).toFixed(1);
@@ -716,8 +732,11 @@ async function install(runtime, scope, options = {}) {
     // mirror below has always been gated, this write never was. In MindForge's own repository
     // `.claude/CLAUDE.md` is TRACKED and not gitignored (226 files under .claude/ are tracked), so a
     // self-install overwrote a committed file. No backup was taken either, and for a reason worth
-    // naming: safeCopyClaude only backs up when the existing content does NOT contain "MindForge" —
-    // and the repo's own entry file does, so it took the silent-replace path every time.
+    // naming: safeCopyClaude used to back up only when the existing content did NOT contain
+    // "MindForge" — and the repo's own entry file does, so it took the silent-replace path every
+    // time. safeCopyClaude no longer uses that heuristic (it compares actual content now, with
+    // the auto-loaded knowledge-context block stripped from both sides), but this gate stays as
+    // defense-in-depth for the self-install case specifically.
     if (!selfInstall) {
       safeCopyClaude(tempEntry, targetPath, { force, verbose });
     }
