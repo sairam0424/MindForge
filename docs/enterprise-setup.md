@@ -45,8 +45,14 @@ Multi-node deployments **must** set explicit unique IDs to avoid routing collisi
 ### SRE Simulation Gate
 `simulateShadowWave()` requires `MINDFORGE_SRE_SIMULATE=true` env flag in v11.9.0.
 For production metric collection, implement real SLI collection from `/api/v1/system` endpoint.
+
+`bin/mindforge-cli.js headless` never actually reaches `simulateShadowWave()` -- that path is only
+wired through `AutoRunner.checkSRESignals()`, and nothing constructs a production `AutoRunner`
+(tracked as DEL-02 in docs/research/2026-08-v12-upgrade-report.md). The command below currently
+exits non-zero with an unrelated "no task executor wired" message rather than enabling simulation;
+this note replaces what used to be a silent no-op.
 ```bash
-MINDFORGE_SRE_SIMULATE=true node bin/mindforge-cli.js headless  # enable simulation
+MINDFORGE_SRE_SIMULATE=true node bin/mindforge-cli.js headless  # currently non-functional, see above
 ```
 
 ### Tier-3 Trust Posture

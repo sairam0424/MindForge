@@ -56,6 +56,7 @@ jobs:
             --output json > /tmp/autonomous-results.json
 
       - name: Generate Report
+        if: always()
         run: |
           node -e "
             const fs = require('fs');
@@ -70,6 +71,7 @@ jobs:
           " 2>/dev/null || echo "Report generation failed" > AUTONOMOUS-REPORT.md
 
       - name: Upload Session Artifacts
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: autonomous-session-${{ github.run_id }}
