@@ -42,34 +42,21 @@ async function migrate(projectRoot) {
     }
   }
 
-  // Step 3: Archive old AUDIT lines if > 5000
-  const auditPath = path.join(projectRoot, '.planning', 'AUDIT.jsonl');
-  if (fs.existsSync(auditPath)) {
-    try {
-      const content = fs.readFileSync(auditPath, 'utf8');
-      const lines = content.split('\n').filter(l => l.trim());
-      if (lines.length > 5000) {
-        const archiveDir = path.join(projectRoot, '.planning', 'audit-archive');
-        if (!fs.existsSync(archiveDir)) fs.mkdirSync(archiveDir, { recursive: true });
+  // THE DEFECT this replaces: this step used to archive AUDIT.jsonl past 5000 lines by gzipping
+  // everything except the last 500 lines, then OVERWRITING the live file with just that tail --
+  // a genuine non-append rewrite of the SHA-256 back-linked audit log. That breaks the hash chain
+  // the exact same way bin/autonomous/audit-writer.js's own retirement comment documents (UC-04b):
+  // "archiving + truncating AUDIT.jsonl orphaned the carried head's previous_hash from an entry no
+  // longer on disk, so the verifier failed closed on a rotated-but-untampered file." This migration
+  // was dead code until it was wired into migrate.js's allMigrations() (see that file), so the
+  // defect was latent, not live -- but wiring it in without removing this step would have made a
+  // reachable hash-chain-breaking path for any real project whose AUDIT.jsonl had grown past 5000
+  // lines during an upgrade crossing 11.0.0. Removed entirely, matching the same accepted tradeoff
+  // audit-writer.js already documents project-wide: AUDIT.jsonl grows unbounded by design until
+  // chain-aware compaction (re-anchoring the first carried entry to previous_hash=null) ships as
+  // its own, separate feature -- not invented here as a side effect of unrelated migration wiring.
 
-        const zlib = require('zlib');
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const archivePath = path.join(archiveDir, `AUDIT-pre-v11-${timestamp}.jsonl.gz`);
-        const toArchive = lines.slice(0, -500).join('\n') + '\n';
-        fs.writeFileSync(archivePath, zlib.gzipSync(toArchive));
-
-        const remaining = lines.slice(-500).join('\n') + '\n';
-        fs.writeFileSync(auditPath, remaining);
-        results.steps.push({ step: 'archive_audit', status: 'done', archived: lines.length - 500 });
-      } else {
-        results.steps.push({ step: 'archive_audit', status: 'skipped', reason: 'under_threshold' });
-      }
-    } catch (e) {
-      results.steps.push({ step: 'archive_audit', status: 'warning', error: e.message });
-    }
-  }
-
-  // Step 4: GC old snapshots
+  // Step 3: GC old snapshots
   try {
     const TemporalHub = require('../engine/temporal-hub');
     const gcResult = await TemporalHub.gc({ maxSnapshots: 50, maxAgeDays: 30 });
@@ -78,7 +65,7 @@ async function migrate(projectRoot) {
     results.steps.push({ step: 'snapshot_gc', status: 'warning', error: e.message });
   }
 
-  // Step 5: Bump schema_version in HANDOFF.json
+  // Step 4: Bump schema_version in HANDOFF.json
   const handoffPath = path.join(projectRoot, '.planning', 'HANDOFF.json');
   if (fs.existsSync(handoffPath)) {
     try {
@@ -91,7 +78,7 @@ async function migrate(projectRoot) {
     }
   }
 
-  // Step 6: Update MINDFORGE.md VERSION
+  // Step 5: Update MINDFORGE.md VERSION
   const mindforgeFile = path.join(projectRoot, 'MINDFORGE.md');
   if (fs.existsSync(mindforgeFile)) {
     try {

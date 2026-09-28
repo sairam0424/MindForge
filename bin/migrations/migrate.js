@@ -162,13 +162,47 @@ async function runMigrations(fromVersion, toVersion) {
  * All registered migrations, in no particular order -- selection is by version range, not position.
  * Exported so a --dry-run caller can show the same plan runMigrations() would actually execute,
  * without duplicating the version-range filter logic.
+ *
+ * THE DEFECT this replaces: this array used to omit two real migration files that exist on disk --
+ * bin/migrations/1.0.0-to-2.0.0.js and bin/migrations/10.7.0-to-11.0.0.js -- so any upgrade whose
+ * (fromVersion, toVersion] range crossed 2.0.0 or 11.0.0 silently skipped that migration's work,
+ * with no error or warning (exit 0, "status: migrated"). 1.0.0-to-2.0.0.js already matches every
+ * other entry's shape ({fromVersion, toVersion, description, run(paths)}) and needed nothing but
+ * being require()'d. 10.7.0-to-11.0.0.js exports a different, incompatible shape
+ * ({MIGRATION_ID, TARGET_VERSION, migrate(projectRoot)}) -- wrapped below in an inline adapter
+ * rather than restructured to match the standard shape, since tests/version-consistency.test.js:77-93
+ * requires that exact module directly and destructures {migrate, TARGET_VERSION} from it, so those
+ * three exports and migrate()'s signature stay untouched. Its migrate() BODY was separately edited
+ * (see bin/migrations/10.7.0-to-11.0.0.js's own comment) to remove a hash-chain-breaking
+ * audit-truncation step this same wiring would otherwise have made reachable for the first time --
+ * a deliberate, distinct fix, not a contradiction of "left alone": the exported shape this adapter
+ * depends on is what stayed fixed, not the file's every line.
  */
 function allMigrations() {
+  const v107to11 = require('./10.7.0-to-11.0.0');
   return [
     require('./0.1.0-to-0.5.0'),
     require('./0.5.0-to-0.6.0'),
     require('./0.6.0-to-1.0.0'),
+    require('./1.0.0-to-2.0.0'),
     require('./v9-unified-memory'),
+    {
+      // Adapter: this migration exports {MIGRATION_ID, TARGET_VERSION, migrate(projectRoot)}, not
+      // the {fromVersion, toVersion, description, run(paths)} shape getMigrationsToRun()'s
+      // compareSemver(m.toVersion, ...) and the execution loop's migration.run(paths) call both
+      // require -- wiring the raw module in here unmodified would throw a TypeError on every call
+      // to getMigrationsToRun(), for every version range, since m.toVersion would be undefined.
+      fromVersion: '10.7.0',
+      toVersion:   v107to11.TARGET_VERSION,
+      description: 'Adds temporal/rate_limiting/session/wave_execution config.json sections; '
+                  + 'GCs stale temporal snapshots; bumps HANDOFF.json schema_version and '
+                  + 'MINDFORGE.md VERSION',
+      async run(paths) {
+        // paths.handoff is always <projectRoot>/.planning/HANDOFF.json (see PLANNING_DIR above),
+        // so two dirname() calls recover projectRoot without adding a new PATHS key.
+        return v107to11.migrate(path.dirname(path.dirname(paths.handoff)));
+      },
+    },
   ];
 }
 
