@@ -72,15 +72,44 @@ function ensureLoaded() {
   return _priceTable;
 }
 
+// THE DEFECT this replaces: cloud-broker.js's mapToProviderModel() and bedrock-provider.js's
+// BEDROCK_MODEL_MAP both return real, in-use Bedrock-style model ids for the 'aws' provider
+// (e.g. 'anthropic.claude-sonnet-4-6-v1:0', 'us.anthropic.claude-haiku-4-5-20251001-v1:0') --
+// three different shapes across those two files alone -- but market_registry only has plain ids
+// ('claude-sonnet-4-6'). getPrice() used to do an exact-match lookup only, so every Bedrock-style
+// id missed and silently fell to the generic FALLBACK_RATES (off by ~25x for Haiku). Both
+// mapToProviderModel() and BEDROCK_MODEL_MAP must keep returning genuine Bedrock ids -- that's
+// what a real AWS Bedrock Converse API call requires -- so the normalization belongs here, the
+// one chokepoint every pricing caller already goes through, rather than duplicated in each
+// provider file.
+/**
+ * Reduce a Bedrock-style Anthropic model id down to the plain id market_registry uses, by
+ * stripping (in order) a cross-region inference-profile prefix, the vendor prefix, an embedded
+ * date stamp, and a trailing on-demand version suffix. Non-Bedrock ids (plain ids, gpt-4o,
+ * gemini-*, etc.) pass through unchanged.
+ * @param {string} modelId
+ * @returns {string}
+ */
+function normalizeBedrockModelId(modelId) {
+  if (!/anthropic\.claude/.test(modelId)) return modelId;
+  return modelId
+    .replace(/^(us|eu|apac)\./, '')
+    .replace(/^anthropic\./, '')
+    .replace(/-\d{8}/, '')
+    .replace(/-v\d+:\d+$/, '');
+}
+
 /**
  * Get the per-1M-token price for a model+bucket.
- * @param {string} modelId - e.g. 'claude-sonnet-4-6'
+ * @param {string} modelId - e.g. 'claude-sonnet-4-6', or a Bedrock-style id like
+ *   'anthropic.claude-sonnet-4-6-v1:0' or 'us.anthropic.claude-haiku-4-5-20251001-v1:0'
  * @param {'input'|'output'|'cache_read'|'cache_creation'} bucket
  * @returns {number} USD per 1M tokens
  */
 function getPrice(modelId, bucket) {
   const table = ensureLoaded();
-  const entry = table[modelId];
+  const lookupId = table[modelId] ? modelId : normalizeBedrockModelId(modelId);
+  const entry = table[lookupId];
   if (!entry) {
     process.stderr.write(`[pricing-registry] WARN: unknown model "${modelId}", using fallback rates\n`);
     return FALLBACK_RATES[bucket] || FALLBACK_RATES.input;
