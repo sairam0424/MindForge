@@ -146,9 +146,15 @@ test('estimateCost delegates fully to pricing-registry.priceCall -- no independe
   // instead of calling bin/models/pricing-registry.js's priceCall(), the single source of truth
   // CLAUDE.md requires every provider to use. Proof of delegation, not just a plausible-looking
   // number: swap priceCall for a sentinel-returning stub and assert estimateCost returns exactly
-  // that sentinel, for both a KNOWN model id and one no hardcoded table would recognize -- if any
-  // independent fallback table still existed inside model-broker.js, the unknown-model call would
-  // return something computed locally instead of the sentinel.
+  // that sentinel.
+  //
+  // THE GAP a second review round caught in an earlier version of this test: it only exercised
+  // 'claude-sonnet-4-6' as its one "known" id -- which was exactly the removed table's `||`
+  // fallback DEFAULT, not a specific entry. A partially-reintroduced hardcoded table keyed only by
+  // the other three ids (claude-opus-4-7, claude-haiku-4-5, gemini-2.5-pro) -- computing cost
+  // locally for those while still delegating sonnet and any unrecognized id to priceCall() -- was
+  // empirically confirmed to slip past that version with 0 failures. Fixed by asserting delegation
+  // for EVERY id the original table hardcoded, individually, plus one genuinely unrecognized id.
   const pricingRegistry = require('../bin/models/pricing-registry');
   const originalPriceCall = pricingRegistry.priceCall;
   const calls = [];
@@ -158,14 +164,22 @@ test('estimateCost delegates fully to pricing-registry.priceCall -- no independe
   };
   try {
     const broker = new ModelBroker();
-    assert.strictEqual(broker.estimateCost('claude-sonnet-4-6', 10000, 5000), 424242,
-      'estimateCost must return whatever pricing-registry.priceCall computes for a known model, not an independently-hardcoded value');
-    assert.strictEqual(broker.estimateCost('some-totally-unknown-model-id', 1000, 500), 424242,
-      'estimateCost must still delegate for a model id no hardcoded table would recognize -- proves there is no fallback rates object left inside model-broker.js');
-    assert.strictEqual(calls.length, 2, 'both estimateCost calls must have reached priceCall');
-    assert.deepStrictEqual(calls[0], { modelId: 'claude-sonnet-4-6', usage: { input_tokens: 10000, output_tokens: 5000 } },
-      'estimateCost must forward the exact modelId and token usage priceCall expects');
-    assert.deepStrictEqual(calls[1], { modelId: 'some-totally-unknown-model-id', usage: { input_tokens: 1000, output_tokens: 500 } });
+    // Every id the removed rates table hardcoded an entry for, individually -- not just the one
+    // that happened to double as its fallback default.
+    const previouslyHardcodedIds = ['claude-opus-4-7', 'claude-sonnet-4-6', 'claude-haiku-4-5', 'gemini-2.5-pro'];
+    const idsToCheck = [...previouslyHardcodedIds, 'some-totally-unknown-model-id'];
+    idsToCheck.forEach((modelId, i) => {
+      const cost = broker.estimateCost(modelId, 10000 + i, 5000 + i);
+      assert.strictEqual(cost, 424242,
+        `estimateCost('${modelId}', ...) must return whatever pricing-registry.priceCall computes, `
+        + 'not an independently-hardcoded value -- a partial hardcoded table covering just this one '
+        + 'id would make this assertion fail');
+    });
+    assert.strictEqual(calls.length, idsToCheck.length, 'every estimateCost call must have reached priceCall');
+    idsToCheck.forEach((modelId, i) => {
+      assert.deepStrictEqual(calls[i], { modelId, usage: { input_tokens: 10000 + i, output_tokens: 5000 + i } },
+        `estimateCost must forward the exact modelId and token usage priceCall expects for '${modelId}'`);
+    });
   } finally {
     pricingRegistry.priceCall = originalPriceCall;
   }
