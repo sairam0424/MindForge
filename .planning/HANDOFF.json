@@ -25,8 +25,8 @@
     "6a90fe7d Merge #315 fix/duplicate-migration-export",
     "9664b7cd Merge #314 fix/security-md-version-table-contradiction",
     "6ce7884f Merge #313 fix/model-broker-hardcoded-pricing",
-    "95001a0e Merge #312 fix/handoff-writer-and-staleness-test-followup",
     "1471dcc5 Merge #311 fix/memory-migration-never-runs",
+    "95001a0e Merge #312 fix/handoff-writer-and-staleness-test-followup",
     "cb1a5f9b Merge #310 fix/state-handoff-staleness"
   ],
   "recent_files": [

@@ -56,7 +56,7 @@ tests since they cover different, non-overlapping migrations).
 **Remaining from the original `/verify` sweep: none.** Every finding (#304–#317) is fixed, reviewed,
 and merged. This is the first time since the sweep started that this section can say that.
 
-Two things flagged along the way remain **open decisions, not code fixes** — see "Decisions needed"
+Two things flagged along the way remain **open decisions, not code fixes** — see "Decisions made"
 below: the `release/v12.0.1` worktree drift, and whether the `develop → release → main` branch flow
 is still intended policy now that every PR this cycle merged directly to `main`.
 
