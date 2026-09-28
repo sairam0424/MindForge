@@ -86,7 +86,10 @@ test('complete() prices the ORIGINAL short model id, not the resolved Bedrock id
     );
     // The RETURNED model field intentionally still reports the resolved Bedrock id -- that's
     // "which model Bedrock actually ran", a real observability fact distinct from what to price by.
-    assert.strictEqual(result.model, 'us.anthropic.claude-sonnet-4-6');
+    // Derived via the real resolver rather than hardcoded, so this can't silently drift from
+    // BEDROCK_MODEL_MAP's actual output -- the exact defect class this PR fixed in
+    // tests/pricing-registry.test.js, applied here too.
+    assert.strictEqual(result.model, BedrockProvider.resolveBedrockModelId('claude-sonnet-4-6'));
   } finally {
     pricingRegistry.priceCall = originalPriceCall;
     restoreClient();
