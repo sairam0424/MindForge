@@ -134,8 +134,20 @@ class BedrockProvider {
     const usage    = response.usage || {};
     const latency  = Date.now() - start;
 
+    // THE DEFECT this replaces: this used to pass bedrockModelId (the ALREADY-RESOLVED Bedrock
+    // inference-profile id) to priceCall(). BEDROCK_MODEL_MAP collapses BOTH 'claude-opus-4-7' and
+    // 'claude-opus-4-8' to the identical Bedrock id 'us.anthropic.claude-opus-4-8' -- a many-to-one
+    // mapping -- so by the time priceCall() saw it, which original model this was had already been
+    // lost. pricing-registry.js's Bedrock-id normalization can reduce a Bedrock-style id back to a
+    // PLAIN id, but it can never recover information the resolution step itself discarded: a real
+    // opus-4-7 request was silently billed at the generic fallback rate (~4.5x under, since
+    // opus-4-8 has no market_registry entry at any id shape) instead of opus-4-7's real, higher
+    // rate. Pass the original short model id straight through instead -- it's already what
+    // market_registry keys on, so this also makes cloud-broker.js/pricing-registry.js's Bedrock-id
+    // normalization a pure defense-in-depth path for OTHER callers, not the thing standing between
+    // every real Bedrock call and correct billing.
     const { priceCall } = require('./pricing-registry');
-    const cost = priceCall(bedrockModelId, {
+    const cost = priceCall(model, {
       input_tokens:  usage.inputTokens  || 0,
       output_tokens: usage.outputTokens || 0,
     });
@@ -190,3 +202,7 @@ class BedrockProvider {
 }
 
 module.exports = BedrockProvider;
+// Exported so tests can derive the real Bedrock-id mapping dynamically instead of hardcoding
+// literal strings that would silently drift from this file's own source of truth.
+module.exports.BEDROCK_MODEL_MAP = BEDROCK_MODEL_MAP;
+module.exports.resolveBedrockModelId = resolveBedrockModelId;
