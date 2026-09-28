@@ -2,56 +2,41 @@
   "_warning": "DO NOT ADD SECRETS OR SENSITIVE DATA TO THIS FILE. IT IS SYNCED ACROSS SESSIONS.",
   "schema_type": "HANDOFF",
   "schema_version": "1.0.0",
-  "next_task": "11.9.4 is published but ONE gap is open and needs npm credentials: the `stable` dist-tag still resolves to 11.9.3. Run `npm dist-tag add mindforge-cc@11.9.4 stable` and verify with `npm dist-tag ls mindforge-cc` (NOT `npm view ... dist-tags`, which reads the CDN-cached packument). Everything else is closed: both packages published with provenance attesting 353e8d41, `latest`=11.9.4, and the v11.9.4 GitHub Release now exists with the registry's own tarball attached (digest verified against dist.integrity and both attestation bundles). mindforge-sdk stayed at 11.8.0 \u2014 E422, sdk/package.json had no `repository` field; fixed on develop along with an offline preflight gate and a step reorder, so the SDK's first attested release is 11.9.5. NEXT after the dist-tag: cut 11.9.5 (develop has #228), and the two operator items that need repo settings \u2014 a v* TAG RULESET, and moving NPM_TOKEN behind a GitHub environment (create the environment FIRST; there are zero configured, so adding `environment:` without one publishes exactly as before while looking like a gate). Do NOT move the v11.9.4 tag.",
-  "current_context": "develop is at 1b5302b5 and GREEN both locally (131 passed / 0 failed / 2 skipped / 133 total, all seven gates plus verify:pinning exit 0) and in CI (MindForge CI, Control Plane, Secret scan all success). Sixteen PRs merged this session (#200-#216), each verified by `merge-base --is-ancestor` rather than by badge, because #198 is MERGED with its code absent from develop. package.json is still 11.9.2; npm latest=11.9.2, stable=11.8.3 until the next release moves it automatically.",
+  "current_phase": "verify-punch-list",
+  "phase_description": "Fixing findings from a full /verify sweep against v12.0.0, one at a time: commit -> PR -> multi-agent review -> CI -> user go-ahead -> merge.",
+  "next_task": "Continue the /verify punch list: next up is the two unsynced memory tiers (JSONL knowledge-store.js vs SQLite vector-hub.js, v9-unified-memory migration never actually run on this checkout, 0 rows in celestial.db's _migrations table). After that: bin/models/model-broker.js dead code with its own hardcoded pricing table (violates the single-pricing-source rule), and a SECURITY.md internal version-table contradiction. See PR #304-#309 descriptions for the fixes already shipped this cycle -- there is no separate persisted findings doc.",
+  "current_context": "main is at 1d45230a (PR #309 merged), v12.0.0, GREEN both locally (140 passed / 0 failed / 3 skipped / 143 total, lint 0 errors, validate-assets exit 0) and in CI. Six PRs merged this cycle (#304-#309), each fixing one /verify finding, each reviewed by this repo's own multi-agent workflow before merge. Two of the six required a follow-up commit after review caught a real problem in the first attempt: #306's registry fix was redesigned from existence-checking to recency-capping after review found existsSync() false-positives on unmounted/permission-denied paths would silently drop real projects; #307's broader secret-redaction attempt was reverted (not patched) after review found it could permanently corrupt legitimate snapshot data via a generic high-entropy regex matching ordinary git SHAs/UUIDs. package.json and npm's published latest/stable both read 12.0.0 -- no version drift.",
   "context_refs": [
-    "scratch-pad/daily-logs/2026-08-21.md \u2014 the full session narrative, including every self-inflicted harness bug and its control experiment. READ THIS FIRST.",
-    "scratch-pad/daily-logs/2026-08-20.md \u2014 the preceding session (the 11-PR queue being built).",
-    "CLAUDE.md lines 53-57 \u2014 the version-bump contract: 16 channels over 15 files, PLUS the two build artifacts and their 3-command chain.",
-    "scripts/sync-version.js \u2014 read the header. Three channel categories: derivable / requires-a-build / deferred.",
-    "tests/version-consistency.test.js \u2014 23 assertions; the round-trip tests are the only shape that can catch a MISSING or GREEDY channel.",
-    ".planning/RELEASE-CHECKLIST.md \u2014 pre-existing release steps.",
-    "docs/publishing-guide.md and .agent/workflows/publish-release.md \u2014 the documented publish sequence."
+    "gh pr list --state merged --limit 10 -- fastest way to reconstruct this cycle's context; PR bodies for #304-#309 each document one finding's full fix arc.",
+    ".planning/STATE.md -- narrative summary of the same cycle, written alongside this file.",
+    "CLAUDE.md lines 53-57 -- the version-bump contract: 16 channels over 15 files, PLUS the two build artifacts and their 3-command chain.",
+    "docs/research/2026-08-v12-upgrade-report.md -- DEL-02 is the source of the headless.js honest-failure decision (PR #308)."
   ],
-  "blockers": [
-    "11.9.3 RELEASE \u2014 CHANGELOG.md has no 11.9.3 section and changelogs/v11.9.3.md does not exist. Two independent gates demand them: bin/utils/readiness-gate.js:115 (a bare `.includes(pkgVersion)` on CHANGELOG.md) and tests/production.test.js:629/:638 (the second is existence-only, so an empty file satisfies it). Without them release:ready drops 14/14 -> 12/14 and npm test fails. These are the ONLY two artifacts a human must author.",
-    "11.9.3 RELEASE \u2014 after `node scripts/sync-version.js`, two tracked build artifacts remain stale and sync-version now says so and exits non-zero: plugins/mindforge/.claude-plugin/plugin.json and plugins/mindforge/mcp/dist/index.js. Clear with, IN ORDER: `npm --prefix mcp-server install && npm --prefix mcp-server run build && node scripts/build-mindforge-plugin.js`. All three are required because build-mindforge-plugin.js refuses without mcp-server/dist/index.js, which is gitignored and absent on a fresh clone."
-  ],
+  "blockers": [],
   "decisions_needed": [
-    "PARTLY DONE (#216). The preflight job now gates the publishing event: it asserts the tagged commit is an ancestor of origin/main and runs the six gates a tag push never saw, with the publish job behind `needs: preflight`. What remains is repo-settings-only and cannot be done in code: a `v*` TAG ruleset restricting who may CREATE the ref. Required status checks cannot attach to a tag, so that ruleset is about authorship, not verification. KNOWN RESIDUAL, documented in the workflow itself: a tag push resolves the workflow from the TAGGED ref, so a tag placed on a commit predating #216 runs that commit's workflow and is ungated.",
-    "RESOLVED, no longer a decision: the release workflow now moves the npm `stable` dist-tag itself, as its last step. Forward-only (refuses to move backward, which a re-run of an older tag would otherwise do silently), prereleases skipped, and verified by reading back /-/package/<pkg>/dist-tags rather than the CDN-cached packument. `stable` is still 11.8.3 on the registry until the next release runs; nothing needs doing by hand to fix that.",
-    "NPM_TOKEN is a long-lived repo secret and there are ZERO configured GitHub environments. Adding an `environment:` key with no environment configured publishes exactly as before while LOOKING like a gate \u2014 move the token to an environment secret FIRST, then add the key.",
-    "mindforge-sdk has no provenance on npm (mindforge-cc does, since 11.9.0). Decide whether to add it.",
-    "HANDOFF.json field mismatch (found while writing this file): the writer bin/autonomous/state-manager.js:151 and bin/dashboard/metrics-aggregator.js:85 use `last_updated`, but .claude/commands/mindforge/next.md:14 gates freshness on `updated_at`, which never existed in this file. That gate is therefore ALWAYS false and a fresh handoff is never honoured. This file now writes BOTH keys so it works with every reader; pick one name and fix the other side, with a test.",
-    "Carried over, still unresolved: D5 plugin asset contract, D6 is the SDK published, D7 what exit code `verify` should use when every stage skips, D8 whether .planning/VERIFICATION.md should be tracked, D9 whether to governance-gate the release path, and whether a --global install should carry bin/ at all."
+    "Whether to re-sync .claude/worktrees/release-v12.0.1 (now 19 commits behind main) or abandon it for a fresh release cut when v12.0.1 is actually ready to ship. Not resolved this update.",
+    "Whether the develop -> release -> main three-branch flow this file used to describe is still intended policy: every PR in the current cycle (#304-#309) merged directly to main, and develop has drifted to 52 commits behind / 10 ahead. Not confirmed as a deliberate change -- flagging so it isn't assumed either way.",
+    "Carried over from 2026-08-21, status NOT re-verified this update (out of scope for a staleness fix -- do not trust these as current without re-checking): D5 plugin asset contract, D6 whether the SDK is published with provenance, D7 what exit code `verify` should use when every stage skips, D8 whether .planning/VERIFICATION.md should be tracked, D9 whether to governance-gate the release path, and whether a --global install should carry bin/ at all.",
+    "HANDOFF.json field mismatch (found 2026-08-21, still true): the writer bin/autonomous/state-manager.js and bin/dashboard/metrics-aggregator.js use `last_updated`, but .claude/commands/mindforge/next.md gates freshness on `updated_at`. This file writes BOTH keys so either reader works; the underlying mismatch itself was never fixed on either reader's side."
   ],
   "recent_commits": [
-    "983c0a06 Merge #210 fix/installer-leaks-tmp-and-db",
-    "5e41ddc5 Merge #209 fix/shipped-docs-name-real-commands",
-    "17ffd135 Merge #200 fix/selfinstall-overwrites-tracked-files-redo",
-    "8d4ea8ef Merge #206 fix/dashboard-lifecycle-flags",
-    "c457cf83 Merge #205 fix/protocol-file-names-only-real-things",
-    "f17a2189 Merge #211 fix/sync-version-plugin-build-channel",
-    "4b1a94f5 Merge #208 fix/formula-may-lag-never-lead",
-    "86a9d87a Merge #207 fix/sync-version-misses-two-channels",
-    "49c8f416 Merge #203 fix/fetch-sha-hashes-404-body",
-    "08987519 Merge #204 fix/verify-stage-availability-guards",
-    "0bc322cf Merge #202 fix/installer-positional-subcommand",
-    "ad15a089 Merge #201 fix/cli-router-cwd-pin"
+    "1d45230a Merge #309 fix/fabricated-agency-skills",
+    "92338c6b Merge #308 fix/headless-honest-failure",
+    "21a09112 Merge #307 fix/browser-daemon-log-secret-residue",
+    "8d7f55fb Merge #306 fix/registry-unbounded-growth",
+    "9cc274d0 Merge #305 fix/command-count-breakdown",
+    "ef057b5f Merge #304 fix/claude-md-backup-heuristic",
+    "16f5280f Merge #303 fix/verify-loop-cli-and-skill-findings"
   ],
   "recent_files": [
-    "scripts/sync-version.js \u2014 three channel categories; 16 channels + 2 build artifacts + 1 deferred",
-    "tests/version-consistency.test.js \u2014 23 assertions incl. two round trips and a greed guard",
-    "bin/installer-core.js \u2014 scope-aware self-install gate, 8 coreFiles, SENSITIVE_EXCLUDE, tmp reaping",
-    "bin/mindforge-cli.js \u2014 cwd: process.cwd() (was ROOT)",
-    "bin/dashboard/server.js \u2014 --status/--stop with a realpath identity check",
-    "bin/engine/verification-runner.js \u2014 stage availability guards, skip vs fail",
-    "bin/engine/temporal-cli.js \u2014 cleanup wired to TemporalHub.gc with --dry-run",
-    "tests/production.test.js \u2014 SENSITIVE_EXCLUDE now behavioural, not a source grep",
-    "SECURITY.md + docs/{getting-started,faq,troubleshooting,user-guide,sdk-reference}.md \u2014 now version channels",
-    "CLAUDE.md, .claude/CLAUDE.md, .agent/CLAUDE.md \u2014 protocol docs name only real files"
+    "bin/installer-core.js -- CLAUDE.md backup content-comparison, command-count namespace breakdown, registry recency cap",
+    "bin/engine/temporal-hub.js -- captureState() excludes .log from captured extensions",
+    "bin/autonomous/headless.js -- require.main guard, refuses to report success with no task executor",
+    ".github/workflows/execution-plane.yml, mindforge-autonomous.yml -- contained headless.js fix's CI blast radius",
+    "docs/registry/SKILLS.md, .mindforge/org/skills/MANIFEST.md, .mindforge/personas/swarm-templates.json -- fabricated agency-* skill references replaced with real ones",
+    "tests/no-home-leak.test.js, tests/temporal-vision.test.js, tests/autonomous.test.js, tests/skills-platform.test.js -- regression coverage for each fix above"
   ],
   "handoffs": [],
-  "last_updated": "2026-08-21T21:32:00Z",
-  "updated_at": "2026-08-21T21:32:00Z"
+  "last_updated": "2026-09-27T17:40:20Z",
+  "updated_at": "2026-09-27T17:40:20Z"
 }

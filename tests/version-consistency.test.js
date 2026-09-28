@@ -722,6 +722,52 @@ test('a bump moves structural version markers and leaves floors, since-markers a
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 });
 
+// -- .planning/STATE.md and HANDOFF.json must not silently rot ---------------------
+//
+// THE DEFECT these three tests replace: STATE.md and HANDOFF.json went 37 days and ~85 PRs stale
+// (last real update 2026-08-21, describing package.json=11.9.2 while HEAD had moved to 12.0.0)
+// with nothing in this repo's own version-consistency suite checking either file -- neither one was
+// wired into scripts/sync-version.js's channel list (deliberately, since these are narrative state,
+// not a version string to rewrite) nor into any other test. bin/dashboard/metrics-aggregator.js's
+// getStatus() also read handoff?.current_phase and handoff?.phase_description, both of which the
+// file never set, so the dashboard's phase fields were permanently null regardless of freshness.
+
+test('STATE.md\'s "Current version" section names the canonical version', () => {
+  const pkgVersion = JSON.parse(readText(path.join(ROOT, 'package.json'))).version;
+  const state = readText(path.join(ROOT, '.planning', 'STATE.md'));
+  const section = (state.split('## Current version')[1] || '').split('\n## ')[0];
+  assert.ok(section.length > 0, 'STATE.md has no "## Current version" section at all');
+  assert.ok(section.includes(`v${pkgVersion}`),
+    `STATE.md's "Current version" section does not mention v${pkgVersion} (package.json's current `
+    + `version). Section:\n${section.slice(0, 300)}`);
+});
+
+test('HANDOFF.json is not stale: last_updated agrees with updated_at and is recent', () => {
+  const handoff = readJson(path.join(ROOT, '.planning', 'HANDOFF.json'));
+  assert.strictEqual(handoff.last_updated, handoff.updated_at,
+    'last_updated and updated_at must agree -- .claude/commands/mindforge/next.md gates freshness on '
+    + 'updated_at while bin/autonomous/state-manager.js writes last_updated; this file satisfies both '
+    + 'readers only if the two values are identical.');
+  const updated = new Date(handoff.last_updated);
+  assert.ok(!Number.isNaN(updated.getTime()),
+    `HANDOFF.json's last_updated is not a valid date: ${handoff.last_updated}`);
+  const ageDays = (Date.now() - updated.getTime()) / (1000 * 60 * 60 * 24);
+  assert.ok(ageDays < 60,
+    `HANDOFF.json's last_updated is ${Math.round(ageDays)} day(s) old (>= 60). This exact file went `
+    + '37 days stale once already with nothing catching it -- this threshold exists to force a real '
+    + 'refresh before that recurs. Update .planning/STATE.md and HANDOFF.json to reflect current '
+    + 'reality; do not just bump the timestamp to satisfy this test.');
+});
+
+test('HANDOFF.json sets current_phase/phase_description so the dashboard is not permanently null', () => {
+  const handoff = readJson(path.join(ROOT, '.planning', 'HANDOFF.json'));
+  assert.ok(typeof handoff.current_phase === 'string' && handoff.current_phase.length > 0,
+    'HANDOFF.json must set current_phase -- bin/dashboard/metrics-aggregator.js\'s getStatus() reads '
+    + 'handoff?.current_phase ?? null, and its absence was a confirmed permanently-null dashboard field.');
+  assert.ok(typeof handoff.phase_description === 'string' && handoff.phase_description.length > 0,
+    'HANDOFF.json must set phase_description for the same reason.');
+});
+
 (async () => {
   for (const { name, fn } of tests) {
     try { await fn(); console.log(`  ✅  ${name}`); passed++; }
