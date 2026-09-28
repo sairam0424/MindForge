@@ -5,8 +5,9 @@
 'use strict';
 
 const fs = require('fs');
-const path = require('path');
 const vectorHub = require('../memory/vector-hub');
+const knowledgeStore = require('../memory/knowledge-store');
+const knowledgeGraph = require('../memory/knowledge-graph');
 
 const fromVersion = '8.2.1';
 const toVersion = '9.0.0';
@@ -27,9 +28,18 @@ async function run() {
 
   await vectorHub.transaction(async ({ run: txRun }) => {
     // 1. Migrate knowledge-base.jsonl → knowledge table
+    //
+    // THE DEFECT THIS REPLACES. The global path used to be hardcoded as
+    // process.cwd()/.mindforge/memory/global-knowledge-base.jsonl -- but that is not where the
+    // global store actually lives. knowledge-store.js's own getPaths() puts it at
+    // os.homedir()/.mindforge/global-knowledge-base.jsonl (no /memory/ nesting, and homedir rather
+    // than cwd). The hardcoded path could never have matched a real file, so global entries were
+    // silently skipped by every run of this migration. Reusing getPaths() also means this can't
+    // drift from the real path again -- there is exactly one place that path is constructed.
+    const paths = knowledgeStore.getPaths();
     const kbPaths = [
-      path.join(process.cwd(), '.mindforge', 'memory', 'knowledge-base.jsonl'),
-      path.join(process.cwd(), '.mindforge', 'memory', 'global-knowledge-base.jsonl'),
+      paths.KB_PATH,
+      paths.GLOBAL_KB_PATH,
     ];
 
     for (const kbPath of kbPaths) {
@@ -58,7 +68,15 @@ async function run() {
     }
 
     // 2. Migrate knowledge-graph edges → graph_edges table
-    const graphPath = path.join(process.cwd(), '.mindforge', 'memory', 'graph-edges.jsonl');
+    //
+    // THE DEFECT THIS REPLACES. This path used to be a second, independent hardcoded expression
+    // (process.cwd()/.mindforge/memory/graph-edges.jsonl) -- the exact same drift risk just fixed
+    // above for the KB paths, left unfixed here even though knowledge-graph.js already exposes its
+    // own getPaths().EDGES_PATH for this. Under default state both resolved identically, so nothing
+    // was broken today, but a future relocation of the real file would have silently broken this
+    // migration's read with no test catching it. Reusing the shared resolver closes that gap the
+    // same way knowledgeStore.getPaths() closed it for the KB paths above.
+    const graphPath = knowledgeGraph.getPaths().EDGES_PATH;
     if (fs.existsSync(graphPath)) {
       const lines = fs.readFileSync(graphPath, 'utf8').split('\n').filter(Boolean);
 
