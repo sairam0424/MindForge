@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const CloudBroker = require('./cloud-broker');
+const pricingRegistry = require('./pricing-registry');
 
 class ModelBroker {
   constructor(config = {}) {
@@ -116,16 +117,16 @@ class ModelBroker {
   }
 
   estimateCost(modelId, input, output) {
-    // v9: Pricing aligned to Claude 4.x family (per 1M tokens)
-    const rates = {
-      'claude-opus-4-7':   { in: 15, out: 75 },
-      'claude-sonnet-4-6': { in: 3, out: 15 },
-      'claude-haiku-4-5':  { in: 0.80, out: 4.0 },
-      'gemini-2.5-pro':    { in: 1.25, out: 10 },
-    };
-
-    const rate = rates[modelId] || rates['claude-sonnet-4-6'];
-    return (input / 1_000_000) * rate.in + (output / 1_000_000) * rate.out;
+    // THE DEFECT this replaces: this method used to carry its own hardcoded per-model rate table,
+    // a second, independent pricing source alongside bin/models/pricing-registry.js -- the file
+    // CLAUDE.md names as the single source of truth ("all providers call priceCall(). Never
+    // hardcode per-model prices in a provider."). The drift wasn't hypothetical: two of the four
+    // hardcoded rates (haiku-4-5, gemini-2.5-pro) had already diverged from
+    // .mindforge/config.json's revops.market_registry months before this fix -- ModelBroker has
+    // zero production callers today (only its own test requires it), so nothing actually consumed
+    // the wrong number, but the second source of truth was already wrong, not just at future risk
+    // of becoming wrong. Delegate instead.
+    return pricingRegistry.priceCall(modelId, { input_tokens: input, output_tokens: output });
   }
 }
 
