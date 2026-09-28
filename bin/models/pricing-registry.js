@@ -155,3 +155,7 @@ function clearCache() {
 }
 
 module.exports = { getPrice, priceCall, clearCache };
+// Exported so tests can reference the real constant/helper directly instead of duplicating a
+// hardcoded copy that would silently drift from this file's own values.
+module.exports.FALLBACK_RATES = FALLBACK_RATES;
+module.exports.normalizeBedrockModelId = normalizeBedrockModelId;
