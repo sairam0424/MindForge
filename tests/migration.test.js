@@ -198,6 +198,30 @@ test('v0.1.0 → v0.5.0: adds intelligence layer fields', () => {
   assert.ok(Array.isArray(m.quality_signals), 'quality_signals should be array');
 });
 
+test('0.1.0-to-0.5.0.js real run() adds ITS OWN fields, not 0.5.0-to-0.6.0.js\'s', () => {
+  // The simulate-based test above only exercises simulateHandoffMigration(), a re-implementation
+  // that never touches the real module -- it could not have caught the duplicate-export bug. This
+  // drives the REAL bin/migrations/0.1.0-to-0.5.0.js module via runRealMigration(), the same
+  // pattern already used for 0.6.0-to-1.0.0 and 1.0.0-to-2.0.0 above.
+  const os = require('os');
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-migtest-010to050-')));
+  try {
+    fs.mkdirSync(path.join(dir, '.planning'), { recursive: true });
+    fs.writeFileSync(path.join(dir, '.planning', 'HANDOFF.json'),
+      JSON.stringify({ schema_version: '0.1.0' }));
+    const r = runRealMigration('0.1.0-to-0.5.0', dir);
+    assert.strictEqual(r.status, 0, `migration failed: ${r.out.slice(0, 300)}`);
+    const handoff = JSON.parse(fs.readFileSync(path.join(dir, '.planning', 'HANDOFF.json'), 'utf8'));
+    assert.ok(Array.isArray(handoff.decisions_made), 'the real 0.1.0->0.5.0 fields must be added');
+    assert.ok(Array.isArray(handoff.discoveries));
+    assert.ok(Array.isArray(handoff.implicit_knowledge));
+    assert.ok(Array.isArray(handoff.quality_signals));
+    assert.ok(!('developer_id' in handoff),
+      'the 0.5.0->0.6.0 fields must NOT appear -- their presence would mean the duplicate export bug is back');
+    assert.ok(!('recent_commits' in handoff));
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
 test('v0.5.0 → v0.6.0: adds distribution platform fields', () => {
   const h = { schema_version: '0.5.0', next_task: 'test', _warning: 'warn' };
   const m = simulateHandoffMigration(h, '0.6.0');
@@ -363,15 +387,23 @@ test('MINDFORGE.md value 1.0 (explicit decimal) is not converted', () => {
 console.log('\nMigration infrastructure:');
 
 test('all migration files have correct fromVersion/toVersion', () => {
+  // THE DEFECT this replaces: a raw substring grep against file TEXT can't tell which of two
+  // module.exports assignments in the same file actually wins at require() time -- exactly how
+  // bin/migrations/0.1.0-to-0.5.0.js's real export was silently shadowed by a duplicate block for
+  // an unknown period, undetected, because both fromVersion/toVersion strings still appeared
+  // somewhere in the file's text regardless. require() each module and assert on what it actually
+  // exports, the same way a real caller (migrate.js's allMigrations()) sees it.
   const files = [
-    { file: 'bin/migrations/0.1.0-to-0.5.0.js', from: '0.1.0', to: '0.5.0' },
-    { file: 'bin/migrations/0.5.0-to-0.6.0.js', from: '0.5.0', to: '0.6.0' },
-    { file: 'bin/migrations/0.6.0-to-1.0.0.js', from: '0.6.0', to: '1.0.0' },
+    { file: '../bin/migrations/0.1.0-to-0.5.0', from: '0.1.0', to: '0.5.0' },
+    { file: '../bin/migrations/0.5.0-to-0.6.0', from: '0.5.0', to: '0.6.0' },
+    { file: '../bin/migrations/0.6.0-to-1.0.0', from: '0.6.0', to: '1.0.0' },
   ];
   files.forEach(({ file, from, to }) => {
-    const c = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
-    assert.ok(c.includes(from), `${file}: should contain fromVersion ${from}`);
-    assert.ok(c.includes(to),   `${file}: should contain toVersion ${to}`);
+    const modPath = require.resolve(file);
+    delete require.cache[modPath];
+    const mig = require(modPath);
+    assert.strictEqual(mig.fromVersion, from, `${file}: require() must export fromVersion ${from}`);
+    assert.strictEqual(mig.toVersion, to, `${file}: require() must export toVersion ${to}`);
   });
 });
 
@@ -405,6 +437,22 @@ test('migrate.js exports getMigrationsToRun function', () => {
   const plan = getMigrationsToRun('8.2.1', '9.0.0');
   assert.strictEqual(plan.length, 1, 'v8.2.1 -> v9.0.0 should select exactly the v9-unified-memory migration');
   assert.strictEqual(plan[0].toVersion, '9.0.0');
+});
+
+test('getMigrationsToRun(0.1.0, 1.0.0) selects all three distinct migrations, not a duplicate', () => {
+  // THE DEFECT this replaces (HIGH-impact, caught by deep research): bin/migrations/0.1.0-to-0.5.0.js
+  // used to have a second module.exports block that shadowed its real one, so allMigrations()'s
+  // two separate require() calls (for './0.1.0-to-0.5.0' and './0.5.0-to-0.6.0') both resolved to
+  // the SAME 0.5.0->0.6.0 object. A real 0.1.0 install upgrading through migrate.js got two
+  // redundant copies of the 0.5.0->0.6.0 migration and NEVER the real 0.1.0->0.5.0 one -- exit 0,
+  // "status: migrated", no error, no warning, decisions_made/discoveries/implicit_knowledge/
+  // quality_signals silently never backfilled. This goes through the REAL allMigrations(), not a
+  // simulated array, so it fails before the fix and passes after.
+  const { getMigrationsToRun } = require('../bin/migrations/migrate');
+  const plan = getMigrationsToRun('0.1.0', '1.0.0');
+  const toVersions = plan.map((m) => m.toVersion).sort();
+  assert.deepStrictEqual(toVersions, ['0.5.0', '0.6.0', '1.0.0'],
+    `expected the three distinct migrations 0.1.0->0.5.0, 0.5.0->0.6.0, 0.6.0->1.0.0 in some order, got toVersions: ${JSON.stringify(toVersions)}`);
 });
 
 // -- CLI entrypoint end-to-end, including the global-path fix ------------------------
