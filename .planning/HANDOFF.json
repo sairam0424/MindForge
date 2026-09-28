@@ -2,42 +2,44 @@
   "_warning": "DO NOT ADD SECRETS OR SENSITIVE DATA TO THIS FILE. IT IS SYNCED ACROSS SESSIONS.",
   "schema_type": "HANDOFF",
   "schema_version": "1.0.0",
-  "current_phase": "verify-punch-list",
-  "phase_description": "Fixing findings from a full /verify sweep against v12.0.0, one at a time: commit → PR → multi-agent review → CI → user go-ahead → merge.",
-  "next_task": "Continue the /verify punch list: next up is the two unsynced memory tiers (JSONL knowledge-store.js vs SQLite vector-hub.js, v9-unified-memory migration never actually run on this checkout, 0 rows in celestial.db's _migrations table). After that: bin/models/model-broker.js dead code with its own hardcoded pricing table (violates the single-pricing-source rule), and a SECURITY.md internal version-table contradiction. See PR #304-#309 descriptions for the fixes already shipped this cycle — there is no separate persisted findings doc.",
-  "current_context": "main is at 1d45230a (PR #309 merged), v12.0.0, GREEN both locally (140 passed / 0 failed / 3 skipped / 143 total, lint 0 errors, validate-assets exit 0) and in CI. Six PRs merged this cycle (#304-#309), each fixing one /verify finding, each reviewed by this repo's own multi-agent workflow before merge. Every one of the six received at least one review-driven follow-up commit — none shipped clean on the first attempt. Two required a full redesign or revert, not just a patch: #306's registry fix was redesigned from existence-checking to recency-capping after review found existsSync() false-positives on unmounted/permission-denied paths would silently drop real projects; #307's broader secret-redaction attempt was reverted (not patched) after review found it could permanently corrupt legitimate snapshot data via a generic high-entropy regex matching ordinary git SHAs/UUIDs. The other four (#304, #305, #308, #309) got a smaller follow-up commit fixing real findings without a full redesign — see each PR's own commit history for specifics, not summarized here since it drifts easily (an earlier revision of this file undercounted this as \"two of six\" and a review caught it). package.json and npm's published latest/stable both read 12.0.0 — no version drift.",
+  "current_phase": "verify-punch-list-closed",
+  "phase_description": "The full /verify sweep punch list (#304-#317) is closed -- every finding fixed, reviewed, and merged. No open findings remain from that sweep; next work is a fresh choice, not a continuation.",
+  "next_task": "No /verify punch-list items remain. Two real candidates, neither started: (1) bin/autonomous/AutoRunner is never constructed outside tests -- /mindforge:auto is still just an LLM-interpreted markdown spec, not real automation -- this is architectural work, not a punch-list-style bug fix; (2) resolve the two open decisions below (release/v12.0.1 worktree drift, develop branch policy) -- human calls, not something to resolve unilaterally. See decisions_needed.",
+  "current_context": "main is at ce0a58d1 (PR #317 merged), v12.0.0, GREEN both locally (141 passed / 0 failed / 3 skipped / 144 total, lint 0 errors/380 warnings, validate-assets exit 0) and in CI. Eight more PRs merged since the last handoff (#310-#317), closing the entire punch list: #310 regenerated this file and STATE.md after 37 days of staleness and added 3 staleness-regression tests; #311 fixed migrate.js's missing CLI entrypoint and v9-unified-memory.js's broken global-knowledge path; #312 recovered follow-up fixes from #310 that were committed locally but never pushed before that PR merged; #313 removed model-broker.js's second, independent hardcoded pricing table; #314 fixed a SECURITY.md self-contradiction (header said 12.0.0 current, table still said 11.x); #315 removed a duplicate module.exports block in 0.1.0-to-0.5.0.js that silently shadowed the real migration; #316 fixed Bedrock model pricing under-billing (priced by resolved id instead of original short id); #317 wired two omitted migrations into allMigrations() and hit a real merge conflict against #315's overlapping test additions, resolved by keeping both PRs' tests. Every one of the eight got at least one review-driven follow-up commit -- none shipped clean on first attempt; #310's follow-ups were themselves dropped once (not pushed before merge) and had to be recovered in #312, the one process failure this cycle. package.json and npm's published latest/stable both still read 12.0.0 -- no version drift.",
   "context_refs": [
-    "gh pr list --state merged --limit 10 — fastest way to reconstruct this cycle's context; PR bodies for #304-#309 each document one finding's full fix arc, including every follow-up commit and why it happened.",
+    "gh pr list --state merged --limit 15 — fastest way to reconstruct this cycle's context; PR bodies for #304-#317 each document one finding's full fix arc, including every follow-up commit and why it happened.",
     ".planning/STATE.md — narrative summary of the same cycle, written alongside this file.",
     "CLAUDE.md lines 53-57 — the version-bump contract: 16 channels over 15 files, PLUS the two build artifacts and their 3-command chain.",
     "docs/research/2026-08-v12-upgrade-report.md — DEL-02 is the source of the headless.js honest-failure decision (PR #308)."
   ],
   "blockers": [],
   "decisions_needed": [
-    "Whether to re-sync .claude/worktrees/release-v12.0.1 (now 19 commits behind main) or abandon it for a fresh release cut when v12.0.1 is actually ready to ship. Not resolved this update.",
-    "Whether the develop → release → main three-branch flow this file used to describe is still intended policy: every PR in the current cycle (#304-#309) merged directly to main, and develop has drifted to 52 commits behind / 10 ahead. Not confirmed as a deliberate change — flagging so it isn't assumed either way.",
+    "Whether to re-sync .claude/worktrees/release-v12.0.1 (now 44 commits behind main, up from 19) or abandon it for a fresh release cut when v12.0.1 is actually ready to ship. Not resolved this update.",
+    "Whether the develop → release → main three-branch flow this file used to describe is still intended policy: every PR across the whole punch list (#304-#317) merged directly to main, and develop has drifted further to 77 commits behind / 10 ahead (up from 52 behind). Not confirmed as a deliberate change — flagging so it isn't assumed either way.",
     "Carried over from 2026-08-21, status NOT re-verified this update (out of scope for a staleness fix — do not trust these as current without re-checking): D5 plugin asset contract, D6 whether the SDK is published with provenance, D7 what exit code `verify` should use when every stage skips, D8 whether .planning/VERIFICATION.md should be tracked, D9 whether to governance-gate the release path, and whether a --global install should carry bin/ at all.",
-    "HANDOFF.json field mismatch (found 2026-08-21) — PARTLY FIXED this update: bin/autonomous/state-manager.js's writeHandoff() now writes both `last_updated` and `updated_at`, so .claude/commands/mindforge/next.md's freshness gate on `updated_at` will actually see a value once this function has a real caller. It still has zero callers anywhere in the repo (confirmed via grep) — wiring it up is unresolved, separate work."
+    "HANDOFF.json field mismatch (found 2026-08-21) — still open: bin/autonomous/state-manager.js's writeHandoff() writes both `last_updated` and `updated_at` (fixed in #312), but it still has zero real callers anywhere in the repo (re-confirmed via grep for `writeHandoff(` outside its own definition/export). Wiring it up so anything actually calls it is unresolved, separate work."
   ],
   "recent_commits": [
-    "1d45230a Merge #309 fix/fabricated-agency-skills",
-    "92338c6b Merge #308 fix/headless-honest-failure",
-    "21a09112 Merge #307 fix/browser-daemon-log-secret-residue",
-    "8d7f55fb Merge #306 fix/registry-unbounded-growth",
-    "9cc274d0 Merge #305 fix/command-count-breakdown",
-    "ef057b5f Merge #304 fix/claude-md-backup-heuristic",
-    "16f5280f Merge #303 fix/verify-loop-cli-and-skill-findings"
+    "ce0a58d1 Merge #317 fix/migrate-allMigrations-gap",
+    "9f348296 Merge #316 fix/bedrock-model-id-pricing-gap",
+    "6a90fe7d Merge #315 fix/duplicate-migration-export",
+    "9664b7cd Merge #314 fix/security-md-version-table-contradiction",
+    "6ce7884f Merge #313 fix/model-broker-hardcoded-pricing",
+    "95001a0e Merge #312 fix/handoff-writer-and-staleness-test-followup",
+    "1471dcc5 Merge #311 fix/memory-migration-never-runs",
+    "cb1a5f9b Merge #310 fix/state-handoff-staleness"
   ],
   "recent_files": [
-    "bin/installer-core.js — CLAUDE.md backup content-comparison, command-count namespace breakdown, registry recency cap",
-    "bin/engine/temporal-hub.js — captureState() excludes .log from captured extensions",
-    "bin/autonomous/headless.js — require.main guard, refuses to report success with no task executor",
-    ".github/workflows/execution-plane.yml, mindforge-autonomous.yml — contained headless.js fix's CI blast radius",
-    "docs/registry/SKILLS.md, .mindforge/org/skills/MANIFEST.md, .mindforge/personas/swarm-templates.json — fabricated agency-* skill references replaced with real ones",
-    "bin/autonomous/state-manager.js — writeHandoff() now writes both last_updated and updated_at",
-    "tests/no-home-leak.test.js, tests/temporal-vision.test.js, tests/autonomous.test.js, tests/skills-platform.test.js, tests/version-consistency.test.js — regression coverage for each fix above"
+    "bin/migrations/migrate.js — added a real CLI entrypoint, exported getMigrationsToRun(), wired in 1.0.0-to-2.0.0.js and an inline adapter for 10.7.0-to-11.0.0.js",
+    "bin/migrations/v9-unified-memory.js — reuses knowledge-store.js/knowledge-graph.js getPaths() instead of re-deriving the global path",
+    "bin/migrations/0.1.0-to-0.5.0.js, 10.7.0-to-11.0.0.js — removed a duplicate module.exports block; removed a hash-chain-breaking audit-truncation step (UC-04b)",
+    "bin/models/model-broker.js, bedrock-provider.js, pricing-registry.js — model-broker.js now delegates to priceCall() instead of its own table; bedrock-provider.js prices by original short id, not the resolved Bedrock id",
+    "bin/autonomous/state-manager.js — writeHandoff() writes both last_updated and updated_at (still zero real callers)",
+    "SECURITY.md — Supported Versions table corrected to match the 12.0.0 header",
+    ".planning/STATE.md, HANDOFF.json (this file) — regenerated in #310, recovered in #312, refreshed again here to close out the punch list",
+    "tests/version-consistency.test.js, migration.test.js, bedrock-provider.test.js, pricing-registry.test.js, model-broker.test.js — regression coverage for each fix above"
   ],
   "handoffs": [],
-  "last_updated": "2026-09-27T18:32:22Z",
-  "updated_at": "2026-09-27T18:32:22Z"
+  "last_updated": "2026-09-28T17:30:38Z",
+  "updated_at": "2026-09-28T17:30:38Z"
 }
