@@ -434,12 +434,72 @@ test('getMigrationsToRun(10.6.0, 11.0.0) selects the adapted 10.7.0-to-11.0.0 mi
   assert.strictEqual(typeof plan[0].run, 'function', 'the adapter must expose a real run(paths) function');
 });
 
+test('1.0.0-to-2.0.0 migration runs end-to-end through the real CLI wiring, not just direct invocation', () => {
+  // THE DEFECT this replaces (MEDIUM, caught by review): the byte-identical/hash-chain/records-itself
+  // tests above already prove 1.0.0-to-2.0.0.js's own run() logic is correct, but every one of them
+  // calls runRealMigration(), which require()s the module directly and invokes mig.run(paths) --
+  // bypassing allMigrations()/getMigrationsToRun()/runMigrations() entirely, the exact integration
+  // surface this PR changes by adding this migration to allMigrations(). The other new test above
+  // (getMigrationsToRun(1.5.0, 2.0.0) selects 1.0.0-to-2.0.0.js) only checks `typeof run === 'function'`
+  // without ever calling it, so it would pass even if the wired-in entry were subtly broken. This
+  // test drives the migration through the REAL CLI end to end, closing that gap the same way the
+  // 10.7.0-to-11.0.0 test above does for the adapter.
+  const { spawnSync } = require('child_process');
+  const os = require('os');
+  const REPO_ROOT = path.join(__dirname, '..');
+  const project = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-migtest-1000to200-')));
+  try {
+    fs.mkdirSync(path.join(project, '.planning'), { recursive: true });
+
+    fs.writeFileSync(path.join(project, '.planning', 'HANDOFF.json'),
+      JSON.stringify({ schema_version: '1.0.0', plugin_api_version: '1.0.0' }));
+    const auditBefore = JSON.stringify({ event: 'pre-existing', _hash: 'seed-hash', previous_hash: null }) + '\n';
+    fs.writeFileSync(path.join(project, '.planning', 'AUDIT.jsonl'), auditBefore);
+    fs.writeFileSync(path.join(project, '.planning', 'token-usage.jsonl'),
+      JSON.stringify({ model: 'claude-sonnet-4-6', tokens: 100 }) + '\n');
+
+    const run = spawnSync(process.execPath,
+      [path.join(REPO_ROOT, 'bin', 'migrations', 'migrate.js'), '--from', '1.0.0', '--to', '2.0.0'],
+      { cwd: project, encoding: 'utf8', timeout: 30000 });
+    assert.strictEqual(run.status, 0, `migration failed: ${run.stderr}\n${run.stdout}`);
+    assert.match(run.stdout, /"status": "migrated"/, `expected a migrated result, got: ${run.stdout}`);
+
+    const handoff = JSON.parse(fs.readFileSync(path.join(project, '.planning', 'HANDOFF.json'), 'utf8'));
+    assert.strictEqual(handoff.plugin_api_version, '2.0.0',
+      'plugin_api_version must be bumped when reached through the real wiring, not just via direct invocation');
+
+    const auditAfter = fs.readFileSync(path.join(project, '.planning', 'AUDIT.jsonl'), 'utf8');
+    assert.ok(auditAfter.startsWith(auditBefore),
+      'the pre-existing audit entry must survive byte-identical as the prefix -- append-only, not rewritten');
+    const auditLines = auditAfter.split('\n').filter(Boolean);
+    assert.strictEqual(auditLines.length, 2, `expected exactly one appended entry, got: ${auditAfter}`);
+    const appended = JSON.parse(auditLines[1]);
+    assert.strictEqual(appended.event, 'schema_migrated');
+
+    const tokenUsage = fs.readFileSync(path.join(project, '.planning', 'token-usage.jsonl'), 'utf8');
+    const tokenEntry = JSON.parse(tokenUsage.trim());
+    assert.strictEqual(tokenEntry.model_group, 'unknown',
+      'model_group must be backfilled onto the pre-existing token-usage.jsonl entry when reached through the real wiring');
+  } finally {
+    fs.rmSync(project, { recursive: true, force: true });
+  }
+});
+
 test('10.7.0-to-11.0.0 migration runs end-to-end through the real CLI and does NOT touch AUDIT.jsonl', () => {
   // Drives the adapted migration through the REAL migrate.js CLI (not a direct migrate(dir) call),
   // proving both the adapter wiring AND the removed audit-truncation step at once: a fixture with
   // a real .mindforge/config.json at schema 10.7.0 selects and runs this migration for real, and
   // its AUDIT.jsonl (present here specifically to prove the archive-and-truncate step is gone) must
   // come out byte-identical -- there is no longer any step that reads, archives, or rewrites it.
+  //
+  // THE DEFECT this replaces (HIGH, caught by review): the removed step only ever fired when
+  // `lines.length > 5000` -- below that it was already a documented no-op
+  // (`status: 'skipped', reason: 'under_threshold'`). An earlier version of this test seeded
+  // AUDIT.jsonl with exactly ONE line, so the byte-identical assertion below would have passed
+  // IDENTICALLY whether Step 3 was truly deleted or merely reintroduced-but-dormant -- proven by
+  // reinserting the exact deleted code into a scratch copy and confirming this test still passed.
+  // Seeding >5000 lines is what actually exercises the old code's threshold gate, so this
+  // assertion can tell "removed" apart from "present but not yet triggered".
   const { spawnSync } = require('child_process');
   const os = require('os');
   const REPO_ROOT = path.join(__dirname, '..');
@@ -453,7 +513,13 @@ test('10.7.0-to-11.0.0 migration runs end-to-end through the real CLI and does N
     fs.writeFileSync(path.join(project, '.planning', 'HANDOFF.json'),
       JSON.stringify({ schema_version: '10.7.0' }));
     fs.writeFileSync(path.join(project, 'MINDFORGE.md'), '# MINDFORGE.md\nVERSION = 10.7.0\n');
-    const auditContent = JSON.stringify({ event: 'test', _hash: 'abc', previous_hash: null }) + '\n';
+    // 5001 lines: one over the removed code's own `> 5000` gate, so this fixture is exactly the
+    // case that used to trigger archiving -- not merely under a threshold that never engages.
+    const auditLines = [];
+    for (let i = 0; i < 5001; i++) {
+      auditLines.push(JSON.stringify({ event: 'test', seq: i, _hash: `hash-${i}`, previous_hash: i === 0 ? null : `hash-${i - 1}` }));
+    }
+    const auditContent = auditLines.join('\n') + '\n';
     fs.writeFileSync(path.join(project, '.planning', 'AUDIT.jsonl'), auditContent);
 
     const run = spawnSync(process.execPath,
@@ -475,7 +541,9 @@ test('10.7.0-to-11.0.0 migration runs end-to-end through the real CLI and does N
 
     const auditAfter = fs.readFileSync(path.join(project, '.planning', 'AUDIT.jsonl'), 'utf8');
     assert.strictEqual(auditAfter, auditContent,
-      'AUDIT.jsonl must be byte-identical -- the removed archive-and-truncate step must never run again');
+      'AUDIT.jsonl (5001 lines -- one over the removed archive-and-truncate step\'s own > 5000 '
+      + 'gate) must be byte-identical: if that step still existed, it would have fired here and '
+      + 'truncated this exact file to its last 500 lines');
     assert.ok(!fs.existsSync(path.join(project, '.planning', 'audit-archive')),
       'no audit-archive directory should ever be created -- that mechanism was removed entirely, not just skipped');
   } finally {

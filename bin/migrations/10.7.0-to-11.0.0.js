@@ -56,7 +56,7 @@ async function migrate(projectRoot) {
   // chain-aware compaction (re-anchoring the first carried entry to previous_hash=null) ships as
   // its own, separate feature -- not invented here as a side effect of unrelated migration wiring.
 
-  // Step 4: GC old snapshots
+  // Step 3: GC old snapshots
   try {
     const TemporalHub = require('../engine/temporal-hub');
     const gcResult = await TemporalHub.gc({ maxSnapshots: 50, maxAgeDays: 30 });
@@ -65,7 +65,7 @@ async function migrate(projectRoot) {
     results.steps.push({ step: 'snapshot_gc', status: 'warning', error: e.message });
   }
 
-  // Step 5: Bump schema_version in HANDOFF.json
+  // Step 4: Bump schema_version in HANDOFF.json
   const handoffPath = path.join(projectRoot, '.planning', 'HANDOFF.json');
   if (fs.existsSync(handoffPath)) {
     try {
@@ -78,7 +78,7 @@ async function migrate(projectRoot) {
     }
   }
 
-  // Step 6: Update MINDFORGE.md VERSION
+  // Step 5: Update MINDFORGE.md VERSION
   const mindforgeFile = path.join(projectRoot, 'MINDFORGE.md');
   if (fs.existsSync(mindforgeFile)) {
     try {
