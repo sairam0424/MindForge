@@ -120,10 +120,12 @@ class ModelBroker {
     // THE DEFECT this replaces: this method used to carry its own hardcoded per-model rate table,
     // a second, independent pricing source alongside bin/models/pricing-registry.js -- the file
     // CLAUDE.md names as the single source of truth ("all providers call priceCall(). Never
-    // hardcode per-model prices in a provider."). ModelBroker has zero production callers today
-    // (only its own test requires it), so the drift never bit anyone yet, but the moment it gets
-    // wired to a real caller, this table would silently diverge from .mindforge/config.json's
-    // revops.market_registry the first time pricing changes there. Delegate instead.
+    // hardcode per-model prices in a provider."). The drift wasn't hypothetical: two of the four
+    // hardcoded rates (haiku-4-5, gemini-2.5-pro) had already diverged from
+    // .mindforge/config.json's revops.market_registry months before this fix -- ModelBroker has
+    // zero production callers today (only its own test requires it), so nothing actually consumed
+    // the wrong number, but the second source of truth was already wrong, not just at future risk
+    // of becoming wrong. Delegate instead.
     return pricingRegistry.priceCall(modelId, { input_tokens: input, output_tokens: output });
   }
 }
