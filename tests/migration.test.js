@@ -407,6 +407,82 @@ test('migrate.js exports getMigrationsToRun function', () => {
   assert.strictEqual(plan[0].toVersion, '9.0.0');
 });
 
+test('getMigrationsToRun(1.5.0, 2.0.0) selects 1.0.0-to-2.0.0.js', () => {
+  // THE DEFECT this replaces: allMigrations() used to omit this file entirely, so any upgrade
+  // range crossing 2.0.0 silently skipped it -- exit 0, "status: migrated", the AUDIT.jsonl
+  // schema-migration record and HANDOFF.json plugin_api_version bump it provides just never
+  // happened.
+  const { getMigrationsToRun } = require('../bin/migrations/migrate');
+  const plan = getMigrationsToRun('1.5.0', '2.0.0');
+  assert.strictEqual(plan.length, 1, `expected exactly 1.0.0-to-2.0.0, got: ${JSON.stringify(plan.map((m) => m.toVersion))}`);
+  assert.strictEqual(plan[0].toVersion, '2.0.0');
+  assert.strictEqual(typeof plan[0].run, 'function', 'the selected migration must have a real run(paths) function');
+});
+
+test('getMigrationsToRun(10.6.0, 11.0.0) selects the adapted 10.7.0-to-11.0.0 migration', () => {
+  // THE DEFECT this replaces: bin/migrations/10.7.0-to-11.0.0.js exports a different shape
+  // ({MIGRATION_ID, TARGET_VERSION, migrate(projectRoot)}) than every other registered migration
+  // ({fromVersion, toVersion, description, run(paths)}). allMigrations() used to omit it entirely
+  // rather than wire it in broken; this proves the inline adapter in migrate.js exposes the
+  // standard shape with a real fromVersion/toVersion/run, so getMigrationsToRun()'s
+  // compareSemver(m.toVersion, ...) and the runner's migration.run(paths) call both work.
+  const { getMigrationsToRun } = require('../bin/migrations/migrate');
+  const plan = getMigrationsToRun('10.6.0', '11.0.0');
+  assert.strictEqual(plan.length, 1, `expected exactly the adapted 10.7.0-to-11.0.0 entry, got: ${JSON.stringify(plan.map((m) => m.toVersion))}`);
+  assert.strictEqual(plan[0].fromVersion, '10.7.0');
+  assert.strictEqual(plan[0].toVersion, '11.0.0');
+  assert.strictEqual(typeof plan[0].run, 'function', 'the adapter must expose a real run(paths) function');
+});
+
+test('10.7.0-to-11.0.0 migration runs end-to-end through the real CLI and does NOT touch AUDIT.jsonl', () => {
+  // Drives the adapted migration through the REAL migrate.js CLI (not a direct migrate(dir) call),
+  // proving both the adapter wiring AND the removed audit-truncation step at once: a fixture with
+  // a real .mindforge/config.json at schema 10.7.0 selects and runs this migration for real, and
+  // its AUDIT.jsonl (present here specifically to prove the archive-and-truncate step is gone) must
+  // come out byte-identical -- there is no longer any step that reads, archives, or rewrites it.
+  const { spawnSync } = require('child_process');
+  const os = require('os');
+  const REPO_ROOT = path.join(__dirname, '..');
+  const project = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-migtest-1070to110-')));
+  try {
+    fs.mkdirSync(path.join(project, '.mindforge'), { recursive: true });
+    fs.mkdirSync(path.join(project, '.planning'), { recursive: true });
+
+    fs.writeFileSync(path.join(project, '.mindforge', 'config.json'),
+      JSON.stringify({ version: '10.7.0', revops: {} }));
+    fs.writeFileSync(path.join(project, '.planning', 'HANDOFF.json'),
+      JSON.stringify({ schema_version: '10.7.0' }));
+    fs.writeFileSync(path.join(project, 'MINDFORGE.md'), '# MINDFORGE.md\nVERSION = 10.7.0\n');
+    const auditContent = JSON.stringify({ event: 'test', _hash: 'abc', previous_hash: null }) + '\n';
+    fs.writeFileSync(path.join(project, '.planning', 'AUDIT.jsonl'), auditContent);
+
+    const run = spawnSync(process.execPath,
+      [path.join(REPO_ROOT, 'bin', 'migrations', 'migrate.js'), '--from', '10.7.0', '--to', '11.0.0'],
+      { cwd: project, encoding: 'utf8', timeout: 30000 });
+    assert.strictEqual(run.status, 0, `migration failed: ${run.stderr}\n${run.stdout}`);
+    assert.match(run.stdout, /"status": "migrated"/, `expected a migrated result, got: ${run.stdout}`);
+
+    const config = JSON.parse(fs.readFileSync(path.join(project, '.mindforge', 'config.json'), 'utf8'));
+    assert.strictEqual(config.version, '11.0.0');
+    assert.ok(config.temporal && config.rate_limiting && config.session && config.wave_execution,
+      `expected all four new config sections, got: ${JSON.stringify(config)}`);
+
+    const handoff = JSON.parse(fs.readFileSync(path.join(project, '.planning', 'HANDOFF.json'), 'utf8'));
+    assert.strictEqual(handoff.schema_version, '11.0.0');
+
+    const mindforgeMd = fs.readFileSync(path.join(project, 'MINDFORGE.md'), 'utf8');
+    assert.match(mindforgeMd, /VERSION = 11\.0\.0/);
+
+    const auditAfter = fs.readFileSync(path.join(project, '.planning', 'AUDIT.jsonl'), 'utf8');
+    assert.strictEqual(auditAfter, auditContent,
+      'AUDIT.jsonl must be byte-identical -- the removed archive-and-truncate step must never run again');
+    assert.ok(!fs.existsSync(path.join(project, '.planning', 'audit-archive')),
+      'no audit-archive directory should ever be created -- that mechanism was removed entirely, not just skipped');
+  } finally {
+    fs.rmSync(project, { recursive: true, force: true });
+  }
+});
+
 // -- CLI entrypoint end-to-end, including the global-path fix ------------------------
 //
 // THE DEFECT this replaces: `node bin/migrations/migrate.js` had no entrypoint at all (defined
