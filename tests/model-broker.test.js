@@ -141,6 +141,36 @@ test('estimateCost returns 0 for zero tokens', () => {
   assert.strictEqual(cost, 0);
 });
 
+test('estimateCost delegates fully to pricing-registry.priceCall -- no independent hardcoded table', () => {
+  // THE DEFECT this replaces: estimateCost() used to carry its own hardcoded per-model rate table
+  // instead of calling bin/models/pricing-registry.js's priceCall(), the single source of truth
+  // CLAUDE.md requires every provider to use. Proof of delegation, not just a plausible-looking
+  // number: swap priceCall for a sentinel-returning stub and assert estimateCost returns exactly
+  // that sentinel, for both a KNOWN model id and one no hardcoded table would recognize -- if any
+  // independent fallback table still existed inside model-broker.js, the unknown-model call would
+  // return something computed locally instead of the sentinel.
+  const pricingRegistry = require('../bin/models/pricing-registry');
+  const originalPriceCall = pricingRegistry.priceCall;
+  const calls = [];
+  pricingRegistry.priceCall = (modelId, usage) => {
+    calls.push({ modelId, usage });
+    return 424242;
+  };
+  try {
+    const broker = new ModelBroker();
+    assert.strictEqual(broker.estimateCost('claude-sonnet-4-6', 10000, 5000), 424242,
+      'estimateCost must return whatever pricing-registry.priceCall computes for a known model, not an independently-hardcoded value');
+    assert.strictEqual(broker.estimateCost('some-totally-unknown-model-id', 1000, 500), 424242,
+      'estimateCost must still delegate for a model id no hardcoded table would recognize -- proves there is no fallback rates object left inside model-broker.js');
+    assert.strictEqual(calls.length, 2, 'both estimateCost calls must have reached priceCall');
+    assert.deepStrictEqual(calls[0], { modelId: 'claude-sonnet-4-6', usage: { input_tokens: 10000, output_tokens: 5000 } },
+      'estimateCost must forward the exact modelId and token usage priceCall expects');
+    assert.deepStrictEqual(calls[1], { modelId: 'some-totally-unknown-model-id', usage: { input_tokens: 1000, output_tokens: 500 } });
+  } finally {
+    pricingRegistry.priceCall = originalPriceCall;
+  }
+});
+
 // ── Results ──────────────────────────────────────────────────────────────────
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`Results: ${passed} passed, ${failed} failed`);
