@@ -170,8 +170,13 @@ async function runMigrations(fromVersion, toVersion) {
  * other entry's shape ({fromVersion, toVersion, description, run(paths)}) and needed nothing but
  * being require()'d. 10.7.0-to-11.0.0.js exports a different, incompatible shape
  * ({MIGRATION_ID, TARGET_VERSION, migrate(projectRoot)}) -- wrapped below in an inline adapter
- * rather than changed in place, since tests/version-consistency.test.js:77-93 requires that exact
- * module directly and destructures {migrate, TARGET_VERSION} from it.
+ * rather than restructured to match the standard shape, since tests/version-consistency.test.js:77-93
+ * requires that exact module directly and destructures {migrate, TARGET_VERSION} from it, so those
+ * three exports and migrate()'s signature stay untouched. Its migrate() BODY was separately edited
+ * (see bin/migrations/10.7.0-to-11.0.0.js's own comment) to remove a hash-chain-breaking
+ * audit-truncation step this same wiring would otherwise have made reachable for the first time --
+ * a deliberate, distinct fix, not a contradiction of "left alone": the exported shape this adapter
+ * depends on is what stayed fixed, not the file's every line.
  */
 function allMigrations() {
   const v107to11 = require('./10.7.0-to-11.0.0');
