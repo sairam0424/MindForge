@@ -722,6 +722,33 @@ test('a bump moves structural version markers and leaves floors, since-markers a
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 });
 
+// ── SECURITY.md's header and its own table must not contradict each other ────────
+//
+// THE DEFECT this replaces: scripts/sync-version.js keeps SECURITY.md's
+// "> **Current version:** X.Y.Z" header in sync on every bump (it's a tracked channel), but the
+// Supported Versions table below it encodes a support POLICY (Current -> Maintenance -> End of
+// Life across major lines, with dated windows) that is not a simple substitution, so it is
+// deliberately excluded from the sweep and must be updated by hand at each major-version
+// transition. Measured live: after the 12.0.0 bump, the header said "Current version: 12.0.0"
+// while the table still marked "11.x" as **Current** -- a direct, visible self-contradiction in
+// the same file, for as long as nothing asserted the two must agree.
+test('SECURITY.md header version and its Supported Versions table agree on which major is Current', () => {
+  const content = readText(path.join(ROOT, 'SECURITY.md'));
+
+  const headerMatch = content.match(/^> \*\*Current version:\*\* (\d+)\.\d+\.\d+/m);
+  assert.ok(headerMatch, 'SECURITY.md must have a "> **Current version:** X.Y.Z" header line');
+  const headerMajor = headerMatch[1];
+
+  const currentRows = [...content.matchAll(/\|\s*(\d+)\.x\s*\|\s*\*\*Current\*\*\s*\|/g)];
+  const foundMajors = currentRows.map(m => m[1]).join(', ');
+  assert.strictEqual(currentRows.length, 1,
+    `SECURITY.md's Supported Versions table must mark exactly one major as Current, found ${currentRows.length}: ${foundMajors}`);
+  const tableMajor = currentRows[0][1];
+
+  assert.strictEqual(tableMajor, headerMajor,
+    `SECURITY.md's header says the current version is ${headerMajor}.x, but its Supported Versions table marks ${tableMajor}.x as Current instead -- these describe the same fact and must agree. The header is auto-synced by scripts/sync-version.js on every bump; the table is not (it is a hand-maintained support-lifecycle policy, not a version substitution) and must be moved by hand whenever the major version changes.`);
+});
+
 // -- .planning/STATE.md and HANDOFF.json must not silently rot ---------------------
 //
 // THE DEFECT these three tests replace: STATE.md and HANDOFF.json went 37 days and ~85 PRs stale
