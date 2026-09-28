@@ -6,12 +6,12 @@
 
 | Version | Status | Support Level |
 |---------|--------|---------------|
-| 11.x | **Current** | Full security and feature updates |
-| 10.x | Maintenance | Critical security patches only (until 2026-11-30) |
-| 9.x | End of Life | No further updates |
-| 8.x and below | End of Life | No further updates |
+| 12.x | **Current** | Full security and feature updates |
+| 11.x | Maintenance | Critical security patches only (until 2027-03-31) |
+| 10.x | End of Life | No further updates |
+| 9.x and below | End of Life | No further updates |
 
-We recommend all users upgrade to the latest 11.x release. Security patches for 10.x will be provided for critical vulnerabilities only, on a best-effort basis, until November 2026.
+We recommend all users upgrade to the latest 12.x release. Security patches for 11.x will be provided for critical vulnerabilities only, on a best-effort basis, until March 2027.
 
 ---
 
