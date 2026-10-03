@@ -135,3 +135,9 @@ ruvector.db
 # agents' in-progress code. eslint flat config does not read .gitignore, and eslint.config.mjs is
 # protected against agent edits by design, so excluding it there is a human decision.
 .claude/worktrees/
+
+# Antigravity installs write namespace-prefixed workflow files such as mindforge:help.md. A colon is not
+# a legal file name character on Windows, and Anthropic's plugin directory stops validating a repository
+# that contains one, so an install into this checkout must never be committed.
+# See tests/tracked-paths-portable.test.js.
+.agent/workflows/*:*

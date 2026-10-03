@@ -26,8 +26,9 @@
  * explains why it should not.
  *
  * Fixtures live under the repo root because the dispatcher's traversal guard rejects anything
- * outside it — a constraint one of the cases below asserts directly. The directory is named
- * `tmp-*` so tests/run-all.js prunes it if a crash ever leaves it behind.
+ * outside it — a constraint one of the cases below asserts directly. The directories are named
+ * `tmp-hookfx-*` so they read as scratch. Nothing prunes them: a kill between mkdtemp and the
+ * `finally` leaves one in the repo root, where `git status` shows it. Delete it by hand.
  */
 'use strict';
 
@@ -389,6 +390,132 @@ test('a LEGITIMATE root reached via a symlink is still accepted', () => {
       `a symlink to the REAL root must be accepted, not rejected. stderr: ${String(r.stderr || '').slice(0, 200)}`);
     assert.strictEqual(r.status, 2, 'and the real gate must run and deny');
   } finally { try { fs.unlinkSync(link); } catch { /* already gone */ } }
+});
+
+// ── The shape hooks.json actually produces: an ABSOLUTE script path carrying the symlink ────────
+//
+// THE DEFECT. hooks.json registers `node ".../run-with-flags.js" trust-gate "${CLAUDE_PLUGIN_ROOT}/scripts/..."`
+// and Claude Code expands the variable BEFORE the dispatcher starts, so the script argument is an
+// absolute path spelled with whatever route the plugin root was reached by. The dispatcher resolved the
+// ROOT with realpath but left the SCRIPT path lexical, so when that route contained a symlink (a
+// symlinked ~/.claude, a dotfiles-managed config dir, macOS /tmp -> /private/tmp) the prefix check
+// `scriptPath.startsWith(root + sep)` failed. For the deny-class hooks that is a fail-CLOSED block, so
+// trust-gate, block-no-verify and config-protection each refused EVERY call, including `echo hello`,
+// with "script path escapes the install root". The test above passes a RELATIVE script path, which
+// resolves under the already-canonical root, so it never exercised this.
+//
+// THE OTHER DIRECTION. Comparing real paths on both sides also closes the mirror-image hole: a symlink
+// INSIDE the root that points OUTSIDE it passed the lexical check and executed the outside file with the
+// gate's authority. The last test here pins that.
+
+// The alias MUST live OUTSIDE the install root. An alias inside it (REPO_ROOT/alias -> REPO_ROOT) still
+// starts with the root's own path, so the old lexical prefix check passes and the test proves nothing;
+// the first draft of these tests did exactly that and stayed green against the unfixed dispatcher.
+function withRootAlias(fn) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-alias-'));
+  const link = path.join(dir, 'root');
+  try {
+    // A TMPDIR inside the checkout (common in sandboxed runs) would put the alias under the root, where
+    // the old lexical check accepts it and these tests go green on the buggy code. Fail loudly instead.
+    for (const p of [dir, fs.realpathSync(dir)]) {
+      assert.ok(!(p + path.sep).startsWith(REPO_ROOT + path.sep),
+        `the alias directory ${p} is inside the install root ${REPO_ROOT}; set TMPDIR outside the checkout`);
+    }
+    fs.symlinkSync(REPO_ROOT, link, 'dir');
+    return fn(link);
+  } finally {
+    try { fs.unlinkSync(link); } catch { /* already gone */ }
+    try { fs.rmdirSync(dir); } catch { /* already gone */ }
+  }
+}
+
+const GATE_REL = path.join('bin', 'security', 'trust-gate-hook.js');
+
+test('an ABSOLUTE script path through a symlinked root runs the real gate and ALLOWS a benign command', () => {
+  withRootAlias((link) => {
+    const r = spawnSync(process.execPath, [DISPATCHER, 'trust-gate', path.join(link, GATE_REL), PROFILES],
+      { cwd: REPO_ROOT, input: PAYLOAD, encoding: 'utf8', env: { ...process.env, CLAUDE_PLUGIN_ROOT: link } });
+    assert.doesNotMatch(String(r.stderr), /escapes the install root/,
+      `a legitimate script reached through a symlink must not be treated as an escape. stderr: ${String(r.stderr).slice(0, 240)}`);
+    assert.strictEqual(r.status, 0, 'a benign command must be allowed by the real gate');
+  });
+});
+
+test('an ABSOLUTE script path through a symlinked root still DENIES a dangerous command, by the gate itself', () => {
+  withRootAlias((link) => {
+    const r = spawnSync(process.execPath, [DISPATCHER, 'trust-gate', path.join(link, GATE_REL), PROFILES],
+      { cwd: REPO_ROOT, input: payloadFor(DANGEROUS_CMD), encoding: 'utf8', env: { ...process.env, CLAUDE_PLUGIN_ROOT: link } });
+    assert.strictEqual(r.status, 2, 'the real gate must deny');
+    assert.match(String(r.stdout), /"decision":\s*"block"[\s\S]*TrustGate/,
+      `the verdict must be the gate's own block decision. stdout: ${String(r.stdout).slice(0, 240)}`);
+    assert.doesNotMatch(String(r.stderr), /escapes the install root|could not run/,
+      `the denial must come from the gate, not from the dispatcher failing closed. stderr: ${String(r.stderr).slice(0, 240)}`);
+  });
+});
+
+test('an ABSOLUTE script path through a symlink works without CLAUDE_PLUGIN_ROOT too (derived root)', () => {
+  withRootAlias((link) => {
+    const env = { ...process.env };
+    delete env.CLAUDE_PLUGIN_ROOT;
+    const r = spawnSync(process.execPath, [DISPATCHER, 'trust-gate', path.join(link, GATE_REL), PROFILES],
+      { cwd: REPO_ROOT, input: PAYLOAD, encoding: 'utf8', env });
+    assert.doesNotMatch(String(r.stderr), /escapes the install root/, `stderr: ${String(r.stderr).slice(0, 240)}`);
+    assert.strictEqual(r.status, 0);
+  });
+});
+
+test('a symlink INSIDE the root that points OUTSIDE it cannot smuggle a script in', () => {
+  let outside;
+  let inside;
+  try {
+    outside = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mf-outside-')));
+    inside = fs.mkdtempSync(path.join(REPO_ROOT, 'tmp-hookfx-'));
+    const marker = path.join(outside, 'ran');
+    // A stub that would APPROVE and leave evidence that it ran.
+    fs.writeFileSync(path.join(outside, 'stub.js'),
+      `require('fs').writeFileSync(${JSON.stringify(marker)}, 'x'); process.exit(0);`);
+    fs.symlinkSync(path.join(outside, 'stub.js'), path.join(inside, 'hook.js'));
+    const rel = path.relative(REPO_ROOT, path.join(inside, 'hook.js')).split(path.sep).join('/');
+    const r = dispatch(DENY_HOOK, rel);
+    assert.ok(!fs.existsSync(marker), 'the script outside the install root must NOT have been executed');
+    assert.strictEqual(r.status, 2, 'a deny-class hook must fail closed on an escape');
+    assert.match(r.stderr, /escapes the install root/);
+    assert.match(r.stderr, /symlink/, 'the message must say a symlink leaving the root is the cause');
+  } finally {
+    if (inside) fs.rmSync(inside, { recursive: true, force: true });
+    if (outside) fs.rmSync(outside, { recursive: true, force: true });
+  }
+});
+
+// If realpath cannot resolve the SCRIPT, a deny-class hook must fail closed. It used to fall back to
+// the unresolved path for the containment check, which lets a symlink carry the file outside the root
+// whenever resolution fails at check time and succeeds at run time (measured: 7 of 250 attempts in a
+// race against a dangling in-root symlink). A race cannot be made deterministic, so this simulates the
+// lost race directly: realpathSync throws for the hook script even though the file is right there and
+// is an ALLOW stub inside the root. The old dispatcher ran it and exited 0; the fixed one exits 2.
+test('when realpath cannot resolve the script, a deny-class hook fails closed instead of comparing the unresolved path', () => {
+  let inside;
+  try {
+    inside = fs.mkdtempSync(path.join(REPO_ROOT, 'tmp-hookfx-'));
+    fs.writeFileSync(path.join(inside, 'hook.js'), 'process.exit(0);');
+    const preload = path.join(inside, 'preload.js');
+    fs.writeFileSync(preload, [
+      'const fs = require(\'fs\');',
+      'const real = fs.realpathSync;',
+      'fs.realpathSync = Object.assign(function patched(p, ...rest) {',
+      '  if (String(p).endsWith(\'hook.js\')) { const e = new Error(\'EACCES: simulated\'); e.code = \'EACCES\'; throw e; }',
+      '  return real.call(this, p, ...rest);',
+      '}, real);',
+    ].join('\n'));
+    const rel = path.relative(REPO_ROOT, path.join(inside, 'hook.js')).split(path.sep).join('/');
+    const r = spawnSync(process.execPath, ['-r', preload, DISPATCHER, DENY_HOOK, rel, PROFILES],
+      { cwd: REPO_ROOT, input: PAYLOAD, encoding: 'utf8', env: process.env });
+    assert.strictEqual(r.status, 2,
+      `an unresolvable script must block a deny-class hook, got ${r.status}. stderr: ${String(r.stderr).slice(0, 240)}`);
+    assert.match(String(r.stderr), /could not be resolved/);
+  } finally {
+    if (inside) fs.rmSync(inside, { recursive: true, force: true });
+  }
 });
 
 test('the LEGITIMATE derived root is still honoured', () => {
