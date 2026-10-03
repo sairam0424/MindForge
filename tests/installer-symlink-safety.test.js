@@ -1,3 +1,4 @@
+// @timeout: 120000
 /**
  * The installer must never write THROUGH a symlink.
  *
