@@ -49,13 +49,15 @@
  * rewriting only the first:
  *   - The dispatcher argument, "$CLAUDE_PROJECT_DIR/.claude/hooks/run-with-flags.js", is absolute at
  *     runtime.
- *   - The 2nd positional argument is NOT resolved against cwd. run-with-flags.js:264 does
+ *   - The 2nd positional argument is NOT resolved against cwd. The dispatcher does
  *     path.resolve(hookRoot, relScriptPath) with hookRoot = path.resolve(__dirname,'..','..'), which
  *     for the installed dispatcher at <project>/.claude/hooks/ is exactly <project>. So it is
- *     project-relative and cwd-independent. It must ALSO stay inside hookRoot or :269 rejects it —
- *     which is why an absolute 2nd argument is not merely unnecessary but actively fatal: built from
- *     process.cwd() it is not realpath'd, so any symlinked ancestor mismatches and every deny-class
- *     hook returns exit 2 on every Write/Edit/Bash. A bricked harness, worse than no config.
+ *     project-relative and cwd-independent, and that is why the installer writes it that way.
+ *     The dispatcher then resolves the script with realpath and requires the REAL path to stay inside
+ *     the real hookRoot. An absolute 2nd argument is therefore tolerated when it resolves inside
+ *     hookRoot, including through a symlinked ancestor, but it adds nothing and ties the command to
+ *     wherever it was built from. A script that is itself a symlink leaving hookRoot is rejected, and
+ *     every deny-class hook then returns exit 2 on every Write/Edit/Bash.
  * Both are derived from HOOK_ROOT by commandFor(). No regex ever touches a rendered command.
  */
 
