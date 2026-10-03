@@ -177,14 +177,20 @@ function candidateRoots() {
 }
 
 /**
- * realpath if the path exists, plain resolve otherwise.
+ * realpath if the path exists, plain resolve otherwise. For comparing ROOTS only.
  *
- * This exists to prevent FALSE REJECTIONS, not to block an attack — a correction to my first
- * reading of it. An unrelated directory is rejected by the candidate comparison whether or not it
- * is a symlink, because its resolved path is not a candidate either way. What realpath buys is the
- * converse: a LEGITIMATE root reached by an equivalent path still matches. That happens routinely —
- * a symlinked checkout, or macOS reporting /tmp/x while process paths resolve to /private/tmp/x.
- * Comparing unresolved strings would reject those and silently fall back to the derived root.
+ * For a root this prevents FALSE REJECTIONS. An unrelated directory is rejected by the candidate
+ * comparison whether or not it is a symlink, because its resolved path is not a candidate either way.
+ * What realpath buys is the converse: a LEGITIMATE root reached by an equivalent path still matches.
+ * That happens routinely — a symlinked checkout, or macOS reporting /tmp/x while process paths resolve
+ * to /private/tmp/x. Comparing unresolved strings would reject those and silently fall back to the
+ * derived root. The containment guard in main() also relies on the root being real, so that a REAL
+ * script path can be compared with it.
+ *
+ * Do not use it for the hook SCRIPT path. The plain-resolve fallback is harmless between two roots, but
+ * for the script it would compare an unresolved path exactly when resolution failed, which is when a
+ * symlink can still carry the file outside the root. main() resolves the script with fs.realpathSync and
+ * fails closed if that throws.
  */
 function canonical(p) {
   try { return fs.realpathSync(path.resolve(p)); } catch { return path.resolve(p); }
@@ -268,12 +274,32 @@ async function main() {
   // mirror image: a symlink INSIDE the root that points outside it, which the lexical comparison let
   // through to execute with the gate's authority.
   const resolvedRoot = canonical(hookRoot);
-  const scriptPath = canonical(path.resolve(hookRoot, relScriptPath));
+  const requestedScript = path.resolve(hookRoot, relScriptPath);
+
+  // Resolve the script STRICTLY: if realpath cannot resolve it, fail closed. It must not go through
+  // canonical(), whose fallback is the unresolved path. A path that cannot be resolved at check time can
+  // still be resolved at run time, so comparing the lexical path would let a symlink inside the root
+  // reach a file outside it. Measured against that fallback: a dangling in-root symlink whose outside
+  // target appeared between the check and the require let the outside script run, with the dispatcher
+  // exiting 0, in 7 of 250 attempts.
+  let scriptPath;
+  try {
+    scriptPath = fs.realpathSync(requestedScript);
+  } catch (err) {
+    if (!requestedScript.startsWith(resolvedRoot + path.sep)) {
+      failed(hookId, raw, `script path escapes the install root: ${requestedScript}`);
+    }
+    failed(hookId, raw, err.code === 'ENOENT'
+      ? `script not found at ${requestedScript}`
+      : `script could not be resolved (${err.code || err.message}) at ${requestedScript}`);
+  }
 
   // Prevent path traversal outside the install root. This branch previously printed
   // "Path traversal rejected" and then exited 0 — announcing an attack signal and permitting it.
   if (!scriptPath.startsWith(resolvedRoot + path.sep)) {
-    failed(hookId, raw, `script path escapes the install root: ${scriptPath}`);
+    failed(hookId, raw, `script path escapes the install root: ${scriptPath}` +
+      (scriptPath === requestedScript ? '' :
+        ` (resolved from ${requestedScript}; a symlink that leaves the install root is rejected)`));
   }
 
   if (!fs.existsSync(scriptPath)) {
