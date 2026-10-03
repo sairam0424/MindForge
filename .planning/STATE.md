@@ -55,9 +55,11 @@ reviews caught; this file no longer re-narrates them.
 ## Verification state (measured, not assumed)
 - `tests/` has **145 files** on `main`. Clean full runs by the pre-commit hook: **142 passed / 0 failed
   / 3 skipped / 145 total** on #325's commit; 141/0/3/144 on #326's final commit (that branch predated
-  #325). The combined `main` was run once at machine load ~20: 140 passed, 2 failed, 3 skipped —
+  #325). The combined `main` was first run at machine load ~20: 140 passed, 2 failed, 3 skipped —
   `harness-audit` and `install-module-load` hit the runner's 60 s per-test limit; both pass alone
-  (25/25 and 16/16). There is no clean full run of the exact combined tree yet; expect 142 passed.
+  (25/25 and 16/16). A later run at load ~12, by the pre-commit hook on the commit that wrote this
+  file (`main` at `d5ff25b9` plus these two files, commit `365b6af1`), was **142 passed / 0 failed / 3
+  skipped / 145 total** — that is the clean full run of the combined tree.
 - `npm run lint` → 0 errors (380 warnings tolerated). `node scripts/ci/validate-assets.js` → exit 0.
 - The 3 skips are env-dependent and expected: `browser.test.js` and `browser-daemon-auth-live.test.js`
   (Chromium + display), `sre-integration.test.js` (worktree support + clean tree).
