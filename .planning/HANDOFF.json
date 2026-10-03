@@ -2,42 +2,48 @@
   "_warning": "DO NOT ADD SECRETS OR SENSITIVE DATA TO THIS FILE. IT IS SYNCED ACROSS SESSIONS.",
   "schema_type": "HANDOFF",
   "schema_version": "1.0.0",
-  "current_phase": "verify-punch-list",
-  "phase_description": "Fixing findings from a full /verify sweep against v12.0.0, one at a time: commit → PR → multi-agent review → CI → user go-ahead → merge.",
-  "next_task": "Continue the /verify punch list: next up is the two unsynced memory tiers (JSONL knowledge-store.js vs SQLite vector-hub.js, v9-unified-memory migration never actually run on this checkout, 0 rows in celestial.db's _migrations table). After that: bin/models/model-broker.js dead code with its own hardcoded pricing table (violates the single-pricing-source rule), and a SECURITY.md internal version-table contradiction. See PR #304-#309 descriptions for the fixes already shipped this cycle — there is no separate persisted findings doc.",
-  "current_context": "main is at 1d45230a (PR #309 merged), v12.0.0, GREEN both locally (140 passed / 0 failed / 3 skipped / 143 total, lint 0 errors, validate-assets exit 0) and in CI. Six PRs merged this cycle (#304-#309), each fixing one /verify finding, each reviewed by this repo's own multi-agent workflow before merge. Every one of the six received at least one review-driven follow-up commit — none shipped clean on the first attempt. Two required a full redesign or revert, not just a patch: #306's registry fix was redesigned from existence-checking to recency-capping after review found existsSync() false-positives on unmounted/permission-denied paths would silently drop real projects; #307's broader secret-redaction attempt was reverted (not patched) after review found it could permanently corrupt legitimate snapshot data via a generic high-entropy regex matching ordinary git SHAs/UUIDs. The other four (#304, #305, #308, #309) got a smaller follow-up commit fixing real findings without a full redesign — see each PR's own commit history for specifics, not summarized here since it drifts easily (an earlier revision of this file undercounted this as \"two of six\" and a review caught it). package.json and npm's published latest/stable both read 12.0.0 — no version drift.",
+  "current_phase": "plugin-directory-prep-done",
+  "phase_description": "The /verify punch list (#304-#317) is closed, and the plugin-directory preparation (#321 README, #322 audit fix, #325 colon-named files, #326 dispatcher symlink bug) is merged. Nothing is mid-flight; the plugin resubmission is blocked on a paid claude.ai plan, so next work is a fresh choice.",
+  "next_task": "Nothing is started. In rough priority: (1) plugin resubmission via the claude.ai developer portal, blocked on a paid claude.ai plan the owner cannot take — when unblocked: Submit new, Plugin bundle, paste https://github.com/sairam0424/MindForge/tree/main/plugins/mindforge, click Validate, fix Blocking findings; (2) follow-ups found by the #321 and #326 reviews and not fixed — see decisions_needed and STATE.md; (3) bin/autonomous/AutoRunner is still never constructed outside tests and /mindforge:auto is a markdown spec, which is architectural work; (4) housekeeping: 19 open Dependabot PRs plus Snyk #99, 204 remote branches other than main and develop, and the orphaned .agent/workflows folder.",
+  "current_context": "main is at d5ff25b9 (PR #326 merged), v12.0.0, npm latest and stable both 12.0.0. CI was green on every PR merged this cycle. tests/ has 145 files: clean full runs by the pre-commit hook were 142 passed / 0 failed / 3 skipped on #325 and 141/0/3/144 on #326 (which predated #325). The combined main was first run at machine load about 20 and showed 140 passed, 2 failed, 3 skipped: harness-audit and install-module-load hit the runner's 60 second per-test limit, and both pass alone (25/25 and 16/16). A later run at load about 12, by the pre-commit hook on commit 365b6af1 (main at d5ff25b9 plus these two files), was 142 passed / 0 failed / 3 skipped / 145 total, which is the clean full run of the combined tree. The suite is load-sensitive: above load ~10 installer and harness tests time out and the Husky pre-commit hook rejects a sound commit, so wait for uptime below ~5 instead of bypassing the hook. This cycle's work: #321 added a generated plugins/mindforge/README.md (from scripts/plugin-readme.template.md via scripts/build-mindforge-plugin.js) that the Anthropic plugin directory requires, after a 42-finding multi-agent review showed the first draft overclaimed; #322 cleared the required Security Scan check (new advisories in mcp-server dependencies fast-uri, hono, ip-address) and rebuilt the bundled MCP server; #325 stopped tracking 73 colon-named files under .agent/workflows that Windows cannot check out; #326 fixed the hook dispatcher failing closed on every call when the plugin root is reached through a symlink and closed an in-root-symlink escape, after a 15-finding review that found a race in the first version. The 2026-09-24 Console submission was Rejected (its path field was a dot instead of plugins/mindforge) and the Console form is retired. main requires six status checks through rulesets; an admin break-glass bypass exists and was not used.",
   "context_refs": [
-    "gh pr list --state merged --limit 10 — fastest way to reconstruct this cycle's context; PR bodies for #304-#309 each document one finding's full fix arc, including every follow-up commit and why it happened.",
-    ".planning/STATE.md — narrative summary of the same cycle, written alongside this file.",
+    "gh pr list --state merged --limit 30 — fastest way to reconstruct the cycle; PR bodies for #304-#317 each document one finding's fix arc, and #321 and #326 hold the two large reviews, including the findings left open.",
+    ".planning/STATE.md — narrative summary of the same state, written alongside this file.",
     "CLAUDE.md lines 53-57 — the version-bump contract: 16 channels over 15 files, PLUS the two build artifacts and their 3-command chain.",
-    "docs/research/2026-08-v12-upgrade-report.md — DEL-02 is the source of the headless.js honest-failure decision (PR #308)."
+    "docs/research/2026-08-v12-upgrade-report.md — DEL-02 is the source of the headless.js honest-failure decision (PR #308).",
+    "Anthropic plugin pre-submission checklist: claude.com/docs/plugins/pre-submission-checklist — the rules the portal's Validate button applies."
   ],
   "blockers": [],
   "decisions_needed": [
-    "Whether to re-sync .claude/worktrees/release-v12.0.1 (now 19 commits behind main) or abandon it for a fresh release cut when v12.0.1 is actually ready to ship. Not resolved this update.",
-    "Whether the develop → release → main three-branch flow this file used to describe is still intended policy: every PR in the current cycle (#304-#309) merged directly to main, and develop has drifted to 52 commits behind / 10 ahead. Not confirmed as a deliberate change — flagging so it isn't assumed either way.",
-    "Carried over from 2026-08-21, status NOT re-verified this update (out of scope for a staleness fix — do not trust these as current without re-checking): D5 plugin asset contract, D6 whether the SDK is published with provenance, D7 what exit code `verify` should use when every stage skips, D8 whether .planning/VERIFICATION.md should be tracked, D9 whether to governance-gate the release path, and whether a --global install should carry bin/ at all.",
-    "HANDOFF.json field mismatch (found 2026-08-21) — PARTLY FIXED this update: bin/autonomous/state-manager.js's writeHandoff() now writes both `last_updated` and `updated_at`, so .claude/commands/mindforge/next.md's freshness gate on `updated_at` will actually see a value once this function has a real caller. It still has zero callers anywhere in the repo (confirmed via grep) — wiring it up is unresolved, separate work."
+    "Plugin resubmission needs a paid claude.ai plan (Pro, Max, Team or Enterprise; free accounts cannot submit). The owner said they cannot take Pro. Options: apply to the Claude for Open Source program (MindForge is below every stated threshold, so only its apply-anyway clause fits), have a collaborator with a paid plan and push access submit, or skip the directory — the repo's own marketplace already works. Which to pursue is the owner's call.",
+    "What to say about /mindforge:auto in any public directory description: the plugin README deliberately does not mention it, because the engine behind it (AutoRunner) is not wired up and the word stuck-detection may overstate it. Not answered.",
+    "Whether to re-sync .claude/worktrees/release-v12.0.1 (now 56 commits behind main and 2 ahead, up from 19 behind) or abandon it for a fresh release cut when v12.0.1 is actually ready to ship.",
+    "Whether the develop → release → main three-branch flow is still intended policy: every PR this cycle merged directly to main, and develop is now 89 commits behind and 10 ahead (it was 52 behind). Not confirmed as a deliberate change.",
+    "Whether to remove the orphaned .agent/workflows folder (57 dash-named files; nothing reads it and the npm package does not ship it). #325 only untracked the 73 colon-named files.",
+    "Follow-ups found by the #321 and #326 reviews and not fixed: mindforge-config-protection matches protected names by basename without resolving symlinks, so a symlink alias to tsconfig.json is not protected; a project whose .claude directory is a symlink to a differently named directory derives the wrong hook root and fails closed; hooks.json timeouts are in milliseconds but Claude Code reads seconds; mindforge-context-monitor and the update check are inert in a plugin-only install and instinct-capture may not fire on real payloads; about 16 skills are written for the Hermes runtime and five GitHub skills scrape ~/.git-credentials and .env; validatePath in .agent/bin/lib/security.cjs mixes canonical and lexical paths (latent).",
+    "Carried over from 2026-08-21, status NOT re-verified (do not trust these as current without re-checking): D5 plugin asset contract, D6 whether the SDK is published with provenance, D7 what exit code `verify` should use when every stage skips, D8 whether .planning/VERIFICATION.md should be tracked, D9 whether to governance-gate the release path, and whether a --global install should carry bin/ at all.",
+    "HANDOFF.json field mismatch (found 2026-08-21), still open: bin/autonomous/state-manager.js's writeHandoff() writes both last_updated and updated_at (fixed in #312), but it still has zero real callers anywhere in the repo (re-confirmed via grep for `writeHandoff(` outside its own definition and export)."
   ],
   "recent_commits": [
-    "1d45230a Merge #309 fix/fabricated-agency-skills",
-    "92338c6b Merge #308 fix/headless-honest-failure",
-    "21a09112 Merge #307 fix/browser-daemon-log-secret-residue",
-    "8d7f55fb Merge #306 fix/registry-unbounded-growth",
-    "9cc274d0 Merge #305 fix/command-count-breakdown",
-    "ef057b5f Merge #304 fix/claude-md-backup-heuristic",
-    "16f5280f Merge #303 fix/verify-loop-cli-and-skill-findings"
+    "d5ff25b9 Merge #326 fix/dispatcher-symlinked-root",
+    "14f75bf5 Merge #325 fix/untrack-colon-named-workflows",
+    "7dca0127 Merge #321 feat/plugin-readme-for-directory",
+    "2a1d8a9b Merge #322 fix/mcp-server-audit-advisories",
+    "ce0a58d1 Merge #317 fix/migrate-allMigrations-gap",
+    "9f348296 Merge #316 fix/bedrock-model-id-pricing-gap",
+    "6a90fe7d Merge #315 fix/duplicate-migration-export",
+    "9664b7cd Merge #314 fix/security-md-version-table-contradiction"
   ],
   "recent_files": [
-    "bin/installer-core.js — CLAUDE.md backup content-comparison, command-count namespace breakdown, registry recency cap",
-    "bin/engine/temporal-hub.js — captureState() excludes .log from captured extensions",
-    "bin/autonomous/headless.js — require.main guard, refuses to report success with no task executor",
-    ".github/workflows/execution-plane.yml, mindforge-autonomous.yml — contained headless.js fix's CI blast radius",
-    "docs/registry/SKILLS.md, .mindforge/org/skills/MANIFEST.md, .mindforge/personas/swarm-templates.json — fabricated agency-* skill references replaced with real ones",
-    "bin/autonomous/state-manager.js — writeHandoff() now writes both last_updated and updated_at",
-    "tests/no-home-leak.test.js, tests/temporal-vision.test.js, tests/autonomous.test.js, tests/skills-platform.test.js, tests/version-consistency.test.js — regression coverage for each fix above"
+    "scripts/plugin-readme.template.md, scripts/build-mindforge-plugin.js, plugins/mindforge/README.md — the plugin README is generated from the template; tests/plugin-packaging.test.js checks it byte for byte and that every hook id and MCP tool is documented and that no shipped hook script gains an undisclosed network call",
+    ".agent/hooks/run-with-flags.js (and its generated copy plugins/mindforge/scripts/run-with-flags.js) — the script path is resolved strictly with realpath and compared with the real root; fails closed if realpath throws",
+    "bin/installer/hook-registration.js — comment corrected; tests/hook-dispatcher-failclosed.test.js — 5 new tests for the symlink cases",
+    "mcp-server/package-lock.json, plugins/mindforge/mcp/dist/index.js — fast-uri, hono and ip-address updated and the bundle rebuilt",
+    ".gitignore, tests/tracked-paths-portable.test.js — colon-named workflow files ignored, and every tracked path checked for Windows-illegal names",
+    "tests/installer-symlink-safety.test.js — 120 second timeout header",
+    "CLAUDE.md, AGENTS.md, docs/faq.md — test-file counts bumped to 145 files / 142 passing; CLAUDE.md no longer claims ~130 live workflow pipelines"
   ],
   "handoffs": [],
-  "last_updated": "2026-09-27T18:32:22Z",
-  "updated_at": "2026-09-27T18:32:22Z"
+  "last_updated": "2026-10-03T19:36:51Z",
+  "updated_at": "2026-10-03T19:36:51Z"
 }

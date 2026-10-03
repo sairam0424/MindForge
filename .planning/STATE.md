@@ -1,8 +1,9 @@
 # MindForge — Project State
 
 ## Status
-🟢 Active — `main` at `1d45230a` (PR #309 merged), GREEN (local suite + CI). npm `latest` = 12.0.0,
-`stable` = 12.0.0 (both current, no drift).
+🟢 Active — `main` at `d5ff25b9` (PR #326 merged). npm `latest` = 12.0.0, `stable` = 12.0.0 (both
+current, no drift). CI green on every PR merged this cycle. Nothing of mine is open except this
+refresh; the open PR list is otherwise Dependabot and Snyk (see "Next action").
 
 ## IMPORTANT
 HANDOFF.json is committed to git. Never write secrets or credentials into it.
@@ -15,57 +16,94 @@ here is safe, and that separation must not be collapsed.
 ## Current version
 v12.0.0 published and matches `package.json`. No release is in flight right now.
 
-**Known drift, tracked separately, not fixed by this update:** a `release/v12.0.1` worktree
-(`.claude/worktrees/release-v12.0.1`) exists but is now 19 commits behind `main` and only 2 ahead —
-it predates PRs #304–#309 entirely. Whether to re-sync it or abandon it in favor of a fresh release
-cut is an open decision, not resolved here.
+**Known drift, tracked separately, not fixed:** the `release/v12.0.1` worktree
+(`.claude/worktrees/release-v12.0.1`) is 56 commits behind `main` and 2 ahead (it was 19 behind on
+2026-09-27). The `develop` branch is 89 commits behind `main` and 10 ahead (it was 52 behind). Whether
+to re-sync, abandon or cut a fresh release is an open decision, not resolved here.
 
 ## Current phase
-Working a punch list of findings from a full `/verify` sweep (run against v12.0.0), fixing one at a
-time with commit → PR → multi-agent review → CI → explicit user go-ahead → merge for each. Shipped
-so far: #304 (CLAUDE.md backup heuristic dropped user content), #305 (command-count display
-ambiguity), #306 (registry.json unbounded growth — redesigned after review caught a false-positive
-existence-check class), #307 (stale secret residue in temporal snapshots — a broader "add
-content-level redaction" attempt was reverted after review found it risked corrupting legitimate
-data; kept to the narrow, correct fix), #308 (`headless.js` silently reported success for autonomous
-work that never ran — now fails loudly per this repo's own DEL-02 decision; a second commit
-contained the fix's CI blast radius after review caught it broke the on-every-push pipeline check),
-#309 (22 fabricated `agency-*` skill references across the skill registry, replaced with real
-skills; a follow-up commit fixed two thematic-fit misses the review caught in the replacements
-themselves).
+Two pieces of work finished in a row; nothing is mid-flight.
 
-Remaining, not yet started: two unsynced memory tiers (JSONL vs SQLite, migration never ran), dead
-code in `bin/models/model-broker.js` violating the single-pricing-source rule, and a `SECURITY.md`
-internal version contradiction.
+**1. The `/verify` punch list (#304–#317) is closed.** Every finding was fixed, reviewed and merged.
+`gh pr list --state merged --limit 30` and the PR bodies hold each fix's full arc, including what the
+reviews caught; this file no longer re-narrates them.
+
+**2. Making the Claude Code plugin submittable to Anthropic's plugin directory (2026-10-03, UTC).**
+- **The submission itself:** the 2026-09-24 Console submission is **Rejected** — its path field was `.`
+  instead of `plugins/mindforge`. The Console form has since been retired ("Plugin submissions have moved
+  to claude.ai"). Resubmitting means the claude.ai developer portal (`claude.ai/directory/manage`), which
+  requires a **paid claude.ai plan** (Pro, Max, Team or Enterprise; free accounts cannot submit). The
+  owner said they cannot take Pro. Alternatives checked: the "Claude for Open Source" program (MindForge
+  is below every stated threshold, so only its "apply anyway" clause fits), a collaborator with a paid
+  plan and push access, or skip the directory — the repo's own marketplace already works
+  (`/plugin marketplace add sairam0424/MindForge`).
+- **#321** added a generated `plugins/mindforge/README.md` (the directory blocks a plugin without one
+  and shows it as the listing). It comes from `scripts/plugin-readme.template.md` through
+  `scripts/build-mindforge-plugin.js`, with 6 tests. A multi-agent review found the first draft
+  overclaimed; it was rewritten and the claims it makes are enforced by tests (including a scan that
+  fails if a shipped hook script gains an undisclosed network call or subprocess).
+- **#322** cleared the required `Security Scan` check (new advisories in `mcp-server`'s dependencies:
+  `fast-uri` high, `hono` and `ip-address` moderate) and rebuilt the bundled MCP server.
+- **#325** stopped tracking 73 colon-named files under `.agent/workflows/` (Antigravity install output
+  committed in March and orphaned) that Windows cannot check out and that the directory's file-name
+  check could stop on. `tests/tracked-paths-portable.test.js` now checks every tracked path.
+- **#326** fixed the hook dispatcher failing closed on every call when the plugin root is reached
+  through a symlink, and closed a related hole (an in-root symlink to an outside file executing with
+  the gate's authority). A review found a race in the first version; the script is now resolved strictly.
+  **Behavior change:** a hook script that is itself a symlink leaving the install root now fails closed.
 
 ## Verification state (measured, not assumed)
-On `main` @ `1d45230a`:
-
-- `node tests/run-all.js` → **140 passed / 0 failed / 3 skipped / 143 total**
-- `npm run lint` → **0 errors**, 380 warnings (tolerated by the project's own contract)
-- `node scripts/ci/validate-assets.js` → exit **0**
-- The 3 skips are env-dependent and expected: `browser.test.js` and
-  `browser-daemon-auth-live.test.js` (Chromium + display), `sre-integration.test.js` (worktree
-  support + clean tree)
-- Remote CI agrees: every PR in the #304–#309 run landed with all real checks green (Trelix, a
-  third-party review app, posts inconsistently — sometimes late, occasionally not at all for a given
-  commit; absence is not treated as failure, but its claims are independently verified before acting
-  on them, since it has produced confirmed false `[failure]`-level claims multiple times this cycle).
-
-**One observation worth a deliberate decision, not acted on here:** every PR this cycle (#304–#309)
-merged directly to `main`. The `develop` branch still exists but has drifted to 52 commits behind
-`main` / only 10 ahead. Whether the three-branch `develop → release → main` flow described in this
-file's older revisions is still the intended policy, or whether direct-to-`main` is now the real
-practice, is not confirmed either way — flagging so the next session doesn't assume the old flow is
-still followed just because this file used to describe it.
+- `tests/` has **145 files** on `main`. Clean full runs by the pre-commit hook: **142 passed / 0 failed
+  / 3 skipped / 145 total** on #325's commit; 141/0/3/144 on #326's final commit (that branch predated
+  #325). The combined `main` was first run at machine load ~20: 140 passed, 2 failed, 3 skipped —
+  `harness-audit` and `install-module-load` hit the runner's 60 s per-test limit; both pass alone
+  (25/25 and 16/16). A later run at load ~12, by the pre-commit hook on the commit that wrote this
+  file (`main` at `d5ff25b9` plus these two files, commit `365b6af1`), was **142 passed / 0 failed / 3
+  skipped / 145 total** — that is the clean full run of the combined tree.
+- `npm run lint` → 0 errors (380 warnings tolerated). `node scripts/ci/validate-assets.js` → exit 0.
+- The 3 skips are env-dependent and expected: `browser.test.js` and `browser-daemon-auth-live.test.js`
+  (Chromium + display), `sre-integration.test.js` (worktree support + clean tree).
+- **The suite is load-sensitive.** The runner caps each test at 60 s unless its first line says
+  `// @timeout: <ms>`, and the Husky pre-commit hook runs the whole suite. At machine load above about
+  10 (other Claude sessions, trelix jobs) installer and harness tests time out and a commit is
+  rejected although nothing is wrong. Check `uptime` and wait for load below about 5 rather than
+  bypass the hook. `installer-symlink-safety` now has a 120 s limit.
+- `main` is protected by rulesets requiring six checks (Code Quality Gates, Health Check 20.x, Security
+  Scan, Change Classification, Governance Enforcement, gitleaks). An admin break-glass bypass exists;
+  it has not been used. `Security Scan` runs `npm audit --omit=dev --audit-level=high` in the root,
+  `sdk/` and `mcp-server/`, so a newly published advisory turns every open PR red with no code change.
 
 ## Last completed task
-Merged PR #309 (fabricated skill-registry fix). Standard cleanup done: branch deleted locally and
-remotely, `main` fast-forwarded.
+Merged #325 and #326 (after #321 and #322 earlier the same day). Both were verified head-to-merge
+(the merge commit's second parent equals the tested head), their branches deleted locally and on
+origin, and the two were checked against each other with `git merge-tree` before merging.
 
 ## Next action
-Continue the `/verify` punch list: two unsynced memory tiers next, per user instruction to proceed
-end-to-end through the remaining findings.
+Open, in rough priority. None is started.
+
+1. **Plugin resubmission** — blocked on a paid claude.ai plan (above), not on code. When unblocked:
+   open `claude.ai/directory/manage`, Submit new → Plugin bundle, paste
+   `https://github.com/sairam0424/MindForge/tree/main/plugins/mindforge`, click **Validate**, fix any
+   Blocking finding, then submit. Expect reviewer *holds* (not rejections): 542 files (limit 512), the
+   bundled `mcp/dist/index.js` at about 773 KiB (limit 256 KiB), and hook scripts that chain into others.
+2. **Follow-ups found by the #321 and #326 reviews, not fixed:**
+   - `mindforge-config-protection` matches protected names by basename without resolving symlinks, so a
+     symlink alias to `tsconfig.json` or an ESLint config is not protected.
+   - A project whose `.claude` directory is a symlink to a differently named directory derives the wrong
+     hook root and fails closed (unchanged from before #326).
+   - `hooks.json` timeouts are written in milliseconds; Claude Code reads seconds.
+   - In a plugin-only install `mindforge-context-monitor` and the update check are inert (they depend on
+     a statusline the plugin does not register), and `instinct-capture` may not fire on real payloads.
+   - About 16 skills are written for another product's runtime (Hermes), and five GitHub skills scrape
+     `~/.git-credentials` and `.env`; both can draw a human-reviewer hold.
+   - `.agent/bin/lib/security.cjs` `validatePath` mixes canonical and lexical paths (latent, no caller
+     is exploitable).
+3. **`bin/autonomous/AutoRunner`** is still never constructed outside tests (its only `new AutoRunner(`
+   mention in `headless.js` is a comment saying so); `/mindforge:auto` is an LLM-interpreted markdown
+   spec. Architectural work, and the wording of any public claim about it is an open decision.
+4. **Housekeeping:** 19 open Dependabot PRs and a Snyk PR (#99), none reviewed in this cycle;
+   204 remote branches other than `main` and `develop`; the orphaned `.agent/workflows/` folder (57
+   dash-named files that nothing reads).
 
 ## Decisions made
 - Version bumps: `package.json` is canonical; **16 channels over 15 files** are derived. Never bump by
@@ -79,31 +117,39 @@ end-to-end through the remaining findings.
 - `.planning/` templates ship from `examples/starter-project/.planning`, never the repo's own live
   `.planning/`. Guarded by `tests/packaging-allowlist.test.js`.
 - npm `files[]` overrides `.npmignore`: runtime state must be NEGATED inside `files[]`.
-- Multi-agent PR review (this cycle's pattern): 3-dimension parallel review (correctness/security/
-  consistency) + adversarial verify pass per finding, before asking the user for a merge go-ahead.
-  Every one of #304-#309 got at least one review-driven follow-up commit — none shipped clean on
-  the first attempt. Most were smaller fixes for real-but-not-fundamental findings. Two needed more
-  than a patch: when a review finds a fundamental flaw (not just a nit), redesign properly or revert
-  to the narrower correct scope — do not patch around it under time pressure. That full-redesign-or-
-  revert bar was hit twice this cycle (#306's existence-check redesign, #307's reverted redaction
-  attempt); the other four's follow-ups were ordinary fixes, not redesigns.
+- `plugins/mindforge/` is **generated** by `scripts/build-mindforge-plugin.js` and a CI step fails on any
+  drift. Its README comes from `scripts/plugin-readme.template.md`: edit the template, never the
+  generated file. The version is deliberately left out of the README so a bump needs no extra rebuild.
+- Tracked paths must be valid on Windows and macOS (no colon, trailing dot or space, device names, or
+  case-only collisions), enforced by `tests/tracked-paths-portable.test.js`; `.gitignore` excludes
+  `.agent/workflows/*:*` so an Antigravity install into this checkout cannot be committed.
+- Multi-agent PR review: parallel dimension reviewers plus two skeptics per finding (one tries to
+  reproduce it, one tries to refute it), before asking the owner for a merge go-ahead. Expect every
+  change to get at least one review-driven follow-up, and expect reviewers to catch overclaims in the
+  author's own text — the #321 README and the #326 first fix both did. Redesign or revert when a review
+  finds a fundamental flaw rather than patching around it. "Disputed" usually means "true but
+  pre-existing", so read the skeptics' reasons before discarding one.
+- A new or strengthened test is not trusted until it has been shown to fail against the defect it
+  claims to catch (scratch copy, or revert the fix). Two of this cycle's first-draft tests passed on the
+  unfixed code and would have proved nothing.
+- Merging: the owner approves each merge explicitly. Refresh a PR that is behind `main` with
+  `gh pr update-branch <n>`, wait for the required checks on the new head, confirm the head SHA, merge
+  with `gh pr merge <n> --merge`, then verify the merge commit's second parent is that head.
+- STATE.md/HANDOFF.json staleness: refresh them when a cycle closes, not only when they are old. The
+  60-day test threshold catches severe rot; it does not catch a file that is hours behind.
 
 ## Active blockers
-None release-blocking right now — no release is in flight. The `release/v12.0.1` worktree drift
-(above) is the closest thing to a blocker, but only for cutting that specific release, not for any
-work on `main`.
+None release-blocking right now — no release is in flight. The plugin resubmission is blocked on a
+paid claude.ai plan, which is an account decision, not a code blocker.
 
 ## Context for next session
-This file and `HANDOFF.json` were 37 days stale (last real update 2026-08-21) before this pass —
-`main` had moved ~85 PRs and a major version bump (11.9.2 → 12.0.0) past what they described. If you
-are reading this and it looks similarly out of date again, check `git log -5 --oneline` and
-`package.json`'s version against what is written above before trusting any of it.
+If this looks out of date, check `git log -5 --oneline` and `package.json`'s version against what is
+written here before trusting any of it; `tests/version-consistency.test.js` has 3 regression tests for
+this class of drift, but they only fire past a 60-day threshold.
 
-The full `/verify` findings list and the reasoning behind each fix (including the two reverted/
-redesigned attempts) live only in this session's conversation history and the individual PR
-descriptions for #304–#309 — there is no single persisted findings doc. If continuing this punch
-list in a fresh session, `gh pr list --state merged --limit 10` and reading those PR bodies is the
-fastest way to reconstruct context.
+The reasoning behind each fix lives in the PR bodies: `gh pr list --state merged --limit 30`. For the
+plugin-directory work, #321's body has the full review (42 findings) and #326's the symlink-dispatcher
+review (15 findings), including the ones deliberately left open above.
 
 ## Last updated
-2026-09-27T18:32:22Z
+2026-10-03T19:36:51Z
