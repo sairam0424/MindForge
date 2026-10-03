@@ -367,15 +367,21 @@ function buildManifest(counts) {
 // a plugin that has none (or fewer than 40 words outside code blocks). The README also has to
 // disclose what the plugin runs and fetches. It is generated, not hand-maintained, because its
 // component counts drift the moment a command, agent or skill is added. The prose lives in
-// scripts/plugin-readme.template.md; tests/plugin-packaging.test.js checks that every hook id
-// and MCP tool name is documented there.
-function buildReadme(counts) {
-  const template = fs.readFileSync(path.join(ROOT, 'scripts', 'plugin-readme.template.md'), 'utf8');
+// scripts/plugin-readme.template.md; tests/plugin-packaging.test.js compares the committed README
+// with renderReadme() byte for byte and checks that every hook id and MCP tool name is documented.
+const README_TEMPLATE = path.join(ROOT, 'scripts', 'plugin-readme.template.md');
+
+function renderReadme(counts, template = fs.readFileSync(README_TEMPLATE, 'utf8')) {
   const readme = template.replace(/\{\{(commands|agents|skills)\}\}/g, (_, key) => String(counts[key]));
-  if (/\{\{[a-z]+\}\}/.test(readme)) {
-    throw new Error('plugin-readme.template.md has an unresolved {{placeholder}}');
+  const leftover = readme.match(/\{\{[A-Za-z]+\}\}/);
+  if (leftover) {
+    throw new Error(`plugin-readme.template.md has an unresolved placeholder ${leftover[0]}`);
   }
-  fs.writeFileSync(path.join(PLUGIN, 'README.md'), readme, 'utf8');
+  return readme;
+}
+
+function buildReadme(counts, template) {
+  fs.writeFileSync(path.join(PLUGIN, 'README.md'), renderReadme(counts, template), 'utf8');
 }
 
 // ── Run ──────────────────────────────────────────────────────────────────────
@@ -401,6 +407,10 @@ function build() {
     process.exit(1);
   }
 
+  // Read the README template before the wipe below, for the same reason as the MCP check above: an
+  // unreadable template must not leave the plugin tree with its README already deleted.
+  const readmeTemplate = fs.readFileSync(README_TEMPLATE, 'utf8');
+
   // Rebuild from scratch so deletions in source propagate (no stale files linger). These wipes were
   // at module scope, which is why the require.main guard alone was not enough: importing the module
   // deleted the whole plugin tree and then returned without rebuilding it. Measured — a bare
@@ -419,7 +429,7 @@ function build() {
     hookEvents: buildHooks(),
   };
   buildManifest(counts);
-  buildReadme(counts);
+  buildReadme(counts, readmeTemplate);
 
   console.log('Generated plugins/mindforge/:');
   console.log(`  commands: ${counts.commands}`);
@@ -442,4 +452,4 @@ if (require.main === module) {
 // Exported so tests can derive the source -> shipped mapping from the generator itself rather than
 // re-declaring it. A test that hardcodes its own copy of this list stops testing the generator and
 // starts testing its own duplicate — which is how the stale trust-gate-hook.js shipped unnoticed.
-module.exports = { build, HOOK_TREES, HOOK_FILES };
+module.exports = { build, renderReadme, HOOK_TREES, HOOK_FILES };

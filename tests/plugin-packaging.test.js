@@ -666,20 +666,21 @@ function readPluginReadme() {
 
 test('plugin README meets the directory rule: 40+ words outside code blocks, no leftover placeholders', () => {
   const readme = readPluginReadme();
-  assert.ok(!/\{\{[a-z]+\}\}/.test(readme), 'README still contains an unresolved {{placeholder}}');
+  assert.ok(!/\{\{[A-Za-z]+\}\}/.test(readme), 'README still contains an unresolved {{placeholder}}');
   const prose = readme.replace(/```[\s\S]*?```/g, ' ');
   const words = (prose.match(/[A-Za-z0-9][A-Za-z0-9'-]*/g) || []).length;
   assert.ok(words >= 40, `README has ${words} words outside code blocks; the directory requires at least 40`);
 });
 
-test('plugin README component counts match what is actually in the plugin', () => {
-  const readme = readPluginReadme();
+test('plugin README is exactly what the generator renders from the template and the counts on disk', () => {
+  const { renderReadme } = require(path.join(ROOT, 'scripts', 'build-mindforge-plugin.js'));
   const commands = listMd(path.join(PLUGIN, 'commands')).length;
   const agents = listMd(path.join(PLUGIN, 'agents')).length;
   const skills = fs.readdirSync(path.join(PLUGIN, 'skills'), { withFileTypes: true })
     .filter((e) => e.isDirectory() && fs.existsSync(path.join(PLUGIN, 'skills', e.name, 'SKILL.md'))).length;
-  assert.ok(readme.includes(`${commands} slash commands, ${agents} subagents and ${skills} skills`),
-    `README counts do not read "${commands} slash commands, ${agents} subagents and ${skills} skills" - re-run scripts/build-mindforge-plugin.js`);
+  assert.strictEqual(readPluginReadme(), renderReadme({ commands, agents, skills }),
+    'plugins/mindforge/README.md differs from scripts/plugin-readme.template.md rendered with the counts on disk '
+    + `(${commands} commands, ${agents} agents, ${skills} skills) - re-run node scripts/build-mindforge-plugin.js`);
 });
 
 test('plugin README documents every registered hook id', () => {
@@ -693,8 +694,9 @@ test('plugin README documents every registered hook id', () => {
     }
   }
   assert.ok(ids.size > 0, 'found no hook ids in hooks.json - the extraction pattern is stale');
-  const missing = [...ids].filter((id) => !readme.includes(`\`${id}\``));
-  assert.deepStrictEqual(missing, [], `hooks registered but not documented in the README: ${missing.join(', ')}`);
+  const rows = readme.split('\n').filter((l) => l.startsWith('| '));
+  const missing = [...ids].filter((id) => !rows.some((l) => l.includes(`| \`${id}\` |`)));
+  assert.deepStrictEqual(missing, [], `hooks registered but without a row in the README hooks table: ${missing.join(', ')}`);
 });
 
 test('plugin README documents every MCP tool the server registers', () => {
@@ -706,11 +708,51 @@ test('plugin README documents every MCP tool the server registers', () => {
   assert.deepStrictEqual(missing, [], `MCP tools registered but not documented in the README: ${missing.join(', ')}`);
 });
 
-test('plugin README discloses the one network call and how to switch hooks off', () => {
+test('plugin README discloses the one network call, the opt-outs and the fail-closed gates', () => {
   const readme = readPluginReadme();
-  for (const needle of ['npm view mindforge-cc version', 'MINDFORGE_DISABLED_HOOKS', 'MINDFORGE_HOOK_PROFILE', '.planning/AUDIT.jsonl']) {
+  for (const needle of ['npm view mindforge-cc version', 'MINDFORGE_DISABLED_HOOKS', 'MINDFORGE_HOOK_PROFILE',
+    'MINDFORGE_HOOK_FAILOPEN', '.planning/AUDIT.jsonl', 'mindforge-check-update']) {
     assert.ok(readme.includes(needle), `README must mention ${needle}`);
   }
+});
+
+// The README promises that the shipped hook scripts make one outbound request and spawn only a few
+// known subprocesses. A README claim nothing enforces goes stale silently, so this scans the shipped
+// scripts and fails if one gains a network-capable module or a child_process import that the README
+// does not account for. It reads source text only; comments are stripped first.
+test('shipped hook scripts stay inside the network and subprocess surface the README discloses', () => {
+  const scriptsDir = path.join(PLUGIN, 'scripts');
+  const files = [];
+  (function walk(dir) {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) walk(p);
+      else if (e.name.endsWith('.js')) files.push(p);
+    }
+  })(scriptsDir);
+  assert.ok(files.length > 10, `expected the hook scripts under ${scriptsDir}, found ${files.length}`);
+
+  const NETWORK = /require\(\s*['"](?:node:)?(?:https?|http2|net|tls|dns|dgram)['"]\s*\)|\bfetch\s*\(|new\s+WebSocket\b|XMLHttpRequest/;
+  const SUBPROCESS = /require\(\s*['"](?:node:)?child_process['"]\s*\)/;
+  // The only files allowed to start processes, each named in the README: the dispatcher starts hook
+  // scripts, the update check runs npm, and project detection runs git.
+  const MAY_SPAWN = new Set(['run-with-flags.js', 'mindforge-check-update.js', 'hooks/lib/detect-project.js']);
+
+  const network = [];
+  const unexpectedSpawners = [];
+  for (const f of files) {
+    const rel = path.relative(scriptsDir, f).split(path.sep).join('/');
+    const code = fs.readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    if (NETWORK.test(code)) network.push(rel);
+    if (SUBPROCESS.test(code) && !MAY_SPAWN.has(rel)) unexpectedSpawners.push(rel);
+  }
+  assert.deepStrictEqual(network, [],
+    `shipped hook scripts with a network-capable module or call the README does not disclose: ${network.join(', ')}`);
+  assert.deepStrictEqual(unexpectedSpawners, [],
+    `shipped hook scripts that start subprocesses without being named in the README: ${unexpectedSpawners.join(', ')}`);
+
+  const update = fs.readFileSync(path.join(scriptsDir, 'mindforge-check-update.js'), 'utf8');
+  assert.ok(update.includes('npm view mindforge-cc version'), 'the update check no longer runs the command the README documents');
 });
 
 (async () => {
