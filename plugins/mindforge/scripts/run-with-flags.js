@@ -260,8 +260,15 @@ async function main() {
   }
 
   const hookRoot = getHookRoot();
-  const resolvedRoot = path.resolve(hookRoot);
-  const scriptPath = path.resolve(hookRoot, relScriptPath);
+  // Compare REAL paths on both sides. hooks.json passes the script as `${CLAUDE_PLUGIN_ROOT}/...`, which
+  // Claude Code expands to an absolute path spelled with whatever route the plugin root was reached by.
+  // Resolving only the root made that path "escape" it whenever the route held a symlink (a symlinked
+  // config directory, macOS /var -> /private/var), and for the deny-class hooks that failed CLOSED on
+  // every call, blocking `echo hello`. Resolving the script too fixes that, and it also rejects the
+  // mirror image: a symlink INSIDE the root that points outside it, which the lexical comparison let
+  // through to execute with the gate's authority.
+  const resolvedRoot = canonical(hookRoot);
+  const scriptPath = canonical(path.resolve(hookRoot, relScriptPath));
 
   // Prevent path traversal outside the install root. This branch previously printed
   // "Path traversal rejected" and then exited 0 — announcing an attack signal and permitting it.
