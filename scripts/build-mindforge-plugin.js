@@ -362,6 +362,22 @@ function buildManifest(counts) {
   );
 }
 
+// ── 6. README ─────────────────────────────────────────────────────────────────
+// Anthropic's plugin directory shows a plugin's README as its listing description and blocks
+// a plugin that has none (or fewer than 40 words outside code blocks). The README also has to
+// disclose what the plugin runs and fetches. It is generated, not hand-maintained, because its
+// component counts drift the moment a command, agent or skill is added. The prose lives in
+// scripts/plugin-readme.template.md; tests/plugin-packaging.test.js checks that every hook id
+// and MCP tool name is documented there.
+function buildReadme(counts) {
+  const template = fs.readFileSync(path.join(ROOT, 'scripts', 'plugin-readme.template.md'), 'utf8');
+  const readme = template.replace(/\{\{(commands|agents|skills)\}\}/g, (_, key) => String(counts[key]));
+  if (/\{\{[a-z]+\}\}/.test(readme)) {
+    throw new Error('plugin-readme.template.md has an unresolved {{placeholder}}');
+  }
+  fs.writeFileSync(path.join(PLUGIN, 'README.md'), readme, 'utf8');
+}
+
 // ── Run ──────────────────────────────────────────────────────────────────────
 // Preflight BEFORE the rmrf below. buildMcp() used to `return false` when the bundle was
 // missing, print one "SKIPPED" line among five, and let the build exit 0 — but by then the
@@ -393,6 +409,7 @@ function build() {
     rmrf(path.join(PLUGIN, sub));
   }
   rmrf(path.join(PLUGIN, '.mcp.json'));
+  rmrf(path.join(PLUGIN, 'README.md'));
 
   buildMcp();
   const counts = {
@@ -402,6 +419,7 @@ function build() {
     hookEvents: buildHooks(),
   };
   buildManifest(counts);
+  buildReadme(counts);
 
   console.log('Generated plugins/mindforge/:');
   console.log(`  commands: ${counts.commands}`);
@@ -409,6 +427,7 @@ function build() {
   console.log(`  skills:   ${counts.skills} (incl. synthesized mindforge-protocol)`);
   console.log(`  hook events: ${counts.hookEvents}`);
   console.log('  mcp server: bundled (.mcp.json + mcp/dist)');
+  console.log('  README.md: generated from scripts/plugin-readme.template.md');
   return counts;
 }
 

@@ -654,6 +654,65 @@ test('no MCP dependency-install hook remains (self-contained bundle needs none)'
   );
 });
 
+// The directory blocks a plugin with no README (or fewer than 40 words outside code blocks) and
+// expects the README to disclose what the plugin runs and fetches. The README is generated from
+// scripts/plugin-readme.template.md, so these checks run against the committed output and fail
+// if a hook, tool or count is added without the generator being re-run or the template updated.
+function readPluginReadme() {
+  const p = path.join(PLUGIN, 'README.md');
+  assert.ok(fs.existsSync(p), 'plugins/mindforge/README.md is missing - run node scripts/build-mindforge-plugin.js');
+  return fs.readFileSync(p, 'utf8');
+}
+
+test('plugin README meets the directory rule: 40+ words outside code blocks, no leftover placeholders', () => {
+  const readme = readPluginReadme();
+  assert.ok(!/\{\{[a-z]+\}\}/.test(readme), 'README still contains an unresolved {{placeholder}}');
+  const prose = readme.replace(/```[\s\S]*?```/g, ' ');
+  const words = (prose.match(/[A-Za-z0-9][A-Za-z0-9'-]*/g) || []).length;
+  assert.ok(words >= 40, `README has ${words} words outside code blocks; the directory requires at least 40`);
+});
+
+test('plugin README component counts match what is actually in the plugin', () => {
+  const readme = readPluginReadme();
+  const commands = listMd(path.join(PLUGIN, 'commands')).length;
+  const agents = listMd(path.join(PLUGIN, 'agents')).length;
+  const skills = fs.readdirSync(path.join(PLUGIN, 'skills'), { withFileTypes: true })
+    .filter((e) => e.isDirectory() && fs.existsSync(path.join(PLUGIN, 'skills', e.name, 'SKILL.md'))).length;
+  assert.ok(readme.includes(`${commands} slash commands, ${agents} subagents and ${skills} skills`),
+    `README counts do not read "${commands} slash commands, ${agents} subagents and ${skills} skills" - re-run scripts/build-mindforge-plugin.js`);
+});
+
+test('plugin README documents every registered hook id', () => {
+  const readme = readPluginReadme();
+  const hooks = readJson(path.join(PLUGIN, 'hooks', 'hooks.json')).hooks;
+  const ids = new Set();
+  for (const group of Object.values(hooks).flat()) {
+    for (const h of group.hooks || []) {
+      const m = /run-with-flags\.js"?\s+(\S+)/.exec(h.command || '');
+      if (m) ids.add(m[1]);
+    }
+  }
+  assert.ok(ids.size > 0, 'found no hook ids in hooks.json - the extraction pattern is stale');
+  const missing = [...ids].filter((id) => !readme.includes(`\`${id}\``));
+  assert.deepStrictEqual(missing, [], `hooks registered but not documented in the README: ${missing.join(', ')}`);
+});
+
+test('plugin README documents every MCP tool the server registers', () => {
+  const readme = readPluginReadme();
+  const src = fs.readFileSync(path.join(ROOT, 'mcp-server', 'src', 'index.ts'), 'utf8');
+  const tools = [...src.matchAll(/registerTool\(\s*"(mindforge_[a-z_]+)"/g)].map((m) => m[1]);
+  assert.ok(tools.length > 0, 'found no registerTool() names in mcp-server/src/index.ts - the extraction pattern is stale');
+  const missing = tools.filter((t) => !readme.includes(`\`${t}\``));
+  assert.deepStrictEqual(missing, [], `MCP tools registered but not documented in the README: ${missing.join(', ')}`);
+});
+
+test('plugin README discloses the one network call and how to switch hooks off', () => {
+  const readme = readPluginReadme();
+  for (const needle of ['npm view mindforge-cc version', 'MINDFORGE_DISABLED_HOOKS', 'MINDFORGE_HOOK_PROFILE', '.planning/AUDIT.jsonl']) {
+    assert.ok(readme.includes(needle), `README must mention ${needle}`);
+  }
+});
+
 (async () => {
   for (const { name, fn } of tests) {
     try { await fn(); console.log(`  ✅  ${name}`); passed++; }
