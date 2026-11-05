@@ -171,7 +171,7 @@ test('tools/call rejects action="evaluate" at the schema boundary (not exposed)'
     'action="evaluate" must be rejected, not silently accepted',
   );
   assert.ok(
-    call.result.content[0].text.includes('invalid_enum_value'),
+    /Invalid (enum value|option).* at action/.test(call.result.content[0].text),
     `expected a zod enum validation error, got: ${call.result.content[0].text}`,
   );
 });
